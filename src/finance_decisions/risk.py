@@ -18,6 +18,7 @@ class PositionRisk:
     pnl_abs: float
     drawdown_from_high: float
     above_ma: bool
+    currency: str = "USD"
     actions: list[str] = field(default_factory=list)
     alerts: list[str] = field(default_factory=list)
 
@@ -33,6 +34,7 @@ class RiskReport:
     portfolio_value: float
     portfolio_cost: float
     actions: list[str]
+    currency: str = "USD"
     portfolio_alerts: list[str] = field(default_factory=list)
 
     @property
@@ -53,8 +55,9 @@ def analyze_portfolio_risk(
     if prices.empty:
         raise ValueError("No price data available.")
     today = prices.iloc[-1]
-    ma = prices.rolling(settings.ma_period).mean().iloc[-1]
-    spy_above_ma = bool(today.get("SPY", 0) > ma.get("SPY", 0))
+    spy_latest = _latest_value(prices["SPY"]) if "SPY" in prices.columns else None
+    spy_ma = _latest_moving_average(prices["SPY"], settings.ma_period) if "SPY" in prices.columns else None
+    spy_above_ma = bool(spy_latest > spy_ma) if spy_latest is not None and spy_ma is not None else False
     vix_value = today.get("^VIX")
     vix = float(vix_value) if pd.notna(vix_value) else None
 
@@ -74,10 +77,12 @@ def analyze_portfolio_risk(
 
     total_value = 0.0
     total_cost = 0.0
+    currencies = {position.currency for position in positions}
+    report_currency = currencies.pop() if len(currencies) == 1 else "MIXED"
     risks: list[PositionRisk] = []
 
     for position in positions:
-        if position.ticker not in prices.columns or pd.isna(today[position.ticker]):
+        if position.ticker not in prices.columns:
             risks.append(
                 PositionRisk(
                     ticker=position.ticker,
@@ -87,19 +92,38 @@ def analyze_portfolio_risk(
                     pnl_abs=0.0,
                     drawdown_from_high=0.0,
                     above_ma=False,
+                    currency=position.currency,
                     alerts=[f"{position.ticker}: price data is unavailable."],
                 )
             )
             continue
 
-        current_price = float(today[position.ticker])
+        price_series = prices[position.ticker]
+        current_price = _latest_value(price_series)
+        moving_average = _latest_moving_average(price_series, settings.ma_period)
+        ticker_high = _latest_rolling_high(price_series, 252)
+        if current_price is None:
+            risks.append(
+                PositionRisk(
+                    ticker=position.ticker,
+                    status="unknown",
+                    current_price=0.0,
+                    pnl_pct=0.0,
+                    pnl_abs=0.0,
+                    drawdown_from_high=0.0,
+                    above_ma=False,
+                    currency=position.currency,
+                    alerts=[f"{position.ticker}: price data is unavailable."],
+                )
+            )
+            continue
+
         cost_basis = position.entry_price * position.shares
         current_value = current_price * position.shares
         pnl_pct = current_price / position.entry_price - 1
         pnl_abs = current_value - cost_basis
-        ticker_high = float(prices[position.ticker].rolling(252, min_periods=1).max().iloc[-1])
-        drawdown = (current_price - ticker_high) / ticker_high
-        above_ma = bool(current_price > ma.get(position.ticker, 0))
+        drawdown = (current_price - ticker_high) / ticker_high if ticker_high is not None and ticker_high > 0 else 0.0
+        above_ma = bool(current_price > moving_average) if moving_average is not None else False
 
         total_value += current_value
         total_cost += cost_basis
@@ -134,6 +158,7 @@ def analyze_portfolio_risk(
                 pnl_abs=pnl_abs,
                 drawdown_from_high=drawdown,
                 above_ma=above_ma,
+                currency=position.currency,
                 actions=position_actions,
                 alerts=alerts,
             )
@@ -158,6 +183,7 @@ def analyze_portfolio_risk(
         portfolio_value=total_value,
         portfolio_cost=total_cost,
         actions=sorted(set(actions)),
+        currency=report_currency,
         portfolio_alerts=portfolio_alerts,
     )
 
@@ -174,7 +200,7 @@ def format_risk_report(report: RiskReport) -> str:
 
     for risk in report.position_risks:
         lines.append(
-            f"- {risk.ticker}: {risk.status}, price ${risk.current_price:.2f}, "
+            f"- {risk.ticker}: {risk.status}, price {_money(risk.current_price, risk.currency)}, "
             f"P&L {risk.pnl_pct * 100:+.1f}%, drawdown {risk.drawdown_from_high * 100:+.1f}%, "
             f"MA200 {'above' if risk.above_ma else 'below'}"
         )
@@ -184,8 +210,8 @@ def format_risk_report(report: RiskReport) -> str:
             [
                 "",
                 "Portfolio:",
-                f"- Cost: ${report.portfolio_cost:,.0f}",
-                f"- Value: ${report.portfolio_value:,.0f}",
+                f"- Cost: {_money(report.portfolio_cost, report.currency, decimals=0)}",
+                f"- Value: {_money(report.portfolio_value, report.currency, decimals=0)}",
                 f"- P&L: {report.portfolio_pnl * 100:+.1f}%",
             ]
         )
@@ -203,3 +229,35 @@ def format_risk_report(report: RiskReport) -> str:
         lines.extend(f"- {action}" for action in report.actions)
 
     return "\n".join(lines)
+
+
+def _latest_value(series: pd.Series) -> float | None:
+    clean = series.dropna()
+    if clean.empty:
+        return None
+    return float(clean.iloc[-1])
+
+
+def _latest_moving_average(series: pd.Series, period: int) -> float | None:
+    clean = series.dropna()
+    if len(clean) < period:
+        return None
+    return float(clean.rolling(period).mean().iloc[-1])
+
+
+def _latest_rolling_high(series: pd.Series, period: int) -> float | None:
+    clean = series.dropna()
+    if clean.empty:
+        return None
+    return float(clean.rolling(period, min_periods=1).max().iloc[-1])
+
+
+def _money(value: float, currency: str, decimals: int = 2) -> str:
+    symbols = {
+        "EUR": "€",
+        "USD": "$",
+        "GBP": "£",
+        "PLN": "zł ",
+    }
+    prefix = symbols.get(currency, f"{currency} ")
+    return f"{prefix}{value:,.{decimals}f}"

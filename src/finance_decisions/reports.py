@@ -290,7 +290,7 @@ def _render_risk_html(payload: dict[str, Any]) -> str:
             "<tr>"
             f"<td><strong>{escape(position['ticker'])}</strong></td>"
             f"<td>{_status_badge(position['status'])}</td>"
-            f"<td class=\"num\">{_money(position['current_price'])}</td>"
+            f"<td class=\"num\">{_money(position['current_price'], position.get('currency', 'USD'))}</td>"
             f"<td class=\"num {_value_class(position['pnl_pct'])}\">{_pct(position['pnl_pct'])}</td>"
             f"<td class=\"num {_value_class(position['drawdown_from_high'])}\">{_pct(position['drawdown_from_high'])}</td>"
             f"<td>{'Above' if position['above_ma'] else 'Below'}</td>"
@@ -301,7 +301,7 @@ def _render_risk_html(payload: dict[str, Any]) -> str:
     return f"""
     <div class="grid summary-grid">
       {_metric_card("As of", report.get("as_of", "-"), "Market data date")}
-      {_metric_card("Portfolio P&L", _pct(portfolio_pnl), f"{_money(portfolio_value)} value vs {_money(portfolio_cost)} cost")}
+      {_metric_card("Portfolio P&L", _pct(portfolio_pnl), f"{_money(portfolio_value, report.get('currency', 'USD'))} value vs {_money(portfolio_cost, report.get('currency', 'USD'))} cost")}
       {_metric_card("SPY vs MA200", "Above" if report.get("spy_above_ma") else "Below", "Broad market trend filter")}
       {_metric_card("VIX", _number(vix), "Volatility stress filter")}
     </div>
@@ -620,10 +620,17 @@ def _pct(value: Any) -> str:
     return f"{float(value) * 100:+.1f}%"
 
 
-def _money(value: Any) -> str:
+def _money(value: Any, currency: str = "USD") -> str:
     if value is None or pd.isna(value):
         return "-"
-    return f"${float(value):,.2f}"
+    symbols = {
+        "EUR": "€",
+        "USD": "$",
+        "GBP": "£",
+        "PLN": "zł ",
+    }
+    prefix = symbols.get(currency, f"{currency} ")
+    return f"{prefix}{float(value):,.2f}"
 
 
 def _number(value: Any) -> str:

@@ -12,6 +12,7 @@ class Position:
     entry_price: float
     shares: float
     entry_date: str | None = None
+    currency: str = "USD"
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "Position":
@@ -20,6 +21,7 @@ class Position:
             entry_price=float(data["entry_price"]),
             shares=float(data["shares"]),
             entry_date=data.get("entry_date"),
+            currency=str(data.get("currency", "USD")).upper(),
         )
 
 
@@ -31,4 +33,3 @@ def load_positions(path: Path) -> list[Position]:
         payload = json.load(file)
 
     return [Position.from_dict(item) for item in payload.get("positions", [])]
-
