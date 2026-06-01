@@ -65,7 +65,7 @@ class RiskSettings:
 
 @dataclass(frozen=True)
 class ScannerSettings:
-    top_n: int = 3
+    top_n: int = 4
     lookback_months: int = 6
     ma_period: int = 200
     max_volatility: float = 0.35

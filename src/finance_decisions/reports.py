@@ -426,8 +426,13 @@ def _render_risk_html(payload: dict[str, Any]) -> str:
 
 
 def _render_scanner_html(payload: dict[str, Any]) -> str:
+    eligible = payload.get("eligible", [])
+    candidates = [str(item["ETF"]) for item in eligible]
+    candidate_count = len(eligible)
+    weight_pct = 100.0 / candidate_count if candidate_count > 0 else 0.0
+
     rows = []
-    eligible_tickers = {str(item["ETF"]) for item in payload.get("eligible", [])}
+    eligible_tickers = {str(item["ETF"]) for item in eligible}
     settings_dict = payload.get("settings", {})
     for item in payload.get("table", []):
         ticker = str(item["ETF"])
@@ -436,10 +441,12 @@ def _render_scanner_html(payload: dict[str, Any]) -> str:
         currency = ticker_currency(ticker)
         rank_val = item.get("Rank")
         rank_str = f"{int(rank_val)}" if rank_val is not None and pd.notna(rank_val) else "-"
+        weight_str = f"{weight_pct:.0f}%" if ticker in eligible_tickers else "-"
         rows.append(
             f"<tr{row_class}>"
             f"<td><strong>{escape(ticker)}</strong></td>"
             f"<td class=\"num\">{rank_str}</td>"
+            f"<td class=\"num\">{weight_str}</td>"
             f"<td>{_strategy_badge(status)}</td>"
             f"<td class=\"num\">{money(item['Price'], currency)}</td>"
             f"<td class=\"num {_value_class(item['Momentum 6M'])}\">{_pct(item['Momentum 6M'])}</td>"
@@ -453,27 +460,38 @@ def _render_scanner_html(payload: dict[str, Any]) -> str:
             "</tr>"
         )
 
-    eligible = payload.get("eligible", [])
-    candidates = [str(item["ETF"]) for item in eligible]
     current = payload.get("current_positions", [])
     market_ok = bool(payload.get("market_ok"))
     spy_above_ma = bool(payload.get("spy_above_ma"))
     vix = payload.get("vix")
     market_reasons = _scanner_market_reasons(market_ok, spy_above_ma, vix)
-    candidate_count = len(eligible)
     to_buy = [ticker for ticker in candidates if ticker not in current]
     to_sell = [ticker for ticker in current if ticker not in candidates]
     to_hold = [ticker for ticker in current if ticker in candidates]
-    decision_text = (
-        "Інвестувати 100% нового місячного внеску в кандидатів після ручної перевірки."
-        if market_ok
-        else "Інвестувати 25-50% нового внеску як DCA, решту 50-75% залишити в кеші."
-    )
-    decision_subtext = (
-        "Ринковий фільтр пройдено: SPY вище MA200, VIX нижче порогу 30. Режим Balanced hybrid дозволяє повний місячний внесок."
-        if market_ok
-        else "Ринковий фільтр не пройдено. Balanced hybrid зменшує новий вхід, але не означає автоматичний продаж поточних позицій."
-    )
+
+    to_buy_str = ", ".join(f"{t} ({weight_pct:.0f}%)" for t in to_buy) if to_buy else "-"
+    to_sell_str = ", ".join(f"{t} (0%)" for t in to_sell) if to_sell else "-"
+    to_hold_str = ", ".join(f"{t} ({weight_pct:.0f}%)" for t in to_hold) if to_hold else "-"
+
+    if market_ok:
+        decision_text = (
+            f"Інвестувати 100% нового внеску порівну між кандидатами (по {weight_pct:.0f}% на кожен актив)."
+            if candidate_count > 0 else "Нічого купувати: немає відповідних кандидатів. Тримати 100% у кеші."
+        )
+        decision_subtext = (
+            "Ринковий фільтр пройдено: SPY вище MA200, VIX нижче порогу 30. Режим Balanced hybrid дозволяє повний місячний внесок."
+        )
+    else:
+        dca_low = 25.0 / candidate_count if candidate_count > 0 else 0.0
+        dca_high = 50.0 / candidate_count if candidate_count > 0 else 0.0
+        decision_text = (
+            f"Balanced hybrid: інвестувати 25-50% нового внеску (по {dca_low:.1f}% - {dca_high:.1f}% на кандидата), решту 50-75% тримати в кеші."
+            if candidate_count > 0 else "Ринкові умови несприятливі, кандидатів немає. Тримати 100% у кеші."
+        )
+        decision_subtext = (
+            "Ринковий фільтр не пройдено. Balanced hybrid зменшує новий вхід, але не означає автоматичний продаж поточних позицій."
+        )
+
     return f"""
     <div class="grid summary-grid">
       {_metric_card("Стан ринку", "OK" if market_ok else "Не OK", "Визначає розмір нового місячного внеску")}
@@ -489,9 +507,9 @@ def _render_scanner_html(payload: dict[str, Any]) -> str:
       <div class="decision-text">{escape(decision_text)}</div>
       <p class="decision-subtext">{escape(decision_subtext)}</p>
       <ul class="action-list">
-        <li><strong>Купити / додати</strong><span>{escape(_tickers_or_dash(to_buy))}</span></li>
-        <li><strong>Скоротити / замінити</strong><span>{escape(_tickers_or_dash(to_sell))}</span></li>
-        <li><strong>Залишити</strong><span>{escape(_tickers_or_dash(to_hold))}</span></li>
+        <li><strong>Купити / додати</strong><span>{escape(to_buy_str)}</span></li>
+        <li><strong>Скоротити / замінити</strong><span>{escape(to_sell_str)}</span></li>
+        <li><strong>Залишити</strong><span>{escape(to_hold_str)}</span></li>
       </ul>
     </section>
     <div class="grid two-col">
@@ -521,6 +539,7 @@ def _render_scanner_html(payload: dict[str, Any]) -> str:
           <tr>
             <th>ETF</th>
             <th>Ранг</th>
+            <th>Вага</th>
             <th>Стратегія</th>
             <th class="num">Ціна</th>
             <th class="num">Моментум 6M</th>
@@ -553,7 +572,7 @@ def _render_scanner_html(payload: dict[str, Any]) -> str:
             <th>MA200</th>
           </tr>
         </thead>
-        <tbody>{''.join(rows) if rows else '<tr><td colspan="12" class="empty">Немає ETF-метрик для показу.</td></tr>'}</tbody>
+        <tbody>{''.join(rows) if rows else '<tr><td colspan="13" class="empty">Немає ETF-метрик для показу.</td></tr>'}</tbody>
       </table>
     </section>
     <section>
@@ -616,12 +635,17 @@ def _candidate_cards(items: list[dict[str, Any]]) -> str:
     if not items:
         return '<p class="empty">Жоден ETF не пройшов фільтри.</p>'
 
+    weight_pct = 100.0 / len(items) if items else 0.0
     cards = []
     for item in items:
         cards.append(
             '<div class="candidate-card">'
             f'<div class="candidate-name">{escape(str(item["ETF"]))}</div>'
             '<div class="candidate-stats">'
+            '<div class="stat-row">'
+            '<span class="stat-label">Цільова вага</span>'
+            f'<span class="stat-value">{weight_pct:.0f}%</span>'
+            '</div>'
             '<div class="stat-row">'
             '<span class="stat-label">Моментум 6M</span>'
             f'<span class="stat-value">{escape(_pct(item["Momentum 6M"]))}</span>'
