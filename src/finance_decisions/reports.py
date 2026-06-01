@@ -135,6 +135,7 @@ def write_html_report(path: Path, title: str, body_text: str, payload: dict[str,
     th {{ color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0; background: #f8fafb; }}
     tr:last-child td {{ border-bottom: 0; }}
     .num {{ text-align: right; font-variant-numeric: tabular-nums; }}
+    th.num {{ text-align: right; }}
     ul {{ margin: 0; padding-left: 20px; }}
     li + li {{ margin-top: 6px; }}
     .empty {{ color: var(--muted); }}
@@ -547,29 +548,100 @@ def _render_scanner_html(payload: dict[str, Any]) -> str:
     </section>
     <section>
       <h2>Рейтинг ETF</h2>
-      <p class="compact-note">Зелений = top-кандидат. Синій = буферне утримання (ETF є в портфелі і утримується за буферним рангом). Жовтий = ETF виконує умови, але не входить у top 3, бо є сильніші кандидати. Сірий = порушує один із фільтрів.</p>
+      <p class="compact-note">Зелений = top-кандидат. Синій = буферне утримання (ETF є в портфелі і утримується за буферним рангом). Жовтий = ETF виконує умови, але не входить у top 4, бо є сильніші кандидати. Сірий = порушує один із фільтрів.</p>
       <div class="table-container">
         <table>
           <thead>
             <tr>
-              <th>ETF</th>
-              <th>Ранг</th>
-              <th>Вага</th>
-              <th>Стратегія</th>
-              <th class="num">Ціна</th>
-              <th class="num">Моментум 6M</th>
-              <th class="num">1M</th>
-              <th class="num">3M</th>
-              <th class="num">12M</th>
-              <th class="num">Волатильність</th>
+              <th>
+                ETF
+                <span class="tooltip">ⓘ
+                  <span class="tooltiptext">
+                    <strong>ETF (Тікер)</strong> — унікальний ідентифікатор біржового фонду на біржі.
+                  </span>
+                </span>
+              </th>
+              <th class="num">
+                Ранг
+                <span class="tooltip">ⓘ
+                  <span class="tooltiptext">
+                    <strong>Ранг</strong> — місце активу в рейтингу за силою моментуму серед тих, що пройшли первинні фільтри.
+                  </span>
+                </span>
+              </th>
+              <th class="num">
+                Вага
+                <span class="tooltip">ⓘ
+                  <span class="tooltiptext">
+                    <strong>Цільова вага</strong> — рекомендована частка активу в загальній вартості портфеля (наразі 25% для кожного з топ-4).
+                  </span>
+                </span>
+              </th>
+              <th>
+                Стратегія
+                <span class="tooltip">ⓘ
+                  <span class="tooltiptext">
+                    <strong>Статус стратегії</strong>:<br/>
+                    • <strong>Підходить</strong> — входить у топ-4;<br/>
+                    • <strong>Утримання</strong> — утримується за буферним рангом;<br/>
+                    • <strong>Є кращі</strong> — проходить фільтри, але поза топ-4;<br/>
+                    • <strong>Не проходить</strong> — порушує базові фільтри стратегії.
+                  </span>
+                </span>
+              </th>
+              <th class="num">
+                Ціна
+                <span class="tooltip">ⓘ
+                  <span class="tooltiptext">
+                    <strong>Ціна</strong> — остання відома ціна закриття однієї акції ETF у валюті торгівлі.
+                  </span>
+                </span>
+              </th>
+              <th class="num">
+                Моментум 6M
+                <span class="tooltip">ⓘ
+                  <span class="tooltiptext">
+                    <strong>Моментум 6M</strong> — доходність активу за 6 місяців (з виключенням останнього неповного місяця для уникнення шумів). Основний показник для сортування рейтингу.
+                  </span>
+                </span>
+              </th>
+              <th class="num">
+                1M
+                <span class="tooltip">ⓘ
+                  <span class="tooltiptext">
+                    <strong>Доходність 1M</strong> — зміна ціни активу за останній 1 місяць.
+                  </span>
+                </span>
+              </th>
+              <th class="num">
+                3M
+                <span class="tooltip">ⓘ
+                  <span class="tooltiptext">
+                    <strong>Доходність 3M</strong> — зміна ціни активу за останні 3 місяці.
+                  </span>
+                </span>
+              </th>
+              <th class="num">
+                12M
+                <span class="tooltip align-left">ⓘ
+                  <span class="tooltiptext">
+                    <strong>Доходність 12M</strong> — зміна ціни активу за останні 12 місяців (1 рік).
+                  </span>
+                </span>
+              </th>
+              <th class="num">
+                Волатильність
+                <span class="tooltip align-left">ⓘ
+                  <span class="tooltiptext">
+                    <strong>Волатильність</strong> — річна волатильність активу, розрахована за щомісячними доходностями. Нижча волатильність означає стабільніший тренд (поріг відсікання &lt; 35%).
+                  </span>
+                </span>
+              </th>
               <th class="num">
                 Sharpe
                 <span class="tooltip align-left">ⓘ
                   <span class="tooltiptext">
-                    <strong>Коефіцієнт Шарпа (Sharpe Ratio)</strong> — це міра ефективності інвестицій з поправкою на ризик. <br/>
-                    Формула: (Середня місячна доходність * 12) / Річна волатильність. <br/>
-                    Він показує, скільки надлишкової доходності приносить актив на одиницю ризику. <br/>
-                    Використовується для відсікання нестабільних активів (мінімум &ge; {settings_dict.get('min_sharpe', 0.20):.2f}).
+                    <strong>Коефіцієнт Шарпа (Sharpe Ratio)</strong> — міра ефективності інвестицій з поправкою на ризик. Розраховується як відношення річної доходності до волатильності. Поріг відсікання &ge; {settings_dict.get('min_sharpe', 0.20):.2f}.
                   </span>
                 </span>
               </th>
@@ -577,14 +649,18 @@ def _render_scanner_html(payload: dict[str, Any]) -> str:
                 Просадка
                 <span class="tooltip align-left">ⓘ
                   <span class="tooltiptext">
-                    <strong>Просадка (Drawdown)</strong> — це відхилення поточної ціни від її історичного максимуму за період. <br/>
-                    Формула: (Ціна - Максимум) / Максимум.<br/>
-                    Вона завжди &le; 0 (або 0%, якщо ціна на піку). <br/>
-                    Показує рівень падіння активу від вершини. Використовується для відсікання слабких активів (поріг &gt; -20%).
+                    <strong>Просадка (Drawdown)</strong> — максимальне падіння ціни активу від його локального піку за розрахунковий період (поріг відсікання &gt; -20%).
                   </span>
                 </span>
               </th>
-              <th>MA200</th>
+              <th>
+                MA200
+                <span class="tooltip align-left">ⓘ
+                  <span class="tooltiptext">
+                    <strong>MA200</strong> — чи знаходиться ціна вище своєї 200-денної ковзної середньої (індикатор довгострокового висхідного тренду).
+                  </span>
+                </span>
+              </th>
             </tr>
           </thead>
           <tbody>{''.join(rows) if rows else '<tr><td colspan="13" class="empty">Немає ETF-метрик для показу.</td></tr>'}</tbody>
