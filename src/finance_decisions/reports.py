@@ -145,13 +145,30 @@ def write_html_report(path: Path, title: str, body_text: str, payload: dict[str,
     }}
     .candidate-name {{ font-size: 18px; font-weight: 800; margin-bottom: 8px; }}
     .candidate-stats {{
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
       font-size: 13px;
+      margin-top: 10px;
+    }}
+    .stat-row {{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px dashed var(--line);
+      padding-bottom: 4px;
+    }}
+    .stat-row:last-child {{
+      border-bottom: none;
+      padding-bottom: 0;
+    }}
+    .stat-label {{
       color: var(--muted);
     }}
-    .candidate-stats strong {{ display: block; color: var(--ink); font-size: 15px; }}
+    .stat-value {{
+      font-weight: 700;
+      color: var(--ink);
+    }}
     .callout {{
       border-left: 4px solid var(--blue);
       background: var(--blue-bg);
@@ -174,7 +191,6 @@ def write_html_report(path: Path, title: str, body_text: str, payload: dict[str,
       .summary-grid, .two-col, .three-col {{ grid-template-columns: 1fr; }}
       .decision-title {{ align-items: flex-start; flex-direction: column; }}
       .action-list li {{ grid-template-columns: 1fr; gap: 2px; }}
-      .candidate-stats {{ grid-template-columns: 1fr; }}
       table {{ display: block; overflow-x: auto; white-space: nowrap; }}
     }}
   </style>
@@ -524,9 +540,18 @@ def _candidate_cards(items: list[dict[str, Any]]) -> str:
             '<div class="candidate-card">'
             f'<div class="candidate-name">{escape(str(item["ETF"]))}</div>'
             '<div class="candidate-stats">'
-            f'<span><strong>{escape(_pct(item["Momentum 6M"]))}</strong>Моментум 6M</span>'
-            f'<span><strong>{escape(_number(item["Sharpe"]))}</strong>Sharpe</span>'
-            f'<span><strong>{escape(_pct(item["Drawdown"]))}</strong>Просадка</span>'
+            '<div class="stat-row">'
+            '<span class="stat-label">Моментум 6M</span>'
+            f'<span class="stat-value">{escape(_pct(item["Momentum 6M"]))}</span>'
+            '</div>'
+            '<div class="stat-row">'
+            '<span class="stat-label">Sharpe</span>'
+            f'<span class="stat-value">{escape(_number(item["Sharpe"]))}</span>'
+            '</div>'
+            '<div class="stat-row">'
+            '<span class="stat-label">Просадка</span>'
+            f'<span class="stat-value">{escape(_pct(item["Drawdown"]))}</span>'
+            '</div>'
             '</div>'
             '</div>'
         )
