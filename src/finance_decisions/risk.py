@@ -109,7 +109,18 @@ def analyze_portfolio_risk(
         price_series = prices[position.ticker]
         current_price = latest_value(price_series)
         moving_average = latest_moving_average(price_series, settings.ma_period)
+
+        # 1. Trailing high since entry date/price
         ticker_high = latest_rolling_high(price_series, 252)
+        if position.entry_date:
+            try:
+                since_entry = price_series.loc[position.entry_date:]
+                if not since_entry.empty:
+                    highest_close = since_entry.max()
+                    ticker_high = max(float(highest_close), position.entry_price) if pd.notna(highest_close) else position.entry_price
+            except Exception:
+                pass
+
         if current_price is None:
             risks.append(
                 PositionRisk(
@@ -136,25 +147,49 @@ def analyze_portfolio_risk(
         total_value += current_value
         total_cost += cost_basis
 
+        # 2. Dynamic Volatility-adjusted stop & drawdown exits
+        daily_returns = price_series.pct_change().dropna().tail(60)
+        if len(daily_returns) >= 10:
+            import numpy as np
+            asset_vol = float(daily_returns.std() * np.sqrt(252))
+        else:
+            asset_vol = 0.15
+
+        base_stop = settings.stop_loss_pct
+        vol_adjusted_stop = base_stop * (asset_vol / 0.15)
+        stop_loss_threshold = min(-0.04, max(-0.25, vol_adjusted_stop))
+
+        base_drawdown_exit = settings.drawdown_exit
+        vol_adjusted_drawdown_exit = base_drawdown_exit * (asset_vol / 0.15)
+        drawdown_exit_threshold = min(-0.08, max(-0.35, vol_adjusted_drawdown_exit))
+
+        base_drawdown_warn = settings.drawdown_warn
+        vol_adjusted_drawdown_warn = base_drawdown_warn * (asset_vol / 0.15)
+        drawdown_warn_threshold = min(-0.05, max(-0.20, vol_adjusted_drawdown_warn))
+
         status = "green"
         alerts: list[str] = []
         position_actions: list[str] = []
 
-        if pnl_pct <= settings.stop_loss_pct:
+        if pnl_pct <= stop_loss_threshold:
             status = "red"
-            alerts.append(f"{position.ticker}: stop loss reached ({pnl_pct * 100:+.1f}%).")
+            alerts.append(f"{position.ticker}: stop loss reached ({pnl_pct * 100:+.1f}% vs stop {stop_loss_threshold * 100:.1f}%).")
             position_actions.append(f"Sell {position.ticker}: stop loss reached.")
         elif not above_ma:
             status = "red"
             alerts.append(f"{position.ticker}: price is below MA200.")
             position_actions.append(f"Sell {position.ticker}: below MA200.")
-        elif drawdown <= settings.drawdown_exit:
+        elif drawdown <= drawdown_exit_threshold:
             status = "red"
-            alerts.append(f"{position.ticker}: drawdown is {drawdown * 100:.1f}%.")
+            alerts.append(f"{position.ticker}: drawdown is {drawdown * 100:.1f}% (exit threshold {drawdown_exit_threshold * 100:.1f}%).")
             position_actions.append(f"Sell {position.ticker}: drawdown limit reached.")
-        elif drawdown <= settings.drawdown_warn or pnl_pct < -0.04:
+        elif drawdown <= drawdown_warn_threshold or pnl_pct < -0.04:
             status = "yellow"
-            alerts.append(f"{position.ticker}: weakness detected ({pnl_pct * 100:+.1f}%).")
+            if drawdown <= drawdown_warn_threshold:
+                alerts.append(f"{position.ticker}: drawdown warning ({drawdown * 100:.1f}% vs warning {drawdown_warn_threshold * 100:.1f}%).")
+            if pnl_pct < -0.04:
+                alerts.append(f"{position.ticker}: minor loss warning ({pnl_pct * 100:+.1f}%).")
+            position_actions.append(f"Monitor {position.ticker}: volatility or warning threshold crossed.")
 
         actions.extend(position_actions)
         risks.append(

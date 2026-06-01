@@ -61,11 +61,17 @@ def run_monthly_scanner(
     config = load_strategy_config(config_path)
     tickers = sorted(set(config.etfs + ["SPY", "^VIX"]))
     prices = download_close_prices(tickers, period="3y")
-    result = scan_etfs(prices, settings=config.scanner, etfs=config.etfs)
 
     current_positions = []
     if positions_path.exists():
         current_positions = [position.ticker for position in load_positions(positions_path)]
+
+    result = scan_etfs(
+        prices,
+        settings=config.scanner,
+        etfs=config.etfs,
+        current_positions=current_positions,
+    )
 
     text = write_scanner_outputs(report_dir, result, current_positions=current_positions)
     print(text)

@@ -36,3 +36,5 @@ lookback_months = 6
 ma_period = 200
 max_volatility = 0.35
 max_drawdown = -0.20
+min_sharpe = 0.20
+hold_buffer_k = 8

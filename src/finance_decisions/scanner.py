@@ -16,12 +16,14 @@ class ScanResult:
     vix: float | None
     table: pd.DataFrame
     eligible: pd.DataFrame
+    settings: ScannerSettings | None = None
 
 
 def scan_etfs(
     prices: pd.DataFrame,
     settings: ScannerSettings | None = None,
     etfs: list[str] | None = None,
+    current_positions: list[str] | None = None,
 ) -> ScanResult:
     settings = settings or ScannerSettings()
     if prices.empty:
@@ -98,16 +100,43 @@ def scan_etfs(
                 "Sharpe",
                 "Drawdown",
                 "Above MA200",
+                "Rank",
             ]
         ).set_index("ETF")
         eligible = table
     else:
         table = table.set_index("ETF").sort_values("Momentum 6M", ascending=False)
-        eligible = table[
+        qualified = table[
             (table["Above MA200"])
             & (table["Volatility"] < settings.max_volatility)
             & (table["Drawdown"] > settings.max_drawdown)
-        ].nlargest(settings.top_n, "Momentum 6M")
+            & (table["Sharpe"] >= settings.min_sharpe)
+        ].copy()
+
+        qualified["Rank"] = range(1, len(qualified) + 1)
+        table["Rank"] = np.nan
+        table.loc[qualified.index, "Rank"] = qualified["Rank"]
+
+        current_positions = current_positions or []
+        buffer_holds = [
+            t for t in current_positions
+            if t in qualified.index and qualified.loc[t, "Rank"] <= settings.hold_buffer_k
+        ]
+
+        selected = []
+        # Add buffer holds up to top_n
+        for t in buffer_holds:
+            if len(selected) < settings.top_n:
+                selected.append(t)
+
+        # Fill the remaining slots with the highest-ranked qualified assets
+        for t in qualified.index:
+            if len(selected) >= settings.top_n:
+                break
+            if t not in selected:
+                selected.append(t)
+
+        eligible = table.loc[selected].copy()
 
     return ScanResult(
         market_ok=market_ok,
@@ -115,6 +144,7 @@ def scan_etfs(
         vix=vix,
         table=table,
         eligible=eligible,
+        settings=settings,
     )
 
 
@@ -142,6 +172,8 @@ def format_scan_result(result: ScanResult, current_positions: list[str] | None =
             display[column] = display[column].map(lambda value: f"{value * 100:+.1f}%" if pd.notna(value) else "-")
         display["Sharpe"] = display["Sharpe"].map(lambda value: f"{value:.2f}" if pd.notna(value) else "-")
         display["Above MA200"] = display["Above MA200"].map(lambda value: "yes" if value else "no")
+        if "Rank" in display.columns:
+            display["Rank"] = display["Rank"].map(lambda value: f"{int(value)}" if pd.notna(value) else "-")
         lines.append(display.to_string())
 
     lines.extend(["", f"Top {len(result.eligible)} candidates:"])

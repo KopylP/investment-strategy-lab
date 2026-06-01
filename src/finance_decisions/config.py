@@ -71,6 +71,8 @@ class ScannerSettings:
     max_volatility: float = 0.35
     max_drawdown: float = -0.20
     max_vix: float = 30.0
+    min_sharpe: float = 0.20
+    hold_buffer_k: int = 8
 
 
 @dataclass(frozen=True)
@@ -115,6 +117,8 @@ def load_strategy_config(path: Path | None = None) -> StrategyConfig:
             ),
             max_drawdown=_env_float("MAX_DRAWDOWN", scanner_payload.get("max_drawdown", ScannerSettings.max_drawdown)),
             max_vix=_env_float("MAX_VIX", scanner_payload.get("max_vix", ScannerSettings.max_vix)),
+            min_sharpe=_env_float("MIN_SHARPE", scanner_payload.get("min_sharpe", ScannerSettings.min_sharpe)),
+            hold_buffer_k=_env_int("HOLD_BUFFER_K", scanner_payload.get("hold_buffer_k", ScannerSettings.hold_buffer_k)),
         ),
     )
 

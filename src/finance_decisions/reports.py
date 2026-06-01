@@ -126,6 +126,8 @@ def write_html_report(path: Path, title: str, body_text: str, payload: dict[str,
     .badge.large {{ font-size: 13px; padding: 5px 11px; }}
     tr.eligible-row td {{ background: #f0fbf6; }}
     tr.eligible-row td:first-child {{ border-left: 4px solid var(--green); }}
+    tr.buffer-row td {{ background: #f0f4fb; }}
+    tr.buffer-row td:first-child {{ border-left: 4px solid var(--blue); }}
     tr.qualified-row td {{ background: #fffaf0; }}
     tr.qualified-row td:first-child {{ border-left: 4px solid var(--yellow); }}
     table {{ width: 100%; border-collapse: collapse; font-size: 14px; }}
@@ -261,6 +263,11 @@ def risk_report_payload(report: RiskReport) -> dict[str, Any]:
 
 
 def scanner_report_payload(result: ScanResult, current_positions: list[str]) -> dict[str, Any]:
+    max_vol = result.settings.max_volatility if (result.settings is not None) else 0.35
+    max_dd = result.settings.max_drawdown if (result.settings is not None) else -0.20
+    min_sr = result.settings.min_sharpe if (result.settings is not None) else 0.20
+    hold_k = result.settings.hold_buffer_k if (result.settings is not None) else 8
+    top_n = result.settings.top_n if (result.settings is not None) else 3
     return {
         "type": "monthly_scanner",
         "market_ok": result.market_ok,
@@ -269,6 +276,13 @@ def scanner_report_payload(result: ScanResult, current_positions: list[str]) -> 
         "table": _dataframe_records(result.table),
         "eligible": _dataframe_records(result.eligible),
         "current_positions": current_positions,
+        "settings": {
+            "max_volatility": max_vol,
+            "max_drawdown": max_dd,
+            "min_sharpe": min_sr,
+            "hold_buffer_k": hold_k,
+            "top_n": top_n,
+        }
     }
 
 
@@ -414,14 +428,18 @@ def _render_risk_html(payload: dict[str, Any]) -> str:
 def _render_scanner_html(payload: dict[str, Any]) -> str:
     rows = []
     eligible_tickers = {str(item["ETF"]) for item in payload.get("eligible", [])}
+    settings_dict = payload.get("settings", {})
     for item in payload.get("table", []):
         ticker = str(item["ETF"])
-        status = _strategy_status(item, ticker in eligible_tickers)
+        status = _strategy_status(item, ticker in eligible_tickers, settings_dict)
         row_class = f' class="{status["row_class"]}"' if status["row_class"] else ""
         currency = ticker_currency(ticker)
+        rank_val = item.get("Rank")
+        rank_str = f"{int(rank_val)}" if rank_val is not None and pd.notna(rank_val) else "-"
         rows.append(
             f"<tr{row_class}>"
             f"<td><strong>{escape(ticker)}</strong></td>"
+            f"<td class=\"num\">{rank_str}</td>"
             f"<td>{_strategy_badge(status)}</td>"
             f"<td class=\"num\">{money(item['Price'], currency)}</td>"
             f"<td class=\"num {_value_class(item['Momentum 6M'])}\">{_pct(item['Momentum 6M'])}</td>"
@@ -497,11 +515,12 @@ def _render_scanner_html(payload: dict[str, Any]) -> str:
     </section>
     <section>
       <h2>Рейтинг ETF</h2>
-      <p class="compact-note">Зелений = top-кандидат. Жовтий = ETF виконує умови, але не входить у top 3, бо є сильніші кандидати. Сірий = порушує один із фільтрів.</p>
+      <p class="compact-note">Зелений = top-кандидат. Синій = буферне утримання (ETF є в портфелі і утримується за буферним рангом). Жовтий = ETF виконує умови, але не входить у top 3, бо є сильніші кандидати. Сірий = порушує один із фільтрів.</p>
       <table>
         <thead>
           <tr>
             <th>ETF</th>
+            <th>Ранг</th>
             <th>Стратегія</th>
             <th class="num">Ціна</th>
             <th class="num">Моментум 6M</th>
@@ -509,7 +528,17 @@ def _render_scanner_html(payload: dict[str, Any]) -> str:
             <th class="num">3M</th>
             <th class="num">12M</th>
             <th class="num">Волатильність</th>
-            <th class="num">Sharpe</th>
+            <th class="num">
+              Sharpe
+              <span class="tooltip">ⓘ
+                <span class="tooltiptext">
+                  <strong>Коефіцієнт Шарпа (Sharpe Ratio)</strong> — це міра ефективності інвестицій з поправкою на ризик. <br/>
+                  Формула: (Середня місячна доходність * 12) / Річна волатильність. <br/>
+                  Він показує, скільки надлишкової доходності приносить актив на одиницю ризику. <br/>
+                  Використовується для відсікання нестабільних активів (мінімум &ge; {settings_dict.get('min_sharpe', 0.20):.2f}).
+                </span>
+              </span>
+            </th>
             <th class="num">
               Просадка
               <span class="tooltip">ⓘ
@@ -524,7 +553,7 @@ def _render_scanner_html(payload: dict[str, Any]) -> str:
             <th>MA200</th>
           </tr>
         </thead>
-        <tbody>{''.join(rows) if rows else '<tr><td colspan="11" class="empty">Немає ETF-метрик для показу.</td></tr>'}</tbody>
+        <tbody>{''.join(rows) if rows else '<tr><td colspan="12" class="empty">Немає ETF-метрик для показу.</td></tr>'}</tbody>
       </table>
     </section>
     <section>
@@ -627,14 +656,22 @@ def _status_badge(status: str) -> str:
     return f'<span class="badge {css}">{escape(status)}</span>'
 
 
-def _strategy_status(item: dict[str, Any], is_eligible: bool) -> dict[str, str]:
+def _strategy_status(item: dict[str, Any], is_eligible: bool, settings: dict[str, Any]) -> dict[str, str]:
+    top_n = settings.get("top_n", 3)
+    rank = item.get("Rank")
     if is_eligible:
+        if rank is not None and pd.notna(rank) and int(rank) > top_n:
+            return {
+                "label": "Буферне утримання",
+                "css": "blue",
+                "row_class": "buffer-row",
+            }
         return {
             "label": "Top кандидат",
             "css": "green",
             "row_class": "eligible-row",
         }
-    if _passes_strategy_filters(item):
+    if _passes_strategy_filters(item, settings):
         return {
             "label": "Є кращі",
             "css": "yellow",
@@ -652,17 +689,28 @@ def _strategy_badge(status: dict[str, str]) -> str:
     css = status["css"]
     if css == "green":
         return '<span class="badge green">Підходить</span>'
+    if css == "blue":
+        return '<span class="badge blue">Утримання</span>'
     if css == "yellow":
         return f'<span class="badge yellow">{escape(label)}</span>'
     return f'<span class="badge unknown">{escape(label)}</span>'
 
 
-def _passes_strategy_filters(item: dict[str, Any]) -> bool:
-    return (
-        bool(item.get("Above MA200"))
-        and float(item.get("Volatility", 0)) < 0.35
-        and float(item.get("Drawdown", 0)) > -0.20
-    )
+def _passes_strategy_filters(item: dict[str, Any], settings: dict[str, Any]) -> bool:
+    max_vol = settings.get("max_volatility", 0.35)
+    max_dd = settings.get("max_drawdown", -0.20)
+    min_sr = settings.get("min_sharpe", 0.20)
+
+    vol = item.get("Volatility")
+    dd = item.get("Drawdown")
+    sr = item.get("Sharpe")
+
+    vol_ok = float(vol) < max_vol if vol is not None and pd.notna(vol) else False
+    dd_ok = float(dd) > max_dd if dd is not None and pd.notna(dd) else False
+    sr_ok = float(sr) >= min_sr if sr is not None and pd.notna(sr) else False
+    ma_ok = bool(item.get("Above MA200"))
+
+    return ma_ok and vol_ok and dd_ok and sr_ok
 
 
 def _list_block(items: list[Any], empty_text: str) -> str:
