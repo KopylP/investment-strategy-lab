@@ -205,6 +205,18 @@ def write_html_report(path: Path, title: str, body_text: str, payload: dict[str,
       visibility: visible;
       opacity: 1;
     }}
+    .tooltip.align-left .tooltiptext {{
+      left: auto;
+      right: 0;
+      margin-left: 0;
+    }}
+    .table-container {{
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }}
     .callout {{
       border-left: 4px solid var(--blue);
       background: var(--blue-bg);
@@ -391,29 +403,31 @@ def _render_risk_html(payload: dict[str, Any]) -> str:
     </div>
     <section>
       <h2>Position Risk</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Ticker</th>
-            <th>Status</th>
-            <th class="num">Price</th>
-            <th class="num">P&L</th>
-            <th class="num">
-              Drawdown
-              <span class="tooltip">ⓘ
-                <span class="tooltiptext">
-                  <strong>Drawdown</strong> is the peak-to-trough decline of the asset price over a period. <br/>
-                  Formula: (Current Price - Peak Price) / Peak Price. <br/>
-                  It is always &le; 0 (or 0% at peak). Indicates maximum paper loss from the highest peak. Affects weekly risk exits (e.g. warning at -10%, exit at -18%).
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Ticker</th>
+              <th>Status</th>
+              <th class="num">Price</th>
+              <th class="num">P&L</th>
+              <th class="num">
+                Drawdown
+                <span class="tooltip align-left">ⓘ
+                  <span class="tooltiptext">
+                    <strong>Drawdown</strong> is the peak-to-trough decline of the asset price over a period. <br/>
+                    Formula: (Current Price - Peak Price) / Peak Price. <br/>
+                    It is always &le; 0 (or 0% at peak). Indicates maximum paper loss from the highest peak. Affects weekly risk exits (e.g. warning at -10%, exit at -18%).
+                  </span>
                 </span>
-              </span>
-            </th>
-            <th>MA200</th>
-            <th>Reason</th>
-          </tr>
-        </thead>
-        <tbody>{''.join(rows) if rows else '<tr><td colspan="7" class="empty">No positions found.</td></tr>'}</tbody>
-      </table>
+              </th>
+              <th>MA200</th>
+              <th>Reason</th>
+            </tr>
+          </thead>
+          <tbody>{''.join(rows) if rows else '<tr><td colspan="7" class="empty">No positions found.</td></tr>'}</tbody>
+        </table>
+      </div>
     </section>
     <section>
       <h2>How To Read This Report</h2>
@@ -534,46 +548,48 @@ def _render_scanner_html(payload: dict[str, Any]) -> str:
     <section>
       <h2>Рейтинг ETF</h2>
       <p class="compact-note">Зелений = top-кандидат. Синій = буферне утримання (ETF є в портфелі і утримується за буферним рангом). Жовтий = ETF виконує умови, але не входить у top 3, бо є сильніші кандидати. Сірий = порушує один із фільтрів.</p>
-      <table>
-        <thead>
-          <tr>
-            <th>ETF</th>
-            <th>Ранг</th>
-            <th>Вага</th>
-            <th>Стратегія</th>
-            <th class="num">Ціна</th>
-            <th class="num">Моментум 6M</th>
-            <th class="num">1M</th>
-            <th class="num">3M</th>
-            <th class="num">12M</th>
-            <th class="num">Волатильність</th>
-            <th class="num">
-              Sharpe
-              <span class="tooltip">ⓘ
-                <span class="tooltiptext">
-                  <strong>Коефіцієнт Шарпа (Sharpe Ratio)</strong> — це міра ефективності інвестицій з поправкою на ризик. <br/>
-                  Формула: (Середня місячна доходність * 12) / Річна волатильність. <br/>
-                  Він показує, скільки надлишкової доходності приносить актив на одиницю ризику. <br/>
-                  Використовується для відсікання нестабільних активів (мінімум &ge; {settings_dict.get('min_sharpe', 0.20):.2f}).
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ETF</th>
+              <th>Ранг</th>
+              <th>Вага</th>
+              <th>Стратегія</th>
+              <th class="num">Ціна</th>
+              <th class="num">Моментум 6M</th>
+              <th class="num">1M</th>
+              <th class="num">3M</th>
+              <th class="num">12M</th>
+              <th class="num">Волатильність</th>
+              <th class="num">
+                Sharpe
+                <span class="tooltip align-left">ⓘ
+                  <span class="tooltiptext">
+                    <strong>Коефіцієнт Шарпа (Sharpe Ratio)</strong> — це міра ефективності інвестицій з поправкою на ризик. <br/>
+                    Формула: (Середня місячна доходність * 12) / Річна волатильність. <br/>
+                    Він показує, скільки надлишкової доходності приносить актив на одиницю ризику. <br/>
+                    Використовується для відсікання нестабільних активів (мінімум &ge; {settings_dict.get('min_sharpe', 0.20):.2f}).
+                  </span>
                 </span>
-              </span>
-            </th>
-            <th class="num">
-              Просадка
-              <span class="tooltip">ⓘ
-                <span class="tooltiptext">
-                  <strong>Просадка (Drawdown)</strong> — це відхилення поточної ціни від її історичного максимуму за період. <br/>
-                  Формула: (Ціна - Максимум) / Максимум.<br/>
-                  Вона завжди &le; 0 (або 0%, якщо ціна на піку). <br/>
-                  Показує рівень падіння активу від вершини. Використовується для відсікання слабких активів (поріг &gt; -20%).
+              </th>
+              <th class="num">
+                Просадка
+                <span class="tooltip align-left">ⓘ
+                  <span class="tooltiptext">
+                    <strong>Просадка (Drawdown)</strong> — це відхилення поточної ціни від її історичного максимуму за період. <br/>
+                    Формула: (Ціна - Максимум) / Максимум.<br/>
+                    Вона завжди &le; 0 (або 0%, якщо ціна на піку). <br/>
+                    Показує рівень падіння активу від вершини. Використовується для відсікання слабких активів (поріг &gt; -20%).
+                  </span>
                 </span>
-              </span>
-            </th>
-            <th>MA200</th>
-          </tr>
-        </thead>
-        <tbody>{''.join(rows) if rows else '<tr><td colspan="13" class="empty">Немає ETF-метрик для показу.</td></tr>'}</tbody>
-      </table>
+              </th>
+              <th>MA200</th>
+            </tr>
+          </thead>
+          <tbody>{''.join(rows) if rows else '<tr><td colspan="13" class="empty">Немає ETF-метрик для показу.</td></tr>'}</tbody>
+        </table>
+      </div>
     </section>
     <section>
       <h2>Коротка довідка</h2>
