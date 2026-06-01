@@ -12,6 +12,7 @@ jobs:
       POSITIONS_FILE: src/finance_decisions/strategies/etf_momentum/positions.json
       STRATEGY_CONFIG: src/finance_decisions/strategies/etf_momentum/config/strategy.toml
       REPORT_DIR: reports/latest/etf-momentum/monthly-scanner
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: Check first Monday
