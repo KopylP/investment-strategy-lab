@@ -169,6 +169,40 @@ def write_html_report(path: Path, title: str, body_text: str, payload: dict[str,
       font-weight: 700;
       color: var(--ink);
     }}
+    .tooltip {{
+      position: relative;
+      display: inline-block;
+      cursor: pointer;
+      margin-left: 4px;
+      color: var(--blue);
+      font-size: 14px;
+      vertical-align: middle;
+    }}
+    .tooltip .tooltiptext {{
+      visibility: hidden;
+      width: 280px;
+      background-color: #18232f;
+      color: #fff;
+      text-align: left;
+      border-radius: 6px;
+      padding: 10px 12px;
+      position: absolute;
+      z-index: 100;
+      bottom: 125%;
+      left: 50%;
+      margin-left: -140px;
+      opacity: 0;
+      transition: opacity 0.2s;
+      font-size: 12px;
+      font-weight: normal;
+      line-height: 1.45;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      white-space: normal;
+    }}
+    .tooltip:hover .tooltiptext {{
+      visibility: visible;
+      opacity: 1;
+    }}
     .callout {{
       border-left: 4px solid var(--blue);
       background: var(--blue-bg);
@@ -350,7 +384,16 @@ def _render_risk_html(payload: dict[str, Any]) -> str:
             <th>Status</th>
             <th class="num">Price</th>
             <th class="num">P&L</th>
-            <th class="num">Drawdown</th>
+            <th class="num">
+              Drawdown
+              <span class="tooltip">ⓘ
+                <span class="tooltiptext">
+                  <strong>Drawdown</strong> is the peak-to-trough decline of the asset price over a period. <br/>
+                  Formula: (Current Price - Peak Price) / Peak Price. <br/>
+                  It is always &le; 0 (or 0% at peak). Indicates maximum paper loss from the highest peak. Affects weekly risk exits (e.g. warning at -10%, exit at -18%).
+                </span>
+              </span>
+            </th>
             <th>MA200</th>
             <th>Reason</th>
           </tr>
@@ -467,7 +510,17 @@ def _render_scanner_html(payload: dict[str, Any]) -> str:
             <th class="num">12M</th>
             <th class="num">Волатильність</th>
             <th class="num">Sharpe</th>
-            <th class="num">Просадка</th>
+            <th class="num">
+              Просадка
+              <span class="tooltip">ⓘ
+                <span class="tooltiptext">
+                  <strong>Просадка (Drawdown)</strong> — це відхилення поточної ціни від її історичного максимуму за період. <br/>
+                  Формула: (Ціна - Максимум) / Максимум.<br/>
+                  Вона завжди &le; 0 (або 0%, якщо ціна на піку). <br/>
+                  Показує рівень падіння активу від вершини. Використовується для відсікання слабких активів (поріг &gt; -20%).
+                </span>
+              </span>
+            </th>
             <th>MA200</th>
           </tr>
         </thead>
