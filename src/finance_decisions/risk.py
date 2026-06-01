@@ -6,6 +6,14 @@ from datetime import date
 import pandas as pd
 
 from finance_decisions.config import RiskSettings
+from finance_decisions.helpers import (
+    is_na,
+    latest_moving_average,
+    latest_rolling_high,
+    latest_value,
+    money,
+    safe_division,
+)
 from finance_decisions.models import Position
 
 
@@ -55,11 +63,11 @@ def analyze_portfolio_risk(
     if prices.empty:
         raise ValueError("No price data available.")
     today = prices.iloc[-1]
-    spy_latest = _latest_value(prices["SPY"]) if "SPY" in prices.columns else None
-    spy_ma = _latest_moving_average(prices["SPY"], settings.ma_period) if "SPY" in prices.columns else None
+    spy_latest = latest_value(prices["SPY"]) if "SPY" in prices.columns else None
+    spy_ma = latest_moving_average(prices["SPY"], settings.ma_period) if "SPY" in prices.columns else None
     spy_above_ma = bool(spy_latest > spy_ma) if spy_latest is not None and spy_ma is not None else False
     vix_value = today.get("^VIX")
-    vix = float(vix_value) if pd.notna(vix_value) else None
+    vix = float(vix_value) if not is_na(vix_value) else None
 
     market_alerts: list[str] = []
     actions: list[str] = []
@@ -78,7 +86,7 @@ def analyze_portfolio_risk(
     total_value = 0.0
     total_cost = 0.0
     currencies = {position.currency for position in positions}
-    report_currency = currencies.pop() if len(currencies) == 1 else "MIXED"
+    report_currency = currencies.pop() if len(currencies) == 1 else ("USD" if not currencies else "MIXED")
     risks: list[PositionRisk] = []
 
     for position in positions:
@@ -99,9 +107,9 @@ def analyze_portfolio_risk(
             continue
 
         price_series = prices[position.ticker]
-        current_price = _latest_value(price_series)
-        moving_average = _latest_moving_average(price_series, settings.ma_period)
-        ticker_high = _latest_rolling_high(price_series, 252)
+        current_price = latest_value(price_series)
+        moving_average = latest_moving_average(price_series, settings.ma_period)
+        ticker_high = latest_rolling_high(price_series, 252)
         if current_price is None:
             risks.append(
                 PositionRisk(
@@ -120,7 +128,7 @@ def analyze_portfolio_risk(
 
         cost_basis = position.entry_price * position.shares
         current_value = current_price * position.shares
-        pnl_pct = current_price / position.entry_price - 1
+        pnl_pct = safe_division(current_price, position.entry_price) - 1
         pnl_abs = current_value - cost_basis
         drawdown = (current_price - ticker_high) / ticker_high if ticker_high is not None and ticker_high > 0 else 0.0
         above_ma = bool(current_price > moving_average) if moving_average is not None else False
@@ -171,7 +179,7 @@ def analyze_portfolio_risk(
             portfolio_alerts.append(f"Portfolio is down {portfolio_pnl * 100:.1f}%: critical loss limit.")
             actions.append("Move to cash: portfolio loss limit reached.")
         elif portfolio_pnl <= settings.portfolio_warn:
-            market_alerts.append(f"Portfolio is down {portfolio_pnl * 100:.1f}%.")
+            portfolio_alerts.append(f"Portfolio is down {portfolio_pnl * 100:.1f}%.")
 
     return RiskReport(
         as_of=prices.index[-1].date(),
@@ -200,7 +208,7 @@ def format_risk_report(report: RiskReport) -> str:
 
     for risk in report.position_risks:
         lines.append(
-            f"- {risk.ticker}: {risk.status}, price {_money(risk.current_price, risk.currency)}, "
+            f"- {risk.ticker}: {risk.status}, price {money(risk.current_price, risk.currency)}, "
             f"P&L {risk.pnl_pct * 100:+.1f}%, drawdown {risk.drawdown_from_high * 100:+.1f}%, "
             f"MA200 {'above' if risk.above_ma else 'below'}"
         )
@@ -210,8 +218,8 @@ def format_risk_report(report: RiskReport) -> str:
             [
                 "",
                 "Portfolio:",
-                f"- Cost: {_money(report.portfolio_cost, report.currency, decimals=0)}",
-                f"- Value: {_money(report.portfolio_value, report.currency, decimals=0)}",
+                f"- Cost: {money(report.portfolio_cost, report.currency, decimals=0)}",
+                f"- Value: {money(report.portfolio_value, report.currency, decimals=0)}",
                 f"- P&L: {report.portfolio_pnl * 100:+.1f}%",
             ]
         )
@@ -231,33 +239,4 @@ def format_risk_report(report: RiskReport) -> str:
     return "\n".join(lines)
 
 
-def _latest_value(series: pd.Series) -> float | None:
-    clean = series.dropna()
-    if clean.empty:
-        return None
-    return float(clean.iloc[-1])
 
-
-def _latest_moving_average(series: pd.Series, period: int) -> float | None:
-    clean = series.dropna()
-    if len(clean) < period:
-        return None
-    return float(clean.rolling(period).mean().iloc[-1])
-
-
-def _latest_rolling_high(series: pd.Series, period: int) -> float | None:
-    clean = series.dropna()
-    if clean.empty:
-        return None
-    return float(clean.rolling(period, min_periods=1).max().iloc[-1])
-
-
-def _money(value: float, currency: str, decimals: int = 2) -> str:
-    symbols = {
-        "EUR": "€",
-        "USD": "$",
-        "GBP": "£",
-        "PLN": "zł ",
-    }
-    prefix = symbols.get(currency, f"{currency} ")
-    return f"{prefix}{value:,.{decimals}f}"

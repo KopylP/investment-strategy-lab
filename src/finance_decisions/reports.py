@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict, is_dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from html import escape
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 
+from finance_decisions.helpers import is_na, money
 from finance_decisions.risk import RiskReport, format_risk_report
 from finance_decisions.scanner import ScanResult, format_scan_result
 
@@ -25,7 +26,7 @@ def write_json_report(path: Path, payload: dict[str, Any]) -> None:
 
 def write_html_report(path: Path, title: str, body_text: str, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    generated_at = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+    generated_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     content = _render_payload_html(payload)
     console_text = _render_console_text_html(payload, body_text)
     html = f"""<!doctype html>
@@ -290,7 +291,7 @@ def _render_risk_html(payload: dict[str, Any]) -> str:
             "<tr>"
             f"<td><strong>{escape(position['ticker'])}</strong></td>"
             f"<td>{_status_badge(position['status'])}</td>"
-            f"<td class=\"num\">{_money(position['current_price'], position.get('currency', 'USD'))}</td>"
+            f"<td class=\"num\">{money(position['current_price'], position.get('currency', 'USD'))}</td>"
             f"<td class=\"num {_value_class(position['pnl_pct'])}\">{_pct(position['pnl_pct'])}</td>"
             f"<td class=\"num {_value_class(position['drawdown_from_high'])}\">{_pct(position['drawdown_from_high'])}</td>"
             f"<td>{'Above' if position['above_ma'] else 'Below'}</td>"
@@ -301,7 +302,7 @@ def _render_risk_html(payload: dict[str, Any]) -> str:
     return f"""
     <div class="grid summary-grid">
       {_metric_card("As of", report.get("as_of", "-"), "Market data date")}
-      {_metric_card("Portfolio P&L", _pct(portfolio_pnl), f"{_money(portfolio_value, report.get('currency', 'USD'))} value vs {_money(portfolio_cost, report.get('currency', 'USD'))} cost")}
+      {_metric_card("Portfolio P&L", _pct(portfolio_pnl), f"{money(portfolio_value, report.get('currency', 'USD'))} value vs {money(portfolio_cost, report.get('currency', 'USD'))} cost")}
       {_metric_card("SPY vs MA200", "Above" if report.get("spy_above_ma") else "Below", "Broad market trend filter")}
       {_metric_card("VIX", _number(vix), "Volatility stress filter")}
     </div>
@@ -353,7 +354,7 @@ def _render_scanner_html(payload: dict[str, Any]) -> str:
             f"<tr{row_class}>"
             f"<td><strong>{escape(ticker)}</strong></td>"
             f"<td>{_strategy_badge(status)}</td>"
-            f"<td class=\"num\">{_money(item['Price'])}</td>"
+            f"<td class=\"num\">{money(item['Price'], 'USD')}</td>"
             f"<td class=\"num {_value_class(item['Momentum 6M'])}\">{_pct(item['Momentum 6M'])}</td>"
             f"<td class=\"num {_value_class(item['Return 1M'])}\">{_pct(item['Return 1M'])}</td>"
             f"<td class=\"num {_value_class(item['Return 3M'])}\">{_pct(item['Return 3M'])}</td>"
@@ -480,33 +481,7 @@ def _scanner_market_reasons(market_ok: bool, spy_above_ma: bool, vix: Any) -> li
     return reasons
 
 
-def _scanner_playbook(market_ok: bool, candidate_count: int, current_positions: list[str]) -> list[str]:
-    if not market_ok:
-        items = [
-            "Цього місяця ринковий фільтр не пройдено, тому стратегія зменшує розмір нового входу.",
-            "Balanced-рішення: інвестувати 25-50% нового місячного внеску як DCA, а решту 50-75% залишити в кеші.",
-            "Поточні позиції не варто автоматично докуповувати тільки тому, що вони вже є в портфелі.",
-            "Для вже відкритих позицій використовуй тижневий risk monitor: саме він має підказувати, чи є ризиковий сигнал на вихід.",
-        ]
-        if current_positions:
-            items.append(
-                "Оскільки в портфелі є відкриті позиції, головне завдання зараз - контроль ризику, а не збільшення експозиції."
-            )
-        return items
 
-    if candidate_count == 0:
-        return [
-            "Ринок пройшов базовий фільтр, але жоден ETF не пройшов усі внутрішні фільтри стратегії.",
-            "У такому циклі краще не змушувати стратегію купувати: пропусти місяць або тримай кеш до появи якісних кандидатів.",
-        ]
-
-    return [
-        "Раз на місяць, після генерації рапорту, переглянь список найкращих кандидатів.",
-        "Як базове правило, розподіляй новий капітал рівними частинами між ETF-кандидатами, які ти після ручної перевірки готовий тримати.",
-        "Якщо ETF вже є в портфелі і він досі серед кандидатів, його можна залишити без зайвої операції.",
-        "Якщо поточна позиція більше не входить до кандидатів, розглянь поступове скорочення або заміну під час місячного ребалансу.",
-        "Не докуповуй усередині місяця без нового сигналу: стратегія задумана як місячна, а не щоденна.",
-    ]
 
 
 def _metric_card(label: str, value: str, note: str) -> str:
@@ -615,32 +590,20 @@ def _list_inline(items: list[Any]) -> str:
 
 
 def _pct(value: Any) -> str:
-    if value is None or pd.isna(value):
+    if is_na(value):
         return "-"
     return f"{float(value) * 100:+.1f}%"
 
 
-def _money(value: Any, currency: str = "USD") -> str:
-    if value is None or pd.isna(value):
-        return "-"
-    symbols = {
-        "EUR": "€",
-        "USD": "$",
-        "GBP": "£",
-        "PLN": "zł ",
-    }
-    prefix = symbols.get(currency, f"{currency} ")
-    return f"{prefix}{float(value):,.2f}"
-
 
 def _number(value: Any) -> str:
-    if value is None or pd.isna(value):
+    if is_na(value):
         return "-"
     return f"{float(value):.2f}"
 
 
 def _value_class(value: Any) -> str:
-    if value is None or pd.isna(value):
+    if is_na(value):
         return ""
     number = float(value)
     if number > 0:
@@ -663,6 +626,6 @@ def _json_safe(value: Any) -> Any:
         return value.isoformat()
     if isinstance(value, pd.Timestamp):
         return value.isoformat()
-    if pd.isna(value):
+    if is_na(value):
         return None
     return value

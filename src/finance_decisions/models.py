@@ -16,10 +16,21 @@ class Position:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "Position":
+        for key in ("ticker", "entry_price", "shares"):
+            if key not in data:
+                raise ValueError(f"Position is missing required field '{key}': {data}")
+
+        entry_price = float(data["entry_price"])
+        shares = float(data["shares"])
+        if entry_price <= 0:
+            raise ValueError(f"entry_price must be positive, got {entry_price}: {data}")
+        if shares <= 0:
+            raise ValueError(f"shares must be positive, got {shares}: {data}")
+
         return cls(
             ticker=str(data["ticker"]).upper(),
-            entry_price=float(data["entry_price"]),
-            shares=float(data["shares"]),
+            entry_price=entry_price,
+            shares=shares,
             entry_date=data.get("entry_date"),
             currency=str(data.get("currency", "USD")).upper(),
         )

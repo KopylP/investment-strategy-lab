@@ -52,6 +52,7 @@ class ScannerSettings:
     ma_period: int = 200
     max_volatility: float = 0.35
     max_drawdown: float = -0.20
+    max_vix: float = 30.0
 
 
 @dataclass(frozen=True)
@@ -93,6 +94,7 @@ def load_strategy_config(path: Path | None = None) -> StrategyConfig:
                 scanner_payload.get("max_volatility", ScannerSettings.max_volatility),
             ),
             max_drawdown=_env_float("MAX_DRAWDOWN", scanner_payload.get("max_drawdown", ScannerSettings.max_drawdown)),
+            max_vix=_env_float("MAX_VIX", scanner_payload.get("max_vix", ScannerSettings.max_vix)),
         ),
     )
 

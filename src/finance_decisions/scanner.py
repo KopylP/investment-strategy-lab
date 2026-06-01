@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 
 from finance_decisions.config import ScannerSettings
+from finance_decisions.helpers import latest_moving_average, latest_value, safe_division
 
 
 @dataclass(frozen=True)
@@ -27,18 +28,18 @@ def scan_etfs(
 
     monthly = prices.resample("ME").last()
 
-    spy_latest = _latest_value(prices["SPY"])
-    spy_ma = _latest_moving_average(prices["SPY"], settings.ma_period)
+    spy_latest = latest_value(prices["SPY"]) if "SPY" in prices.columns else None
+    spy_ma = latest_moving_average(prices["SPY"], settings.ma_period) if "SPY" in prices.columns else None
     spy_above_ma = bool(spy_latest > spy_ma) if spy_latest is not None and spy_ma is not None else False
     today = prices.iloc[-1]
     vix_value = today.get("^VIX")
     vix = float(vix_value) if pd.notna(vix_value) else None
-    market_ok = spy_above_ma and (vix is None or vix < 30)
+    market_ok = spy_above_ma and (vix is None or vix < settings.max_vix)
 
     rows = []
     for ticker in [column for column in prices.columns if column != "^VIX"]:
-        latest_price = _latest_value(prices[ticker])
-        moving_average = _latest_moving_average(prices[ticker], settings.ma_period)
+        latest_price = latest_value(prices[ticker])
+        moving_average = latest_moving_average(prices[ticker], settings.ma_period)
         if latest_price is None:
             continue
 
@@ -52,14 +53,21 @@ def scan_etfs(
             {
                 "ETF": ticker,
                 "Price": round(latest_price, 2),
-                "Momentum 6M": monthly_prices.iloc[-2]
-                / monthly_prices.iloc[-settings.lookback_months - 2]
-                - 1,
-                "Return 1M": monthly_prices.iloc[-1] / monthly_prices.iloc[-2] - 1,
-                "Return 3M": monthly_prices.iloc[-1] / monthly_prices.iloc[-4] - 1
+                "Momentum 6M": safe_division(
+                    monthly_prices.iloc[-2],
+                    monthly_prices.iloc[-settings.lookback_months - 2],
+                ) - 1,
+                "Return 1M": safe_division(
+                    monthly_prices.iloc[-1], monthly_prices.iloc[-2]
+                ) - 1,
+                "Return 3M": safe_division(
+                    monthly_prices.iloc[-1], monthly_prices.iloc[-4]
+                ) - 1
                 if len(monthly_prices) >= 4
                 else np.nan,
-                "Return 12M": monthly_prices.iloc[-1] / monthly_prices.iloc[-13] - 1
+                "Return 12M": safe_division(
+                    monthly_prices.iloc[-1], monthly_prices.iloc[-13]
+                ) - 1
                 if len(monthly_prices) >= 13
                 else np.nan,
                 "Volatility": volatility,
@@ -158,15 +166,3 @@ def format_scan_result(result: ScanResult, current_positions: list[str] | None =
     return "\n".join(lines)
 
 
-def _latest_value(series: pd.Series) -> float | None:
-    clean = series.dropna()
-    if clean.empty:
-        return None
-    return float(clean.iloc[-1])
-
-
-def _latest_moving_average(series: pd.Series, period: int) -> float | None:
-    clean = series.dropna()
-    if len(clean) < period:
-        return None
-    return float(clean.rolling(period).mean().iloc[-1])
