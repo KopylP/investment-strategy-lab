@@ -55,11 +55,20 @@ pip install -r requirements-dev.txt
 
 ## Run Locally
 
+By default, the strategy runs in **European** mode (loading EUR-denominated ETFs). You can choose between the **European** (EUR) and **US** (USD) markets using the `STRATEGY_MARKET` environment variable (`EU` or `US`):
+
 ```bash
+# Run in European mode (default)
 PYTHONPATH=src python -m finance_decisions.strategies.etf_momentum.monthly_scanner
 PYTHONPATH=src python -m finance_decisions.strategies.etf_momentum.weekly_risk_monitor
+
+# Run in US mode (using USD-denominated ETFs)
+PYTHONPATH=src STRATEGY_MARKET=US python -m finance_decisions.strategies.etf_momentum.monthly_scanner
+PYTHONPATH=src STRATEGY_MARKET=US python -m finance_decisions.strategies.etf_momentum.weekly_risk_monitor
+
 pytest -q
 ```
+
 
 Each strategy run writes report files to `reports/latest/...` by default:
 
@@ -297,7 +306,8 @@ Strategy defaults live in
 `src/finance_decisions/strategies/etf_momentum/config/strategy.toml`. You can
 override selected values with GitHub Actions repository variables:
 
-- `ETF_LIST` as comma-separated tickers, for example `SPY,QQQ,GLD`
+- `STRATEGY_MARKET` set to `EU` (default) or `US` to switch strategy modes
+- `ETF_LIST` as comma-separated tickers, for example `SXR8.DE,SXRV.DE` or `SPY,QQQ,GLD`
 - `TOP_N`
 - `LOOKBACK_MONTHS`
 - `STOP_LOSS_PCT`

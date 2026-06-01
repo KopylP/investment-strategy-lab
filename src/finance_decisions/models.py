@@ -27,12 +27,20 @@ class Position:
         if shares <= 0:
             raise ValueError(f"shares must be positive, got {shares}: {data}")
 
+        ticker = str(data["ticker"]).upper()
+        currency_val = data.get("currency")
+        if currency_val is None or str(currency_val).strip() == "":
+            from finance_decisions.helpers import ticker_currency
+            currency = ticker_currency(ticker)
+        else:
+            currency = str(currency_val).upper()
+
         return cls(
-            ticker=str(data["ticker"]).upper(),
+            ticker=ticker,
             entry_price=entry_price,
             shares=shares,
             entry_date=data.get("entry_date"),
-            currency=str(data.get("currency", "USD")).upper(),
+            currency=currency,
         )
 
 

@@ -21,12 +21,11 @@ class ScanResult:
 def scan_etfs(
     prices: pd.DataFrame,
     settings: ScannerSettings | None = None,
+    etfs: list[str] | None = None,
 ) -> ScanResult:
     settings = settings or ScannerSettings()
     if prices.empty:
         raise ValueError("No price data available.")
-
-    monthly = prices.resample("ME").last()
 
     spy_latest = latest_value(prices["SPY"]) if "SPY" in prices.columns else None
     spy_ma = latest_moving_average(prices["SPY"], settings.ma_period) if "SPY" in prices.columns else None
@@ -36,14 +35,20 @@ def scan_etfs(
     vix = float(vix_value) if pd.notna(vix_value) else None
     market_ok = spy_above_ma and (vix is None or vix < settings.max_vix)
 
+    scan_tickers = etfs if etfs is not None else [column for column in prices.columns if column not in ("SPY", "^VIX")]
+
     rows = []
-    for ticker in [column for column in prices.columns if column != "^VIX"]:
+    for ticker in scan_tickers:
+        if ticker not in prices.columns:
+            continue
         latest_price = latest_value(prices[ticker])
         moving_average = latest_moving_average(prices[ticker], settings.ma_period)
         if latest_price is None:
             continue
 
-        monthly_prices = monthly[ticker].dropna()
+        # Resample individually to prevent calendar holiday NaN dropping
+        ticker_prices = prices[ticker].dropna()
+        monthly_prices = ticker_prices.resample("ME").last()
         if len(monthly_prices) < settings.lookback_months + 2:
             continue
 

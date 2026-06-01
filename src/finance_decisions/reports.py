@@ -9,7 +9,7 @@ from typing import Any
 
 import pandas as pd
 
-from finance_decisions.helpers import is_na, money
+from finance_decisions.helpers import is_na, money, ticker_currency
 from finance_decisions.risk import RiskReport, format_risk_report
 from finance_decisions.scanner import ScanResult, format_scan_result
 
@@ -285,6 +285,14 @@ def _render_risk_html(payload: dict[str, Any]) -> str:
     portfolio_cost = report.get("portfolio_cost", 0)
     vix = report.get("vix")
 
+    mixed_warning = ""
+    if report.get("currency") == "MIXED":
+        mixed_warning = """
+    <div class="callout" style="border-left-color: var(--yellow); background: var(--yellow-bg); color: var(--yellow); margin-top: 14px;">
+      <strong>Caution:</strong> Portfolio contains a mix of currencies. Totals (Cost and Value) are raw sums of multiple currencies without conversion.
+    </div>
+        """
+
     rows = []
     for position in positions:
         rows.append(
@@ -306,6 +314,7 @@ def _render_risk_html(payload: dict[str, Any]) -> str:
       {_metric_card("SPY vs MA200", "Above" if report.get("spy_above_ma") else "Below", "Broad market trend filter")}
       {_metric_card("VIX", _number(vix), "Volatility stress filter")}
     </div>
+    {mixed_warning}
     <div class="grid two-col">
       <section>
         <h2>Actions</h2>
@@ -350,11 +359,12 @@ def _render_scanner_html(payload: dict[str, Any]) -> str:
         ticker = str(item["ETF"])
         status = _strategy_status(item, ticker in eligible_tickers)
         row_class = f' class="{status["row_class"]}"' if status["row_class"] else ""
+        currency = ticker_currency(ticker)
         rows.append(
             f"<tr{row_class}>"
             f"<td><strong>{escape(ticker)}</strong></td>"
             f"<td>{_strategy_badge(status)}</td>"
-            f"<td class=\"num\">{money(item['Price'], 'USD')}</td>"
+            f"<td class=\"num\">{money(item['Price'], currency)}</td>"
             f"<td class=\"num {_value_class(item['Momentum 6M'])}\">{_pct(item['Momentum 6M'])}</td>"
             f"<td class=\"num {_value_class(item['Return 1M'])}\">{_pct(item['Return 1M'])}</td>"
             f"<td class=\"num {_value_class(item['Return 3M'])}\">{_pct(item['Return 3M'])}</td>"

@@ -11,7 +11,7 @@ except ModuleNotFoundError:  # pragma: no cover - Python < 3.11 compatibility.
     import tomli as tomllib
 
 
-DEFAULT_ETFS = [
+DEFAULT_ETFS_US = [
     "SPY",
     "QQQ",
     "IWM",
@@ -32,6 +32,24 @@ DEFAULT_ETFS = [
     "XLU",
 ]
 
+DEFAULT_ETFS_EU = [
+    "SXR8.DE",
+    "SXRV.DE",
+    "IUSN.DE",
+    "EUN2.DE",
+    "IS3N.DE",
+    "4GLD.DE",
+    "ZIL2.DE",
+    "IS04.DE",
+    "IUS7.DE",
+    "IBCI.DE",
+    "IQQA.DE",
+    "XDJE.DE",
+    "QDVE.DE",
+    "QDVF.DE",
+    "QDVG.DE",
+    "QDVI.DE",
+]
 
 @dataclass(frozen=True)
 class RiskSettings:
@@ -66,7 +84,9 @@ def load_strategy_config(path: Path | None = None) -> StrategyConfig:
     path = path or _default_config_path()
     payload = _load_toml(path)
 
-    etfs = _env_list("ETF_LIST") or payload.get("strategy", {}).get("etfs", DEFAULT_ETFS)
+    market = os.environ.get("STRATEGY_MARKET", "EU").upper()
+    default_etfs = DEFAULT_ETFS_US if market == "US" else DEFAULT_ETFS_EU
+    etfs = _env_list("ETF_LIST") or payload.get("strategy", {}).get("etfs", default_etfs)
     risk_payload = payload.get("risk", {})
     scanner_payload = payload.get("scanner", {})
 
@@ -110,10 +130,14 @@ def _default_config_path() -> Path:
     configured = os.environ.get("STRATEGY_CONFIG")
     if configured:
         return Path(configured)
+    
+    market = os.environ.get("STRATEGY_MARKET", "EU").upper()
+    config_name = "strategy_us.toml" if market == "US" else "strategy.toml"
+    
     return Path(
         importlib.resources.files("finance_decisions.strategies.etf_momentum")
         / "config"
-        / "strategy.toml"
+        / config_name
     )
 
 

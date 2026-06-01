@@ -38,6 +38,21 @@ def safe_division(numerator: float, denominator: float, default: float = 0.0) ->
     return numerator / denominator
 
 
+def ticker_currency(ticker: str) -> str:
+    """Determine the default trading currency based on the ticker suffix."""
+    ticker_upper = ticker.upper()
+    if "." in ticker_upper:
+        suffix = ticker_upper.split(".")[-1]
+        # Common European exchange suffixes trading in EUR
+        if suffix in {"DE", "PA", "MI", "AS", "MC", "AT", "BR", "LI"}:
+            return "EUR"
+        elif suffix == "L":
+            return "GBP"
+        elif suffix == "SW":
+            return "CHF"
+    return "USD"
+
+
 def money(value: float, currency: str, decimals: int = 2) -> str:
     """Format a monetary value with a currency symbol prefix."""
     symbols = {
@@ -46,8 +61,10 @@ def money(value: float, currency: str, decimals: int = 2) -> str:
         "GBP": "£",
         "PLN": "zł ",
     }
-    prefix = symbols.get(currency, f"{currency} ")
+    currency_upper = currency.upper()
+    prefix = symbols.get(currency_upper, f"{currency_upper} ")
     return f"{prefix}{value:,.{decimals}f}"
+
 
 
 def is_na(value: object) -> bool:

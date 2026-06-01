@@ -20,11 +20,12 @@ DEFAULT_WEEKLY_REPORT_DIR = "reports/latest/etf-momentum/weekly-risk-monitor"
 
 def run_weekly_risk_monitor(
     *,
-    default_config: str | Path = DEFAULT_CONFIG,
+    default_config: str | Path | None = None,
     default_positions: str | Path = DEFAULT_POSITIONS,
     default_report_dir: str = DEFAULT_WEEKLY_REPORT_DIR,
 ) -> int:
-    config_path = Path(os.environ.get("STRATEGY_CONFIG", default_config))
+    config_env = os.environ.get("STRATEGY_CONFIG")
+    config_path = Path(config_env) if config_env else (Path(default_config) if default_config else None)
     positions_path = Path(os.environ.get("POSITIONS_FILE", default_positions))
     report_dir = Path(os.environ.get("REPORT_DIR", default_report_dir))
 
@@ -48,18 +49,19 @@ def run_weekly_risk_monitor(
 
 def run_monthly_scanner(
     *,
-    default_config: str | Path = DEFAULT_CONFIG,
+    default_config: str | Path | None = None,
     default_positions: str | Path = DEFAULT_POSITIONS,
     default_report_dir: str = DEFAULT_MONTHLY_REPORT_DIR,
 ) -> int:
-    config_path = Path(os.environ.get("STRATEGY_CONFIG", default_config))
+    config_env = os.environ.get("STRATEGY_CONFIG")
+    config_path = Path(config_env) if config_env else (Path(default_config) if default_config else None)
     positions_path = Path(os.environ.get("POSITIONS_FILE", default_positions))
     report_dir = Path(os.environ.get("REPORT_DIR", default_report_dir))
 
     config = load_strategy_config(config_path)
     tickers = sorted(set(config.etfs + ["SPY", "^VIX"]))
     prices = download_close_prices(tickers, period="3y")
-    result = scan_etfs(prices, settings=config.scanner)
+    result = scan_etfs(prices, settings=config.scanner, etfs=config.etfs)
 
     current_positions = []
     if positions_path.exists():
