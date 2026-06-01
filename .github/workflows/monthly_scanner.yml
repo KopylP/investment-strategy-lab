@@ -1,0 +1,60 @@
+name: Monthly ETF Scanner
+
+on:
+  schedule:
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    env:
+      POSITIONS_FILE: src/finance_decisions/strategies/etf_momentum/positions.json
+      STRATEGY_CONFIG: src/finance_decisions/strategies/etf_momentum/config/strategy.toml
+      REPORT_DIR: reports/latest/etf-momentum/monthly-scanner
+
+    steps:
+      - name: Check first Monday
+        id: schedule_check
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "$(date -u +%d)" -le 07 ]; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout repo
+        if: steps.schedule_check.outputs.should_run == 'true'
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        if: steps.schedule_check.outputs.should_run == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        if: steps.schedule_check.outputs.should_run == 'true'
+        run: pip install -r requirements.txt
+
+      - name: Run monthly scanner
+        if: steps.schedule_check.outputs.should_run == 'true'
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ETF_LIST: ${{ vars.ETF_LIST }}
+          TOP_N: ${{ vars.TOP_N }}
+          LOOKBACK_MONTHS: ${{ vars.LOOKBACK_MONTHS }}
+          SCANNER_MA_PERIOD: ${{ vars.SCANNER_MA_PERIOD }}
+          MAX_VOLATILITY: ${{ vars.MAX_VOLATILITY }}
+          MAX_DRAWDOWN: ${{ vars.MAX_DRAWDOWN }}
+        run: PYTHONPATH=src python -m finance_decisions.strategies.etf_momentum.monthly_scanner
+
+      - name: Upload report artifact
+        if: always() && steps.schedule_check.outputs.should_run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: monthly-scanner-report
+          path: reports/latest/etf-momentum/monthly-scanner
+          retention-days: 90

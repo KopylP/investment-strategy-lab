@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "finance-decisions"
+version = "0.1.0"
+description = "ETF momentum scanner and portfolio risk monitor."
+requires-python = ">=3.11"
+dependencies = [
+  "pandas",
+  "numpy",
+  "yfinance",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"finance_decisions.strategies.etf_momentum" = ["README.md", "positions.json", "config/*.toml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

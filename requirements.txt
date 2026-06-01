@@ -1,0 +1,4 @@
+pandas
+numpy
+yfinance
+tomli; python_version < "3.11"

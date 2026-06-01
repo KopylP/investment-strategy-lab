@@ -1,0 +1,49 @@
+name: Weekly Risk Monitor
+
+on:
+  schedule:
+    - cron: "0 8 * * 1"
+  workflow_dispatch:
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    env:
+      POSITIONS_FILE: src/finance_decisions/strategies/etf_momentum/positions.json
+      STRATEGY_CONFIG: src/finance_decisions/strategies/etf_momentum/config/strategy.toml
+      REPORT_DIR: reports/latest/etf-momentum/weekly-risk-monitor
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run risk monitor
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TOP_N: ${{ vars.TOP_N }}
+          STOP_LOSS_PCT: ${{ vars.STOP_LOSS_PCT }}
+          DRAWDOWN_WARN: ${{ vars.DRAWDOWN_WARN }}
+          DRAWDOWN_EXIT: ${{ vars.DRAWDOWN_EXIT }}
+          VIX_WARN: ${{ vars.VIX_WARN }}
+          VIX_EXIT: ${{ vars.VIX_EXIT }}
+          PORTFOLIO_WARN: ${{ vars.PORTFOLIO_WARN }}
+          PORTFOLIO_EXIT: ${{ vars.PORTFOLIO_EXIT }}
+        run: PYTHONPATH=src python -m finance_decisions.strategies.etf_momentum.weekly_risk_monitor
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-risk-monitor-report
+          path: reports/latest/etf-momentum/weekly-risk-monitor
+          retention-days: 90

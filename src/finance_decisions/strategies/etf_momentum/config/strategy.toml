@@ -1,0 +1,38 @@
+[strategy]
+etfs = [
+  "SPY",
+  "QQQ",
+  "IWM",
+  "EFA",
+  "EEM",
+  "GLD",
+  "SLV",
+  "TLT",
+  "IEF",
+  "LQD",
+  "VNQ",
+  "USO",
+  "DBA",
+  "XLE",
+  "XLK",
+  "XLV",
+  "XLF",
+  "XLU",
+]
+
+[risk]
+ma_period = 200
+stop_loss_pct = -0.08
+drawdown_warn = -0.10
+drawdown_exit = -0.18
+vix_warn = 25.0
+vix_exit = 35.0
+portfolio_warn = -0.10
+portfolio_exit = -0.20
+
+[scanner]
+top_n = 3
+lookback_months = 6
+ma_period = 200
+max_volatility = 0.35
+max_drawdown = -0.20

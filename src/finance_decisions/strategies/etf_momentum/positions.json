@@ -1,0 +1,23 @@
+{
+  "positions": [
+    {
+      "ticker": "QQQ",
+      "entry_price": 430.50,
+      "shares": 5,
+      "entry_date": "2024-11-01"
+    },
+    {
+      "ticker": "GLD",
+      "entry_price": 185.20,
+      "shares": 10,
+      "entry_date": "2024-11-01"
+    },
+    {
+      "ticker": "XLK",
+      "entry_price": 210.00,
+      "shares": 8,
+      "entry_date": "2024-12-02"
+    }
+  ]
+}
+
