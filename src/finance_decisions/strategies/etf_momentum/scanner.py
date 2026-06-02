@@ -5,8 +5,8 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-from finance_decisions.config import ScannerSettings
 from finance_decisions.helpers import latest_moving_average, latest_value, safe_division
+from .config import ScannerSettings
 
 
 @dataclass(frozen=True)
@@ -201,5 +201,3 @@ def format_scan_result(result: ScanResult, current_positions: list[str] | None =
         )
 
     return "\n".join(lines)
-
-

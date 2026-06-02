@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from finance_decisions.config import load_strategy_config
+from finance_decisions.strategies.etf_momentum.config import load_strategy_config
 from finance_decisions.strategies.etf_momentum import monthly_scanner, weekly_risk_monitor
 from finance_decisions.strategies.etf_momentum.runner import DEFAULT_CONFIG, DEFAULT_POSITIONS
 

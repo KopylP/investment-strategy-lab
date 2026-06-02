@@ -139,7 +139,7 @@ def _default_config_path() -> Path:
     config_name = "strategy_us.toml" if market == "US" else "strategy.toml"
     
     return Path(
-        importlib.resources.files("finance_decisions.strategies.etf_momentum")
+        importlib.resources.files(__package__)
         / "config"
         / config_name
     )

@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from finance_decisions.models import Position
-from finance_decisions.risk import analyze_portfolio_risk
+from finance_decisions.strategies.etf_momentum.risk import analyze_portfolio_risk
 
 
 def test_analyze_portfolio_risk_flags_stop_loss() -> None:

@@ -5,7 +5,6 @@ from datetime import date
 
 import pandas as pd
 
-from finance_decisions.config import RiskSettings
 from finance_decisions.helpers import (
     is_na,
     latest_moving_average,
@@ -15,6 +14,7 @@ from finance_decisions.helpers import (
     safe_division,
 )
 from finance_decisions.models import Position
+from .config import RiskSettings
 
 
 @dataclass(frozen=True)
@@ -114,7 +114,16 @@ def analyze_portfolio_risk(
         ticker_high = latest_rolling_high(price_series, 252)
         if position.entry_date:
             try:
-                since_entry = price_series.loc[position.entry_date:]
+                sorted_prices = price_series.sort_index()
+                entry_ts = pd.to_datetime(position.entry_date)
+                if isinstance(sorted_prices.index, pd.DatetimeIndex):
+                    # Align timezones
+                    if sorted_prices.index.tz is not None and entry_ts.tz is None:
+                        entry_ts = entry_ts.tz_localize(sorted_prices.index.tz)
+                    elif sorted_prices.index.tz is None and entry_ts.tz is not None:
+                        entry_ts = entry_ts.tz_convert(None)
+
+                since_entry = sorted_prices.loc[entry_ts:]
                 if not since_entry.empty:
                     highest_close = since_entry.max()
                     ticker_high = max(float(highest_close), position.entry_price) if pd.notna(highest_close) else position.entry_price
@@ -168,8 +177,8 @@ def analyze_portfolio_risk(
         drawdown_warn_threshold = min(-0.05, max(-0.20, vol_adjusted_drawdown_warn))
 
         status = "green"
-        alerts: list[str] = []
-        position_actions: list[str] = []
+        alerts = []
+        position_actions = []
 
         if pnl_pct <= stop_loss_threshold:
             status = "red"
@@ -272,6 +281,3 @@ def format_risk_report(report: RiskReport) -> str:
         lines.extend(f"- {action}" for action in report.actions)
 
     return "\n".join(lines)
-
-
-

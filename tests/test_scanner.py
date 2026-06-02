@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pandas as pd
 
-from finance_decisions.config import ScannerSettings
-from finance_decisions.scanner import scan_etfs
+from finance_decisions.strategies.etf_momentum.config import ScannerSettings
+from finance_decisions.strategies.etf_momentum.scanner import scan_etfs
 
 
 def test_scan_etfs_returns_top_candidate() -> None:

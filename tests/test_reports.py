@@ -1,103 +1,78 @@
 from __future__ import annotations
 
-from datetime import date
+import json
+from pathlib import Path
+from finance_decisions.reports import (
+    write_html_report,
+    write_json_report,
+    write_text_report,
+)
 
-import pandas as pd
 
-from finance_decisions.reports import scanner_report_payload, risk_report_payload, write_html_report
-from finance_decisions.risk import PositionRisk, RiskReport
-from finance_decisions.scanner import ScanResult
+def test_write_text_report(tmp_path) -> None:
+    path = tmp_path / "report.txt"
+    write_text_report(path, "hello world")
+    assert path.read_text(encoding="utf-8") == "hello world"
 
 
-def test_write_html_report_renders_risk_sections(tmp_path) -> None:
-    report = RiskReport(
-        as_of=date(2026, 5, 22),
-        spy_above_ma=True,
-        vix=16.7,
-        market_alerts=[],
-        position_risks=[
-            PositionRisk(
-                ticker="QQQ",
-                status="green",
-                current_price=717.54,
-                pnl_pct=0.12,
-                pnl_abs=120.0,
-                drawdown_from_high=-0.03,
-                above_ma=True,
-            )
-        ],
-        portfolio_pnl=0.12,
-        portfolio_value=1120.0,
-        portfolio_cost=1000.0,
-        actions=[],
+def test_write_json_report(tmp_path) -> None:
+    path = tmp_path / "report.json"
+    payload = {"foo": "bar", "val": 123}
+    write_json_report(path, payload)
+    loaded = json.loads(path.read_text(encoding="utf-8"))
+    assert loaded == payload
+
+
+def test_write_html_report_generic_features(tmp_path) -> None:
+    # Set up template directories
+    strategy_templates = tmp_path / "strategy" / "templates"
+    strategy_templates.mkdir(parents=True)
+    
+    # Write a test template
+    template_file = strategy_templates / "test_report.html"
+    template_file.write_text(
+        "Title: {{ title }}\n"
+        "Value: {{ my_val | pct }}\n"
+        "Number: {{ my_num | number }}\n"
+        "Custom Filter: {{ status | format_custom }}\n"
+        "Custom Test: {% if is_valid is clean %}yes{% else %}no{% endif %}\n"
+        "Generated: {{ generated_at }}",
+        encoding="utf-8",
     )
-
-    path = tmp_path / "report.html"
-    write_html_report(path, "Weekly Risk Monitor", "text report", risk_report_payload(report))
-
-    html = path.read_text(encoding="utf-8")
-    assert "Portfolio P&amp;L" in html
-    assert "Position Risk" in html
-    assert "How To Read This Report" in html
-
-
-def test_write_html_report_renders_scanner_sections(tmp_path) -> None:
-    table = pd.DataFrame(
-        [
-            {
-                "ETF": "QQQ",
-                "Price": 500.0,
-                "Momentum 6M": 0.15,
-                "Return 1M": 0.03,
-                "Return 3M": 0.08,
-                "Return 12M": 0.2,
-                "Volatility": 0.18,
-                "Sharpe": 1.4,
-                "Drawdown": -0.04,
-                "Above MA200": True,
-            },
-            {
-                "ETF": "SPY",
-                "Price": 450.0,
-                "Momentum 6M": 0.08,
-                "Return 1M": 0.02,
-                "Return 3M": 0.05,
-                "Return 12M": 0.12,
-                "Volatility": 0.16,
-                "Sharpe": 1.1,
-                "Drawdown": -0.02,
-                "Above MA200": True,
-            }
-        ]
-    ).set_index("ETF")
-    eligible = table.loc[["QQQ"]]
-    result = ScanResult(
-        market_ok=True,
-        spy_above_ma=True,
-        vix=18.0,
-        table=table,
-        eligible=eligible,
-    )
-
-    path = tmp_path / "scanner.html"
+    
+    output_path = tmp_path / "output.html"
+    
+    custom_filters = {
+        "format_custom": lambda v: f"status is {v}",
+    }
+    custom_tests = {
+        "clean": lambda v: v == "clean_value",
+    }
+    
+    payload = {
+        "my_val": 0.125,
+        "my_num": 1.234,
+        "status": "active",
+        "is_valid": "clean_value",
+    }
+    
     write_html_report(
-        path,
-        "Monthly ETF Scanner",
-        "text report",
-        scanner_report_payload(result, current_positions=["QQQ"]),
+        path=output_path,
+        title="Generic Report Test",
+        body_text="plain text",
+        payload=payload,
+        template_name="test_report.html",
+        templates_dirs=[strategy_templates],
+        custom_filters=custom_filters,
+        custom_tests=custom_tests,
     )
-
-    html = path.read_text(encoding="utf-8")
-    assert "Рішення на цей місяць" in html
-    assert "Кандидати" in html
-    assert "Рейтинг ETF" in html
-    assert "Чому такий сигнал" in html
-    assert "Правила Balanced hybrid" in html
-    assert "Balanced hybrid" in html
-    assert "25-50%" in html
-    assert "Базовий горизонт" in html
-    assert "Підходить" in html
-    assert "eligible-row" in html
-    assert "Є кращі" in html
-    assert "qualified-row" in html
-    assert "QQQ" in html
+    
+    assert output_path.exists()
+    content = output_path.read_text(encoding="utf-8")
+    
+    assert "Title: Generic Report Test" in content
+    assert "Value: +12.5%" in content
+    assert "Number: 1.23" in content
+    assert "Custom Filter: status is active" in content
+    assert "Custom Test: yes" in content
+    assert "Generated:" in content
