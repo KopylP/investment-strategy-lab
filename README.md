@@ -15,17 +15,25 @@ momentum strategy provides:
 │   ├── monthly_scanner.yml
 │   └── weekly_risk_monitor.yml
 ├── src/finance_decisions/
-│   ├── config.py
+│   ├── helpers.py
 │   ├── market_data.py
 │   ├── models.py
 │   ├── notifications.py
-│   ├── reports.py
-│   ├── risk.py
-│   ├── scanner.py
+│   ├── reports.py             # Strategy-agnostic template rendering engine
 │   └── strategies/
+│       ├── templates/         # Shared base strategy layouts
+│       │   └── base.html
 │       └── etf_momentum/
+│           ├── config.py      # Strategy configuration defaults
 │           ├── config/
-│           │   └── strategy.toml
+│           │   ├── strategy.toml
+│           │   └── strategy_us.toml
+│           ├── templates/     # Strategy specific HTML templates
+│           │   ├── monthly_scanner.html
+│           │   └── weekly_risk_monitor.html
+│           ├── reports.py     # Strategy payload & filter mappings
+│           ├── risk.py        # Strategy risk calculations
+│           ├── scanner.py     # Strategy scanner logic
 │           ├── README.md
 │           ├── monthly_scanner.py
 │           ├── positions.json
@@ -36,14 +44,9 @@ momentum strategy provides:
 └── requirements-dev.txt
 ```
 
-All strategy-specific code, docs, config, and runtime position state live under
-`src/finance_decisions/strategies/<strategy_name>/`. Shared reusable
-infrastructure, such as market data, reports, notifications, config loading,
-risk primitives, scanner logic, and position models, stays in
-`src/finance_decisions/`.
+All strategy-specific code, docs, templates, configurations, indicators, and runtime position state live under `src/finance_decisions/strategies/<strategy_name>/`. Shared reusable infrastructure, such as market data downloaders, the generic reports engine, notifications, base layout templates, and position models, stays in `src/finance_decisions/` or `src/finance_decisions/strategies/`.
 
-There are no root-level strategy wrappers. Run strategies through module
-entrypoints so local commands, tests, and GitHub Actions all use the same code.
+There are no root-level strategy wrappers. Run strategies through module entrypoints with command-line flags or environment variables.
 
 ## Local Setup
 
@@ -62,10 +65,14 @@ By default, the strategy runs in **European** mode (loading EUR-denominated ETFs
 PYTHONPATH=src python -m finance_decisions.strategies.etf_momentum.monthly_scanner
 PYTHONPATH=src python -m finance_decisions.strategies.etf_momentum.weekly_risk_monitor
 
+# Run with custom command-line overrides
+PYTHONPATH=src python -m finance_decisions.strategies.etf_momentum.monthly_scanner --config src/finance_decisions/strategies/etf_momentum/config/strategy_us.toml --positions src/finance_decisions/strategies/etf_momentum/positions.json --report-dir reports/custom-dir
+
 # Run in US mode (using USD-denominated ETFs)
 PYTHONPATH=src STRATEGY_MARKET=US python -m finance_decisions.strategies.etf_momentum.monthly_scanner
 PYTHONPATH=src STRATEGY_MARKET=US python -m finance_decisions.strategies.etf_momentum.weekly_risk_monitor
 
+# Run tests
 pytest -q
 ```
 

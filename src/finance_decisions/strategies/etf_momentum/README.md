@@ -8,7 +8,15 @@ monthly candidate selection and monitors current positions for weekly risk exits
 ```text
 src/finance_decisions/strategies/etf_momentum/
 ├── config/
-│   └── strategy.toml
+│   ├── strategy.toml
+│   └── strategy_us.toml
+├── templates/
+│   ├── monthly_scanner.html
+│   └── weekly_risk_monitor.html
+├── config.py
+├── reports.py
+├── risk.py
+├── scanner.py
 ├── README.md
 ├── monthly_scanner.py
 ├── positions.json
@@ -16,14 +24,17 @@ src/finance_decisions/strategies/etf_momentum/
 └── weekly_risk_monitor.py
 ```
 
-- `config/strategy.toml` owns ETF universe and strategy thresholds.
+- `config/` holds defaults for the ETF momentum strategy (European and US versions).
+- `templates/` contains Jinja2 HTML templates for strategy reports.
+- `config.py` implements configuration loaders and default ticker lists.
+- `reports.py` converts analysis results to template payload objects and registers custom filters.
+- `risk.py` implements trailing drawdown, volatility stops, and portfolio risk checks.
+- `scanner.py` ranks candidate ETFs using Sharpe ratio and lookback momentum rules.
 - `positions.json` is the current portfolio source for this strategy.
-- `monthly_scanner.py` is the module entrypoint for ETF ranking.
-- `weekly_risk_monitor.py` is the module entrypoint for risk checks.
-- `runner.py` orchestrates shared infrastructure for both entrypoints.
+- `monthly_scanner.py` and `weekly_risk_monitor.py` are the CLI entrypoints.
+- `runner.py` orchestrates downloading, analysis, report generation, and Telegram notifications.
 
-Shared infrastructure stays outside the strategy package in
-`src/finance_decisions/`.
+Shared infrastructure stays outside the strategy package in `src/finance_decisions/`.
 
 ## Run Locally
 
