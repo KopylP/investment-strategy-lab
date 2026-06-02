@@ -73,15 +73,15 @@ def analyze_portfolio_risk(
     actions: list[str] = []
 
     if not spy_above_ma:
-        market_alerts.append("SPY is below MA200: broad market trend is weak.")
-        actions.append("Consider moving portfolio risk down or raising cash.")
+        market_alerts.append("SPY нижче MA200: широкий тренд ринку слабкий.")
+        actions.append("Зменшіть ризик портфеля або збільшіть частку кешу.")
 
     if vix is not None:
         if vix > settings.vix_exit:
-            market_alerts.append(f"VIX is {vix:.1f}: market stress is high.")
-            actions.append("Reduce exposure during elevated volatility.")
+            market_alerts.append(f"VIX становить {vix:.1f}: високий рівень ринкового стресу.")
+            actions.append("Зменшіть частку інвестицій під час підвищеної волатильності.")
         elif vix > settings.vix_warn:
-            market_alerts.append(f"VIX is {vix:.1f}: volatility is elevated.")
+            market_alerts.append(f"VIX становить {vix:.1f}: волатильність підвищена.")
 
     total_value = 0.0
     total_cost = 0.0
@@ -101,7 +101,7 @@ def analyze_portfolio_risk(
                     drawdown_from_high=0.0,
                     above_ma=False,
                     currency=position.currency,
-                    alerts=[f"{position.ticker}: price data is unavailable."],
+                    alerts=[f"{position.ticker}: ринкові дані ціни недоступні."],
                 )
             )
             continue
@@ -141,7 +141,7 @@ def analyze_portfolio_risk(
                     drawdown_from_high=0.0,
                     above_ma=False,
                     currency=position.currency,
-                    alerts=[f"{position.ticker}: price data is unavailable."],
+                    alerts=[f"{position.ticker}: ринкові дані ціни недоступні."],
                 )
             )
             continue
@@ -182,23 +182,23 @@ def analyze_portfolio_risk(
 
         if pnl_pct <= stop_loss_threshold:
             status = "red"
-            alerts.append(f"{position.ticker}: stop loss reached ({pnl_pct * 100:+.1f}% vs stop {stop_loss_threshold * 100:.1f}%).")
-            position_actions.append(f"Sell {position.ticker}: stop loss reached.")
+            alerts.append(f"{position.ticker}: досягнуто стоп-лосс ({pnl_pct * 100:+.1f}% проти ліміту {stop_loss_threshold * 100:.1f}%).")
+            position_actions.append(f"Продати {position.ticker}: досягнуто стоп-лосс.")
         elif not above_ma:
             status = "red"
-            alerts.append(f"{position.ticker}: price is below MA200.")
-            position_actions.append(f"Sell {position.ticker}: below MA200.")
+            alerts.append(f"{position.ticker}: ціна нижче MA200.")
+            position_actions.append(f"Продати {position.ticker}: ціна нижче MA200.")
         elif drawdown <= drawdown_exit_threshold:
             status = "red"
-            alerts.append(f"{position.ticker}: drawdown is {drawdown * 100:.1f}% (exit threshold {drawdown_exit_threshold * 100:.1f}%).")
-            position_actions.append(f"Sell {position.ticker}: drawdown limit reached.")
+            alerts.append(f"{position.ticker}: просадка становить {drawdown * 100:.1f}% (ліміт виходу {drawdown_exit_threshold * 100:.1f}%).")
+            position_actions.append(f"Продати {position.ticker}: досягнуто ліміт просадки.")
         elif drawdown <= drawdown_warn_threshold or pnl_pct < -0.04:
             status = "yellow"
             if drawdown <= drawdown_warn_threshold:
-                alerts.append(f"{position.ticker}: drawdown warning ({drawdown * 100:.1f}% vs warning {drawdown_warn_threshold * 100:.1f}%).")
+                alerts.append(f"{position.ticker}: попередження про просадку ({drawdown * 100:.1f}% проти попереджувального ліміту {drawdown_warn_threshold * 100:.1f}%).")
             if pnl_pct < -0.04:
-                alerts.append(f"{position.ticker}: minor loss warning ({pnl_pct * 100:+.1f}%).")
-            position_actions.append(f"Monitor {position.ticker}: volatility or warning threshold crossed.")
+                alerts.append(f"{position.ticker}: попередження про незначні втрати ({pnl_pct * 100:+.1f}%).")
+            position_actions.append(f"Моніторинг {position.ticker}: перетнуто межу волатильності або попередження.")
 
         actions.extend(position_actions)
         risks.append(
@@ -220,10 +220,10 @@ def analyze_portfolio_risk(
     portfolio_alerts: list[str] = []
     if portfolio_pnl is not None:
         if portfolio_pnl <= settings.portfolio_exit:
-            portfolio_alerts.append(f"Portfolio is down {portfolio_pnl * 100:.1f}%: critical loss limit.")
-            actions.append("Move to cash: portfolio loss limit reached.")
+            portfolio_alerts.append(f"Портфель впав на {portfolio_pnl * 100:.1f}%: критичний ліміт втрат.")
+            actions.append("Вихід у кеш: досягнуто ліміт втрат портфеля.")
         elif portfolio_pnl <= settings.portfolio_warn:
-            portfolio_alerts.append(f"Portfolio is down {portfolio_pnl * 100:.1f}%.")
+            portfolio_alerts.append(f"Портфель впав на {portfolio_pnl * 100:.1f}%.")
 
     return RiskReport(
         as_of=prices.index[-1].date(),
@@ -241,29 +241,37 @@ def analyze_portfolio_risk(
 
 
 def format_risk_report(report: RiskReport) -> str:
+    status_map = {
+        "green": "зелений",
+        "yellow": "жовтий",
+        "red": "червоний",
+        "unknown": "невідомо",
+    }
+
     lines = [
-        f"ETF Risk Monitor | {report.as_of.isoformat()}",
+        f"Тижневий моніторинг ризиків ETF | {report.as_of.isoformat()}",
         "",
-        f"SPY vs MA200: {'above' if report.spy_above_ma else 'below'}",
-        f"VIX: {report.vix:.1f}" if report.vix is not None else "VIX: unavailable",
+        f"SPY проти MA200: {'вище' if report.spy_above_ma else 'нижче'}",
+        f"VIX: {report.vix:.1f}" if report.vix is not None else "VIX: недоступний",
         "",
-        "Positions:",
+        "Позиції:",
     ]
 
     for risk in report.position_risks:
+        status_ukr = status_map.get(risk.status.lower(), risk.status)
         lines.append(
-            f"- {risk.ticker}: {risk.status}, price {money(risk.current_price, risk.currency)}, "
-            f"P&L {risk.pnl_pct * 100:+.1f}%, drawdown {risk.drawdown_from_high * 100:+.1f}%, "
-            f"MA200 {'above' if risk.above_ma else 'below'}"
+            f"- {risk.ticker}: {status_ukr}, ціна {money(risk.current_price, risk.currency)}, "
+            f"P&L {risk.pnl_pct * 100:+.1f}%, просадка {risk.drawdown_from_high * 100:+.1f}%, "
+            f"MA200 {'вище' if risk.above_ma else 'нижче'}"
         )
 
     if report.portfolio_pnl is not None:
         lines.extend(
             [
                 "",
-                "Portfolio:",
-                f"- Cost: {money(report.portfolio_cost, report.currency, decimals=0)}",
-                f"- Value: {money(report.portfolio_value, report.currency, decimals=0)}",
+                "Портфель:",
+                f"- Витрати: {money(report.portfolio_cost, report.currency, decimals=0)}",
+                f"- Поточна вартість: {money(report.portfolio_value, report.currency, decimals=0)}",
                 f"- P&L: {report.portfolio_pnl * 100:+.1f}%",
             ]
         )
@@ -271,13 +279,13 @@ def format_risk_report(report: RiskReport) -> str:
     alerts = report.alerts
     lines.append("")
     if alerts:
-        lines.append(f"Alerts ({len(alerts)}):")
+        lines.append(f"Сигнали ({len(alerts)}):")
         lines.extend(f"- {alert}" for alert in alerts)
     else:
-        lines.append("No alerts. Positions are inside the configured risk rules.")
+        lines.append("Немає сигналів. Усі позиції знаходяться в межах встановлених лімітів ризику.")
 
     if report.actions:
-        lines.extend(["", "Actions:"])
+        lines.extend(["", "Дії:"])
         lines.extend(f"- {action}" for action in report.actions)
 
     return "\n".join(lines)

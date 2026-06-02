@@ -64,7 +64,7 @@ def write_risk_outputs(report_dir: Path, report: RiskReport) -> str:
     
     write_html_report(
         path=report_dir / "report.html",
-        title="Weekly Risk Monitor",
+        title="Тижневий моніторинг ризиків",
         body_text=text,
         payload=payload,
         template_name="weekly_risk_monitor.html",

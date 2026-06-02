@@ -40,11 +40,10 @@ def test_write_risk_outputs_renders_html(tmp_path) -> None:
     write_risk_outputs(tmp_path, report)
 
     html_path = tmp_path / "report.html"
-    assert html_path.exists()
     html = html_path.read_text(encoding="utf-8")
-    assert "Portfolio P&amp;L" in html
-    assert "Position Risk" in html
-    assert "How To Read This Report" in html
+    assert "Дохідність портфеля" in html
+    assert "Ризик позицій" in html
+    assert "Як читати цей звіт" in html
 
 
 def test_write_scanner_outputs_renders_html(tmp_path) -> None:

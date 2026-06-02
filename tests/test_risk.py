@@ -25,7 +25,7 @@ def test_analyze_portfolio_risk_flags_stop_loss() -> None:
 
     assert report.portfolio_pnl == pytest.approx(-0.10)
     assert report.position_risks[0].status == "red"
-    assert "Sell QQQ" in report.actions[0]
+    assert "Продати QQQ" in report.actions[0]
 
 
 def test_analyze_portfolio_risk_ignores_sparse_missing_values_for_ma200() -> None:
