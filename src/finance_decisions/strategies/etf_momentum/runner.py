@@ -73,9 +73,59 @@ def run_monthly_scanner(
     text = write_scanner_outputs(report_dir, result, current_positions=current_positions)
     logger.info(text)
     logger.info(f"\nReports written to: {report_dir}")
+    
+    telegram_text = _format_scanner_telegram_message(result, current_positions)
     send_telegram(
-        text,
+        telegram_text,
         os.environ.get("TELEGRAM_TOKEN"),
         os.environ.get("TELEGRAM_CHAT_ID"),
     )
     return 0
+
+
+def _format_scanner_telegram_message(result: Any, current_positions: list[str]) -> str:
+    spy_status = "так" if result.spy_above_ma else "ні"
+    vix_str = f"{result.vix:.1f}" if result.vix is not None else "недоступний"
+    market_status = "так" if result.market_ok else "ні"
+    
+    lines = [
+        "Місячний ETF-сканер",
+        "",
+        f"SPY вище MA200: {spy_status}",
+        f"VIX: {vix_str}",
+        f"Стан ринку OK: {market_status}",
+        "",
+    ]
+    
+    if not result.market_ok:
+        lines.append("Ринкові умови несприятливі. Рекомендація: тримати кеш.")
+        return "\n".join(lines)
+        
+    lines.append(f"Топ-{len(result.eligible)} кандидатів:")
+    if result.eligible.empty:
+        lines.append("- Немає кандидатів. Тримати кеш.")
+    else:
+        for ticker, row in result.eligible.iterrows():
+            lines.append(
+                f"- {ticker}: моментум {row['Momentum 6M'] * 100:+.1f}%, "
+                f"Sharpe {row['Sharpe']:.2f}, просадка {row['Drawdown'] * 100:+.1f}%"
+            )
+            
+    if current_positions:
+        to_buy = [ticker for ticker in result.eligible.index if ticker not in current_positions]
+        to_sell = [ticker for ticker in current_positions if ticker not in result.eligible.index]
+        to_hold = [ticker for ticker in current_positions if ticker in result.eligible.index]
+        
+        to_buy_str = ", ".join(to_buy) if to_buy else "-"
+        to_sell_str = ", ".join(to_sell) if to_sell else "-"
+        to_hold_str = ", ".join(to_hold) if to_hold else "-"
+        
+        lines.extend([
+            "",
+            "Зміни в портфелі:",
+            f"- Купити: {to_buy_str}",
+            f"- Продати: {to_sell_str}",
+            f"- Утримувати: {to_hold_str}",
+        ])
+        
+    return "\n".join(lines)
