@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="grid summary-grid">
+  <div class="card">
+    <div class="metric-label">As of</div>
+    <div class="metric-value">{{ report.as_of }}</div>
+    <div class="metric-note">Market data date</div>
+  </div>
+  <div class="card">
+    <div class="metric-label">Portfolio P&amp;L</div>
+    <div class="metric-value {{ report.portfolio_pnl | value_class }}">{{ report.portfolio_pnl | pct }}</div>
+    <div class="metric-note">{{ report.portfolio_value | money(report.currency or 'USD') }} value vs {{ report.portfolio_cost | money(report.currency or 'USD') }} cost</div>
+  </div>
+  <div class="card">
+    <div class="metric-label">SPY vs MA200</div>
+    <div class="metric-value">{% if report.spy_above_ma %}Above{% else %}Below{% endif %}</div>
+    <div class="metric-note">Broad market trend filter</div>
+  </div>
+  <div class="card">
+    <div class="metric-label">VIX</div>
+    <div class="metric-value">{{ report.vix | number }}</div>
+    <div class="metric-note">Volatility stress filter</div>
+  </div>
+</div>
+
+{% if report.currency == 'MIXED' %}
+<div class="callout" style="border-left-color: var(--yellow); background: var(--yellow-bg); color: var(--yellow); margin-top: 14px;">
+  <strong>Caution:</strong> Portfolio contains a mix of currencies. Totals (Cost and Value) are raw sums of multiple currencies without conversion.
+</div>
+{% endif %}
+
+<div class="grid two-col">
+  <section>
+    <h2>Actions</h2>
+    {% if actions %}
+      <ul>
+        {% for action in actions %}
+          <li>{{ action }}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="empty">No portfolio actions triggered.</p>
+    {% endif %}
+  </section>
+  <section>
+    <h2>Alerts</h2>
+    {% if alerts %}
+      <ul>
+        {% for alert in alerts %}
+          <li>{{ alert }}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="empty">No alerts. Positions are inside configured risk rules.</p>
+    {% endif %}
+  </section>
+</div>
+
+<section>
+  <h2>Position Risk</h2>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Ticker</th>
+          <th>Status</th>
+          <th class="num">Price</th>
+          <th class="num">P&L</th>
+          <th class="num">
+            Drawdown
+            <span class="tooltip align-left dir-down">ⓘ
+              <span class="tooltiptext">
+                <strong>Drawdown</strong> is the peak-to-trough decline of the asset price over a period. <br/>
+                Formula: (Current Price - Peak Price) / Peak Price. <br/>
+                It is always &le; 0 (or 0% at peak). Indicates maximum paper loss from the highest peak. Affects weekly risk exits (e.g. warning at -10%, exit at -18%).
+              </span>
+            </span>
+          </th>
+          <th>MA200</th>
+          <th>Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for position in report.position_risks %}
+        <tr>
+          <td><strong>{{ position.ticker }}</strong></td>
+          <td>{{ position.status | status_badge | safe }}</td>
+          <td class="num">{{ position.current_price | money(position.currency or 'USD') }}</td>
+          <td class="num {{ position.pnl_pct | value_class }}">{{ position.pnl_pct | pct }}</td>
+          <td class="num {{ position.drawdown_from_high | value_class }}">{{ position.drawdown_from_high | pct }}</td>
+          <td>{% if position.above_ma %}Above{% else %}Below{% endif %}</td>
+          <td>
+            {% if position.alerts %}
+              {% for a in position.alerts %}
+                {{ a }}{% if not loop.last %}<br>{% endif %}
+              {% endfor %}
+            {% else %}
+              <span class="empty">-</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="empty">No positions found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>How To Read This Report</h2>
+  <div class="callout">
+    Red means the configured exit rule triggered. Yellow means warning or weakness. Green means the position passed the current checks.
+    Review the action list first, then confirm the market context and the raw JSON before making any trade.
+  </div>
+</section>
+{% endblock %}

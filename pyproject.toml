@@ -11,13 +11,16 @@ dependencies = [
   "pandas",
   "numpy",
   "yfinance",
+  "jinja2>=3.1.6",
 ]
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-"finance_decisions.strategies.etf_momentum" = ["README.md", "positions.json", "config/*.toml"]
+"finance_decisions.strategies.etf_momentum" = ["README.md", "positions.json", "config/*.toml", "templates/*.html"]
+"finance_decisions.strategies" = ["templates/*.html"]
+
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
