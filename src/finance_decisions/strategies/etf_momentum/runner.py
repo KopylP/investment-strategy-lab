@@ -77,11 +77,12 @@ def run_monthly_scanner(
         tickers.add(config.cash_etf)
     prices = download_close_prices(sorted(tickers), period="3y")
 
+    latest = {ticker: latest_value(prices[ticker]) for ticker in prices.columns}
     result = scan_etfs(
         prices,
         settings=config.scanner,
         etfs=config.etfs,
-        current_positions=list(holdings),
+        current_positions=holdings_by_value(holdings, latest),
         groups=config.groups,
         names=config.names,
         cash_etf=config.cash_etf,
@@ -89,7 +90,7 @@ def run_monthly_scanner(
     plan = build_plan(
         result,
         holdings=holdings,
-        prices={ticker: latest_value(prices[ticker]) for ticker in prices.columns},
+        prices=latest,
         cash=portfolio.cash,
         settings=config.plan,
         top_n=config.scanner.top_n,
@@ -105,6 +106,11 @@ def run_monthly_scanner(
     logger.info(f"\nReports written to: {report_dir}")
     _notify(format_monthly_telegram(result, plan))
     return 0
+
+
+def holdings_by_value(holdings: dict[str, float], prices: dict[str, float | None]) -> list[str]:
+    """Held tickers, largest position first."""
+    return sorted(holdings, key=lambda ticker: holdings[ticker] * (prices.get(ticker) or 0.0), reverse=True)
 
 
 def _notify(text: str) -> None:

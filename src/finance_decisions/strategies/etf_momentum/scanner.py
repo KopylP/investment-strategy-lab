@@ -240,8 +240,9 @@ def _select(table: pd.DataFrame, settings: ScannerSettings, current_positions: l
     for ticker, rank in ranks.items():
         table.loc[ticker, "Rank"] = rank
 
-    held = set(current_positions)
-    buffer = [t for t in qualified.index if t in held and ranks[t] <= settings.hold_buffer_k]
+    # Held ETFs keep priority in the order given (largest holding first), so when two
+    # holdings share a group the bigger one stays and no large same-bet swap is made.
+    buffer = [t for t in dict.fromkeys(current_positions) if t in ranks and ranks[t] <= settings.hold_buffer_k]
     order = buffer + [t for t in qualified.index if t not in buffer]
 
     selected: list[str] = []

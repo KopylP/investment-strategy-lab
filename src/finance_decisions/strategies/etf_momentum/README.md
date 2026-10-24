@@ -52,7 +52,7 @@ An ETF qualifies only if all of these hold:
 
 1. Rank qualified ETFs by momentum.
 2. A held ETF keeps its place while it ranks within `hold_buffer_k` (8), so the
-   portfolio does not churn.
+   portfolio does not churn. If two holdings share a group, the larger one is kept.
 3. Take at most `max_per_group` (1) ETF from each `[groups]` entry. Nasdaq-100,
    Nasdaq-100 hedged and S&P 500 IT are one group: holding all three is one bet.
 4. Up to `top_n` (4) picks. Each slot is `1/top_n` of the portfolio (25%).
