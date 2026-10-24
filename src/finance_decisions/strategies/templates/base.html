@@ -129,7 +129,7 @@
     .slip { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
     .order {
       display: grid;
-      grid-template-columns: 28px 76px minmax(0, 1fr) auto;
+      grid-template-columns: 28px 98px minmax(0, 1fr) auto;
       gap: 4px 14px;
       align-items: start;
       padding: 16px 18px;
@@ -137,7 +137,7 @@
     .order + .order { border-top: 1px solid var(--line); }
     .order input { width: 20px; height: 20px; margin: 3px 0 0; accent-color: var(--buy); cursor: pointer; }
     .order.done .order-main, .order.done .order-money { opacity: 0.45; text-decoration: line-through; }
-    .verb { font-weight: 700; font-size: 0.9375rem; padding: 2px 0; }
+    .verb { font-weight: 700; font-size: 0.9375rem; padding: 2px 0; white-space: nowrap; }
     .verb.sell { color: var(--sell); }
     .verb.buy { color: var(--buy); }
     .verb.park { color: var(--park); }
