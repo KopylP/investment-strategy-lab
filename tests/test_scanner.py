@@ -1,49 +1,44 @@
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
+import pytest
 
+from finance_decisions.helpers import completed_month_closes
 from finance_decisions.strategies.etf_momentum.config import ScannerSettings
 from finance_decisions.strategies.etf_momentum.scanner import scan_etfs
 
 
-def test_scan_etfs_returns_top_candidate() -> None:
-    dates = pd.date_range("2024-01-01", periods=320, freq="B")
-    prices = pd.DataFrame(
-        {
-            "SPY": [100 + index * 0.1 for index in range(320)],
-            "^VIX": [18.0] * 320,
-            "AAA": [50 + index * 0.1 for index in range(320)],
-            "BBB": [60 + index * 0.03 for index in range(320)],
-        },
-        index=dates,
-    )
+def _prices(columns: dict, periods: int = 320, start: str = "2024-01-01") -> pd.DataFrame:
+    dates = pd.date_range(start, periods=periods, freq="B")
+    base = {
+        "SPY": [100 + index * 0.1 for index in range(periods)],
+        "^VIX": [18.0] * periods,
+    }
+    base.update({name: values(periods) if callable(values) else values for name, values in columns.items()})
+    return pd.DataFrame(base, index=dates)
 
-    result = scan_etfs(
-        prices,
-        ScannerSettings(top_n=1, lookback_months=3, ma_period=20),
-    )
+
+def _trend(start: float, step: float):
+    return lambda n: [start + index * step for index in range(n)]
+
+
+def test_scan_etfs_returns_top_candidate() -> None:
+    prices = _prices({"AAA": _trend(50, 0.1), "BBB": _trend(60, 0.03)})
+
+    result = scan_etfs(prices, ScannerSettings(top_n=1, lookback_months=3, ma_period=20))
 
     assert result.market_ok is True
     assert list(result.eligible.index) == ["AAA"]
+    assert result.eligible.loc["AAA", "Weight"] == 1.0
 
 
 def test_scan_etfs_ignores_sparse_missing_values_for_ma200() -> None:
-    dates = pd.date_range("2024-01-01", periods=320, freq="B")
-    prices = pd.DataFrame(
-        {
-            "SPY": [100 + index * 0.1 for index in range(320)],
-            "^VIX": [18.0] * 320,
-            "AAA": [50 + index * 0.1 for index in range(320)],
-        },
-        index=dates,
-    )
-    prices.loc[dates[150], "SPY"] = None
-    prices.loc[dates[175], "AAA"] = None
+    prices = _prices({"AAA": _trend(50, 0.1)})
+    prices.loc[prices.index[150], "SPY"] = None
+    prices.loc[prices.index[175], "AAA"] = None
 
-    result = scan_etfs(
-        prices,
-        ScannerSettings(top_n=1, lookback_months=3, ma_period=200),
-    )
+    result = scan_etfs(prices, ScannerSettings(top_n=1, lookback_months=3, ma_period=200))
 
     assert result.spy_above_ma is True
     assert bool(result.table.loc["AAA", "Above MA200"]) is True
@@ -51,48 +46,98 @@ def test_scan_etfs_ignores_sparse_missing_values_for_ma200() -> None:
 
 
 def test_scan_etfs_sharpe_filter_and_hold_buffer() -> None:
-    dates = pd.date_range("2024-01-01", periods=320, freq="B")
-    prices = pd.DataFrame(
+    prices = _prices(
         {
-            "SPY": [100 + index * 0.1 for index in range(320)],
-            "^VIX": [18.0] * 320,
-            "AAA": [100 + index * 0.5 for index in range(320)],  # Rank 1 momentum
-            "BBB": [100 + index * 0.4 for index in range(320)],  # Rank 2 momentum
-            "CCC": [100 + index * 0.3 for index in range(320)],  # Rank 3 momentum
-            "DDD": [100 + index * 0.25 for index in range(320)], # Rank 4 momentum (under buffer)
-            "EEE": [100 + index * 0.2 for index in range(320)],  # Rank 5 momentum (not under buffer)
-            # FFF has higher return than DDD/EEE but wild volatility -> low Sharpe
-            "FFF": [100 + index * 0.28 + (100 if index % 2 == 0 else -100) for index in range(320)],
-        },
-        index=dates,
+            "AAA": _trend(100, 0.5),
+            "BBB": _trend(100, 0.4),
+            "CCC": _trend(100, 0.3),
+            "DDD": _trend(100, 0.25),
+            "EEE": _trend(100, 0.2),
+            # Higher return than DDD/EEE but wild swings -> fails volatility and Sharpe.
+            "FFF": lambda n: [100 + index * 0.28 + (100 if index % 2 == 0 else -100) for index in range(n)],
+        }
     )
+    settings = ScannerSettings(top_n=3, lookback_months=3, ma_period=20, min_sharpe=2.0, hold_buffer_k=4)
 
-    settings = ScannerSettings(
-        top_n=3,
-        lookback_months=3,
-        ma_period=20,
-        min_sharpe=2.0,
-        hold_buffer_k=4,
-    )
+    no_positions = scan_etfs(prices, settings)
+    assert list(no_positions.eligible.index) == ["AAA", "BBB", "CCC"]
+    assert no_positions.table.loc["FFF", "Status"] == "failed"
+    assert "волатильність" in no_positions.table.loc["FFF", "Reason"]
 
-    # 1. No current positions: should select AAA, BBB, CCC (Top 3)
-    result_no_positions = scan_etfs(prices, settings)
-    assert list(result_no_positions.eligible.index) == ["AAA", "BBB", "CCC"]
-    # FFF must be filtered out because of low Sharpe ratio
-    assert "FFF" not in result_no_positions.eligible.index
-    assert result_no_positions.table.loc["FFF", "Sharpe"] < 2.0
+    # DDD is held and ranks 4 <= buffer 4, so it keeps its slot and pushes CCC out.
+    with_ddd = scan_etfs(prices, settings, current_positions=["DDD"])
+    assert list(with_ddd.eligible.index) == ["AAA", "BBB", "DDD"]
+    assert with_ddd.table.loc["DDD", "Status"] == "buffer"
+    assert with_ddd.table.loc["CCC", "Status"] == "reserve"
 
-    # 2. Current position includes DDD (Rank 4):
-    # Since DDD is in current positions and its rank is 4 <= hold_buffer_k (4),
-    # it should be kept, displacing CCC (rank 3) out of the selected top_n list.
-    result_with_positions = scan_etfs(prices, settings, current_positions=["DDD"])
-    assert "DDD" in result_with_positions.eligible.index
-    # The selected should be AAA, BBB, and DDD
-    assert list(result_with_positions.eligible.index) == ["DDD", "AAA", "BBB"]
+    # EEE ranks 5 > buffer 4, so holding it does not protect it.
+    with_eee = scan_etfs(prices, settings, current_positions=["EEE"])
+    assert list(with_eee.eligible.index) == ["AAA", "BBB", "CCC"]
 
-    # 3. Current position includes EEE (Rank 5):
-    # EEE rank is 5 > hold_buffer_k (4), so it should NOT be kept.
-    result_with_eee = scan_etfs(prices, settings, current_positions=["EEE"])
-    assert "EEE" not in result_with_eee.eligible.index
-    assert list(result_with_eee.eligible.index) == ["AAA", "BBB", "CCC"]
 
+def test_missing_vix_on_last_row_still_uses_last_valid_close() -> None:
+    prices = _prices({"AAA.DE": _trend(10, 0.05)})
+    prices["^VIX"] = 45.0
+    prices.loc[prices.index[-1], ["SPY", "^VIX"]] = np.nan  # US closed, Xetra traded
+
+    result = scan_etfs(prices, ScannerSettings(ma_period=20), etfs=["AAA.DE"])
+
+    assert result.vix == 45.0
+    assert result.market_ok is False
+
+
+def test_unavailable_vix_fails_market_check() -> None:
+    prices = _prices({"AAA": _trend(10, 0.05)}).drop(columns=["^VIX"])
+
+    result = scan_etfs(prices, ScannerSettings(ma_period=20), etfs=["AAA"])
+
+    assert result.vix is None
+    assert result.market_ok is False
+    assert any("VIX" in reason for reason in result.market_reasons)
+
+
+def test_negative_momentum_is_rejected_even_above_ma() -> None:
+    # Rises for a year, then drifts down for four months while staying above the MA.
+    def rise_then_dip(n: int) -> list[float]:
+        return [100 + index * 0.5 if index < n - 90 else 100 + (n - 90) * 0.5 - (index - (n - 90)) * 0.05 for index in range(n)]
+
+    prices = _prices({"AAA": rise_then_dip, "BBB": _trend(100, 0.2)})
+
+    result = scan_etfs(prices, ScannerSettings(lookback_months=3, ma_period=200, min_sharpe=-10))
+
+    assert result.table.loc["AAA", "Above MA200"]
+    assert result.table.loc["AAA", "Momentum"] < 0
+    assert result.table.loc["AAA", "Status"] == "failed"
+    assert list(result.eligible.index) == ["BBB"]
+
+
+def test_group_cap_keeps_one_etf_per_group() -> None:
+    prices = _prices({"NDX": _trend(100, 0.5), "TECH": _trend(100, 0.45), "GOLD": _trend(100, 0.2)})
+    groups = {"NDX": "US tech", "TECH": "US tech", "GOLD": "Gold"}
+
+    result = scan_etfs(prices, ScannerSettings(top_n=3, lookback_months=3, ma_period=20), groups=groups)
+
+    assert list(result.eligible.index) == ["NDX", "GOLD"]
+    assert result.table.loc["TECH", "Status"] == "group_blocked"
+    assert result.cash_weight == pytest.approx(1 / 3)
+
+
+def test_stale_ticker_is_excluded() -> None:
+    prices = _prices({"AAA": _trend(100, 0.5), "OLD": _trend(100, 0.6)})
+    prices.loc[prices.index[-15]:, "OLD"] = np.nan
+
+    result = scan_etfs(prices, ScannerSettings(top_n=2, lookback_months=3, ma_period=20))
+
+    assert result.table.loc["OLD", "Status"] == "failed"
+    assert "застарілі" in result.table.loc["OLD", "Reason"]
+    assert list(result.eligible.index) == ["AAA"]
+
+
+def test_completed_month_closes_drops_month_in_progress() -> None:
+    series = pd.Series(1.0, index=pd.date_range("2026-01-01", "2026-03-11", freq="B"))
+
+    assert completed_month_closes(series, now=pd.Timestamp("2026-03-12")).index[-1].month == 2
+    # Once the calendar moves on, the last month counts even without a final business-day close.
+    assert completed_month_closes(series, now=pd.Timestamp("2026-04-02")).index[-1].month == 3
+    full = pd.Series(1.0, index=pd.date_range("2026-01-01", "2026-03-31", freq="B"))
+    assert completed_month_closes(full, now=pd.Timestamp("2026-03-31")).index[-1].month == 3

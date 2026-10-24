@@ -3,8 +3,9 @@
 Small Python app for strategy-level finance decision support. The active ETF
 momentum strategy provides:
 
-- a monthly ETF momentum scanner
-- a weekly portfolio risk monitor
+- a monthly ETF momentum scanner that produces a concrete order plan
+- a weekly portfolio risk monitor with an exit price for every position
+- a backtest that replays the same rules on history
 
 ## Project Layout
 
@@ -29,9 +30,12 @@ momentum strategy provides:
 │           │   ├── strategy.toml
 │           │   └── strategy_us.toml
 │           ├── templates/     # Strategy specific HTML templates
+│           │   ├── backtest.html
 │           │   ├── monthly_scanner.html
 │           │   └── weekly_risk_monitor.html
-│           ├── reports.py     # Strategy payload & filter mappings
+│           ├── backtest.py    # Historical replay + CLI
+│           ├── plan.py        # Monthly orders from scan + portfolio
+│           ├── reports.py     # Text, Telegram, JSON and HTML outputs
 │           ├── risk.py        # Strategy risk calculations
 │           ├── scanner.py     # Strategy scanner logic
 │           ├── README.md
@@ -72,6 +76,12 @@ PYTHONPATH=src python -m finance_decisions.strategies.etf_momentum.monthly_scann
 PYTHONPATH=src STRATEGY_MARKET=US python -m finance_decisions.strategies.etf_momentum.monthly_scanner
 PYTHONPATH=src STRATEGY_MARKET=US python -m finance_decisions.strategies.etf_momentum.weekly_risk_monitor
 
+# Plan with a different contribution this month
+PYTHONPATH=src python -m finance_decisions.strategies.etf_momentum.monthly_scanner --contribution 600
+
+# Replay the strategy on 8 years of history
+PYTHONPATH=src python -m finance_decisions.strategies.etf_momentum.backtest --years 8
+
 # Run tests
 pytest -q
 ```
@@ -91,25 +101,22 @@ for automation, storage, or a .NET UI.
 The active strategy lives in
 `src/finance_decisions/strategies/etf_momentum/`.
 
+The strategy rules, the positions file format, and how to act on each report are
+documented in
+[`src/finance_decisions/strategies/etf_momentum/README.md`](src/finance_decisions/strategies/etf_momentum/README.md).
+
 Edit
-`src/finance_decisions/strategies/etf_momentum/positions.json` after each trade.
-This file is the current portfolio source for the weekly risk monitor and the
-comparison baseline for the monthly scanner.
+`src/finance_decisions/strategies/etf_momentum/positions.json` after each trade
+(one entry per purchase, plus `cash`). It is the portfolio source for both the
+weekly risk monitor and the monthly plan.
 
 Defaults live in
-`src/finance_decisions/strategies/etf_momentum/config/strategy.toml`.
+`src/finance_decisions/strategies/etf_momentum/config/strategy.toml`. The most
+important setting to check is your monthly contribution:
 
 ```toml
-[risk]
-stop_loss_pct = -0.08
-drawdown_warn = -0.10
-drawdown_exit = -0.18
-
-[scanner]
-top_n = 3
-lookback_months = 6
-max_volatility = 0.35
-max_drawdown = -0.20
+[plan]
+monthly_contribution = 400.0
 ```
 
 Use the config file for normal changes. Use GitHub Actions repository variables
@@ -243,11 +250,11 @@ PYTHONPATH=src python -m finance_decisions.strategies.etf_momentum.weekly_risk_m
 
 The included workflows run automatically:
 
-- Monthly scanner: first Monday of each month at 09:00 UTC.
-- Weekly risk monitor: every Monday at 08:00 UTC.
+- Weekly risk monitor: every Sunday at 17:00 UTC.
+- Monthly scanner: first Sunday of each month at 18:00 UTC.
 
-GitHub scheduled workflows use UTC time. For Poland, remember that local time
-changes with daylight saving time.
+Both run after US and European markets have closed, so every price is a full
+close. Act on the results on Monday. GitHub scheduled workflows use UTC time.
 
 ### 7. Keep Positions Updated
 
@@ -272,10 +279,11 @@ The next weekly risk monitor will use the pushed positions file.
 Workflows are in `.github/workflows`:
 
 - `CI` runs tests on push, pull request, and manual dispatch.
-- `Weekly Risk Monitor` runs every Monday at 08:00 UTC.
-- `Monthly ETF Scanner` runs on the first Monday of each month at 09:00 UTC.
+- `Weekly Risk Monitor` runs every Sunday at 17:00 UTC.
+- `Monthly ETF Scanner` runs on the first Sunday of each month at 18:00 UTC.
+- `Strategy Backtest` runs only when started manually (inputs: years, contribution).
 
-Both strategy workflows can also be started manually with the **Run workflow**
+All strategy workflows can also be started manually with the **Run workflow**
 button. They upload the latest JSON, HTML, and text report as GitHub Actions
 artifacts with 90-day retention.
 
@@ -313,19 +321,16 @@ Strategy defaults live in
 `src/finance_decisions/strategies/etf_momentum/config/strategy.toml`. You can
 override selected values with GitHub Actions repository variables:
 
-- `STRATEGY_MARKET` set to `EU` (default) or `US` to switch strategy modes
 - `ETF_LIST` as comma-separated tickers, for example `SXR8.DE,SXRV.DE` or `SPY,QQQ,GLD`
-- `TOP_N`
-- `LOOKBACK_MONTHS`
-- `STOP_LOSS_PCT`
-- `DRAWDOWN_WARN`
-- `DRAWDOWN_EXIT`
-- `VIX_WARN`
-- `VIX_EXIT`
-- `PORTFOLIO_WARN`
-- `PORTFOLIO_EXIT`
-- `MAX_VOLATILITY`
-- `MAX_DRAWDOWN`
+- `CASH_ETF`, `MONTHLY_CONTRIBUTION`, `WEAK_MARKET_INVEST_PCT`
+- Scanner: `TOP_N`, `LOOKBACK_MONTHS`, `SCANNER_MA_PERIOD`, `MAX_VOLATILITY`,
+  `MAX_DRAWDOWN`, `MAX_VIX`, `MIN_SHARPE`, `MIN_MOMENTUM`, `HOLD_BUFFER_K`,
+  `MAX_PER_GROUP`
+- Risk monitor: `STOP_LOSS_PCT`, `DRAWDOWN_WARN`, `DRAWDOWN_EXIT`,
+  `MA_EXIT_BAND`, `VIX_WARN`, `VIX_EXIT`, `PORTFOLIO_WARN`, `PORTFOLIO_EXIT`
+
+The workflows load the EU config (`strategy.toml`). To run the US universe, change
+`STRATEGY_CONFIG` in the workflow to `strategy_us.toml`.
 
 Set variables in GitHub:
 
@@ -345,7 +350,7 @@ SPY,QQQ,GLD,XLK,TLT
 
 Every strategy run creates three files:
 
-- `report.html` - human-readable decision report with summary cards, alerts, actions, and tables.
+- `report.html` - the decision report: verdict, numbered order checklist, reasons, and details.
 - `report.json` - structured data for future automation or .NET UI.
 - `report.txt` - console-friendly summary.
 

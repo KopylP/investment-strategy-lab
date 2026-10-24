@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field, fields
 import importlib.resources
 import os
 from pathlib import Path
+from typing import Any
 
 try:
     import tomllib
@@ -39,7 +40,7 @@ DEFAULT_ETFS_EU = [
     "EUN2.DE",
     "IS3N.DE",
     "4GLD.DE",
-    "ZIL2.DE",
+    "SXRS.DE",
     "IS04.DE",
     "IUS7.DE",
     "IBCI.DE",
@@ -49,7 +50,9 @@ DEFAULT_ETFS_EU = [
     "QDVF.DE",
     "QDVG.DE",
     "QDVI.DE",
+    "NQSE.DE",
 ]
+
 
 @dataclass(frozen=True)
 class RiskSettings:
@@ -61,6 +64,11 @@ class RiskSettings:
     vix_exit: float = 35.0
     portfolio_warn: float = -0.10
     portfolio_exit: float = -0.20
+    # Sell only when price closes this far below MA200; between MA200 and the band is a warning.
+    ma_exit_band: float = 0.02
+    small_loss_warn: float = -0.04
+    # Stops and drawdown limits scale with asset volatility relative to this reference.
+    vol_reference: float = 0.15
 
 
 @dataclass(frozen=True)
@@ -72,7 +80,30 @@ class ScannerSettings:
     max_drawdown: float = -0.20
     max_vix: float = 30.0
     min_sharpe: float = 0.20
+    # Absolute momentum: an ETF must beat this return over the lookback to qualify.
+    min_momentum: float = 0.0
     hold_buffer_k: int = 8
+    max_per_group: int = 1
+    # Used only when the cash ETF has too little history to measure the real rate.
+    risk_free_rate: float = 0.02
+    max_stale_days: int = 5
+
+
+@dataclass(frozen=True)
+class PlanSettings:
+    monthly_contribution: float = 0.0
+    weak_market_invest_pct: float = 0.5
+    trim_band: float = 0.10
+    min_trade: float = 25.0
+    fractional_shares: bool = True
+
+
+@dataclass(frozen=True)
+class BacktestSettings:
+    years: int = 10
+    cost_pct: float = 0.001
+    fee_per_trade: float = 1.0
+    benchmark: str = "SXR8.DE"
 
 
 @dataclass(frozen=True)
@@ -80,47 +111,69 @@ class StrategyConfig:
     etfs: list[str]
     risk: RiskSettings
     scanner: ScannerSettings
+    plan: PlanSettings = field(default_factory=PlanSettings)
+    backtest: BacktestSettings = field(default_factory=BacktestSettings)
+    cash_etf: str | None = None
+    currency: str = "EUR"
+    names: dict[str, str] = field(default_factory=dict)
+    groups: dict[str, str] = field(default_factory=dict)
+
+    def name(self, ticker: str) -> str:
+        return self.names.get(ticker, ticker)
+
+    def group(self, ticker: str) -> str:
+        return self.groups.get(ticker, ticker)
+
+
+# Environment variable names that differ from the upper-cased field name.
+_RISK_ENV = {"ma_period": "RISK_MA_PERIOD"}
+_SCANNER_ENV = {"ma_period": "SCANNER_MA_PERIOD"}
+_BACKTEST_ENV = {"years": "BACKTEST_YEARS", "cost_pct": "BACKTEST_COST_PCT", "fee_per_trade": "BACKTEST_FEE", "benchmark": "BACKTEST_BENCHMARK"}
 
 
 def load_strategy_config(path: Path | None = None) -> StrategyConfig:
     path = path or _default_config_path()
     payload = _load_toml(path)
 
-    market = os.environ.get("STRATEGY_MARKET", "EU").upper()
+    market = _market()
     default_etfs = DEFAULT_ETFS_US if market == "US" else DEFAULT_ETFS_EU
-    etfs = _env_list("ETF_LIST") or payload.get("strategy", {}).get("etfs", default_etfs)
-    risk_payload = payload.get("risk", {})
-    scanner_payload = payload.get("scanner", {})
+    strategy = payload.get("strategy", {})
+    etfs = _env_list("ETF_LIST") or strategy.get("etfs", default_etfs)
+    cash_etf = os.environ.get("CASH_ETF") or strategy.get("cash_etf")
 
     return StrategyConfig(
         etfs=[str(ticker).upper() for ticker in etfs],
-        risk=RiskSettings(
-            ma_period=_env_int("RISK_MA_PERIOD", risk_payload.get("ma_period", RiskSettings.ma_period)),
-            stop_loss_pct=_env_float("STOP_LOSS_PCT", risk_payload.get("stop_loss_pct", RiskSettings.stop_loss_pct)),
-            drawdown_warn=_env_float("DRAWDOWN_WARN", risk_payload.get("drawdown_warn", RiskSettings.drawdown_warn)),
-            drawdown_exit=_env_float("DRAWDOWN_EXIT", risk_payload.get("drawdown_exit", RiskSettings.drawdown_exit)),
-            vix_warn=_env_float("VIX_WARN", risk_payload.get("vix_warn", RiskSettings.vix_warn)),
-            vix_exit=_env_float("VIX_EXIT", risk_payload.get("vix_exit", RiskSettings.vix_exit)),
-            portfolio_warn=_env_float("PORTFOLIO_WARN", risk_payload.get("portfolio_warn", RiskSettings.portfolio_warn)),
-            portfolio_exit=_env_float("PORTFOLIO_EXIT", risk_payload.get("portfolio_exit", RiskSettings.portfolio_exit)),
-        ),
-        scanner=ScannerSettings(
-            top_n=_env_int("TOP_N", scanner_payload.get("top_n", ScannerSettings.top_n)),
-            lookback_months=_env_int(
-                "LOOKBACK_MONTHS",
-                scanner_payload.get("lookback_months", ScannerSettings.lookback_months),
-            ),
-            ma_period=_env_int("SCANNER_MA_PERIOD", scanner_payload.get("ma_period", ScannerSettings.ma_period)),
-            max_volatility=_env_float(
-                "MAX_VOLATILITY",
-                scanner_payload.get("max_volatility", ScannerSettings.max_volatility),
-            ),
-            max_drawdown=_env_float("MAX_DRAWDOWN", scanner_payload.get("max_drawdown", ScannerSettings.max_drawdown)),
-            max_vix=_env_float("MAX_VIX", scanner_payload.get("max_vix", ScannerSettings.max_vix)),
-            min_sharpe=_env_float("MIN_SHARPE", scanner_payload.get("min_sharpe", ScannerSettings.min_sharpe)),
-            hold_buffer_k=_env_int("HOLD_BUFFER_K", scanner_payload.get("hold_buffer_k", ScannerSettings.hold_buffer_k)),
-        ),
+        risk=_build(RiskSettings, payload.get("risk", {}), _RISK_ENV),
+        scanner=_build(ScannerSettings, payload.get("scanner", {}), _SCANNER_ENV),
+        plan=_build(PlanSettings, payload.get("plan", {}), {}),
+        backtest=_build(BacktestSettings, payload.get("backtest", {}), _BACKTEST_ENV),
+        cash_etf=str(cash_etf).upper() if cash_etf else None,
+        currency=str(strategy.get("currency", "USD" if market == "US" else "EUR")).upper(),
+        names={str(k).upper(): str(v) for k, v in payload.get("names", {}).items()},
+        groups={str(k).upper(): str(v) for k, v in payload.get("groups", {}).items()},
     )
+
+
+def _build(cls: type, section: dict[str, Any], env_names: dict[str, str]) -> Any:
+    values = {}
+    for item in fields(cls):
+        default = item.default
+        raw = os.environ.get(env_names.get(item.name, item.name.upper()))
+        value = raw if raw not in (None, "") else section.get(item.name, default)
+        values[item.name] = _cast(value, type(default))
+    return cls(**values)
+
+
+def _cast(value: Any, target: type) -> Any:
+    if target is bool:
+        if isinstance(value, str):
+            return value.strip().lower() in {"1", "true", "yes", "on"}
+        return bool(value)
+    return target(value)
+
+
+def _market() -> str:
+    return os.environ.get("STRATEGY_MARKET", "EU").upper()
 
 
 def _load_toml(path: Path) -> dict:
@@ -134,25 +187,9 @@ def _default_config_path() -> Path:
     configured = os.environ.get("STRATEGY_CONFIG")
     if configured:
         return Path(configured)
-    
-    market = os.environ.get("STRATEGY_MARKET", "EU").upper()
-    config_name = "strategy_us.toml" if market == "US" else "strategy.toml"
-    
-    return Path(
-        importlib.resources.files(__package__)
-        / "config"
-        / config_name
-    )
 
-
-def _env_float(name: str, default: float) -> float:
-    value = os.environ.get(name)
-    return float(value) if value is not None and value != "" else float(default)
-
-
-def _env_int(name: str, default: int) -> int:
-    value = os.environ.get(name)
-    return int(value) if value is not None and value != "" else int(default)
+    config_name = "strategy_us.toml" if _market() == "US" else "strategy.toml"
+    return Path(importlib.resources.files(__package__) / "config" / config_name)
 
 
 def _env_list(name: str) -> list[str] | None:

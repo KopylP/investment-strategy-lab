@@ -1,4 +1,7 @@
 [strategy]
+currency = "EUR"
+# Where parked money waits: unfilled slots and the uninvested half in a weak market.
+cash_etf = "XEON.DE"
 etfs = [
   "SXR8.DE",
   "SXRV.DE",
@@ -6,7 +9,7 @@ etfs = [
   "EUN2.DE",
   "IS3N.DE",
   "4GLD.DE",
-  "ZIL2.DE",
+  "SXRS.DE",
   "IS04.DE",
   "IUS7.DE",
   "IBCI.DE",
@@ -28,6 +31,8 @@ vix_warn = 25.0
 vix_exit = 35.0
 portfolio_warn = -0.10
 portfolio_exit = -0.20
+ma_exit_band = 0.02
+small_loss_warn = -0.04
 
 [scanner]
 top_n = 4
@@ -35,5 +40,64 @@ lookback_months = 6
 ma_period = 200
 max_volatility = 0.35
 max_drawdown = -0.20
+max_vix = 30.0
 min_sharpe = 0.20
+min_momentum = 0.0
 hold_buffer_k = 8
+max_per_group = 1
+risk_free_rate = 0.02
+max_stale_days = 5
+
+[plan]
+# Set this to the amount you add every month (EUR). Override with --contribution or MONTHLY_CONTRIBUTION.
+monthly_contribution = 400.0
+weak_market_invest_pct = 0.5
+trim_band = 0.10
+min_trade = 25.0
+fractional_shares = true
+
+[backtest]
+years = 10
+cost_pct = 0.001
+fee_per_trade = 1.0
+benchmark = "SXR8.DE"
+
+# ETFs in the same group move together; the scanner picks at most max_per_group from each.
+[groups]
+"SXR8.DE" = "Акції США: S&P 500"
+"SXRV.DE" = "Технології США / Nasdaq-100"
+"NQSE.DE" = "Технології США / Nasdaq-100"
+"QDVE.DE" = "Технології США / Nasdaq-100"
+"QDVI.DE" = "Акції США: стиль Value"
+"QDVF.DE" = "Енергетика США"
+"QDVG.DE" = "Охорона здоров'я США"
+"IUSN.DE" = "Малі компанії світу"
+"EUN2.DE" = "Акції єврозони"
+"IQQA.DE" = "Акції єврозони"
+"IS3N.DE" = "Ринки, що розвиваються"
+"XDJE.DE" = "Японія"
+"4GLD.DE" = "Золото"
+"SXRS.DE" = "Сировина"
+"IS04.DE" = "Довгі облігації США"
+"IUS7.DE" = "Облігації ринків, що розвиваються"
+"IBCI.DE" = "Інфляційні облігації єврозони"
+
+[names]
+"SXR8.DE" = "iShares Core S&P 500"
+"SXRV.DE" = "iShares Nasdaq-100"
+"NQSE.DE" = "iShares Nasdaq-100 (EUR hedged)"
+"QDVE.DE" = "iShares S&P 500 Information Technology"
+"QDVI.DE" = "iShares Edge MSCI USA Value Factor"
+"QDVF.DE" = "iShares S&P 500 Energy"
+"QDVG.DE" = "iShares S&P 500 Health Care"
+"IUSN.DE" = "iShares MSCI World Small Cap"
+"EUN2.DE" = "iShares Core EURO STOXX 50"
+"IQQA.DE" = "iShares Euro Dividend"
+"IS3N.DE" = "iShares Core MSCI EM IMI"
+"XDJE.DE" = "Xtrackers Nikkei 225 (EUR hedged)"
+"4GLD.DE" = "Xetra-Gold"
+"SXRS.DE" = "iShares Diversified Commodity Swap"
+"IS04.DE" = "iShares $ Treasury Bond 20+yr"
+"IUS7.DE" = "iShares J.P. Morgan $ EM Bond"
+"IBCI.DE" = "iShares € Inflation Linked Govt Bond"
+"XEON.DE" = "Xtrackers EUR Overnight Rate Swap (кеш)"

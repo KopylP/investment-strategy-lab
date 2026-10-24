@@ -1,118 +1,144 @@
 {% extends "base.html" %}
 
+{% set r = report %}
+{% set cur = r.currency if r.currency != "MIXED" else "EUR" %}
+{% set parking = r.cash_etf or "кеш" %}
+{% set rs = r.settings %}
+
 {% block content %}
-<div class="grid summary-grid">
-  <div class="card">
-    <div class="metric-label">Станом на</div>
-    <div class="metric-value">{{ report.as_of }}</div>
-    <div class="metric-note">Дата ринкових даних</div>
-  </div>
-  <div class="card">
-    <div class="metric-label">Дохідність портфеля</div>
-    <div class="metric-value {{ report.portfolio_pnl | value_class }}">{{ report.portfolio_pnl | pct }}</div>
-    <div class="metric-note">Поточна вартість {{ report.portfolio_value | money(report.currency or 'USD') }} проти витрат {{ report.portfolio_cost | money(report.currency or 'USD') }}</div>
-  </div>
-  <div class="card">
-    <div class="metric-label">SPY проти MA200</div>
-    <div class="metric-value">{% if report.spy_above_ma %}Вище{% else %}Нижче{% endif %}</div>
-    <div class="metric-note">Фільтр тренду широкого ринку</div>
-  </div>
-  <div class="card">
-    <div class="metric-label">VIX</div>
-    <div class="metric-value">{{ report.vix | number }}</div>
-    <div class="metric-note">Фільтр стресу та волатильності</div>
-  </div>
+<header class="page">
+  <h1>Перевірка ризиків</h1>
+  <p class="lead">Тиждень {{ week }}, ціни закриття {{ r.as_of | ua_date }}.</p>
+</header>
+
+<div class="verdict{% if status == 'act' %} act{% elif status == 'watch' %} weak{% endif %}">
+  <p class="verdict-line">
+    {% if status == "act" %}Потрібна дія: виконайте кроки нижче.
+    {% elif status == "watch" %}Продавати нічого не треба, але є за чим стежити.
+    {% else %}Усе гаразд. Цього тижня нічого робити не треба.{% endif %}
+  </p>
+  <ul>
+    {% for alert in alerts %}<li>{{ alert }}</li>{% else %}<li>Усі позиції в межах правил, ринок спокійний.</li>{% endfor %}
+  </ul>
 </div>
 
-{% if report.currency == 'MIXED' %}
-<div class="callout" style="border-left-color: var(--yellow); background: var(--yellow-bg); color: var(--yellow); margin-top: 14px;">
-  <strong>Увага:</strong> Портфель містить активи у різних валютах. Підсумки (Витрати та Вартість) є простою сумою без конвертації.
-</div>
+{% if r.currency == "MIXED" %}
+  <ul class="notes"><li>Позиції в різних валютах: підсумки портфеля є простою сумою без конвертації.</li></ul>
 {% endif %}
 
-<div class="grid two-col">
-  <section>
-    <h2>Дії</h2>
-    {% if actions %}
-      <ul>
-        {% for action in actions %}
-          <li>{{ action }}</li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p class="empty">Жодних дій по портфелю не потрібно.</p>
-    {% endif %}
-  </section>
-  <section>
-    <h2>Сигнали</h2>
-    {% if alerts %}
-      <ul>
-        {% for alert in alerts %}
-          <li>{{ alert }}</li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p class="empty">Немає сигналів. Усі позиції знаходяться в межах встановлених лімітів ризику.</p>
-    {% endif %}
-  </section>
-</div>
-
-<section>
-  <h2>Ризик позицій</h2>
-  <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th>Тікер</th>
-          <th>Статус</th>
-          <th class="num">Ціна</th>
-          <th class="num">P&L</th>
-          <th class="num">
-            Просадка
-            <span class="tooltip align-left dir-down">ⓘ
-              <span class="tooltiptext">
-                <strong>Просадка (Drawdown)</strong> — це падіння ціни активу від локального піку до мінімуму. <br/>
-                Формула: (Поточна ціна - Максимальна ціна) / Максимальна ціна. <br/>
-                Вона завжди &le; 0 (або 0% на піку). Показує максимальний паперовий збиток від найвищої ціни. Впливає на вихід за ризиком (наприклад, попередження при -10%, вихід при -18%).
-              </span>
-            </span>
-          </th>
-          <th>MA200</th>
-          <th>Причина</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for position in report.position_risks %}
-        <tr>
-          <td><strong>{{ position.ticker }}</strong></td>
-          <td>{{ position.status | status_badge | safe }}</td>
-          <td class="num">{{ position.current_price | money(position.currency or 'USD') }}</td>
-          <td class="num {{ position.pnl_pct | value_class }}">{{ position.pnl_pct | pct }}</td>
-          <td class="num {{ position.drawdown_from_high | value_class }}">{{ position.drawdown_from_high | pct }}</td>
-          <td>{% if position.above_ma %}Вище{% else %}Нижче{% endif %}</td>
-          <td>
-            {% if position.alerts %}
-              {% for a in position.alerts %}
-                {{ a }}{% if not loop.last %}<br>{% endif %}
-              {% endfor %}
-            {% else %}
-              <span class="empty">-</span>
-            {% endif %}
-          </td>
-        </tr>
-        {% else %}
-        <tr><td colspan="7" class="empty">Позицій не знайдено.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
+{% if actions %}
+<section class="block">
+  <h2>Що зробити</h2>
+  <div class="slip">
+    <ol class="slip-list">
+      {% for action in actions %}
+        <li class="order simple">
+          <input type="checkbox" id="action-{{ loop.index }}" data-key="{{ r.as_of }}-{{ loop.index }}">
+          <label for="action-{{ loop.index }}">{{ action }}</label>
+        </li>
+      {% endfor %}
+    </ol>
   </div>
 </section>
+{% endif %}
 
-<section>
-  <h2>Як читати цей звіт</h2>
-  <div class="callout">
-    Червоний колір означає спрацьовування правила виходу. Жовтий — попередження або слабкість. Зелений — позиція пройшла всі перевірки.
-    Спочатку перевіряйте список рекомендованих дій, потім оцінюйте загальний стан ринку та вихідні JSON-дані перед укладанням будь-якої угоди.
-  </div>
+<section class="block">
+  <h2>Позиції</h2>
+  <p class="muted small">Смуга показує запас до ближчого правила виходу: що коротша смуга, то ближче продаж. Повна смуга означає запас 20% і більше.</p>
+  {% for p in r.position_risks %}
+    {% set shown = "red" if p.sell else p.status %}
+    <article class="position">
+      <div class="pos-head">
+        <div><span class="ticker">{{ p.ticker }}</span> <span class="order-name">{{ p.name }}</span></div>
+        <span class="pill {{ shown }}">{{ shown | status_label }}</span>
+      </div>
+      {% if p.status == "unknown" %}
+        <p class="muted small">{{ p.alerts | join(" ") }}</p>
+      {% else %}
+        <div class="pos-figures">
+          <span>Ціна <strong class="num">{{ p.current_price | money(p.currency) }}</strong></span>
+          <span>P&amp;L <strong class="num {{ p.pnl_pct | value_class }}">{{ p.pnl_pct | pct }}</strong> <span class="muted num">({{ p.pnl_abs | money(p.currency) }})</span></span>
+          <span>Вартість <strong class="num">{{ p.value | money(p.currency) }}</strong></span>
+          <span>Куплено по <strong class="num">{{ p.entry_price | money(p.currency) }}</strong></span>
+        </div>
+        {% if p.exit_price is not none %}
+          <div class="cushion">
+            <p class="cushion-label">Вихід, якщо ціна закриття опуститься нижче <strong class="num">{{ p.exit_price | money(p.currency) }}</strong> ({{ p.exit_rule }}). Запас {{ (-p.exit_distance) | pct0 if p.exit_distance < 0 else "0%" }}.</p>
+            <div class="meter" role="img" aria-label="Запас до виходу {{ p.exit_distance | pct }}"><div class="meter-fill {{ shown }}" style="width: {{ p.exit_distance | cushion_width }}%"></div></div>
+          </div>
+          <table class="levels">
+            <tbody>
+              <tr><td>Стоп-лосс від ціни входу ({{ p.stop_loss_threshold | pct }})</td><td class="num">{{ p.stop_price | money(p.currency) }}</td></tr>
+              {% if p.ma_exit_price is not none %}<tr><td>MA200 ({{ p.ma_value | money(p.currency) }}) мінус допуск {{ rs.ma_exit_band | pct0 }}</td><td class="num">{{ p.ma_exit_price | money(p.currency) }}</td></tr>{% endif %}
+              {% if p.trail_exit_price is not none %}<tr><td>Просадка {{ p.drawdown_exit_threshold | pct }} від максимуму {{ p.trail_high | money(p.currency) }}</td><td class="num">{{ p.trail_exit_price | money(p.currency) }}</td></tr>{% endif %}
+            </tbody>
+          </table>
+        {% endif %}
+      {% endif %}
+    </article>
+  {% else %}
+    <p class="muted">Позицій немає. Додайте покупки в positions.json.</p>
+  {% endfor %}
 </section>
+
+<section class="block">
+  <h2>Портфель</h2>
+  <div class="figures">
+    <div class="figure"><div class="figure-label">Вартість</div><div class="figure-value">{{ r.portfolio_value | money(cur, 0) }}</div><div class="figure-note">з кешем {{ r.cash | money(cur, 0) }}</div></div>
+    <div class="figure"><div class="figure-label">Вкладено</div><div class="figure-value">{{ r.portfolio_cost | money(cur, 0) }}</div></div>
+    <div class="figure"><div class="figure-label">Прибуток</div><div class="figure-value {{ r.portfolio_pnl | value_class }}">{{ r.portfolio_pnl | pct }}</div><div class="figure-note">{{ (r.portfolio_value - r.portfolio_cost) | money(cur, 0) }}</div></div>
+    <div class="figure"><div class="figure-label">Від піку</div><div class="figure-value {{ r.portfolio_drawdown | value_class }}">{{ r.portfolio_drawdown | pct }}</div><div class="figure-note">вихід при {{ rs.portfolio_exit | pct0 }}</div></div>
+  </div>
+  {% if r.portfolio_drawdown is not none %}
+    {% set used = [(r.portfolio_drawdown / rs.portfolio_exit), 1] | min %}
+    <p class="cushion-label" style="margin-top:14px">Використано {{ used | pct0 }} ліміту просадки портфеля. Попередження при {{ rs.portfolio_warn | pct0 }}, продаж усього при {{ rs.portfolio_exit | pct0 }}.</p>
+    <div class="meter"><div class="meter-fill {% if r.portfolio_drawdown <= rs.portfolio_exit %}red{% elif r.portfolio_drawdown <= rs.portfolio_warn %}yellow{% else %}green{% endif %}" style="width: {{ (used * 100) | round | int }}%"></div></div>
+  {% endif %}
+</section>
+
+<section class="block">
+  <h2>Ринок</h2>
+  <div class="figures">
+    <div class="figure">
+      <div class="figure-label">SPY проти MA200</div>
+      <div class="figure-value">{% if r.spy_price is none %}немає даних{% elif r.spy_above_ma %}вище{% else %}нижче{% endif %}</div>
+      <div class="figure-note">{% if r.spy_price is not none %}{{ r.spy_price | number }} проти {{ r.spy_ma | number }}{% endif %}</div>
+    </div>
+    <div class="figure">
+      <div class="figure-label">VIX</div>
+      <div class="figure-value">{{ r.vix | number }}</div>
+      <div class="figure-note">увага понад {{ rs.vix_warn | int }}, продаж слабких позицій понад {{ rs.vix_exit | int }}</div>
+    </div>
+  </div>
+  <p class="muted small" style="margin-top:10px">Слабкий ринок сам по собі не причина продавати: він лише зменшує суму наступного місячного внеску.</p>
+</section>
+
+<details>
+  <summary>Правила виходу</summary>
+  <div class="details-body">
+    <dl class="rules">
+      <dt>Стоп-лосс</dt><dd>Продаж, якщо ціна впала від ціни входу на {{ rs.stop_loss_pct | pct0 }} з поправкою на волатильність фонду (від −4% до −25%).</dd>
+      <dt>MA200</dt><dd>Продаж, якщо ціна закриття більш ніж на {{ rs.ma_exit_band | pct0 }} нижче 200-денної середньої. Нижче середньої, але в межах допуску — попередження.</dd>
+      <dt>Просадка позиції</dt><dd>Продаж, якщо ціна впала від максимуму з моменту купівлі на {{ rs.drawdown_exit | pct0 }} з поправкою на волатильність. Попередження при {{ rs.drawdown_warn | pct0 }}.</dd>
+      <dt>Високий стрес</dt><dd>Якщо VIX вище {{ rs.vix_exit | int }}, позиції з попередженнями продаються одразу.</dd>
+      <dt>Просадка портфеля</dt><dd>Рахується від піку портфеля, а не від вкладених грошей. При {{ rs.portfolio_exit | pct0 }} продаємо все в {{ parking }} і повертаємося за наступним місячним планом.</dd>
+      <dt>Після продажу</dt><dd>Гроші йдуть у {{ parking }}. Видаліть записи проданого ETF з positions.json.</dd>
+    </dl>
+  </div>
+</details>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.querySelectorAll(".order input[type=checkbox]").forEach(function (box) {
+    var row = box.closest(".order");
+    var key = "risk-" + box.dataset.key;
+    try { box.checked = localStorage.getItem(key) === "1"; } catch (e) {}
+    row.classList.toggle("done", box.checked);
+    box.addEventListener("change", function () {
+      row.classList.toggle("done", box.checked);
+      try { localStorage.setItem(key, box.checked ? "1" : "0"); } catch (e) {}
+    });
+  });
+</script>
 {% endblock %}

@@ -22,6 +22,33 @@ def latest_moving_average(series: pd.Series, period: int) -> float | None:
     return float(clean.rolling(period).mean().iloc[-1])
 
 
+def last_valid_date(series: pd.Series) -> pd.Timestamp | None:
+    """Return the index label of the last non-NaN value, or None."""
+    clean = series.dropna()
+    if clean.empty:
+        return None
+    return clean.index[-1]
+
+
+def completed_month_closes(series: pd.Series, now: pd.Timestamp | None = None) -> pd.Series:
+    """Return month-end closes for completed months only.
+
+    The current month is dropped while it is still in progress: its last
+    observation is before the month's final business day and *now* has not
+    moved into a later month yet.
+    """
+    clean = series.dropna()
+    if clean.empty:
+        return clean
+    monthly = clean.resample("ME").last()
+    last = clean.index[-1]
+    if now is not None and (now.year, now.month) > (last.year, last.month):
+        return monthly
+    if last.normalize() < (last + pd.offsets.BMonthEnd(0)).normalize():
+        monthly = monthly.iloc[:-1]
+    return monthly
+
+
 def latest_rolling_high(series: pd.Series, period: int) -> float | None:
     """Return the rolling high over the last *period* non-NaN values."""
     clean = series.dropna()
@@ -63,7 +90,8 @@ def money(value: float, currency: str, decimals: int = 2) -> str:
     }
     currency_upper = currency.upper()
     prefix = symbols.get(currency_upper, f"{currency_upper} ")
-    return f"{prefix}{value:,.{decimals}f}"
+    sign = "-" if value < 0 else ""
+    return f"{sign}{prefix}{abs(value):,.{decimals}f}"
 
 
 
@@ -80,3 +108,29 @@ def is_na(value: object) -> bool:
         return bool(pd.isna(value))
     except (ValueError, TypeError):
         return False
+
+
+_UA_MONTHS = ["січень", "лютий", "березень", "квітень", "травень", "червень", "липень", "серпень", "вересень", "жовтень", "листопад", "грудень"]
+_UA_MONTHS_GENITIVE = ["січня", "лютого", "березня", "квітня", "травня", "червня", "липня", "серпня", "вересня", "жовтня", "листопада", "грудня"]
+_UA_WEEKDAYS = ["понеділок", "вівторок", "середа", "четвер", "п'ятниця", "субота", "неділя"]
+
+
+def ua_month(value) -> str:
+    """'листопад 2026'"""
+    return f"{_UA_MONTHS[value.month - 1]} {value.year}"
+
+
+def ua_day(value, weekday: bool = False) -> str:
+    """'3 листопада' or 'понеділок, 3 листопада'"""
+    text = f"{value.day} {_UA_MONTHS_GENITIVE[value.month - 1]}"
+    return f"{_UA_WEEKDAYS[value.weekday()]}, {text}" if weekday else text
+
+
+def next_weekday(value):
+    """First Monday-to-Friday date strictly after *value*."""
+    from datetime import timedelta
+
+    day = value + timedelta(days=1)
+    while day.weekday() >= 5:
+        day += timedelta(days=1)
+    return day
