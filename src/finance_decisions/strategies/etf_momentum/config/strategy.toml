@@ -49,8 +49,8 @@ risk_free_rate = 0.02
 max_stale_days = 5
 
 [plan]
-# Set this to the amount you add every month (EUR). Override with --contribution or MONTHLY_CONTRIBUTION.
-monthly_contribution = 400.0
+# Monthly contribution in EUR (1000 PLN ≈ 227 EUR). Override with --contribution or MONTHLY_CONTRIBUTION.
+monthly_contribution = 227.0
 weak_market_invest_pct = 0.5
 trim_band = 0.10
 min_trade = 25.0
