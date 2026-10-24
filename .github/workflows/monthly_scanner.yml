@@ -1,21 +1,21 @@
 name: Monthly ETF Scanner
 
+# Runs on the first Sunday of each month after all markets have closed, so every
+# price is a full close. The plan is meant to be executed on Monday.
 on:
   schedule:
-    - cron: "0 9 * * 1"
+    - cron: "0 18 * * 0"
   workflow_dispatch:
 
 jobs:
   scan:
     runs-on: ubuntu-latest
     env:
-      POSITIONS_FILE: src/finance_decisions/strategies/etf_momentum/positions.json
       STRATEGY_CONFIG: src/finance_decisions/strategies/etf_momentum/config/strategy.toml
-      REPORT_DIR: reports/latest/etf-momentum/monthly-scanner
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
-      - name: Check first Monday
+      - name: Check first Sunday
         id: schedule_check
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "$(date -u +%d)" -le 07 ]; then
@@ -45,11 +45,19 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           ETF_LIST: ${{ vars.ETF_LIST }}
+          CASH_ETF: ${{ vars.CASH_ETF }}
+          MONTHLY_CONTRIBUTION: ${{ vars.MONTHLY_CONTRIBUTION }}
           TOP_N: ${{ vars.TOP_N }}
           LOOKBACK_MONTHS: ${{ vars.LOOKBACK_MONTHS }}
           SCANNER_MA_PERIOD: ${{ vars.SCANNER_MA_PERIOD }}
           MAX_VOLATILITY: ${{ vars.MAX_VOLATILITY }}
           MAX_DRAWDOWN: ${{ vars.MAX_DRAWDOWN }}
+          MAX_VIX: ${{ vars.MAX_VIX }}
+          MIN_SHARPE: ${{ vars.MIN_SHARPE }}
+          MIN_MOMENTUM: ${{ vars.MIN_MOMENTUM }}
+          HOLD_BUFFER_K: ${{ vars.HOLD_BUFFER_K }}
+          MAX_PER_GROUP: ${{ vars.MAX_PER_GROUP }}
+          WEAK_MARKET_INVEST_PCT: ${{ vars.WEAK_MARKET_INVEST_PCT }}
         run: PYTHONPATH=src python -m finance_decisions.strategies.etf_momentum.monthly_scanner
 
       - name: Upload report artifact

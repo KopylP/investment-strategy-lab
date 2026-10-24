@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% set s = metrics.strategy %}
+{% set b = metrics.benchmark %}
+{% set names = {"strategy": "Стратегія", "benchmark": benchmark} %}
+{% set slot = {"strategy": "s1", "benchmark": "s2"} %}
+
+{% macro chart(c, id, caption) %}
+  <figure class="chart" id="{{ id }}">
+    <figcaption class="muted small">{{ caption }}</figcaption>
+    <div class="legend">
+      {% for line in c.lines %}<span><span class="swatch {{ slot[line.key] }}"></span>{{ names[line.key] }}</span>{% endfor %}
+    </div>
+    <div class="chart-box">
+      <svg viewBox="0 0 {{ c.width }} {{ c.height }}" role="img" aria-label="{{ caption }}">
+        {% for t in c.y_ticks %}
+          <line class="grid" x1="{{ c.left }}" x2="{{ c.right }}" y1="{{ t.y }}" y2="{{ t.y }}"></line>
+          <text class="tick" x="{{ c.left - 8 }}" y="{{ t.y + 4 }}" text-anchor="end">{{ t.label }}</text>
+        {% endfor %}
+        {% for t in c.x_ticks %}
+          <text class="tick" x="{{ t.x }}" y="{{ c.bottom + 18 }}" text-anchor="middle">{{ t.label }}</text>
+        {% endfor %}
+        {% for line in c.lines %}
+          <polyline class="series {{ line.key }}" points="{{ line.points }}"></polyline>
+        {% endfor %}
+        {% for line in c.lines %}
+          <circle class="end {{ line.key }}" cx="{{ line.end_x }}" cy="{{ line.end_y }}" r="4"></circle>
+          <text class="end-label" x="{{ line.end_x + 10 }}" y="{{ line.label_y + 4 }}">{{ line.end_label }}</text>
+        {% endfor %}
+        <line class="crosshair" x1="0" x2="0" y1="{{ c.top }}" y2="{{ c.bottom }}" visibility="hidden"></line>
+        <rect class="hit" x="{{ c.left }}" y="{{ c.top }}" width="{{ c.right - c.left }}" height="{{ c.bottom - c.top }}"></rect>
+      </svg>
+      <div class="tip" hidden></div>
+    </div>
+    <script type="application/json" class="chart-data">{{ c.data | json_dumps | safe }}</script>
+  </figure>
+{% endmacro %}
+
+{% block content %}
+<header class="page">
+  <h1>Бектест стратегії</h1>
+  <p class="lead">{{ start | ua_date }} – {{ end | ua_date }} ({{ years }} р.). Внесок {{ contribution | money("EUR") }} щомісяця{% if initial %} плюс {{ initial | money("EUR") }} на старті{% endif %}. Порівняння з {{ benchmark }} при тих самих внесках.</p>
+</header>
+
+{% set safer = s.max_drawdown > b.max_drawdown %}
+{% set richer = s.cagr > b.cagr %}
+<div class="verdict{% if not richer and not safer %} act{% elif not richer %} weak{% endif %}">
+  <p class="verdict-line">
+    {% if richer and safer %}Стратегія заробила більше і падала менше, ніж {{ benchmark }}.
+    {% elif safer %}Стратегія заробляла менше, ніж {{ benchmark }}, але падала значно м'якше.
+    {% elif richer %}Стратегія заробила більше, але падала глибше, ніж {{ benchmark }}.
+    {% else %}На цьому періоді стратегія програла {{ benchmark }} і за дохідністю, і за ризиком.{% endif %}
+  </p>
+  <ul>
+    <li>Дохідність на рік: {{ s.cagr | pct }} проти {{ b.cagr | pct }}.</li>
+    <li>Найбільша просадка: {{ s.max_drawdown | pct }} проти {{ b.max_drawdown | pct }}.</li>
+    <li>Підсумок: {{ s.final_value | money("EUR", 0) }} проти {{ b.final_value | money("EUR", 0) }} при вкладених {{ s.contributed | money("EUR", 0) }}.</li>
+  </ul>
+</div>
+
+<section class="block">
+  <h2>Як ріс капітал</h2>
+  {{ chart(growth_chart, "growth", "Зростання 100 € без урахування внесків (зважене за часом). Наведіть курсор, щоб побачити значення.") }}
+</section>
+
+<section class="block">
+  <h2>Наскільки глибоко падав</h2>
+  {{ chart(drawdown_chart, "drawdown", "Падіння від попереднього максимуму.") }}
+</section>
+
+<section class="block">
+  <h2>Підсумки</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th></th><th class="num">Стратегія</th><th class="num">{{ benchmark }}</th></tr></thead>
+      <tbody>
+        <tr><td>Дохідність на рік</td><td class="num">{{ s.cagr | pct }}</td><td class="num">{{ b.cagr | pct }}</td></tr>
+        <tr><td>Волатильність</td><td class="num">{{ s.volatility | pct0 }}</td><td class="num">{{ b.volatility | pct0 }}</td></tr>
+        <tr><td>Sharpe</td><td class="num">{{ s.sharpe | number }}</td><td class="num">{{ b.sharpe | number }}</td></tr>
+        <tr><td>Найбільша просадка</td><td class="num">{{ s.max_drawdown | pct }}</td><td class="num">{{ b.max_drawdown | pct }}</td></tr>
+        <tr><td>Підсумкова сума</td><td class="num">{{ s.final_value | money("EUR", 0) }}</td><td class="num">{{ b.final_value | money("EUR", 0) }}</td></tr>
+        <tr><td>Прибуток</td><td class="num">{{ s.profit | money("EUR", 0) }}</td><td class="num">{{ b.profit | money("EUR", 0) }}</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="muted small" style="margin-top:10px">Угод: {{ trades }}, витрати на угоди {{ costs | money("EUR", 0) }}. Продажів за тижневим ризик-монітором: {{ risk_exits }}. Ринок був у нормі {{ months_market_ok }} з {{ months }} місяців.</p>
+</section>
+
+<section class="block">
+  <h2>По роках</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Рік</th><th class="num">Стратегія</th><th class="num">{{ benchmark }}</th><th class="num">Різниця</th></tr></thead>
+      <tbody>
+        {% for row in yearly %}
+          <tr>
+            <td>{{ row.year }}{% if row.partial %} <span class="muted small">неповний</span>{% endif %}</td>
+            <td class="num {{ row.strategy | value_class }}">{{ row.strategy | pct }}</td>
+            <td class="num {{ row.benchmark | value_class }}">{{ row.benchmark | pct }}</td>
+            <td class="num {{ (row.strategy - row.benchmark) | value_class }}">{{ (row.strategy - row.benchmark) | pct }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<details>
+  <summary>Обмеження бектесту</summary>
+  <div class="details-body">
+    <ul>
+      <li>Список ETF сьогоднішній: фонди, які закрилися, сюди не потрапили. Це прикрашає результат.</li>
+      <li>Сигнал рахується на закритті попереднього дня, угоди виконуються за ціною закриття наступного. У реальності ціна буде трохи іншою.</li>
+      <li>Ціни Yahoo скориговані на дивіденди. Податки не враховано.</li>
+      <li>Фонди з короткою історією беруть участь лише після того, як набрали 12+ місяців даних.</li>
+      <li>Минулі результати не гарантують майбутніх. Використовуйте бектест, щоб перевіряти зміни правил, а не щоб прогнозувати дохід.</li>
+    </ul>
+  </div>
+</details>
+{% endblock %}
+
+{% block scripts %}
+<style>
+  .chart { margin: 0; }
+  .legend { display: flex; gap: 18px; margin: 6px 0 8px; font-size: 0.875rem; }
+  .chart-box { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 4px 4px; }
+  .chart svg { display: block; width: 100%; height: auto; }
+  .chart .grid { stroke: var(--line); stroke-width: 1; }
+  .chart .tick { fill: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .chart .series { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .chart .series.strategy, .chart .end.strategy { stroke: var(--series-1); }
+  .chart .series.benchmark, .chart .end.benchmark { stroke: var(--series-2); }
+  .chart .end { stroke-width: 2; stroke: var(--surface); }
+  .chart .end.strategy { fill: var(--series-1); }
+  .chart .end.benchmark { fill: var(--series-2); }
+  .chart .end-label { fill: var(--ink); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .chart .crosshair { stroke: var(--muted); stroke-width: 1; }
+  .chart .hit { fill: transparent; cursor: crosshair; }
+  .chart .tip { position: absolute; top: 8px; pointer-events: none; background: var(--ink); color: var(--paper); font-size: 0.8125rem; padding: 6px 10px; border-radius: 6px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+</style>
+<script>
+  document.querySelectorAll(".chart").forEach(function (figure) {
+    var data = JSON.parse(figure.querySelector(".chart-data").textContent);
+    var svg = figure.querySelector("svg");
+    var hit = figure.querySelector(".hit");
+    var line = figure.querySelector(".crosshair");
+    var tip = figure.querySelector(".tip");
+    var names = { strategy: "Стратегія", benchmark: "{{ benchmark }}" };
+    function show(evt) {
+      var pt = svg.createSVGPoint();
+      pt.x = evt.clientX; pt.y = evt.clientY;
+      var x = pt.matrixTransform(svg.getScreenCTM().inverse()).x;
+      var i = 0, best = Infinity;
+      data.x.forEach(function (v, k) { var d = Math.abs(v - x); if (d < best) { best = d; i = k; } });
+      line.setAttribute("x1", data.x[i]); line.setAttribute("x2", data.x[i]);
+      line.setAttribute("visibility", "visible");
+      var parts = [data.dates[i]];
+      Object.keys(names).forEach(function (key) { if (data[key]) parts.push(names[key] + ": " + data[key][i]); });
+      tip.textContent = parts.join("   ");
+      tip.hidden = false;
+      var box = figure.querySelector(".chart-box").getBoundingClientRect();
+      var px = evt.clientX - box.left;
+      tip.style.left = Math.min(Math.max(px - tip.offsetWidth / 2, 4), box.width - tip.offsetWidth - 4) + "px";
+    }
+    hit.addEventListener("mousemove", show);
+    hit.addEventListener("mouseleave", function () { tip.hidden = true; line.setAttribute("visibility", "hidden"); });
+  });
+</script>
+{% endblock %}

@@ -1,53 +1,179 @@
 from __future__ import annotations
 
-import json
 from dataclasses import asdict
-from datetime import date, datetime, timezone
+import json
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 
-from finance_decisions.helpers import is_na, money, ticker_currency
+from finance_decisions.helpers import money, next_weekday, ua_day, ua_month
 from finance_decisions.reports import write_html_report, write_json_report, write_text_report
-from .risk import RiskReport, format_risk_report
-from .scanner import ScanResult, format_scan_result
+from .plan import KIND_BUY, KIND_PARK, MonthlyPlan
+from .risk import STATUS_LABELS, RiskReport, format_risk_report
+from .scanner import ScanResult
 
-# Local template search folder for this strategy
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
+
+ACTION_LABELS = {"sell": "Продати", "buy": "Купити"}
+SCAN_STATUS_LABELS = {
+    "selected": "Обрано",
+    "buffer": "Утримуємо",
+    "group_blocked": "Дубль групи",
+    "reserve": "Резерв",
+    "failed": "Не проходить",
+}
+
+
+# ---------------------------------------------------------------- monthly scanner
+
+
+def scanner_report_payload(result: ScanResult, plan: MonthlyPlan, current_positions: list[str]) -> dict[str, Any]:
+    execute_on = next_weekday(result.as_of)
+    settings = asdict(result.settings) if result.settings else {}
+    return {
+        "type": "monthly_scanner",
+        "as_of": result.as_of,
+        "plan_month": ua_month(execute_on),
+        "execute_on": ua_day(execute_on, weekday=True),
+        "execute_date": execute_on,
+        "market_ok": result.market_ok,
+        "spy_above_ma": result.spy_above_ma,
+        "spy_price": result.spy_price,
+        "spy_ma": result.spy_ma,
+        "vix": result.vix,
+        "market_reasons": result.market_reasons,
+        "risk_free_rate": result.risk_free_rate,
+        "cash_weight": result.cash_weight,
+        "table": _dataframe_records(result.table),
+        "eligible": _dataframe_records(result.eligible),
+        "current_positions": current_positions,
+        "settings": settings,
+        "plan": asdict(plan),
+        "currency": plan.currency,
+        "positions_snippet": positions_snippet(plan, execute_on),
+    }
+
+
+def format_scan_report(result: ScanResult, plan: MonthlyPlan) -> str:
+    """Full plain-text plan: the same content as the HTML report, without the ranking details."""
+    execute_on = next_weekday(result.as_of)
+    lines = [
+        f"План інвестицій на {ua_month(execute_on)}",
+        f"Дані на {result.as_of:%d.%m.%Y}. Виконати: {ua_day(execute_on, weekday=True)}.",
+        "",
+        _market_headline(plan),
+    ]
+    lines.extend(f"  - {reason}" for reason in result.market_reasons)
+
+    lines.extend(["", "Що зробити (по черзі):"])
+    lines.extend(_order_lines(plan, detailed=True) or ["  Угод цього місяця немає."])
+
+    lines.extend(["", "Портфель після угод:"])
+    for row in plan.allocation:
+        if row.value_after <= 0 and row.value_before <= 0:
+            continue
+        target = f", ціль {row.target_weight:.0%}" if row.target_weight else ""
+        lines.append(f"  {row.ticker:<9} {row.weight_before:>4.0%} -> {row.weight_after:>4.0%}{target}  {money(row.value_after, plan.currency)}")
+
+    if plan.notes:
+        lines.extend(["", "Примітки:"])
+        lines.extend(f"  - {note}" for note in plan.notes)
+
+    lines.extend(["", "Рейтинг (пройшли фільтри):"])
+    ranked = result.table[result.table["Rank"].notna()]
+    if ranked.empty:
+        lines.append("  Жоден ETF не пройшов фільтри.")
+    for ticker, row in ranked.iterrows():
+        mark = "*" if ticker in result.eligible.index else " "
+        lines.append(f" {mark}{int(row['Rank']):>2}. {ticker:<9} моментум {row['Momentum']:+.1%}  {row['Reason']}")
+    lines.extend(["", "Після угод оновіть positions.json фактичними цінами виконання."])
+    return "\n".join(lines)
+
+
+def format_monthly_telegram(result: ScanResult, plan: MonthlyPlan) -> str:
+    execute_on = next_weekday(result.as_of)
+    lines = [
+        f"План на {ua_month(execute_on)} (дані на {result.as_of:%d.%m.%Y})",
+        _market_headline(plan),
+        "",
+        f"Що зробити, {ua_day(execute_on, weekday=True)}:",
+    ]
+    lines.extend(_order_lines(plan, detailed=False) or ["Угод цього місяця немає."])
+    if plan.notes:
+        lines.append("")
+        lines.extend(f"• {note}" for note in plan.notes)
+    lines.extend(["", "Деталі та пояснення: HTML-звіт у GitHub Actions."])
+    return "\n".join(lines)
+
+
+def _market_headline(plan: MonthlyPlan) -> str:
+    invest = money(plan.contribution * plan.invest_pct, plan.currency)
+    if plan.market_ok:
+        return f"Ринок у нормі: інвестуємо весь внесок ({invest})."
+    return f"Ринок слабкий: інвестуємо {plan.invest_pct:.0%} внеску ({invest}), решту паркуємо."
+
+
+def _order_lines(plan: MonthlyPlan, detailed: bool) -> list[str]:
+    lines = []
+    for index, order in enumerate(plan.orders, 1):
+        shares = f"{order.shares:.4f}".rstrip("0").rstrip(".")
+        line = f"{index}. {ACTION_LABELS[order.action]} {order.ticker}: {money(order.amount, plan.currency)} (≈ {shares} шт.)"
+        if detailed:
+            line += f" по {money(order.price, plan.currency)}. {order.name}. {order.reason[:1].upper()}{order.reason[1:]}."
+        lines.append(line)
+    return lines
+
+
+def positions_snippet(plan: MonthlyPlan, execute_on) -> str:
+    """JSON lots to paste into positions.json after the buys are filled."""
+    lots = [
+        {
+            "ticker": order.ticker,
+            "entry_price": round(order.price, 4),
+            "shares": round(order.shares, 6),
+            "entry_date": execute_on.isoformat(),
+            "currency": plan.currency,
+        }
+        for order in plan.orders
+        if order.kind in (KIND_BUY, KIND_PARK)
+    ]
+    return ",\n".join(json.dumps(lot, ensure_ascii=False) for lot in lots)
+
+
+def write_scanner_outputs(report_dir: Path, result: ScanResult, plan: MonthlyPlan, current_positions: list[str]) -> str:
+    text = format_scan_report(result, plan)
+    payload = scanner_report_payload(result, plan, current_positions)
+    write_text_report(report_dir / "report.txt", text)
+    write_json_report(report_dir / "report.json", payload)
+    write_html_report(
+        path=report_dir / "report.html",
+        title=f"План на {payload['plan_month']}",
+        body_text=text,
+        payload=payload,
+        template_name="monthly_scanner.html",
+        templates_dirs=[TEMPLATES_DIR],
+        custom_filters=_filters(),
+    )
+    return text
+
+
+# ---------------------------------------------------------------- weekly risk monitor
 
 
 def risk_report_payload(report: RiskReport) -> dict[str, Any]:
     return {
         "type": "weekly_risk_monitor",
         "report": asdict(report),
+        "status": report.status,
         "alerts": report.alerts,
         "actions": report.actions,
+        "week": report.as_of.isocalendar()[1],
     }
 
 
-def scanner_report_payload(result: ScanResult, current_positions: list[str]) -> dict[str, Any]:
-    max_vol = result.settings.max_volatility if (result.settings is not None) else 0.35
-    max_dd = result.settings.max_drawdown if (result.settings is not None) else -0.20
-    min_sr = result.settings.min_sharpe if (result.settings is not None) else 0.20
-    hold_k = result.settings.hold_buffer_k if (result.settings is not None) else 8
-    top_n = result.settings.top_n if (result.settings is not None) else 3
-    return {
-        "type": "monthly_scanner",
-        "market_ok": result.market_ok,
-        "spy_above_ma": result.spy_above_ma,
-        "vix": result.vix,
-        "table": _dataframe_records(result.table),
-        "eligible": _dataframe_records(result.eligible),
-        "current_positions": current_positions,
-        "settings": {
-            "max_volatility": max_vol,
-            "max_drawdown": max_dd,
-            "min_sharpe": min_sr,
-            "hold_buffer_k": hold_k,
-            "top_n": top_n,
-        }
-    }
+def format_weekly_telegram(report: RiskReport) -> str:
+    return format_risk_report(report)
 
 
 def write_risk_outputs(report_dir: Path, report: RiskReport) -> str:
@@ -55,136 +181,209 @@ def write_risk_outputs(report_dir: Path, report: RiskReport) -> str:
     payload = risk_report_payload(report)
     write_text_report(report_dir / "report.txt", text)
     write_json_report(report_dir / "report.json", payload)
-    
-    # We pass TEMPLATES_DIR to search for local etf_momentum templates, 
-    # plus strategy custom filters and tests
-    custom_filters = {
-        "status_badge": _status_badge,
-    }
-    
     write_html_report(
         path=report_dir / "report.html",
-        title="Тижневий моніторинг ризиків",
+        title=f"Перевірка ризиків {report.as_of:%d.%m.%Y}",
         body_text=text,
         payload=payload,
         template_name="weekly_risk_monitor.html",
         templates_dirs=[TEMPLATES_DIR],
-        custom_filters=custom_filters,
+        custom_filters=_filters(),
     )
     return text
 
 
-def write_scanner_outputs(report_dir: Path, result: ScanResult, current_positions: list[str]) -> str:
-    text = format_scan_result(result, current_positions=current_positions)
-    payload = scanner_report_payload(result, current_positions)
-    write_text_report(report_dir / "report.txt", text)
-    write_json_report(report_dir / "report.json", payload)
-    
-    # Register strategy-specific filters and tests for the Jinja template
-    custom_filters = {
-        "strategy_status": _strategy_status,
-        "strategy_badge": _strategy_badge,
+# ---------------------------------------------------------------- shared helpers
+
+
+def _filters() -> dict[str, Any]:
+    return {
+        "status_label": lambda status: STATUS_LABELS.get(str(status), str(status)),
+        "action_label": lambda action: ACTION_LABELS.get(str(action), str(action)),
+        "scan_status": lambda status: SCAN_STATUS_LABELS.get(str(status), str(status)),
+        "shares": lambda value: f"{float(value):.4f}".rstrip("0").rstrip("."),
+        "pct0": _pct0,
+        "sentence": lambda text: f"{str(text)[:1].upper()}{str(text)[1:]}" if text else "",
+        "ua_date": lambda value: _as_date(value).strftime("%d.%m.%Y") if value else "-",
+        "cushion_width": _cushion_width,
     }
-    
-    write_html_report(
-        path=report_dir / "report.html",
-        title="Місячний ETF-сканер",
-        body_text=text,
-        payload=payload,
-        template_name="monthly_scanner.html",
-        templates_dirs=[TEMPLATES_DIR],
-        custom_filters=custom_filters,
-    )
-    return text
+
+
+def _pct0(value: Any) -> str:
+    if value is None or pd.isna(value):
+        return "-"
+    return f"{float(value) * 100:.0f}%"
+
+
+def _cushion_width(distance: Any, scale: float = 0.20) -> int:
+    """Bar width (0-100) for the gap between price and its exit level; 20% gap fills the bar."""
+    if distance is None or pd.isna(distance):
+        return 0
+    return int(max(0.0, min(1.0, -float(distance) / scale)) * 100)
+
+
+def _as_date(value: Any):
+    if isinstance(value, str):
+        return pd.Timestamp(value).date()
+    return value
 
 
 def _dataframe_records(frame: pd.DataFrame) -> list[dict[str, Any]]:
     if frame.empty:
         return []
-    copy = frame.reset_index()
-    return copy.to_dict(orient="records")
+    return frame.reset_index().to_dict(orient="records")
 
 
-def _render_console_text_html(payload: dict[str, Any], body_text: str) -> str:
-    if payload.get("type") != "monthly_scanner":
-        return body_text
-
-    vix_val = payload.get("vix")
-    vix_str = f"{float(vix_val):.2f}" if vix_val is not None and not is_na(vix_val) else "-"
-    lines = [
-        "Місячний ETF-сканер",
-        "",
-        f"SPY вище MA200: {'так' if payload.get('spy_above_ma') else 'ні'}",
-        f"VIX: {vix_str}",
-        f"Стан ринку OK: {'так' if payload.get('market_ok') else 'ні'}",
-        "",
-    ]
-    if payload.get("market_ok"):
-        lines.append("Ринковий фільтр пройдено. Перевірте кандидатів нижче перед будь-яким рішенням.")
-    else:
-        lines.append("Ринкові умови несприятливі. Balanced hybrid: інвестувати 25-50% нового внеску, решту тримати в кеші.")
-    return "\n".join(lines)
+# ---------------------------------------------------------------- backtest
 
 
-# Local formatting and presentation logic specific to this strategy
-def _status_badge(status: str) -> str:
-    status_lower = str(status).lower()
-    css = status_lower if status_lower in {"green", "yellow", "red", "unknown"} else "unknown"
-    return f'<span class="badge {css}">{status_lower}</span>'
-
-
-def _strategy_status(item: dict[str, Any], is_eligible: bool, settings: dict[str, Any]) -> dict[str, str]:
-    top_n = settings.get("top_n", 3)
-    rank = item.get("Rank")
-    if is_eligible:
-        if rank is not None and pd.notna(rank) and int(rank) > top_n:
-            return {
-                "label": "Буферне утримання",
-                "css": "blue",
-                "row_class": "buffer-row",
-            }
-        return {
-            "label": "Top кандидат",
-            "css": "green",
-            "row_class": "eligible-row",
-        }
-    if _passes_strategy_filters(item, settings):
-        return {
-            "label": "Є кращі",
-            "css": "yellow",
-            "row_class": "qualified-row",
-        }
+def backtest_payload(result) -> dict[str, Any]:
+    weekly = lambda series: series.resample("W-FRI").last().dropna()  # noqa: E731
+    growth = {"strategy": weekly(result.growth) * 100, "benchmark": weekly(result.benchmark_growth) * 100}
+    drawdown = {key: series / series.cummax() - 1 for key, series in growth.items()}
     return {
-        "label": "Не проходить",
-        "css": "unknown",
-        "row_class": "",
+        "type": "backtest",
+        "start": result.start,
+        "end": result.end,
+        "years": round((result.end - result.start).days / 365.25, 1),
+        "benchmark": result.benchmark,
+        "contribution": result.contribution,
+        "initial": result.initial,
+        "trades": result.trades,
+        "costs": result.costs,
+        "risk_exits": result.risk_exits,
+        "months": result.months,
+        "months_market_ok": result.months_market_ok,
+        "metrics": result.metrics,
+        "yearly": result.yearly,
+        "growth_chart": line_chart(growth, money_axis=True),
+        "drawdown_chart": line_chart(drawdown, pct_axis=True, floor_zero=True),
     }
 
 
-def _strategy_badge(status: dict[str, str]) -> str:
-    label = status["label"]
-    css = status["css"]
-    if css == "green":
-        return '<span class="badge green">Підходить</span>'
-    if css == "blue":
-        return '<span class="badge blue">Утримання</span>'
-    if css == "yellow":
-        return f'<span class="badge yellow">{label}</span>'
-    return f'<span class="badge unknown">{label}</span>'
+def format_backtest_report(result) -> str:
+    s, b = result.metrics["strategy"], result.metrics["benchmark"]
+    lines = [
+        f"Бектест ETF Momentum: {result.start:%d.%m.%Y} - {result.end:%d.%m.%Y}",
+        f"Внесок {money(result.contribution, 'EUR')} щомісяця, порівняння з {result.benchmark} (ті самі внески).",
+        "",
+        f"{'':<22}{'Стратегія':>12}{result.benchmark:>12}",
+        f"{'Дохідність на рік':<22}{s['cagr']:>12.1%}{b['cagr']:>12.1%}",
+        f"{'Волатильність':<22}{s['volatility']:>12.1%}{b['volatility']:>12.1%}",
+        f"{'Sharpe':<22}{s['sharpe']:>12.2f}{b['sharpe']:>12.2f}",
+        f"{'Найбільша просадка':<22}{s['max_drawdown']:>12.1%}{b['max_drawdown']:>12.1%}",
+        f"{'Підсумкова сума':<22}{s['final_value']:>12,.0f}{b['final_value']:>12,.0f}",
+        f"{'Вкладено':<22}{s['contributed']:>12,.0f}{b['contributed']:>12,.0f}",
+        "",
+        f"Угод: {result.trades}, витрати на угоди: {money(result.costs, 'EUR')}, продажів за ризик-монітором: {result.risk_exits}.",
+        f"Місяців із ринком у нормі: {result.months_market_ok} з {result.months}.",
+        "",
+        "По роках (стратегія / бенчмарк):",
+    ]
+    lines.extend(
+        f"  {row['year']}{'*' if row['partial'] else ' '} {row['strategy']:+7.1%} / {row['benchmark']:+7.1%}" for row in result.yearly
+    )
+    lines.extend(["", "* неповний рік. Список ETF сьогоднішній, податки не враховано."])
+    return "\n".join(lines)
 
 
-def _passes_strategy_filters(item: dict[str, Any], settings: dict[str, Any]) -> bool:
-    max_vol = settings.get("max_volatility", 0.35)
-    max_dd = settings.get("max_drawdown", -0.20)
-    min_sr = settings.get("min_sharpe", 0.20)
+def write_backtest_outputs(report_dir: Path, result) -> str:
+    text = format_backtest_report(result)
+    payload = backtest_payload(result)
+    write_text_report(report_dir / "report.txt", text)
+    write_json_report(report_dir / "report.json", {k: v for k, v in payload.items() if not k.endswith("_chart")})
+    write_html_report(
+        path=report_dir / "report.html",
+        title="Бектест стратегії",
+        body_text=text,
+        payload=payload,
+        template_name="backtest.html",
+        templates_dirs=[TEMPLATES_DIR],
+        custom_filters=_filters(),
+    )
+    return text
 
-    vol = item.get("Volatility")
-    dd = item.get("Drawdown")
-    sr = item.get("Sharpe")
 
-    vol_ok = float(vol) < max_vol if vol is not None and pd.notna(vol) else False
-    dd_ok = float(dd) > max_dd if dd is not None and pd.notna(dd) else False
-    sr_ok = float(sr) >= min_sr if sr is not None and pd.notna(sr) else False
-    ma_ok = bool(item.get("Above MA200"))
+def line_chart(
+    series: dict[str, pd.Series],
+    *,
+    width: int = 760,
+    height: int = 260,
+    money_axis: bool = False,
+    pct_axis: bool = False,
+    floor_zero: bool = False,
+) -> dict[str, Any]:
+    """SVG geometry for a small multi-line chart sharing one x and one y axis."""
+    left, right, top, bottom = 52, 92, 12, 28
+    frame = pd.DataFrame(series).dropna()
+    if frame.empty:
+        return {"width": width, "height": height, "lines": [], "y_ticks": [], "x_ticks": [], "data": {}}
+    low, high = float(frame.min().min()), float(frame.max().max())
+    if floor_zero:
+        high = 0.0
+    ticks = _nice_ticks(low, high)
+    low, high = ticks[0], ticks[-1]
+    plot_w, plot_h = width - left - right, height - top - bottom
 
-    return ma_ok and vol_ok and dd_ok and sr_ok
+    def x(i: int) -> float:
+        return left + plot_w * i / max(len(frame) - 1, 1)
+
+    def y(v: float) -> float:
+        return top + plot_h * (1 - (v - low) / (high - low or 1))
+
+    def label(v: float) -> str:
+        if pct_axis:
+            return f"{v * 100 + 0.0:.0f}%" if round(v * 100) != 0 else "0%"
+        return f"€{v:,.0f}" if money_axis else f"{v:,.2f}"
+
+    lines = []
+    for key in frame.columns:
+        values = frame[key].tolist()
+        points = " ".join(f"{x(i):.1f},{y(v):.1f}" for i, v in enumerate(values))
+        lines.append({"key": key, "points": points, "end_x": x(len(values) - 1), "end_y": y(values[-1]), "end_label": label(values[-1])})
+    # Keep end labels from overlapping.
+    if len(lines) == 2 and abs(lines[0]["end_y"] - lines[1]["end_y"]) < 16:
+        upper, lower = sorted(lines, key=lambda line: line["end_y"])
+        upper["label_y"], lower["label_y"] = upper["end_y"] - 8, lower["end_y"] + 8
+    for line in lines:
+        line.setdefault("label_y", line["end_y"])
+
+    years = sorted({d.year for d in frame.index})
+    x_ticks = []
+    for year in years:
+        first = next(i for i, d in enumerate(frame.index) if d.year == year)
+        if first > 0:
+            x_ticks.append({"x": x(first), "label": str(year)})
+
+    return {
+        "width": width,
+        "height": height,
+        "left": left,
+        "right": width - right,
+        "top": top,
+        "bottom": height - bottom,
+        "lines": lines,
+        "y_ticks": [{"y": y(t), "label": label(t)} for t in ticks],
+        "x_ticks": x_ticks,
+        "data": {
+            "x": [round(x(i), 1) for i in range(len(frame))],
+            "dates": [d.strftime("%d.%m.%Y") for d in frame.index],
+            **{key: [label(v) for v in frame[key]] for key in frame.columns},
+        },
+    }
+
+
+def _nice_ticks(low: float, high: float, count: int = 4) -> list[float]:
+    import math
+
+    span = high - low or abs(high) or 1.0
+    raw = span / count
+    magnitude = 10 ** math.floor(math.log10(raw))
+    step = next(m * magnitude for m in (1, 2, 2.5, 5, 10) if m * magnitude >= raw)
+    start = math.floor(low / step) * step
+    ticks = []
+    value = start
+    while value < high + step * 0.999:
+        ticks.append(round(value, 10))
+        value += step
+    return ticks

@@ -30,12 +30,19 @@ def main() -> int:
         default=DEFAULT_MONTHLY_REPORT_DIR,
         help="Directory to write output reports.",
     )
+    parser.add_argument(
+        "--contribution",
+        type=float,
+        default=None,
+        help="New money to invest this month (overrides plan.monthly_contribution in the config).",
+    )
     args = parser.parse_args()
 
     return run_monthly_scanner(
         config_path=args.config,
         positions_path=args.positions,
         report_dir=args.report_dir,
+        contribution=args.contribution,
     )
 
 

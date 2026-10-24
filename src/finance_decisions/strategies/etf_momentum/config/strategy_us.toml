@@ -1,4 +1,7 @@
 [strategy]
+currency = "USD"
+# Where parked money waits: unfilled slots and the uninvested half in a weak market.
+cash_etf = "BIL"
 etfs = [
   "SPY",
   "QQQ",
@@ -29,6 +32,8 @@ vix_warn = 25.0
 vix_exit = 35.0
 portfolio_warn = -0.10
 portfolio_exit = -0.20
+ma_exit_band = 0.02
+small_loss_warn = -0.04
 
 [scanner]
 top_n = 4
@@ -36,5 +41,66 @@ lookback_months = 6
 ma_period = 200
 max_volatility = 0.35
 max_drawdown = -0.20
+max_vix = 30.0
 min_sharpe = 0.20
+min_momentum = 0.0
 hold_buffer_k = 8
+max_per_group = 1
+risk_free_rate = 0.035
+max_stale_days = 5
+
+[plan]
+# Set this to the amount you add every month (USD). Override with --contribution or MONTHLY_CONTRIBUTION.
+monthly_contribution = 400.0
+weak_market_invest_pct = 0.5
+trim_band = 0.10
+min_trade = 25.0
+fractional_shares = true
+
+[backtest]
+years = 15
+cost_pct = 0.0005
+fee_per_trade = 0.0
+benchmark = "SPY"
+
+# ETFs in the same group move together; the scanner picks at most max_per_group from each.
+[groups]
+"SPY" = "Акції США: S&P 500"
+"QQQ" = "Технології США / Nasdaq-100"
+"XLK" = "Технології США / Nasdaq-100"
+"IWM" = "Малі компанії США"
+"EFA" = "Розвинені ринки поза США"
+"EEM" = "Ринки, що розвиваються"
+"GLD" = "Дорогоцінні метали"
+"SLV" = "Дорогоцінні метали"
+"TLT" = "Держоблігації США"
+"IEF" = "Держоблігації США"
+"LQD" = "Корпоративні облігації США"
+"VNQ" = "Нерухомість США"
+"USO" = "Енергетика та нафта"
+"XLE" = "Енергетика та нафта"
+"DBA" = "Сільгосп сировина"
+"XLV" = "Охорона здоров'я США"
+"XLF" = "Фінанси США"
+"XLU" = "Комунальні послуги США"
+
+[names]
+"SPY" = "SPDR S&P 500"
+"QQQ" = "Invesco QQQ (Nasdaq-100)"
+"XLK" = "Technology Select Sector SPDR"
+"IWM" = "iShares Russell 2000"
+"EFA" = "iShares MSCI EAFE"
+"EEM" = "iShares MSCI Emerging Markets"
+"GLD" = "SPDR Gold Shares"
+"SLV" = "iShares Silver Trust"
+"TLT" = "iShares 20+ Year Treasury Bond"
+"IEF" = "iShares 7-10 Year Treasury Bond"
+"LQD" = "iShares iBoxx $ Investment Grade Corporate Bond"
+"VNQ" = "Vanguard Real Estate"
+"USO" = "United States Oil Fund"
+"XLE" = "Energy Select Sector SPDR"
+"DBA" = "Invesco DB Agriculture"
+"XLV" = "Health Care Select Sector SPDR"
+"XLF" = "Financial Select Sector SPDR"
+"XLU" = "Utilities Select Sector SPDR"
+"BIL" = "SPDR Bloomberg 1-3 Month T-Bill (кеш)"

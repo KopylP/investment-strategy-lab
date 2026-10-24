@@ -1,17 +1,16 @@
 name: Weekly Risk Monitor
 
+# Runs every Sunday after all markets have closed; act on the result on Monday.
 on:
   schedule:
-    - cron: "0 8 * * 1"
+    - cron: "0 17 * * 0"
   workflow_dispatch:
 
 jobs:
   monitor:
     runs-on: ubuntu-latest
     env:
-      POSITIONS_FILE: src/finance_decisions/strategies/etf_momentum/positions.json
       STRATEGY_CONFIG: src/finance_decisions/strategies/etf_momentum/config/strategy.toml
-      REPORT_DIR: reports/latest/etf-momentum/weekly-risk-monitor
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
@@ -31,10 +30,11 @@ jobs:
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          TOP_N: ${{ vars.TOP_N }}
+          CASH_ETF: ${{ vars.CASH_ETF }}
           STOP_LOSS_PCT: ${{ vars.STOP_LOSS_PCT }}
           DRAWDOWN_WARN: ${{ vars.DRAWDOWN_WARN }}
           DRAWDOWN_EXIT: ${{ vars.DRAWDOWN_EXIT }}
+          MA_EXIT_BAND: ${{ vars.MA_EXIT_BAND }}
           VIX_WARN: ${{ vars.VIX_WARN }}
           VIX_EXIT: ${{ vars.VIX_EXIT }}
           PORTFOLIO_WARN: ${{ vars.PORTFOLIO_WARN }}

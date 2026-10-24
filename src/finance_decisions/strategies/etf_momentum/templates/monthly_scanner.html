@@ -1,358 +1,237 @@
 {% extends "base.html" %}
 
-{% block content %}
-<div class="grid summary-grid">
-  <div class="card">
-    <div class="metric-label">Стан ринку</div>
-    <div class="metric-value">{% if market_ok %}OK{% else %}Не OK{% endif %}</div>
-    <div class="metric-note">Визначає розмір нового місячного внеску</div>
-  </div>
-  <div class="card">
-    <div class="metric-label">SPY vs MA200</div>
-    <div class="metric-value">{% if spy_above_ma %}Вище{% else %}Нижче{% endif %}</div>
-    <div class="metric-note">Фільтр широкого ринкового тренду</div>
-  </div>
-  <div class="card">
-    <div class="metric-label">VIX</div>
-    <div class="metric-value">{{ vix | number }}</div>
-    <div class="metric-note">Фільтр стресу та волатильності</div>
-  </div>
-  <div class="card">
-    <div class="metric-label">Кандидати</div>
-    <div class="metric-value">{{ eligible | length }}</div>
-    <div class="metric-note">ETF, які пройшли всі фільтри</div>
-  </div>
-</div>
+{% set cur = currency %}
+{% set parking = plan.cash_etf or "кеш на рахунку" %}
+{% set target = 1.0 / plan.top_n %}
+{% set lookback = settings.lookback_months %}
 
-<section class="decision {% if market_ok %}green{% else %}red{% endif %}">
-  <div class="decision-title">
-    <h2>Рішення на цей місяць</h2>
+{% block content %}
+<header class="page">
+  <h1>План на {{ plan_month }}</h1>
+  <p class="lead">Виконати {{ execute_on }}. Розрахунок за цінами закриття {{ as_of | ua_date }}.</p>
+</header>
+
+<div class="verdict{% if not market_ok %} weak{% endif %}">
+  <p class="verdict-line">
     {% if market_ok %}
-      <span class="badge green large">Market OK</span>
+      Ринок у нормі. Інвестуємо весь внесок: {{ plan.contribution | money(cur) }}.
     {% else %}
-      <span class="badge red large">Market не OK</span>
-    {% endif %}
-  </div>
-  <div class="decision-text">
-    {% if market_ok %}
-      {% if eligible %}
-        {% set weight_pct = (100.0 / (eligible | length)) | round(0) | int %}
-        Інвестувати 100% нового внеску порівну між кандидатами (по {{ weight_pct }}% на кожен актив).
-      {% else %}
-        Нічого купувати: немає відповідних кандидатів. Тримати 100% у кеші.
-      {% endif %}
-    {% else %}
-      {% if eligible %}
-        {% set dca_low = (25.0 / (eligible | length)) | round(1) %}
-        {% set dca_high = (50.0 / (eligible | length)) | round(1) %}
-        Balanced hybrid: інвестувати 25-50% нового внеску (по {{ dca_low }}% - {{ dca_high }}% на кандидата), решту 50-75% тримати в кеші.
-      {% else %}
-        Ринкові умови несприятливі, кандидатів немає. Тримати 100% у кеші.
-      {% endif %}
-    {% endif %}
-  </div>
-  <p class="decision-subtext">
-    {% if market_ok %}
-      Ринковий фільтр пройдено: SPY вище MA200, VIX нижче порогу 30. Режим Balanced hybrid дозволяє повний місячний внесок.
-    {% else %}
-      Ринковий фільтр не пройдено. Balanced hybrid зменшує новий вхід, але не означає автоматичний продаж поточних позицій.
+      Ринок слабкий. Інвестуємо {{ plan.invest_pct | pct0 }} внеску ({{ (plan.contribution * plan.invest_pct) | money(cur) }}), решту паркуємо в {{ parking }}.
     {% endif %}
   </p>
-  <ul class="action-list">
-    <li>
-      <strong>Купити / додати</strong>
-      <span>
-        {% set to_buy = [] %}
-        {% for item in eligible %}
-          {% if item.ETF not in current_positions %}
-            {% set _ = to_buy.append(item.ETF) %}
-          {% endif %}
-        {% endfor %}
-        {% if to_buy %}
-          {% set weight_pct = (100.0 / (eligible | length)) | round(0) | int %}
-          {% for t in to_buy %}
-            {{ t }} ({{ weight_pct }}%){% if not loop.last %}, {% endif %}
-          {% endfor %}
-        {% else %}
-          -
-        {% endif %}
-      </span>
-    </li>
-    <li>
-      <strong>Скоротити / замінити</strong>
-      <span>
-        {% set eligible_tickers = [] %}
-        {% for item in eligible %}
-          {% set _ = eligible_tickers.append(item.ETF) %}
-        {% endfor %}
-        {% set to_sell = [] %}
-        {% for t in current_positions %}
-          {% if t not in eligible_tickers %}
-            {% set _ = to_sell.append(t) %}
-          {% endif %}
-        {% endfor %}
-        {% if to_sell %}
-          {% for t in to_sell %}
-            {{ t }} (0%){% if not loop.last %}, {% endif %}
-          {% endfor %}
-        {% else %}
-          -
-        {% endif %}
-      </span>
-    </li>
-    <li>
-      <strong>Залишити</strong>
-      <span>
-        {% set eligible_tickers = [] %}
-        {% for item in eligible %}
-          {% set _ = eligible_tickers.append(item.ETF) %}
-        {% endfor %}
-        {% set to_hold = [] %}
-        {% for t in current_positions %}
-          {% if t in eligible_tickers %}
-            {% set _ = to_hold.append(t) %}
-          {% endif %}
-        {% endfor %}
-        {% if to_hold %}
-          {% set weight_pct = (100.0 / (eligible | length)) | round(0) | int %}
-          {% for t in to_hold %}
-            {{ t }} ({{ weight_pct }}%){% if not loop.last %}, {% endif %}
-          {% endfor %}
-        {% else %}
-          -
-        {% endif %}
-      </span>
-    </li>
+  <ul>
+    {% for reason in market_reasons %}<li>{{ reason }}</li>{% endfor %}
   </ul>
-</section>
-
-<div class="grid two-col">
-  <section>
-    <h2>Кандидати</h2>
-    {% if eligible %}
-      <div class="grid three-col">
-        {% set weight_pct = (100.0 / (eligible | length)) | round(0) | int %}
-        {% for item in eligible %}
-          <div class="candidate-card">
-            <div class="candidate-name">{{ item.ETF }}</div>
-            <div class="candidate-stats">
-              <div class="stat-row">
-                <span class="stat-label">Цільова вага</span>
-                <span class="stat-value">{{ weight_pct }}%</span>
-              </div>
-              <div class="stat-row">
-                <span class="stat-label">Моментум 6M</span>
-                <span class="stat-value">{{ item['Momentum 6M'] | pct }}</span>
-              </div>
-              <div class="stat-row">
-                <span class="stat-label">Sharpe</span>
-                <span class="stat-value">{{ item.Sharpe | number }}</span>
-              </div>
-              <div class="stat-row">
-                <span class="stat-label">Просадка</span>
-                <span class="stat-value">{{ item.Drawdown | pct }}</span>
-              </div>
-            </div>
-          </div>
-        {% endfor %}
-      </div>
-    {% else %}
-      <p class="empty">Жоден ETF не пройшов фільтри.</p>
-    {% endif %}
-  </section>
-  <section>
-    <h2>Чому такий сигнал</h2>
-    <ul>
-      {% if spy_above_ma %}
-        <li>SPY вище MA200: широкий ринок у висхідному або прийнятному тренді.</li>
-      {% else %}
-        <li>SPY нижче MA200: широкий ринок слабший за свій довгостроковий тренд, тому стратегія блокує нові покупки.</li>
-      {% endif %}
-
-      {% if vix is none or vix is na %}
-        <li>VIX недоступний: фільтр волатильності не може підтвердити спокійний ринок.</li>
-      {% elif vix < 30 %}
-        <li>VIX {{ vix | number }} нижче порогу 30: волатильність не є головною причиною блокування.</li>
-      {% else %}
-        <li>VIX {{ vix | number }} на рівні 30 або вище: ринок показує підвищений стрес.</li>
-      {% endif %}
-
-      {% if market_ok %}
-        <li>Обидва ринкові фільтри пройдені, тому стратегія може розглядати ETF-кандидатів.</li>
-      {% else %}
-        <li>Оскільки хоча б один ринковий фільтр не пройдено, стратегія обирає захисний режим.</li>
-      {% endif %}
-    </ul>
-  </section>
 </div>
 
-<section>
-  <h2>Правила Balanced hybrid</h2>
-  <div class="grid three-col">
-    <div class="candidate-card">
-      <div class="metric-label">Market OK</div>
-      <div class="metric-value">100% внеску</div>
-      <div class="metric-note">Розподілити між кандидатами після ручної перевірки.</div>
-    </div>
-    <div class="candidate-card">
-      <div class="metric-label">Market не OK</div>
-      <div class="metric-value">25-50% внеску</div>
-      <div class="metric-note">Решту 50-75% залишити в кеші до наступного рапорту.</div>
-    </div>
-    <div class="candidate-card">
-      <div class="metric-label">Поточні позиції</div>
-      <div class="metric-value">Не продавати автоматично</div>
-      <div class="metric-note">Вихід раніше - тільки за weekly risk monitor або свідомий ребаланс.</div>
-    </div>
+<section class="block">
+  <h2>Що зробити</h2>
+  <p class="muted small">Виконуйте по черзі: спершу продажі, потім покупки. Відмічайте виконані кроки.</p>
+  <div class="slip">
+    {% if plan.orders %}
+      <ol class="slip-list">
+        {% for order in plan.orders %}
+          {% set verb_class = "park" if order.kind in ["park", "unpark"] else order.action %}
+          <li class="order">
+            <input type="checkbox" id="order-{{ loop.index }}" data-key="{{ as_of }}-{{ loop.index }}">
+            <label for="order-{{ loop.index }}" class="verb {{ verb_class }}">{{ loop.index }}. {{ order.action | action_label }}</label>
+            <div class="order-main">
+              <span class="ticker">{{ order.ticker }}</span>
+              <span class="order-name">{{ order.name }}</span>
+              <div class="order-reason">{{ order.reason | sentence }}</div>
+            </div>
+            <div class="order-money">
+              <div class="amount">{{ order.amount | money(cur) }}</div>
+              <div class="shares">≈ {{ order.shares | shares }} шт. по {{ order.price | money(cur) }}</div>
+            </div>
+          </li>
+        {% endfor %}
+      </ol>
+      {% set sold = plan.orders | selectattr("action", "equalto", "sell") | sum(attribute="amount") %}
+      {% set bought = plan.orders | selectattr("kind", "equalto", "buy") | sum(attribute="amount") %}
+      {% set parked = plan.orders | selectattr("kind", "equalto", "park") | sum(attribute="amount") %}
+      <div class="slip-total">
+        <span>Продажі: <strong class="num">{{ sold | money(cur) }}</strong></span>
+        <span>Покупки ETF: <strong class="num">{{ bought | money(cur) }}</strong></span>
+        {% if parked %}<span>У парковку: <strong class="num">{{ parked | money(cur) }}</strong></span>{% endif %}
+      </div>
+    {% else %}
+      <p class="slip-empty">Цього місяця угод немає. Портфель уже відповідає плану.</p>
+    {% endif %}
   </div>
-  <p class="compact-note">Базовий горизонт утримання - один місячний цикл. Тримати довше можна, якщо ETF залишається серед кандидатів і не порушує risk monitor.</p>
+  {% if plan.notes %}
+    <ul class="notes">
+      {% for note in plan.notes %}<li>{{ note }}</li>{% endfor %}
+    </ul>
+  {% endif %}
 </section>
 
-<section>
-  <h2>Рейтинг ETF</h2>
-  <p class="compact-note">Зелений = top-кандидат. Синій = буферне утримання (ETF є в портфелі і утримується за буферним рангом). Жовтий = ETF виконує умови, але не входить у top 4, бо є сильніші кандидати. Сірий = порушує один із фільтрів.</p>
-  <div class="table-container">
+<section class="block">
+  <h2>Портфель після угод</h2>
+  <p class="muted small">Ціль: {{ target | pct0 }} на кожен із {{ plan.top_n }} слотів. Порожні слоти та парковка лежать у {{ parking }}.</p>
+  {% set ns = namespace(slot=0) %}
+  {% set slots = {} %}
+  {% for row in plan.allocation if row.role == "pick" %}
+    {% set ns.slot = ns.slot + 1 %}
+    {% set _ = slots.update({row.ticker: "s" ~ ns.slot}) %}
+  {% endfor %}
+  <div class="alloc-bar" role="img" aria-label="Розподіл портфеля після угод">
+    {% for row in plan.allocation if row.value_after > 0 %}
+      <div class="alloc-seg {{ slots.get(row.ticker, 's-cash') }}" style="flex: {{ '%.4f' | format(row.weight_after) }} 1 0" title="{{ row.ticker }}: {{ row.weight_after | pct0 }}, {{ row.value_after | money(cur) }}"></div>
+    {% endfor %}
+  </div>
+  <div class="table-wrap">
     <table>
       <thead>
-        <tr>
-          <th>
-            ETF
-            <span class="tooltip dir-down">ⓘ
-              <span class="tooltiptext">
-                <strong>ETF (Тікер)</strong> — унікальний ідентифікатор біржового фонду на біржі.
-              </span>
-            </span>
-          </th>
-          <th class="num">
-            Ранг
-            <span class="tooltip dir-down">ⓘ
-              <span class="tooltiptext">
-                <strong>Ранг</strong> — місце активу в рейтингу за силою моментуму серед тих, що пройшли первинні фільтри.
-              </span>
-            </span>
-          </th>
-          <th class="num">
-            Вага
-            <span class="tooltip dir-down">ⓘ
-              <span class="tooltiptext">
-                <strong>Цільова вага</strong> — рекомендована частка активу в загальній вартості портфеля (наразі 25% для кожного з топ-4).
-              </span>
-            </span>
-          </th>
-          <th>
-            Стратегія
-            <span class="tooltip dir-down">ⓘ
-              <span class="tooltiptext">
-                <strong>Статус стратегії</strong>:<br/>
-                • <strong>Підходить</strong> — входить у топ-4;<br/>
-                • <strong>Утримання</strong> — утримується за буферним рангом;<br/>
-                • <strong>Є кращі</strong> — проходить фільтри, але поза топ-4;<br/>
-                • <strong>Не проходить</strong> — порушує базові фільтри стратегії.
-              </span>
-            </span>
-          </th>
-          <th class="num">
-            Ціна
-            <span class="tooltip dir-down">ⓘ
-              <span class="tooltiptext">
-                <strong>Ціна</strong> — остання відома ціна закриття однієї акції ETF у валюті торгівлі.
-              </span>
-            </span>
-          </th>
-          <th class="num">
-            Моментум 6M
-            <span class="tooltip dir-down">ⓘ
-              <span class="tooltiptext">
-                <strong>Моментум 6M</strong> — доходність активу за 6 місяців (з виключенням останнього неповного місяця для уникнення шумів). Основний показник для сортування рейтингу.
-              </span>
-            </span>
-          </th>
-          <th class="num">1M</th>
-          <th class="num">3M</th>
-          <th class="num">12M</th>
-          <th class="num">
-            Волатильність
-            <span class="tooltip align-left dir-down">ⓘ
-              <span class="tooltiptext">
-                <strong>Волатильність</strong> — річна волатильність активу, розрахована за щомісячними доходностями. Нижча волатильність означає стабільніший тренд (поріг відсікання &lt; {{ (settings.max_volatility * 100) | int }}%).
-              </span>
-            </span>
-          </th>
-          <th class="num">
-            Sharpe
-            <span class="tooltip align-left dir-down">ⓘ
-              <span class="tooltiptext">
-                <strong>Коефіцієнт Шарпа (Sharpe Ratio)</strong> — міра ефективності інвестицій з поправкою на ризик (поріг відсікання &ge; {{ settings.min_sharpe | number }}).
-              </span>
-            </span>
-          </th>
-          <th class="num">
-            Просадка
-            <span class="tooltip align-left dir-down">ⓘ
-              <span class="tooltiptext">
-                <strong>Просадка (Drawdown)</strong> — локальне падіння ціни активу від піку (поріг відсікання &gt; {{ (settings.max_drawdown * 100) | int }}%).
-              </span>
-            </span>
-          </th>
-          <th>MA200</th>
-        </tr>
+        <tr><th>ETF</th><th class="num">Зараз</th><th class="num">Після</th><th class="num">Ціль</th><th class="num">Сума після</th></tr>
       </thead>
       <tbody>
-        {% set eligible_tickers = [] %}
-        {% for item in eligible %}
-          {% set _ = eligible_tickers.append(item.ETF) %}
-        {% endfor %}
-        {% for item in table %}
-          {% set status = item | strategy_status(item.ETF in eligible_tickers, settings) %}
-          <tr{% if status.row_class %} class="{{ status.row_class }}"{% endif %}>
-            <td><strong>{{ item.ETF }}</strong></td>
-            <td class="num">{% set rank = item.get('Rank') %}{% if rank is not none and rank is not na %}{{ rank | int }}{% else %}-{% endif %}</td>
-            <td class="num">
-              {% if item.ETF in eligible_tickers %}
-                {{ (100.0 / (eligible | length)) | round(0) | int }}%
-              {% else %}
-                -
-              {% endif %}
-            </td>
-            <td>{{ status | strategy_badge | safe }}</td>
-            <td class="num">{{ item.Price | money(item.ETF | ticker_currency) }}</td>
-            <td class="num {{ item['Momentum 6M'] | value_class }}">{{ item['Momentum 6M'] | pct }}</td>
-            <td class="num {{ item['Return 1M'] | value_class }}">{{ item['Return 1M'] | pct }}</td>
-            <td class="num {{ item['Return 3M'] | value_class }}">{{ item['Return 3M'] | pct }}</td>
-            <td class="num {{ item['Return 12M'] | value_class }}">{{ item['Return 12M'] | pct }}</td>
-            <td class="num">{{ item.Volatility | pct }}</td>
-            <td class="num">{{ item.Sharpe | number }}</td>
-            <td class="num {{ item.Drawdown | value_class }}">{{ item.Drawdown | pct }}</td>
-            <td>{% if item['Above MA200'] %}Вище{% else %}Нижче{% endif %}</td>
+        {% for row in plan.allocation if row.value_after > 0 or row.value_before > 0 %}
+          <tr>
+            <td><span class="swatch {{ slots.get(row.ticker, 's-cash') }}"></span><strong>{{ row.ticker }}</strong><span class="sub">{{ row.name }}</span></td>
+            <td class="num">{{ row.weight_before | pct0 }}</td>
+            <td class="num">{{ row.weight_after | pct0 }}</td>
+            <td class="num">{% if row.role == "cash" %}залишок{% else %}{{ row.target_weight | pct0 }}{% endif %}</td>
+            <td class="num">{{ row.value_after | money(cur) }}</td>
           </tr>
-        {% else %}
-          <tr><td colspan="13" class="empty">Немає ETF-метрик для показу.</td></tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
+  <p class="muted small" style="margin-top:10px">Разом після угод: {{ plan.total_after | money(cur) }} (зараз {{ plan.total_before | money(cur) }} + внесок {{ plan.contribution | money(cur) }}).</p>
 </section>
 
-<section>
-  <h2>Коротка довідка</h2>
-  <ul>
-    <li><strong>SPY</strong> - ETF на S&amp;P 500, тут він є індикатором широкого ринку США.</li>
-    <li><strong>VIX</strong> - індекс очікуваної волатильності; значення 30+ блокує нові покупки.</li>
-    <li><strong>MA200</strong> - 200-денна середня. Вище MA200 = тренд прийнятний для стратегії.</li>
-    <li><strong>Моментум 6M</strong> - дохідність за попередні шість місяців, без поточного неповного місяця.</li>
-  </ul>
+<section class="block">
+  <h2>Чому саме ці ETF</h2>
+  {% if eligible %}
+    <p>Обираємо найсильніші за {{ lookback }}-місячним моментумом ETF, які пройшли всі фільтри, не більше {{ settings.max_per_group }} з кожної групи схожих фондів.</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>ETF</th><th class="num">Моментум {{ lookback }}M</th><th class="num">Sharpe</th><th class="num">Волатильність</th><th>Чому обрано</th></tr>
+        </thead>
+        <tbody>
+          {% for item in eligible %}
+            <tr>
+              <td><span class="swatch {{ slots.get(item.ETF, 's-cash') }}"></span><strong>{{ item.ETF }}</strong><span class="sub">{{ item.Group }}</span></td>
+              <td class="num">{{ item.Momentum | pct }}</td>
+              <td class="num">{{ item.Sharpe | number }}</td>
+              <td class="num">{{ item.Volatility | pct0 }}</td>
+              <td>{{ item.Reason | sentence }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p>Жоден ETF не пройшов усі фільтри, тому нові гроші паркуються в {{ parking }}. Повний список причин нижче, у рейтингу.</p>
+  {% endif %}
 </section>
 
-<section>
-  <h2>Як читати цільові ваги (наприклад, 25%) та статус рекомендацій</h2>
-  <div class="callout" style="border-left-color: var(--blue); background: var(--blue-bg); color: #1f466f; margin-top: 10px;">
-    <strong>Цільова вага (наприклад, 25%)</strong> — це бажана частка активу в <em>усьому вашому портфелі</em> після ребалансу, а не відсоток від щомісячного поповнення.<br/><br/>
-    <strong>Як зробити ребаланс:</strong>
-    <ul style="margin-top: 8px; padding-left: 20px;">
-      <li><strong>Не продавайте</strong> активи зі статусом <strong>«Залишити»</strong> (Hold), якщо вони не перевищують цільову вагу.</li>
-      <li>Використовуйте <strong>нові кошти</strong> та кошти від продажу активів, які випали зі стратегії (статус <strong>«Скоротити»</strong>), щоб придбати активи зі статусом <strong>«Купити»</strong>.</li>
-      <li>Докуповуйте активи так, щоб кожен із обраних кандидатів становив приблизно рівну частку від <em>загальної вартості портфеля</em> після поповнення (наприклад, по 25% на кожен з 4 активів).</li>
-    </ul>
+<section class="block">
+  <h2>Як виконати угоди</h2>
+  <ol class="steps">
+    {% if cur == "EUR" %}
+      <li>Торгуйте на Xetra з 9:30 до 17:00 за центральноєвропейським часом (10:30–18:00 за Києвом). Перші пів години після відкриття спреди ширші.</li>
+    {% else %}
+      <li>Торгуйте з 9:45 до 15:45 за Нью-Йорком (16:45–22:45 за Києвом). Перші та останні 15 хвилин спреди ширші.</li>
+    {% endif %}
+    <li>Спершу виконайте продажі й дочекайтеся, поки гроші зарахуються.</li>
+    <li>Ставте лімітні ордери: для купівлі трохи вище поточної ціни, для продажу трохи нижче. Ринкові ордери на ETF можуть виконатися за поганою ціною.</li>
+    <li>Ціни в плані взято з останнього закриття, тож фактичні суми трохи відрізнятимуться. Це нормально.</li>
+    <li>Оновіть positions.json: видаліть записи проданих ETF, додайте кожну покупку окремим записом із фактичною ціною та кількістю, а в полі <code>cash</code> вкажіть залишок грошей на рахунку.</li>
+  </ol>
+  {% if positions_snippet %}
+    <p class="muted small" style="margin-top:14px">Заготовка нових записів для positions.json (замініть ціну й кількість на фактичні):</p>
+    <pre>{{ positions_snippet }}</pre>
+  {% endif %}
+</section>
+
+<details>
+  <summary>Повний рейтинг ETF ({{ table | length }})</summary>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="num">Ранг</th><th>ETF</th><th>Статус</th>
+          <th class="num">Моментум {{ lookback }}M</th><th class="num">1M</th><th class="num">3M</th><th class="num">12M</th>
+          <th class="num">Волат.</th><th class="num">Sharpe</th><th class="num">Просадка</th><th class="num">Ціна</th><th>Причина</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in table %}
+          <tr{% if item.Status in ["selected", "buffer"] %} class="is-picked"{% endif %}>
+            <td class="num">{% if item.Rank is not na %}{{ item.Rank | int }}{% else %}-{% endif %}</td>
+            <td><strong>{{ item.ETF }}</strong><span class="sub">{{ item.Name }}</span></td>
+            <td><span class="pill {{ item.Status }}">{{ item.Status | scan_status }}</span></td>
+            <td class="num {{ item.Momentum | value_class }}">{{ item.Momentum | pct }}</td>
+            <td class="num">{{ item['Return 1M'] | pct }}</td>
+            <td class="num">{{ item['Return 3M'] | pct }}</td>
+            <td class="num">{{ item['Return 12M'] | pct }}</td>
+            <td class="num">{{ item.Volatility | pct0 }}</td>
+            <td class="num">{{ item.Sharpe | number }}</td>
+            <td class="num">{{ item.Drawdown | pct }}</td>
+            <td class="num">{{ item.Price | money(cur) }}</td>
+            <td class="small">{{ item.Reason | sentence }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="12" class="muted">Немає даних для рейтингу.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
-</section>
+</details>
+
+<details>
+  <summary>Правила стратегії</summary>
+  <div class="details-body">
+    <dl class="rules">
+      <dt>Стан ринку</dt>
+      <dd>У нормі, коли SPY вище своєї {{ settings.ma_period }}-денної середньої і VIX нижче {{ settings.max_vix | int }}. Якщо даних немає, ринок вважається слабким.</dd>
+      <dt>Слабкий ринок</dt>
+      <dd>Інвестуємо {{ plan.settings.weak_market_invest_pct | pct0 }} внеску, решту паркуємо в {{ parking }}. Поточні позиції через це не продаємо. Коли ринок знову в нормі, запарковані гроші повертаються в роботу.</dd>
+      <dt>Фільтри ETF</dt>
+      <dd>Ціна вище MA{{ settings.ma_period }}; моментум за {{ lookback }} повних місяців вище {{ settings.min_momentum | pct0 }}; річна волатильність нижче {{ settings.max_volatility | pct0 }}; просадка від річного максимуму не глибше {{ settings.max_drawdown | pct0 }}; Sharpe за 12 місяців не менше {{ settings.min_sharpe }} (з урахуванням ставки кешу {{ risk_free_rate | pct }}); свіжі дані, не старші {{ settings.max_stale_days }} днів.</dd>
+      <dt>Вибір</dt>
+      <dd>До {{ settings.top_n }} ETF з найвищим моментумом, не більше {{ settings.max_per_group }} з групи схожих фондів. Те, що вже є в портфелі, утримуємо, поки воно в топ-{{ settings.hold_buffer_k }}.</dd>
+      <dt>Ваги</dt>
+      <dd>Кожен слот — {{ target | pct0 }} портфеля. Якщо кандидатів менше, ніж слотів, частка порожніх слотів лишається в {{ parking }}.</dd>
+      <dt>Ребаланс</dt>
+      <dd>Продаємо те, що випало з вибірки. Нові гроші спрямовуємо в позиції нижче цілі. Прибуткову позицію скорочуємо, лише якщо вона перевищує ціль більш ніж на {{ plan.settings.trim_band | pct0 }}. Угоди менше {{ plan.settings.min_trade | money(cur) }} пропускаємо.</dd>
+      <dt>Ризики між планами</dt>
+      <dd>Щотижневий монітор продає позицію, якщо спрацював стоп-лосс, ціна впала нижче MA200 більш ніж на допуск або просадка від максимуму перевищила ліміт.</dd>
+    </dl>
+  </div>
+</details>
+
+<details>
+  <summary>Словник термінів</summary>
+  <div class="details-body">
+    <dl class="rules">
+      <dt>MA200</dt><dd>Середня ціна за останні 200 торгових днів. Ціна вище неї означає висхідний тренд.</dd>
+      <dt>VIX</dt><dd>Індекс очікуваної волатильності ринку США, «індекс страху». Понад 30 означає стрес.</dd>
+      <dt>Моментум</dt><dd>Дохідність за останні {{ lookback }} повних місяців. Поточний незавершений місяць не враховується.</dd>
+      <dt>Волатильність</dt><dd>Наскільки сильно коливається ціна за рік, у відсотках. Менше означає спокійніший фонд.</dd>
+      <dt>Sharpe</dt><dd>Дохідність понад ставку кешу на одиницю ризику за 12 місяців. Більше означає кращу якість тренду.</dd>
+      <dt>Просадка</dt><dd>Наскільки ціна зараз нижче свого максимуму за останній рік.</dd>
+      <dt>Група</dt><dd>Фонди, що рухаються майже однаково (наприклад, Nasdaq-100 і технології S&amp;P 500). Брати кілька таких фондів означає робити ту саму ставку двічі.</dd>
+      <dt>Парковка</dt><dd>{{ parking }}: фонд грошового ринку, який росте приблизно на ставку центробанку і майже не коливається.</dd>
+    </dl>
+  </div>
+</details>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.querySelectorAll(".order input[type=checkbox]").forEach(function (box) {
+    var row = box.closest(".order");
+    var key = "plan-" + box.dataset.key;
+    try { box.checked = localStorage.getItem(key) === "1"; } catch (e) {}
+    row.classList.toggle("done", box.checked);
+    box.addEventListener("change", function () {
+      row.classList.toggle("done", box.checked);
+      try { localStorage.setItem(key, box.checked ? "1" : "0"); } catch (e) {}
+    });
+  });
+</script>
 {% endblock %}
