@@ -141,3 +141,15 @@ def test_completed_month_closes_drops_month_in_progress() -> None:
     assert completed_month_closes(series, now=pd.Timestamp("2026-04-02")).index[-1].month == 3
     full = pd.Series(1.0, index=pd.date_range("2026-01-01", "2026-03-31", freq="B"))
     assert completed_month_closes(full, now=pd.Timestamp("2026-03-31")).index[-1].month == 3
+
+
+def test_larger_holding_wins_within_a_group() -> None:
+    prices = _prices({"NDX": _trend(100, 0.4), "TECH": _trend(100, 0.5), "GOLD": _trend(100, 0.2)})
+    groups = {"NDX": "US tech", "TECH": "US tech", "GOLD": "Gold"}
+    settings = ScannerSettings(top_n=3, lookback_months=3, ma_period=20)
+
+    # NDX is the bigger holding, so it keeps the tech slot although TECH ranks higher.
+    result = scan_etfs(prices, settings, current_positions=["NDX", "TECH"], groups=groups)
+
+    assert "NDX" in result.eligible.index
+    assert result.table.loc["TECH", "Status"] == "group_blocked"

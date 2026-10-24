@@ -1,11 +1,25 @@
 {
-  "cash": 0.0,
+  "cash": 0.27,
   "positions": [
     {
       "ticker": "NQSE.DE",
-      "entry_price": 17.756,
-      "shares": 22.52759631,
+      "entry_price": 15.528,
+      "shares": 31.57,
       "entry_date": "2026-06-01",
+      "currency": "EUR"
+    },
+    {
+      "ticker": "QDVE.DE",
+      "entry_price": 42.954,
+      "shares": 3.49,
+      "entry_date": null,
+      "currency": "EUR"
+    },
+    {
+      "ticker": "QDVI.DE",
+      "entry_price": 16.782,
+      "shares": 8.88,
+      "entry_date": null,
       "currency": "EUR"
     }
   ]

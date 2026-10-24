@@ -147,7 +147,7 @@ def run_backtest(
                 history,
                 settings=config.scanner,
                 etfs=config.etfs,
-                current_positions=list(holdings),
+                current_positions=sorted(holdings, key=lambda t: holdings[t] * float(today_prices.get(t) or 0.0), reverse=True),
                 groups=config.groups,
                 names=config.names,
                 cash_etf=config.cash_etf,
