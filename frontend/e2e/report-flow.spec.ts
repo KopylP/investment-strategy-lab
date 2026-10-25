@@ -18,10 +18,15 @@ test('a new user goes from registration to a partly executed monthly report', as
   await shot('02-overview-onboarding');
 
   await page.goto('/accounts/new');
-  await page.getByRole('button', { name: /Як у Python-флоу/ }).click();
-  await expect(page.getByText('US ETF momentum')).toBeVisible();
+  await page.getByRole('button', { name: 'Далі' }).click();
+  await page.getByRole('button', { name: /Європа 70 \/ США 30/ }).click();
+  await expect(page.getByText('US ETF momentum').first()).toBeVisible();
   await shot('03-account-new');
+  await page.getByRole('button', { name: 'Далі' }).click();
+  await page.locator('input#contribution').fill('227');
+  await page.getByRole('button', { name: 'Далі' }).click();
   await page.getByRole('button', { name: 'Відкрити рахунок' }).click();
+  await page.getByRole('button', { name: /Подивитись рахунок/ }).click();
   await page.waitForURL(/\/accounts\/[0-9a-f-]{36}$/);
   await expect(page.getByRole('heading', { name: 'Під-портфелі', exact: true })).toBeVisible();
   await expect(page.locator('input#contribution')).toHaveValue(/227/);
@@ -86,7 +91,7 @@ test('a new user goes from registration to a partly executed monthly report', as
   await shot('11b-taxes');
 
   await page.goto('/holdings');
-  await expect(page.getByRole('heading', { name: 'EU momentum' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Європа' })).toBeVisible();
   await shot('12-holdings');
 
   await page.goto('/strategies');
