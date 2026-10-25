@@ -1,6 +1,6 @@
 # План міграції: Investment Strategy Lab → .NET модулярний моноліт
 
-> Статус: **ЗАТВЕРДЖЕНО, У РОБОТІ** (відкриті питання §15 прийнято за пропозиціями)
+> Статус: **ЗАТВЕРДЖЕНО, У РОБОТІ** (відкриті питання §15 прийнято за пропозиціями; прискорення й відмова від Wolverine — D12, D13)
 > Дата: 2026-10-25
 > Обсяг: повна специфікація архітектури (DDD), структура репозиторію, етапи міграції.
 
@@ -57,6 +57,8 @@
 | D9 | Графіки будуються зі щоденних знімків, які похідні від ledger-а. Зміни заднім числом інвалідують знімки від дати зміни. |
 | D10 | AI-рецензент — порт `IPlanReviewer` + `NullPlanReviewer`; місце в рапорті й життєвому циклі зарезервоване. |
 | D11 | Без пошти й Telegram на старті; сповіщення тільки в застосунку. |
+| D12 | **Прискорення розробки** (2026-10-25): великі кроки з комітом на під-етап; тести тільки для важливого — доменні правила й розрахунки (ребалансер, податки, TWR, розклади, якість котирувань), golden-тести, ArchitectureTests і **один наскрізний integration-тест на етап**. Без тестів для DTO, endpoint-ів, конфігурації й «проводки». Валідація вводу — у фабриках VO (`TryOf`), без FluentValidation. |
+| D13 | **Без Wolverine** (2026-10-25): для одного процесу він заважкий (кодогенерація під час старту, Roslyn/MSBuild у залежностях, неявні транзакції). Замість нього — власний outbox/inbox (~300 рядків) + планувальник на `BackgroundService`; команди й запити — прямий виклик handler-а через DI. ADR-0003 оновлено. |
 
 ---
 
@@ -68,9 +70,9 @@
 | Runtime | **.NET 10 (LTS), C# 14** | extension members, `field`, null-conditional assignment, collection expressions, primary constructors |
 | Solution | `.slnx`, Central Package Management (`Directory.Packages.props`) | |
 | API | ASP.NET Core Minimal APIs, `MapGroup` на модуль, вбудований OpenAPI | Типізовані результати `TypedResults` |
-| Messaging | **Wolverine** (MIT): in-process bus, EF Core outbox/inbox, scheduled messages | Пізніше той самий код працює через RabbitMQ / Azure Service Bus (див. §9) |
+| Messaging | **Власний легкий outbox/inbox** у схемі кожного модуля + `BackgroundService`-диспетчер; handler-и викликаються напряму через DI (без шини) | Рішення D13: замість Wolverine. Пізніше диспетчер outbox можна перемкнути на RabbitMQ без зміни handler-ів (див. §9) |
 | ORM / БД | EF Core 10 + **PostgreSQL**; окрема схема і `DbContext` на модуль | named query filters для `OwnerId` |
-| Фонові задачі | Wolverine scheduled/recurring messages (або Hangfire, див. §15) | нічні котирування, щомісячні рапорти, щотижневий ризик |
+| Фонові задачі | Власний планувальник (`BackgroundService` з розкладом у часовому поясі) | нічні котирування, щомісячні рапорти, щотижневий ризик |
 | Auth | ASP.NET Core Identity, cookie-автентифікація (BFF, same-origin) + Google login (опційно) | без JWT у localStorage |
 | Оркестрація dev | **.NET Aspire** AppHost: Postgres, Python-сайдкар, Angular dev server | |
 | Логи/телеметрія | OpenTelemetry через Aspire ServiceDefaults | |
@@ -463,7 +465,7 @@ sequenceDiagram
 6. Performance: `MarkDirty(from = executedOn)` → `RebuildSnapshots`.
 7. UI оновлюється (polling `httpResource` або SSE — див. §15).
 
-Ідемпотентність: Wolverine inbox + унікальний індекс на `Transaction.SourceReference`.
+Ідемпотентність: inbox споживача + унікальний індекс на `Transaction.SourceReference`.
 
 ### 7.3 Сторно (скасування відмітки)
 `UndoActionMark` → DE `ActionMarkUndone` → `ReverseTransaction` у Portfolio → `TransactionReversed` → Taxation і Performance перераховують.
@@ -615,7 +617,7 @@ public sealed class RecordPartialFillHandler(IReportRepository reports, TimeProv
                            Money.Of(command.Fee, report.Currency), command.ExecutedOn);
 
         return report.RecordPartialFill(ReportActionId.Of(command.ActionId), fill, command.Note);
-        // збереження + outbox — через Wolverine transactional middleware
+        // збереження + outbox — repository.SaveChangesAsync: interceptor пише integration events в outbox у тій самій транзакції
     }
 }
 
@@ -625,8 +627,8 @@ internal static class RecordPartialFillEndpoint
     public static RouteGroupBuilder MapRecordPartialFill(this RouteGroupBuilder group)
     {
         group.MapPost("/{reportId:guid}/actions/{actionId:guid}/partial-fills", async (
-                Guid reportId, Guid actionId, PartialFillRequest body, IMessageBus bus, CancellationToken ct) =>
-            (await bus.InvokeAsync<Result>(body.ToCommand(reportId, actionId), ct)).ToHttpResult())
+                Guid reportId, Guid actionId, PartialFillRequest body, RecordPartialFillHandler handler, CancellationToken ct) =>
+            (await handler.Handle(body.ToCommand(reportId, actionId), ct)).ToHttpResult())
             .WithName("RecordPartialFill");
         return group;
     }
@@ -642,7 +644,7 @@ internal static class RecordPartialFillEndpoint
 1. **Модуль = проєкт `InvestmentLab.<Module>` + проєкт `InvestmentLab.<Module>.Contracts`.** Інші модулі посилаються **тільки** на `Contracts`. Перевіряється ArchUnitNET у CI.
 2. `Contracts` містить тільки: integration events, команди між модулями, інтерфейси запитів (`I<Module>Queries`) і DTO з примітивами (`Guid`, `decimal`, `string`, `DateOnly`). Ніяких доменних типів.
 3. **Своя схема БД** (`marketdata`, `strategies`, `portfolio`, `rebalancing`, `taxation`, `performance`, `identity`) і свій `DbContext`. Без FK між схемами, без JOIN-ів між модулями.
-4. Асинхронна взаємодія — через **outbox/inbox Wolverine**. Сьогодні транспорт in-process (через Postgres-backed durable queues), завтра — RabbitMQ без зміни handler-ів.
+4. Асинхронна взаємодія — через **власний outbox/inbox** (таблиці в схемі модуля, диспетчер — `BackgroundService`). Сьогодні доставка in-process, завтра — RabbitMQ без зміни handler-ів.
 5. Синхронні запити між модулями (`IQuoteHistory`, `IFxRates`, `IAccountSetupQueries`, `IHoldingsQueries`, `ITaxEstimator`, `IStrategyEvaluation`) — інтерфейси в `Contracts`. Сьогодні — in-process реалізація, завтра — HTTP/gRPC-клієнт з тим самим інтерфейсом.
 6. Модулі, яким потрібні чужі дані для своїх розрахунків (Taxation, Performance), **тримають копії** з подій, а не питають щоразу.
 7. Кожен модуль реєструється через `IModule` (`AddServices`, `MapEndpoints`, `ConfigureMessaging`). Host нічого не знає про внутрішність модулів.
@@ -1524,6 +1526,25 @@ strategy-engine/
 |---|---|
 | 0. Фундамент | ✅ виконано |
 | 1. Strategy Engine API | ✅ виконано |
+| 2. MarketData | 🔄 у роботі — див. «З чого продовжити» |
+
+### З чого продовжити (етап 2, MarketData)
+
+**Вже є:** `ModuleDbContext` (схема модуля, snake_case, конвертери VO SharedKernel, `decimal(20,8)`) з тестами; пакети EF Core 10 + Npgsql у CPM; локальний `dotnet-ef` (`backend/.config/dotnet-tools.json`, `dotnet tool restore`).
+
+**Наступні кроки по черзі (один коміт на крок):**
+
+1. **2a. Інфраструктура модулів у `BuildingBlocks`:**
+   - `AddModuleDbContext<T>()` — `AddDbContext` + `UseNpgsql(connection "investmentlab", MigrationsHistoryTable у схемі модуля)` + `UseSnakeCaseNamingConvention()` + `EnrichNpgsqlDbContext<T>()`; реєстр контекстів для мігратора й диспетчера;
+   - `DatabaseMigrator` (hosted service, мігрує всі контексти на старті);
+   - outbox: `OutboxMessage` (`Id`, `Type`, `Payload` jsonb, `OccurredAt`, `ProcessedAt`, `Attempts`, `Error`) мапиться в кожному `ModuleDbContext`; `ModuleDbContext.Publish(event)`; `OutboxDispatcher` (`BackgroundService`) доставляє в `IIntegrationEventHandler<T>` (handler-и ідемпотентні; Contracts нічого не реєструють — тип події за `FullName` з handler-ів у DI);
+   - планувальник: `IScheduledJob` + `DailySchedule(TimeOnly, TimeZoneInfo, weekdaysOnly)` + `JobScheduler` (тест на обчислення наступного запуску).
+2. **2b. Instruments:** `Instrument` (AR: `InstrumentId`, `Isin?` — обов'язковий для ETF, `Name`, `Exchange`, `TradingCurrency`, `InstrumentKind` Etf/Index, `Group`, `IsAccumulating?`, `ProviderSymbols`), `AssignProviderSymbol`; сід із `instruments.json` (усі ETF з `strategy.toml`/`strategy_us.toml` + `XEON.DE`, `SPY` як benchmark, `^VIX` як індекс; ISIN-и звірити з сайтом емітента); `IInstrumentCatalog`; API `GET/POST /api/market-data/instruments`.
+3. **2c. Quotes:** `DailyQuote` (`Close`, `AdjustedClose`, `Source`, `FetchedAt`, `QualityFlags`), `QuoteQualityInspector` (Spike > 20% за день, Gap > 5 робочих днів; Stale — під час читання), `QuoteCorrection` (AR; виправлені котирування інжест не перезаписує); `IQuoteProvider` → `YFinanceQuoteProvider` (HTTP до `strategy-engine` `/v1/prices`, таймаути довші за стандартні: `RemoveAllResilienceHandlers()` + свій `AddStandardResilienceHandler`); `IngestDailyQuotes` (від останньої дати + 1 або 3 роки назад, групування за датою початку) + нічна задача (22:30 Europe/Warsaw, пн–пт) + кнопка `POST /api/market-data/quotes/ingest`; `IQuoteHistory` (`GetQuoteHistory`, `GetLatestPrices`); IE `DailyQuotesIngestedV1`, `QuoteCorrectedV1`.
+4. **2d. FxRates:** `FxRate` (NBP, `Base`, `Quote`=PLN, `EffectiveDate`, `Rate`, `TableNumber`), `FxRateResolver` (останній курс **строго до** дати, не старший 10 днів — правило Белки); `NbpFxRateProvider` (`https://api.nbp.pl/api/exchangerates/rates/a/{code}/{from}/{to}/?format=json`, діапазон ≤ 93 дні — запити шматками); інжест EUR, USD за 2 роки + задача о 13:00 Europe/Warsaw; `IFxRates`.
+5. **Integration-тест етапу** (WebApplicationFactory + Testcontainers Postgres, фейкові `IQuoteProvider`/`IFxRateProvider`): інжест → історія → виправлення → `QuoteCorrectedV1` з outbox → повторний інжест не затирає виправлення.
+
+Далі — етап 3 (Identity + Portfolio) за таблицею нижче.
 
 Кожен етап закінчується робочим станом і зеленим CI. Поточний Python-флоу (GitHub Actions) працює паралельно до етапу 9.
 
@@ -1550,7 +1571,7 @@ strategy-engine/
 | Q1 | Назва кореневого namespace/solution | `InvestmentLab` |
 | Q2 | Шар `Api/` (endpoints) — окрема 4-та папка у фічі чи endpoint поруч із handler-ом | Окрема папка `<Feature>/Api/`, щоб `Application` не залежав від ASP.NET |
 | Q3 | Окремий проєкт `<Module>.Contracts` на модуль | Так — це головна гарантія виділення в мікросервіс |
-| Q4 | Messaging/фонові задачі: Wolverine (outbox + scheduled) чи власні абстракції + Hangfire | Wolverine |
+| Q4 | Messaging/фонові задачі: Wolverine (outbox + scheduled) чи власні абстракції + Hangfire | ✅ Вирішено (D13): власний легкий outbox/inbox і планувальник, без Wolverine і Hangfire |
 | Q5 | Монорепо (backend + frontend + strategy-engine в одному репо) | Так, з окремими CI-workflow |
 | Q6 | UI-кіт | ✅ Вирішено: PrimeNG + Sakai (§11.1) |
 | Q7 | Оновлення UI після відмітки: polling чи SSE | Спершу повторне завантаження після команди; SSE пізніше |

@@ -5,7 +5,7 @@ namespace InvestmentLab.ArchitectureTests;
 /// </summary>
 internal static class DependencyRules
 {
-    private static readonly string[] Infrastructure = ["Microsoft.EntityFrameworkCore", "Microsoft.AspNetCore", "Wolverine", "Npgsql"];
+    private static readonly string[] Infrastructure = ["Microsoft.EntityFrameworkCore", "Microsoft.AspNetCore", "Npgsql"];
     private static readonly string[] PersistenceAndHttp = ["Microsoft.EntityFrameworkCore", "Microsoft.AspNetCore", "Npgsql"];
 
     public static string? Check(string fromNamespace, string toNamespace)
@@ -91,7 +91,7 @@ internal static class DependencyRules
 
     private static string? CheckFramework(CodeLocation from, CodeLocation to) => from.Layer switch
     {
-        "Domain" when to.IsUnder(Infrastructure) => "Domain must not depend on EF Core, ASP.NET Core, Wolverine or Npgsql",
+        "Domain" when to.IsUnder(Infrastructure) => "Domain must not depend on EF Core, ASP.NET Core or Npgsql",
         "Application" when to.IsUnder(PersistenceAndHttp) => "Application must not depend on EF Core, ASP.NET Core or Npgsql",
         _ => null,
     };
