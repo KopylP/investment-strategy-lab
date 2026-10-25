@@ -1,36 +1,27 @@
 <app-page-header title="Огляд" [subtitle]="store.account() ? store.account()!.name + ' · ' + store.account()!.broker : 'Почнімо з налаштування'">
 </app-page-header>
 
-@if (store.accountsLoaded() && store.strategiesLoaded() && (!store.hasStrategies() || !store.account() || !store.hasStrategyAssigned())) {
+@if (store.accountsLoaded() && !store.account()) {
   <div class="card">
-    <h2 class="text-lg font-semibold mb-4">Три кроки до першого рапорту</h2>
-    <div class="flex flex-col gap-4">
-      <div class="flex items-center gap-3">
-        <i class="pi text-xl" [class.pi-check-circle]="store.hasStrategies()" [class.text-primary]="store.hasStrategies()" [class.pi-circle]="!store.hasStrategies()"></i>
-        <div class="flex-1">
-          <div class="font-medium">Стратегії</div>
-          <div class="text-sm text-muted-color">Стандартні EU та US моментум-стратегії — ті самі, що в Python-флоу.</div>
-        </div>
-        @if (!store.hasStrategies()) { <p-button label="Створити" size="small" routerLink="/strategies" /> }
+    <div class="flex flex-col md:flex-row md:items-center gap-6">
+      <i class="pi pi-compass text-5xl text-primary"></i>
+      <div class="flex-1">
+        <h2 class="text-xl font-semibold m-0">Почнімо: налаштуйте свій рахунок</h2>
+        <p class="text-muted-color mt-2 mb-0">
+          За кілька кроків: який у вас брокер, як розділити гроші, яку стратегію обрати і скільки вкладати щомісяця.
+          Стандартні стратегії вже готові — кожен крок пояснює, що і навіщо.
+        </p>
       </div>
-      <div class="flex items-center gap-3">
-        <i class="pi text-xl" [class.pi-check-circle]="!!store.account()" [class.text-primary]="!!store.account()" [class.pi-circle]="!store.account()"></i>
-        <div class="flex-1">
-          <div class="font-medium">Рахунок і під-портфелі</div>
-          <div class="text-sm text-muted-color">Цільові частки, стратегія для кожного під-портфеля, щомісячний внесок.</div>
-        </div>
-        @if (!store.account()) { <p-button label="Відкрити рахунок" size="small" routerLink="/accounts/new" /> }
-        @else if (!store.hasStrategyAssigned()) { <p-button label="Призначити стратегії" size="small" [routerLink]="['/accounts', store.account()!.id]" /> }
-      </div>
-      <div class="flex items-center gap-3">
-        <i class="pi pi-circle text-xl"></i>
-        <div class="flex-1">
-          <div class="font-medium">Позиції й перший рапорт</div>
-          <div class="text-sm text-muted-color">Імпортуйте positions.json або почніть з нуля — рапорт покаже, що купити.</div>
-        </div>
-      </div>
+      <p-button label="Почати налаштування" icon="pi pi-arrow-right" iconPos="right" routerLink="/accounts/new" />
     </div>
   </div>
+} @else if (store.account() && store.strategiesLoaded() && !store.hasStrategyAssigned()) {
+  <p-message severity="warn" styleClass="mb-4">
+    <div class="flex flex-wrap items-center justify-between gap-3 w-full">
+      <span>Жодному під-портфелю не призначено стратегію — рапорти не знатимуть, що купувати.</span>
+      <p-button label="Обрати стратегію" size="small" [routerLink]="['/accounts', store.account()!.id]" />
+    </div>
+  </p-message>
 }
 
 @if (store.account()) {
