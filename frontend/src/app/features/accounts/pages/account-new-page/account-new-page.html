@@ -1,64 +1,201 @@
-<app-page-header title="Новий рахунок" subtitle="Реальний брокерський рахунок; під-портфелі ділять його віртуально" />
+<app-page-header title="Новий рахунок" subtitle="Кілька кроків — і сервіс щомісяця підказуватиме, що купити в брокера" />
 
-<div class="card">
-  <h2 class="text-lg font-semibold mb-4">1. Рахунок</h2>
-  <div class="grid gap-4 md:grid-cols-3">
-    <div class="flex flex-col gap-2">
-      <label for="name" class="font-medium">Назва</label>
-      <input pInputText id="name" [ngModel]="name()" (ngModelChange)="name.set($event)" />
-    </div>
-    <div class="flex flex-col gap-2">
-      <label for="broker" class="font-medium">Брокер</label>
-      <input pInputText id="broker" [ngModel]="broker()" (ngModelChange)="broker.set($event)" />
-    </div>
-    <div class="flex flex-col gap-2">
-      <span class="font-medium">Валюта рахунку</span>
-      <p-selectbutton [options]="currencies" optionLabel="label" optionValue="value" [ngModel]="currency()" (ngModelChange)="$event && currency.set($event)" [allowEmpty]="false" />
-    </div>
-  </div>
-</div>
+<p-stepper [value]="step()" (valueChange)="step.set($any($event))" [linear]="true">
+  <p-step-list>
+    <p-step [value]="1">Рахунок</p-step>
+    <p-step [value]="2">Як розділити гроші</p-step>
+    <p-step [value]="3">Внески</p-step>
+    <p-step [value]="4">Перевірка</p-step>
+    <p-step [value]="5">Готово</p-step>
+  </p-step-list>
 
-<div class="card">
-  <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-    <h2 class="text-lg font-semibold m-0">2. Під-портфелі</h2>
-    <div class="flex gap-2">
-      <p-button label="Як у Python-флоу: EU 70% / US 30%" icon="pi pi-bolt" severity="secondary" [outlined]="true" size="small"
-                [loading]="creatingDefaults()" (onClick)="useDefaultSetup()" />
-      <p-button label="Додати" icon="pi pi-plus" severity="secondary" size="small" (onClick)="add()" />
-    </div>
-  </div>
-  @if (!strategies().length) {
-    <p-message severity="info" styleClass="mb-4" text="Стратегій ще немає: кнопка «Як у Python-флоу» створить стандартні EU і US стратегії й призначить їх." />
-  }
-  <p-table [value]="sleeves()" [tableStyle]="{ 'min-width': '56rem' }" dataKey="key">
-    <ng-template #header>
-      <tr><th>Назва</th><th class="w-36">Частка, %</th><th>Стратегія</th><th>ETF для паркування</th><th class="w-36">Макс. позиція, %</th><th class="w-12"></th></tr>
-    </ng-template>
-    <ng-template #body let-sleeve>
-      <tr>
-        <td><input pInputText [ngModel]="sleeve.name" (ngModelChange)="update(sleeve.key, { name: $event })" class="w-full" /></td>
-        <td><p-inputnumber [ngModel]="sleeve.targetSharePercent" (ngModelChange)="update(sleeve.key, { targetSharePercent: $event ?? 0 })" suffix=" %" [min]="0" [max]="100" [maxFractionDigits]="2" fluid /></td>
-        <td><p-select [options]="strategyOptions()" optionLabel="label" optionValue="value" [ngModel]="sleeve.strategyId" (ngModelChange)="update(sleeve.key, { strategyId: $event })" [showClear]="true" placeholder="Без стратегії" appendTo="body" fluid /></td>
-        <td><p-select [options]="cashOptions()" optionLabel="label" optionValue="value" [ngModel]="sleeve.cashInstrumentId" (ngModelChange)="update(sleeve.key, { cashInstrumentId: $event })" [showClear]="true" [filter]="true" placeholder="Як у стратегії" appendTo="body" fluid /></td>
-        <td><p-inputnumber [ngModel]="sleeve.maxPositionWeightPercent" (ngModelChange)="update(sleeve.key, { maxPositionWeightPercent: $event })" suffix=" %" [min]="1" [max]="100" placeholder="—" fluid /></td>
-        <td><p-button icon="pi pi-trash" [text]="true" severity="danger" [disabled]="sleeves().length === 1" (onClick)="remove(sleeve.key)" ariaLabel="Прибрати" /></td>
-      </tr>
-    </ng-template>
-    <ng-template #footer>
-      <tr>
-        <td>Разом</td>
-        <td [class.text-primary]="total() === 100">{{ total() }} %</td>
-        <td colspan="4" class="text-muted-color text-sm">{{ total() === 100 ? 'Частки складаються в 100%' : 'Частки мають скластися рівно в 100%' }}</td>
-      </tr>
-    </ng-template>
-  </p-table>
-</div>
+  <p-step-panels>
+    <!-- 1. The account -->
+    <p-step-panel [value]="1">
+      <ng-template #content>
+        <div class="card">
+          <p-message severity="secondary" styleClass="mb-5">
+            <div><b>Рахунок</b> — це ваш реальний брокерський рахунок (наприклад, у Revolut). Сервіс не підключається до брокера: він рахує план, а ви виконуєте його в застосунку брокера й відмічаєте тут (або завантажуєте виписку).</div>
+          </p-message>
+          <div class="grid gap-5 md:grid-cols-2">
+            <div class="flex flex-col gap-2">
+              <label for="name" class="font-medium">Як назвати</label>
+              <input pInputText id="name" [ngModel]="name()" (ngModelChange)="name.set($event)" />
+            </div>
+            <div class="flex flex-col gap-2">
+              <span class="font-medium">Брокер</span>
+              <p-selectbutton [options]="brokers" optionLabel="label" optionValue="value" [ngModel]="broker()" (ngModelChange)="$event && broker.set($event)" [allowEmpty]="false" size="small" />
+            </div>
+            <div class="flex flex-col gap-2">
+              <span class="font-medium">Валюта рахунку</span>
+              <p-selectbutton [options]="currencies" optionLabel="label" optionValue="value" [ngModel]="currency()" (ngModelChange)="$event && currency.set($event)" [allowEmpty]="false" />
+              <small class="text-muted-color">У ній рахуються план, кеш і вартість. ETF в інших валютах перераховуються за курсом NBP. Показувати суми можна в будь-якій валюті (перемикач угорі).</small>
+            </div>
+            <div class="flex flex-col gap-2">
+              <span class="font-medium">Тип рахунку для податків</span>
+              <p-selectbutton [options]="taxPolicies" optionLabel="label" optionValue="value" [ngModel]="taxPolicy()" (ngModelChange)="$event && taxPolicy.set($event)" [allowEmpty]="false" size="small" />
+              <small class="text-muted-color">{{ taxHint() }}</small>
+            </div>
+          </div>
+          <div class="flex justify-end mt-6">
+            <p-button label="Далі" icon="pi pi-arrow-right" iconPos="right" [disabled]="!accountValid()" (onClick)="step.set(2)" />
+          </div>
+        </div>
+      </ng-template>
+    </p-step-panel>
 
-<div class="card">
-  <h2 class="text-lg font-semibold mb-4">3. План</h2>
-  <app-plan-settings-form [(settings)]="plan" [currency]="currency()" />
-</div>
+    <!-- 2. Sub-portfolios and strategies -->
+    <p-step-panel [value]="2">
+      <ng-template #content>
+        <div class="card">
+          <p-message severity="secondary" styleClass="mb-5">
+            <div>
+              <b>Під-портфель</b> — частина рахунку зі своєю метою: цільовою часткою й стратегією. Гроші лежать на одному рахунку, а сервіс
+              віртуально ділить їх і стежить, щоб кожна частина трималась своєї частки. <b>Стратегія</b> щоразу вирішує, які ETF тримати в під-портфелі.
+            </div>
+          </p-message>
 
-<div class="flex justify-end gap-2">
-  <p-button label="Відкрити рахунок" icon="pi pi-check" [loading]="saving()" [disabled]="!valid()" (onClick)="save()" />
-</div>
+          <div class="font-medium mb-3">Оберіть основу</div>
+          <div class="grid gap-3 md:grid-cols-3 mb-6">
+            <button type="button" class="text-left rounded-border border p-4 bg-transparent cursor-pointer text-color hover:border-primary"
+              [class.border-primary]="preset() === 'simple'" [class.border-surface]="preset() !== 'simple'" (click)="choosePreset('simple')">
+              <div class="font-semibold"><i class="pi pi-circle mr-2"></i>Просто</div>
+              <div class="text-sm text-muted-color mt-1">Один під-портфель, одна стратегія. Найкраще для початку.</div>
+            </button>
+            <button type="button" class="text-left rounded-border border p-4 bg-transparent cursor-pointer text-color hover:border-primary"
+              [class.border-primary]="preset() === 'balanced'" [class.border-surface]="preset() !== 'balanced'" (click)="choosePreset('balanced')">
+              <div class="font-semibold"><i class="pi pi-chart-pie mr-2"></i>Європа 70 / США 30</div>
+              <div class="text-sm text-muted-color mt-1">Дві частини з різними наборами ETF — більше диверсифікації.</div>
+            </button>
+            <button type="button" class="text-left rounded-border border p-4 bg-transparent cursor-pointer text-color hover:border-primary"
+              [class.border-primary]="preset() === 'custom'" [class.border-surface]="preset() !== 'custom'" (click)="choosePreset('custom')">
+              <div class="font-semibold"><i class="pi pi-sliders-h mr-2"></i>Свій варіант</div>
+              <div class="text-sm text-muted-color mt-1">Будь-яка кількість частин і стратегій.</div>
+            </button>
+          </div>
+
+          @if (strategiesLoading() && !strategies().length) {
+            <div class="text-muted-color">Готуємо стандартні стратегії…</div>
+          }
+
+          <div class="flex flex-col gap-4">
+            @for (sleeve of sleeves(); track sleeve.key; let i = $index) {
+              <div class="border border-surface rounded-border p-4">
+                <div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto] items-end">
+                  <div class="flex flex-col gap-2">
+                    <label class="font-medium" [for]="'sleeve-' + sleeve.key">Назва частини</label>
+                    <input pInputText [id]="'sleeve-' + sleeve.key" [ngModel]="sleeve.name" (ngModelChange)="update(sleeve.key, { name: $event })" />
+                  </div>
+                  <div class="flex flex-col gap-2">
+                    <span class="font-medium">Частка рахунку: {{ sleeve.targetSharePercent }}%</span>
+                    <p-slider [ngModel]="sleeve.targetSharePercent" (ngModelChange)="update(sleeve.key, { targetSharePercent: $event })" [min]="1" [max]="100" [step]="5" styleClass="mt-2" />
+                  </div>
+                  <p-button icon="pi pi-trash" [text]="true" severity="danger" [disabled]="sleeves().length === 1" (onClick)="remove(sleeve.key)" ariaLabel="Прибрати" />
+                </div>
+                <div class="font-medium mt-4 mb-2">Стратегія для «{{ sleeve.name }}»</div>
+                <app-strategy-picker [strategies]="strategies()" [value]="sleeve.strategyId" (valueChange)="update(sleeve.key, { strategyId: $event })" />
+              </div>
+            }
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between gap-3 mt-4">
+            <p-button label="Додати частину" icon="pi pi-plus" severity="secondary" [outlined]="true" size="small" (onClick)="add()" />
+            <div class="flex items-center gap-3">
+              <span [class.text-primary]="total() === 100" [class.text-red-500]="total() !== 100">Разом {{ total() }}%</span>
+              @if (total() !== 100) { <p-button label="Вирівняти до 100%" size="small" [text]="true" (onClick)="balance()" /> }
+            </div>
+          </div>
+
+          <div class="flex justify-between mt-6">
+            <p-button label="Назад" icon="pi pi-arrow-left" severity="secondary" [text]="true" (onClick)="step.set(1)" />
+            <p-button label="Далі" icon="pi pi-arrow-right" iconPos="right" [disabled]="!sleevesValid()" (onClick)="step.set(3)" />
+          </div>
+        </div>
+      </ng-template>
+    </p-step-panel>
+
+    <!-- 3. Contributions -->
+    <p-step-panel [value]="3">
+      <ng-template #content>
+        <div class="card">
+          <p-message severity="secondary" styleClass="mb-5">
+            <div><b>Внесок</b> — скільки ви плануєте докладати регулярно. У кожному рапорті сервіс скаже, скільки внести і що на ці гроші купити. Суму можна змінити при кожному рапорті.</div>
+          </p-message>
+          <div class="flex flex-col gap-2 max-w-sm">
+            <label for="contribution" class="font-medium">Щомісячний внесок</label>
+            <p-inputnumber inputId="contribution" [ngModel]="plan().monthlyContribution" (ngModelChange)="plan.set({ ...plan(), monthlyContribution: $event ?? 0 })"
+                           mode="currency" [currency]="currency()" locale="uk-UA" [min]="0" fluid />
+          </div>
+          <button type="button" class="mt-5 p-0 border-0 bg-transparent text-primary cursor-pointer" (click)="showAdvanced.set(!showAdvanced())">
+            <i class="pi mr-1" [class.pi-chevron-down]="!showAdvanced()" [class.pi-chevron-up]="showAdvanced()"></i>Додаткові налаштування (можна не чіпати)
+          </button>
+          @if (showAdvanced()) {
+            <div class="mt-4">
+              <app-plan-settings-form [settings]="plan()" (settingsChange)="plan.set($event)" [currency]="currency()" [showPolicy]="sleeves().length > 1" />
+            </div>
+          }
+          <div class="flex justify-between mt-6">
+            <p-button label="Назад" icon="pi pi-arrow-left" severity="secondary" [text]="true" (onClick)="step.set(2)" />
+            <p-button label="Далі" icon="pi pi-arrow-right" iconPos="right" (onClick)="step.set(4)" />
+          </div>
+        </div>
+      </ng-template>
+    </p-step-panel>
+
+    <!-- 4. Review -->
+    <p-step-panel [value]="4">
+      <ng-template #content>
+        <div class="card">
+          <h2 class="text-lg font-semibold mt-0">{{ name() }} · {{ broker() }} · {{ currency() }}</h2>
+          <div class="flex flex-col gap-3">
+            @for (row of summary(); track row.name) {
+              <div class="border border-surface rounded-border p-4 flex flex-wrap justify-between gap-3">
+                <div>
+                  <div class="font-semibold">{{ row.name }} — {{ row.share }}%</div>
+                  <div class="text-sm">{{ row.strategy }}</div>
+                  <div class="text-sm text-muted-color">{{ row.blurb }}</div>
+                </div>
+                <div class="text-right">
+                  <div class="text-muted-color text-sm">щомісяця</div>
+                  <div class="font-semibold">≈ {{ row.contribution }}</div>
+                </div>
+              </div>
+            }
+          </div>
+          <p-message severity="info" styleClass="mt-5">
+            <div>Що буде далі: за розкладом стратегій (зазвичай першої неділі місяця) з’явиться <b>рапорт</b> — список дій для брокера. Виконайте їх у застосунку брокера й натисніть «Виконано» або «Довантажити операції» з виписки.</div>
+          </p-message>
+          <div class="flex justify-between mt-6">
+            <p-button label="Назад" icon="pi pi-arrow-left" severity="secondary" [text]="true" (onClick)="step.set(3)" />
+            <p-button label="Відкрити рахунок" icon="pi pi-check" [loading]="saving()" (onClick)="save()" />
+          </div>
+        </div>
+      </ng-template>
+    </p-step-panel>
+
+    <!-- 5. Next steps -->
+    <p-step-panel [value]="5">
+      <ng-template #content>
+        <div class="card text-center">
+          <i class="pi pi-check-circle text-5xl text-primary"></i>
+          <h2 class="text-xl font-semibold">Рахунок готовий</h2>
+          <p class="text-muted-color">Звідки почати?</p>
+          <div class="grid gap-3 md:grid-cols-3 text-left mt-4">
+            <button type="button" class="rounded-border border border-surface p-4 bg-transparent cursor-pointer text-color hover:border-primary text-left" (click)="go(['/transactions/import'])">
+              <div class="font-semibold"><i class="pi pi-upload mr-2"></i>У мене вже є інвестиції</div>
+              <div class="text-sm text-muted-color mt-1">Завантажте виписку Revolut (CSV) — історія операцій, позиції й кеш з’являться автоматично.</div>
+            </button>
+            <button type="button" class="rounded-border border border-surface p-4 bg-transparent cursor-pointer text-color hover:border-primary text-left" (click)="go(['/reports'])">
+              <div class="font-semibold"><i class="pi pi-bolt mr-2"></i>Починаю з нуля</div>
+              <div class="text-sm text-muted-color mt-1">Згенеруйте перший рапорт: скільки внести і які ETF купити.</div>
+            </button>
+            <button type="button" class="rounded-border border border-surface p-4 bg-transparent cursor-pointer text-color hover:border-primary text-left" (click)="go(['/accounts', createdId() ?? ''])">
+              <div class="font-semibold"><i class="pi pi-wallet mr-2"></i>Подивитись рахунок</div>
+              <div class="text-sm text-muted-color mt-1">Частки, стратегії, розклад рапортів — усе можна змінити пізніше.</div>
+            </button>
+          </div>
+        </div>
+      </ng-template>
+    </p-step-panel>
+  </p-step-panels>
+</p-stepper>
