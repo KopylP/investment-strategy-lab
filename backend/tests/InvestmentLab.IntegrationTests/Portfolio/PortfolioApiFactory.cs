@@ -6,7 +6,7 @@ using Testcontainers.PostgreSql;
 
 namespace InvestmentLab.IntegrationTests.Portfolio;
 
-/// <summary>The API on a throwaway Postgres; nightly jobs do not fire during a test run.</summary>
+/// <summary>The API on a throwaway Postgres; nightly jobs do not fire during a test run, nor at its start.</summary>
 public sealed class PortfolioApiFactory : WebApplicationFactory<api::Program>, IAsyncLifetime
 {
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17").Build();
@@ -14,7 +14,8 @@ public sealed class PortfolioApiFactory : WebApplicationFactory<api::Program>, I
     public async ValueTask InitializeAsync() => await _postgres.StartAsync();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder) =>
-        builder.UseSetting("ConnectionStrings:investmentlab", _postgres.GetConnectionString());
+        builder.UseSetting("ConnectionStrings:investmentlab", _postgres.GetConnectionString())
+            .UseSetting("Scheduling:RunAtStartup", "false");
 
     public override async ValueTask DisposeAsync()
     {

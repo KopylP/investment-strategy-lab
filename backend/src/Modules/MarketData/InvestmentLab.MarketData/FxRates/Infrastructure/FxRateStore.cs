@@ -13,6 +13,11 @@ internal sealed class FxRateStore(MarketDataDbContext db) : IFxRateStore, IFxRat
             .Where(rate => rate.Source == source && rate.Base == @base && rate.Quote == quote)
             .MaxAsync(rate => (DateOnly?)rate.EffectiveDate, cancellationToken);
 
+    public async Task<DateOnly?> FirstEffectiveDateAsync(FxRateSource source, Currency @base, Currency quote, CancellationToken cancellationToken) =>
+        await db.FxRates
+            .Where(rate => rate.Source == source && rate.Base == @base && rate.Quote == quote)
+            .MinAsync(rate => (DateOnly?)rate.EffectiveDate, cancellationToken);
+
     public async Task<IReadOnlyList<FxRate>> RatesBetweenAsync(
         Currency @base, Currency quote, DateOnly from, DateOnly to, CancellationToken cancellationToken) =>
         await db.FxRates.AsNoTracking()

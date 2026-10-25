@@ -95,6 +95,17 @@ export class StatementImportPage {
     }));
   });
 
+  /** Why "Імпортувати" is disabled, in words; null when it is not. */
+  protected readonly blockers = computed(() => {
+    const current = this.store.current();
+    if (!current || this.store.canConfirm()) return null;
+    const unmapped = current.rows.filter((row) => row.decision === 'NeedsMapping');
+    if (unmapped.length === 0) return ['У виписці немає нових операцій: усе вже в журналі.'];
+    const reasons = new Map<string, number>();
+    for (const row of unmapped) reasons.set(row.note ?? 'не зіставлено', (reasons.get(row.note ?? 'не зіставлено') ?? 0) + 1);
+    return [`Рядків без зіставлення: ${unmapped.length}.`, ...[...reasons].map(([reason, count]) => `${reason} (рядків: ${count})`)];
+  });
+
   protected instrumentValue(mapping: TickerMapping): string | null {
     return mapping.instrumentId ?? (mapping.registerAs !== null ? newInstrument : null);
   }

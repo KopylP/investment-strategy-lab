@@ -4,10 +4,6 @@
   @if (profile(); as current) {
     <div class="flex flex-col gap-5">
       <div class="flex flex-col gap-2">
-        <label for="currency" class="font-medium">Валюта відображення</label>
-        <p-select inputId="currency" [options]="currencies" optionLabel="label" optionValue="value" [ngModel]="current.displayCurrency" (ngModelChange)="patch({ displayCurrency: $event })" fluid />
-      </div>
-      <div class="flex flex-col gap-2">
         <label for="locale" class="font-medium">Мова</label>
         <p-select inputId="locale" [options]="locales" optionLabel="label" optionValue="value" [ngModel]="current.locale" (ngModelChange)="patch({ locale: $event })" fluid />
       </div>
