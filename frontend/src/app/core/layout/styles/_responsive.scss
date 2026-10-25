@@ -108,3 +108,57 @@
         }
     }
 }
+
+/* Phones: tighter gutters, smaller headings, the topbar fits in one row. */
+@media (max-width: 575px) {
+    .layout-topbar {
+        padding: 0 1rem;
+
+        .layout-menu-button {
+            margin-right: 0.25rem;
+        }
+
+        .layout-topbar-logo span {
+            display: none;
+        }
+
+        .layout-topbar-actions,
+        .layout-config-menu {
+            gap: 0.25rem;
+        }
+    }
+
+    .layout-wrapper .layout-main-container {
+        padding: 5.5rem 1rem 0 1rem;
+    }
+
+    .card {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    h1 {
+        font-size: 1.75rem;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    h3 {
+        font-size: 1.25rem;
+    }
+
+    h4 {
+        font-size: 1.125rem;
+    }
+
+    .p-step:not(.p-step-active) .p-step-title {
+        display: none;
+    }
+}
+
+.p-selectbutton {
+    flex-wrap: wrap;
+    max-width: 100%;
+}
