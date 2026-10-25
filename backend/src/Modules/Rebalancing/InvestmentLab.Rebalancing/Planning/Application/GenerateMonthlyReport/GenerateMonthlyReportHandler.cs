@@ -51,7 +51,9 @@ public sealed class GenerateMonthlyReportHandler(
 
         var heldIds = holdings.SubPortfolios.SelectMany(sub => sub.Positions.Select(position => position.InstrumentId));
         var cashIds = planned.Select(sub => sub.CashInstrumentId).OfType<Guid>();
-        var prices = new Dictionary<Guid, MarketData.Contracts.Quotes.LatestPriceDto>(await inputs.PricesAsync(heldIds.Concat(cashIds), asOf, cancellationToken));
+        var warnings = new List<string>();
+        var prices = new Dictionary<Guid, MarketData.Contracts.Quotes.LatestPriceDto>(
+            await inputs.PricesAsync(heldIds.Concat(cashIds), asOf, account.BaseCurrency, warnings, cancellationToken));
 
         // 1. Contribution split by how far each sub-portfolio is from its target share.
         var standings = planned.Select(sub => new SubPortfolioStanding(sub.Id, Percentage.Of(sub.TargetShare), ValueOf(snapshots.GetValueOrDefault(sub.Id), prices))).ToList();
@@ -72,11 +74,10 @@ public sealed class GenerateMonthlyReportHandler(
             .SelectMany(result => result.Value!.Targets.Select(target => target.InstrumentId)
                 .Concat(result.Value.CashInstrumentId is { } cash ? [cash] : []))
             .Where(id => !prices.ContainsKey(id));
-        foreach (var (id, price) in await inputs.PricesAsync(targetIds, asOf, cancellationToken))
+        foreach (var (id, price) in await inputs.PricesAsync(targetIds, asOf, account.BaseCurrency, warnings, cancellationToken))
             prices[id] = price;
 
         // 3. Guardrails, then the rebalancer per sub-portfolio.
-        var warnings = new List<string>();
         var outcomes = new List<SubPortfolioOutcome>();
         foreach (var sub in planned)
         {
@@ -116,6 +117,9 @@ public sealed class GenerateMonthlyReportHandler(
                 plan.Orders,
                 notes));
         }
+
+        if (outcomes.All(outcome => outcome.Error is not null))
+            return ReportErrors.NoStrategyAnswered(string.Join("; ", outcomes.Select(outcome => outcome.Error).Distinct()));
 
         var needed = outcomes.SelectMany(outcome => outcome.Orders.Select(order => order.InstrumentId))
             .Concat(holdings.SubPortfolios.SelectMany(sub => sub.Positions.Select(position => position.InstrumentId)));

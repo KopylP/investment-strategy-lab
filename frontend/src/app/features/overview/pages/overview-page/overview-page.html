@@ -1,0 +1,95 @@
+<app-page-header title="Огляд" [subtitle]="store.account() ? store.account()!.name + ' · ' + store.account()!.broker : 'Почнімо з налаштування'" />
+
+@if (store.accountsLoaded() && store.strategiesLoaded() && (!store.hasStrategies() || !store.account() || !store.hasStrategyAssigned())) {
+  <div class="card">
+    <h2 class="text-lg font-semibold mb-4">Три кроки до першого рапорту</h2>
+    <div class="flex flex-col gap-4">
+      <div class="flex items-center gap-3">
+        <i class="pi text-xl" [class.pi-check-circle]="store.hasStrategies()" [class.text-primary]="store.hasStrategies()" [class.pi-circle]="!store.hasStrategies()"></i>
+        <div class="flex-1">
+          <div class="font-medium">Стратегії</div>
+          <div class="text-sm text-muted-color">Стандартні EU та US моментум-стратегії — ті самі, що в Python-флоу.</div>
+        </div>
+        @if (!store.hasStrategies()) { <p-button label="Створити" size="small" routerLink="/strategies" /> }
+      </div>
+      <div class="flex items-center gap-3">
+        <i class="pi text-xl" [class.pi-check-circle]="!!store.account()" [class.text-primary]="!!store.account()" [class.pi-circle]="!store.account()"></i>
+        <div class="flex-1">
+          <div class="font-medium">Рахунок і під-портфелі</div>
+          <div class="text-sm text-muted-color">Цільові частки, стратегія для кожного під-портфеля, щомісячний внесок.</div>
+        </div>
+        @if (!store.account()) { <p-button label="Відкрити рахунок" size="small" routerLink="/accounts/new" /> }
+        @else if (!store.hasStrategyAssigned()) { <p-button label="Призначити стратегії" size="small" [routerLink]="['/accounts', store.account()!.id]" /> }
+      </div>
+      <div class="flex items-center gap-3">
+        <i class="pi pi-circle text-xl"></i>
+        <div class="flex-1">
+          <div class="font-medium">Позиції й перший рапорт</div>
+          <div class="text-sm text-muted-color">Імпортуйте positions.json або почніть з нуля — рапорт покаже, що купити.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+@if (store.account()) {
+  @if (store.isLoading() && !store.sleeves().length) {
+    <div class="card"><p-skeleton height="8rem" /></div>
+  } @else {
+    <div class="grid gap-4 grid-cols-1 md:grid-cols-3 mb-4">
+      <div class="card mb-0">
+        <div class="text-muted-color text-sm mb-2">Вартість рахунку</div>
+        <div class="text-3xl font-semibold">{{ store.totalValue() | money: store.account()!.baseCurrency }}</div>
+        <div class="text-sm mt-2" [appSignedValue]="store.totalPnl()">нереалізовано {{ store.totalPnl() | money: store.account()!.baseCurrency }}</div>
+      </div>
+      <div class="card mb-0">
+        <div class="text-muted-color text-sm mb-2">Вільний кеш</div>
+        <div class="text-3xl font-semibold">{{ store.totalCash() | money: store.account()!.baseCurrency }}</div>
+        <div class="text-sm text-muted-color mt-2">не враховуючи ETF для паркування</div>
+      </div>
+      <div class="card mb-0">
+        <div class="text-muted-color text-sm mb-2">Рапорт місяця</div>
+        @if (store.openReport(); as report) {
+          <div class="text-xl font-semibold mb-1">{{ report.period | period }}</div>
+          <div class="text-sm text-muted-color mb-3">{{ report.actionsOpen }} з {{ report.actionsTotal }} дій чекають на відмітку</div>
+          <p-button label="Відкрити рапорт" icon="pi pi-arrow-right" iconPos="right" size="small" [routerLink]="['/reports', report.id]" />
+        } @else {
+          <div class="text-sm text-muted-color mb-3">Відкритого рапорту немає.</div>
+          <p-button label="До рапортів" icon="pi pi-bolt" size="small" routerLink="/reports" />
+        }
+      </div>
+    </div>
+
+    @if (store.allocation().length) {
+      <div class="card">
+        <h2 class="text-lg font-semibold mb-4">Частки під-портфелів: факт і ціль</h2>
+        <div class="flex flex-col gap-4">
+          @for (row of store.allocation(); track row.name) {
+            <div>
+              <div class="flex justify-between text-sm mb-1">
+                <span class="font-medium">{{ row.name }}</span>
+                <span>{{ row.actual | percent }} <span class="text-muted-color">/ ціль {{ row.target | percent: 0 }}</span> · {{ row.value | money: store.account()!.baseCurrency }}</span>
+              </div>
+              <p-progressbar [value]="row.actual * 100" [showValue]="false" styleClass="h-2" />
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    @if (store.latestRisk(); as risk) {
+      <div class="card">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 class="text-lg font-semibold m-0">Остання перевірка ризику</h2>
+            <div class="text-sm text-muted-color">{{ risk.generatedAt | dateTime }}</div>
+          </div>
+          <div class="flex items-center gap-2">
+            @if (risk.actionsTotal) { <p-tag [value]="risk.actionsTotal + ' сигналів виходу'" severity="danger" /> } @else { <p-tag value="без сигналів виходу" severity="success" /> }
+            <p-button label="Відкрити" size="small" [text]="true" [routerLink]="['/reports', risk.id]" />
+          </div>
+        </div>
+      </div>
+    }
+  }
+}

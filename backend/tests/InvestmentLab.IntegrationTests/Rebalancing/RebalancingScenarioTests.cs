@@ -30,6 +30,7 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
         var ct = TestContext.Current.CancellationToken;
         var client = await _factory.CreateSignedInClientAsync(ct);
         (await client.PostAsync("/api/market-data/quotes/ingest", null, ct)).EnsureSuccessStatusCode();
+        (await client.PostAsync("/api/market-data/fx-rates/ingest", null, ct)).EnsureSuccessStatusCode();
         var strategies = await PostAsync<List<StrategyDto>>(client, "/api/strategies/defaults", new { }, ct);
 
         var account = await PostAsync<AccountSetupDto>(client, "/api/portfolio/accounts", new
@@ -54,6 +55,7 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
         report.Summary.Trigger.ShouldBe("OnDemand");
         report.Sections.Count.ShouldBe(2);
         report.Sections.ShouldAllBe(section => section.Error == null);
+        report.Warnings.ShouldContain(warning => warning.Contains("перераховано в EUR"));
         var contribute = report.Actions[0];
         contribute.Kind.ShouldBe("Contribute");
         contribute.PlannedAmount.ShouldBe(1000m);

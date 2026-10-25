@@ -1,0 +1,38 @@
+<p-dialog header="Записати угоду" [modal]="true" [visible]="visible()" (visibleChange)="visible.set($event)" [style]="{ width: '36rem' }" [breakpoints]="{ '640px': '95vw' }">
+  <div class="flex flex-col gap-4">
+    <p-selectbutton [options]="sides" optionLabel="label" optionValue="value" [ngModel]="side()" (ngModelChange)="$event && side.set($event)" [allowEmpty]="false" />
+    <div class="flex flex-col gap-2">
+      <label for="trade-instrument" class="font-medium">ETF</label>
+      <p-select inputId="trade-instrument" [options]="instruments()" optionLabel="label" optionValue="value" [ngModel]="instrumentId()" (ngModelChange)="instrumentId.set($event)" [filter]="true" appendTo="body" fluid />
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div class="flex flex-col gap-2">
+        <label for="trade-quantity" class="font-medium">Кількість</label>
+        <p-inputnumber inputId="trade-quantity" [ngModel]="quantity()" (ngModelChange)="quantity.set($event)" [maxFractionDigits]="8" locale="uk-UA" fluid />
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="trade-price" class="font-medium">Ціна</label>
+        <p-inputnumber inputId="trade-price" [ngModel]="price()" (ngModelChange)="price.set($event)" mode="currency" [currency]="currency()" locale="uk-UA" [maxFractionDigits]="6" fluid />
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="trade-fee" class="font-medium">Комісія</label>
+        <p-inputnumber inputId="trade-fee" [ngModel]="fee()" (ngModelChange)="fee.set($event ?? 0)" mode="currency" [currency]="currency()" locale="uk-UA" fluid />
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="trade-date" class="font-medium">Дата</label>
+        <p-datepicker inputId="trade-date" [ngModel]="executedOn()" (ngModelChange)="executedOn.set($event)" dateFormat="dd.mm.yy" [showIcon]="true" appendTo="body" fluid />
+      </div>
+    </div>
+    <div class="flex flex-col gap-2">
+      <label for="trade-sub" class="font-medium">Під-портфель</label>
+      <p-select inputId="trade-sub" [options]="subPortfolios()" optionLabel="label" optionValue="value" [ngModel]="subPortfolioId()" (ngModelChange)="subPortfolioId.set($event)"
+                [showClear]="true" placeholder="Розподілити автоматично" appendTo="body" fluid />
+      <small class="text-muted-color">Без вибору: купівля ділиться за цільовими частками, продаж — за утримуваними штуками.</small>
+    </div>
+    <div class="text-right text-lg font-semibold">{{ total() | money: currency() }}</div>
+  </div>
+  <ng-template #footer>
+    <p-button label="Скасувати" [text]="true" severity="secondary" (onClick)="visible.set(false)" />
+    <p-button label="Записати" icon="pi pi-check" [disabled]="!valid()" [loading]="busy()" (onClick)="submit()" />
+  </ng-template>
+</p-dialog>

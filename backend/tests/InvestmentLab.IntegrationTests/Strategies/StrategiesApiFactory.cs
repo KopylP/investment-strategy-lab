@@ -1,6 +1,8 @@
 extern alias api;
 
 using System.Collections.Concurrent;
+using InvestmentLab.IntegrationTests.MarketData;
+using InvestmentLab.MarketData.FxRates.Application;
 using InvestmentLab.MarketData.Instruments.Domain;
 using InvestmentLab.MarketData.Quotes.Application;
 using InvestmentLab.MarketData.Quotes.Domain;
@@ -34,6 +36,7 @@ public sealed class StrategiesApiFactory : WebApplicationFactory<api::Program>, 
         builder.ConfigureTestServices(services =>
         {
             services.AddSingleton<IQuoteProvider, SyntheticQuoteProvider>();
+            services.AddSingleton<IFxRateProvider, FakeNbpProvider>();
             services.AddHttpClient<StrategyEngineClient>().AddHttpMessageHandler(() => new RecordingHandler(EngineRequests));
         });
     }

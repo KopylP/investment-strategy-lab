@@ -1,0 +1,97 @@
+<app-page-header title="Позиції" subtitle="Віртуальні лоти FIFO по під-портфелях за останніми котируваннями">
+  <p-datepicker [ngModel]="store.asOf()" (ngModelChange)="store.asOf.set($event)" placeholder="Сьогодні" dateFormat="dd.mm.yy" [showIcon]="true" [showClear]="true" [maxDate]="today" />
+</app-page-header>
+
+@if (store.isLoading() && !store.sleeves().length) {
+  <div class="card"><p-skeleton height="12rem" /></div>
+} @else if (store.loadError()) {
+  <div class="card"><p-message severity="error" text="Не вдалося завантажити позиції" /></div>
+} @else if (!store.account()) {
+  <div class="card"><app-empty-state icon="pi pi-wallet" title="Немає рахунку"><p-button label="Відкрити рахунок" routerLink="/accounts/new" /></app-empty-state></div>
+} @else {
+  @let totals = store.totals();
+  <div class="grid gap-4 grid-cols-2 lg:grid-cols-4 mb-4">
+    <div class="card mb-0">
+      <div class="text-muted-color text-sm mb-2">Вартість</div>
+      <div class="text-2xl font-semibold">{{ totals.value | money: store.currency() }}</div>
+    </div>
+    <div class="card mb-0">
+      <div class="text-muted-color text-sm mb-2">Нереалізований результат</div>
+      <div class="text-2xl font-semibold" [appSignedValue]="totals.pnl">{{ totals.pnl | money: store.currency() }}</div>
+      <div class="text-sm mt-1" [appSignedValue]="totals.pnlPct">{{ totals.pnlPct | signedPercent }}</div>
+    </div>
+    <div class="card mb-0">
+      <div class="text-muted-color text-sm mb-2">Інвестовано (вартість позицій)</div>
+      <div class="text-2xl font-semibold">{{ totals.invested | money: store.currency() }}</div>
+    </div>
+    <div class="card mb-0">
+      <div class="text-muted-color text-sm mb-2">Вільний кеш</div>
+      <div class="text-2xl font-semibold">{{ totals.cash | money: store.currency() }}</div>
+    </div>
+  </div>
+
+  @if (store.staleQuotes()) {
+    <p-message severity="warn" styleClass="mb-4" text="Частина котирувань застаріла або відсутня — вартість таких позицій може бути неточною." />
+  }
+
+  @for (sleeve of store.sleeves(); track sleeve.id) {
+    <div class="card">
+      <div class="flex flex-wrap items-baseline justify-between gap-2 mb-4">
+        <div>
+          <h2 class="text-lg font-semibold m-0">{{ sleeve.name }}</h2>
+          <div class="text-sm text-muted-color">частка {{ sleeve.actualShare | percent }} при цілі {{ sleeve.targetShare | percent: 0 }} · кеш {{ sleeve.cash | money: store.currency() }}</div>
+        </div>
+        <div class="text-right">
+          <div class="text-xl font-semibold">{{ sleeve.value | money: store.currency() }}</div>
+          <div class="text-sm" [appSignedValue]="sleeve.pnl">{{ sleeve.pnl | money: store.currency() }}</div>
+        </div>
+      </div>
+      @if (sleeve.positions.length) {
+        <p-table [value]="sleeve.positions" dataKey="instrumentId" [tableStyle]="{ 'min-width': '52rem' }" size="small">
+          <ng-template #header>
+            <tr><th class="w-10"></th><th>ETF</th><th class="text-right">Штук</th><th class="text-right">Середня ціна</th><th class="text-right">Ціна</th><th class="text-right">Вартість</th><th class="text-right">Вага</th><th class="text-right">Результат</th></tr>
+          </ng-template>
+          <ng-template #body let-position let-expanded="expanded">
+            <tr>
+              <td><p-button [pRowToggler]="position" [text]="true" [rounded]="true" severity="secondary" [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" ariaLabel="Лоти" /></td>
+              <td>
+                <div class="font-medium">{{ position.symbol }}</div>
+                <div class="text-xs text-muted-color">{{ position.name }}</div>
+              </td>
+              <td class="text-right">{{ position.quantity | quantity }}</td>
+              <td class="text-right">{{ position.averageCost | money: store.currency() }}</td>
+              <td class="text-right">
+                {{ position.price === null ? '—' : (position.price | money: store.currency()) }}
+                @if (position.isStale) { <i class="pi pi-exclamation-triangle text-xs" [pTooltip]="'Котирування на ' + (position.priceDate | date)"></i> }
+              </td>
+              <td class="text-right font-medium">{{ position.value | money: store.currency() }}</td>
+              <td class="text-right">{{ position.weight | percent }}</td>
+              <td class="text-right" [appSignedValue]="position.pnl">
+                {{ position.pnl | money: store.currency() }}
+                <div class="text-xs">{{ position.pnlPct | signedPercent }}</div>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template #expandedrow let-position>
+            <tr>
+              <td></td>
+              <td colspan="7">
+                <div class="font-medium text-sm mb-2">Лоти (FIFO)</div>
+                @for (lot of position.lots; track $index) {
+                  <div class="flex justify-between gap-4 text-sm py-1 max-w-xl">
+                    <span>{{ lot.openedOn | date }}</span>
+                    <span>{{ lot.quantity | quantity }} шт. × {{ lot.unitCost | money: store.currency() : 4 }}</span>
+                  </div>
+                }
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      } @else {
+        <div class="text-muted-color">Позицій немає{{ sleeve.cash ? ' — лише кеш' : '' }}.</div>
+      }
+    </div>
+  } @empty {
+    <div class="card"><app-empty-state icon="pi pi-chart-pie" title="Позицій ще немає" text="Імпортуйте positions.json на сторінці рахунку або відмітьте виконання в рапорті." /></div>
+  }
+}
