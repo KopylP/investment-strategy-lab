@@ -1,0 +1,32 @@
+<app-page-header title="Інструменти й котирування" [subtitle]="'Котирування завантажуються щоночі о 22:30 (пн–пт)' + (store.lastQuoteDate() ? '; останнє — ' + (store.lastQuoteDate() | date) : '')">
+  <p-button label="Курси NBP" icon="pi pi-euro" severity="secondary" [outlined]="true" [loading]="store.busy() === 'fx'" (onClick)="store.ingestFxRates()" />
+  <p-button label="Оновити котирування" icon="pi pi-cloud-download" [loading]="store.busy() === 'quotes'" (onClick)="store.ingestQuotes()" />
+</app-page-header>
+
+<div class="card">
+  @if (store.isLoading() && !store.rows().length) {
+    <p-skeleton height="12rem" />
+  } @else {
+    <p-table [value]="store.rows()" [tableStyle]="{ 'min-width': '52rem' }" [rowGroupMode]="'subheader'" groupRowsBy="group" size="small">
+      <ng-template #header>
+        <tr><th>Тікер</th><th>Назва</th><th>ISIN</th><th>Біржа</th><th class="text-right">Остання ціна</th><th>Дата</th></tr>
+      </ng-template>
+      <ng-template #groupheader let-row>
+        <tr><td colspan="6" class="font-semibold">{{ row.group || (row.kind === 'Index' ? 'Індекси' : 'Інше') }}</td></tr>
+      </ng-template>
+      <ng-template #body let-row>
+        <tr>
+          <td class="font-medium">{{ row.symbol }}</td>
+          <td>{{ row.name }}</td>
+          <td class="text-muted-color">{{ row.isin ?? '—' }}</td>
+          <td class="text-muted-color">{{ row.exchange }}</td>
+          <td class="text-right">{{ row.price ? (row.price.close | money: row.currency : 2) : '—' }}</td>
+          <td>
+            {{ row.price ? (row.price.date | date) : '—' }}
+            @if (row.price?.isStale) { <p-tag value="застаріле" severity="warn" styleClass="ml-2" /> }
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  }
+</div>

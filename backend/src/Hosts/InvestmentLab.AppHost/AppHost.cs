@@ -18,12 +18,23 @@ var strategyEngine = builder.AddUvicornApp("strategy-engine", "../../../../strat
     .WithHttpHealthCheck("/health")
     .WithUrlForEndpoint("http", _ => new ResourceUrlAnnotation { Url = "/docs", DisplayText = "Swagger (strategy engine)" });
 
-builder.AddProject<Projects.InvestmentLab_Api>("api")
+var api = builder.AddProject<Projects.InvestmentLab_Api>("api")
     .WithReference(database)
     .WaitFor(database)
     .WithReference(strategyEngine)
     // Probe over http: CI agents do not trust the ASP.NET Core dev certificate.
     .WithHttpHealthCheck("/health", endpointName: "http")
     .WithUrlForEndpoint("https", _ => new ResourceUrlAnnotation { Url = "/scalar", DisplayText = "Scalar (API docs)" });
+
+// Angular dev server; /api is proxied to the API so the browser sees one origin (cookie auth, SameSite=Strict).
+// Tests and CI (ephemeral database) run without it.
+if (!ephemeral)
+{
+    builder.AddJavaScriptApp("frontend", "../../../../frontend", "start")
+        .WithReference(api)
+        .WaitFor(api)
+        .WithHttpEndpoint(env: "PORT")
+        .WithExternalHttpEndpoints();
+}
 
 builder.Build().Run();

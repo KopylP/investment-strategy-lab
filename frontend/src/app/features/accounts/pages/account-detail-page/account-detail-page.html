@@ -1,0 +1,133 @@
+@if (store.isLoading() && !store.account()) {
+  <div class="card"><p-skeleton height="12rem" /></div>
+} @else if (store.loadError()) {
+  <div class="card"><p-message severity="error" text="Рахунок не знайдено" /></div>
+} @else if (store.account(); as account) {
+  <app-page-header [title]="account.name" [subtitle]="account.broker + ' · ' + account.baseCurrency + ' · податки ' + account.taxPolicyCode">
+    <p-button label="Імпорт positions.json" icon="pi pi-upload" severity="secondary" [outlined]="true" (onClick)="openImport()" />
+    <p-button label="Рапорти" icon="pi pi-list-check" routerLink="/reports" />
+  </app-page-header>
+
+  <div class="card">
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+      <h2 class="text-lg font-semibold m-0">Під-портфелі</h2>
+      <div class="flex gap-2">
+        @if (!editingShares()) {
+          <p-button label="Змінити частки" icon="pi pi-percentage" severity="secondary" size="small" (onClick)="startEditingShares()" />
+          <p-button label="Додати" icon="pi pi-plus" severity="secondary" size="small" (onClick)="openAdd()" />
+        } @else {
+          <p-button label="Скасувати" [text]="true" severity="secondary" size="small" (onClick)="editingShares.set(false)" />
+          <p-button label="Зберегти частки" icon="pi pi-check" size="small" [disabled]="sharesTotal() !== 100" [loading]="store.busy() === 'shares'" (onClick)="saveShares()" />
+        }
+      </div>
+    </div>
+    <p-table [value]="store.active()" [tableStyle]="{ 'min-width': '52rem' }" dataKey="id">
+      <ng-template #header>
+        <tr><th>Під-портфель</th><th class="w-40">Цільова частка</th><th>Стратегія</th><th>Паркування</th><th>Обмеження</th><th class="w-12"></th></tr>
+      </ng-template>
+      <ng-template #body let-sub>
+        <tr>
+          <td class="font-medium">{{ sub.name }}</td>
+          <td>
+            @if (editingShares()) {
+              <p-inputnumber [ngModel]="shares()[sub.id]" (ngModelChange)="setShare(sub.id, $event)" suffix=" %" [min]="0" [max]="100" [maxFractionDigits]="2" fluid />
+            } @else {
+              {{ sub.targetShare | percent: 0 }}
+            }
+          </td>
+          <td>
+            <p-select [options]="strategyOptions()" optionLabel="label" optionValue="value" [ngModel]="sub.strategyId" (ngModelChange)="assign(sub, $event)"
+                      [showClear]="true" placeholder="Без стратегії" [loading]="store.busy() === 'strategy-' + sub.id" appendTo="body" styleClass="min-w-52" />
+            @if (sub.pinnedStrategyVersion) { <p-tag [value]="'закріплено v' + sub.pinnedStrategyVersion" severity="secondary" styleClass="ml-2" /> }
+          </td>
+          <td>{{ sub.cashInstrumentId ? instruments.symbol(sub.cashInstrumentId) : 'як у стратегії' }}</td>
+          <td class="text-sm text-muted-color">
+            @if (sub.maxPositionWeight) { позиція ≤ {{ sub.maxPositionWeight | percent: 0 }} }
+            @if (sub.maxMonthlyTurnover) { · оборот ≤ {{ sub.maxMonthlyTurnover | percent: 0 }} }
+            @if (!sub.maxPositionWeight && !sub.maxMonthlyTurnover) { — }
+          </td>
+          <td>
+            @if (store.active().length > 1) {
+              <p-button icon="pi pi-sign-out" [text]="true" severity="danger" ariaLabel="Вивести" [loading]="store.busy() === 'retire-' + sub.id" (onClick)="confirmRetire(sub)" />
+            }
+          </td>
+        </tr>
+      </ng-template>
+      @if (editingShares()) {
+        <ng-template #footer>
+          <tr><td>Разом</td><td>{{ sharesTotal() }} %</td><td colspan="4" class="text-sm text-muted-color">має бути рівно 100%</td></tr>
+        </ng-template>
+      }
+    </p-table>
+    @if (store.retired().length) {
+      <div class="text-sm text-muted-color mt-3">Виведені: {{ store.retiredNames() }}</div>
+    }
+    @if (!store.strategies().length) {
+      <p-message severity="info" styleClass="mt-4">
+        <span>Стратегій ще немає. <a routerLink="/strategies" class="font-medium underline">Створіть стандартні</a> і призначте їх під-портфелям.</span>
+      </p-message>
+    }
+  </div>
+
+  @if (plan(); as settings) {
+    <div class="card">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <h2 class="text-lg font-semibold m-0">План</h2>
+        <p-button label="Зберегти план" icon="pi pi-save" size="small" [loading]="store.busy() === 'plan'" (onClick)="savePlan()" />
+      </div>
+      <app-plan-settings-form [settings]="settings" (settingsChange)="plan.set($event)" [currency]="account.baseCurrency" />
+    </div>
+  }
+
+  <p-dialog header="Новий під-портфель" [modal]="true" [visible]="addVisible()" (visibleChange)="addVisible.set($event)" [style]="{ width: '34rem' }" [breakpoints]="{ '640px': '95vw' }">
+    <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-2">
+        <label for="sub-name" class="font-medium">Назва</label>
+        <input pInputText id="sub-name" [ngModel]="draft().name" (ngModelChange)="patchDraft({ name: $event })" />
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="sub-share" class="font-medium">Цільова частка, %</label>
+        <p-inputnumber inputId="sub-share" [ngModel]="draft().share" (ngModelChange)="patchDraft({ share: $event ?? 0 })" suffix=" %" [min]="1" [max]="99" fluid />
+        <small class="text-muted-color">Частки інших під-портфелів пропорційно зменшаться.</small>
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="sub-strategy" class="font-medium">Стратегія</label>
+        <p-select inputId="sub-strategy" [options]="strategyOptions()" optionLabel="label" optionValue="value" [ngModel]="draft().strategyId" (ngModelChange)="patchDraft({ strategyId: $event })" [showClear]="true" appendTo="body" fluid />
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="sub-cash" class="font-medium">ETF для паркування</label>
+        <p-select inputId="sub-cash" [options]="cashOptions()" optionLabel="label" optionValue="value" [ngModel]="draft().cashInstrumentId" (ngModelChange)="patchDraft({ cashInstrumentId: $event })" [showClear]="true" [filter]="true" placeholder="Як у стратегії" appendTo="body" fluid />
+      </div>
+    </div>
+    <ng-template #footer>
+      <p-button label="Скасувати" [text]="true" severity="secondary" (onClick)="addVisible.set(false)" />
+      <p-button label="Додати" icon="pi pi-plus" [disabled]="!draft().name.trim()" [loading]="store.busy() === 'add'" (onClick)="add()" />
+    </ng-template>
+  </p-dialog>
+
+  <p-dialog header="Імпорт positions.json" [modal]="true" [visible]="importVisible()" (visibleChange)="importVisible.set($event)" [style]="{ width: '34rem' }" [breakpoints]="{ '640px': '95vw' }">
+    <div class="flex flex-col gap-4">
+      <p class="m-0 text-muted-color">Файл Python-флоу: позиції стануть операціями журналу (внесок на всю вартість і купівлі за ціною входу). Повторний імпорт нічого не дублює.</p>
+      <div class="flex flex-col gap-2">
+        <label for="import-sleeve" class="font-medium">Під-портфель</label>
+        <p-select inputId="import-sleeve" [options]="store.active()" optionLabel="name" optionValue="id" [ngModel]="importSleeve()" (ngModelChange)="importSleeve.set($event)" appendTo="body" fluid />
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="import-date" class="font-medium">Дата позицій</label>
+        <p-datepicker inputId="import-date" [ngModel]="importDate()" (ngModelChange)="importDate.set($event)" dateFormat="dd.mm.yy" [showIcon]="true" appendTo="body" fluid />
+      </div>
+      <div class="flex flex-col gap-2">
+        <span class="font-medium">Файл</span>
+        <label class="p-button p-button-outlined p-button-secondary justify-center cursor-pointer">
+          <i class="pi pi-file mr-2"></i>{{ importFileName() || 'Вибрати positions.json' }}
+          <input type="file" accept=".json,application/json" class="hidden" (change)="readFile($event)" />
+        </label>
+        @if (importError()) { <p-message severity="error" size="small" [text]="importError()!" /> }
+      </div>
+    </div>
+    <ng-template #footer>
+      <p-button label="Скасувати" [text]="true" severity="secondary" (onClick)="importVisible.set(false)" />
+      <p-button label="Імпортувати" icon="pi pi-upload" [disabled]="!importJson() || !importSleeve()" [loading]="store.busy() === 'import'" (onClick)="runImport()" />
+    </ng-template>
+  </p-dialog>
+}

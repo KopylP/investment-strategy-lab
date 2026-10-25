@@ -32,9 +32,9 @@ public sealed class GenerateRiskReviewHandler(
         string Label(Guid id) => labels.TryGetValue(id, out var label) ? label : id.ToString();
         var snapshots = holdings.SubPortfolios.ToDictionary(sub => sub.SubPortfolioId);
         var heldIds = holdings.SubPortfolios.SelectMany(sub => sub.Positions.Select(position => position.InstrumentId)).ToList();
-        var prices = await inputs.PricesAsync(heldIds, asOf, cancellationToken);
-
-        var warnings = new List<string>(PlanningInputs.PriceWarnings(heldIds, prices, labels));
+        var warnings = new List<string>();
+        var prices = await inputs.PricesAsync(heldIds, asOf, account.BaseCurrency, warnings, cancellationToken);
+        warnings.InsertRange(0, PlanningInputs.PriceWarnings(heldIds, prices, labels));
         var outcomes = new List<SubPortfolioOutcome>();
         foreach (var sub in planned)
         {

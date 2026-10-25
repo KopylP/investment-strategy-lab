@@ -1,3 +1,4 @@
+using InvestmentLab.MarketData.Contracts.FxRates;
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.MarketData.Contracts.Quotes;
 using InvestmentLab.Portfolio.Contracts.Accounts;
@@ -18,7 +19,8 @@ public interface IPlanSettingsRepository
 }
 
 /// <summary>What planning reads from other modules for one account: setup, holdings, instrument labels and prices.</summary>
-public sealed class PlanningInputs(IAccountSetupQueries accounts, IHoldingsQueries holdings, IInstrumentCatalog instruments, IQuoteHistory quotes)
+public sealed class PlanningInputs(
+    IAccountSetupQueries accounts, IHoldingsQueries holdings, IInstrumentCatalog instruments, IQuoteHistory quotes, IFxRates fxRates)
 {
     private const string YahooPrefix = "yfinance:";
 
@@ -37,12 +39,49 @@ public sealed class PlanningInputs(IAccountSetupQueries accounts, IHoldingsQueri
                 ? symbol[YahooPrefix.Length..]
                 : instrument.Name);
 
-    public async Task<IReadOnlyDictionary<Guid, LatestPriceDto>> PricesAsync(IEnumerable<Guid> instrumentIds, DateOnly asOf, CancellationToken cancellationToken)
+    /// <summary>
+    /// Latest close per instrument in the account currency. A quote in another currency is converted at the NBP cross
+    /// rate (both legs against PLN, last tables up to <paramref name="asOf"/>); without a rate the instrument has no price
+    /// and a warning says why.
+    /// </summary>
+    public async Task<IReadOnlyDictionary<Guid, LatestPriceDto>> PricesAsync(
+        IEnumerable<Guid> instrumentIds, DateOnly asOf, string accountCurrency, ICollection<string> warnings, CancellationToken cancellationToken)
     {
         var ids = instrumentIds.Distinct().ToList();
-        return ids.Count == 0
-            ? new Dictionary<Guid, LatestPriceDto>()
-            : (await quotes.GetLatestPrices(ids, asOf, cancellationToken)).ToDictionary(price => price.InstrumentId);
+        var prices = new Dictionary<Guid, LatestPriceDto>();
+        if (ids.Count == 0)
+            return prices;
+
+        var rates = new Dictionary<string, decimal?>();
+        foreach (var price in await quotes.GetLatestPrices(ids, asOf, cancellationToken))
+        {
+            if (string.Equals(price.Currency, accountCurrency, StringComparison.OrdinalIgnoreCase))
+            {
+                prices[price.InstrumentId] = price;
+                continue;
+            }
+
+            if (!rates.TryGetValue(price.Currency, out var rate))
+            {
+                rate = rates[price.Currency] = await CrossRateAsync(price.Currency, accountCurrency, asOf, cancellationToken);
+                warnings.Add(rate is { } known
+                    ? $"Ціни в {price.Currency} перераховано в {accountCurrency} за курсом NBP {known:0.####}: у брокера сума буде у валюті ETF."
+                    : $"Немає курсу NBP {price.Currency}/{accountCurrency}: ETF у {price.Currency} цього разу не торгуються. Оновіть курси NBP.");
+            }
+            if (rate is { } factor)
+                prices[price.InstrumentId] = price with { Close = price.Close * factor, AdjustedClose = price.AdjustedClose * factor, Currency = accountCurrency };
+        }
+        return prices;
+    }
+
+    /// <summary>Units of <paramref name="to"/> for one unit of <paramref name="from"/>; NBP publishes both against PLN.</summary>
+    private async Task<decimal?> CrossRateAsync(string from, string to, DateOnly asOf, CancellationToken cancellationToken)
+    {
+        async Task<decimal?> InPln(string currency) => currency == "PLN"
+            ? 1m
+            : (await fxRates.GetFxRate(currency, "PLN", asOf.AddDays(1), cancellationToken))?.Rate;
+
+        return await InPln(from) is { } fromPln && await InPln(to) is { } toPln && toPln > 0m ? fromPln / toPln : null;
     }
 
     public static IEnumerable<SubPortfolioSetupDto> Planned(AccountSetupDto account) =>

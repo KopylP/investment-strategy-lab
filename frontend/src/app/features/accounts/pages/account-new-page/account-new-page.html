@@ -1,0 +1,64 @@
+<app-page-header title="Новий рахунок" subtitle="Реальний брокерський рахунок; під-портфелі ділять його віртуально" />
+
+<div class="card">
+  <h2 class="text-lg font-semibold mb-4">1. Рахунок</h2>
+  <div class="grid gap-4 md:grid-cols-3">
+    <div class="flex flex-col gap-2">
+      <label for="name" class="font-medium">Назва</label>
+      <input pInputText id="name" [ngModel]="name()" (ngModelChange)="name.set($event)" />
+    </div>
+    <div class="flex flex-col gap-2">
+      <label for="broker" class="font-medium">Брокер</label>
+      <input pInputText id="broker" [ngModel]="broker()" (ngModelChange)="broker.set($event)" />
+    </div>
+    <div class="flex flex-col gap-2">
+      <span class="font-medium">Валюта рахунку</span>
+      <p-selectbutton [options]="currencies" optionLabel="label" optionValue="value" [ngModel]="currency()" (ngModelChange)="$event && currency.set($event)" [allowEmpty]="false" />
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+    <h2 class="text-lg font-semibold m-0">2. Під-портфелі</h2>
+    <div class="flex gap-2">
+      <p-button label="Як у Python-флоу: EU 70% / US 30%" icon="pi pi-bolt" severity="secondary" [outlined]="true" size="small"
+                [loading]="creatingDefaults()" (onClick)="useDefaultSetup()" />
+      <p-button label="Додати" icon="pi pi-plus" severity="secondary" size="small" (onClick)="add()" />
+    </div>
+  </div>
+  @if (!strategies().length) {
+    <p-message severity="info" styleClass="mb-4" text="Стратегій ще немає: кнопка «Як у Python-флоу» створить стандартні EU і US стратегії й призначить їх." />
+  }
+  <p-table [value]="sleeves()" [tableStyle]="{ 'min-width': '56rem' }" dataKey="key">
+    <ng-template #header>
+      <tr><th>Назва</th><th class="w-36">Частка, %</th><th>Стратегія</th><th>ETF для паркування</th><th class="w-36">Макс. позиція, %</th><th class="w-12"></th></tr>
+    </ng-template>
+    <ng-template #body let-sleeve>
+      <tr>
+        <td><input pInputText [ngModel]="sleeve.name" (ngModelChange)="update(sleeve.key, { name: $event })" class="w-full" /></td>
+        <td><p-inputnumber [ngModel]="sleeve.targetSharePercent" (ngModelChange)="update(sleeve.key, { targetSharePercent: $event ?? 0 })" suffix=" %" [min]="0" [max]="100" [maxFractionDigits]="2" fluid /></td>
+        <td><p-select [options]="strategyOptions()" optionLabel="label" optionValue="value" [ngModel]="sleeve.strategyId" (ngModelChange)="update(sleeve.key, { strategyId: $event })" [showClear]="true" placeholder="Без стратегії" appendTo="body" fluid /></td>
+        <td><p-select [options]="cashOptions()" optionLabel="label" optionValue="value" [ngModel]="sleeve.cashInstrumentId" (ngModelChange)="update(sleeve.key, { cashInstrumentId: $event })" [showClear]="true" [filter]="true" placeholder="Як у стратегії" appendTo="body" fluid /></td>
+        <td><p-inputnumber [ngModel]="sleeve.maxPositionWeightPercent" (ngModelChange)="update(sleeve.key, { maxPositionWeightPercent: $event })" suffix=" %" [min]="1" [max]="100" placeholder="—" fluid /></td>
+        <td><p-button icon="pi pi-trash" [text]="true" severity="danger" [disabled]="sleeves().length === 1" (onClick)="remove(sleeve.key)" ariaLabel="Прибрати" /></td>
+      </tr>
+    </ng-template>
+    <ng-template #footer>
+      <tr>
+        <td>Разом</td>
+        <td [class.text-primary]="total() === 100">{{ total() }} %</td>
+        <td colspan="4" class="text-muted-color text-sm">{{ total() === 100 ? 'Частки складаються в 100%' : 'Частки мають скластися рівно в 100%' }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<div class="card">
+  <h2 class="text-lg font-semibold mb-4">3. План</h2>
+  <app-plan-settings-form [(settings)]="plan" [currency]="currency()" />
+</div>
+
+<div class="flex justify-end gap-2">
+  <p-button label="Відкрити рахунок" icon="pi pi-check" [loading]="saving()" [disabled]="!valid()" (onClick)="save()" />
+</div>
