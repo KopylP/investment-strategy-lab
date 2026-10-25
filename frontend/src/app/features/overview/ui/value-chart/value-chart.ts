@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { UIChart } from 'primeng/chart';
+import { DisplayCurrency } from '../../../../core/context/display-currency';
 import { ChartTheme } from '../../../../shared/charts/chart-theme';
 import { formatDate, formatMoney, formatPeriod } from '../../../../shared/pipes/format';
 import { DashboardDto } from '../../data-access/dashboard-api';
@@ -14,11 +15,22 @@ import { DashboardDto } from '../../data-access/dashboard-api';
 })
 export class ValueChart {
   private readonly theme = inject(ChartTheme);
+  private readonly display = inject(DisplayCurrency);
+
+  /** The chart in the display currency at today's NBP rate (the shape is the account's; only the scale changes). */
+  private readonly scale = computed(() => {
+    const currency = this.dashboard().currency;
+    const target = this.display.code();
+    const rate = target ? this.display.rate(currency, target) : null;
+    return rate === null ? { rate: 1, currency } : { rate, currency: target! };
+  });
 
   readonly dashboard = input.required<DashboardDto>();
 
   protected readonly data = computed(() => {
     const { series, reports } = this.dashboard();
+    const { rate } = this.scale();
+    const scaled = (value: number | null) => (value === null ? null : value * rate);
     const palette = this.theme.palette();
     const reportDays = new Map(reports.map((report) => [report.date, report]));
     const hasPlan = series.some((point) => point.planValue !== null);
@@ -27,7 +39,7 @@ export class ValueChart {
       datasets: [
         {
           label: 'Вартість',
-          data: series.map((point) => point.value),
+          data: series.map((point) => scaled(point.value)),
           borderColor: palette.primary,
           backgroundColor: palette.primarySoft,
           fill: false,
@@ -39,7 +51,7 @@ export class ValueChart {
         },
         {
           label: 'Внесено',
-          data: series.map((point) => point.netContributions),
+          data: series.map((point) => scaled(point.netContributions)),
           borderColor: palette.neutral,
           borderDash: [6, 4],
           stepped: true,
@@ -50,7 +62,7 @@ export class ValueChart {
         ...(hasPlan
           ? [{
               label: 'Якби все за планом',
-              data: series.map((point) => point.planValue),
+              data: series.map((point) => scaled(point.planValue)),
               borderColor: palette.series[1],
               pointRadius: 0,
               borderWidth: 1.5,
@@ -64,7 +76,8 @@ export class ValueChart {
 
   protected readonly options = computed(() => {
     const palette = this.theme.palette();
-    const { currency, series, reports } = this.dashboard();
+    const { series, reports } = this.dashboard();
+    const { currency } = this.scale();
     const reportDays = new Map(reports.map((report) => [formatDate(report.date), report]));
     return {
       maintainAspectRatio: false,

@@ -12,7 +12,7 @@
     <ng-template #body let-sub let-i="rowIndex">
       <tr>
         <td><i class="pi pi-circle-fill text-xs mr-2" [style.color]="colors()[i % colors().length]"></i>{{ sub.name }}</td>
-        <td class="text-right">{{ sub.value | money: dashboard().currency : 0 }}</td>
+        <td class="text-right"><app-money [amount]="sub.value" [currency]="dashboard().currency" [digits]="0" /></td>
         <td class="text-right font-medium">{{ sub.actualShare | percent }}</td>
         <td class="text-right text-muted-color">{{ sub.targetShare | percent: 0 }}</td>
         <td class="text-right" [appSignedValue]="sub.twr">{{ sub.twr | signedPercent }}</td>

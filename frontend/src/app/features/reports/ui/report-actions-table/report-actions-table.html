@@ -42,10 +42,10 @@
       </td>
       <td class="text-right whitespace-nowrap">
         @if (!action.isMoney) {
-          {{ action.plannedPrice | money: action.currency : 2 }}
+          <app-money [amount]="action.plannedPrice" [currency]="action.currency" />
         }
       </td>
-      <td class="text-right font-medium whitespace-nowrap">{{ action.plannedAmount | money: action.currency }}</td>
+      <td class="text-right font-medium whitespace-nowrap"><app-money [amount]="action.plannedAmount" [currency]="action.currency" /></td>
       <td>
         <div class="flex items-center gap-2">
           <app-action-status-tag [status]="action.status" [fillSummary]="action.fillSummary" />
@@ -94,10 +94,10 @@
                   <span>{{ fill.executedOn | date }}{{ fill.note ? ' · ' + fill.note : '' }}</span>
                   <span>
                     @if (action.isMoney) {
-                      {{ fill.quantity | money: action.currency }}
+                      <app-money [amount]="fill.quantity" [currency]="action.currency" [inline]="true" />
                     } @else {
-                      {{ fill.quantity | quantity }} × {{ fill.price | money: action.currency }}
-                      @if (fill.fee) { · комісія {{ fill.fee | money: action.currency }} }
+                      {{ fill.quantity | quantity }} × <app-money [amount]="fill.price" [currency]="action.currency" [inline]="true" />
+                      @if (fill.fee) { · комісія <app-money [amount]="fill.fee" [currency]="action.currency" [inline]="true" /> }
                     }
                     @if (fill.transactionId) {
                       <i class="pi pi-check-circle text-primary ml-1" pTooltip="Записано в журнал"></i>

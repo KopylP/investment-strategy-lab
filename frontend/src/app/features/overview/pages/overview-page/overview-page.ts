@@ -7,6 +7,7 @@ import { SelectButton } from 'primeng/selectbutton';
 import { Skeleton } from 'primeng/skeleton';
 import { Tag } from 'primeng/tag';
 import { DateTimePipe, DatePipe, MoneyPipe, PeriodPipe, SignedPercentPipe } from '../../../../shared/pipes/format-pipes';
+import { Money } from '../../../../shared/ui/money/money';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { SignedValue } from '../../../../shared/ui/signed-value';
 import { OverviewStore } from '../../data-access/overview-store';
@@ -17,7 +18,7 @@ import { ValueChart } from '../../ui/value-chart/value-chart';
 @Component({
   selector: 'app-overview-page',
   imports: [
-    FormsModule, RouterLink, Button, Message, SelectButton, Skeleton, Tag, PageHeader, SignedValue, ValueChart, DrawdownChart, AllocationCard,
+    FormsModule, RouterLink, Button, Message, SelectButton, Skeleton, Tag, PageHeader, SignedValue, ValueChart, DrawdownChart, AllocationCard, Money,
     MoneyPipe, SignedPercentPipe, PeriodPipe, DateTimePipe, DatePipe,
   ],
   providers: [OverviewStore],

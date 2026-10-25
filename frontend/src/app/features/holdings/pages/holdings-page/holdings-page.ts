@@ -8,8 +8,9 @@ import { Skeleton } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
 
 import { Tooltip } from 'primeng/tooltip';
-import { DatePipe, MoneyPipe, PercentPipe, QuantityPipe, SignedPercentPipe } from '../../../../shared/pipes/format-pipes';
+import { DatePipe, PercentPipe, QuantityPipe, SignedPercentPipe } from '../../../../shared/pipes/format-pipes';
 import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
+import { Money } from '../../../../shared/ui/money/money';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { SignedValue } from '../../../../shared/ui/signed-value';
 import { HoldingsStore } from '../../data-access/holdings-store';
@@ -17,8 +18,8 @@ import { HoldingsStore } from '../../data-access/holdings-store';
 @Component({
   selector: 'app-holdings-page',
   imports: [
-    FormsModule, RouterLink, Button, DatePicker, Message, Skeleton, TableModule, Tooltip, PageHeader, EmptyState, SignedValue,
-    MoneyPipe, PercentPipe, QuantityPipe, SignedPercentPipe, DatePipe,
+    FormsModule, RouterLink, Button, DatePicker, Message, Skeleton, TableModule, Tooltip, PageHeader, EmptyState, SignedValue, Money,
+    PercentPipe, QuantityPipe, SignedPercentPipe, DatePipe,
   ],
   providers: [HoldingsStore],
   templateUrl: './holdings-page.html',

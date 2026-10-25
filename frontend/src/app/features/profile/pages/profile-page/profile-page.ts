@@ -6,6 +6,7 @@ import { Select } from 'primeng/select';
 import { Skeleton } from 'primeng/skeleton';
 import { toProblemMessage } from '../../../../core/api/api-client';
 import { AuthStore, UserProfile } from '../../../../core/auth/auth-store';
+import { DisplayCurrency } from '../../../../core/context/display-currency';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 
 @Component({
@@ -17,6 +18,7 @@ import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 export class ProfilePage {
   protected readonly auth = inject(AuthStore);
   private readonly messages = inject(MessageService);
+  private readonly display = inject(DisplayCurrency);
 
   private readonly profileResource = resource({ loader: () => this.auth.getProfile() });
   protected readonly profile = linkedSignal<UserProfile | undefined>(() => this.profileResource.value());
@@ -35,7 +37,9 @@ export class ProfilePage {
     if (!profile) return;
     this.saving.set(true);
     try {
-      this.profileResource.set(await this.auth.updateProfile(profile));
+      const saved = await this.auth.updateProfile(profile);
+      this.profileResource.set(saved);
+      this.display.useSaved(saved.displayCurrency);
       this.messages.add({ severity: 'success', summary: 'Профіль збережено' });
     } catch (error) {
       this.messages.add({ severity: 'error', summary: 'Не збережено', detail: toProblemMessage(error) });

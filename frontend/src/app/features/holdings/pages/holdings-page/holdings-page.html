@@ -13,20 +13,20 @@
   <div class="grid gap-4 grid-cols-2 lg:grid-cols-4 mb-4">
     <div class="card mb-0">
       <div class="text-muted-color text-sm mb-2">Вартість</div>
-      <div class="text-2xl font-semibold">{{ totals.value | money: store.currency() }}</div>
+      <div class="text-2xl font-semibold"><app-money [amount]="totals.value" [currency]="store.currency()" /></div>
     </div>
     <div class="card mb-0">
       <div class="text-muted-color text-sm mb-2">Нереалізований результат</div>
-      <div class="text-2xl font-semibold" [appSignedValue]="totals.pnl">{{ totals.pnl | money: store.currency() }}</div>
+      <div class="text-2xl font-semibold" [appSignedValue]="totals.pnl"><app-money [amount]="totals.pnl" [currency]="store.currency()" /></div>
       <div class="text-sm mt-1" [appSignedValue]="totals.pnlPct">{{ totals.pnlPct | signedPercent }}</div>
     </div>
     <div class="card mb-0">
       <div class="text-muted-color text-sm mb-2">Інвестовано (вартість позицій)</div>
-      <div class="text-2xl font-semibold">{{ totals.invested | money: store.currency() }}</div>
+      <div class="text-2xl font-semibold"><app-money [amount]="totals.invested" [currency]="store.currency()" /></div>
     </div>
     <div class="card mb-0">
       <div class="text-muted-color text-sm mb-2">Вільний кеш</div>
-      <div class="text-2xl font-semibold">{{ totals.cash | money: store.currency() }}</div>
+      <div class="text-2xl font-semibold"><app-money [amount]="totals.cash" [currency]="store.currency()" /></div>
     </div>
   </div>
 
@@ -39,11 +39,11 @@
       <div class="flex flex-wrap items-baseline justify-between gap-2 mb-4">
         <div>
           <h2 class="text-lg font-semibold m-0">{{ sleeve.name }}</h2>
-          <div class="text-sm text-muted-color">частка {{ sleeve.actualShare | percent }} при цілі {{ sleeve.targetShare | percent: 0 }} · кеш {{ sleeve.cash | money: store.currency() }}</div>
+          <div class="text-sm text-muted-color">частка {{ sleeve.actualShare | percent }} при цілі {{ sleeve.targetShare | percent: 0 }} · кеш <app-money [amount]="sleeve.cash" [currency]="store.currency()" [inline]="true" /></div>
         </div>
         <div class="text-right">
-          <div class="text-xl font-semibold">{{ sleeve.value | money: store.currency() }}</div>
-          <div class="text-sm" [appSignedValue]="sleeve.pnl">{{ sleeve.pnl | money: store.currency() }}</div>
+          <div class="text-xl font-semibold"><app-money [amount]="sleeve.value" [currency]="store.currency()" /></div>
+          <div class="text-sm" [appSignedValue]="sleeve.pnl"><app-money [amount]="sleeve.pnl" [currency]="store.currency()" /></div>
         </div>
       </div>
       @if (sleeve.positions.length) {
@@ -59,15 +59,15 @@
                 <div class="text-xs text-muted-color">{{ position.name }}</div>
               </td>
               <td class="text-right">{{ position.quantity | quantity }}</td>
-              <td class="text-right">{{ position.averageCost | money: store.currency() }}</td>
+              <td class="text-right"><app-money [amount]="position.averageCost" [currency]="store.currency()" /></td>
               <td class="text-right">
-                {{ position.price === null ? '—' : (position.price | money: store.currency()) }}
+                @if (position.quotedPrice === null) { — } @else { <app-money [amount]="position.quotedPrice" [currency]="position.quoteCurrency" /> }
                 @if (position.isStale) { <i class="pi pi-exclamation-triangle text-xs" [pTooltip]="'Котирування на ' + (position.priceDate | date)"></i> }
               </td>
-              <td class="text-right font-medium">{{ position.value | money: store.currency() }}</td>
+              <td class="text-right font-medium"><app-money [amount]="position.value" [currency]="store.currency()" /></td>
               <td class="text-right">{{ position.weight | percent }}</td>
               <td class="text-right" [appSignedValue]="position.pnl">
-                {{ position.pnl | money: store.currency() }}
+                <app-money [amount]="position.pnl" [currency]="store.currency()" />
                 <div class="text-xs">{{ position.pnlPct | signedPercent }}</div>
               </td>
             </tr>
@@ -80,7 +80,7 @@
                 @for (lot of position.lots; track $index) {
                   <div class="flex justify-between gap-4 text-sm py-1 max-w-xl">
                     <span>{{ lot.openedOn | date }}</span>
-                    <span>{{ lot.quantity | quantity }} шт. × {{ lot.unitCost | money: store.currency() : 4 }}</span>
+                    <span>{{ lot.quantity | quantity }} шт. × <app-money [amount]="lot.unitCost" [currency]="store.currency()" [digits]="4" [inline]="true" /></span>
                   </div>
                 }
               </td>

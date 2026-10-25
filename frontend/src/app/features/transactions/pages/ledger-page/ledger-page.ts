@@ -14,7 +14,7 @@ import { Tag } from 'primeng/tag';
 import { Tooltip } from 'primeng/tooltip';
 import { InstrumentCatalog } from '../../../../core/context/instrument-catalog';
 import { symbolOf } from '../../../../shared/models/api';
-import { DatePipe, MoneyPipe } from '../../../../shared/pipes/format-pipes';
+import { DatePipe } from '../../../../shared/pipes/format-pipes';
 import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { SignedValue } from '../../../../shared/ui/signed-value';
@@ -22,11 +22,12 @@ import { CashInput, TradeInput, TransactionsStore, TransactionVm } from '../../d
 import { CashDialog } from '../../ui/cash-dialog/cash-dialog';
 import { TradeDialog } from '../../ui/trade-dialog/trade-dialog';
 
+import { Money } from '../../../../shared/ui/money/money';
 @Component({
   selector: 'app-ledger-page',
-  imports: [
+  imports: [Money,
     FormsModule, RouterLink, Button, IconField, InputIcon, InputText, Message, Select, Skeleton, TableModule, Tag, Tooltip,
-    PageHeader, EmptyState, SignedValue, TradeDialog, CashDialog, DatePipe, MoneyPipe,
+    PageHeader, EmptyState, SignedValue, TradeDialog, CashDialog, DatePipe,
   ],
   providers: [TransactionsStore],
   templateUrl: './ledger-page.html',
