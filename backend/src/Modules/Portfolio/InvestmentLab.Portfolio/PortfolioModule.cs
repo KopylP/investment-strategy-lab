@@ -63,6 +63,7 @@ public sealed class PortfolioModule : IModule
         services.AddScoped<RecordInternalTransferHandler>();
         services.AddScoped<ReverseTransactionHandler>();
         services.AddScoped<GetTransactionsHandler>();
+        services.AddScoped<IJournalQueries, JournalQueries>();
         services.AddScoped<ImportPositionsHandler>();
         services.AddIntegrationEventHandler<RecordTradeV1, PortfolioCommandHandlers>();
         services.AddIntegrationEventHandler<RecordContributionV1, PortfolioCommandHandlers>();

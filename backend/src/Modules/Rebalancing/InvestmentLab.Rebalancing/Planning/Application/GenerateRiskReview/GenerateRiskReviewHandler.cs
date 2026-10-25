@@ -3,6 +3,7 @@ using InvestmentLab.Rebalancing.Planning.Application.GenerateMonthlyReport;
 using InvestmentLab.Rebalancing.Planning.Domain;
 using InvestmentLab.Rebalancing.Reports.Domain;
 using InvestmentLab.Strategies.Contracts;
+using InvestmentLab.Taxation.Contracts;
 
 namespace InvestmentLab.Rebalancing.Planning.Application.GenerateRiskReview;
 
@@ -13,7 +14,7 @@ public sealed record GenerateRiskReviewCommand(Guid AccountId, DateOnly? AsOf = 
 /// position, warnings are listed. A newer review supersedes an open older one.
 /// </summary>
 public sealed class GenerateRiskReviewHandler(
-    PlanningInputs inputs, IStrategyEvaluation strategies, IReportRepository reports, TimeProvider clock)
+    PlanningInputs inputs, IStrategyEvaluation strategies, IReportRepository reports, SaleTaxes taxes, TimeProvider clock)
 {
     public async Task<Result<ReportId>> Handle(GenerateRiskReviewCommand command, ReportTrigger trigger, CancellationToken cancellationToken)
     {
@@ -86,6 +87,7 @@ public sealed class GenerateRiskReviewHandler(
             null, outcomes, warnings);
 
         var report = RebalancingReport.Generate(draft, now);
+        await taxes.EstimateAsync(report, asOf, cancellationToken);
         reports.Add(report);
         foreach (var open in (await reports.OpenAsync(account.Id, cancellationToken)).Where(each => each.Kind == ReportKind.RiskReview))
         {

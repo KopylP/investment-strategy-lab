@@ -32,6 +32,7 @@ export class AppMenu {
         },
         { label: 'Позиції', icon: 'pi pi-fw pi-chart-pie', routerLink: ['/holdings'] },
         { label: 'Журнал операцій', icon: 'pi pi-fw pi-book', routerLink: ['/transactions'] },
+        { label: 'Податки', icon: 'pi pi-fw pi-percentage', routerLink: ['/taxes'] },
       ],
     },
     {
