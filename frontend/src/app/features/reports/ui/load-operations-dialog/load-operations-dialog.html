@@ -1,0 +1,84 @@
+<div class="flex flex-col gap-5 pt-1">
+  <section class="flex flex-col gap-3">
+    <div class="font-medium">1. Нова виписка Revolut <span class="text-muted-color font-normal">(необов’язково)</span></div>
+    <p class="m-0 text-sm text-muted-color">
+      Якщо ви вже виконали план у Revolut, завантажте свіжу виписку (CSV): нові операції потраплять у журнал, а вже імпортовані не задублюються.
+    </p>
+    <div class="flex flex-wrap items-center gap-3">
+      <label class="p-button p-button-outlined p-button-secondary p-button-sm cursor-pointer">
+        <i class="pi pi-upload mr-2"></i>Вибрати CSV
+        <input type="file" accept=".csv,text/csv" class="hidden" (change)="onFile($event)" [disabled]="busy() !== null" />
+      </label>
+      @if (busy() === 'upload') { <span class="text-sm text-muted-color">Розбираю виписку…</span> }
+    </div>
+    @if (upload(); as upload) {
+      @if (upload.status === 'Confirmed') {
+        <p-message severity="success" text="Виписку імпортовано в журнал." />
+      } @else if (upload.counts.needsMapping > 0) {
+        <p-message severity="warn">
+          <span>Деякі тікери треба зіставити з інструментами чи під-портфелями. </span>
+          <a [routerLink]="['/transactions/import']" [queryParams]="{ importId: upload.id }" class="font-medium underline" (click)="close()">Відкрити майстер імпорту</a>
+        </p-message>
+      } @else if (upload.counts.toRecord === 0) {
+        <p-message severity="info" text="Нових операцій у виписці немає — усе вже в журналі." />
+      } @else {
+        <div class="flex flex-wrap items-center gap-3">
+          <span>Нових операцій: <b>{{ upload.counts.toRecord }}</b></span>
+          <p-button label="Імпортувати в журнал" icon="pi pi-download" size="small" [loading]="busy() === 'import'" (onClick)="importStatement()" />
+          <a [routerLink]="['/transactions/import']" [queryParams]="{ importId: upload.id }" class="text-sm underline" (click)="close()">переглянути детально</a>
+        </div>
+      }
+    }
+  </section>
+
+  <section class="flex flex-col gap-3">
+    <div class="font-medium">2. Що з журналу виконує цей план</div>
+    @if (busy() === 'preview' && !preview()) {
+      <p-skeleton height="5rem" />
+    } @else if (preview(); as preview) {
+      @if (matches().length) {
+        <ul class="list-none m-0 p-0 flex flex-col gap-3">
+          @for (match of matches(); track match.actionId) {
+            <li class="border border-surface rounded-border p-3 flex flex-col gap-2">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <span class="font-medium">{{ match.action?.title ?? match.actionKind }}</span>
+                <p-tag [value]="match.completes ? 'виконано повністю' : 'частково'" [severity]="match.completes ? 'success' : 'warn'" />
+              </div>
+              @for (operation of match.operations; track operation.transactionId) {
+                <div class="text-sm text-muted-color">
+                  {{ operation.occurredOn | date }} · {{ operationLabel(operation) }}
+                  @if (operation.kind === 'Contribution') {
+                    {{ operation.quantity | money: data.currency }}
+                  } @else {
+                    {{ symbol(operation.instrumentId) }} {{ operation.quantity | quantity }} шт. × {{ operation.price | money: data.currency }}
+                  }
+                  · {{ operation.source === 'Import' ? 'з виписки' : 'вручну' }}
+                </div>
+              }
+            </li>
+          }
+        </ul>
+      } @else {
+        <p-message severity="info" text="У журналі немає операцій після цього рапорту, які збігаються з планом." />
+      }
+
+      @if (preview.unmatched.length) {
+        <details class="text-sm">
+          <summary class="cursor-pointer text-muted-color">Поза планом: {{ preview.unmatched.length }} операцій</summary>
+          <ul class="mt-2 mb-0 pl-4">
+            @for (operation of preview.unmatched; track operation.transactionId) {
+              <li>{{ operation.occurredOn | date }} · {{ operationLabel(operation) }} {{ symbol(operation.instrumentId) }} {{ operation.quantity | quantity }}</li>
+            }
+          </ul>
+        </details>
+      }
+    }
+  </section>
+
+  @if (error(); as error) { <p-message severity="error" [text]="error" /> }
+
+  <div class="flex justify-end gap-2">
+    <p-button label="Закрити" [text]="true" severity="secondary" (onClick)="close()" />
+    <p-button [label]="'Відмітити ' + matches().length + ' дій'" icon="pi pi-check" [disabled]="!matches().length" [loading]="busy() === 'apply'" (onClick)="apply()" />
+  </div>
+</div>

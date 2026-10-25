@@ -1,0 +1,162 @@
+@let s = section();
+<div class="flex flex-col gap-6">
+  @if (s.error) {
+    <p-message severity="error" [text]="'Стратегія не відповіла: ' + s.error + '. Позиції під-портфеля цього разу не змінюються.'" />
+  }
+
+  <div class="flex flex-wrap items-center gap-2">
+    <p-tag [value]="s.strategyLabel" severity="secondary" icon="pi pi-sliders-h" />
+    <p-tag [value]="'Цільова частка ' + (s.targetShare | percent: 0)" severity="secondary" />
+    @if (s.marketIsFavorable !== null) {
+      <p-tag [value]="s.marketIsFavorable ? 'Ринок у нормі' : 'Ринок слабкий'" [severity]="s.marketIsFavorable ? 'success' : 'warn'"
+             [icon]="s.marketIsFavorable ? 'pi pi-sun' : 'pi pi-cloud'" />
+      <p-tag [value]="'Інвестуємо ' + (s.investFraction | percent: 0) + ' внеску'" severity="info" />
+    }
+    @if (s.contribution) {
+      <p-tag [value]="'Внесок ' + (s.contribution | money: currency())" severity="info" icon="pi pi-plus" />
+    }
+  </div>
+
+  @if (s.summary) {
+    <p class="m-0">{{ s.summary }}</p>
+  }
+  @if (s.marketReasons.length) {
+    <ul class="m-0 pl-5 text-sm text-muted-color">
+      @for (reason of s.marketReasons; track $index) {
+        <li>{{ reason }}</li>
+      }
+    </ul>
+  }
+  @for (note of s.notes; track $index) {
+    <p-message severity="info" [text]="note" />
+  }
+  @for (warning of s.warnings; track $index) {
+    <p-message severity="warn" [text]="warning" />
+  }
+
+  @if (s.orders.length) {
+    <div>
+      <h3 class="text-lg font-semibold mt-4 mb-3">Ордери під-портфеля (до неттінгу)</h3>
+      <p-table [value]="s.orders" [tableStyle]="{ 'min-width': '40rem' }" size="small">
+        <ng-template #header>
+          <tr><th>Дія</th><th>ETF</th><th class="text-right">Штук</th><th class="text-right">Сума</th><th>Чому</th></tr>
+        </ng-template>
+        <ng-template #body let-order>
+          <tr>
+            <td><p-tag [value]="order.kindLabel" [severity]="order.severity" /></td>
+            <td class="font-medium">{{ order.symbol }}</td>
+            <td class="text-right">{{ order.quantity | quantity }}</td>
+            <td class="text-right">{{ order.amount | money: currency() }}</td>
+            <td class="text-sm text-muted-color">{{ order.reason }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+
+  @if (s.allocation.length) {
+    <div>
+      <h3 class="text-lg font-semibold mt-4 mb-3">До → після</h3>
+      <p-table [value]="s.allocation" [tableStyle]="{ 'min-width': '40rem' }" size="small">
+        <ng-template #header>
+          <tr><th>Позиція</th><th class="text-right">Було</th><th class="text-right">Вага</th><th class="text-right">Стане</th><th class="text-right">Вага</th><th class="text-right">Ціль</th></tr>
+        </ng-template>
+        <ng-template #body let-row>
+          <tr>
+            <td class="font-medium">
+              {{ row.label }}
+              @if (row.role === 'Exit') { <p-tag value="вихід" severity="danger" styleClass="ml-2" /> }
+            </td>
+            <td class="text-right">{{ row.valueBefore | money: currency() }}</td>
+            <td class="text-right text-muted-color">{{ row.weightBefore | percent }}</td>
+            <td class="text-right">{{ row.valueAfter | money: currency() }}</td>
+            <td class="text-right">{{ row.weightAfter | percent }}</td>
+            <td class="text-right text-muted-color">{{ row.targetWeight === null ? '—' : (row.targetWeight | percent: 0) }}</td>
+          </tr>
+        </ng-template>
+        <ng-template #footer>
+          <tr>
+            <td>Разом</td>
+            <td class="text-right">{{ s.totalBefore | money: currency() }}</td>
+            <td></td>
+            <td class="text-right">{{ s.totalAfter | money: currency() }}</td>
+            <td></td>
+            <td></td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+
+  @if (s.scores.length) {
+    <div>
+      <h3 class="text-lg font-semibold mt-4 mb-3">Чому саме ці ETF</h3>
+      <p-table [value]="s.scores" [tableStyle]="{ 'min-width': '56rem' }" size="small" [scrollable]="true">
+        <ng-template #header>
+          <tr>
+            <th>Ранг</th><th>ETF</th><th class="text-right">Моментум</th><th class="text-right">1 міс</th><th class="text-right">3 міс</th>
+            <th class="text-right">12 міс</th><th class="text-right">Волатильність</th><th>MA200</th><th>Рішення</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-score>
+          <tr>
+            <td>{{ score.rank ?? '—' }}</td>
+            <td>
+              <div class="font-medium">{{ score.symbol }}</div>
+              <div class="text-xs text-muted-color">{{ score.name }} · {{ score.group }}</div>
+            </td>
+            <td class="text-right" [appSignedValue]="score.momentum">{{ score.momentum | signedPercent }}</td>
+            <td class="text-right" [appSignedValue]="score.return1m">{{ score.return1m | signedPercent }}</td>
+            <td class="text-right" [appSignedValue]="score.return3m">{{ score.return3m | signedPercent }}</td>
+            <td class="text-right" [appSignedValue]="score.return12m">{{ score.return12m | signedPercent }}</td>
+            <td class="text-right">{{ score.volatility | percent }}</td>
+            <td><i class="pi" [class.pi-arrow-up]="score.aboveMovingAverage" [class.pi-arrow-down]="!score.aboveMovingAverage"
+                   [appSignedValue]="score.aboveMovingAverage ? 1 : -1" [pTooltip]="score.aboveMovingAverage ? 'Ціна вище MA200' : 'Ціна нижче MA200'"></i></td>
+            <td>
+              @if (score.isTarget) {
+                <p-tag [value]="'ціль ' + (score.targetWeight | percent: 0)" severity="success" />
+              }
+              <div class="text-xs text-muted-color mt-1">{{ score.reason }}</div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+
+  @if (s.risk; as risk) {
+    <div class="flex flex-col gap-3">
+      <div class="flex items-center gap-2">
+        <h3 class="text-lg font-semibold m-0">Ризик</h3>
+        <p-tag [value]="risk.status === 'ok' ? 'Усе гаразд' : risk.status === 'watch' ? 'Стежити' : 'Діяти'"
+               [severity]="risk.status === 'ok' ? 'success' : risk.status === 'watch' ? 'warn' : 'danger'" />
+      </div>
+      @for (alert of risk.marketAlerts.concat(risk.portfolioAlerts); track $index) {
+        <p-message severity="warn" [text]="alert" />
+      }
+      <p-table [value]="risk.positionsVm" [tableStyle]="{ 'min-width': '48rem' }" size="small">
+        <ng-template #header>
+          <tr><th>ETF</th><th class="text-right">Вартість</th><th class="text-right">P&amp;L</th><th class="text-right">Від піку</th><th class="text-right">Вихід</th><th>Сигнали</th></tr>
+        </ng-template>
+        <ng-template #body let-position>
+          <tr>
+            <td class="font-medium">{{ position.symbol }}</td>
+            <td class="text-right">{{ position.value | money: currency() }}</td>
+            <td class="text-right" [appSignedValue]="position.pnlPct">{{ position.pnlPct | signedPercent }}</td>
+            <td class="text-right" [appSignedValue]="position.drawdownFromHigh">{{ position.drawdownFromHigh | signedPercent }}</td>
+            <td class="text-right">
+              {{ position.exitPrice === null ? '—' : (position.exitPrice | money: currency()) }}
+              <div class="text-xs text-muted-color">{{ position.exitRule }}</div>
+            </td>
+            <td>
+              @if (position.sell) { <p-tag value="продати" severity="danger" /> }
+              @for (alert of position.alerts; track $index) {
+                <div class="text-xs text-muted-color">{{ alert }}</div>
+              }
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+</div>

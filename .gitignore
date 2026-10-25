@@ -37,7 +37,8 @@ dist/
 *.swo
 
 # Generated reports and local outputs
-reports/
+/reports/
+strategy-engine/reports/
 
 # .NET build output (obj/ holds machine-specific absolute paths from restore)
 bin/

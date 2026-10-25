@@ -1,0 +1,9 @@
+<div class="flex flex-col gap-4 pt-1">
+  <p class="m-0 text-muted-color">Дія лишиться в рапорті як пропущена з причиною; журнал не зміниться.</p>
+  <p-selectbutton [options]="presets" optionLabel="label" optionValue="value" [ngModel]="reason()" (ngModelChange)="choose($event)" [allowEmpty]="true" size="small" />
+  <textarea pTextarea rows="3" [ngModel]="reason()" (ngModelChange)="reason.set($event)" placeholder="Причина" fluid></textarea>
+  <div class="flex justify-end gap-2">
+    <p-button label="Скасувати" [text]="true" severity="secondary" (onClick)="cancel()" />
+    <p-button label="Пропустити" icon="pi pi-forward" severity="contrast" [disabled]="!reason().trim()" (onClick)="submit()" />
+  </div>
+</div>
