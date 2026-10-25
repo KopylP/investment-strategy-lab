@@ -25,6 +25,21 @@ public sealed class ValuationTests
     }
 
     [Fact]
+    public void A_dollar_balance_is_valued_at_each_day_rate_so_the_rate_moves_value_but_is_not_a_flow()
+    {
+        var rates = new Dictionary<DateOnly, decimal> { [D1] = 0.90m, [D2] = 0.90m, [D3] = 0.85m };
+        var snapshots = ValuationCalculator.Build([
+            new Movement(D1, 1, Sleeve, null, 0m, 100m, 90m, CashCurrency: "USD"),   // $100 top-up worth 90 € that day
+        ], [D1, D2, D3], (_, _) => null, (currency, day) => currency == "USD" ? rates[day] : null);
+
+        var account = snapshots.Where(snapshot => snapshot.SubPortfolioId is null).ToList();
+        account.Select(snapshot => snapshot.Value).ShouldBe([90m, 90m, 85m]);
+        account.Select(snapshot => snapshot.Cash).ShouldBe([90m, 90m, 85m]);
+        account[2].NetContributions.ShouldBe(90m);
+        account[2].TwrIndex.ShouldBe(0.94444444m);                                // the dollar fell, the money did not leave
+    }
+
+    [Fact]
     public void An_internal_transfer_is_a_flow_for_each_sleeve_but_not_for_the_account()
     {
         var snapshots = ValuationCalculator.Build([

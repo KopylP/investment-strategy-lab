@@ -36,7 +36,7 @@ public sealed class Transaction : AggregateRoot<TransactionId>
 
     public static Result<Transaction> Trade(
         InvestmentAccount account, TradeSide side, Guid instrumentId, Quantity quantity, Price price, Money fee,
-        IReadOnlyList<Allocation> allocations, DateOnly executedOn, TransactionSource source, DateTimeOffset recordedAt)
+        IReadOnlyList<Allocation> allocations, DateOnly executedOn, TransactionSource source, DateTimeOffset recordedAt, Money? settlement = null)
     {
         if (instrumentId == Guid.Empty)
             return TransactionErrors.InstrumentRequired();
@@ -46,6 +46,8 @@ public sealed class Transaction : AggregateRoot<TransactionId>
             return currency;
         if (fee.Amount < 0m)
             return TransactionErrors.FeeNegative();
+        if (CheckSettlement(account, settlement) is { } settlementError)
+            return settlementError;
         if (CheckSubPortfolios(account, allocations.Select(a => a.SubPortfolioId)) is { } unknown)
             return unknown;
 
@@ -55,15 +57,17 @@ public sealed class Transaction : AggregateRoot<TransactionId>
 
         var kind = side == TradeSide.Buy ? TransactionKind.Buy : TransactionKind.Sell;
         return new Transaction(TransactionId.New(), account, kind, executedOn, source,
-            new TradeDetails(instrumentId, side, quantity, price, fee, allocations), recordedAt);
+            new TradeDetails(instrumentId, side, quantity, price, fee, allocations, settlement), recordedAt);
     }
 
     public static Result<Transaction> CashMovement(
         InvestmentAccount account, CashMovementKind kind, Money amount, IReadOnlyList<CashAllocation> allocations, Guid? instrumentId,
-        DateOnly occurredOn, TransactionSource source, DateTimeOffset recordedAt)
+        DateOnly occurredOn, TransactionSource source, DateTimeOffset recordedAt, Money? settlement = null)
     {
         if (CheckCurrency(account, amount.Currency) is { } currency)
             return currency;
+        if (CheckSettlement(account, settlement) is { } settlementError)
+            return settlementError;
         if (amount.Amount <= 0m || allocations.Any(a => a.Amount.Amount <= 0m))
             return TransactionErrors.AmountNotPositive();
         if (CheckSubPortfolios(account, allocations.Select(a => a.SubPortfolioId)) is { } unknown)
@@ -74,7 +78,7 @@ public sealed class Transaction : AggregateRoot<TransactionId>
             return TransactionErrors.AllocationsDoNotAddUp(allocated, amount.Amount);
 
         return new Transaction(TransactionId.New(), account, ToKind(kind), occurredOn, source,
-            new CashMovementDetails(kind, amount, allocations, instrumentId), recordedAt);
+            new CashMovementDetails(kind, amount, allocations, instrumentId, settlement), recordedAt);
     }
 
     public static Result<Transaction> InternalTransfer(
@@ -121,6 +125,15 @@ public sealed class Transaction : AggregateRoot<TransactionId>
 
     private static Error? CheckCurrency(InvestmentAccount account, Currency currency) =>
         currency == account.BaseCurrency ? null : TransactionErrors.CurrencyMismatch(account.BaseCurrency, currency);
+
+    /// <summary>A settlement is in a foreign currency (else it is just the amount) and above zero.</summary>
+    private static Error? CheckSettlement(InvestmentAccount account, Money? settlement) => settlement switch
+    {
+        null => null,
+        { Amount: <= 0m } => TransactionErrors.AmountNotPositive(),
+        _ when settlement.Currency == account.BaseCurrency => TransactionErrors.SettlementInAccountCurrency(account.BaseCurrency),
+        _ => null,
+    };
 
     private static Error? CheckSubPortfolios(InvestmentAccount account, IEnumerable<SubPortfolioId> ids)
     {

@@ -49,6 +49,7 @@ internal static class HoldingsMapping
                     line.CostBasis,
                     decimal.Round(line.AverageCost, 6),
                     line.FirstOpenedOn,
-                    [.. line.Lots.Select(lot => new LotDto(lot.OpenedBy.Value, lot.OpenedOn, lot.Quantity.Value, decimal.Round(lot.UnitCost, 8)))]))]))]);
+                    [.. line.Lots.Select(lot => new LotDto(lot.OpenedBy.Value, lot.OpenedOn, lot.Quantity.Value, decimal.Round(lot.UnitCost, 8)))]))],
+                [.. sub.ForeignCash.Select(money => new CashBalanceDto(money.Currency.Code, decimal.Round(money.Amount, 2)))]))]);
     }
 }

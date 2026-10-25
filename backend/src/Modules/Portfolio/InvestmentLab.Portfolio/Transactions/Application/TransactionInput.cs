@@ -81,14 +81,16 @@ internal static class TransactionMapping
     {
         public TradeRecordedDto ToDto() => new(
             trade.InstrumentId, trade.Side.ToString(), trade.Quantity.Value, trade.Price.Amount, trade.Fee.Amount,
-            [.. trade.Allocations.Select(a => new QuantityAllocationDto(a.SubPortfolioId.Value, a.Quantity.Value))]);
+            [.. trade.Allocations.Select(a => new QuantityAllocationDto(a.SubPortfolioId.Value, a.Quantity.Value))],
+            trade.Settlement?.Amount, trade.Settlement?.Currency.Code);
     }
 
     extension(CashMovementDetails cash)
     {
         public CashMovementRecordedDto ToDto() => new(
             cash.Kind.ToString(), cash.Amount.Amount, cash.InstrumentId,
-            [.. cash.Allocations.Select(a => new AmountAllocationDto(a.SubPortfolioId.Value, a.Amount.Amount))]);
+            [.. cash.Allocations.Select(a => new AmountAllocationDto(a.SubPortfolioId.Value, a.Amount.Amount))],
+            cash.Settlement?.Amount, cash.Settlement?.Currency.Code);
     }
 
     extension(InternalTransferDetails transfer)

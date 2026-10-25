@@ -46,4 +46,7 @@ public static class TransactionErrors
         Error.Conflict("transaction.already_reversed", $"Transaction {transactionId} is already reversed.");
 
     public static Error ReasonRequired() => Error.Validation("transaction.reason_required", "Say why the transaction is reversed.");
+
+    public static Error SettlementInAccountCurrency(Currency currency) =>
+        Error.Validation("transaction.settlement_in_account_currency", $"A settlement is for another currency than the account's {currency}.");
 }

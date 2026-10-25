@@ -32,9 +32,11 @@ public sealed class SnapshotBuilder(IJournalQueries journal, PriceBook prices, I
             var days = BusinessDays(from, through);
             var instruments = movements.Concat(shadow).Select(movement => movement.InstrumentId).OfType<Guid>().Distinct().ToList();
             var priceOn = await prices.LoadAsync(instruments, snapshot.Currency, from, through, cancellationToken);
+            var currencies = movements.Select(movement => movement.CashCurrency).OfType<string>().ToList();
+            var fxOn = await prices.LoadFxAsync(currencies, snapshot.Currency, from, through, cancellationToken);
             var owner = UserId.Of(snapshot.OwnerId);
-            stored.AddRange(ValuationCalculator.Build(movements, days, priceOn).Select(s => ValuationSnapshot.From(accountId, owner, SnapshotScenario.Actual, s)));
-            stored.AddRange(ValuationCalculator.Build(shadow, days, priceOn).Where(s => s.SubPortfolioId is null)
+            stored.AddRange(ValuationCalculator.Build(movements, days, priceOn, fxOn).Select(s => ValuationSnapshot.From(accountId, owner, SnapshotScenario.Actual, s)));
+            stored.AddRange(ValuationCalculator.Build(shadow, days, priceOn, fxOn).Where(s => s.SubPortfolioId is null)
                 .Select(s => ValuationSnapshot.From(accountId, owner, SnapshotScenario.FullPlan, s)));
         }
 

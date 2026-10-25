@@ -13,8 +13,8 @@ export interface TransactionDto {
   source: 'ReportAction' | 'Manual' | 'Reconciliation' | 'Import';
   sourceReference: string | null;
   isReversed: boolean;
-  trade: { instrumentId: string; side: string; quantity: number; price: number; fee: number; allocations: { subPortfolioId: string; quantity: number }[] } | null;
-  cash: { kind: string; amount: number; instrumentId: string | null; allocations: { subPortfolioId: string; amount: number }[] } | null;
+  trade: { instrumentId: string; side: string; quantity: number; price: number; fee: number; allocations: { subPortfolioId: string; quantity: number }[]; settledAmount?: number | null; settledCurrency?: string | null } | null;
+  cash: { kind: string; amount: number; instrumentId: string | null; allocations: { subPortfolioId: string; amount: number }[]; settledAmount?: number | null; settledCurrency?: string | null } | null;
   transfer: { fromSubPortfolioId: string; toSubPortfolioId: string; instrumentId: string | null; quantity: number | null; amount: number | null } | null;
   reversalOf: string | null;
   reversalReason: string | null;
@@ -147,11 +147,11 @@ export class TransactionsStore {
     let allocation = '';
     let amount: number | null = null;
     if (trade) {
-      description = `${this.instruments.symbol(trade.instrumentId)} · ${formatQuantity(trade.quantity)} × ${formatMoney(trade.price, currency)}${trade.fee ? ` · комісія ${formatMoney(trade.fee, currency)}` : ''}`;
+      description = `${this.instruments.symbol(trade.instrumentId)} · ${formatQuantity(trade.quantity)} × ${formatMoney(trade.price, currency)}${trade.fee ? ` · комісія ${formatMoney(trade.fee, currency)}` : ''}${settled(trade)}`;
       allocation = trade.allocations.map((part) => `${sub(part.subPortfolioId)}: ${formatQuantity(part.quantity)}`).join(', ');
       amount = (trade.side === 'Buy' ? -1 : 1) * trade.quantity * trade.price - trade.fee;
     } else if (cash) {
-      description = cash.instrumentId ? this.instruments.symbol(cash.instrumentId) : '';
+      description = `${cash.instrumentId ? this.instruments.symbol(cash.instrumentId) : ''}${settled(cash)}`.replace(/^ · /, '');
       allocation = cash.allocations.map((part) => `${sub(part.subPortfolioId)}: ${formatMoney(part.amount, currency)}`).join(', ');
       amount = cash.kind === 'Contribution' || cash.kind === 'Dividend' ? cash.amount : -cash.amount;
     } else if (transfer) {
@@ -177,4 +177,9 @@ export class TransactionsStore {
       reversalReason: transaction.reversalReason,
     };
   }
+}
+
+/** " · розраховано 110,00 $" when the broker settled the entry in another currency. */
+function settled(entry: { settledAmount?: number | null; settledCurrency?: string | null }): string {
+  return entry.settledAmount && entry.settledCurrency ? ` · у брокера ${formatMoney(entry.settledAmount, entry.settledCurrency)}` : '';
 }
