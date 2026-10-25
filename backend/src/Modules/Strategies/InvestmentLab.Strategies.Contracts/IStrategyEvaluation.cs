@@ -32,6 +32,7 @@ public sealed record StrategyEvaluationResult<T>(T? Value, string? ErrorCode = n
     public bool IsSuccess => ErrorCode is null;
 }
 
+/// <param name="CashInstrumentId">Where money that is not invested is parked (the sub-portfolio's ETF or the strategy's).</param>
 public sealed record StrategyDecisionDto(
     Guid StrategyId,
     int StrategyVersion,
@@ -42,7 +43,8 @@ public sealed record StrategyDecisionDto(
     IReadOnlyList<TargetWeightDto> Targets,
     MarketRegimeDto Market,
     RationaleDto Rationale,
-    IReadOnlyList<string> Warnings);
+    IReadOnlyList<string> Warnings,
+    Guid? CashInstrumentId = null);
 
 /// <param name="Weight">Share of the sub-portfolio, 0..1.</param>
 public sealed record TargetWeightDto(Guid InstrumentId, decimal Weight);

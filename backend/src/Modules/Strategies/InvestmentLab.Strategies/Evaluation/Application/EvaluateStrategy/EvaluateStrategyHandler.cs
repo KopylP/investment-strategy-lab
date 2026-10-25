@@ -22,7 +22,9 @@ public sealed class EvaluateStrategyHandler(IStrategyReader strategies, IStrateg
 
         var (strategy, version, context) = prepared.Value;
         var decision = await engine.DecideAsync(strategy.TypeCode, context, cancellationToken);
-        return decision.IsSuccess ? decision.Value with { StrategyId = strategy.Id.Value, StrategyVersion = version.Number } : decision.Error;
+        return decision.IsSuccess
+            ? decision.Value with { StrategyId = strategy.Id.Value, StrategyVersion = version.Number, CashInstrumentId = context.CashInstrumentId }
+            : decision.Error;
     }
 
     public async Task<Result<RiskAssessmentDto>> AssessRisk(EvaluateStrategyRequest request, CancellationToken cancellationToken)

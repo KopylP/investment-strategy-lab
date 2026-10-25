@@ -15,9 +15,13 @@ public sealed record RecordInternalTransferCommand(
 public sealed class RecordInternalTransferHandler(TransactionRecorder recorder)
 {
     public Task<Result<RecordedTransaction>> Handle(Guid accountId, RecordInternalTransferCommand command, CancellationToken cancellationToken) =>
-        recorder.RecordAsync(accountId, context => Create(context, command), cancellationToken);
+        Handle(accountId, command, TransactionSource.Manual, cancellationToken);
 
-    private static Result<Transaction> Create(RecordingContext context, RecordInternalTransferCommand command)
+    public Task<Result<RecordedTransaction>> Handle(
+        Guid accountId, RecordInternalTransferCommand command, TransactionSource source, CancellationToken cancellationToken) =>
+        recorder.RecordAsync(accountId, context => Create(context, command, source), cancellationToken);
+
+    private static Result<Transaction> Create(RecordingContext context, RecordInternalTransferCommand command, TransactionSource source)
     {
         if (command.FromSubPortfolioId == Guid.Empty || command.ToSubPortfolioId == Guid.Empty)
             return TransactionErrors.UnknownSubPortfolio(Guid.Empty);
@@ -32,7 +36,7 @@ public sealed class RecordInternalTransferHandler(TransactionRecorder recorder)
             command.Quantity is { } quantity ? Quantity.Of(quantity) : null,
             command.Amount is { } amount ? Money.Of(amount, context.Account.BaseCurrency) : null,
             command.OccurredOn,
-            TransactionSource.Manual,
+            source,
             context.Now);
     }
 }

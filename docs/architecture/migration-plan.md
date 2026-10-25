@@ -1531,7 +1531,8 @@ strategy-engine/
 | 2. MarketData | ✅ виконано |
 | 3. Identity + Portfolio | ✅ виконано |
 | 4. Strategies | ✅ виконано |
-| 5. Rebalancing | ⏭ наступний — див. «З чого продовжити» |
+| 5. Rebalancing | ✅ виконано |
+| 6. Frontend v1 | ⏭ наступний — див. «З чого продовжити» |
 | 10. Імпорт виписки Revolut | заплановано — після етапу 8, див. «Етап 10» |
 
 ### Що дав етап 2 (MarketData)
@@ -1586,13 +1587,31 @@ strategy-engine/
 - фільтр власника переїхав у `ModuleDbContext` (`CurrentUser` + `HasOwnerFilter`), ним користуються Portfolio і Strategies;
 - параметри плану (`minTrade`, `trimBand`, `fractionalShares`, внесок) не входять у параметри стратегії — це `RebalancingPolicy` етапу 5.
 
-### З чого продовжити (етап 5, Rebalancing)
+### Що дав етап 5 (Rebalancing)
 
-1. **5a. Planning (чистий домен, TDD):** `RebalancingPolicy`, `SubPortfolioRebalancer` — порт `plan.py` до цента за golden-фікстурами `tests/InvestmentLab.GoldenTests/Fixtures` (17 синтетичних + 12 місяців бектесту), далі `ContributionAllocator` (`FillUnderweight`/`FixedSplit`, `DriftBand`), `GuardrailEnforcer`, `OrderNetting`.
-2. **5b. Reports:** агрегат `RebalancingReport` + `ReportAction`/`Fill`, статуси й правила з §6.6; `GenerateMonthlyReport` (на вимогу і за розкладом, D14): `IAccountSetupQueries` → `IHoldingsQueries` → `IStrategyEvaluation` по під-портфелях → ребалансер → неттінг → `IQuoteHistory.GetLatestPrices`; `NullPlanReviewer`; IE `ReportGeneratedV1`.
-3. **5c. Marking:** `MarkActionExecuted`, `RecordPartialFill`, `SkipAction`, `UndoActionMark`, `CloseReport` → команди Portfolio `RecordTradeV1` / `RecordContributionV1` / `ReverseTransactionV1` через outbox; обробка `TransactionRecordedV1` (прив'язка `TransactionId`) і `TransactionRejectedV1` (відкат відмітки).
-4. **5d. Risk review:** щотижнева задача `GenerateRiskReview` → рапорт `Kind = RiskReview` (продажі тільки для `exit`, попередження для `warn`).
-5. **Integration-тест етапу:** сценарій §7.2 — рапорт → часткове виконання → операція в журналі → `Holdings` оновлені → сторно відмітки повертає їх.
+- **Planning (чистий домен):** `SubPortfolioRebalancer` — порт `plan.py` (вихід, invest fraction, ваги цілей, top-up, trim у плюсі понад `TrimBand`, `MinTrade`, цілі штуки, park/unpark, нотатки й таблиця «до → після»); **усі 29 golden-фікстур збігаються до цента** (суми, кількості, причини, нотатки, алокація). `ContributionAllocator` (`FillUnderweight`/`FixedSplit`, залишок округлення — найбільшій частці, підказка трансферу понад `DriftBand`), `GuardrailEnforcer` (обрізання цілі до `MaxPositionWeight`, без плеча; попередження про оборот понад `MaxMonthlyTurnover`), `OrderNetting` (протилежні ордери одного інструмента → внутрішній переказ + нетто-угода), `ReportComposer`, `RebalancingPolicy`, `PlanSettings` (внесок за замовчуванням, політика, генерація за розкладом).
+- **Reports:** AR `RebalancingReport` + `ReportAction` (`Contribute`, `Sell`, `Unpark`, `Transfer`, `Buy`, `Park`), `Fill` (номер ніколи не повторюється — `rebalancing:{reportId}:{actionId}:{n}` = `SourceReference` у Portfolio), статуси й правила §6.6: часткові виконання, автоматичне закриття, пропуск лише `Pending`, сторно відкриває закритий рапорт, відмова Portfolio відкочує відмітку з причиною, `Close` пропускає невідмічене, `SupersedeBy`. Розділи (рішення стратегії, «чому», ордери до неттінгу, алокація, ризик) — знімок у jsonb.
+- **Генерація:** `POST /api/rebalancing/accounts/{id}/reports` (D14) і задача першої неділі місяця о 20:00 Europe/Warsaw (не чіпає рахунок з відкритим рапортом); `POST …/risk-reviews` і щонеділі о 19:00 — ризик-рев'ю (`exit` → продаж усієї позиції, `warn` → нотатка). Застарілі/відсутні котирування — попередження; внесок, уже відмічений у періоді, не планується вдруге; новий рапорт замінює відкритий. `GET|PUT …/settings`, `GET …/open-actions`.
+- **Відмітки:** `POST /api/rebalancing/reports/{id}/actions/{actionId}/fills | partial-fills | skip | undo`, `POST …/close`; команди Portfolio `RecordTradeV1` / `RecordContributionV1` / нова `RecordInternalTransferV1` / `ReverseTransactionV1` через outbox у тій самій транзакції; `TransactionRecordedV1` прив'язує `TransactionId`, `TransactionRejectedV1` відкочує. Виконання розподіляється між під-портфелями пропорційно плану.
+- **Contracts:** IE `ReportGeneratedV1` (планові дії — для тіньового портфеля), `ReportClosedV1`, `ReportSupersededV1`; `IReportQueries`. `StrategyDecisionDto` отримав `CashInstrumentId`.
+- **Тести:** 30 golden, 12 доменних (розподіл внеску, guardrails, неттінг, правила рапорту), integration-сценарій §7.2 зі справжнім Python-рушієм: рапорт → внесок → часткова купівля → `Holdings` → сторно → повторна генерація замінює рапорт без повторного внеску; ізоляція власника. Усього 235 тестів.
+
+**Відхилення від кроків етапу (свідомі):**
+- доменних подій (`ActionFillRecorded` тощо) немає: handler після зміни агрегату сам кладе команду Portfolio в outbox у тій самій транзакції — так само, як Portfolio публікує свої IE; результат той самий, менше проводки;
+- `IPlanReviewer` і `NullPlanReviewer` живуть у `Planning` (порт приймає `ReportDraft` з `Reports.Domain`, а `Reports.Domain` посилається на `PlanReview` з `Reviews.Domain` — інакше цикл); у `Reviews` лишився тільки домен рецензії;
+- `TaxEstimate` у рапорті не заповнюється — з'явиться на етапі 7 (`ITaxEstimator`); `RecalculateReport` і `RecordOffPlanTrade` не зроблені: перерахунок = повторна генерація (D14), позапланова угода записується в Portfolio напряму;
+- для `Contribute` у `Fill` кількість = сума, ціна = 1 (одна модель виконання для всіх дій);
+- кількості в діях обрізаються (не округлюються) до 8 знаків — продаж ніколи не перевищує утримуване;
+- нотатка «Вкажіть monthly_contribution у config…» з CLI не переноситься (у вебі — налаштування рахунку).
+
+### З чого продовжити (етап 6, Frontend v1)
+
+Фронтенду ще немає. Кроки — за §11: Angular + PrimeNG + Sakai у `frontend/`, BFF через той самий origin (cookie `investmentlab.auth`, `SameSite=Strict`), Aspire запускає `ng serve`.
+1. **6a. Каркас:** Sakai layout, пресет теми (§11.4), shell, роутинг, auth-сторінки (вхід/реєстрація), interceptor 401 → вхід, профіль.
+2. **6b. Рахунки й стратегії:** список/створення рахунку, під-портфелі, цільові частки, призначення стратегії; онбординг «створити дефолтні стратегії» (`POST /api/strategies/defaults`, якщо стратегій немає); налаштування плану (внесок, `MinTrade`, `TrimBand`, дробові акції).
+3. **6c. Рапорти (головний екран):** «Згенерувати рапорт» (+ «Оновити котирування», якщо попередження), список рапортів, рапорт як робочий документ — дії з відмітками (виконано / частково / пропустити / скасувати), статуси, причини відмов, розділи «чому», алокація до/після, ризик-рев'ю.
+4. **6d. Журнал і позиції:** операції, сторно, позиції з лотами, імпорт `positions.json`.
+5. **E2E (Playwright):** вхід → рапорт → часткове виконання → операція в журналі.
 
 ### Етап 10: імпорт виписки Revolut (узгоджено 2026-10-25)
 
