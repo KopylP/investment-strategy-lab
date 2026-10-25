@@ -35,10 +35,16 @@
               {{ sub.targetShare | percent: 0 }}
             }
           </td>
-          <td>
-            <p-select [options]="strategyOptions()" optionLabel="label" optionValue="value" [ngModel]="sub.strategyId" (ngModelChange)="assign(sub, $event)"
-                      [showClear]="true" placeholder="Без стратегії" [loading]="store.busy() === 'strategy-' + sub.id" appendTo="body" styleClass="min-w-52" />
-            @if (sub.pinnedStrategyVersion) { <p-tag [value]="'закріплено v' + sub.pinnedStrategyVersion" severity="secondary" styleClass="ml-2" /> }
+          <td class="max-w-md">
+            <button type="button" class="w-full text-left p-2 -m-2 rounded-border border-0 bg-transparent cursor-pointer text-color hover:bg-emphasis"
+              [disabled]="store.busy() === 'strategy-' + sub.id" (click)="pickFor.set(sub)">
+              <div class="font-medium flex items-center gap-2">
+                {{ sub.strategyId ? store.strategyName(sub.strategyId) : 'Без стратегії' }}
+                <i class="pi pi-pencil text-xs text-muted-color"></i>
+                @if (sub.pinnedStrategyVersion) { <p-tag [value]="'закріплено v' + sub.pinnedStrategyVersion" severity="secondary" /> }
+              </div>
+              <div class="text-xs text-muted-color">{{ blurbOf(sub.strategyId) }}</div>
+            </button>
           </td>
           <td>{{ sub.cashInstrumentId ? instruments.symbol(sub.cashInstrumentId) : 'як у стратегії' }}</td>
           <td class="text-sm text-muted-color">
@@ -84,6 +90,14 @@
     <app-report-schedule [accountId]="account.id" />
   </div>
 
+  <p-dialog [header]="'Стратегія для «' + (pickFor()?.name ?? '') + '»'" [modal]="true" [visible]="!!pickFor()" (visibleChange)="!$event && pickFor.set(null)"
+            [style]="{ width: '52rem' }" [breakpoints]="{ '768px': '95vw' }" [dismissableMask]="true">
+    <p class="mt-0 text-muted-color">Стратегія вирішує, які ETF тримати в цьому під-портфелі. Зміна діє з наступного рапорту; угоди, що вже є, не змінюються.</p>
+    @if (pickFor(); as sub) {
+      <app-strategy-picker [strategies]="store.strategies()" [value]="sub.strategyId" [allowNone]="true" (valueChange)="assign(sub, $event); pickFor.set(null)" />
+    }
+  </p-dialog>
+
   <p-dialog header="Новий під-портфель" [modal]="true" [visible]="addVisible()" (visibleChange)="addVisible.set($event)" [style]="{ width: '34rem' }" [breakpoints]="{ '640px': '95vw' }">
     <div class="flex flex-col gap-4">
       <div class="flex flex-col gap-2">
@@ -97,7 +111,7 @@
       </div>
       <div class="flex flex-col gap-2">
         <label for="sub-strategy" class="font-medium">Стратегія</label>
-        <p-select inputId="sub-strategy" [options]="strategyOptions()" optionLabel="label" optionValue="value" [ngModel]="draft().strategyId" (ngModelChange)="patchDraft({ strategyId: $event })" [showClear]="true" appendTo="body" fluid />
+        <app-strategy-picker [strategies]="store.strategies()" [value]="draft().strategyId" [compact]="true" (valueChange)="patchDraft({ strategyId: $event })" />
       </div>
       <div class="flex flex-col gap-2">
         <label for="sub-cash" class="font-medium">ETF для паркування</label>

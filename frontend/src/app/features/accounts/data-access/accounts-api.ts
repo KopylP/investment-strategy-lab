@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { ApiClient } from '../../../core/api/api-client';
 import { AccountSetup } from '../../../shared/models/api';
+import { Strategy } from '../../strategies/models/strategy';
 
 export interface SubPortfolioInput {
   name: string;
@@ -16,6 +17,7 @@ export interface OpenAccountInput {
   name: string;
   broker: string;
   baseCurrency: string;
+  taxPolicyCode?: string;
   subPortfolios: SubPortfolioInput[];
   contributionPolicy: { kind: string; driftBandPercent: number | null };
 }
@@ -29,14 +31,8 @@ export interface PlanSettings {
   generateOnSchedule: boolean;
 }
 
-export interface StrategyOption {
-  id: string;
-  name: string;
-  typeCode: string;
-  status: string;
-  latestVersion: number;
-  version: { cashInstrumentId: string | null; universe: string[] };
-}
+/** Strategies as the account screens use them (the full strategy from the Strategies API). */
+export type StrategyOption = Strategy;
 
 @Injectable({ providedIn: 'root' })
 export class AccountsApi {

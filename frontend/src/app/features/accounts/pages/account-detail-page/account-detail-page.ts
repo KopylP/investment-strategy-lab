@@ -27,9 +27,11 @@ interface SubPortfolioDraft {
 }
 
 import { ReportScheduleCard } from '../../ui/report-schedule/report-schedule';
+import { describeStrategy } from '../../../strategies/models/strategy-summary';
+import { StrategyPicker } from '../../../strategies/ui/strategy-picker/strategy-picker';
 @Component({
   selector: 'app-account-detail-page',
-  imports: [ReportScheduleCard, 
+  imports: [ReportScheduleCard, StrategyPicker,
     FormsModule, RouterLink, Button, DatePicker, Dialog, InputNumber, InputText, Message, Select, Skeleton, TableModule, Tag,
     PageHeader, PlanSettingsForm, PercentPipe,
   ],
@@ -50,7 +52,8 @@ export class AccountDetailPage {
 
   protected readonly plan = linkedSignal<PlanSettingsVm | undefined>(() => this.store.planSettings());
 
-  protected readonly strategyOptions = computed(() => this.store.strategies().map((strategy) => ({ label: strategy.name, value: strategy.id })));
+  /** The sub-portfolio whose strategy is being chosen in the picker dialog. */
+  protected readonly pickFor = signal<SubPortfolioSetup | null>(null);
   protected readonly cashOptions = computed(() => this.instruments.etfs().map((etf) => ({ label: `${symbolOf(etf)} · ${etf.name}`, value: etf.id })));
 
   protected readonly addVisible = signal(false);
@@ -78,6 +81,12 @@ export class AccountDetailPage {
 
   protected async saveShares(): Promise<void> {
     if (await this.store.changeTargetShares(this.shares())) this.editingShares.set(false);
+  }
+
+  protected blurbOf(strategyId: string | null): string {
+    const strategy = strategyId ? this.store.strategies().find((each) => each.id === strategyId) : undefined;
+    if (!strategy) return 'Рапорти цей під-портфель не чіпають — оберіть стратегію';
+    return describeStrategy(strategy, (id) => this.instruments.symbol(id), (id) => this.instruments.byId().get(id)?.tradingCurrency).headline;
   }
 
   protected assign(sub: SubPortfolioSetup, strategyId: string | null): void {

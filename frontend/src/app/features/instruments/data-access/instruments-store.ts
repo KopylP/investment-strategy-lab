@@ -88,12 +88,12 @@ export class InstrumentsStore {
   readonly detailLoading = this.detailResource.isLoading;
 
   private readonly heldIds = computed(
-    () => new Set((this.holdingsResource.value()?.subPortfolios ?? []).flatMap((sub) => sub.positions.filter((position) => position.quantity > 0).map((position) => position.instrumentId))),
+    () => new Set(((this.holdingsResource.hasValue() ? this.holdingsResource.value() : undefined)?.subPortfolios ?? []).flatMap((sub) => sub.positions.filter((position) => position.quantity > 0).map((position) => position.instrumentId))),
   );
 
   readonly rows = computed<InstrumentRow[]>(() => {
-    const prices = new Map((this.pricesResource.value() ?? []).map((price) => [price.instrumentId, price]));
-    const months = new Map((this.monthResource.value() ?? []).map((series) => [series.instrumentId, series.points]));
+    const prices = new Map((this.pricesResource.hasValue() ? this.pricesResource.value() : []).map((price) => [price.instrumentId, price]));
+    const months = new Map((this.monthResource.hasValue() ? this.monthResource.value() : []).map((series) => [series.instrumentId, series.points]));
     const held = this.heldIds();
     return this.catalog
       .instruments()
@@ -138,7 +138,8 @@ export class InstrumentsStore {
   });
 
   readonly selected = computed(() => this.rows().find((row) => row.id === this.selectedId()) ?? null);
-  readonly detailPoints = computed(() => this.detailResource.value()?.points ?? []);
+  readonly detailPoints = computed(() => (this.detailResource.hasValue() ? this.detailResource.value().points : []));
+  readonly detailError = computed(() => !!this.detailResource.error());
 
   /** Period statistics of the chosen instrument (adjusted close: dividends of distributing ETFs count as return). */
   readonly detailStats = computed(() => {
@@ -166,7 +167,7 @@ export class InstrumentsStore {
     };
   });
 
-  readonly lastQuoteDate = computed(() => (this.pricesResource.value() ?? []).map((price) => price.date).sort().at(-1) ?? null);
+  readonly lastQuoteDate = computed(() => (this.pricesResource.hasValue() ? this.pricesResource.value() : []).map((price) => price.date).sort().at(-1) ?? null);
   readonly counts = computed(() => {
     const rows = this.rows();
     return {

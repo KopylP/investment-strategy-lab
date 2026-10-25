@@ -5,7 +5,7 @@
 
 <div class="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] items-start">
   <!-- Market list -->
-  <div class="card mb-0 p-0 overflow-hidden" [class.hidden]="store.selected()" [class.lg:block]="store.selected()">
+  <div class="card mb-0 p-0 overflow-hidden" [class]="store.selected() ? 'hidden lg:block' : ''">
     <div class="p-4 flex flex-col gap-3 border-b border-surface">
       <p-iconfield>
         <p-inputicon styleClass="pi pi-search" />
@@ -90,6 +90,8 @@
           <p-skeleton height="18rem" />
         } @else if (store.detailPoints().length > 1) {
           <app-price-chart [points]="store.detailPoints()" [currency]="row.currency" />
+        } @else if (store.detailError()) {
+          <div class="h-72 flex items-center justify-center text-muted-color">Не вдалося завантажити історію котирувань.</div>
         } @else {
           <div class="h-72 flex items-center justify-center text-muted-color">Котирувань за період немає — оновіть котирування.</div>
         }
