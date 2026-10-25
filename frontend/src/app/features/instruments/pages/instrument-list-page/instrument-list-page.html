@@ -89,7 +89,7 @@
         @if (store.detailLoading() && !store.detailPoints().length) {
           <p-skeleton height="18rem" />
         } @else if (store.detailPoints().length > 1) {
-          <app-price-chart [points]="store.detailPoints()" [currency]="row.currency" />
+          <app-price-chart [points]="store.detailPoints()" [currency]="row.currency" [trades]="trades.of(row.id)" />
         } @else if (store.detailError()) {
           <div class="h-72 flex items-center justify-center text-muted-color">Не вдалося завантажити історію котирувань.</div>
         } @else {

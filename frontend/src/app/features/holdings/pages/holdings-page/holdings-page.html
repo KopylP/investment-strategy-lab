@@ -76,6 +76,8 @@
             <tr>
               <td></td>
               <td colspan="7">
+                <div class="font-medium text-sm mb-2">Ціна й ваші угоди <span class="text-muted-color font-normal">(▲ купівля, ▼ продаж)</span></div>
+                <div class="mb-4 max-w-4xl"><app-position-chart [instrumentId]="position.instrumentId" [currency]="position.quoteCurrency" /></div>
                 <div class="font-medium text-sm mb-2">Лоти (FIFO)</div>
                 @for (lot of position.lots; track $index) {
                   <div class="flex justify-between gap-4 text-sm py-1 max-w-xl">

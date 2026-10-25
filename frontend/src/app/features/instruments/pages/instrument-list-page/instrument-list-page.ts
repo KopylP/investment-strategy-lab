@@ -12,7 +12,8 @@ import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { SignedValue } from '../../../../shared/ui/signed-value';
 import { Sparkline } from '../../../../shared/ui/sparkline';
 import { ChartPeriod, InstrumentFilter, InstrumentsStore } from '../../data-access/instruments-store';
-import { PriceChart } from '../../ui/price-chart';
+import { PriceChart } from '../../../../shared/charts/price-chart';
+import { AccountTrades } from '../../../../shared/data/account-trades';
 
 const kindLabels: Record<string, string> = { Etf: 'ETF', Stock: 'Акція', Index: 'Індекс', FxPair: 'Валюта' };
 
@@ -28,6 +29,7 @@ const kindLabels: Record<string, string> = { Etf: 'ETF', Stock: 'Акція', In
 })
 export class InstrumentListPage {
   protected readonly store = inject(InstrumentsStore);
+  protected readonly trades = inject(AccountTrades);
 
   protected readonly periods: { label: string; value: ChartPeriod }[] = ['1M', '3M', '6M', '1Y', '3Y'].map((value) => ({
     label: value.replace('M', 'М').replace('Y', 'Р'),
