@@ -22,7 +22,8 @@ builder.AddProject<Projects.InvestmentLab_Api>("api")
     .WithReference(database)
     .WaitFor(database)
     .WithReference(strategyEngine)
-    .WithHttpHealthCheck("/health")
+    // Probe over http: CI agents do not trust the ASP.NET Core dev certificate.
+    .WithHttpHealthCheck("/health", endpointName: "http")
     .WithUrlForEndpoint("https", _ => new ResourceUrlAnnotation { Url = "/scalar", DisplayText = "Scalar (API docs)" });
 
 builder.Build().Run();
