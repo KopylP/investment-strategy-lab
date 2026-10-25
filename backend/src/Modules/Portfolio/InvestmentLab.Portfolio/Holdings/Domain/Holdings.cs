@@ -20,7 +20,9 @@ public sealed record HoldingLine(Guid InstrumentId, IReadOnlyList<VirtualLot> Lo
     public DateOnly FirstOpenedOn => Lots.Min(lot => lot.OpenedOn);
 }
 
-public sealed record SubPortfolioHoldings(SubPortfolioId SubPortfolioId, Money Cash, IReadOnlyList<HoldingLine> Lines)
+/// <param name="Cash">In the account currency.</param>
+/// <param name="ForeignCash">Balances in other currencies the broker keeps apart (not converted: their value moves with the rate).</param>
+public sealed record SubPortfolioHoldings(SubPortfolioId SubPortfolioId, Money Cash, IReadOnlyList<Money> ForeignCash, IReadOnlyList<HoldingLine> Lines)
 {
     public Quantity UnitsOf(Guid instrumentId) => Lines.FirstOrDefault(line => line.InstrumentId == instrumentId)?.Quantity ?? Quantity.None;
 }

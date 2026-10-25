@@ -5,10 +5,16 @@ public sealed record QuantityAllocationDto(Guid SubPortfolioId, decimal Quantity
 public sealed record AmountAllocationDto(Guid SubPortfolioId, decimal Amount);
 
 /// <param name="Side">Buy or Sell.</param>
-public sealed record TradeRecordedDto(Guid InstrumentId, string Side, decimal Quantity, decimal Price, decimal Fee, IReadOnlyList<QuantityAllocationDto> Allocations);
+/// <param name="SettledAmount">Set when the broker settled the trade in another currency (<paramref name="SettledCurrency"/>): that balance moved, not the account-currency cash.</param>
+public sealed record TradeRecordedDto(
+    Guid InstrumentId, string Side, decimal Quantity, decimal Price, decimal Fee, IReadOnlyList<QuantityAllocationDto> Allocations,
+    decimal? SettledAmount = null, string? SettledCurrency = null);
 
 /// <param name="Kind">Contribution, Withdrawal, Fee, TaxPayment or Dividend; <paramref name="Amount"/> is always positive.</param>
-public sealed record CashMovementRecordedDto(string Kind, decimal Amount, Guid? InstrumentId, IReadOnlyList<AmountAllocationDto> Allocations);
+/// <param name="SettledAmount">Set when the money moved in another currency (<paramref name="SettledCurrency"/>, e.g. a USD top-up).</param>
+public sealed record CashMovementRecordedDto(
+    string Kind, decimal Amount, Guid? InstrumentId, IReadOnlyList<AmountAllocationDto> Allocations,
+    decimal? SettledAmount = null, string? SettledCurrency = null);
 
 public sealed record InternalTransferRecordedDto(Guid FromSubPortfolioId, Guid ToSubPortfolioId, Guid? InstrumentId, decimal? Quantity, decimal? Amount);
 

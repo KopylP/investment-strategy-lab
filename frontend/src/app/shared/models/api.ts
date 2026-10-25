@@ -55,8 +55,11 @@ export interface Position {
 export interface SubPortfolioHoldings {
   subPortfolioId: string;
   name: string;
+  /** In the account currency. */
   cash: number;
   positions: Position[];
+  /** Balances the broker keeps in other currencies (USD after selling a US stock), each in its own currency. */
+  foreignCash?: { currency: string; amount: number }[];
 }
 
 export interface AccountHoldings {

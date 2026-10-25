@@ -32,7 +32,10 @@ export interface SleeveVm {
   name: string;
   targetShare: number;
   actualShare: number;
+  /** All cash in the account currency (other currencies at the latest NBP rate). */
   cash: number;
+  /** The cash as the broker keeps it: account currency first, then every other balance in its own currency. */
+  cashParts: { currency: string; amount: number }[];
   value: number;
   costBasis: number;
   pnl: number;
@@ -96,7 +99,9 @@ export class HoldingsStore {
           lots: position.lots,
         };
       });
-      const value = positions.reduce((sum, position) => sum + position.value, 0) + sub.cash;
+      const foreign = sub.foreignCash ?? [];
+      const cash = sub.cash + foreign.reduce((sum, part) => sum + part.amount * (this.fx.rate(part.currency, data.holdings.currency) ?? 0), 0);
+      const value = positions.reduce((sum, position) => sum + position.value, 0) + cash;
       positions.forEach((position) => (position.weight = value ? position.value / value : 0));
       const costBasis = positions.reduce((sum, position) => sum + position.costBasis, 0);
       return {
@@ -104,7 +109,8 @@ export class HoldingsStore {
         name: sub.name,
         targetShare: targets.get(sub.subPortfolioId) ?? 0,
         actualShare: 0,
-        cash: sub.cash,
+        cash,
+        cashParts: [{ currency: data.holdings.currency, amount: sub.cash }, ...foreign],
         value,
         costBasis,
         pnl: positions.reduce((sum, position) => sum + position.pnl, 0),
@@ -120,9 +126,12 @@ export class HoldingsStore {
     const sleeves = this.sleeves();
     const value = sleeves.reduce((sum, sleeve) => sum + sleeve.value, 0);
     const cash = sleeves.reduce((sum, sleeve) => sum + sleeve.cash, 0);
+    const parts = new Map<string, number>();
+    for (const part of sleeves.flatMap((sleeve) => sleeve.cashParts)) parts.set(part.currency, (parts.get(part.currency) ?? 0) + part.amount);
+    const cashParts = [...parts].map(([currency, amount]) => ({ currency, amount }));
     const costBasis = sleeves.reduce((sum, sleeve) => sum + sleeve.costBasis, 0);
     const pnl = sleeves.reduce((sum, sleeve) => sum + sleeve.pnl, 0);
-    return { value, cash, invested: value - cash, costBasis, pnl, pnlPct: costBasis ? pnl / costBasis : null };
+    return { value, cash, cashParts, hasForeignCash: cashParts.length > 1, invested: value - cash, costBasis, pnl, pnlPct: costBasis ? pnl / costBasis : null };
   });
 
   readonly positionCount = computed(() => new Set(this.sleeves().flatMap((sleeve) => sleeve.positions.map((position) => position.instrumentId))).size);

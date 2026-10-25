@@ -1,7 +1,26 @@
 namespace InvestmentLab.Portfolio.Transactions.Domain;
 
 /// <summary>A statement row in the account currency, with its instrument and sub-portfolio resolved (when mapped).</summary>
-public sealed record PricedRow(StatementRow Row, Guid? InstrumentId, Guid? SubPortfolioId, decimal Quantity, decimal Price, decimal Amount);
+/// <param name="Settlement">The row's own amount when it is in another currency than the account's: that balance moves.</param>
+/// <param name="Fee">
+/// Broker commission hidden in the total: Revolut's "Total Amount" is quantity × price plus the fee on a buy (minus it on
+/// a sale). In the account currency.
+/// </param>
+public sealed record PricedRow(StatementRow Row, Guid? InstrumentId, Guid? SubPortfolioId, decimal Quantity, decimal Price, decimal Amount, Money? Settlement = null, decimal Fee = 0m)
+{
+    /// <summary>Differences up to this are rounding of the total, not a fee.</summary>
+    private const decimal RoundingNoise = 0.015m;
+
+    /// <summary>The fee hidden in a trade's total, in the row's own currency (zero for anything else).</summary>
+    public static decimal FeeOf(StatementRow row)
+    {
+        if (row.Kind is not (StatementRowKind.Buy or StatementRowKind.Sell) || row.Quantity is not { } quantity || row.Price is not { } price)
+            return 0m;
+        var gross = quantity * price;
+        var fee = row.Kind == StatementRowKind.Buy ? row.Amount - gross : gross - row.Amount;
+        return fee > RoundingNoise ? decimal.Round(fee, 2) : 0m;
+    }
+}
 
 /// <summary>
 /// Decides what each row of a statement does to the journal (stage 10): new entry, already there, changed, the same
@@ -113,8 +132,10 @@ public static class StatementMatcher
 
     private static bool SameNumbers(PricedRow priced, Transaction entry) => entry.Details switch
     {
-        TradeDetails trade => trade.Quantity.Value == priced.Quantity && Close(trade.Price.Amount, priced.Price, PriceTolerance) && entry.OccurredOn == priced.Row.OccurredOn,
-        CashMovementDetails cash => Math.Abs(cash.Amount.Amount - priced.Amount) <= 0.01m && entry.OccurredOn == priced.Row.OccurredOn,
+        TradeDetails trade => trade.Quantity.Value == priced.Quantity && Close(trade.Price.Amount, priced.Price, PriceTolerance) && entry.OccurredOn == priced.Row.OccurredOn
+                              && trade.Settlement == priced.Settlement && Math.Abs(trade.Fee.Amount - decimal.Round(priced.Fee, 2)) <= 0.01m,
+        CashMovementDetails cash => Math.Abs(cash.Amount.Amount - priced.Amount) <= 0.01m && entry.OccurredOn == priced.Row.OccurredOn
+                                    && cash.Settlement == priced.Settlement,
         _ => false,
     };
 

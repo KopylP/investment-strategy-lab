@@ -53,13 +53,18 @@ public static class MovementMapper
                 var total = trade.Allocations.Sum(allocation => allocation.Quantity);
                 foreach (var allocation in trade.Allocations)
                 {
-                    var fee = total > 0m ? trade.Fee * allocation.Quantity / total : 0m;
+                    var share = total > 0m ? allocation.Quantity / total : 0m;
+                    // Settled in another currency: that balance pays (or receives) the broker's amount.
+                    var (cashDelta, currency) = trade is { SettledAmount: { } settled, SettledCurrency: { } code }
+                        ? (-sign * settled * share, code)
+                        : (-sign * allocation.Quantity * trade.Price - trade.Fee * share, (string?)null);
                     movements.Add(new Movement(day, sequence++, allocation.SubPortfolioId, trade.InstrumentId, sign * allocation.Quantity,
-                        -sign * allocation.Quantity * trade.Price - fee, 0m, TradePrice: trade.Price));
+                        cashDelta, 0m, TradePrice: trade.Price, CashCurrency: currency));
                 }
             }
             else if (entry.Cash is { } cash)
             {
+                var total = cash.Allocations.Sum(allocation => allocation.Amount);
                 foreach (var allocation in cash.Allocations)
                 {
                     var (cashDelta, flow) = cash.Kind switch
@@ -69,7 +74,12 @@ public static class MovementMapper
                         "Dividend" => (allocation.Amount, 0m),
                         _ => (-allocation.Amount, 0m),   // fees and tax payments: costs, not flows
                     };
-                    movements.Add(new Movement(day, sequence++, allocation.SubPortfolioId, null, 0m, cashDelta, flow));
+                    // A USD top-up is a flow worth its account-currency amount that day, but the money sits in USD.
+                    if (cash is { SettledAmount: { } settled, SettledCurrency: { } code } && total > 0m)
+                        movements.Add(new Movement(day, sequence++, allocation.SubPortfolioId, null, 0m,
+                            Math.Sign(cashDelta) * settled * allocation.Amount / total, flow, CashCurrency: code));
+                    else
+                        movements.Add(new Movement(day, sequence++, allocation.SubPortfolioId, null, 0m, cashDelta, flow));
                 }
             }
             else if (entry.Transfer is { } transfer)
@@ -127,6 +137,30 @@ public sealed class PriceBook(IQuoteHistory quotes, IInstrumentCatalog instrumen
             series.TryGetValue(instrumentId, out var points) && Last(points, day) is { } close && factors[instrumentId](day) is { } factor
                 ? close * factor
                 : null;
+    }
+
+    /// <summary>Daily NBP cross rates of other currencies to the account currency, for balances kept in them.</summary>
+    public async Task<FxOn> LoadFxAsync(IReadOnlyCollection<string> currencies, string currency, DateOnly from, DateOnly to, CancellationToken cancellationToken)
+    {
+        async Task<List<(DateOnly Date, decimal Rate)>?> PlnSeries(string code) => code == "PLN"
+            ? null
+            : [.. (await fxRates.GetFxRateHistory(code, "PLN", from.AddDays(-15), to, cancellationToken)).Select(rate => (rate.EffectiveDate, rate.Rate))];
+
+        var toPln = await PlnSeries(currency);
+        var series = new Dictionary<string, List<(DateOnly Date, decimal Rate)>?>();
+        foreach (var code in currencies.Distinct())
+            series[code] = await PlnSeries(code);
+
+        return (code, day) =>
+        {
+            if (code == currency)
+                return 1m;
+            if (!series.TryGetValue(code, out var fromPln))
+                return null;
+            var a = fromPln is null ? 1m : Last(fromPln, day);
+            var b = toPln is null ? 1m : Last(toPln, day);
+            return a is { } x && b is { } y && y > 0m ? x / y : null;
+        };
     }
 
     private static decimal? Last(List<(DateOnly Date, decimal Value)> points, DateOnly day)

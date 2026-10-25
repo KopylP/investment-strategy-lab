@@ -8,7 +8,7 @@ import { Skeleton } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
 
 import { Tooltip } from 'primeng/tooltip';
-import { DatePipe, PercentPipe, QuantityPipe, SignedPercentPipe } from '../../../../shared/pipes/format-pipes';
+import { DatePipe, MoneyPipe, PercentPipe, QuantityPipe, SignedPercentPipe } from '../../../../shared/pipes/format-pipes';
 import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
 import { Money } from '../../../../shared/ui/money/money';
 import { PositionChart } from '../../ui/position-chart';
@@ -20,7 +20,7 @@ import { HoldingsStore } from '../../data-access/holdings-store';
   selector: 'app-holdings-page',
   imports: [
     FormsModule, RouterLink, Button, DatePicker, Message, Skeleton, TableModule, Tooltip, PageHeader, EmptyState, SignedValue, Money, PositionChart,
-    PercentPipe, QuantityPipe, SignedPercentPipe, DatePipe,
+    MoneyPipe, PercentPipe, QuantityPipe, SignedPercentPipe, DatePipe,
   ],
   providers: [HoldingsStore],
   templateUrl: './holdings-page.html',

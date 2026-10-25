@@ -30,8 +30,29 @@ public sealed class PlanningInputs(
 
     public Task<IReadOnlyList<AccountSetupDto>> AccountsAsync(CancellationToken cancellationToken) => accounts.GetAccountSetups(cancellationToken);
 
-    public async Task<AccountHoldingsDto> HoldingsAsync(AccountSetupDto account, CancellationToken cancellationToken) =>
-        await holdings.GetHoldings(account.Id, null, cancellationToken) ?? new AccountHoldingsDto(account.Id, account.BaseCurrency, null, []);
+    /// <summary>
+    /// Current holdings with every sub-portfolio's cash in the account currency: balances the broker keeps in other
+    /// currencies (USD after selling a US stock) are money to invest too, counted at the latest NBP cross rate.
+    /// </summary>
+    public async Task<AccountHoldingsDto> HoldingsAsync(AccountSetupDto account, CancellationToken cancellationToken)
+    {
+        var current = await holdings.GetHoldings(account.Id, null, cancellationToken) ?? new AccountHoldingsDto(account.Id, account.BaseCurrency, null, []);
+        var today = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1);
+        var rates = new Dictionary<string, decimal?>();
+        var subs = new List<SubPortfolioHoldingsDto>();
+        foreach (var sub in current.SubPortfolios)
+        {
+            var cash = sub.Cash;
+            foreach (var foreign in sub.ForeignCash ?? [])
+            {
+                if (!rates.TryGetValue(foreign.Currency, out var rate))
+                    rate = rates[foreign.Currency] = await CrossRateAsync(foreign.Currency, account.BaseCurrency, today, cancellationToken);
+                cash += rate is { } factor ? decimal.Round(foreign.Amount * factor, 2) : 0m;
+            }
+            subs.Add(sub with { Cash = cash });
+        }
+        return current with { SubPortfolios = subs };
+    }
 
     /// <summary>Ticker per instrument (the Yahoo symbol, as in the Python reports), else the name.</summary>
     public async Task<IReadOnlyDictionary<Guid, string>> LabelsAsync(CancellationToken cancellationToken) =>

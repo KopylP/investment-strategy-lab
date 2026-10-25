@@ -183,11 +183,17 @@ public sealed class StatementImportService(
             {
                 var row = byNumber[outcome.Number];
                 var reference = await NextReferenceAsync(row.Row.Identity, cancellationToken);
-                var recorded = await recorder.RecordAsync(account.Id.Value, context => Create(context, row, statement, reference), cancellationToken);
+                var asIncome = false;
+                var recorded = await recorder.RecordAsync(account.Id.Value, context =>
+                {
+                    var created = Create(context, row, statement, reference);
+                    asIncome = row.Row.Kind == StatementRowKind.Sell && created is { IsSuccess: true, Value.Kind: TransactionKind.Dividend };
+                    return created;
+                }, cancellationToken);
                 if (recorded.IsSuccess)
                 {
                     references.Add(reference);
-                    result = "записано";
+                    result = asIncome ? "записано як дохід: продаж акцій без купівлі (спін-оф)" : "записано";
                 }
                 else
                     result = $"не записано: {recorded.Error.Message}";
@@ -307,7 +313,12 @@ public sealed class StatementImportService(
             var mapping = statement.MappingOf(row.Ticker);
             var instrument = mapping?.InstrumentId ?? (mapping?.RegisterAs is { Length: > 0 } symbol ? Placeholder(symbol) : null);
             var sub = row.NeedsInstrument ? mapping?.SubPortfolioId ?? (row.Kind == StatementRowKind.Dividend ? statement.CashSubPortfolioId : null) : statement.CashSubPortfolioId;
-            priced.Add(new PricedRow(row, instrument, factor == 0m ? null : sub, row.Quantity ?? 0m, (row.Price ?? 0m) * factor, row.Amount * factor));
+            // A row in another currency settles from (or into) the broker's balance in that currency, as Revolut keeps it.
+            var settlement = !string.Equals(row.Currency, accountCurrency, StringComparison.OrdinalIgnoreCase) && factor != 0m && row.Amount > 0m && row.Kind != StatementRowKind.Unsupported && Currency.TryOf(row.Currency) is { IsSuccess: true } own
+                ? Money.Of(row.Amount, own.Value)
+                : null;
+            priced.Add(new PricedRow(row, instrument, factor == 0m ? null : sub, row.Quantity ?? 0m, (row.Price ?? 0m) * factor, row.Amount * factor, settlement,
+                PricedRow.FeeOf(row) * factor));
         }
         return priced;
     }
@@ -321,13 +332,18 @@ public sealed class StatementImportService(
         var day = row.Row.OccurredOn;
         switch (row.Row.Kind)
         {
+            case StatementRowKind.Sell when IsSpinOffSale(context, row, sub):
+                // Shares that came without a buy (a spin-off, e.g. SFGYY from Sony) and were sold: the proceeds are income.
+                var proceeds = Money.Of(decimal.Round(row.Amount, 2), currency);
+                return Transaction.CashMovement(account, CashMovementKind.Dividend, proceeds, [new CashAllocation(sub, proceeds)], row.InstrumentId,
+                    day, source, context.Now, row.Settlement);
             case StatementRowKind.Buy or StatementRowKind.Sell:
                 var quantity = Quantity.TryOf(row.Quantity);
                 var price = Price.TryOf(decimal.Round(row.Price, 6), currency);
                 if (quantity.IsFailure || price.IsFailure)
                     return quantity.IsFailure ? quantity.Error : price.Error;
                 return Transaction.Trade(account, row.Row.Kind == StatementRowKind.Buy ? TradeSide.Buy : TradeSide.Sell, row.InstrumentId!.Value,
-                    quantity.Value, price.Value, Money.Zero(currency), [new Allocation(sub, quantity.Value)], day, source, context.Now);
+                    quantity.Value, price.Value, Money.Of(decimal.Round(row.Fee, 2), currency), [new Allocation(sub, quantity.Value)], day, source, context.Now, row.Settlement);
             default:
                 var kind = row.Row.Kind switch
                 {
@@ -337,9 +353,15 @@ public sealed class StatementImportService(
                 };
                 var amount = Money.Of(row.Amount, currency);
                 return Transaction.CashMovement(account, kind, amount, [new CashAllocation(sub, amount)],
-                    kind == CashMovementKind.Dividend ? row.InstrumentId : null, day, source, context.Now);
+                    kind == CashMovementKind.Dividend ? row.InstrumentId : null, day, source, context.Now, row.Settlement);
         }
     }
+
+    /// <summary>A sale of units the account never bought (none held now and no buy of the instrument in the journal).</summary>
+    private static bool IsSpinOffSale(RecordingContext context, PricedRow row, SubPortfolioId sub) =>
+        row.InstrumentId is { } instrument
+        && context.Holdings.UnitsOf(sub, instrument).Value < row.Quantity
+        && !context.Journal.Any(entry => entry.Details is TradeDetails { Side: TradeSide.Buy } trade && trade.InstrumentId == instrument);
 
     /// <summary>"revolut:abc", or "revolut:abc#2" when the row was recorded before and corrected.</summary>
     private async Task<string> NextReferenceAsync(string identity, CancellationToken cancellationToken)

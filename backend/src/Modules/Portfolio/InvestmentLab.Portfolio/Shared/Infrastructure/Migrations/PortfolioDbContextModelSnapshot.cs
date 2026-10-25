@@ -238,11 +238,11 @@ namespace InvestmentLab.Portfolio.Shared.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_holdings");
 
-                    b.HasIndex("AccountId", "SubPortfolioId", "InstrumentId")
+                    b.HasIndex("AccountId", "SubPortfolioId", "InstrumentId", "Currency")
                         .IsUnique()
-                        .HasDatabaseName("ix_holdings_account_id_sub_portfolio_id_instrument_id");
+                        .HasDatabaseName("ix_holdings_account_id_sub_portfolio_id_instrument_id_currency");
 
-                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("AccountId", "SubPortfolioId", "InstrumentId"), false);
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("AccountId", "SubPortfolioId", "InstrumentId", "Currency"), false);
 
                     b.ToTable("holdings", "portfolio");
                 });

@@ -12,8 +12,11 @@ public interface IHoldingsQueries
 /// <param name="AsOf">Date of the last entry taken into account (or the requested date).</param>
 public sealed record AccountHoldingsDto(Guid AccountId, string Currency, DateOnly? AsOf, IReadOnlyList<SubPortfolioHoldingsDto> SubPortfolios);
 
-/// <param name="Cash">May be negative when a buy was recorded before its contribution.</param>
-public sealed record SubPortfolioHoldingsDto(Guid SubPortfolioId, string Name, decimal Cash, IReadOnlyList<PositionDto> Positions);
+/// <param name="Cash">In the account currency; may be negative when a buy was recorded before its contribution.</param>
+/// <param name="ForeignCash">Balances the broker keeps in other currencies, each in its own currency (convert at the current rate to value them).</param>
+public sealed record SubPortfolioHoldingsDto(Guid SubPortfolioId, string Name, decimal Cash, IReadOnlyList<PositionDto> Positions, IReadOnlyList<CashBalanceDto>? ForeignCash = null);
+
+public sealed record CashBalanceDto(string Currency, decimal Amount);
 
 /// <param name="AverageCost">Cost per unit, fees included.</param>
 public sealed record PositionDto(Guid InstrumentId, decimal Quantity, decimal CostBasis, decimal AverageCost, DateOnly FirstOpenedOn, IReadOnlyList<LotDto> Lots);

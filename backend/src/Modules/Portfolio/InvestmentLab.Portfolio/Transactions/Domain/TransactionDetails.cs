@@ -56,12 +56,18 @@ public sealed record CashAllocation(SubPortfolioId SubPortfolioId, Money Amount)
 public abstract record TransactionDetails;
 
 /// <param name="Fee">Broker fee of the whole trade; split between sub-portfolios like the quantity.</param>
-public sealed record TradeDetails(Guid InstrumentId, TradeSide Side, Quantity Quantity, Price Price, Money Fee, IReadOnlyList<Allocation> Allocations)
+/// <param name="Settlement">
+/// What the broker really took or paid when the trade was settled in another currency than the account's (Revolut
+/// buys AVGO from the USD balance): that currency's cash moves, the account-currency cash does not. Price and fee stay
+/// in the account currency (cost basis, taxes, returns).
+/// </param>
+public sealed record TradeDetails(Guid InstrumentId, TradeSide Side, Quantity Quantity, Price Price, Money Fee, IReadOnlyList<Allocation> Allocations, Money? Settlement = null)
     : TransactionDetails;
 
 /// <param name="Amount">Always positive; the kind says whether cash comes in or goes out.</param>
 /// <param name="InstrumentId">Instrument that paid a dividend, if any.</param>
-public sealed record CashMovementDetails(CashMovementKind Kind, Money Amount, IReadOnlyList<CashAllocation> Allocations, Guid? InstrumentId)
+/// <param name="Settlement">The movement in another currency than the account's (a USD top-up): that balance changes.</param>
+public sealed record CashMovementDetails(CashMovementKind Kind, Money Amount, IReadOnlyList<CashAllocation> Allocations, Guid? InstrumentId, Money? Settlement = null)
     : TransactionDetails
 {
     public bool IsInflow => Kind is CashMovementKind.Contribution or CashMovementKind.Dividend;
