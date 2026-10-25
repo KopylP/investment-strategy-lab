@@ -1530,7 +1530,8 @@ strategy-engine/
 | 1. Strategy Engine API | ✅ виконано |
 | 2. MarketData | ✅ виконано |
 | 3. Identity + Portfolio | ✅ виконано |
-| 4. Strategies | ⏭ наступний — див. «З чого продовжити» |
+| 4. Strategies | ✅ виконано |
+| 5. Rebalancing | ⏭ наступний — див. «З чого продовжити» |
 
 ### Що дав етап 2 (MarketData)
 
@@ -1568,12 +1569,29 @@ strategy-engine/
 - `RetireSubPortfolio` не перевіряє, що під-портфель порожній: позиції лишаються видимими, їх переносять `InternalTransfer`;
 - ArchUnitNET зливав однойменні type-параметри generic-методів (`Publish<TEvent>`) різних типів у хибну залежність — тест їх пропускає.
 
-### З чого продовжити (етап 4, Strategies)
+### Що дав етап 4 (Strategies)
 
-1. **4a. Catalog:** `StrategyTypeDescriptor` із `/strategies` (і `/schema`) Python-сайдкара (`SyncCatalogFromEngines` на старті), `GET /api/strategies/catalog`.
-2. **4b. Definitions:** `Strategy` (AR, `OwnerId`, фільтр `Owner` — як у `PortfolioDbContext`) + незмінні `StrategyVersion`; параметри валідуються JSON Schema типу; універсум — `InstrumentId` з `IInstrumentCatalog`; сід із `strategy.toml` / `strategy_us.toml` для нового користувача (`UserRegisteredV1`) або командою; `Create/Reconfigure/Archive/Get/List`; IE `StrategyReconfiguredV1`.
-3. **4c. Evaluation:** `StrategyEvaluationContext` (позиції/лоти/кеш із `IHoldingsQueries.GetSubPortfolioSnapshot`, ряди з `IQuoteHistory` + VIX), `PythonStrategyEngine` → `/decide`, `/risk`; `StrategyState`; `IStrategyEvaluation` у Contracts.
-4. **Integration-тест етапу:** рішення .NET → Python на тих самих даних збігається з golden-фікстурами `monthly_scanner` (фікстури з етапу 1).
+- **Catalog:** `StrategyTypeDescriptor` (код, назва, рушій і його версія, JSON Schema параметрів, дефолти, потрібні ролі рядів) у `strategies.strategy_types`. Синхронізація з `GET /v1/strategies` сайдкара — на вимогу (`POST /api/strategies/catalog/sync`) і автоматично, коли каталог порожній або старший за годину; якщо рушій недоступний, використовується збережена копія. `GET /api/strategies/catalog`.
+- **Definitions:** `Strategy` (AR, `OwnerId` + фільтр `Owner`, унікальна назва в межах користувача) з незмінними `StrategyVersion` (параметри jsonb, універсум `uuid[]`, cash ETF, бенчмарк, індекс волатильності, частота). Параметри = дефолти типу + задані значення (глибоке злиття), перевіряються JSON Schema з сайдкара (`JsonSchema.Net`); інструменти — через `IInstrumentCatalog`. `POST /api/strategies`, `PUT /{id}` (нова версія, IE `StrategyReconfiguredV1`), `POST /{id}/archive`, `GET /{id}?version=`, `GET`. `POST /api/strategies/defaults` створює «EU ETF momentum» і «US ETF momentum» із сіду `default-strategies.json` (згенеровано з `strategy.toml` / `strategy_us.toml`; бенчмарк `SPY`, VIX `^VIX`), повторний виклик нічого не дублює.
+- **Evaluation:** `EvaluateStrategyHandler` будує контекст (версія стратегії, котирування за 2 роки до `asOf` з `IQuoteHistory`, назви й групи з `IInstrumentCatalog`, стан під-портфеля), `PythonStrategyEngine` (ACL) шле його в `/v1/strategies/{code}/decide` або `/risk`; ключі рядів — id інструментів (бенчмарк і VIX з суфіксами, бо `SPY` буває і в універсумі). `IStrategyEvaluation` у Contracts (для Rebalancing) і `POST /api/strategies/{id}/decide|risk` для реального під-портфеля (знімок з `IHoldingsQueries`, cash ETF під-портфеля має пріоритет, закріплена версія під-портфеля).
+- **Тести:** доменні правила версій і злиття/валідації параметрів (7); integration-сценарій етапу зі **справжнім Python-рушієм** з AppHost: синтетичні котирування → каталог → дефолтні стратегії → рахунок з імпортованим `positions.json` → рішення .NET збігається з відповіддю рушія на той самий контекст (цілі, ваги, invest fraction), оцінка ризику по 3 позиціях; нова версія з `topN = 2`, відмова для `topN = 0`, ізоляція власника. Усього 192 тести.
+
+**Відхилення від кроків етапу (свідомі):**
+- критерій «рішення збігається з `monthly_scanner`» перевірено так: контекст, який будує .NET, рушій вирішує так само, як і .NET-відповідь; відповідність `decision.py` ↔ `monthly_scanner` уже покривають Python-тести етапу 1;
+- дефолтні стратегії створюються командою (`POST /api/strategies/defaults`, кнопка онбордингу на фронті), а не обробником `UserRegisteredV1`: інакше реєстрація залежала б від доступності Python-рушія в outbox;
+- `StrategyDecision` / `RiskAssessment` — DTO з Contracts, а не доменні типи: це дані від рушія, правил над ними в Strategies немає; `StrategyEvaluationContext` живе в Application;
+- `StrategyState` не зберігається: жоден тип не підтримує стан (`supportsState = false`); з'явиться разом зі стратегією зі станом;
+- клієнт сайдкара (`StrategyEngineClient`) і синхронізатор каталогу лежать у `Shared/Infrastructure`, бо ними користуються три фічі, а між фічами дозволено тільки `Domain`;
+- фільтр власника переїхав у `ModuleDbContext` (`CurrentUser` + `HasOwnerFilter`), ним користуються Portfolio і Strategies;
+- параметри плану (`minTrade`, `trimBand`, `fractionalShares`, внесок) не входять у параметри стратегії — це `RebalancingPolicy` етапу 5.
+
+### З чого продовжити (етап 5, Rebalancing)
+
+1. **5a. Planning (чистий домен, TDD):** `RebalancingPolicy`, `SubPortfolioRebalancer` — порт `plan.py` до цента за golden-фікстурами `tests/InvestmentLab.GoldenTests/Fixtures` (17 синтетичних + 12 місяців бектесту), далі `ContributionAllocator` (`FillUnderweight`/`FixedSplit`, `DriftBand`), `GuardrailEnforcer`, `OrderNetting`.
+2. **5b. Reports:** агрегат `RebalancingReport` + `ReportAction`/`Fill`, статуси й правила з §6.6; `GenerateMonthlyReport` (на вимогу і за розкладом, D14): `IAccountSetupQueries` → `IHoldingsQueries` → `IStrategyEvaluation` по під-портфелях → ребалансер → неттінг → `IQuoteHistory.GetLatestPrices`; `NullPlanReviewer`; IE `ReportGeneratedV1`.
+3. **5c. Marking:** `MarkActionExecuted`, `RecordPartialFill`, `SkipAction`, `UndoActionMark`, `CloseReport` → команди Portfolio `RecordTradeV1` / `RecordContributionV1` / `ReverseTransactionV1` через outbox; обробка `TransactionRecordedV1` (прив'язка `TransactionId`) і `TransactionRejectedV1` (відкат відмітки).
+4. **5d. Risk review:** щотижнева задача `GenerateRiskReview` → рапорт `Kind = RiskReview` (продажі тільки для `exit`, попередження для `warn`).
+5. **Integration-тест етапу:** сценарій §7.2 — рапорт → часткове виконання → операція в журналі → `Holdings` оновлені → сторно відмітки повертає їх.
 
 Кожен етап закінчується робочим станом і зеленим CI. Поточний Python-флоу (GitHub Actions) працює паралельно до етапу 9.
 
