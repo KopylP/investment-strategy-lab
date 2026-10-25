@@ -1,32 +1,121 @@
-<app-page-header title="Інструменти й котирування" [subtitle]="'Котирування завантажуються щоночі о 22:30 (пн–пт)' + (store.lastQuoteDate() ? '; останнє — ' + (store.lastQuoteDate() | date) : '')">
+<app-page-header title="Інструменти й котирування" [subtitle]="'Ціни закриття щоночі о 22:30 (пн–пт)' + (store.lastQuoteDate() ? ' · останні — ' + (store.lastQuoteDate() | date) : '')">
   <p-button label="Курси NBP" icon="pi pi-euro" severity="secondary" [outlined]="true" [loading]="store.busy() === 'fx'" (onClick)="store.ingestFxRates()" />
   <p-button label="Оновити котирування" icon="pi pi-cloud-download" [loading]="store.busy() === 'quotes'" (onClick)="store.ingestQuotes()" />
 </app-page-header>
 
-<div class="card">
-  @if (store.isLoading() && !store.rows().length) {
-    <p-skeleton height="12rem" />
+<div class="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] items-start">
+  <!-- Market list -->
+  <div class="card mb-0 p-0 overflow-hidden" [class.hidden]="store.selected()" [class.lg:block]="store.selected()">
+    <div class="p-4 flex flex-col gap-3 border-b border-surface">
+      <p-iconfield>
+        <p-inputicon styleClass="pi pi-search" />
+        <input pInputText type="search" placeholder="Тікер, назва або ISIN" [ngModel]="store.search()" (ngModelChange)="store.search.set($event)" class="w-full" />
+      </p-iconfield>
+      <div class="overflow-x-auto">
+        <p-selectbutton [options]="filters(store.counts())" optionLabel="label" optionValue="value" [ngModel]="store.filter()" (ngModelChange)="$event && store.filter.set($event)" [allowEmpty]="false" size="small" />
+      </div>
+    </div>
+
+    @if (store.isLoading() && !store.rows().length) {
+      <div class="p-4 flex flex-col gap-3">@for (i of [1, 2, 3, 4, 5, 6]; track i) { <p-skeleton height="2.75rem" /> }</div>
+    } @else {
+      <ul class="list-none m-0 p-0 max-h-[70vh] overflow-y-auto">
+        @for (row of store.visibleRows(); track row.id) {
+          <li>
+            <button type="button" (click)="store.select(row.id)"
+              class="w-full text-left flex items-center gap-3 px-4 py-3 border-0 border-b border-surface bg-transparent cursor-pointer text-color hover:bg-emphasis transition-colors"
+              [class.bg-emphasis]="store.selectedId() === row.id">
+              <div class="w-10 h-10 shrink-0 rounded-full flex items-center justify-center text-xs font-bold"
+                style="background: color-mix(in srgb, var(--p-primary-500) 14%, transparent); color: var(--p-primary-500)">
+                {{ row.symbol.slice(0, 4) }}
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="font-semibold flex items-center gap-2">
+                  {{ row.symbol }}
+                  @if (row.held) { <i class="pi pi-wallet text-xs text-primary" title="Є в портфелі"></i> }
+                </div>
+                <div class="text-xs text-muted-color truncate">{{ row.name }}</div>
+              </div>
+              <app-sparkline [values]="row.spark" class="hidden sm:block" />
+              <div class="text-right w-24 shrink-0">
+                <div class="font-medium whitespace-nowrap">{{ row.price ? (row.price.close | money: row.currency) : '—' }}</div>
+                <div class="text-xs" [appSignedValue]="row.change1m">{{ row.change1m === null ? '' : (row.change1m | signedPercent) + ' міс.' }}</div>
+              </div>
+            </button>
+          </li>
+        } @empty {
+          <li class="p-4 text-muted-color">Нічого не знайдено.</li>
+        }
+      </ul>
+    }
+  </div>
+
+  <!-- Details of the chosen instrument -->
+  @if (store.selected(); as row) {
+    <div class="card mb-0 lg:sticky lg:top-24">
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <button type="button" class="lg:hidden mb-3 p-0 border-0 bg-transparent text-primary cursor-pointer" (click)="store.select(row.id)"><i class="pi pi-arrow-left mr-1"></i>До списку</button>
+          <div class="flex flex-wrap items-center gap-2">
+            <h2 class="text-2xl font-bold m-0">{{ row.symbol }}</h2>
+            <p-tag [value]="kindLabel(row.kind)" severity="secondary" />
+            @if (row.group) { <p-tag [value]="row.group" severity="info" /> }
+            @if (row.isAccumulating !== null) { <p-tag [value]="row.isAccumulating ? 'Acc' : 'Dist'" severity="contrast" /> }
+            @if (row.held) { <p-tag value="у портфелі" severity="success" /> }
+          </div>
+          <div class="text-muted-color mt-1">{{ row.name }}</div>
+        </div>
+        <p-button icon="pi pi-times" [text]="true" [rounded]="true" severity="secondary" ariaLabel="Закрити" class="hidden lg:block" (onClick)="store.select(row.id)" />
+      </div>
+
+      <div class="flex flex-wrap items-end justify-between gap-3 mt-4">
+        <div>
+          <div class="text-4xl font-bold tracking-tight">{{ row.price ? (row.price.close | money: row.currency) : '—' }}</div>
+          <div class="text-sm mt-1">
+            @if (store.detailStats(); as stats) {
+              <span [appSignedValue]="stats.change" class="font-semibold">{{ stats.change | signedPercent }}</span>
+              <span class="text-muted-color"> за період</span>
+            }
+            @if (row.price) {
+              <span class="text-muted-color"> · закриття {{ row.price.date | date }}</span>
+              @if (row.price.isStale) { <p-tag value="застаріле" severity="warn" styleClass="ml-2" /> }
+            }
+          </div>
+        </div>
+        <p-selectbutton [options]="periods" optionLabel="label" optionValue="value" [ngModel]="store.period()" (ngModelChange)="$event && store.period.set($event)" [allowEmpty]="false" size="small" />
+      </div>
+
+      <div class="mt-4">
+        @if (store.detailLoading() && !store.detailPoints().length) {
+          <p-skeleton height="18rem" />
+        } @else if (store.detailPoints().length > 1) {
+          <app-price-chart [points]="store.detailPoints()" [currency]="row.currency" />
+        } @else {
+          <div class="h-72 flex items-center justify-center text-muted-color">Котирувань за період немає — оновіть котирування.</div>
+        }
+      </div>
+
+      @if (store.detailStats(); as stats) {
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 pt-4 border-t border-surface">
+          <div><div class="text-xs text-muted-color uppercase">Максимум</div><div class="font-semibold">{{ stats.high | money: row.currency }}</div></div>
+          <div><div class="text-xs text-muted-color uppercase">Мінімум</div><div class="font-semibold">{{ stats.low | money: row.currency }}</div></div>
+          <div><div class="text-xs text-muted-color uppercase">Найбільше падіння</div><div class="font-semibold" [appSignedValue]="stats.maxDrawdown">{{ stats.maxDrawdown | signedPercent }}</div></div>
+          <div><div class="text-xs text-muted-color uppercase">Волатильність</div><div class="font-semibold">{{ stats.volatility | percent }} річних</div></div>
+        </div>
+      }
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 pt-4 border-t border-surface text-sm">
+        <div><div class="text-xs text-muted-color uppercase">ISIN</div><div>{{ row.isin ?? '—' }}</div></div>
+        <div><div class="text-xs text-muted-color uppercase">Біржа</div><div>{{ row.exchange }}</div></div>
+        <div><div class="text-xs text-muted-color uppercase">Валюта</div><div>{{ row.currency }}</div></div>
+        <div><div class="text-xs text-muted-color uppercase">Котирування з позначками</div><div>{{ store.detailStats()?.flagged ?? 0 }}</div></div>
+      </div>
+    </div>
   } @else {
-    <p-table [value]="store.rows()" [tableStyle]="{ 'min-width': '52rem' }" [rowGroupMode]="'subheader'" groupRowsBy="group" size="small">
-      <ng-template #header>
-        <tr><th>Тікер</th><th>Назва</th><th>ISIN</th><th>Біржа</th><th class="text-right">Остання ціна</th><th>Дата</th></tr>
-      </ng-template>
-      <ng-template #groupheader let-row>
-        <tr><td colspan="6" class="font-semibold">{{ row.group || (row.kind === 'Index' ? 'Індекси' : 'Інше') }}</td></tr>
-      </ng-template>
-      <ng-template #body let-row>
-        <tr>
-          <td class="font-medium">{{ row.symbol }}</td>
-          <td>{{ row.name }}</td>
-          <td class="text-muted-color">{{ row.isin ?? '—' }}</td>
-          <td class="text-muted-color">{{ row.exchange }}</td>
-          <td class="text-right">{{ row.price ? (row.price.close | money: row.currency : 2) : '—' }}</td>
-          <td>
-            {{ row.price ? (row.price.date | date) : '—' }}
-            @if (row.price?.isStale) { <p-tag value="застаріле" severity="warn" styleClass="ml-2" /> }
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
+    <div class="card mb-0 hidden lg:flex flex-col items-center justify-center text-center text-muted-color min-h-96">
+      <i class="pi pi-chart-line text-4xl mb-3"></i>
+      <div class="font-medium text-color">Оберіть інструмент</div>
+      <div class="text-sm mt-1">Графік ціни, зміна за період, максимум, мінімум і волатильність.</div>
+    </div>
   }
 </div>
