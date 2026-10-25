@@ -40,11 +40,13 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/InvestmentLab.ArchitectureTests/InvestmentLab.ArchitectureTests.csproj" />
+    <Project Path="tests/InvestmentLab.GoldenTests/InvestmentLab.GoldenTests.csproj" />
     <Project Path="tests/InvestmentLab.IntegrationTests/InvestmentLab.IntegrationTests.csproj" />
   </Folder>
   <Folder Name="/tests/Modules/">
     <Project Path="tests/Modules/InvestmentLab.MarketData.Tests/InvestmentLab.MarketData.Tests.csproj" />
     <Project Path="tests/Modules/InvestmentLab.Portfolio.Tests/InvestmentLab.Portfolio.Tests.csproj" />
+    <Project Path="tests/Modules/InvestmentLab.Rebalancing.Tests/InvestmentLab.Rebalancing.Tests.csproj" />
     <Project Path="tests/Modules/InvestmentLab.Strategies.Tests/InvestmentLab.Strategies.Tests.csproj" />
   </Folder>
   <Folder Name="/tests/BuildingBlocks/">

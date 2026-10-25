@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../src/Modules/Rebalancing/InvestmentLab.Rebalancing/InvestmentLab.Rebalancing.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="InvestmentLab.SharedKernel" />
+  </ItemGroup>
+</Project>
