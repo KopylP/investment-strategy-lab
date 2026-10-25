@@ -1,21 +1,38 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Button } from 'primeng/button';
-import { ProgressBar } from 'primeng/progressbar';
+import { Message } from 'primeng/message';
+import { SelectButton } from 'primeng/selectbutton';
 import { Skeleton } from 'primeng/skeleton';
 import { Tag } from 'primeng/tag';
-import { DateTimePipe, MoneyPipe, PercentPipe, PeriodPipe } from '../../../../shared/pipes/format-pipes';
+import { DateTimePipe, DatePipe, MoneyPipe, PeriodPipe, SignedPercentPipe } from '../../../../shared/pipes/format-pipes';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { SignedValue } from '../../../../shared/ui/signed-value';
 import { OverviewStore } from '../../data-access/overview-store';
+import { AllocationCard } from '../../ui/allocation-card/allocation-card';
+import { DrawdownChart } from '../../ui/drawdown-chart/drawdown-chart';
+import { ValueChart } from '../../ui/value-chart/value-chart';
 
 @Component({
   selector: 'app-overview-page',
-  imports: [RouterLink, Button, ProgressBar, Skeleton, Tag, PageHeader, SignedValue, MoneyPipe, PercentPipe, PeriodPipe, DateTimePipe],
+  imports: [
+    FormsModule, RouterLink, Button, Message, SelectButton, Skeleton, Tag, PageHeader, SignedValue, ValueChart, DrawdownChart, AllocationCard,
+    MoneyPipe, SignedPercentPipe, PeriodPipe, DateTimePipe, DatePipe,
+  ],
   providers: [OverviewStore],
   templateUrl: './overview-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OverviewPage {
   protected readonly store = inject(OverviewStore);
+
+  protected readonly periods = [
+    { label: '1М', value: '1M' },
+    { label: '3М', value: '3M' },
+    { label: '6М', value: '6M' },
+    { label: '1Р', value: '1Y' },
+    { label: 'З початку року', value: 'YTD' },
+    { label: 'Усе', value: 'ALL' },
+  ];
 }

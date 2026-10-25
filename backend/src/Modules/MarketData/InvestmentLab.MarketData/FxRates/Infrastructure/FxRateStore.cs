@@ -38,4 +38,14 @@ internal sealed class FxRateStore(MarketDataDbContext db) : IFxRateStore, IFxRat
                 resolved.Value.EffectiveDate, resolved.Value.Rate, resolved.Value.TableNumber)
             : null;
     }
+
+    public async Task<IReadOnlyList<FxRateDto>> GetFxRateHistory(string baseCurrency, string quoteCurrency, DateOnly from, DateOnly to, CancellationToken cancellationToken)
+    {
+        if (Currency.TryOf(baseCurrency) is not { IsSuccess: true } @base || Currency.TryOf(quoteCurrency) is not { IsSuccess: true } quote)
+            return [];
+
+        return [.. (await RatesBetweenAsync(@base.Value, quote.Value, from, to, cancellationToken))
+            .OrderBy(rate => rate.EffectiveDate)
+            .Select(rate => new FxRateDto(rate.Source.ToString(), rate.Base.Code, rate.Quote.Code, rate.EffectiveDate, rate.Rate, rate.TableNumber))];
+    }
 }

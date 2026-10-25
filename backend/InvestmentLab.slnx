@@ -45,6 +45,7 @@
   </Folder>
   <Folder Name="/tests/Modules/">
     <Project Path="tests/Modules/InvestmentLab.MarketData.Tests/InvestmentLab.MarketData.Tests.csproj" />
+    <Project Path="tests/Modules/InvestmentLab.Performance.Tests/InvestmentLab.Performance.Tests.csproj" />
     <Project Path="tests/Modules/InvestmentLab.Portfolio.Tests/InvestmentLab.Portfolio.Tests.csproj" />
     <Project Path="tests/Modules/InvestmentLab.Rebalancing.Tests/InvestmentLab.Rebalancing.Tests.csproj" />
     <Project Path="tests/Modules/InvestmentLab.Strategies.Tests/InvestmentLab.Strategies.Tests.csproj" />

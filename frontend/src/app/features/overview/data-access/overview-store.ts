@@ -1,7 +1,7 @@
-import { computed, inject, Injectable, resource } from '@angular/core';
+import { computed, inject, Injectable, resource, signal } from '@angular/core';
 import { ApiClient } from '../../../core/api/api-client';
 import { AccountContext } from '../../../core/context/account-context';
-import { AccountHoldings, LatestPrice } from '../../../shared/models/api';
+import { DashboardDto } from './dashboard-api';
 
 interface ReportSummary {
   id: string;
@@ -13,27 +13,21 @@ interface ReportSummary {
   generatedAt: string;
 }
 
-/** The home screen: where the user is in the setup and what needs attention now. */
+export type DashboardPeriod = '1M' | '3M' | '6M' | '1Y' | 'YTD' | 'ALL';
+
+/** The home screen: setup progress, what needs attention now, and how the money did (Performance). */
 @Injectable()
 export class OverviewStore {
   private readonly api = inject(ApiClient);
   private readonly accounts = inject(AccountContext);
 
+  readonly period = signal<DashboardPeriod>('ALL');
+
   private readonly strategiesResource = resource({ loader: () => this.api.get<unknown[]>('/api/strategies') });
 
-  private readonly valuationResource = resource({
-    params: () => this.accounts.currentId(),
-    loader: async ({ params: accountId }) => {
-      const holdings = await this.api.get<AccountHoldings>(`/api/portfolio/accounts/${accountId}/holdings`);
-      const ids = [...new Set(holdings.subPortfolios.flatMap((sub) => sub.positions.map((position) => position.instrumentId)))];
-      const prices = ids.length ? await this.api.get<LatestPrice[]>('/api/market-data/quotes/latest', { instrumentIds: ids }) : [];
-      const close = new Map(prices.map((price) => [price.instrumentId, price.close]));
-      return holdings.subPortfolios.map((sub) => {
-        const invested = sub.positions.reduce((sum, position) => sum + position.quantity * (close.get(position.instrumentId) ?? position.averageCost), 0);
-        const cost = sub.positions.reduce((sum, position) => sum + position.costBasis, 0);
-        return { id: sub.subPortfolioId, name: sub.name, value: invested + sub.cash, cash: sub.cash, pnl: invested - cost, positions: sub.positions.length };
-      });
-    },
+  private readonly dashboardResource = resource({
+    params: () => (this.accounts.currentId() ? { accountId: this.accounts.currentId()!, period: this.period() } : undefined),
+    loader: ({ params }) => this.api.get<DashboardDto>(`/api/performance/accounts/${params.accountId}/dashboard`, { period: params.period }),
   });
 
   private readonly reportsResource = resource({
@@ -45,20 +39,18 @@ export class OverviewStore {
   readonly account = this.accounts.current;
   readonly hasStrategies = computed(() => (this.strategiesResource.value()?.length ?? 0) > 0);
   readonly strategiesLoaded = computed(() => this.strategiesResource.hasValue());
-  readonly sleeves = computed(() => this.valuationResource.value() ?? []);
-  readonly isLoading = computed(() => this.valuationResource.isLoading() || this.reportsResource.isLoading());
-  readonly totalValue = computed(() => this.sleeves().reduce((sum, sleeve) => sum + sleeve.value, 0));
-  readonly totalPnl = computed(() => this.sleeves().reduce((sum, sleeve) => sum + sleeve.pnl, 0));
-  readonly totalCash = computed(() => this.sleeves().reduce((sum, sleeve) => sum + sleeve.cash, 0));
-  readonly hasHoldings = computed(() => this.sleeves().some((sleeve) => sleeve.positions > 0 || sleeve.cash !== 0));
+  readonly hasStrategyAssigned = computed(() => this.account()?.subPortfolios.some((sub) => sub.status === 'Active' && sub.strategyId) ?? false);
+
+  readonly dashboard = computed(() => (this.dashboardResource.hasValue() ? this.dashboardResource.value() : undefined));
+  readonly isLoading = this.dashboardResource.isLoading;
+  readonly loadError = this.dashboardResource.error;
+  readonly hasHistory = computed(() => (this.dashboard()?.series.length ?? 0) > 0);
+
   readonly reports = computed(() => this.reportsResource.value() ?? []);
   readonly openReport = computed(() => this.reports().find((report) => report.kind !== 'RiskReview' && (report.status === 'New' || report.status === 'InProgress')));
   readonly latestRisk = computed(() => this.reports().find((report) => report.kind === 'RiskReview'));
-  readonly hasStrategyAssigned = computed(() => this.account()?.subPortfolios.some((sub) => sub.status === 'Active' && sub.strategyId) ?? false);
-
-  readonly allocation = computed(() => {
-    const total = this.totalValue();
-    const targets = new Map(this.account()?.subPortfolios.map((sub) => [sub.id, sub.targetShare]) ?? []);
-    return this.sleeves().map((sleeve) => ({ name: sleeve.name, actual: total ? sleeve.value / total : 0, target: targets.get(sleeve.id) ?? 0, value: sleeve.value }));
+  readonly planGap = computed(() => {
+    const dashboard = this.dashboard();
+    return dashboard?.planValue != null ? dashboard.value - dashboard.planValue : null;
   });
 }
