@@ -1,0 +1,117 @@
+[
+  {
+    "name": "EU ETF momentum",
+    "typeCode": "etf-momentum",
+    "currency": "EUR",
+    "universe": [
+      "SXR8.DE",
+      "SXRV.DE",
+      "IUSN.DE",
+      "EUN2.DE",
+      "IS3N.DE",
+      "4GLD.DE",
+      "SXRS.DE",
+      "IS04.DE",
+      "IUS7.DE",
+      "IBCI.DE",
+      "IQQA.DE",
+      "XDJE.DE",
+      "QDVE.DE",
+      "QDVF.DE",
+      "QDVG.DE",
+      "QDVI.DE",
+      "NQSE.DE"
+    ],
+    "cashInstrument": "XEON.DE",
+    "benchmark": "SPY",
+    "volatilityIndex": "^VIX",
+    "rebalanceFrequency": "Monthly",
+    "parameters": {
+      "scanner": {
+        "topN": 4,
+        "lookbackMonths": 6,
+        "maPeriod": 200,
+        "maxVolatility": 0.35,
+        "maxDrawdown": -0.2,
+        "maxVix": 30.0,
+        "minSharpe": 0.2,
+        "minMomentum": 0.0,
+        "holdBufferK": 8,
+        "maxPerGroup": 1,
+        "riskFreeRate": 0.02,
+        "maxStaleDays": 5
+      },
+      "risk": {
+        "maPeriod": 200,
+        "stopLossPct": -0.08,
+        "drawdownWarn": -0.1,
+        "drawdownExit": -0.18,
+        "vixWarn": 25.0,
+        "vixExit": 35.0,
+        "portfolioWarn": -0.1,
+        "portfolioExit": -0.2,
+        "maExitBand": 0.02,
+        "smallLossWarn": -0.04
+      },
+      "weakMarketInvestPct": 0.5
+    }
+  },
+  {
+    "name": "US ETF momentum",
+    "typeCode": "etf-momentum",
+    "currency": "USD",
+    "universe": [
+      "SPY",
+      "QQQ",
+      "IWM",
+      "EFA",
+      "EEM",
+      "GLD",
+      "SLV",
+      "TLT",
+      "IEF",
+      "LQD",
+      "VNQ",
+      "USO",
+      "DBA",
+      "XLE",
+      "XLK",
+      "XLV",
+      "XLF",
+      "XLU"
+    ],
+    "cashInstrument": "BIL",
+    "benchmark": "SPY",
+    "volatilityIndex": "^VIX",
+    "rebalanceFrequency": "Monthly",
+    "parameters": {
+      "scanner": {
+        "topN": 4,
+        "lookbackMonths": 6,
+        "maPeriod": 200,
+        "maxVolatility": 0.35,
+        "maxDrawdown": -0.2,
+        "maxVix": 30.0,
+        "minSharpe": 0.2,
+        "minMomentum": 0.0,
+        "holdBufferK": 8,
+        "maxPerGroup": 1,
+        "riskFreeRate": 0.035,
+        "maxStaleDays": 5
+      },
+      "risk": {
+        "maPeriod": 200,
+        "stopLossPct": -0.08,
+        "drawdownWarn": -0.1,
+        "drawdownExit": -0.18,
+        "vixWarn": 25.0,
+        "vixExit": 35.0,
+        "portfolioWarn": -0.1,
+        "portfolioExit": -0.2,
+        "maExitBand": 0.02,
+        "smallLossWarn": -0.04
+      },
+      "weakMarketInvestPct": 0.5
+    }
+  }
+]

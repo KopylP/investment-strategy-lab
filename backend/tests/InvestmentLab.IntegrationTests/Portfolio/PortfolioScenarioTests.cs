@@ -100,7 +100,7 @@ public sealed class PortfolioScenarioTests(PortfolioApiFactory factory) : IClass
     }
 
     /// <summary>The live file of the Python flow, so the test proves the migration of the real data.</summary>
-    private static string PositionsJsonPath()
+    internal static string PositionsJsonPath()
     {
         for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir is not null; dir = dir.Parent)
         {
