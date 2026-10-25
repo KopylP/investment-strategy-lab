@@ -10,23 +10,66 @@
   <div class="card"><app-empty-state icon="pi pi-wallet" title="Немає рахунку"><p-button label="Відкрити рахунок" routerLink="/accounts/new" /></app-empty-state></div>
 } @else {
   @let totals = store.totals();
-  <div class="grid gap-4 grid-cols-2 lg:grid-cols-4 mb-4">
-    <div class="card mb-0">
-      <div class="text-muted-color text-sm mb-2">Вартість</div>
-      <div class="text-2xl font-semibold"><app-money [amount]="totals.value" [currency]="store.currency()" /></div>
+  <!-- Hero: what is held and how it is doing, then what it consists of. -->
+  <div class="card">
+    <div class="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-start">
+      <div>
+        <div class="text-muted-color text-sm">Вартість · {{ store.asOf() ? 'на вибрану дату' : 'за останніми котируваннями' }}</div>
+        <div class="text-5xl font-bold tracking-tight mt-1 leading-tight"><app-money [amount]="totals.value" [currency]="store.currency()" /></div>
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3">
+          <span class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-semibold"
+            [style.background]="totals.pnl >= 0 ? 'color-mix(in srgb, var(--p-finance-gain) 14%, transparent)' : 'color-mix(in srgb, var(--p-finance-loss) 14%, transparent)'"
+            [appSignedValue]="totals.pnl">
+            <i class="pi text-xs" [class.pi-arrow-up-right]="totals.pnl >= 0" [class.pi-arrow-down-right]="totals.pnl < 0"></i>
+            {{ totals.pnl >= 0 ? '+' : '' }}<app-money [amount]="totals.pnl" [currency]="store.currency()" [hideOriginal]="true" />
+            @if (totals.pnlPct !== null) { · {{ totals.pnlPct | signedPercent }} }
+          </span>
+          <span class="text-sm text-muted-color">нереалізований результат відкритих позицій</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="text-muted-color text-sm mb-2">Склад</div>
+        <div class="flex h-3 rounded-full overflow-hidden gap-0.5" role="img" aria-label="Частки інструментів">
+          @for (slice of store.composition(); track slice.label) {
+            <div [style.width.%]="slice.weight * 100" [style.background]="slice.color" [title]="slice.label + ' ' + (slice.weight | percent)"></div>
+          }
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 mt-3">
+          @for (slice of store.composition(); track slice.label) {
+            <div class="flex items-center gap-2 text-sm min-w-0">
+              <i class="pi pi-circle-fill text-[0.6rem]" [style.color]="slice.color"></i>
+              <span class="font-medium truncate">{{ slice.label }}</span>
+              <span class="text-muted-color ml-auto">{{ slice.weight | percent }}</span>
+            </div>
+          }
+        </div>
+      </div>
     </div>
-    <div class="card mb-0">
-      <div class="text-muted-color text-sm mb-2">Нереалізований результат</div>
-      <div class="text-2xl font-semibold" [appSignedValue]="totals.pnl"><app-money [amount]="totals.pnl" [currency]="store.currency()" /></div>
-      <div class="text-sm mt-1" [appSignedValue]="totals.pnlPct">{{ totals.pnlPct | signedPercent }}</div>
-    </div>
-    <div class="card mb-0">
-      <div class="text-muted-color text-sm mb-2">Інвестовано (вартість позицій)</div>
-      <div class="text-2xl font-semibold"><app-money [amount]="totals.invested" [currency]="store.currency()" /></div>
-    </div>
-    <div class="card mb-0">
-      <div class="text-muted-color text-sm mb-2">Вільний кеш</div>
-      <div class="text-2xl font-semibold"><app-money [amount]="totals.cash" [currency]="store.currency()" /></div>
+  </div>
+
+  <div class="card py-4">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-y-4">
+      <div class="px-4 lg:border-r border-surface">
+        <div class="text-muted-color text-xs uppercase tracking-wide">Інвестовано</div>
+        <div class="text-xl font-semibold mt-1"><app-money [amount]="totals.invested" [currency]="store.currency()" /></div>
+        <div class="text-xs text-muted-color">вартість позицій</div>
+      </div>
+      <div class="px-4 lg:border-r border-surface">
+        <div class="text-muted-color text-xs uppercase tracking-wide">Собівартість</div>
+        <div class="text-xl font-semibold mt-1"><app-money [amount]="totals.costBasis" [currency]="store.currency()" /></div>
+        <div class="text-xs text-muted-color">скільки заплачено за них</div>
+      </div>
+      <div class="px-4 lg:border-r border-surface">
+        <div class="text-muted-color text-xs uppercase tracking-wide">Вільний кеш</div>
+        <div class="text-xl font-semibold mt-1"><app-money [amount]="totals.cash" [currency]="store.currency()" /></div>
+        <div class="text-xs text-muted-color">ще не вкладено</div>
+      </div>
+      <div class="px-4">
+        <div class="text-muted-color text-xs uppercase tracking-wide">Позицій</div>
+        <div class="text-xl font-semibold mt-1">{{ store.positionCount() }}</div>
+        <div class="text-xs text-muted-color">у {{ store.sleeves().length }} під-портфелях</div>
+      </div>
     </div>
   </div>
 

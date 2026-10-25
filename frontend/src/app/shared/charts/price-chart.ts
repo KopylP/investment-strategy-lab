@@ -24,7 +24,7 @@ export interface TradeMarker {
 @Component({
   selector: 'app-price-chart',
   imports: [UIChart],
-  template: `@for (chart of [options()]; track chart) { <p-chart type="line" [data]="data()" [options]="chart" [height]="height()" /> }`,
+  template: `@for (chart of [options()]; track chart) { <p-chart type="line" [data]="data()" [options]="chart" [plugins]="[tradeLines()]" [height]="height()" /> }`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PriceChart {
@@ -76,11 +76,36 @@ export class PriceChart {
         },
         ...(byIndex.size
           ? [
-              { label: 'Купівля', data: markers('Buy'), showLine: false, pointStyle: 'triangle', pointRadius: 7, pointHoverRadius: 9, backgroundColor: palette.gain, borderColor: palette.gain, order: 1 },
-              { label: 'Продаж', data: markers('Sell'), showLine: false, pointStyle: 'triangle', rotation: 180, pointRadius: 7, pointHoverRadius: 9, backgroundColor: palette.loss, borderColor: palette.loss, order: 1 },
+              // Colours that are never the line's own (green/red), with a white ring so they stand out on the fill.
+              { label: 'Купівля', data: markers('Buy'), showLine: false, pointStyle: 'triangle', pointRadius: 9, pointHoverRadius: 11, backgroundColor: palette.primary, borderColor: '#ffffff', borderWidth: 2, order: 0 },
+              { label: 'Продаж', data: markers('Sell'), showLine: false, pointStyle: 'triangle', rotation: 180, pointRadius: 9, pointHoverRadius: 11, backgroundColor: palette.tax, borderColor: '#ffffff', borderWidth: 2, order: 0 },
             ]
           : []),
       ],
+    };
+  });
+
+  /** A dashed vertical line through every trade day, so trades are visible at a glance even where the line is busy. */
+  protected readonly tradeLines = computed(() => {
+    const byIndex = this.tradesByIndex();
+    const palette = this.theme.palette();
+    return {
+      id: 'tradeLines',
+      beforeDatasetsDraw: (chart: { ctx: CanvasRenderingContext2D; chartArea: { top: number; bottom: number }; scales: { x: { getPixelForValue: (index: number) => number } } }) => {
+        const { ctx, chartArea, scales } = chart;
+        ctx.save();
+        ctx.setLineDash([4, 4]);
+        ctx.lineWidth = 1;
+        for (const [index, trades] of byIndex) {
+          const x = scales.x.getPixelForValue(index);
+          ctx.strokeStyle = withAlpha(trades.some((trade) => trade.side === 'Buy') ? palette.primary : palette.tax, 0.55);
+          ctx.beginPath();
+          ctx.moveTo(x, chartArea.top);
+          ctx.lineTo(x, chartArea.bottom);
+          ctx.stroke();
+        }
+        ctx.restore();
+      },
     };
   });
 
