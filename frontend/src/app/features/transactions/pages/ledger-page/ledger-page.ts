@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { IconField } from 'primeng/iconfield';
@@ -24,7 +25,7 @@ import { TradeDialog } from '../../ui/trade-dialog/trade-dialog';
 @Component({
   selector: 'app-ledger-page',
   imports: [
-    FormsModule, Button, IconField, InputIcon, InputText, Message, Select, Skeleton, TableModule, Tag, Tooltip,
+    FormsModule, RouterLink, Button, IconField, InputIcon, InputText, Message, Select, Skeleton, TableModule, Tag, Tooltip,
     PageHeader, EmptyState, SignedValue, TradeDialog, CashDialog, DatePipe, MoneyPipe,
   ],
   providers: [TransactionsStore],

@@ -247,6 +247,103 @@ namespace InvestmentLab.Portfolio.Shared.Infrastructure.Migrations
                     b.ToTable("holdings", "portfolio");
                 });
 
+            modelBuilder.Entity("InvestmentLab.Portfolio.Transactions.Domain.StatementImport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<string>("Broker")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("broker");
+
+                    b.Property<Guid?>("CashSubPortfolioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("cash_sub_portfolio_id");
+
+                    b.Property<DateTimeOffset?>("ConfirmedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("confirmed_at");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("file_name");
+
+                    b.Property<DateOnly?>("FromDate")
+                        .HasColumnType("date")
+                        .HasColumnName("from_date");
+
+                    b.Property<string>("Mappings")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("mappings");
+
+                    b.Property<string>("Mode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("mode");
+
+                    b.Property<string>("Outcomes")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("outcomes");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_id");
+
+                    b.Property<string>("RecordedReferences")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("recorded_references");
+
+                    b.Property<string>("ReversedTransactionIds")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("reversed_transaction_ids");
+
+                    b.Property<string>("Rows")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("rows");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTimeOffset?>("UndoneAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("undone_at");
+
+                    b.Property<DateTimeOffset>("UploadedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("uploaded_at");
+
+                    b.Property<string>("Warnings")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("warnings");
+
+                    b.HasKey("Id")
+                        .HasName("pk_statement_imports");
+
+                    b.HasIndex("AccountId")
+                        .HasDatabaseName("ix_statement_imports_account_id");
+
+                    b.ToTable("statement_imports", "portfolio");
+                });
+
             modelBuilder.Entity("InvestmentLab.Portfolio.Transactions.Domain.Transaction", b =>
                 {
                     b.Property<Guid>("Id")

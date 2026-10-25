@@ -119,3 +119,11 @@ public sealed record RiskSignalDto(Guid InstrumentId, string Kind, string Reason
 
 /// <summary>A new version of the strategy exists; sub-portfolios following the latest version use it from now on.</summary>
 public sealed record StrategyReconfiguredV1(Guid StrategyId, Guid OwnerId, int Version, DateTimeOffset ReconfiguredAt);
+
+/// <summary>The user's strategies and what they may hold (e.g. to place an imported instrument in the right sub-portfolio).</summary>
+public interface IStrategyDirectory
+{
+    Task<IReadOnlyList<StrategySummaryDto>> GetStrategies(CancellationToken cancellationToken);
+}
+
+public sealed record StrategySummaryDto(Guid Id, string Name, string TypeCode, int LatestVersion, IReadOnlyList<Guid> Universe, Guid? CashInstrumentId);

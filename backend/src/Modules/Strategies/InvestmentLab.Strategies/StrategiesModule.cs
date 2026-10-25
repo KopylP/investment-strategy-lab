@@ -46,6 +46,7 @@ public sealed class StrategiesModule : IModule
         services.AddScoped<GetStrategyCatalogHandler>();
 
         services.AddScoped<IStrategyRepository, StrategyRepository>();
+        services.AddScoped<IStrategyDirectory, StrategyDirectory>();
         services.AddScoped<IStrategyTypes, StrategyTypes>();
         services.AddSingleton<IDefaultStrategies, DefaultStrategies>();
         services.AddScoped<StrategySetupFactory>();
