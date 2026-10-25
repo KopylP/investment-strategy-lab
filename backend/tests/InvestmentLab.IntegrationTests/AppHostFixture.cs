@@ -27,7 +27,8 @@ public sealed class AppHostFixture : IAsyncLifetime
         await _app.ResourceNotifications.WaitForResourceHealthyAsync("api", timeout.Token);
     }
 
-    public HttpClient CreateApiClient() => App.CreateHttpClient("api", "https");
+    // Plain http: CI agents have no trusted dev certificate.
+    public HttpClient CreateApiClient() => App.CreateHttpClient("api", "http");
 
     public async ValueTask DisposeAsync()
     {
