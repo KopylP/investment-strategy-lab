@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace InvestmentLab.BuildingBlocks.Persistence;
 
-/// <summary>Applies every module's migrations before the host starts serving.</summary>
+/// <summary>Applies every module's migrations, then seeds reference data, before the host starts serving.</summary>
 internal sealed class DatabaseMigrator(
     IEnumerable<ModuleDbContextType> contexts,
     IServiceScopeFactory scopes,
@@ -21,6 +21,10 @@ internal sealed class DatabaseMigrator(
             logger.LogInformation("Migrating {Context}", context.ContextType.Name);
             await database.MigrateAsync(cancellationToken);
         }
+
+        await using var seedScope = scopes.CreateAsyncScope();
+        foreach (var seeder in seedScope.ServiceProvider.GetServices<IModuleDataSeeder>())
+            await seeder.SeedAsync(cancellationToken);
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
