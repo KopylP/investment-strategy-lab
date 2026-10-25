@@ -80,12 +80,12 @@
 | Область | Вибір |
 |---|---|
 | Framework | **Angular 21+** (остання стабільна на старті): standalone, zoneless, signals |
-| Дані | `httpResource` / `resource`, signal stores на фічу |
+| Дані | `resource` / `httpResource`, feature store на signals |
 | Форми | Signal Forms (якщо стабільні на старті) або typed reactive forms |
-| UI-кіт | Angular Material (див. §15) |
-| Графіки | Apache ECharts (`ngx-echarts`) |
+| UI-кіт | **PrimeNG** (пресет Aura → власний пресет) + безкоштовний шаблон **Sakai**, Tailwind + `tailwindcss-primeui` для layout-у (див. §11) |
+| Графіки | `p-chart` (Chart.js) з палітрою з токенів теми |
 | API-клієнт | генерація з OpenAPI (`ng-openapi-gen` або orval) |
-| Тести | Vitest, Playwright (e2e) |
+| Тести | Vitest + Angular Testing Library, Playwright (e2e) |
 
 ### Strategy Engine
 Python 3.12+, FastAPI, наявний код `finance_decisions` (scanner, risk, backtest), `uv`.
@@ -947,73 +947,447 @@ InvestmentLab.Performance/
 
 ## 11. Frontend (Angular)
 
-### 11.1 Принципи
-- **Feature-first**: кожна фіча — lazy-loaded маршрут зі своїми `data-access`, `ui`, `pages`, `models`.
-- Standalone-компоненти, **zoneless**, signals, `input()`/`output()`/`model()`, новий control flow (`@if`, `@for`, `@defer`).
-- Дані через `httpResource`; стан фічі — signal store (сервіс із `signal`/`computed`/`linkedSignal`).
-- Згенерований OpenAPI-клієнт лежить у `core/api/generated`, фічі обгортають його своїм `*.api.ts`.
-- Компоненти `ui/` — презентаційні (тільки inputs/outputs), `pages/` — контейнери.
-- Фічі не імпортують одна одну; спільне йде в `shared/`.
+### 11.1 UI-кіт і тема: PrimeNG + Sakai
 
-### 11.2 Структура
+**Рішення:** [PrimeNG](https://primeng.org) (MIT) з пресетом **Aura** і безкоштовним офіційним шаблоном
+**[Sakai](https://github.com/primefaces/sakai-ng)** (MIT) як основою layout-у (topbar, sidebar, світла/темна тема, налаштування теми).
+
+Чому не Angular Material і не інше:
+
+| Потреба фінансового застосунку | PrimeNG | Angular Material | Taiga UI |
+|---|---|---|---|
+| Готовий безкоштовний admin/dashboard-шаблон | ✅ Sakai (офіційний) | ⚠️ лише сторонні (ng-matero) | ❌ |
+| Таблиця: сортування, фіксовані колонки, розгортання рядків, футер з підсумками | ✅ `p-table` | ⚠️ базова `mat-table` | ✅ addon-table |
+| Поле суми з валютою і локаллю (`1 234,56 €`) | ✅ `p-inputnumber mode="currency"` | ❌ немає | ✅ |
+| Графіки в тому самому дизайні | ✅ `p-chart` (Chart.js) | ❌ немає | ✅ addon-charts |
+| Ціль vs факт (алокація) | ✅ `p-metergroup` | ❌ | ⚠️ |
+| Статуси, бейджі, toast, confirm, dynamic dialog, stepper, timeline, skeleton | ✅ усе є | ⚠️ частково | ✅ |
+| Темізація через дизайн-токени (світла/темна, свій бренд) | ✅ `definePreset` | ✅ M3 tokens | ✅ |
+| Спільнота, документація | велика | велика | менша |
+
+Taiga UI (від T-Bank) — сильна альтернатива саме для фінтеху, але без готового шаблону. Material — без
+грошових полів, графіків і з бідною таблицею, тобто довелося б дописувати саме те, що найважливіше для цього застосунку.
+
+> Використовуємо тільки безкоштовні частини: `primeng`, `@primeuix/themes`, `primeicons`, `tailwindcss-primeui`, Sakai.
+> Платні PrimeBlocks / Premium templates / LTS — не потрібні, поки тримаємося останньої версії.
+
+### 11.2 Стек фронтенду
+
+| Область | Вибір |
+|---|---|
+| Framework | Angular 21+ (остання стабільна на старті): standalone, **zoneless**, signals |
+| UI-кіт | PrimeNG (версія, сумісна з Angular на старті), пресет Aura → свій `InvestmentLabPreset` |
+| Layout-шаблон | Sakai (переносимо `layout/` у `core/layout`, решту демо видаляємо) |
+| Layout-утиліти | Tailwind CSS + `tailwindcss-primeui` (кольори/відступи з токенів PrimeNG) — як у Sakai |
+| Іконки | PrimeIcons |
+| Графіки | `p-chart` (Chart.js) + `chartjs-adapter-date-fns`, `chartjs-plugin-annotation` (маркери рапортів), `chartjs-plugin-zoom` |
+| Стан фічі | feature store — `@Injectable` сервіс на signals (`signal`, `computed`, `linkedSignal`, `resource`) |
+| Форми | Signal Forms, якщо стабільні на старті; інакше typed reactive forms. Поля — тільки компоненти PrimeNG |
+| API-клієнт | згенерований з OpenAPI (`ng-openapi-gen`) |
+| i18n | `@angular/localize` (uk — основна, en — потім) |
+| Якість | angular-eslint, `eslint-plugin-boundaries`, Prettier, Stylelint |
+| Тести | Vitest + Angular Testing Library, Playwright (e2e) |
+
+### 11.3 Архітектура фронтенду
+
+**Feature-first.** Кожна фіча — lazy-loaded маршрут. Фічі не імпортують одна одну.
+
+**Три ролі коду в кожній фічі — і тільки три:**
+
+| Роль | Папка | Що можна | Чого не можна |
+|---|---|---|---|
+| **Сторінка (container)** | `pages/` | інжектить store, відкриває діалоги, слухає `output()` UI-компонентів, викликає методи store, зв'язує маршрут | HTTP напряму, розрахунки, мапінг DTO |
+| **Store + API (логіка)** | `data-access/` | стан (`signal`), похідні (`computed`), завантаження (`resource`), команди, мапінг DTO → view model, toast про результат | DOM, шаблони, PrimeNG-компоненти |
+| **UI-компонент (presentational)** | `ui/` | тільки `input()` / `output()` / `model()`, локальний UI-стан (розгорнутий рядок), PrimeNG-компоненти, pipes | `inject()` store/API/router, HTTP, бізнес-рішення |
+
+Додатково: `models/` — view-моделі й типи фічі; `<feature>.routes.ts` — маршрути з `providers` для store.
+
+**Правила компонентів:**
+- Одна папка — один компонент: `.ts` + `.html` + `.scss` (тільки якщо потрібен) + `.spec.ts`. **Без inline-шаблонів**, крім компонентів-обгорток до ~5 рядків.
+- Імена за актуальним Angular style guide: файл `report-actions-table.ts`, клас `ReportActionsTable`, селектор `app-report-actions-table`. Сторінки: `report-detail-page.ts` / `ReportDetailPage`.
+- `ChangeDetectionStrategy.OnPush` усюди (разом із zoneless).
+- `input.required<T>()` для обов'язкових даних, `output<T>()` з бізнес-назвами подій (`markExecuted`, `skip`), а не `clicked`.
+- UI-компонент отримує вже готову view-модель (`ReportActionVm`), а не DTO з бекенду.
+- Компонент більше ~150 рядків шаблону або з кількома відповідальностями розбивається на менші UI-компоненти.
+- Шаблони: новий control flow (`@if`, `@for` з `track`, `@switch`, `@defer` для важких графіків), без функцій-викликів у шаблоні, крім signals.
+- Межі перевіряє `eslint-plugin-boundaries`: `ui` не імпортує `data-access`, фіча не імпортує іншу фічу, `shared` не імпортує `features`.
+
+### 11.4 Тема й стилі: максимум з PrimeNG
+
+**Принцип: вигляд задає тема, а не CSS компонентів.** Порядок, у якому шукаємо рішення:
+
+1. **Готовий компонент PrimeNG** з його inputs (`severity`, `size`, `variant`, `outlined`, `text`, `rounded`).
+2. **Дизайн-токени пресету** (`definePreset`) — бренд, кольори, радіуси, щільність. Один раз для всього застосунку.
+3. **Утиліти Tailwind** з `tailwindcss-primeui` тільки для **layout-у** (grid, flex, gap, відступи) і семантичних кольорів (`text-primary`, `bg-surface-50`, `text-muted-color`).
+4. **Pass Through (`pt`)** — якщо треба додати клас/атрибут у внутрішню частину компонента PrimeNG.
+5. `.scss` компонента — тільки `:host` і рідкісний специфічний layout, **лише через CSS-змінні токенів** (`var(--p-...)`).
+
+**Заборонено** (Stylelint + code review): hex/rgb-кольори в компонентах, `::ng-deep`, `!important`, перевизначення
+класів `.p-*` у глобальних стилях, власні реалізації того, що є в PrimeNG (свої таблиці, діалоги, кнопки, toast).
+
+**Пресет теми:**
+
+```ts
+// core/theme/investment-lab.preset.ts
+import { definePreset } from '@primeuix/themes';
+import Aura from '@primeuix/themes/aura';
+
+export const InvestmentLabPreset = definePreset(Aura, {
+  semantic: {
+    primary: {
+      50: '{indigo.50}', 100: '{indigo.100}', 200: '{indigo.200}', 300: '{indigo.300}', 400: '{indigo.400}',
+      500: '{indigo.500}', 600: '{indigo.600}', 700: '{indigo.700}', 800: '{indigo.800}', 900: '{indigo.900}',
+      950: '{indigo.950}',
+    },
+  },
+  // Фінансові семантичні токени → CSS-змінні --p-finance-*
+  extend: {
+    finance: {
+      gain: { light: '{green.600}', dark: '{green.400}' },
+      loss: { light: '{red.600}', dark: '{red.400}' },
+      neutral: '{surface.500}',
+      tax: '{amber.600}',
+    },
+  },
+});
+```
+
+```ts
+// app.config.ts
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideZonelessChangeDetection(),
+    provideRouter(appRoutes, withComponentInputBinding(), withViewTransitions()),
+    provideHttpClient(withFetch(), withInterceptors([antiforgeryInterceptor, problemDetailsInterceptor])),
+    providePrimeNG({
+      theme: {
+        preset: InvestmentLabPreset,
+        options: { darkModeSelector: '.app-dark', cssLayer: { name: 'primeng', order: 'theme, base, primeng' } },
+      },
+      translation: ukTranslation, // назви днів, кнопок, повідомлення валідації
+    }),
+    MessageService,
+    ConfirmationService,
+  ],
+};
+```
+
+```css
+/* styles.css */
+@layer theme, base, primeng;
+@import 'tailwindcss';
+@plugin 'tailwindcss-primeui';
+@import 'primeicons/primeicons.css';
+@import './app/core/layout/styles/layout.css'; /* з Sakai */
+```
+
+Кольори прибутку/збитку — тільки через `--p-finance-gain` / `--p-finance-loss` (у pipes/директиві `appSignedValue`
+і в палітрі графіків). Палітра графіків береться з токенів у `shared/charts/chart-theme.ts` і реагує на темну тему.
+
+### 11.5 Карта PrimeNG-компонентів для екранів
+
+| Екран / елемент | Компоненти PrimeNG |
+|---|---|
+| Shell, навігація, бейдж «новий рапорт» | Sakai layout, `p-menu`, `p-badge`, `p-avatar` |
+| Дашборд: KPI-картки | `p-card`, `p-tag`, `p-skeleton` |
+| Вартість у часі, внески, маркери рапортів, просідання | `p-chart` (line/stacked area + annotation), `p-selectbutton` (1М/6М/1Р/Усе), `p-togglebutton` (EUR/PLN) |
+| Алокація ціль vs факт | `p-metergroup`, `p-chart` (doughnut) |
+| План vs факт | `p-card` + `p-chart` (дві лінії) + `p-progressbar` (виконано дій) |
+| Список рапортів | `p-table` (lazy, paginator), `p-tag` (статус), `p-timeline` (історія на дашборді) |
+| Рапорт: дії | `p-table` + `pRowToggler` (розбивка неттінгу), `p-tag`, `p-button`, `p-splitbutton` (Виконано ▾ Частково / Пропустити), `p-tooltip` |
+| Відмітка виконання | `DialogService` (dynamic dialog), `p-inputnumber` (кількість; `mode="currency"` для ціни й комісії), `p-datepicker`, `p-textarea`, `p-floatlabel`, `p-message` для валідації |
+| Обґрунтування стратегії | `p-accordion` / `p-panel`, `p-table` метрик |
+| Попередження (якість даних, guardrails) | `p-message severity="warn"` |
+| Підтвердження (закрити рапорт, сторно) | `p-confirmdialog` / `p-confirmpopup` |
+| Результат команд | `p-toast` через `MessageService` (тільки зі store) |
+| Налаштування рахунку | `p-stepper`, `p-inputnumber` (частки, %), `p-select`, `p-slider` |
+| Стратегія: параметри з JSON Schema | `shared/ui/schema-form` будує поля з `p-inputnumber`, `p-select`, `p-multiselect`, `p-toggleswitch` |
+| Журнал операцій, звірка | `p-table` (фільтри, експорт CSV), `p-tag` |
+| Податки | `p-table` з footer-підсумками, `p-fieldset`, `p-message` (дисклеймер) |
+
+### 11.6 Структура
 
 ```text
 frontend/
 ├── angular.json
 ├── package.json
+├── eslint.config.js                       # angular-eslint + boundaries
+├── .stylelintrc.json                      # заборона hex/rgb, ::ng-deep, !important
 ├── tsconfig.json
 └── src/
     ├── main.ts
-    ├── styles/
+    ├── styles.css                         # тільки layers, tailwind, primeicons, layout Sakai
     └── app/
-        ├── app.config.ts                    # provideZonelessChangeDetection, provideHttpClient, router
-        ├── app.routes.ts                    # lazy loadChildren на кожну фічу
+        ├── app.ts / app.config.ts / app.routes.ts
         ├── core/
-        │   ├── api/generated/               # OpenAPI-клієнт (не редагується вручну)
-        │   ├── auth/                        # auth.service.ts, auth.guard.ts, login callback
-        │   ├── http/                        # interceptors: antiforgery, errors
-        │   ├── layout/                      # shell, nav, бейдж "новий рапорт"
-        │   └── i18n/
+        │   ├── api/generated/             # OpenAPI-клієнт (не редагується вручну)
+        │   ├── auth/                      # auth-store.ts, auth-guard.ts
+        │   ├── http/                      # antiforgery-interceptor.ts, problem-details-interceptor.ts
+        │   ├── layout/                    # з Sakai: app-layout, app-topbar, app-sidebar, app-menu, layout-service, styles/
+        │   ├── theme/                     # investment-lab.preset.ts, uk-translation.ts
+        │   └── notifications/             # report-inbox-store.ts (лічильник нових рапортів для бейджа)
         ├── shared/
-        │   ├── ui/                          # money, percent, status-badge, empty-state, confirm-dialog
-        │   ├── charts/                      # обгортки ECharts
-        │   ├── pipes/                       # money.pipe.ts, signed-percent.pipe.ts
-        │   └── models/                      # Money, Currency (фронтові VO-типи)
+        │   ├── ui/                        # money-value/, signed-percent/, status-tag/, empty-state/, page-header/, schema-form/
+        │   ├── charts/                    # chart-theme.ts (палітра з токенів), time-series-chart/, allocation-doughnut/
+        │   ├── pipes/                     # money-pipe.ts, quantity-pipe.ts, signed-percent-pipe.ts
+        │   └── models/                    # money.ts, currency.ts, percentage.ts
         └── features/
             ├── dashboard/
             │   ├── dashboard.routes.ts
-            │   ├── pages/dashboard.page.ts
-            │   ├── data-access/dashboard.api.ts, dashboard.store.ts
-            │   ├── ui/value-chart/, performance-card/, allocation-card/, plan-vs-actual-card/,
-            │   │   drawdown-card/, tax-widget/, report-inbox/
-            │   └── models/
+            │   ├── pages/dashboard-page/
+            │   ├── data-access/dashboard-api.ts, dashboard-store.ts, dashboard-mapper.ts
+            │   ├── ui/kpi-card/, value-chart/, performance-card/, allocation-card/, plan-vs-actual-card/,
+            │   │   drawdown-card/, tax-widget/, report-timeline/
+            │   └── models/dashboard-vm.ts
             ├── reports/
             │   ├── reports.routes.ts
-            │   ├── pages/report-list.page.ts, report-detail.page.ts
-            │   ├── data-access/reports.api.ts, report-detail.store.ts
-            │   ├── ui/action-row/, fill-dialog/, partial-fill-dialog/, skip-dialog/,
-            │   │   off-plan-trade-dialog/, netting-breakdown/, rationale-panel/, review-panel/
-            │   └── models/
-            ├── accounts/
-            │   ├── pages/account-list.page.ts, account-setup.page.ts
-            │   ├── ui/sub-portfolio-editor/, target-shares-editor/, contribution-policy-form/, guardrails-form/
-            │   └── data-access/, models/
-            ├── strategies/
-            │   ├── pages/strategy-catalog.page.ts, strategy-editor.page.ts
-            │   ├── ui/schema-form/          # форма з JSON Schema параметрів
-            │   └── data-access/, models/
-            ├── transactions/
-            │   ├── pages/ledger.page.ts, reconciliation.page.ts
-            │   └── ui/, data-access/, models/
-            ├── taxes/
-            │   ├── pages/tax-year.page.ts
-            │   └── ui/realizations-table/, carryforward-form/
-            ├── instruments/
-            │   ├── pages/instrument-list.page.ts
-            │   └── ui/quote-correction-dialog/
-            └── auth/
-                └── pages/login.page.ts, register.page.ts
+            │   ├── pages/report-list-page/, report-detail-page/
+            │   ├── data-access/reports-api.ts, report-list-store.ts, report-detail-store.ts, report-mapper.ts
+            │   ├── ui/report-header/, report-progress/, report-actions-table/, action-status-tag/,
+            │   │   netting-breakdown/, fill-form/, fill-dialog/, skip-dialog/, off-plan-trade-dialog/,
+            │   │   rationale-panel/, report-warnings/, review-panel/
+            │   └── models/report-vm.ts, report-action-vm.ts, fill-input.ts
+            ├── accounts/       (pages/, data-access/, ui/sub-portfolio-editor/, target-shares-editor/, contribution-policy-form/, guardrails-form/, models/)
+            ├── strategies/     (pages/strategy-catalog-page/, strategy-editor-page/, data-access/, ui/, models/)
+            ├── transactions/   (pages/ledger-page/, reconciliation-page/, data-access/, ui/, models/)
+            ├── taxes/          (pages/tax-year-page/, data-access/, ui/realizations-table/, carryforward-form/, models/)
+            ├── instruments/    (pages/instrument-list-page/, data-access/, ui/quote-correction-dialog/, models/)
+            └── auth/           (pages/login-page/, register-page/)
 ```
+
+### 11.7 Приклад: рапорт (сторінка → store → UI)
+
+**Store — уся логіка фічі:**
+
+```ts
+// features/reports/data-access/report-detail-store.ts
+@Injectable()
+export class ReportDetailStore {
+  private readonly api = inject(ReportsApi);
+  private readonly messages = inject(MessageService);
+
+  private readonly reportId = signal<string | undefined>(undefined);
+  private readonly busyActionId = signal<string | undefined>(undefined);
+
+  private readonly reportResource = resource({
+    params: () => this.reportId(),
+    loader: ({ params: id }) => this.api.getReport(id).then(toReportVm),
+  });
+
+  readonly report = computed(() => this.reportResource.value());
+  readonly isLoading = this.reportResource.isLoading;
+  readonly loadError = this.reportResource.error;
+  readonly actions = computed(() => this.report()?.actions ?? []);
+  readonly progress = computed(() => summarizeProgress(this.actions()));
+  readonly canMark = computed(() => this.report()?.isOpenForMarking ?? false);
+  readonly busyAction = this.busyActionId.asReadonly();
+
+  open(reportId: string): void {
+    this.reportId.set(reportId);
+  }
+
+  async markExecuted(action: ReportActionVm, fill: FillInput): Promise<void> {
+    await this.runCommand(action, () => this.api.markExecuted(this.requireId(), action.id, fill), 'Дію відмічено як виконану');
+  }
+
+  async recordPartialFill(action: ReportActionVm, fill: FillInput): Promise<void> {
+    await this.runCommand(action, () => this.api.recordPartialFill(this.requireId(), action.id, fill), 'Часткове виконання збережено');
+  }
+
+  async skip(action: ReportActionVm, reason: string): Promise<void> {
+    await this.runCommand(action, () => this.api.skip(this.requireId(), action.id, reason), 'Дію пропущено');
+  }
+
+  private async runCommand(action: ReportActionVm, command: () => Promise<unknown>, success: string): Promise<void> {
+    this.busyActionId.set(action.id);
+    try {
+      await command();
+      this.messages.add({ severity: 'success', summary: success, detail: action.title });
+      this.reportResource.reload();
+    } catch (error) {
+      this.messages.add({ severity: 'error', summary: 'Не вдалося зберегти', detail: toProblemMessage(error) });
+    } finally {
+      this.busyActionId.set(undefined);
+    }
+  }
+
+  private requireId(): string {
+    return this.reportId() ?? throwError('Report is not opened');
+  }
+}
+```
+
+**Сторінка — тільки зв'язує:**
+
+```ts
+// features/reports/pages/report-detail-page/report-detail-page.ts
+@Component({
+  selector: 'app-report-detail-page',
+  imports: [PageHeader, ReportHeader, ReportProgress, ReportWarnings, ReportActionsTable, RationalePanel, Skeleton, Message],
+  providers: [ReportDetailStore, DialogService],
+  templateUrl: './report-detail-page.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ReportDetailPage {
+  protected readonly store = inject(ReportDetailStore);
+  private readonly dialogs = inject(DialogService);
+
+  readonly reportId = input.required<string>(); // з маршруту через withComponentInputBinding
+
+  constructor() {
+    effect(() => this.store.open(this.reportId()));
+  }
+
+  protected openPartialFill(action: ReportActionVm): void {
+    this.dialogs
+      .open(FillDialog, { header: `Часткове виконання · ${action.title}`, modal: true, data: { action, mode: 'partial' } })
+      ?.onClose.pipe(filter(Boolean))
+      .subscribe((fill: FillInput) => this.store.recordPartialFill(action, fill));
+  }
+
+  // openFill, openSkip — аналогічно
+}
+```
+
+```html
+<!-- report-detail-page.html -->
+@if (store.isLoading() && !store.report()) {
+  <p-skeleton height="12rem" />
+} @else if (store.loadError()) {
+  <p-message severity="error" text="Не вдалося завантажити рапорт" />
+} @else if (store.report(); as report) {
+  <app-page-header [title]="report.title" [subtitle]="report.periodLabel" />
+  <app-report-header [report]="report" />
+  <app-report-progress [progress]="store.progress()" />
+  <app-report-warnings [warnings]="report.warnings" />
+
+  <app-report-actions-table
+    [actions]="store.actions()"
+    [readonly]="!store.canMark()"
+    [busyActionId]="store.busyAction()"
+    (markExecuted)="openFill($event)"
+    (partialFill)="openPartialFill($event)"
+    (skip)="openSkip($event)"
+    (undo)="confirmUndo($event)" />
+
+  @defer (on viewport) {
+    <app-rationale-panel [sections]="report.sections" />
+  } @placeholder {
+    <p-skeleton height="6rem" />
+  }
+}
+```
+
+**UI-компонент — тільки PrimeNG, inputs і outputs:**
+
+```ts
+// features/reports/ui/report-actions-table/report-actions-table.ts
+@Component({
+  selector: 'app-report-actions-table',
+  imports: [TableModule, Button, SplitButton, Tooltip, ActionStatusTag, NettingBreakdown, MoneyPipe, QuantityPipe],
+  templateUrl: './report-actions-table.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ReportActionsTable {
+  readonly actions = input.required<readonly ReportActionVm[]>();
+  readonly readonly = input(false);
+  readonly busyActionId = input<string>();
+
+  readonly markExecuted = output<ReportActionVm>();
+  readonly partialFill = output<ReportActionVm>();
+  readonly skip = output<ReportActionVm>();
+  readonly undo = output<ReportActionVm>();
+
+  protected secondaryActions(action: ReportActionVm): MenuItem[] {
+    return [
+      { label: 'Частково', icon: 'pi pi-percentage', command: () => this.partialFill.emit(action) },
+      { label: 'Пропустити', icon: 'pi pi-forward', command: () => this.skip.emit(action) },
+    ];
+  }
+}
+```
+
+```html
+<!-- report-actions-table.html -->
+<p-table [value]="actions()" dataKey="id" [tableStyle]="{ 'min-width': '48rem' }">
+  <ng-template #header>
+    <tr>
+      <th class="w-12"></th>
+      <th>Дія</th>
+      <th class="text-right">Кількість</th>
+      <th class="text-right">Сума</th>
+      <th>Статус</th>
+      <th class="text-right"></th>
+    </tr>
+  </ng-template>
+
+  <ng-template #body let-action let-expanded="expanded">
+    <tr>
+      <td>
+        @if (action.hasNettingBreakdown) {
+          <p-button [pRowToggler]="action" text rounded severity="secondary"
+                    [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" />
+        }
+      </td>
+      <td>
+        <div class="font-medium">{{ action.title }}</div>
+        <div class="text-sm text-muted-color">{{ action.reason }}</div>
+      </td>
+      <td class="text-right">{{ action.plannedQuantity | quantity }}</td>
+      <td class="text-right">{{ action.plannedAmount | money }}</td>
+      <td><app-action-status-tag [status]="action.status" [fillSummary]="action.fillSummary" /></td>
+      <td class="text-right">
+        @if (action.isPending && !readonly()) {
+          <p-splitbutton label="Виконано" icon="pi pi-check" size="small"
+                         [model]="secondaryActions(action)"
+                         [disabled]="busyActionId() === action.id"
+                         (onClick)="markExecuted.emit(action)" />
+        } @else if (action.canUndo && !readonly()) {
+          <p-button label="Скасувати" icon="pi pi-undo" size="small" text severity="secondary"
+                    (onClick)="undo.emit(action)" />
+        }
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template #expandedrow let-action>
+    <tr>
+      <td colspan="6"><app-netting-breakdown [allocations]="action.allocations" /></td>
+    </tr>
+  </ng-template>
+</p-table>
+```
+
+```ts
+// features/reports/ui/action-status-tag/action-status-tag.ts — маленький, тому inline-шаблон дозволений
+@Component({
+  selector: 'app-action-status-tag',
+  imports: [Tag],
+  template: `<p-tag [value]="label()" [severity]="severity()" [icon]="icon()" />`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ActionStatusTag {
+  readonly status = input.required<ActionStatus>();
+  readonly fillSummary = input<string>();
+
+  protected readonly severity = computed(() => ACTION_STATUS_APPEARANCE[this.status()].severity);
+  protected readonly icon = computed(() => ACTION_STATUS_APPEARANCE[this.status()].icon);
+  protected readonly label = computed(() => this.fillSummary() ?? ACTION_STATUS_APPEARANCE[this.status()].label);
+}
+
+const ACTION_STATUS_APPEARANCE = {
+  Pending: { label: 'Очікує', severity: 'secondary', icon: 'pi pi-clock' },
+  Executed: { label: 'Виконано', severity: 'success', icon: 'pi pi-check' },
+  PartiallyExecuted: { label: 'Частково', severity: 'warn', icon: 'pi pi-percentage' },
+  Skipped: { label: 'Пропущено', severity: 'contrast', icon: 'pi pi-forward' },
+} as const satisfies Record<ActionStatus, StatusAppearance>;
+```
+
+Що видно з прикладу:
+- у компонентах немає жодного власного кольору чи CSS: усе — `severity`, `text`, `size`, утиліти layout-у й токени;
+- таблиця, розгортання рядків, split-кнопка, діалог, toast, skeleton — готові компоненти PrimeNG;
+- логіка (завантаження, команди, повідомлення, прогрес) — тільки у store; сторінка лише з'єднує store і UI;
+- UI-компоненти можна тестувати й переглядати ізольовано, подаючи view-моделі.
 
 ---
 
@@ -1063,7 +1437,7 @@ strategy-engine/
 | Integration | модуль + Postgres + outbox, наскрізні сценарії §7 | Testcontainers, Alba/WebApplicationFactory |
 | Contract | .NET ↔ Python `/decide`, `/prices` | JSON Schema snapshot з обох боків |
 | Architecture | модулі бачать тільки `Contracts`; `Domain` не залежить від `Application/Infrastructure/Api`; без EF у `Domain` | ArchUnitNET |
-| Frontend | компоненти й stores | Vitest |
+| Frontend | stores (логіка), UI-компоненти з view-моделями, межі фіч (`eslint-plugin-boundaries`) | Vitest, Angular Testing Library |
 | E2E | вхід → рапорт → відмітка → дашборд оновився | Playwright |
 
 ---
@@ -1080,7 +1454,7 @@ strategy-engine/
 | **3. Identity + Portfolio** | Вхід; рахунок, під-портфелі, цільові частки, політика внесків; журнал операцій, `Holdings`; `ImportPositionsJson`. | Імпортований `positions.json` дає ті самі позиції й кеш; сторно працює. |
 | **4. Strategies** | Каталог із сайдкара; `Strategy` + версії (сід з `strategy.toml`, `strategy_us.toml`); `EvaluateStrategy`, `EvaluateRisk`. | Рішення .NET → Python збігається з поточним `monthly_scanner` на тих самих даних. |
 | **5. Rebalancing** | `ContributionAllocator`, `SubPortfolioRebalancer` (порт `plan.py`), `GuardrailEnforcer`, `OrderNetting`; агрегат рапорту; відмітки; щомісячна й щотижнева задачі; `NullPlanReviewer`. | Golden-тести до цента; наскрізний сценарій §7.2 в integration-тестах. |
-| **6. Frontend v1** | Shell, auth, accounts, strategies, **reports** (робочий документ), transactions. | E2E: вхід → рапорт → часткове виконання → операція в журналі. |
+| **6. Frontend v1** | Sakai layout + пресет теми, shell, auth, accounts, strategies, **reports** (робочий документ), transactions. | E2E: вхід → рапорт → часткове виконання → операція в журналі. |
 | **7. Taxation** | Белка: FIFO, NBP, річне сальдо, перенос збитків; оцінка в рапорті; сторінка податків. | Сценарні тести; звірка з PIT-8C за минулий рік (якщо є). |
 | **8. Performance + Dashboard** | Знімки, TWR/XIRR, просідання, тіньовий портфель, інвалідація; дашборд з графіками. | Дашборд узгоджений з ledger-ом; зміна заднім числом перераховує графіки. |
 | **9. Паралельний запуск і перемикання** | 1–2 місяці: GitHub Actions і сервіс рахують план паралельно, різниця фіксується. Далі вимикаємо `monthly_scanner.yml`/`weekly_risk_monitor.yml`, `positions.json` архівується. | Розбіжностей немає 2 місяці поспіль. |
@@ -1097,7 +1471,7 @@ strategy-engine/
 | Q3 | Окремий проєкт `<Module>.Contracts` на модуль | Так — це головна гарантія виділення в мікросервіс |
 | Q4 | Messaging/фонові задачі: Wolverine (outbox + scheduled) чи власні абстракції + Hangfire | Wolverine |
 | Q5 | Монорепо (backend + frontend + strategy-engine в одному репо) | Так, з окремими CI-workflow |
-| Q6 | UI-кіт: Angular Material чи PrimeNG | Angular Material |
+| Q6 | UI-кіт | ✅ Вирішено: PrimeNG + Sakai (§11.1) |
 | Q7 | Оновлення UI після відмітки: polling чи SSE | Спершу повторне завантаження після команди; SSE пізніше |
 | Q8 | Хостинг (VPS + docker compose / Azure Container Apps / інше) | Вирішити до етапу 9; Aspire дає маніфест для обох |
 | Q9 | Модуль Identity: свій (ASP.NET Identity) чи зовнішній провайдер (Entra ID / Auth0 / Keycloak) | ASP.NET Identity + Google login |
