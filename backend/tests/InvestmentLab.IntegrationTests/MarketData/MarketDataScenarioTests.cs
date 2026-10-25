@@ -14,7 +14,7 @@ public sealed class MarketDataScenarioTests(MarketDataApiFactory factory) : ICla
     public async Task Ingested_quotes_can_be_corrected_and_the_correction_survives_the_next_ingest()
     {
         var ct = TestContext.Current.CancellationToken;
-        var client = factory.CreateClient();
+        var client = await factory.CreateSignedInClientAsync(ct);
         var days = FakeQuoteProvider.TradingDays();
 
         var instruments = await client.GetFromJsonAsync<List<InstrumentDto>>("/api/market-data/instruments", ct);
@@ -47,7 +47,7 @@ public sealed class MarketDataScenarioTests(MarketDataApiFactory factory) : ICla
     public async Task Fx_rate_for_a_transaction_comes_from_the_previous_business_day()
     {
         var ct = TestContext.Current.CancellationToken;
-        var client = factory.CreateClient();
+        var client = await factory.CreateSignedInClientAsync(ct);
         await client.PostAsync("/api/market-data/fx-rates/ingest", null, ct);
 
         var monday = FakeQuoteProvider.TradingDays().Last(day => day.DayOfWeek == DayOfWeek.Monday);
