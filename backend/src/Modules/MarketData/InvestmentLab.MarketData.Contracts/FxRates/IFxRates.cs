@@ -8,6 +8,9 @@ public interface IFxRates
     /// at most ten days old. Null when no such rate is stored.
     /// </summary>
     Task<FxRateDto?> GetFxRate(string baseCurrency, string quoteCurrency, DateOnly transactionDate, CancellationToken cancellationToken);
+
+    /// <summary>Every stored NBP table for the pair from <paramref name="from"/> to <paramref name="to"/>, oldest first (valuation over time).</summary>
+    Task<IReadOnlyList<FxRateDto>> GetFxRateHistory(string baseCurrency, string quoteCurrency, DateOnly from, DateOnly to, CancellationToken cancellationToken);
 }
 
 public sealed record FxRateDto(string Source, string Base, string Quote, DateOnly EffectiveDate, decimal Rate, string? TableNumber);

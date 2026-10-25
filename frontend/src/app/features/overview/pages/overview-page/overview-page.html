@@ -1,4 +1,8 @@
-<app-page-header title="Огляд" [subtitle]="store.account() ? store.account()!.name + ' · ' + store.account()!.broker : 'Почнімо з налаштування'" />
+<app-page-header title="Огляд" [subtitle]="store.account() ? store.account()!.name + ' · ' + store.account()!.broker : 'Почнімо з налаштування'">
+  @if (store.hasHistory()) {
+    <p-selectbutton [options]="periods" optionLabel="label" optionValue="value" [ngModel]="store.period()" (ngModelChange)="$event && store.period.set($event)" [allowEmpty]="false" size="small" />
+  }
+</app-page-header>
 
 @if (store.accountsLoaded() && store.strategiesLoaded() && (!store.hasStrategies() || !store.account() || !store.hasStrategyAssigned())) {
   <div class="card">
@@ -33,61 +37,93 @@
 }
 
 @if (store.account()) {
-  @if (store.isLoading() && !store.sleeves().length) {
-    <div class="card"><p-skeleton height="8rem" /></div>
-  } @else {
-    <div class="grid gap-4 grid-cols-1 md:grid-cols-3 mb-4">
-      <div class="card mb-0">
-        <div class="text-muted-color text-sm mb-2">Вартість рахунку</div>
-        <div class="text-3xl font-semibold">{{ store.totalValue() | money: store.account()!.baseCurrency }}</div>
-        <div class="text-sm mt-2" [appSignedValue]="store.totalPnl()">нереалізовано {{ store.totalPnl() | money: store.account()!.baseCurrency }}</div>
+  @if (store.openReport(); as report) {
+    <p-message severity="info" styleClass="mb-4">
+      <div class="flex flex-wrap items-center justify-between gap-3 w-full">
+        <span>Рапорт за {{ report.period | period }}: {{ report.actionsOpen }} з {{ report.actionsTotal }} дій чекають на відмітку.</span>
+        <p-button label="Відкрити рапорт" icon="pi pi-arrow-right" iconPos="right" size="small" [routerLink]="['/reports', report.id]" />
       </div>
-      <div class="card mb-0">
-        <div class="text-muted-color text-sm mb-2">Вільний кеш</div>
-        <div class="text-3xl font-semibold">{{ store.totalCash() | money: store.account()!.baseCurrency }}</div>
-        <div class="text-sm text-muted-color mt-2">не враховуючи ETF для паркування</div>
-      </div>
-      <div class="card mb-0">
-        <div class="text-muted-color text-sm mb-2">Рапорт місяця</div>
-        @if (store.openReport(); as report) {
-          <div class="text-xl font-semibold mb-1">{{ report.period | period }}</div>
-          <div class="text-sm text-muted-color mb-3">{{ report.actionsOpen }} з {{ report.actionsTotal }} дій чекають на відмітку</div>
-          <p-button label="Відкрити рапорт" icon="pi pi-arrow-right" iconPos="right" size="small" [routerLink]="['/reports', report.id]" />
-        } @else {
-          <div class="text-sm text-muted-color mb-3">Відкритого рапорту немає.</div>
-          <p-button label="До рапортів" icon="pi pi-bolt" size="small" routerLink="/reports" />
-        }
-      </div>
-    </div>
+    </p-message>
+  }
 
-    @if (store.allocation().length) {
+  @if (store.isLoading() && !store.dashboard()) {
+    <div class="card"><p-skeleton height="20rem" /></div>
+  } @else if (store.loadError()) {
+    <div class="card"><p-message severity="error" text="Не вдалося побудувати дашборд" /></div>
+  } @else if (store.dashboard(); as d) {
+    @if (!store.hasHistory()) {
       <div class="card">
-        <h2 class="text-lg font-semibold mb-4">Частки під-портфелів: факт і ціль</h2>
-        <div class="flex flex-col gap-4">
-          @for (row of store.allocation(); track row.name) {
-            <div>
-              <div class="flex justify-between text-sm mb-1">
-                <span class="font-medium">{{ row.name }}</span>
-                <span>{{ row.actual | percent }} <span class="text-muted-color">/ ціль {{ row.target | percent: 0 }}</span> · {{ row.value | money: store.account()!.baseCurrency }}</span>
-              </div>
-              <p-progressbar [value]="row.actual * 100" [showValue]="false" styleClass="h-2" />
-            </div>
-          }
+        <div class="text-muted-color">Графіки з’являться з першою операцією в журналі: імпортуйте позиції або відмітьте внесок у рапорті.</div>
+        @if (!store.openReport()) { <p-button label="До рапортів" icon="pi pi-bolt" size="small" routerLink="/reports" styleClass="mt-3" /> }
+      </div>
+    } @else {
+      <div class="grid gap-4 grid-cols-2 xl:grid-cols-5 mb-4">
+        <div class="card mb-0 col-span-2 xl:col-span-1">
+          <div class="text-muted-color text-sm mb-2">Вартість · {{ d.asOf | date }}</div>
+          <div class="text-3xl font-semibold">{{ d.value | money: d.currency : 0 }}</div>
+          <div class="text-sm mt-2" [appSignedValue]="d.gain">{{ d.gain >= 0 ? '+' : '' }}{{ d.gain | money: d.currency : 0 }} до внесків</div>
+        </div>
+        <div class="card mb-0">
+          <div class="text-muted-color text-sm mb-2">Дохідність (TWR)</div>
+          <div class="text-2xl font-semibold" [appSignedValue]="d.twr">{{ d.twr | signedPercent }}</div>
+          <div class="text-sm text-muted-color mt-2">{{ d.twrAnnualized === null ? 'без впливу внесків' : (d.twrAnnualized | signedPercent) + ' річних' }}</div>
+        </div>
+        <div class="card mb-0">
+          <div class="text-muted-color text-sm mb-2">Ваша дохідність (XIRR)</div>
+          <div class="text-2xl font-semibold" [appSignedValue]="d.xirr">{{ d.xirr === null ? '—' : (d.xirr | signedPercent) }}</div>
+          <div class="text-sm text-muted-color mt-2">річних, з урахуванням часу внесків</div>
+        </div>
+        <div class="card mb-0">
+          <div class="text-muted-color text-sm mb-2">Просідання</div>
+          <div class="text-2xl font-semibold" [appSignedValue]="d.currentDrawdown">{{ d.currentDrawdown | signedPercent }}</div>
+          <div class="text-sm text-muted-color mt-2">найбільше {{ d.maxDrawdown | signedPercent }}</div>
+        </div>
+        <div class="card mb-0">
+          <div class="text-muted-color text-sm mb-2">Податок {{ (d.asOf ?? '').slice(0, 4) }}</div>
+          <div class="text-2xl font-semibold">{{ d.taxDueThisYearPln === null ? '—' : (d.taxDueThisYearPln | money: 'PLN' : 0) }}</div>
+          <a routerLink="/taxes" class="text-sm text-primary mt-2 inline-block">деталі →</a>
         </div>
       </div>
-    }
 
-    @if (store.latestRisk(); as risk) {
       <div class="card">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <h2 class="text-lg font-semibold m-0">Остання перевірка ризику</h2>
-            <div class="text-sm text-muted-color">{{ risk.generatedAt | dateTime }}</div>
-          </div>
-          <div class="flex items-center gap-2">
-            @if (risk.actionsTotal) { <p-tag [value]="risk.actionsTotal + ' сигналів виходу'" severity="danger" /> } @else { <p-tag value="без сигналів виходу" severity="success" /> }
-            <p-button label="Відкрити" size="small" [text]="true" [routerLink]="['/reports', risk.id]" />
-          </div>
+        <div class="flex flex-wrap items-baseline justify-between gap-2 mb-2">
+          <h2 class="text-lg font-semibold m-0">Вартість у часі</h2>
+          @if (store.planGap(); as gap) {
+            <span class="text-sm">
+              План vs факт: <span [appSignedValue]="gap">{{ gap >= 0 ? '+' : '' }}{{ gap | money: d.currency : 0 }}</span>
+              <span class="text-muted-color"> — різниця з «якби все за планом»</span>
+            </span>
+          }
+        </div>
+        @defer (on idle) {
+          <app-value-chart [dashboard]="d" />
+        } @placeholder {
+          <p-skeleton height="22rem" />
+        }
+        <div class="text-xs text-muted-color mt-2">Точки на лінії — дні рапортів. TWR рахує дохідність без впливу внесків, XIRR — з урахуванням того, коли гроші внесено.</div>
+      </div>
+
+      <div class="grid gap-4 xl:grid-cols-2">
+        <div class="card mb-0">
+          <h2 class="text-lg font-semibold mb-4">Під-портфелі: факт і ціль</h2>
+          <app-allocation-card [dashboard]="d" />
+        </div>
+        <div class="card mb-0">
+          <h2 class="text-lg font-semibold mb-4">Просідання від піку</h2>
+          @defer (on idle) {
+            <app-drawdown-chart [dashboard]="d" />
+          } @placeholder {
+            <p-skeleton height="12rem" />
+          }
+          @if (store.latestRisk(); as risk) {
+            <div class="flex flex-wrap items-center justify-between gap-2 mt-4">
+              <span class="text-sm text-muted-color">Остання перевірка ризику: {{ risk.generatedAt | dateTime }}</span>
+              <div class="flex items-center gap-2">
+                @if (risk.actionsTotal) { <p-tag [value]="risk.actionsTotal + ' сигналів виходу'" severity="danger" /> } @else { <p-tag value="без сигналів виходу" severity="success" /> }
+                <p-button label="Відкрити" size="small" [text]="true" [routerLink]="['/reports', risk.id]" />
+              </div>
+            </div>
+          }
         </div>
       </div>
     }
