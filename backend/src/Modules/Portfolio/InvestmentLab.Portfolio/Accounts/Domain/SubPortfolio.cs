@@ -13,9 +13,13 @@ public sealed class SubPortfolio : Entity<SubPortfolioId>
     public Guardrails Guardrails { get; private set; }
     public SubPortfolioStatus Status { get; private set; }
 
-    private SubPortfolio(SubPortfolioId id, string name, TargetShare targetShare, StrategyRef? strategy, Guid? cashInstrumentId, Guardrails guardrails)
+    /// <summary>Place in the account, so sub-portfolios are always listed in the order they were added.</summary>
+    public int Position { get; private set; }
+
+    private SubPortfolio(SubPortfolioId id, int position, string name, TargetShare targetShare, StrategyRef? strategy, Guid? cashInstrumentId, Guardrails guardrails)
         : base(id)
     {
+        Position = position;
         Name = name;
         TargetShare = targetShare;
         Strategy = strategy;
@@ -27,8 +31,8 @@ public sealed class SubPortfolio : Entity<SubPortfolioId>
     // EF Core: owned types are materialised through this constructor.
     private SubPortfolio(SubPortfolioId id) : base(id) => (Name, TargetShare, Guardrails) = (null!, null!, null!);
 
-    internal static SubPortfolio Create(SubPortfolioDraft draft) =>
-        new(SubPortfolioId.New(), draft.Name.Trim(), draft.TargetShare, draft.Strategy, draft.CashInstrumentId, draft.Guardrails);
+    internal static SubPortfolio Create(SubPortfolioDraft draft, int position) =>
+        new(SubPortfolioId.New(), position, draft.Name.Trim(), draft.TargetShare, draft.Strategy, draft.CashInstrumentId, draft.Guardrails);
 
     public bool IsActive => Status == SubPortfolioStatus.Active;
 

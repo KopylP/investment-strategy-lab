@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace InvestmentLab.Portfolio.Shared.Infrastructure.Migrations
 {
     [DbContext(typeof(PortfolioDbContext))]
-    [Migration("20261025111210_AddAccounts")]
-    partial class AddAccounts
+    [Migration("20261025112624_AddPortfolio")]
+    partial class AddPortfolio
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -153,6 +153,10 @@ namespace InvestmentLab.Portfolio.Shared.Infrastructure.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("name");
 
+                    b.Property<int>("Position")
+                        .HasColumnType("integer")
+                        .HasColumnName("position");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -179,10 +183,122 @@ namespace InvestmentLab.Portfolio.Shared.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_sub_portfolios");
 
-                    b.HasIndex("AccountId")
-                        .HasDatabaseName("ix_sub_portfolios_account_id");
+                    b.HasIndex("AccountId", "Position")
+                        .IsUnique()
+                        .HasDatabaseName("ix_sub_portfolios_account_id_position");
 
                     b.ToTable("sub_portfolios", "portfolio");
+                });
+
+            modelBuilder.Entity("InvestmentLab.Portfolio.Shared.Infrastructure.HoldingRow", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(20, 8)
+                        .HasColumnType("numeric(20,8)")
+                        .HasColumnName("amount");
+
+                    b.Property<DateOnly?>("AsOf")
+                        .HasColumnType("date")
+                        .HasColumnName("as_of");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("currency");
+
+                    b.Property<Guid?>("InstrumentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("instrument_id");
+
+                    b.Property<string>("Lots")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("lots");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_id");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(20, 8)
+                        .HasColumnType("numeric(20,8)")
+                        .HasColumnName("quantity");
+
+                    b.Property<Guid>("SubPortfolioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("sub_portfolio_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_holdings");
+
+                    b.HasIndex("AccountId", "SubPortfolioId", "InstrumentId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_holdings_account_id_sub_portfolio_id_instrument_id");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("AccountId", "SubPortfolioId", "InstrumentId"), false);
+
+                    b.ToTable("holdings", "portfolio");
+                });
+
+            modelBuilder.Entity("InvestmentLab.Portfolio.Transactions.Domain.Transaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<string>("Details")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("details");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("kind");
+
+                    b.Property<DateOnly>("OccurredOn")
+                        .HasColumnType("date")
+                        .HasColumnName("occurred_on");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_id");
+
+                    b.Property<DateTimeOffset>("RecordedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("recorded_at");
+
+                    b.Property<Guid?>("ReversalOf")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reversal_of");
+
+                    b.HasKey("Id")
+                        .HasName("pk_transactions");
+
+                    b.HasIndex("ReversalOf")
+                        .IsUnique()
+                        .HasDatabaseName("ix_transactions_reversal_of")
+                        .HasFilter("reversal_of IS NOT NULL");
+
+                    b.HasIndex("AccountId", "OccurredOn")
+                        .HasDatabaseName("ix_transactions_account_id_occurred_on");
+
+                    b.ToTable("transactions", "portfolio");
                 });
 
             modelBuilder.Entity("InvestmentLab.Portfolio.Accounts.Domain.SubPortfolio", b =>
@@ -217,6 +333,43 @@ namespace InvestmentLab.Portfolio.Shared.Infrastructure.Migrations
                         });
 
                     b.Navigation("Strategy");
+                });
+
+            modelBuilder.Entity("InvestmentLab.Portfolio.Transactions.Domain.Transaction", b =>
+                {
+                    b.OwnsOne("InvestmentLab.Portfolio.Transactions.Domain.TransactionSource", "Source", b1 =>
+                        {
+                            b1.Property<Guid>("TransactionId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("id");
+
+                            b1.Property<string>("Kind")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)")
+                                .HasColumnName("source_kind");
+
+                            b1.Property<string>("Reference")
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("source_reference");
+
+                            b1.HasKey("TransactionId");
+
+                            b1.HasIndex("Reference")
+                                .IsUnique()
+                                .HasDatabaseName("ix_transactions_source_reference")
+                                .HasFilter("source_reference IS NOT NULL");
+
+                            b1.ToTable("transactions", "portfolio");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TransactionId")
+                                .HasConstraintName("fk_transactions_transactions_id");
+                        });
+
+                    b.Navigation("Source")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("InvestmentLab.Portfolio.Accounts.Domain.InvestmentAccount", b =>

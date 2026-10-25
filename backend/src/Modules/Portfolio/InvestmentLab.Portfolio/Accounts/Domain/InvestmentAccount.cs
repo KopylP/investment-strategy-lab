@@ -19,9 +19,9 @@ public sealed class InvestmentAccount : AggregateRoot<AccountId>
     public string TaxPolicyCode { get; private set; }
     public ContributionPolicy ContributionPolicy { get; private set; }
     public DateTimeOffset OpenedAt { get; private set; }
-    public IReadOnlyList<SubPortfolio> SubPortfolios => _subPortfolios;
+    public IReadOnlyList<SubPortfolio> SubPortfolios => [.. _subPortfolios.OrderBy(sub => sub.Position)];
 
-    public IEnumerable<SubPortfolio> ActiveSubPortfolios => _subPortfolios.Where(sub => sub.IsActive);
+    public IEnumerable<SubPortfolio> ActiveSubPortfolios => SubPortfolios.Where(sub => sub.IsActive);
 
     private InvestmentAccount(
         AccountId id, UserId ownerId, string name, string broker, Currency baseCurrency, string taxPolicyCode,
@@ -61,7 +61,7 @@ public sealed class InvestmentAccount : AggregateRoot<AccountId>
         {
             if (account.CheckNameIsFree(draft.Name) is { } taken)
                 return taken;
-            account._subPortfolios.Add(SubPortfolio.Create(draft));
+            account._subPortfolios.Add(SubPortfolio.Create(draft, account._subPortfolios.Count));
         }
 
         return account.CheckSharesAddUp() is { } error ? error : account;
@@ -73,7 +73,7 @@ public sealed class InvestmentAccount : AggregateRoot<AccountId>
         if (CheckNameIsFree(draft.Name) is { } taken)
             return taken;
 
-        var added = SubPortfolio.Create(draft);
+        var added = SubPortfolio.Create(draft, _subPortfolios.Count);
         var shares = new Dictionary<SubPortfolioId, TargetShare>(sharesOfOthers) { [added.Id] = draft.TargetShare };
         _subPortfolios.Add(added);
 
