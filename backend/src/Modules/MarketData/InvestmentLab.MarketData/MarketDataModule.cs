@@ -1,8 +1,14 @@
 using InvestmentLab.BuildingBlocks.Modules;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.BuildingBlocks.Scheduling;
+using InvestmentLab.MarketData.Contracts.FxRates;
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.MarketData.Contracts.Quotes;
+using InvestmentLab.MarketData.FxRates.Api;
+using InvestmentLab.MarketData.FxRates.Application;
+using InvestmentLab.MarketData.FxRates.Application.IngestFxRates;
+using InvestmentLab.MarketData.FxRates.Infrastructure;
+using InvestmentLab.MarketData.FxRates.Infrastructure.Nbp;
 using InvestmentLab.MarketData.Instruments.Api;
 using InvestmentLab.MarketData.Instruments.Application;
 using InvestmentLab.MarketData.Instruments.Application.AssignProviderSymbol;
@@ -50,6 +56,14 @@ public sealed class MarketDataModule : IModule
         services.AddScoped<CorrectQuoteHandler>();
         services.AddScheduledJob<NightlyQuotesJob>(NightlyQuotesJob.Schedule);
         AddYFinance(builder);
+
+        services.AddScoped<FxRateStore>();
+        services.AddScoped<IFxRateStore>(provider => provider.GetRequiredService<FxRateStore>());
+        services.AddScoped<IFxRates>(provider => provider.GetRequiredService<FxRateStore>());
+        services.AddScoped<IngestFxRatesHandler>();
+        services.AddScheduledJob<DailyFxRatesJob>(DailyFxRatesJob.Schedule);
+        services.AddHttpClient<NbpFxRateProvider>(http => http.BaseAddress = new Uri(NbpFxRateProvider.BaseAddress));
+        services.AddScoped<IFxRateProvider>(provider => provider.GetRequiredService<NbpFxRateProvider>());
     }
 
     private static void AddYFinance(IHostApplicationBuilder builder)
@@ -74,5 +88,6 @@ public sealed class MarketDataModule : IModule
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>
         endpoints.MapGroup("/api/market-data")
             .MapInstruments()
-            .MapQuotes();
+            .MapQuotes()
+            .MapFxRates();
 }
