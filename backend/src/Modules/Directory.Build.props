@@ -1,0 +1,23 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <IsContractsProject>$(MSBuildProjectName.EndsWith('.Contracts'))</IsContractsProject>
+    <!-- InvestmentLab.Portfolio.Contracts -> Portfolio -->
+    <ModuleName>$(MSBuildProjectName.Replace('InvestmentLab.', '').Replace('.Contracts', ''))</ModuleName>
+  </PropertyGroup>
+
+  <!-- Contracts are the published language of a module: primitives only, no references. -->
+
+  <!-- Module implementation: ASP.NET Core, building blocks, own contracts, visible to own tests. -->
+  <ItemGroup Condition="'$(IsContractsProject)' != 'true'">
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)../BuildingBlocks/InvestmentLab.BuildingBlocks/InvestmentLab.BuildingBlocks.csproj" />
+    <ProjectReference Include="$(MSBuildProjectDirectory)/../InvestmentLab.$(ModuleName).Contracts/InvestmentLab.$(ModuleName).Contracts.csproj" />
+    <InternalsVisibleTo Include="InvestmentLab.$(ModuleName).Tests" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(IsContractsProject)' != 'true'">
+    <Using Include="InvestmentLab.SharedKernel" />
+  </ItemGroup>
+</Project>

@@ -38,3 +38,13 @@ dist/
 
 # Generated reports and local outputs
 reports/
+
+# .NET build output (obj/ holds machine-specific absolute paths from restore)
+bin/
+obj/
+*.user
+TestResults/
+
+# Node / Angular
+node_modules/
+.angular/

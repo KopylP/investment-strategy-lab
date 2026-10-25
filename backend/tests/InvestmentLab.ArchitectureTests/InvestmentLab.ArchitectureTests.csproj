@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="TngTech.ArchUnitNET" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The API host references every module, so all module and contracts assemblies land in the output. -->
+    <ProjectReference Include="../../src/Hosts/InvestmentLab.Api/InvestmentLab.Api.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,49 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/BuildingBlocks/">
+    <Project Path="src/BuildingBlocks/InvestmentLab.BuildingBlocks/InvestmentLab.BuildingBlocks.csproj" />
+    <Project Path="src/BuildingBlocks/InvestmentLab.SharedKernel/InvestmentLab.SharedKernel.csproj" />
+  </Folder>
+  <Folder Name="/src/Hosts/">
+    <Project Path="src/Hosts/InvestmentLab.Api/InvestmentLab.Api.csproj" />
+    <Project Path="src/Hosts/InvestmentLab.AppHost/InvestmentLab.AppHost.csproj" />
+    <Project Path="src/Hosts/InvestmentLab.ServiceDefaults/InvestmentLab.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Identity/">
+    <Project Path="src/Modules/Identity/InvestmentLab.Identity.Contracts/InvestmentLab.Identity.Contracts.csproj" />
+    <Project Path="src/Modules/Identity/InvestmentLab.Identity/InvestmentLab.Identity.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/MarketData/">
+    <Project Path="src/Modules/MarketData/InvestmentLab.MarketData.Contracts/InvestmentLab.MarketData.Contracts.csproj" />
+    <Project Path="src/Modules/MarketData/InvestmentLab.MarketData/InvestmentLab.MarketData.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Performance/">
+    <Project Path="src/Modules/Performance/InvestmentLab.Performance.Contracts/InvestmentLab.Performance.Contracts.csproj" />
+    <Project Path="src/Modules/Performance/InvestmentLab.Performance/InvestmentLab.Performance.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Portfolio/">
+    <Project Path="src/Modules/Portfolio/InvestmentLab.Portfolio.Contracts/InvestmentLab.Portfolio.Contracts.csproj" />
+    <Project Path="src/Modules/Portfolio/InvestmentLab.Portfolio/InvestmentLab.Portfolio.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Rebalancing/">
+    <Project Path="src/Modules/Rebalancing/InvestmentLab.Rebalancing.Contracts/InvestmentLab.Rebalancing.Contracts.csproj" />
+    <Project Path="src/Modules/Rebalancing/InvestmentLab.Rebalancing/InvestmentLab.Rebalancing.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Strategies/">
+    <Project Path="src/Modules/Strategies/InvestmentLab.Strategies.Contracts/InvestmentLab.Strategies.Contracts.csproj" />
+    <Project Path="src/Modules/Strategies/InvestmentLab.Strategies/InvestmentLab.Strategies.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Taxation/">
+    <Project Path="src/Modules/Taxation/InvestmentLab.Taxation.Contracts/InvestmentLab.Taxation.Contracts.csproj" />
+    <Project Path="src/Modules/Taxation/InvestmentLab.Taxation/InvestmentLab.Taxation.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/InvestmentLab.ArchitectureTests/InvestmentLab.ArchitectureTests.csproj" />
+    <Project Path="tests/InvestmentLab.IntegrationTests/InvestmentLab.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/BuildingBlocks/">
+    <Project Path="tests/BuildingBlocks/InvestmentLab.BuildingBlocks.Tests/InvestmentLab.BuildingBlocks.Tests.csproj" />
+    <Project Path="tests/BuildingBlocks/InvestmentLab.SharedKernel.Tests/InvestmentLab.SharedKernel.Tests.csproj" />
+  </Folder>
+</Solution>
