@@ -33,7 +33,7 @@ if (!ephemeral)
     builder.AddJavaScriptApp("frontend", "../../../../frontend", "start")
         .WithReference(api)
         .WaitFor(api)
-        .WithHttpEndpoint(env: "PORT")
+        .WithHttpEndpoint(port: 4200, env: "PORT")
         .WithExternalHttpEndpoints();
 }
 

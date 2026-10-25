@@ -43,3 +43,6 @@ __screenshots__/
 .DS_Store
 Thumbs.db
 /.vscode
+/test-results
+/playwright-report
+/e2e/screenshots
