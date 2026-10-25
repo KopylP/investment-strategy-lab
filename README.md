@@ -6,7 +6,7 @@
 | Папка | Що |
 |---|---|
 | [`backend/`](backend/) | .NET 10 модулярний моноліт (`InvestmentLab.slnx`) + Aspire AppHost. |
-| [`strategy-engine/`](strategy-engine/README.md) | Python `finance_decisions`: сканер ETF momentum, ризик-монітор, бектест. Звідси ж працює legacy-флоу GitHub Actions. |
+| [`strategy-engine/`](strategy-engine/README.md) | Python `finance_decisions`: сканер ETF momentum, ризик-монітор, бектест. |
 | `frontend/` | Angular (етап 6). |
 
 ## Що потрібно

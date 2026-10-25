@@ -301,16 +301,8 @@ The next weekly risk monitor will use the pushed positions file.
 
 ## GitHub Actions
 
-Workflows are in `.github/workflows`:
-
-- `CI` runs tests on push, pull request, and manual dispatch.
-- `Weekly Risk Monitor` runs every Sunday at 17:00 UTC.
-- `Monthly ETF Scanner` runs on the first Sunday of each month at 18:00 UTC.
-- `Strategy Backtest` runs only when started manually (inputs: years, contribution).
-
-All strategy workflows can also be started manually with the **Run workflow**
-button. They upload the latest JSON, HTML, and text report as GitHub Actions
-artifacts with 90-day retention.
+The workflows were removed on 2026-10-25: the .NET service now generates the monthly
+report and the weekly risk review. Run the CLI commands below locally when needed.
 
 ### First GitHub Setup
 

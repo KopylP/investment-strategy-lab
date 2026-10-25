@@ -670,12 +670,7 @@ investment-strategy-lab/
 │   │   └── adr/                    # ADR-0001-modular-monolith.md, ...
 │   └── domain/
 │       └── glossary.md
-├── .github/workflows/
-│   ├── backend.yml
-│   ├── frontend.yml
-│   ├── strategy-engine.yml
-│   └── (legacy) monthly_scanner.yml, weekly_risk_monitor.yml — до кінця паралельного запуску
-└── README.md
+└── README.md                       # GitHub Actions прибрано 2026-10-25: legacy-флоу замінив сервіс, тести — локально
 ```
 
 ### 10.2 Backend
@@ -1535,7 +1530,7 @@ strategy-engine/
 | 6. Frontend v1 | ✅ виконано |
 | 7. Taxation | ✅ виконано |
 | 8. Performance + Dashboard | ✅ виконано |
-| 9. Паралельний запуск | ⏳ потребує 1–2 місяців реального використання — див. «Етап 9: як запустити» |
+| 9. Паралельний запуск | ⏭ GitHub Actions прибрано 2026-10-25 — сервіс єдине джерело плану |
 | 10. Імпорт виписки Revolut | ✅ виконано |
 
 ### Що дав етап 2 (MarketData)
@@ -1651,7 +1646,9 @@ strategy-engine/
 
 ### Етап 9: як запустити паралельний прогін
 
-Етап вимагає часу, а не коду: 1–2 місяці сервіс і GitHub Actions рахують план паралельно.
+> **2026-10-25:** GitHub Actions (legacy-флоу `monthly_scanner` / `weekly_risk_monitor` / `backtest` і CI) прибрано на прохання власника — сервіс уже єдине джерело плану. Порівняння з Python-флоу за потреби — локальним запуском `strategy-engine` (`uv run python -m …`, див. його README). Тести — локально: `dotnet test`, `npm run build`, `uv run pytest`.
+
+Етап вимагав часу, а не коду: 1–2 місяці сервіс і GitHub Actions мали рахувати план паралельно.
 1. Запуск: `dotnet run --project backend/src/Hosts/InvestmentLab.AppHost` (Postgres у Docker з постійним томом, Python-рушій, API, фронтенд на `http://localhost:4200`).
 2. Один раз: зареєструватися → «Як у Python-флоу: EU 70% / US 30%» → імпорт `positions.json` у кожен під-портфель → у плані внесок 227.
 3. Першої неділі місяця порівнювати рапорт сервісу з issue/HTML від `monthly_scanner.yml`, щонеділі ризик-рев'ю з `weekly_risk_monitor.yml`; розбіжності записувати в `docs/architecture/parallel-run.md` (дата, що різниться, причина).
