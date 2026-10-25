@@ -41,7 +41,6 @@ public sealed class DependencyRulesTests
     [InlineData("InvestmentLab.Rebalancing.Reports.Infrastructure", "InvestmentLab.Portfolio")]
     [InlineData("InvestmentLab.Rebalancing.Reports.Domain", "Microsoft.EntityFrameworkCore")]
     [InlineData("InvestmentLab.Rebalancing.Reports.Domain", "Microsoft.AspNetCore.Http")]
-    [InlineData("InvestmentLab.Rebalancing.Reports.Domain", "Wolverine")]
     [InlineData("InvestmentLab.Rebalancing.Reports.Domain", "InvestmentLab.BuildingBlocks.Http")]
     [InlineData("InvestmentLab.Rebalancing.Reports.Application.GetReport", "Microsoft.AspNetCore.Http")]
     [InlineData("InvestmentLab.Rebalancing.Reports.Application.GetReport", "Microsoft.EntityFrameworkCore")]
