@@ -1,5 +1,6 @@
 <app-page-header title="Журнал операцій" subtitle="Позиції й кеш похідні з цих записів; записи не змінюються — помилку виправляє сторно">
   @if (store.account()) {
+    <p-button label="Імпорт з Revolut" icon="pi pi-file-import" severity="secondary" [outlined]="true" routerLink="/transactions/import" />
     <p-button label="Рух коштів" icon="pi pi-money-bill" severity="secondary" [outlined]="true" (onClick)="cashVisible.set(true)" />
     <p-button label="Угода" icon="pi pi-plus" (onClick)="tradeVisible.set(true)" />
   }

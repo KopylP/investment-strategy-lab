@@ -48,6 +48,7 @@ public sealed class MarketDataModule : IModule
         services.AddScoped<AssignProviderSymbolHandler>();
         services.AddScoped<GetInstrumentsHandler>();
         services.AddScoped<IInstrumentCatalog, InstrumentCatalog>();
+        services.AddScoped<IInstrumentRegistry, InstrumentRegistry>();
         services.AddScoped<IModuleDataSeeder, InstrumentSeeder>();
 
         services.AddScoped<IQuoteStore, QuoteStore>();

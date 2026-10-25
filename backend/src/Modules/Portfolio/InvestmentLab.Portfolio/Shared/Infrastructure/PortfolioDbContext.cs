@@ -15,6 +15,7 @@ public sealed class PortfolioDbContext(DbContextOptions<PortfolioDbContext> opti
     public DbSet<InvestmentAccount> Accounts => Set<InvestmentAccount>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<HoldingRow> HoldingRows => Set<HoldingRow>();
+    public DbSet<StatementImport> StatementImports => Set<StatementImport>();
 
     protected override string Schema => SchemaName;
 
@@ -26,6 +27,7 @@ public sealed class PortfolioDbContext(DbContextOptions<PortfolioDbContext> opti
         modelBuilder.ApplyConfiguration(new SubPortfolioConfiguration());
         modelBuilder.ApplyConfiguration(new TransactionConfiguration(this));
         modelBuilder.ApplyConfiguration(new HoldingRowConfiguration(this));
+        modelBuilder.ApplyConfiguration(new StatementImportConfiguration(this));
     }
 }
 

@@ -21,6 +21,8 @@ using InvestmentLab.Portfolio.Transactions.Api;
 using InvestmentLab.Portfolio.Transactions.Application;
 using InvestmentLab.Portfolio.Transactions.Application.GetTransactions;
 using InvestmentLab.Portfolio.Transactions.Application.ImportPositions;
+using InvestmentLab.Portfolio.Transactions.Application.ImportStatement;
+using InvestmentLab.Portfolio.Transactions.Domain;
 using InvestmentLab.Portfolio.Transactions.Application.Integration;
 using InvestmentLab.Portfolio.Transactions.Application.RecordCashMovement;
 using InvestmentLab.Portfolio.Transactions.Application.RecordInternalTransfer;
@@ -64,6 +66,9 @@ public sealed class PortfolioModule : IModule
         services.AddScoped<ReverseTransactionHandler>();
         services.AddScoped<GetTransactionsHandler>();
         services.AddScoped<IJournalQueries, JournalQueries>();
+        services.AddScoped<IStatementParser, RevolutStatementParser>();
+        services.AddScoped<IStatementImportRepository, StatementImportRepository>();
+        services.AddScoped<StatementImportService>();
         services.AddScoped<ImportPositionsHandler>();
         services.AddIntegrationEventHandler<RecordTradeV1, PortfolioCommandHandlers>();
         services.AddIntegrationEventHandler<RecordContributionV1, PortfolioCommandHandlers>();
@@ -80,5 +85,6 @@ public sealed class PortfolioModule : IModule
             .MapAccounts()
             .MapTransactions()
             .MapImport()
+            .MapStatementImports()
             .MapHoldings();
 }
