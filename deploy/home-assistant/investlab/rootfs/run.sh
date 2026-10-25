@@ -21,6 +21,8 @@ if [ ! -s "$PGDATA/PG_VERSION" ]; then
 fi
 DB_PASSWORD="$(cat /data/db-password)"
 mkdir -p /var/run/postgresql && chown postgres:postgres /var/run/postgresql
+# /data belongs to root: the server log is created for postgres, which cannot create files there itself.
+touch /data/postgres.log && chown postgres:postgres /data/postgres.log
 # Small footprint for a Raspberry Pi: the database is a few MB of quotes and a ledger.
 su postgres -c "$PGBIN/pg_ctl -D $PGDATA -w -l /data/postgres.log -o \"-c listen_addresses=127.0.0.1 -c shared_buffers=48MB -c max_connections=30 -c work_mem=4MB\" start"
 export PGPASSWORD="$DB_PASSWORD"
