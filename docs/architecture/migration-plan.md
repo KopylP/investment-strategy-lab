@@ -1,6 +1,6 @@
 # План міграції: Investment Strategy Lab → .NET модулярний моноліт
 
-> Статус: **ЗАТВЕРДЖЕНО, У РОБОТІ** (відкриті питання §15 прийнято за пропозиціями; прискорення й відмова від Wolverine — D12, D13)
+> Статус: **ЗАТВЕРДЖЕНО, У РОБОТІ** (відкриті питання §15 прийнято за пропозиціями; прискорення й відмова від Wolverine — D12, D13; рапорт на вимогу — D14)
 > Дата: 2026-10-25
 > Обсяг: повна специфікація архітектури (DDD), структура репозиторію, етапи міграції.
 
@@ -59,6 +59,7 @@
 | D11 | Без пошти й Telegram на старті; сповіщення тільки в застосунку. |
 | D12 | **Прискорення розробки** (2026-10-25): великі кроки з комітом на під-етап; тести тільки для важливого — доменні правила й розрахунки (ребалансер, податки, TWR, розклади, якість котирувань), golden-тести, ArchitectureTests і **один наскрізний integration-тест на етап**. Без тестів для DTO, endpoint-ів, конфігурації й «проводки». Валідація вводу — у фабриках VO (`TryOf`), без FluentValidation. |
 | D13 | **Без Wolverine** (2026-10-25): для одного процесу він заважкий (кодогенерація під час старту, Roslyn/MSBuild у залежностях, неявні транзакції). Замість нього — власний outbox/inbox (~300 рядків) + планувальник на `BackgroundService`; команди й запити — прямий виклик handler-а через DI. ADR-0003 оновлено. |
+| D14 | **Рапорт на вимогу** (2026-10-25): щомісячний рапорт можна згенерувати будь-коли кнопкою «Згенерувати рапорт» (`POST /api/rebalancing/accounts/{accountId}/reports`) — той самий use case `GenerateMonthlyReport`, що й у задачі за розкладом; рапорт зберігає `Trigger` (`Scheduled` / `OnDemand`). Правила: (1) рапорт рахується на останніх котируваннях у БД; якщо вони застарілі, у `Warnings` є попередження, а в UI — кнопка «Оновити котирування» (`POST /api/market-data/quotes/ingest`) перед генерацією; (2) якщо за період уже є відкритий рапорт, новий його **замінює** (`SupersedeBy`): уже зроблені відмітки лишаються в ledger-і, новий план рахується від фактичних позицій і кешу, тому не повторює виконане; (3) внесок, уже відмічений як виконаний у цьому періоді, повторно не планується; сума внеску на вимогу може бути змінена користувачем; (4) задача за розкладом **не чіпає** рахунок, для якого вже є відкритий рапорт за поточний період (рапорт користувача не перезаписується автоматично). |
 
 ---
 
@@ -314,6 +315,7 @@ flowchart LR
 | `AccountId`, `OwnerId` | |
 | `Period` | `YearMonth` |
 | `Kind` | `ReportKind`: `Monthly`, `Recalculation`, `RiskReview` (щотижневий) |
+| `Trigger` | `ReportTrigger`: `Scheduled`, `OnDemand` (D14) |
 | `Status` | `ReportStatus`: `New`, `InProgress`, `Closed`, `Superseded` |
 | `MarketAsOf` | дата котирувань, на яких рахувався план |
 | `ContributionPlan` | VO: сума, розподіл по під-портфелях, обрана політика |
@@ -364,7 +366,7 @@ flowchart LR
 
 **Порти:** `IPlanReviewer` (→ `NullPlanReviewer`).
 
-**Use cases:** `GenerateMonthlyReport` (задача за розкладом і кнопка), `GenerateRiskReview` (щотижнева задача), `RecalculateReport`, `MarkActionExecuted`, `RecordPartialFill`, `SkipAction`, `UndoActionMark`, `CloseReport`, `RecordOffPlanTrade` (проксі в Portfolio з прив'язкою до відкритого рапорту), queries: `GetReport`, `ListReports`, `GetOpenActionsCount`.
+**Use cases:** `GenerateMonthlyReport` (задача за розкладом і кнопка «на вимогу» — правила D14), `GenerateRiskReview` (щотижнева задача), `RecalculateReport`, `MarkActionExecuted`, `RecordPartialFill`, `SkipAction`, `UndoActionMark`, `CloseReport`, `RecordOffPlanTrade` (проксі в Portfolio з прив'язкою до відкритого рапорту), queries: `GetReport`, `ListReports`, `GetOpenActionsCount`.
 
 **Contracts:** IE `ReportGenerated` (з плановими діями — для тіньового портфеля), `ReportClosed`, `ReportSuperseded`.
 
