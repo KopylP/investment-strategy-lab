@@ -1,6 +1,7 @@
 import { computed, inject, Injectable, resource, signal } from '@angular/core';
 import { ApiClient } from '../../../core/api/api-client';
 import { AccountContext } from '../../../core/context/account-context';
+import { DisplayCurrency } from '../../../core/context/display-currency';
 import { InstrumentCatalog } from '../../../core/context/instrument-catalog';
 import { AccountHoldings, LatestPrice, Lot, toIsoDate } from '../../../shared/models/api';
 
@@ -11,7 +12,11 @@ export interface PositionVm {
   quantity: number;
   averageCost: number;
   costBasis: number;
+  /** Latest close in the account currency (converted from the trading currency). */
   price: number | null;
+  /** The close as quoted, in the instrument's trading currency. */
+  quotedPrice: number | null;
+  quoteCurrency: string;
   priceDate: string | null;
   isStale: boolean;
   value: number;
@@ -39,6 +44,7 @@ export class HoldingsStore {
   private readonly api = inject(ApiClient);
   private readonly accounts = inject(AccountContext);
   private readonly instruments = inject(InstrumentCatalog);
+  private readonly fx = inject(DisplayCurrency);
 
   readonly asOf = signal<Date | null>(null);
 
@@ -65,7 +71,9 @@ export class HoldingsStore {
     const sleeves = data.holdings.subPortfolios.map((sub) => {
       const positions = sub.positions.map((position) => {
         const quote = data.prices.get(position.instrumentId);
-        const price = quote?.close ?? null;
+        // Quotes are in the trading currency (AVGO in USD); positions are kept in the account currency.
+        const rate = quote ? this.fx.rate(quote.currency, data.holdings.currency) : null;
+        const price = quote && rate !== null ? quote.close * rate : null;
         const value = price !== null ? position.quantity * price : position.costBasis;
         return {
           instrumentId: position.instrumentId,
@@ -75,6 +83,8 @@ export class HoldingsStore {
           averageCost: position.averageCost,
           costBasis: position.costBasis,
           price,
+          quotedPrice: quote?.close ?? null,
+          quoteCurrency: quote?.currency ?? data.holdings.currency,
           priceDate: quote?.date ?? null,
           isStale: quote?.isStale ?? true,
           value,

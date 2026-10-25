@@ -9,17 +9,17 @@
   </div>
   <div class="card mb-0">
     <div class="text-muted-color text-sm mb-2">Внесок</div>
-    <div class="text-2xl font-semibold">{{ report().contribution.total | money: report().summary.currency }}</div>
+    <div class="text-2xl font-semibold"><app-money [amount]="report().contribution.total" [currency]="report().summary.currency" /></div>
     <div class="text-sm text-muted-color mt-2">{{ report().contribution.splitLabel }}</div>
   </div>
   <div class="card mb-0">
     <div class="text-muted-color text-sm mb-2">Купівлі</div>
-    <div class="text-2xl font-semibold">{{ report().totals.buys | money: report().summary.currency }}</div>
+    <div class="text-2xl font-semibold"><app-money [amount]="report().totals.buys" [currency]="report().summary.currency" /></div>
     <div class="text-sm text-muted-color mt-2">разом із парковкою</div>
   </div>
   <div class="card mb-0">
     <div class="text-muted-color text-sm mb-2">Продажі</div>
-    <div class="text-2xl font-semibold">{{ report().totals.sells | money: report().summary.currency }}</div>
+    <div class="text-2xl font-semibold"><app-money [amount]="report().totals.sells" [currency]="report().summary.currency" /></div>
     @if (report().taxEstimate?.isTaxed && report().totals.sells > 0) {
       <div class="text-sm mt-2" style="color: var(--p-finance-tax)">≈ податок {{ report().taxEstimate!.taxPln | money: 'PLN' : 0 }}</div>
     } @else {

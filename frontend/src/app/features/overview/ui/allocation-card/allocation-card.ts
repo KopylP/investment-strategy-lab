@@ -2,14 +2,15 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { UIChart } from 'primeng/chart';
 import { TableModule } from 'primeng/table';
 import { ChartTheme, withAlpha } from '../../../../shared/charts/chart-theme';
-import { MoneyPipe, PercentPipe, SignedPercentPipe } from '../../../../shared/pipes/format-pipes';
+import { PercentPipe, SignedPercentPipe } from '../../../../shared/pipes/format-pipes';
+import { Money } from '../../../../shared/ui/money/money';
 import { SignedValue } from '../../../../shared/ui/signed-value';
 import { DashboardDto } from '../../data-access/dashboard-api';
 
 /** Sub-portfolios: actual share against target, value and return. */
 @Component({
   selector: 'app-allocation-card',
-  imports: [UIChart, TableModule, MoneyPipe, PercentPipe, SignedPercentPipe, SignedValue],
+  imports: [UIChart, TableModule, Money, PercentPipe, SignedPercentPipe, SignedValue],
   templateUrl: './allocation-card.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

@@ -60,8 +60,8 @@
       <div class="grid gap-4 grid-cols-2 xl:grid-cols-5 mb-4">
         <div class="card mb-0 col-span-2 xl:col-span-1">
           <div class="text-muted-color text-sm mb-2">Вартість · {{ d.asOf | date }}</div>
-          <div class="text-3xl font-semibold">{{ d.value | money: d.currency : 0 }}</div>
-          <div class="text-sm mt-2" [appSignedValue]="d.gain">{{ d.gain >= 0 ? '+' : '' }}{{ d.gain | money: d.currency : 0 }} до внесків</div>
+          <div class="text-3xl font-semibold"><app-money [amount]="d.value" [currency]="d.currency" [digits]="0" /></div>
+          <div class="text-sm mt-2" [appSignedValue]="d.gain">{{ d.gain >= 0 ? '+' : '' }}<app-money [amount]="d.gain" [currency]="d.currency" [digits]="0" [inline]="true" /> до внесків</div>
         </div>
         <div class="card mb-0">
           <div class="text-muted-color text-sm mb-2">Дохідність (TWR)</div>
@@ -90,7 +90,7 @@
           <h2 class="text-lg font-semibold m-0">Вартість у часі</h2>
           @if (store.planGap(); as gap) {
             <span class="text-sm">
-              План vs факт: <span [appSignedValue]="gap">{{ gap >= 0 ? '+' : '' }}{{ gap | money: d.currency : 0 }}</span>
+              План vs факт: <span [appSignedValue]="gap">{{ gap >= 0 ? '+' : '' }}<app-money [amount]="gap" [currency]="d.currency" [digits]="0" [inline]="true" /></span>
               <span class="text-muted-color"> — різниця з «якби все за планом»</span>
             </span>
           }

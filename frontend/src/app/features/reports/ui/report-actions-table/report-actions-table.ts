@@ -5,13 +5,14 @@ import { SplitButton } from 'primeng/splitbutton';
 import { TableModule } from 'primeng/table';
 import { Tooltip } from 'primeng/tooltip';
 import { Message } from 'primeng/message';
-import { DatePipe, MoneyPipe, QuantityPipe } from '../../../../shared/pipes/format-pipes';
+import { DatePipe, QuantityPipe } from '../../../../shared/pipes/format-pipes';
 import { ReportActionVm } from '../../models/report-vm';
 import { ActionStatusTag } from '../action-status-tag/action-status-tag';
 
+import { Money } from '../../../../shared/ui/money/money';
 @Component({
   selector: 'app-report-actions-table',
-  imports: [TableModule, Button, SplitButton, Tooltip, Message, ActionStatusTag, MoneyPipe, QuantityPipe, DatePipe],
+  imports: [Money, TableModule, Button, SplitButton, Tooltip, Message, ActionStatusTag, QuantityPipe, DatePipe],
   templateUrl: './report-actions-table.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

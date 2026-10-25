@@ -4,19 +4,23 @@ import { Router, RouterLink } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { Menu } from 'primeng/menu';
 import { Select } from 'primeng/select';
+import { SelectButton } from 'primeng/selectbutton';
+import { Tooltip } from 'primeng/tooltip';
 import { AuthStore } from '../auth/auth-store';
 import { AccountContext } from '../context/account-context';
+import { DisplayCurrency } from '../context/display-currency';
 import { LayoutService } from './layout-service';
 
 @Component({
   selector: 'app-topbar',
-  imports: [RouterLink, FormsModule, Select, Menu],
+  imports: [RouterLink, FormsModule, Select, SelectButton, Tooltip, Menu],
   templateUrl: './app-topbar.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppTopbar {
   protected readonly layout = inject(LayoutService);
   protected readonly accounts = inject(AccountContext);
+  protected readonly display = inject(DisplayCurrency);
   private readonly auth = inject(AuthStore);
   private readonly router = inject(Router);
 
@@ -30,6 +34,10 @@ export class AppTopbar {
 
   protected toggleDarkMode(): void {
     this.layout.layoutConfig.update((config) => ({ ...config, darkTheme: !config.darkTheme }));
+  }
+
+  protected chooseCurrency(code: string): void {
+    void this.display.choose(code);
   }
 
   protected chooseAccount(accountId: string): void {
