@@ -61,5 +61,16 @@ public sealed record RecordContributionV1(
     DateOnly OccurredOn,
     IReadOnlyList<AmountAllocationDto>? Allocations);
 
+/// <summary>Command: move units (or cash) between sub-portfolios of the account, e.g. a netted report action. Idempotent by <paramref name="SourceReference"/>.</summary>
+public sealed record RecordInternalTransferV1(
+    Guid AccountId,
+    string SourceReference,
+    Guid FromSubPortfolioId,
+    Guid ToSubPortfolioId,
+    DateOnly OccurredOn,
+    Guid? InstrumentId,
+    decimal? Quantity,
+    decimal? Amount);
+
 /// <summary>Command: undo the entry recorded from <paramref name="SourceReference"/> (e.g. an unmarked fill).</summary>
 public sealed record ReverseTransactionV1(Guid AccountId, string SourceReference, string Reason);
