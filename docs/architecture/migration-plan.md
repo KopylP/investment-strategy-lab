@@ -249,7 +249,7 @@ flowchart LR
 **Use cases (Application, по фічах):**
 `RegisterInstrument`, `AssignProviderSymbol`, `IngestDailyQuotes` (нічна задача), `CorrectQuote`, `IngestFxRates`, `GetQuoteHistory` (query), `GetLatestPrices` (query), `GetFxRate` (query).
 
-**Contracts:** `IMarketDataQueries` (`GetQuoteHistory`, `GetLatestPrices`, `GetFxRate`, `GetInstruments`); IE: `DailyQuotesIngested(date, instrumentIds)`, `QuoteCorrected(instrumentId, date)`.
+**Contracts:** `IInstrumentCatalog` (`GetInstruments`), `IQuoteHistory` (`GetQuoteHistory`, `GetLatestPrices`), `IFxRates` (`GetFxRate`); IE: `DailyQuotesIngested(date, instrumentIds)`, `QuoteCorrected(instrumentId, date)`.
 
 ### 6.4 Strategies
 
@@ -299,7 +299,7 @@ flowchart LR
 
 **Contracts:**
 - команди: `RecordTrade`, `RecordContribution` (з `SourceReference`, ідемпотентність за ним);
-- queries: `IPortfolioQueries` (`GetAccountSetup`, `GetHoldings(asOf)`, `GetSubPortfolioSnapshot`);
+- queries: `IAccountSetupQueries` (`GetAccountSetup`), `IHoldingsQueries` (`GetHoldings(asOf)`, `GetSubPortfolioSnapshot`);
 - IE: `TransactionRecorded`, `TransactionReversed`, `TransactionRejected(sourceReference, reason)`, `TargetSharesChanged`, `SubPortfolioAdded`.
 
 ### 6.6 Rebalancing
@@ -599,11 +599,11 @@ public sealed class RebalancingReport : AggregateRoot<ReportId>
 Кожен use case — окрема папка: команда/запит, handler, валідатор, endpoint, DTO.
 
 ```csharp
-// Application/Reports/RecordPartialFill/RecordPartialFillCommand.cs
+// Reports/Application/RecordPartialFill/RecordPartialFillCommand.cs
 public sealed record RecordPartialFillCommand(
     Guid ReportId, Guid ActionId, decimal Quantity, decimal Price, decimal Fee, DateOnly ExecutedOn, string? Note);
 
-// Application/Reports/RecordPartialFill/RecordPartialFillHandler.cs
+// Reports/Application/RecordPartialFill/RecordPartialFillHandler.cs
 public sealed class RecordPartialFillHandler(IReportRepository reports, TimeProvider clock)
 {
     public async Task<Result> Handle(RecordPartialFillCommand command, CancellationToken ct)
@@ -619,7 +619,7 @@ public sealed class RecordPartialFillHandler(IReportRepository reports, TimeProv
     }
 }
 
-// Api/Reports/RecordPartialFillEndpoint.cs
+// Reports/Api/RecordPartialFillEndpoint.cs
 internal static class RecordPartialFillEndpoint
 {
     public static RouteGroupBuilder MapRecordPartialFill(this RouteGroupBuilder group)
@@ -643,7 +643,7 @@ internal static class RecordPartialFillEndpoint
 2. `Contracts` містить тільки: integration events, команди між модулями, інтерфейси запитів (`I<Module>Queries`) і DTO з примітивами (`Guid`, `decimal`, `string`, `DateOnly`). Ніяких доменних типів.
 3. **Своя схема БД** (`marketdata`, `strategies`, `portfolio`, `rebalancing`, `taxation`, `performance`, `identity`) і свій `DbContext`. Без FK між схемами, без JOIN-ів між модулями.
 4. Асинхронна взаємодія — через **outbox/inbox Wolverine**. Сьогодні транспорт in-process (через Postgres-backed durable queues), завтра — RabbitMQ без зміни handler-ів.
-5. Синхронні запити між модулями (`IMarketDataQueries`, `IPortfolioQueries`, `ITaxEstimator`, `IStrategyEvaluation`) — інтерфейси в `Contracts`. Сьогодні — in-process реалізація, завтра — HTTP/gRPC-клієнт з тим самим інтерфейсом.
+5. Синхронні запити між модулями (`IQuoteHistory`, `IFxRates`, `IAccountSetupQueries`, `IHoldingsQueries`, `ITaxEstimator`, `IStrategyEvaluation`) — інтерфейси в `Contracts`. Сьогодні — in-process реалізація, завтра — HTTP/gRPC-клієнт з тим самим інтерфейсом.
 6. Модулі, яким потрібні чужі дані для своїх розрахунків (Taxation, Performance), **тримають копії** з подій, а не питають щоразу.
 7. Кожен модуль реєструється через `IModule` (`AddServices`, `MapEndpoints`, `ConfigureMessaging`). Host нічого не знає про внутрішність модулів.
 8. Ідемпотентні споживачі (ключ — `SourceReference`/id повідомлення).
@@ -742,56 +742,61 @@ backend/
         └── Fixtures/
 ```
 
-### 10.3 Всередині модуля: feature-first + Domain / Application / Infrastructure
+### 10.3 Всередині модуля: спершу фіча, всередині — Domain / Application / Infrastructure / Api
 
-Приклад — **Rebalancing** (найбагатший модуль). Шари — це **папки в одному проєкті**; напрямок залежностей
-`Api → Application → Domain`, `Infrastructure → Application/Domain` перевіряється ArchUnitNET.
+**Правило:** верхній рівень проєкту модуля — **бізнес-фічі** (можливості контексту). Кожна фіча має свої шари-папки.
+Шар створюється тільки тоді, коли він фічі потрібен (наприклад, у `Planning` немає `Infrastructure`, у `Dashboard` немає `Domain`).
+
+Namespace повторює шлях: `InvestmentLab.Rebalancing.Reports.Domain`, `InvestmentLab.Rebalancing.Planning.Application.GenerateMonthlyReport`.
+
+**Залежності (перевіряє ArchUnitNET):**
+
+| Звідки | Куди можна |
+|---|---|
+| `<Feature>/Domain` | `SharedKernel`, `Domain` інших фіч **цього ж** модуля (без циклів) |
+| `<Feature>/Application` | свій `Domain`, `Domain` інших фіч модуля, `Contracts` інших модулів, `BuildingBlocks` |
+| `<Feature>/Infrastructure` | свої `Application` і `Domain`, `Shared/Infrastructure` модуля, `BuildingBlocks` |
+| `<Feature>/Api` | свій `Application` |
+| Між фічами модуля | **тільки через `Domain`**. `Application`/`Infrastructure`/`Api` іншої фічі — заборонено |
+| Між модулями | **тільки `<Module>.Contracts`** |
+
+`Shared/` — не фіча, а спільне для модуля: `DbContext`, міграції, реєстрація модуля. Бізнес-логіки в ньому немає.
+
+#### Приклад — Rebalancing
+
+Три фічі: **Planning** (як скласти план → створює рапорт), **Reports** (рапорт як робочий документ),
+**Reviews** (рецензія плану, зараз — заглушка). Напрямок: `Planning → Reports.Domain → Reviews.Domain`.
 
 ```text
 InvestmentLab.Rebalancing/
-├── Domain/
-│   ├── Reports/                                   # агрегат RebalancingReport
-│   │   ├── RebalancingReport.cs                   # AR
-│   │   ├── ReportAction.cs                        # E
-│   │   ├── ReportSection.cs                       # E
+├── Reports/                                        # Рапорт як робочий документ
+│   ├── Domain/
+│   │   ├── RebalancingReport.cs                    # AR
+│   │   ├── ReportAction.cs                         # E
+│   │   ├── ReportSection.cs                        # E
 │   │   ├── ReportId.cs
 │   │   ├── ReportActionId.cs
 │   │   ├── ReportStatus.cs
 │   │   ├── ReportKind.cs
 │   │   ├── ActionKind.cs
 │   │   ├── ActionStatus.cs
-│   │   ├── Fill.cs                                # VO
-│   │   ├── SkipReason.cs                          # VO
-│   │   ├── ContributionPlan.cs                    # VO
+│   │   ├── Fill.cs                                 # VO
+│   │   ├── SkipReason.cs                           # VO
+│   │   ├── ContributionPlan.cs                     # VO
+│   │   ├── ReportWarning.cs                        # VO
 │   │   ├── ReportErrors.cs
-│   │   ├── Events/
-│   │   │   ├── ReportGenerated.cs
-│   │   │   ├── ActionFillRecorded.cs
-│   │   │   ├── ActionSkipped.cs
-│   │   │   ├── ActionMarkUndone.cs
-│   │   │   └── ReportClosed.cs
-│   │   └── IReportRepository.cs
-│   ├── Planning/                                  # доменні сервіси планування (чисті функції)
-│   │   ├── ContributionAllocator.cs
-│   │   ├── SubPortfolioRebalancer.cs
-│   │   ├── GuardrailEnforcer.cs
-│   │   ├── OrderNetting.cs
-│   │   ├── RebalancingPolicy.cs                   # VO
-│   │   ├── PlannedOrder.cs                        # VO
-│   │   └── SubPortfolioPosition.cs                # VO (вхід ребалансера)
-│   └── Reviews/
-│       ├── PlanReview.cs                          # VO (зарезервовано)
-│       └── ReviewFinding.cs                       # VO
-│
-├── Application/
-│   ├── Reports/
-│   │   ├── GenerateMonthlyReport/
-│   │   │   ├── GenerateMonthlyReportCommand.cs
-│   │   │   ├── GenerateMonthlyReportHandler.cs
-│   │   │   └── MonthlyReportSchedule.cs           # recurring message
-│   │   ├── GenerateRiskReview/
-│   │   ├── RecalculateReport/
+│   │   ├── IReportRepository.cs
+│   │   └── Events/
+│   │       ├── ReportGenerated.cs
+│   │       ├── ActionFillRecorded.cs
+│   │       ├── ActionSkipped.cs
+│   │       ├── ActionMarkUndone.cs
+│   │       └── ReportClosed.cs
+│   ├── Application/
 │   │   ├── MarkActionExecuted/
+│   │   │   ├── MarkActionExecutedCommand.cs
+│   │   │   ├── MarkActionExecutedHandler.cs
+│   │   │   └── MarkActionExecutedValidator.cs
 │   │   ├── RecordPartialFill/
 │   │   ├── SkipAction/
 │   │   ├── UndoActionMark/
@@ -801,147 +806,216 @@ InvestmentLab.Rebalancing/
 │   │   │   ├── GetReportQuery.cs
 │   │   │   ├── GetReportHandler.cs
 │   │   │   └── ReportDetailsDto.cs
-│   │   └── ListReports/
-│   ├── Integration/                               # реакції на чужі події
-│   │   ├── OnTransactionRecorded.cs
-│   │   └── OnTransactionRejected.cs
-│   └── Ports/
-│       └── IPlanReviewer.cs
-│
-├── Infrastructure/
-│   ├── Persistence/
-│   │   ├── RebalancingDbContext.cs                # схема "rebalancing"
-│   │   ├── Configurations/
-│   │   │   ├── RebalancingReportConfiguration.cs
-│   │   │   └── ReportActionConfiguration.cs
-│   │   ├── Repositories/
-│   │   │   └── ReportRepository.cs
-│   │   └── Migrations/
-│   ├── Reviewers/
-│   │   └── NullPlanReviewer.cs
-│   └── Contracts/                                 # реалізація публічних інтерфейсів модуля (якщо є)
-│
-├── Api/
-│   └── Reports/
-│       ├── ReportsEndpoints.cs                    # MapGroup("/api/reports")
+│   │   ├── ListReports/
+│   │   ├── GetOpenActionsCount/
+│   │   └── Integration/                            # реакції на події інших модулів
+│   │       ├── WhenTransactionRecorded.cs
+│   │       ├── WhenTransactionRejected.cs
+│   │       └── WhenActionFillRecorded_RecordTrade.cs   # DE → команда RecordTrade у Portfolio
+│   ├── Infrastructure/
+│   │   ├── RebalancingReportConfiguration.cs       # EF mapping
+│   │   ├── ReportActionConfiguration.cs
+│   │   └── ReportRepository.cs
+│   └── Api/
+│       ├── ReportsEndpoints.cs                     # MapGroup("/api/reports")
 │       ├── MarkActionExecutedEndpoint.cs
 │       ├── RecordPartialFillEndpoint.cs
-│       └── ...
+│       ├── SkipActionEndpoint.cs
+│       ├── UndoActionMarkEndpoint.cs
+│       ├── CloseReportEndpoint.cs
+│       ├── GetReportEndpoint.cs
+│       └── ListReportsEndpoint.cs
 │
-└── RebalancingModule.cs                           # IModule: DI, endpoints, messaging
+├── Planning/                                       # Як скласти план
+│   ├── Domain/
+│   │   ├── ContributionAllocator.cs                # DS
+│   │   ├── SubPortfolioRebalancer.cs               # DS (порт правил plan.py)
+│   │   ├── GuardrailEnforcer.cs                    # DS
+│   │   ├── OrderNetting.cs                         # DS
+│   │   ├── ReportComposer.cs                       # DS: план → RebalancingReport.Generate(...)
+│   │   ├── RebalancingPolicy.cs                    # VO
+│   │   ├── PlannedOrder.cs                         # VO
+│   │   └── SubPortfolioPosition.cs                 # VO
+│   ├── Application/
+│   │   ├── GenerateMonthlyReport/
+│   │   │   ├── GenerateMonthlyReportCommand.cs
+│   │   │   ├── GenerateMonthlyReportHandler.cs
+│   │   │   └── MonthlyReportSchedule.cs            # recurring message
+│   │   ├── GenerateRiskReview/
+│   │   │   ├── GenerateRiskReviewCommand.cs
+│   │   │   ├── GenerateRiskReviewHandler.cs
+│   │   │   └── WeeklyRiskReviewSchedule.cs
+│   │   └── RecalculateReport/
+│   └── Api/
+│       ├── GenerateReportEndpoint.cs               # «Згенерувати зараз»
+│       └── RecalculateReportEndpoint.cs
+│
+├── Reviews/                                        # Рецензія плану (зараз — заглушка)
+│   ├── Domain/
+│   │   ├── PlanReview.cs                           # VO
+│   │   ├── ReviewFinding.cs                        # VO
+│   │   ├── ReviewVerdict.cs
+│   │   └── FindingSeverity.cs
+│   ├── Application/
+│   │   └── IPlanReviewer.cs                        # порт
+│   └── Infrastructure/
+│       └── NullPlanReviewer.cs
+│
+├── Shared/                                         # спільне для модуля, без бізнес-логіки
+│   └── Infrastructure/
+│       ├── RebalancingDbContext.cs                 # схема "rebalancing"; підхоплює конфігурації всіх фіч
+│       └── Migrations/
+│
+└── RebalancingModule.cs                            # IModule: DI, endpoints, messaging, schedules
 ```
 
 ```text
 InvestmentLab.Rebalancing.Contracts/
-├── Events/
-│   ├── ReportGeneratedV1.cs
-│   ├── ReportClosedV1.cs
-│   └── ReportSupersededV1.cs
-└── RebalancingContractsMarker.cs
+├── ReportGeneratedV1.cs
+├── ReportClosedV1.cs
+└── ReportSupersededV1.cs
 ```
 
-### 10.4 Решта модулів (тільки Domain-папки агрегатів і ключові фічі)
+### 10.4 Решта модулів
+
+Скорочено: фіча → шари → ключові файли. Повний набір файлів кожної фічі — за зразком `Rebalancing/Reports`.
 
 ```text
+InvestmentLab.Identity/
+├── Users/              Domain/ (через ASP.NET Identity) · Application/ Register/, Login/, Logout/, GetCurrentUser/ · Infrastructure/ · Api/
+├── Profiles/           Domain/ UserProfile (AR), DisplayCurrency · Application/ UpdateProfile/, GetProfile/ · Infrastructure/ · Api/
+├── Shared/Infrastructure/  IdentityDbContext, Migrations/
+└── IdentityModule.cs
+
 InvestmentLab.MarketData/
-├── Domain/
-│   ├── Instruments/        Instrument, InstrumentId, InstrumentKind, ProviderSymbol, QuoteProvider, InstrumentGroup
-│   ├── Quotes/             DailyQuote, QualityFlags, QuoteCorrection, QuoteQualityInspector
-│   └── FxRates/            FxRate, FxRateSource, FxRateResolver, BusinessCalendar
-├── Application/
-│   ├── Instruments/        RegisterInstrument/, AssignProviderSymbol/, GetInstruments/
-│   ├── Quotes/             IngestDailyQuotes/, CorrectQuote/, GetQuoteHistory/, GetLatestPrices/
-│   ├── FxRates/            IngestFxRates/, GetFxRate/
-│   └── Ports/              IQuoteProvider.cs, IFxRateProvider.cs
-├── Infrastructure/
-│   ├── Persistence/
-│   ├── Providers/
-│   │   ├── YFinance/       YFinanceQuoteProvider.cs (HTTP → strategy-engine /prices), мапінг (ACL)
-│   │   └── Nbp/            NbpFxRateProvider.cs, NbpTableADto.cs (ACL)
-│   └── Contracts/          MarketDataQueries.cs (реалізація IMarketDataQueries)
-├── Api/
+├── Instruments/
+│   ├── Domain/         Instrument (AR), InstrumentId, InstrumentKind, InstrumentGroup, ProviderSymbol, QuoteProvider, InstrumentErrors
+│   ├── Application/    RegisterInstrument/, AssignProviderSymbol/, GetInstruments/
+│   ├── Infrastructure/ InstrumentConfiguration, InstrumentRepository, InstrumentCatalog (реалізує IInstrumentCatalog з Contracts)
+│   └── Api/
+├── Quotes/
+│   ├── Domain/         DailyQuote, QualityFlags, QuoteCorrection (AR), QuoteQualityInspector (DS)
+│   ├── Application/    IngestDailyQuotes/ (+ NightlyQuotesSchedule), CorrectQuote/, GetQuoteHistory/, GetLatestPrices/, IQuoteProvider (порт)
+│   ├── Infrastructure/ DailyQuoteConfiguration, QuoteStore, QuoteHistory (реалізує IQuoteHistory), YFinance/ (ACL → strategy-engine /prices)
+│   └── Api/
+├── FxRates/
+│   ├── Domain/         FxRate, FxRateSource, BusinessCalendar, FxRateResolver (DS)
+│   ├── Application/    IngestFxRates/, GetFxRate/, IFxRateProvider (порт)
+│   ├── Infrastructure/ FxRateConfiguration, FxRates (реалізує IFxRates), Nbp/ (ACL), Ecb/ (ACL)
+│   └── Api/
+├── Shared/Infrastructure/  MarketDataDbContext, Migrations/
 └── MarketDataModule.cs
 
 InvestmentLab.Strategies/
-├── Domain/
-│   ├── Strategies/         Strategy, StrategyId, StrategyVersion, StrategyParameters, StrategyTypeCode,
-│   │                       RebalanceFrequency, StrategyErrors, Events/
-│   ├── Decisions/          StrategyDecision, TargetWeight, InvestFraction, RiskSignal, Rationale, InstrumentScore
-│   ├── State/              StrategyState
-│   └── Catalog/            StrategyTypeDescriptor
-├── Application/
-│   ├── Strategies/         CreateStrategy/, ReconfigureStrategy/, ArchiveStrategy/, GetStrategy/
-│   ├── Evaluation/         EvaluateStrategy/, EvaluateRisk/, StrategyEvaluationContext.cs
-│   ├── Catalog/            GetStrategyCatalog/, SyncCatalogFromEngines/
-│   └── Ports/              IStrategyEngine.cs, IStrategyEngineResolver.cs
-├── Infrastructure/
-│   ├── Persistence/
-│   ├── Engines/
-│   │   └── Python/         PythonStrategyEngine.cs, DecideRequestDto.cs, DecideResponseDto.cs (ACL)
-│   └── Contracts/          StrategyEvaluation.cs
-├── Api/
+├── Definitions/                                    # налаштовані стратегії та їх версії
+│   ├── Domain/         Strategy (AR), StrategyId, StrategyVersion (E), StrategyParameters, StrategyTypeCode, RebalanceFrequency, Universe, Events/, StrategyErrors
+│   ├── Application/    CreateStrategy/, ReconfigureStrategy/, ArchiveStrategy/, GetStrategy/, ListStrategies/
+│   ├── Infrastructure/ StrategyConfiguration, StrategyRepository
+│   └── Api/
+├── Catalog/                                        # типи стратегій (алгоритми)
+│   ├── Domain/         StrategyTypeDescriptor, ParameterSchema
+│   ├── Application/    GetStrategyCatalog/, SyncCatalogFromEngines/
+│   ├── Infrastructure/
+│   └── Api/
+├── Evaluation/                                     # виклик рушіїв
+│   ├── Domain/         StrategyDecision, TargetWeight, InvestFraction, RiskSignal, Rationale, InstrumentScore, StrategyState (AR), StrategyEvaluationContext
+│   ├── Application/    EvaluateStrategy/, EvaluateRisk/, IStrategyEngine (порт), IStrategyEngineResolver
+│   ├── Infrastructure/ StrategyStateConfiguration, StrategyEvaluation (реалізує IStrategyEvaluation), Engines/Python/ (ACL: DTO, клієнт)
+│   └── (без Api — викликається тільки з інших модулів)
+├── Shared/Infrastructure/  StrategiesDbContext, Migrations/
 └── StrategiesModule.cs
 
 InvestmentLab.Portfolio/
-├── Domain/
-│   ├── Accounts/           InvestmentAccount, AccountId, SubPortfolio, SubPortfolioId, TargetShare,
-│   │                       ContributionPolicy, Guardrails, StrategyRef, Broker, AccountErrors, Events/
-│   ├── Transactions/       Transaction, TransactionId, TransactionKind, TradeDetails, CashMovementDetails,
-│   │                       InternalTransferDetails, Allocation, TransactionSource, TradeSide,
-│   │                       TransactionRecorder, TradeAllocator, Events/
-│   ├── Holdings/           Holdings (read model), HoldingLine, VirtualLot
-│   └── Reconciliations/    Reconciliation, ReconciliationId, BrokerStatement, Difference, Events/
-├── Application/
-│   ├── Accounts/           OpenAccount/, AddSubPortfolio/, ChangeTargetShares/, AssignStrategy/,
-│   │                       ChangeContributionPolicy/, GetAccount/
-│   ├── Transactions/       RecordTrade/, RecordContribution/, RecordCashMovement/, RecordInternalTransfer/,
-│   │                       ReverseTransaction/, GetTransactions/
-│   ├── Holdings/           GetHoldings/
-│   ├── Reconciliations/    StartReconciliation/, ResolveDifference/
-│   └── Import/             ImportPositionsJson/        # одноразова міграція з positions.json
-├── Infrastructure/
-├── Api/
+├── Accounts/
+│   ├── Domain/         InvestmentAccount (AR), AccountId, SubPortfolio (E), SubPortfolioId, TargetShare, ContributionPolicy, Guardrails, StrategyRef, Broker, Events/, AccountErrors
+│   ├── Application/    OpenAccount/, AddSubPortfolio/, ChangeTargetShares/, AssignStrategy/, ChangeContributionPolicy/, RetireSubPortfolio/, GetAccount/
+│   ├── Infrastructure/ InvestmentAccountConfiguration, AccountRepository, AccountSetupQueries (реалізує IAccountSetupQueries)
+│   └── Api/
+├── Transactions/
+│   ├── Domain/         Transaction (AR), TransactionId, TransactionKind, TradeDetails, CashMovementDetails, InternalTransferDetails, Allocation, TradeSide, TransactionSource, TransactionRecorder (DS), TradeAllocator (DS), Events/, TransactionErrors
+│   ├── Application/    RecordTrade/, RecordContribution/, RecordCashMovement/, RecordInternalTransfer/, ReverseTransaction/, GetTransactions/
+│   ├── Infrastructure/ TransactionConfiguration, TransactionRepository
+│   └── Api/
+├── Holdings/                                       # read model, оновлюється в транзакції запису операції
+│   ├── Domain/         Holdings, HoldingLine, VirtualLot, HoldingsProjector (DS)
+│   ├── Application/    GetHoldings/
+│   ├── Infrastructure/ HoldingsConfiguration, HoldingsQueries (реалізує IHoldingsQueries)
+│   └── Api/
+├── Reconciliations/
+│   ├── Domain/         Reconciliation (AR), ReconciliationId, BrokerStatement, Difference, DifferenceResolution, Events/
+│   ├── Application/    StartReconciliation/, ResolveDifference/, GetReconciliation/
+│   ├── Infrastructure/
+│   └── Api/
+├── Import/                                         # одноразова міграція з positions.json
+│   ├── Application/    ImportPositionsJson/
+│   └── Api/
+├── Shared/Infrastructure/  PortfolioDbContext, Migrations/
 └── PortfolioModule.cs
 
 InvestmentLab.Taxation/
-├── Domain/
-│   ├── Assessments/        TaxAssessment, TaxLot, Realization, TaxYear, TaxYearSummary, TaxEstimate, Events/
-│   ├── Ledger/             TaxLedger, TaxableTransaction
-│   ├── Carryforwards/      LossCarryforward
-│   └── Policies/
-│       ├── ITaxPolicy.cs, TaxPolicyCode.cs, TaxPolicyRegistry.cs
-│       ├── LotMatching/    ILotMatcher, FifoLotMatcher
-│       ├── FxConversion/   IFxConversionRule, NbpPreviousBusinessDayRule
-│       ├── Rates/          ITaxRateSchedule, FlatRate
-│       ├── Netting/        INettingRule, AnnualNetting
-│       ├── Carryforward/   ILossCarryforwardRule, PolishFiveYearRule
-│       ├── Rounding/       IRoundingRule, WholeZlotyRounding
-│       ├── BelkaTaxPolicy.cs
-│       └── NoTaxPolicy.cs
-├── Application/
-│   ├── Assessments/        RecomputeAssessment/, GetAssessment/
-│   ├── Estimation/         EstimateSales/
-│   ├── Carryforwards/      RecordLossCarryforward/
-│   └── Integration/        OnTransactionRecorded.cs, OnTransactionReversed.cs
-├── Infrastructure/
-├── Api/
+├── Policies/                                       # правила оподаткування (чистий домен)
+│   └── Domain/         ITaxPolicy, TaxPolicyCode, TaxPolicyRegistry, BelkaTaxPolicy, NoTaxPolicy,
+│                       LotMatching/ (ILotMatcher, FifoLotMatcher), FxConversion/ (IFxConversionRule, NbpPreviousBusinessDayRule),
+│                       Rates/ (ITaxRateSchedule, FlatRate), Netting/ (INettingRule, AnnualNetting),
+│                       Carryforward/ (ILossCarryforwardRule, PolishFiveYearRule), Rounding/ (IRoundingRule, WholeZlotyRounding)
+├── Ledger/                                         # власна копія оподатковуваних операцій
+│   ├── Domain/         TaxLedger (AR), TaxableTransaction
+│   ├── Application/    Integration/ WhenTransactionRecorded.cs, WhenTransactionReversed.cs
+│   └── Infrastructure/
+├── Assessments/
+│   ├── Domain/         TaxAssessment (AR), TaxLot (E), Realization (E), TaxYear, TaxYearSummary, Events/
+│   ├── Application/    RecomputeAssessment/, GetAssessment/
+│   ├── Infrastructure/
+│   └── Api/
+├── Estimation/
+│   ├── Domain/         TaxEstimate, ProposedSale
+│   ├── Application/    EstimateSales/
+│   └── Infrastructure/ TaxEstimator (реалізує ITaxEstimator з Contracts)
+├── Carryforwards/
+│   ├── Domain/         LossCarryforward (AR)
+│   ├── Application/    RecordLossCarryforward/, ListLossCarryforwards/
+│   ├── Infrastructure/
+│   └── Api/
+├── Shared/Infrastructure/  TaxationDbContext, Migrations/
 └── TaxationModule.cs
 
 InvestmentLab.Performance/
-├── Domain/
-│   ├── Valuation/          ValuationSnapshot, PositionSnapshot, ValuationCalculator
-│   ├── Returns/            TwrCalculator, XirrCalculator, DrawdownCalculator, ReturnSeries
-│   ├── Shadow/             ShadowPortfolio, ShadowScenario, ShadowPortfolioSimulator
-│   ├── Ledger/             PerformanceLedger
-│   └── Recalculation/      RecalculationMarker
-├── Application/
-│   ├── Dashboard/          GetDashboard/, GetValueSeries/, GetPerformance/, GetAllocation/, GetPlanVsActual/
-│   ├── Snapshots/          RebuildSnapshots/, NightlyValuation/
-│   └── Integration/        OnTransactionRecorded.cs, OnReportGenerated.cs, OnDailyQuotesIngested.cs, ...
-├── Infrastructure/
-├── Api/
+├── Ledger/                                         # власна копія операцій, часток, маркер перерахунку
+│   ├── Domain/         PerformanceLedger (AR), RecalculationMarker (AR)
+│   ├── Application/    Integration/ WhenTransactionRecorded.cs, WhenTransactionReversed.cs, WhenTargetSharesChanged.cs, WhenQuoteCorrected.cs
+│   └── Infrastructure/
+├── Valuation/
+│   ├── Domain/         ValuationSnapshot, PositionSnapshot, ValuationCalculator (DS)
+│   ├── Application/    RebuildSnapshots/, NightlyValuation/ (+ schedule), Integration/ WhenDailyQuotesIngested.cs
+│   └── Infrastructure/
+├── Returns/
+│   └── Domain/         TwrCalculator, XirrCalculator, DrawdownCalculator, ReturnSeries
+├── Shadow/
+│   ├── Domain/         ShadowPortfolio (AR), ShadowScenario, ShadowPortfolioSimulator (DS)
+│   ├── Application/    Integration/ WhenReportGenerated.cs
+│   └── Infrastructure/
+├── Dashboard/                                      # тільки читання
+│   ├── Application/    GetDashboard/, GetValueSeries/, GetPerformance/, GetAllocation/, GetPlanVsActual/
+│   └── Api/
+├── Shared/Infrastructure/  PerformanceDbContext, Migrations/
 └── PerformanceModule.cs
 ```
+
+**Contracts розбиті за фічами-постачальниками**, щоб кожна фіча реалізовувала свій інтерфейс
+(і при виділенні в сервіс було видно, що саме експортується):
+
+```text
+InvestmentLab.MarketData.Contracts/   IInstrumentCatalog, IQuoteHistory, IFxRates, DailyQuotesIngestedV1, QuoteCorrectedV1
+InvestmentLab.Strategies.Contracts/   IStrategyEvaluation, StrategyDecisionDto, StrategyReconfiguredV1
+InvestmentLab.Portfolio.Contracts/    IAccountSetupQueries, IHoldingsQueries, RecordTrade, RecordContribution,
+                                      TransactionRecordedV1, TransactionReversedV1, TransactionRejectedV1, TargetSharesChangedV1
+InvestmentLab.Rebalancing.Contracts/  ReportGeneratedV1, ReportClosedV1, ReportSupersededV1
+InvestmentLab.Taxation.Contracts/     ITaxEstimator, TaxAssessmentUpdatedV1
+InvestmentLab.Identity.Contracts/     ICurrentUser, UserRegisteredV1
+```
+
+**Тести повторюють ту саму структуру:** `InvestmentLab.Rebalancing.Tests/Reports/Domain/RebalancingReportTests.cs`,
+`.../Planning/Domain/SubPortfolioRebalancerTests.cs`, `.../Reports/Application/RecordPartialFillHandlerTests.cs`.
 
 ---
 
@@ -1436,7 +1510,7 @@ strategy-engine/
 | Application | handler-и з in-memory репозиторіями | xUnit |
 | Integration | модуль + Postgres + outbox, наскрізні сценарії §7 | Testcontainers, Alba/WebApplicationFactory |
 | Contract | .NET ↔ Python `/decide`, `/prices` | JSON Schema snapshot з обох боків |
-| Architecture | модулі бачать тільки `Contracts`; `Domain` не залежить від `Application/Infrastructure/Api`; без EF у `Domain` | ArchUnitNET |
+| Architecture | модулі бачать тільки `Contracts`; між фічами модуля — тільки через `Domain`; у фічі `Domain` не залежить від `Application/Infrastructure/Api`; без EF у `Domain` (правила §10.3) | ArchUnitNET |
 | Frontend | stores (логіка), UI-компоненти з view-моделями, межі фіч (`eslint-plugin-boundaries`) | Vitest, Angular Testing Library |
 | E2E | вхід → рапорт → відмітка → дашборд оновився | Playwright |
 
@@ -1467,7 +1541,7 @@ strategy-engine/
 | # | Питання | Пропозиція |
 |---|---|---|
 | Q1 | Назва кореневого namespace/solution | `InvestmentLab` |
-| Q2 | Шар `Api/` (endpoints) — окрема 4-та папка в модулі чи endpoint поруч із handler-ом у `Application/<Feature>/` | Окрема папка `Api/`, щоб `Application` не залежав від ASP.NET |
+| Q2 | Шар `Api/` (endpoints) — окрема 4-та папка у фічі чи endpoint поруч із handler-ом | Окрема папка `<Feature>/Api/`, щоб `Application` не залежав від ASP.NET |
 | Q3 | Окремий проєкт `<Module>.Contracts` на модуль | Так — це головна гарантія виділення в мікросервіс |
 | Q4 | Messaging/фонові задачі: Wolverine (outbox + scheduled) чи власні абстракції + Hangfire | Wolverine |
 | Q5 | Монорепо (backend + frontend + strategy-engine в одному репо) | Так, з окремими CI-workflow |
