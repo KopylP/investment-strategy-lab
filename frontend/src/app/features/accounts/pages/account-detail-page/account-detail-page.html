@@ -79,6 +79,11 @@
     </div>
   }
 
+  <div class="card">
+    <h2 class="text-lg font-semibold mt-0 mb-4">Розклад рапортів</h2>
+    <app-report-schedule [accountId]="account.id" />
+  </div>
+
   <p-dialog header="Новий під-портфель" [modal]="true" [visible]="addVisible()" (visibleChange)="addVisible.set($event)" [style]="{ width: '34rem' }" [breakpoints]="{ '640px': '95vw' }">
     <div class="flex flex-col gap-4">
       <div class="flex flex-col gap-2">

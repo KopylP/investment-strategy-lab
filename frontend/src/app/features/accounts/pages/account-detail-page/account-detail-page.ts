@@ -26,9 +26,10 @@ interface SubPortfolioDraft {
   cashInstrumentId: string | null;
 }
 
+import { ReportScheduleCard } from '../../ui/report-schedule/report-schedule';
 @Component({
   selector: 'app-account-detail-page',
-  imports: [
+  imports: [ReportScheduleCard, 
     FormsModule, RouterLink, Button, DatePicker, Dialog, InputNumber, InputText, Message, Select, Skeleton, TableModule, Tag,
     PageHeader, PlanSettingsForm, PercentPipe,
   ],

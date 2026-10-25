@@ -18,13 +18,12 @@ public static class ReportSchedules
     public static DateOnly Today(TimeProvider clock) =>
         DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(clock.GetUtcNow(), TimeZoneInfo.FindSystemTimeZoneById(TimeZone)).DateTime);
 
-    /// <summary>The first Sunday of a month.</summary>
-    public static bool IsMonthlyReportDay(DateOnly day) => day.DayOfWeek == DayOfWeek.Sunday && day.Day <= 7;
 }
 
 /// <summary>
-/// Runs daily; on the first Sunday of the month generates the report for every account that wants it, except accounts
-/// that already have an open report for the month (D14: a user's report is never overwritten automatically).
+/// Runs daily; generates the rebalancing report for every account whose strategies want one today (weekly, the first
+/// Sunday of the month or of the quarter — their "reporting" parameters), except accounts that already have an open
+/// report for the month (D14: a user's report is never overwritten automatically).
 /// </summary>
 public sealed class MonthlyReportJob(
     PlanningInputs inputs, IPlanSettingsRepository settings, IReportRepository reports, GenerateMonthlyReportHandler generate,
@@ -33,12 +32,14 @@ public sealed class MonthlyReportJob(
     public async Task RunAsync(CancellationToken cancellationToken)
     {
         var today = ReportSchedules.Today(clock);
-        if (!ReportSchedules.IsMonthlyReportDay(today))
+        if (today.DayOfWeek != DayOfWeek.Sunday)
             return;
 
         foreach (var account in await inputs.AccountsAsync(cancellationToken))
         {
             if (await settings.FindAsync(account.Id, cancellationToken) is { GenerateOnSchedule: false })
+                continue;
+            if (!(await inputs.CadencesAsync(account, cancellationToken)).Any(each => each.Cadence.IsRebalanceDay(today)))
                 continue;
             var period = YearMonth.Containing(today);
             if ((await reports.ForPeriodAsync(account.Id, period, cancellationToken)).Any(report => report.IsOpen && report.Kind != ReportKind.RiskReview))
@@ -51,7 +52,7 @@ public sealed class MonthlyReportJob(
     }
 }
 
-/// <summary>Every Sunday: the weekly risk review of every account that wants it.</summary>
+/// <summary>Every Sunday: the risk review of every account with a strategy that asks for it.</summary>
 public sealed class WeeklyRiskReviewJob(
     PlanningInputs inputs, IPlanSettingsRepository settings, GenerateRiskReviewHandler generate, TimeProvider clock, ILogger<WeeklyRiskReviewJob> logger)
     : IScheduledJob
@@ -65,6 +66,8 @@ public sealed class WeeklyRiskReviewJob(
         foreach (var account in await inputs.AccountsAsync(cancellationToken))
         {
             if (await settings.FindAsync(account.Id, cancellationToken) is { GenerateOnSchedule: false })
+                continue;
+            if (!(await inputs.CadencesAsync(account, cancellationToken)).Any(each => each.Cadence.IsRiskReviewDay(today)))
                 continue;
 
             var result = await generate.Handle(new GenerateRiskReviewCommand(account.Id, today), ReportTrigger.Scheduled, cancellationToken);

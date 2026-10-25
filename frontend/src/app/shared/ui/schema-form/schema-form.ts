@@ -20,6 +20,8 @@ interface SchemaNode {
   $ref?: string;
   allOf?: SchemaNode[];
   enum?: (string | number)[];
+  /** Human labels of enum values, published by the engine next to the enum. */
+  'x-enumLabels'?: Record<string, string>;
   minimum?: number;
   maximum?: number;
   exclusiveMinimum?: number;
@@ -103,7 +105,7 @@ function toField(property: SchemaNode, path: string[], key: string): FieldVm {
     kind,
     min: property.minimum ?? property.exclusiveMinimum,
     max: property.maximum ?? property.exclusiveMaximum,
-    options: property.enum?.map((value) => ({ label: String(value), value })),
+    options: property.enum?.map((value) => ({ label: property['x-enumLabels']?.[String(value)] ?? String(value), value })),
   };
 }
 
