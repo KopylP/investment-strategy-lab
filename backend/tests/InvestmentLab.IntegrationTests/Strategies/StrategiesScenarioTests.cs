@@ -34,7 +34,8 @@ public sealed class StrategiesScenarioTests : IClassFixture<StrategiesApiFactory
         var catalog = await client.GetFromJsonAsync<List<StrategyTypeDto>>("/api/strategies/catalog", ct);
         catalog!.ShouldContain(type => type.Code == "etf-momentum");
 
-        var defaults = await PostAsync<List<StrategyDto>>(client, "/api/strategies/defaults", new { }, ct);
+        // Made at registration; asking again creates nothing.
+        var defaults = await client.DefaultStrategiesAsync<StrategyDto>(strategy => strategy.Name, ct);
         defaults.Select(strategy => strategy.Name).ShouldBe(["EU ETF momentum", "US ETF momentum"]);
         var eu = defaults[0];
         eu.Version.Universe.Count.ShouldBe(17);
@@ -82,7 +83,7 @@ public sealed class StrategiesScenarioTests : IClassFixture<StrategiesApiFactory
     {
         var ct = TestContext.Current.CancellationToken;
         var client = await _factory.CreateSignedInClientAsync(ct);
-        var eu = (await PostAsync<List<StrategyDto>>(client, "/api/strategies/defaults", new { }, ct))[0];
+        var eu = (await client.DefaultStrategiesAsync<StrategyDto>(strategy => strategy.Name, ct))[0];
         var setup = eu.Version;
 
         var invalid = await client.PutAsJsonAsync($"/api/strategies/{eu.Id}", new

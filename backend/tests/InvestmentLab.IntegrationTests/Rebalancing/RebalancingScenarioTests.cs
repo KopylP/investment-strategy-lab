@@ -31,7 +31,7 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
         var client = await _factory.CreateSignedInClientAsync(ct);
         (await client.PostAsync("/api/market-data/quotes/ingest", null, ct)).EnsureSuccessStatusCode();
         (await client.PostAsync("/api/market-data/fx-rates/ingest", null, ct)).EnsureSuccessStatusCode();
-        var strategies = await PostAsync<List<StrategyDto>>(client, "/api/strategies/defaults", new { }, ct);
+        var strategies = await client.DefaultStrategiesAsync<StrategyDto>(strategy => strategy.Name, ct);
 
         var account = await PostAsync<AccountSetupDto>(client, "/api/portfolio/accounts", new
         {

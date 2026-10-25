@@ -23,6 +23,25 @@ internal static class SignedInClient
         }
     }
 
+    extension(HttpClient client)
+    {
+        /// <summary>
+        /// The standard strategies every new user gets at registration; they arrive through the outbox, so this waits
+        /// for them. <paramref name="name"/> reads a strategy's name: the result is ordered by it ("EU…", "US…").
+        /// </summary>
+        public async Task<List<T>> DefaultStrategiesAsync<T>(Func<T, string> name, CancellationToken cancellationToken)
+        {
+            for (var attempt = 0; attempt < 60; attempt++)
+            {
+                var strategies = await client.GetFromJsonAsync<List<T>>("/api/strategies", cancellationToken) ?? [];
+                if (strategies.Count >= 2)
+                    return [.. strategies.OrderBy(name, StringComparer.Ordinal)];
+                await Task.Delay(250, cancellationToken);
+            }
+            throw new TimeoutException("Default strategies were not created after registration.");
+        }
+    }
+
     private static async Task EnsureSuccessAsync(HttpResponseMessage response)
     {
         if (!response.IsSuccessStatusCode)
