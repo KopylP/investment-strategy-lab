@@ -23,7 +23,18 @@ public sealed record InstrumentDto(
 public interface IInstrumentRegistry
 {
     Task<RegisteredInstrumentDto> RegisterAsync(NewInstrumentDto instrument, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The Yahoo symbol of each ticker as a broker lists it (<c>ASME</c> in EUR → <c>ASME.DE</c>), in order; null when Yahoo
+    /// has none in that currency or cannot be asked.
+    /// </summary>
+    Task<IReadOnlyList<ListedSymbolDto?>> ResolveAsync(IReadOnlyList<BrokerTickerDto> tickers, CancellationToken cancellationToken);
 }
+
+/// <param name="IsYahooSymbol">The ticker already is a Yahoo symbol (typed by the user): only it is checked, in any currency.</param>
+public sealed record BrokerTickerDto(string Ticker, string Currency, bool IsYahooSymbol = false);
+
+public sealed record ListedSymbolDto(string YahooSymbol, string Name);
 
 /// <param name="YahooSymbol">E.g. <c>AAPL</c> or <c>QDVE.DE</c>; quotes are loaded nightly under it.</param>
 /// <param name="Kind">Etf or Stock.</param>

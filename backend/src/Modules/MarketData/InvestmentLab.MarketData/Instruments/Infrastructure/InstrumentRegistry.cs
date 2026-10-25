@@ -6,8 +6,16 @@ using InvestmentLab.MarketData.Instruments.Domain;
 namespace InvestmentLab.MarketData.Instruments.Infrastructure;
 
 /// <summary>Registers an instrument under its Yahoo symbol; an instrument that already owns the symbol is returned as it is.</summary>
-internal sealed class InstrumentRegistry(IInstrumentRepository instruments, RegisterInstrumentHandler register) : IInstrumentRegistry
+internal sealed class InstrumentRegistry(IInstrumentRepository instruments, RegisterInstrumentHandler register, ISymbolLookup lookup) : IInstrumentRegistry
 {
+    public async Task<IReadOnlyList<ListedSymbolDto?>> ResolveAsync(IReadOnlyList<BrokerTickerDto> tickers, CancellationToken cancellationToken)
+    {
+        var matches = await lookup.LookupAsync([.. tickers.Select(ticker => ticker.IsYahooSymbol
+            ? new SymbolQuery([ticker.Ticker.Trim().ToUpperInvariant()], null)
+            : new SymbolQuery(Candidates(ticker.Ticker, ticker.Currency), ticker.Currency))], cancellationToken);
+        return [.. matches.Select(match => match is null ? null : new ListedSymbolDto(match.Symbol, match.Name))];
+    }
+
     public async Task<RegisteredInstrumentDto> RegisterAsync(NewInstrumentDto instrument, CancellationToken cancellationToken)
     {
         var symbol = ProviderSymbol.TryParse($"yfinance:{instrument.YahooSymbol.Trim().ToUpperInvariant()}");
@@ -24,6 +32,11 @@ internal sealed class InstrumentRegistry(IInstrumentRepository instruments, Regi
             "AS" => "Euronext Amsterdam",
             "PA" => "Euronext Paris",
             "MI" => "Borsa Italiana",
+            "MC" => "BME",
+            "BR" => "Euronext Brussels",
+            "F" => "Frankfurt",
+            "SW" => "SIX",
+            "WA" => "GPW",
             var other => other,
         } : "US";
 
@@ -31,5 +44,21 @@ internal sealed class InstrumentRegistry(IInstrumentRepository instruments, Regi
             kind, null, string.IsNullOrWhiteSpace(instrument.Name) ? instrument.YahooSymbol : instrument.Name.Trim(), exchange, instrument.TradingCurrency, null, null,
             [symbol.Value.ToString()]), cancellationToken);
         return result.IsSuccess ? new RegisteredInstrumentDto(result.Value, null) : new RegisteredInstrumentDto(null, result.Error.Message);
+    }
+
+    /// <summary>Yahoo symbols of the exchanges a broker most likely trades the ticker on in that currency, most likely first.</summary>
+    private static IReadOnlyList<string> Candidates(string ticker, string currency)
+    {
+        var symbol = ticker.Trim().ToUpperInvariant();
+        string[] suffixes = currency.ToUpperInvariant() switch
+        {
+            "EUR" => [".DE", ".AS", ".PA", ".MI", ".MC", ".BR", ".F"],
+            "GBP" or "GBX" => [".L"],
+            "CHF" => [".SW"],
+            "PLN" => [".WA"],
+            _ => [""],
+        };
+        // US share classes are written with a dash on Yahoo: BRK.B → BRK-B.
+        return [.. suffixes.Select(suffix => suffix.Length == 0 ? symbol.Replace('.', '-') : symbol + suffix)];
     }
 }

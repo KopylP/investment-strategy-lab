@@ -9,7 +9,8 @@ using Microsoft.Extensions.Logging;
 namespace InvestmentLab.MarketData.Instruments.Infrastructure.Seed;
 
 /// <summary>
-/// Registers the ETFs of the current strategies (strategy.toml, strategy_us.toml), their cash ETFs and ^VIX.
+/// Registers the ETFs of the current strategies (strategy.toml, strategy_us.toml), their cash ETFs, ^VIX and the stocks
+/// of the Revolut statement, so an import maps them straight away.
 /// Instruments already known by their Yahoo symbol are left as they are.
 /// </summary>
 internal sealed class InstrumentSeeder(

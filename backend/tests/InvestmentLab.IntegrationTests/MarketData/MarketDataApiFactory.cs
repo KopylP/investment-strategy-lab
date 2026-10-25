@@ -5,6 +5,7 @@ using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.MarketData.Contracts.Quotes;
 using InvestmentLab.MarketData.FxRates.Application;
 using InvestmentLab.MarketData.FxRates.Domain;
+using InvestmentLab.MarketData.Instruments.Application;
 using InvestmentLab.MarketData.Instruments.Domain;
 using InvestmentLab.MarketData.Quotes.Application;
 using InvestmentLab.MarketData.Quotes.Domain;
@@ -35,6 +36,7 @@ public sealed class MarketDataApiFactory : WebApplicationFactory<api::Program>, 
         {
             services.AddSingleton<IQuoteProvider>(Quotes);
             services.AddSingleton<IFxRateProvider, FakeNbpProvider>();
+            services.AddSingleton<ISymbolLookup, FakeSymbolLookup>();
             services.AddSingleton(this);
             services.AddIntegrationEventHandler<QuoteCorrectedV1, QuoteCorrectedRecorder>();
         });
@@ -107,4 +109,14 @@ public sealed class FakeNbpProvider : IFxRateProvider
 
         return Task.FromResult<IReadOnlyList<FxRate>>(rates);
     }
+}
+
+/// <summary>Yahoo knows only Rheinmetall, and only on Xetra.</summary>
+public sealed class FakeSymbolLookup : ISymbolLookup
+{
+    private static readonly SymbolMatch Rheinmetall = new("RHM.DE", "Rheinmetall AG", "EUR", "EQUITY");
+
+    public Task<IReadOnlyList<SymbolMatch?>> LookupAsync(IReadOnlyList<SymbolQuery> queries, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<SymbolMatch?>>([.. queries.Select(query =>
+            query.Candidates.Contains(Rheinmetall.Symbol) && query.Currency == Rheinmetall.Currency ? Rheinmetall : null)]);
 }

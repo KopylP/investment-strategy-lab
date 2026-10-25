@@ -82,8 +82,19 @@ public sealed class MarketDataModule : IModule
                 resilience.CircuitBreaker.SamplingDuration = TimeSpan.FromMinutes(4);
                 resilience.TotalRequestTimeout.Timeout = TimeSpan.FromMinutes(6);
             });
-#pragma warning restore EXTEXP0001
         builder.Services.AddScoped<IQuoteProvider>(services => services.GetRequiredService<YFinanceQuoteProvider>());
+
+        // A statement's unknown tickers, each tried on a few exchanges: a minute is plenty.
+        builder.Services.AddHttpClient<YFinanceSymbolLookup>(http => http.BaseAddress = new Uri(baseAddress))
+            .RemoveAllResilienceHandlers()
+            .AddStandardResilienceHandler(resilience =>
+            {
+                resilience.AttemptTimeout.Timeout = TimeSpan.FromMinutes(1);
+                resilience.CircuitBreaker.SamplingDuration = TimeSpan.FromMinutes(2);
+                resilience.TotalRequestTimeout.Timeout = TimeSpan.FromMinutes(2);
+            });
+#pragma warning restore EXTEXP0001
+        builder.Services.AddScoped<ISymbolLookup>(services => services.GetRequiredService<YFinanceSymbolLookup>());
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>

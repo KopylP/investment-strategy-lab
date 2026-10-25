@@ -225,3 +225,27 @@ class QuoteSeries(ApiModel):
 class PricesResponse(ApiModel):
     series: list[QuoteSeries]
     missing: list[str]
+
+
+class SymbolQuery(ApiModel):
+    """Yahoo symbols to try in order; the first one that exists (in ``currency``, when given) wins."""
+
+    candidates: list[str] = Field(min_length=1)
+    currency: str | None = None
+
+
+class SymbolLookupRequest(ApiModel):
+    queries: list[SymbolQuery] = Field(min_length=1)
+
+
+class SymbolInfo(ApiModel):
+    symbol: str
+    name: str
+    currency: str
+    quote_type: str
+
+
+class SymbolLookupResponse(ApiModel):
+    """One entry per query, in order; ``null`` when no candidate exists."""
+
+    results: list[SymbolInfo | None]

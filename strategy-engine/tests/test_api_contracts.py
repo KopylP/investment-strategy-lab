@@ -13,6 +13,7 @@ from fastapi.testclient import TestClient
 
 from finance_decisions.api.main import create_app
 from finance_decisions.api.prices import get_quote_downloader
+from finance_decisions.api.symbols import get_symbol_info
 from finance_decisions.models import Position
 from finance_decisions.strategies.etf_momentum.config import RiskSettings, ScannerSettings
 from finance_decisions.strategies.etf_momentum.risk import analyze_portfolio_risk
@@ -267,6 +268,35 @@ def test_prices_returns_close_and_adjusted_close(client: TestClient) -> None:
         "adjustedClose": [600.0, 605.5],
     }
     assert body["missing"] == ["NOPE.DE"]
+
+
+def test_symbol_lookup_takes_the_first_candidate_in_the_currency(client: TestClient) -> None:
+    known = {
+        "ASME.DE": {"name": "ASML Holding N.V.", "currency": "EUR", "quote_type": "EQUITY"},
+        "ASML": {"name": "ASML Holding N.V.", "currency": "USD", "quote_type": "EQUITY"},
+        "AAPL": {"name": "Apple Inc.", "currency": "USD", "quote_type": "EQUITY"},
+    }
+    asked: list[str] = []
+
+    def fake_info(symbol: str) -> dict[str, str] | None:
+        asked.append(symbol)
+        return known.get(symbol)
+
+    app = create_app()
+    app.dependency_overrides[get_symbol_info] = lambda: fake_info
+    response = TestClient(app).post("/v1/symbols/lookup", json={"queries": [
+        {"candidates": ["ASML", "asme.de", "ASME.AS"], "currency": "EUR"},
+        {"candidates": ["AAPL"]},
+        {"candidates": ["NOPE"], "currency": "USD"},
+    ]})
+
+    assert response.status_code == 200, response.text
+    assert response.json()["results"] == [
+        {"symbol": "ASME.DE", "name": "ASML Holding N.V.", "currency": "EUR", "quoteType": "EQUITY"},
+        {"symbol": "AAPL", "name": "Apple Inc.", "currency": "USD", "quoteType": "EQUITY"},
+        None,
+    ]
+    assert "ASME.AS" not in asked
 
 
 def test_published_contract_matches_snapshot(client: TestClient) -> None:
