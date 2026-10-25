@@ -59,14 +59,8 @@ class RiskParameters(_Parameters):
 
 
 class ReportingParameters(_Parameters):
-    """Which reports the strategy needs and how often; the service schedules them (Sunday evening, Europe/Warsaw)."""
+    """Reports besides the rebalance (whose frequency is the strategy's own setting); the service schedules them on Sunday evening."""
 
-    rebalance: Literal["weekly", "monthly", "quarterly"] = Field(
-        "monthly",
-        title="Ребаланс",
-        description="Як часто стратегія переглядає склад портфеля: рапорт із внеском, купівлями й продажами.",
-        json_schema_extra={"x-enumLabels": {"weekly": "Щотижня (неділя)", "monthly": "Щомісяця (перша неділя)", "quarterly": "Щокварталу (перша неділя кварталу)"}},
-    )
     risk_review: Literal["off", "weekly"] = Field(
         "weekly",
         title="Перевірка ризику",

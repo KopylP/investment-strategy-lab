@@ -8,7 +8,7 @@ using InvestmentLab.Strategies.Definitions.Domain;
 namespace InvestmentLab.Strategies.Definitions.Application;
 
 /// <param name="Parameters">Only what differs from the type's defaults; null keeps all defaults.</param>
-/// <param name="RebalanceFrequency">Monthly (default) or Weekly.</param>
+/// <param name="RebalanceFrequency">Monthly (default), Weekly or Quarterly.</param>
 public sealed record StrategySetupInput(
     IReadOnlyList<Guid> Universe,
     Guid BenchmarkInstrumentId,
