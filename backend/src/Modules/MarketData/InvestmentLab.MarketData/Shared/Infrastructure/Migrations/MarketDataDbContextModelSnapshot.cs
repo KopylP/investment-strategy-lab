@@ -122,6 +122,95 @@ namespace InvestmentLab.MarketData.Shared.Infrastructure.Migrations
                     b.ToTable("instruments", "marketdata");
                 });
 
+            modelBuilder.Entity("InvestmentLab.MarketData.Quotes.Domain.DailyQuote", b =>
+                {
+                    b.Property<Guid>("InstrumentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("instrument_id");
+
+                    b.Property<DateOnly>("TradingDate")
+                        .HasColumnType("date")
+                        .HasColumnName("trading_date");
+
+                    b.Property<decimal>("AdjustedClose")
+                        .HasPrecision(20, 8)
+                        .HasColumnType("numeric(20,8)")
+                        .HasColumnName("adjusted_close");
+
+                    b.Property<decimal>("Close")
+                        .HasPrecision(20, 8)
+                        .HasColumnType("numeric(20,8)")
+                        .HasColumnName("close");
+
+                    b.Property<DateTimeOffset>("FetchedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fetched_at");
+
+                    b.Property<int>("QualityFlags")
+                        .HasColumnType("integer")
+                        .HasColumnName("quality_flags");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("source");
+
+                    b.HasKey("InstrumentId", "TradingDate")
+                        .HasName("pk_daily_quotes");
+
+                    b.ToTable("daily_quotes", "marketdata");
+                });
+
+            modelBuilder.Entity("InvestmentLab.MarketData.Quotes.Domain.QuoteCorrection", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("AdjustedClose")
+                        .HasPrecision(20, 8)
+                        .HasColumnType("numeric(20,8)")
+                        .HasColumnName("adjusted_close");
+
+                    b.Property<decimal>("Close")
+                        .HasPrecision(20, 8)
+                        .HasColumnType("numeric(20,8)")
+                        .HasColumnName("close");
+
+                    b.Property<DateTimeOffset>("CorrectedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("corrected_at");
+
+                    b.Property<string>("CorrectedBy")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("corrected_by");
+
+                    b.Property<Guid>("InstrumentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("instrument_id");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<DateOnly>("TradingDate")
+                        .HasColumnType("date")
+                        .HasColumnName("trading_date");
+
+                    b.HasKey("Id")
+                        .HasName("pk_quote_corrections");
+
+                    b.HasIndex("InstrumentId", "TradingDate")
+                        .HasDatabaseName("ix_quote_corrections_instrument_id_trading_date");
+
+                    b.ToTable("quote_corrections", "marketdata");
+                });
+
             modelBuilder.Entity("InvestmentLab.MarketData.Instruments.Domain.Instrument", b =>
                 {
                     b.OwnsMany("InvestmentLab.MarketData.Instruments.Domain.ProviderSymbol", "ProviderSymbols", b1 =>

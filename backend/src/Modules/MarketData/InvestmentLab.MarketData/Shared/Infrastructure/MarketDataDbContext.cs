@@ -1,5 +1,6 @@
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.MarketData.Instruments.Domain;
+using InvestmentLab.MarketData.Quotes.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace InvestmentLab.MarketData.Shared.Infrastructure;
@@ -9,6 +10,8 @@ public sealed class MarketDataDbContext(DbContextOptions<MarketDataDbContext> op
     public const string SchemaName = "marketdata";
 
     public DbSet<Instrument> Instruments => Set<Instrument>();
+    public DbSet<DailyQuote> DailyQuotes => Set<DailyQuote>();
+    public DbSet<QuoteCorrection> QuoteCorrections => Set<QuoteCorrection>();
 
     protected override string Schema => SchemaName;
 

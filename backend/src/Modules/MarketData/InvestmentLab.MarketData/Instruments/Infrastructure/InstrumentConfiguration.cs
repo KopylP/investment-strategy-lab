@@ -1,4 +1,5 @@
 using InvestmentLab.MarketData.Instruments.Domain;
+using InvestmentLab.MarketData.Shared.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -10,7 +11,7 @@ internal sealed class InstrumentConfiguration : IEntityTypeConfiguration<Instrum
     {
         instrument.ToTable("instruments");
         instrument.HasKey(i => i.Id);
-        instrument.Property(i => i.Id).HasConversion(id => id.Value, value => InstrumentId.Of(value));
+        instrument.Property(i => i.Id).HasConversion<MarketDataConverters.InstrumentIdConverter>();
         instrument.Property(i => i.Kind).HasConversion<string>().HasMaxLength(20);
         instrument.Property(i => i.Name).HasMaxLength(200);
         instrument.Property(i => i.Exchange).HasMaxLength(10);
