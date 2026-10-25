@@ -1,4 +1,4 @@
-<app-page-header title="Стратегії" subtitle="Стратегія видає цілі (які ETF і з якою вагою), а ордери рахує ребалансер">
+<app-page-header title="Стратегії" subtitle="Стратегія вирішує, які ETF тримати в під-портфелі й як часто переглядати; що купити й продати рахує сервіс">
   @if (store.strategies().length) {
     <p-button label="Додати стандартні" icon="pi pi-plus" severity="secondary" [outlined]="true" [loading]="store.creatingDefaults()" (onClick)="store.createDefaults()" />
   }
@@ -30,6 +30,11 @@
             <p-tag [value]="'v' + strategy.latestVersion" severity="info" />
           }
         </div>
+        @let info = blurb(strategy);
+        <div class="text-sm mb-2">{{ info.headline }}</div>
+        <ul class="text-xs text-muted-color mt-0 mb-3 pl-4">
+          @for (point of info.points; track point) { <li>{{ point }}</li> }
+        </ul>
         <div class="flex flex-wrap gap-1 mb-3">
           @for (id of strategy.version.universe.slice(0, 8); track id) {
             <p-tag [value]="store.instruments.symbol(id)" severity="secondary" />
@@ -42,6 +47,13 @@
           Бенчмарк {{ store.instruments.symbol(strategy.version.benchmarkInstrumentId) }}
           @if (strategy.version.cashInstrumentId) { · кеш у {{ store.instruments.symbol(strategy.version.cashInstrumentId) }} }
           · з {{ strategy.createdAt | date }}
+        </div>
+        <div class="text-sm mt-3 pt-3 border-t border-surface">
+          @if (usage().get(strategy.id); as places) {
+            <i class="pi pi-wallet text-xs mr-1 text-primary"></i>Працює в: {{ places.join(', ') }}
+          } @else {
+            <span class="text-muted-color"><i class="pi pi-info-circle text-xs mr-1"></i>Ще ніде не використовується — оберіть її в під-портфелі рахунку</span>
+          }
         </div>
       </a>
     }
