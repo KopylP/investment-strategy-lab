@@ -1529,7 +1529,8 @@ strategy-engine/
 | 0. Фундамент | ✅ виконано |
 | 1. Strategy Engine API | ✅ виконано |
 | 2. MarketData | ✅ виконано |
-| 3. Identity + Portfolio | ⏭ наступний — див. «З чого продовжити» |
+| 3. Identity + Portfolio | ✅ виконано |
+| 4. Strategies | ⏭ наступний — див. «З чого продовжити» |
 
 ### Що дав етап 2 (MarketData)
 
@@ -1547,13 +1548,32 @@ strategy-engine/
 
 **Як додати міграцію модуля:** `cd backend && dotnet tool restore && dotnet ef migrations add <Name> --project src/Modules/<Module>/InvestmentLab.<Module> --output-dir Shared/Infrastructure/Migrations` (потрібна `ModuleDesignTimeDbContextFactory<T>` у `Shared/Infrastructure` і пакет `Microsoft.EntityFrameworkCore.Design` у модулі — зразок у MarketData).
 
-### З чого продовжити (етап 3, Identity + Portfolio)
+### Що дав етап 3 (Identity + Portfolio)
 
-1. **3a. Identity:** ASP.NET Core Identity в `IdentityDbContext` (схема `identity`), cookie-автентифікація (BFF), `Register`/`Login`/`Logout`/`GetCurrentUser`; `ICurrentUser` у BuildingBlocks; `UserProfile` (`DisplayCurrency`, `Locale`, `TimeZone`); IE `UserRegistered`; авторизація на всіх `/api/*`, крім входу; автор виправлення котирування = поточний користувач.
-2. **3b. Accounts:** `InvestmentAccount` (AR) з під-портфелями, `TargetShare` (сума = 100%), `ContributionPolicy` (`FillUnderweight`/`FixedSplit`), `Guardrails`, `StrategyRef`; named query filter `Owner` за `OwnerId`; `IAccountSetupQueries`.
-3. **3c. Transactions + Holdings:** журнал операцій (`RecordTrade`, `RecordContribution`, `RecordCashMovement`, `RecordInternalTransfer`, `ReverseTransaction`), `TransactionRecorder`, `TradeAllocator`, `HoldingsProjector` (оновлення в тій самій транзакції), унікальний `SourceReference`; `IHoldingsQueries`.
-4. **3d. Import:** `ImportPositionsJson` з поточного `positions.json` (інструменти — через `IInstrumentCatalog` за yfinance-символом).
-5. **Integration-тест етапу:** вхід → рахунок із двома під-портфелями → імпорт `positions.json` → позиції й кеш збігаються з файлом → сторно операції повертає попередні `Holdings`.
+- **Identity:** ASP.NET Core Identity поверх власного `IdentityDbContext : ModuleDbContext` (схема `identity`, лише user-таблиці без ролей, `UserOnlyStore`), cookie `investmentlab.auth` (HttpOnly, SameSite=Strict, 14 днів, sliding; 401/403 замість редиректу). `POST /api/identity/register`, `/login`, `/logout`, `GET /me`, `GET|PUT /profile` (`UserProfile`: `DisplayCurrency` EUR/USD/PLN, `Locale`, IANA `TimeZone`; дефолт EUR, uk-UA, Europe/Warsaw). Реєстрація пише користувача, профіль і `UserRegisteredV1` в одному `SaveChanges`. Пароль — від 10 символів, без вимог до цифр/регістру (парольні фрази).
+- **Авторизація за замовчуванням:** fallback policy «потрібен вхід» на всіх ендпоінтах; `AllowAnonymous` — тільки register/login, health, OpenAPI/Scalar. `ICurrentUser` у BuildingBlocks (`Id` з claim `NameIdentifier`); автор виправлення котирування — id поточного користувача.
+- **Фільтр власника:** named query filter `Owner` (`PortfolioDbContext.HasOwnerFilter`): з користувачем у запиті видно тільки його дані; без користувача (outbox, задачі) — усе. Чужий рахунок → 404.
+- **Accounts:** `InvestmentAccount` (база EUR/USD, `TaxPolicyCode` = `PL-BELKA` за замовчуванням), під-портфелі з `Position` (стабільний порядок), `TargetShare`, `StrategyRef` (Guid + закріплена версія або остання), `CashInstrumentId`, `Guardrails`; сума часток активних = рівно 100% при відкритті, додаванні (`AddSubPortfolio` разом із новими частками інших), зміні й виведенні. API `/api/portfolio/accounts…`; `IAccountSetupQueries`; IE `SubPortfolioAddedV1`, `TargetSharesChangedV1`.
+- **Transactions:** незмінний журнал (`Buy`, `Sell`, `Contribution`, `Withdrawal`, `Fee`, `TaxPayment`, `Dividend`, `InternalTransfer`, `Reversal`), тіло — jsonb через конвертер (домен без серіалізатора), унікальні `source_reference` і `reversal_of`. `TransactionRecorder` переграє журнал разом із новою операцією і записує операцію, `Holdings` та IE в одному `SaveChanges`. `TradeAllocator`: купівля й внесок без явного розподілу — за цільовими частками, продаж і дивіденд — за утримуваними штуками; залишок округлення — найбільшій вазі; комісія ділиться як кількість. IE `TransactionRecordedV1`, `TransactionReversedV1`, `TransactionRejectedV1`; команди `RecordTradeV1`, `RecordContributionV1`, `ReverseTransactionV1` (через outbox, ідемпотентні за `SourceReference`).
+- **Holdings:** `HoldingsProjector` — повне переграванння журналу за датою: віртуальні лоти FIFO, ціна лота = ціна угоди + частка комісії на штуку; продаж/переказ більше, ніж є в під-портфелі на ту дату, — помилка (зокрема заднім числом); кеш нижче нуля — попередження. Сторно = операція, якої «не було». Read model `portfolio.holdings` (позиція з лотами в jsonb + рядок кешу) переписується з кожною операцією; `GET …/holdings?asOf=` для минулої дати переграє журнал. `IHoldingsQueries`.
+- **Import:** `POST …/sub-portfolios/{id}/import-positions?asOf=` приймає `positions.json` як є: внесок на всю вартість + кеш, далі купівля кожної позиції за ціною входу (`entry_date` або `asOf`); інструменти — через `IInstrumentCatalog` за `yfinance`-символом; посилання `import:{subId}:…`, тому повторний імпорт нічого не змінює.
+- **Тести:** доменні правила рахунку, журналу, розподілу і проєктора (25), integration-сценарій етапу на справжньому `positions.json` (позиції, середня ціна, кеш, повторний імпорт, продаж, відмова в перепродажі, сторно → попередні `Holdings`), доступ без входу → 401, ізоляція власника. Усього 183 тести.
+
+**Відхилення від кроків етапу (свідомі):**
+- імпорт живе у фічі `Transactions` (`Transactions/Application/ImportPositions`), а не в окремій `Import`: він записує операції, а правило залежностей дозволяє фічі бачити іншу тільки через `Domain`;
+- `TransactionRecorder` — сервіс Application, а не доменний: йому потрібні журнал і проєкція `Holdings` (інша фіча); правило «не продати більше, ніж є» живе в доменному `HoldingsProjector`;
+- `Holdings` не оновлюються інкрементально — кожна операція переграє журнал рахунку (сотні записів, дешево); так однаково правильні сторно й операції заднім числом;
+- паралельні записи в один рахунок не блокуються (захищає тільки унікальний `SourceReference`); якщо з'явиться реальна конкуренція — `SELECT … FOR UPDATE` рахунку в `TransactionRecorder`;
+- антифорджері-токенів немає: захист від CSRF — `SameSite=Strict` cookie й однаковий origin (BFF); Google login — пізніше (потрібні client secrets);
+- `RetireSubPortfolio` не перевіряє, що під-портфель порожній: позиції лишаються видимими, їх переносять `InternalTransfer`;
+- ArchUnitNET зливав однойменні type-параметри generic-методів (`Publish<TEvent>`) різних типів у хибну залежність — тест їх пропускає.
+
+### З чого продовжити (етап 4, Strategies)
+
+1. **4a. Catalog:** `StrategyTypeDescriptor` із `/strategies` (і `/schema`) Python-сайдкара (`SyncCatalogFromEngines` на старті), `GET /api/strategies/catalog`.
+2. **4b. Definitions:** `Strategy` (AR, `OwnerId`, фільтр `Owner` — як у `PortfolioDbContext`) + незмінні `StrategyVersion`; параметри валідуються JSON Schema типу; універсум — `InstrumentId` з `IInstrumentCatalog`; сід із `strategy.toml` / `strategy_us.toml` для нового користувача (`UserRegisteredV1`) або командою; `Create/Reconfigure/Archive/Get/List`; IE `StrategyReconfiguredV1`.
+3. **4c. Evaluation:** `StrategyEvaluationContext` (позиції/лоти/кеш із `IHoldingsQueries.GetSubPortfolioSnapshot`, ряди з `IQuoteHistory` + VIX), `PythonStrategyEngine` → `/decide`, `/risk`; `StrategyState`; `IStrategyEvaluation` у Contracts.
+4. **Integration-тест етапу:** рішення .NET → Python на тих самих даних збігається з golden-фікстурами `monthly_scanner` (фікстури з етапу 1).
 
 Кожен етап закінчується робочим станом і зеленим CI. Поточний Python-флоу (GitHub Actions) працює паралельно до етапу 9.
 
