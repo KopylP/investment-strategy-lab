@@ -1528,25 +1528,32 @@ strategy-engine/
 |---|---|
 | 0. Фундамент | ✅ виконано |
 | 1. Strategy Engine API | ✅ виконано |
-| 2. MarketData | 🔄 у роботі — див. «З чого продовжити» |
+| 2. MarketData | ✅ виконано |
+| 3. Identity + Portfolio | ⏭ наступний — див. «З чого продовжити» |
 
-### З чого продовжити (етап 2, MarketData)
+### Що дав етап 2 (MarketData)
 
-**Вже є:** `ModuleDbContext` (схема модуля, snake_case, конвертери VO SharedKernel, `decimal(20,8)`) з тестами; пакети EF Core 10 + Npgsql у CPM; локальний `dotnet-ef` (`backend/.config/dotnet-tools.json`, `dotnet tool restore`).
+- **BuildingBlocks:** `AddModuleDbContext<T>(schema)` (Npgsql + snake_case + історія міграцій у схемі модуля + Aspire enrich), `DatabaseMigrator` (міграції всіх модулів, потім `IModuleDataSeeder`-и), outbox (`ModuleDbContext.Publish(event, occurredAt)` → `outbox_messages`; `OutboxDispatcher` раз на секунду, до 10 спроб; handler-и — `services.AddIntegrationEventHandler<TEvent, THandler>()`), планувальник (`services.AddScheduledJob<TJob>(DailySchedule)`; DST: пропущений час → після стрибка, повторений → один раз).
+- **Instruments:** 38 інструментів у сіді (`Instruments/Infrastructure/Seed/instruments.json`, згенеровано з TOML): 18 EU ETF + 19 US ETF (разом із cash ETF `XEON.DE`, `BIL`) + `^VIX`; ISIN-и пройшли перевірку контрольної суми, `XDJE`/`IS04` звірено з Deutsche Börse.
+- **Quotes:** `POST /api/market-data/quotes/ingest`, нічна задача 22:30 Europe/Warsaw (пн–пт); 3 роки історії — ~28,7 тис. котирувань за ~9 с; `GET /quotes/{id}`, `GET /quotes/latest`, `POST /quotes/{id}/corrections`; `IQuoteHistory`; IE `DailyQuotesIngestedV1`, `QuoteCorrectedV1`.
+- **FxRates:** NBP таблиця A, EUR і USD за 2 роки (502 курси кожної), задача 13:00 Europe/Warsaw; `GET /fx-rates/{base}/{quote}?transactionDate=`; `IFxRates`.
+- **Тести:** доменні правила (розклад, якість котирувань, захист виправлень, резолвер курсу, сід), integration-сценарій етапу (WebApplicationFactory + Testcontainers, фейкові провайдери). Усього 155 тестів.
 
-**Наступні кроки по черзі (один коміт на крок):**
+**Відхилення від кроків етапу (свідомі):**
+- інжест починає з **останньої** збереженої дати, а не з наступної: запуск посеред торгового дня зберігає проміжний close, і наступний інжест його оновлює (`DailyQuote.Refresh` змінює рядок тільки якщо ціни інші й котирування не виправлене вручну);
+- автор виправлення котирування — `"unknown"`, доки немає Identity (етап 3 підставить користувача);
+- `Gap` і `Stale` рахують робочі дні пн–пт, біржові свята не моделюються (можливі зайві попередження на тиждень Різдва);
+- версію EF Core зафіксовано явним посиланням на `Microsoft.EntityFrameworkCore.Relational` у BuildingBlocks: інакше хост отримує нижчу версію з Npgsql, ніж `EntityFrameworkCore.Design` у модулі, і падає на старті.
 
-1. **2a. Інфраструктура модулів у `BuildingBlocks`:**
-   - `AddModuleDbContext<T>()` — `AddDbContext` + `UseNpgsql(connection "investmentlab", MigrationsHistoryTable у схемі модуля)` + `UseSnakeCaseNamingConvention()` + `EnrichNpgsqlDbContext<T>()`; реєстр контекстів для мігратора й диспетчера;
-   - `DatabaseMigrator` (hosted service, мігрує всі контексти на старті);
-   - outbox: `OutboxMessage` (`Id`, `Type`, `Payload` jsonb, `OccurredAt`, `ProcessedAt`, `Attempts`, `Error`) мапиться в кожному `ModuleDbContext`; `ModuleDbContext.Publish(event)`; `OutboxDispatcher` (`BackgroundService`) доставляє в `IIntegrationEventHandler<T>` (handler-и ідемпотентні; Contracts нічого не реєструють — тип події за `FullName` з handler-ів у DI);
-   - планувальник: `IScheduledJob` + `DailySchedule(TimeOnly, TimeZoneInfo, weekdaysOnly)` + `JobScheduler` (тест на обчислення наступного запуску).
-2. **2b. Instruments:** `Instrument` (AR: `InstrumentId`, `Isin?` — обов'язковий для ETF, `Name`, `Exchange`, `TradingCurrency`, `InstrumentKind` Etf/Index, `Group`, `IsAccumulating?`, `ProviderSymbols`), `AssignProviderSymbol`; сід із `instruments.json` (усі ETF з `strategy.toml`/`strategy_us.toml` + `XEON.DE`, `SPY` як benchmark, `^VIX` як індекс; ISIN-и звірити з сайтом емітента); `IInstrumentCatalog`; API `GET/POST /api/market-data/instruments`.
-3. **2c. Quotes:** `DailyQuote` (`Close`, `AdjustedClose`, `Source`, `FetchedAt`, `QualityFlags`), `QuoteQualityInspector` (Spike > 20% за день, Gap > 5 робочих днів; Stale — під час читання), `QuoteCorrection` (AR; виправлені котирування інжест не перезаписує); `IQuoteProvider` → `YFinanceQuoteProvider` (HTTP до `strategy-engine` `/v1/prices`, таймаути довші за стандартні: `RemoveAllResilienceHandlers()` + свій `AddStandardResilienceHandler`); `IngestDailyQuotes` (від останньої дати + 1 або 3 роки назад, групування за датою початку) + нічна задача (22:30 Europe/Warsaw, пн–пт) + кнопка `POST /api/market-data/quotes/ingest`; `IQuoteHistory` (`GetQuoteHistory`, `GetLatestPrices`); IE `DailyQuotesIngestedV1`, `QuoteCorrectedV1`.
-4. **2d. FxRates:** `FxRate` (NBP, `Base`, `Quote`=PLN, `EffectiveDate`, `Rate`, `TableNumber`), `FxRateResolver` (останній курс **строго до** дати, не старший 10 днів — правило Белки); `NbpFxRateProvider` (`https://api.nbp.pl/api/exchangerates/rates/a/{code}/{from}/{to}/?format=json`, діапазон ≤ 93 дні — запити шматками); інжест EUR, USD за 2 роки + задача о 13:00 Europe/Warsaw; `IFxRates`.
-5. **Integration-тест етапу** (WebApplicationFactory + Testcontainers Postgres, фейкові `IQuoteProvider`/`IFxRateProvider`): інжест → історія → виправлення → `QuoteCorrectedV1` з outbox → повторний інжест не затирає виправлення.
+**Як додати міграцію модуля:** `cd backend && dotnet tool restore && dotnet ef migrations add <Name> --project src/Modules/<Module>/InvestmentLab.<Module> --output-dir Shared/Infrastructure/Migrations` (потрібна `ModuleDesignTimeDbContextFactory<T>` у `Shared/Infrastructure` і пакет `Microsoft.EntityFrameworkCore.Design` у модулі — зразок у MarketData).
 
-Далі — етап 3 (Identity + Portfolio) за таблицею нижче.
+### З чого продовжити (етап 3, Identity + Portfolio)
+
+1. **3a. Identity:** ASP.NET Core Identity в `IdentityDbContext` (схема `identity`), cookie-автентифікація (BFF), `Register`/`Login`/`Logout`/`GetCurrentUser`; `ICurrentUser` у BuildingBlocks; `UserProfile` (`DisplayCurrency`, `Locale`, `TimeZone`); IE `UserRegistered`; авторизація на всіх `/api/*`, крім входу; автор виправлення котирування = поточний користувач.
+2. **3b. Accounts:** `InvestmentAccount` (AR) з під-портфелями, `TargetShare` (сума = 100%), `ContributionPolicy` (`FillUnderweight`/`FixedSplit`), `Guardrails`, `StrategyRef`; named query filter `Owner` за `OwnerId`; `IAccountSetupQueries`.
+3. **3c. Transactions + Holdings:** журнал операцій (`RecordTrade`, `RecordContribution`, `RecordCashMovement`, `RecordInternalTransfer`, `ReverseTransaction`), `TransactionRecorder`, `TradeAllocator`, `HoldingsProjector` (оновлення в тій самій транзакції), унікальний `SourceReference`; `IHoldingsQueries`.
+4. **3d. Import:** `ImportPositionsJson` з поточного `positions.json` (інструменти — через `IInstrumentCatalog` за yfinance-символом).
+5. **Integration-тест етапу:** вхід → рахунок із двома під-портфелями → імпорт `positions.json` → позиції й кеш збігаються з файлом → сторно операції повертає попередні `Holdings`.
 
 Кожен етап закінчується робочим станом і зеленим CI. Поточний Python-флоу (GitHub Actions) працює паралельно до етапу 9.
 
