@@ -128,7 +128,7 @@ public interface IStrategyDirectory
 
 public sealed record StrategySummaryDto(Guid Id, string Name, string TypeCode, int LatestVersion, IReadOnlyList<Guid> Universe, Guid? CashInstrumentId, StrategyReportingDto Reporting);
 
-/// <summary>Which reports the strategy needs: rebalance Weekly/Monthly/Quarterly, risk review Off/Weekly (its "reporting" parameters).</summary>
+/// <summary>Which reports the strategy needs: rebalance Weekly/Monthly/Quarterly (its frequency), risk review Off/Weekly (its "reporting" parameters).</summary>
 public sealed record StrategyReportingDto(string Rebalance, string RiskReview)
 {
     public static StrategyReportingDto Default => new("Monthly", "Weekly");

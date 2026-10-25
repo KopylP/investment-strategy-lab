@@ -9,23 +9,21 @@ internal sealed class StrategyDirectory(IStrategyRepository strategies) : IStrat
     public async Task<IReadOnlyList<StrategySummaryDto>> GetStrategies(CancellationToken cancellationToken) =>
         [.. (await strategies.ListAsync(cancellationToken)).Select(strategy => new StrategySummaryDto(
             strategy.Id.Value, strategy.Name, strategy.TypeCode, strategy.Latest.Number, strategy.Latest.Universe, strategy.Latest.CashInstrumentId,
-            ReportingOf(strategy.Latest.Parameters)))];
+            new StrategyReportingDto(strategy.Latest.Frequency.ToString(), RiskReviewOf(strategy.Latest.Parameters))))];
 
-    /// <summary>The "reporting" parameters of a strategy; versions made before they existed get the classic monthly + weekly.</summary>
-    internal static StrategyReportingDto ReportingOf(string parameters)
+    /// <summary>The "reporting.riskReview" parameter; versions made before it existed keep the weekly review.</summary>
+    internal static string RiskReviewOf(string parameters)
     {
         try
         {
             using var document = JsonDocument.Parse(parameters);
-            if (!document.RootElement.TryGetProperty("reporting", out var reporting) || reporting.ValueKind != JsonValueKind.Object)
-                return StrategyReportingDto.Default;
-            return new StrategyReportingDto(
-                Capitalized(reporting, "rebalance") ?? StrategyReportingDto.Default.Rebalance,
-                Capitalized(reporting, "riskReview") ?? StrategyReportingDto.Default.RiskReview);
+            return document.RootElement.TryGetProperty("reporting", out var reporting) && reporting.ValueKind == JsonValueKind.Object
+                ? Capitalized(reporting, "riskReview") ?? StrategyReportingDto.Default.RiskReview
+                : StrategyReportingDto.Default.RiskReview;
         }
         catch (JsonException)
         {
-            return StrategyReportingDto.Default;
+            return StrategyReportingDto.Default.RiskReview;
         }
     }
 

@@ -14,10 +14,12 @@ public readonly record struct StrategyId
     public override string ToString() => Value.ToString();
 }
 
+/// <summary>How often the strategy rebalances: the scheduler makes a report on that Sunday (first of the month / quarter).</summary>
 public enum RebalanceFrequency
 {
     Monthly,
     Weekly,
+    Quarterly,
 }
 
 public enum StrategyStatus
