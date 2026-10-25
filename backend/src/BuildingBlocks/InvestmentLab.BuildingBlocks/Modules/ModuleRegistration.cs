@@ -1,6 +1,7 @@
 using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.BuildingBlocks.Scheduling;
+using InvestmentLab.BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +20,8 @@ public static class ModuleRegistration
 
         builder.Services.AddSingleton<IReadOnlyList<IModule>>(modules);
         builder.Services.TryAddSingleton(TimeProvider.System);
+        builder.Services.AddHttpContextAccessor();
+        builder.Services.TryAddScoped<ICurrentUser, HttpCurrentUser>();
 
         // Order matters: schemas exist before the outbox is polled or a job runs.
         builder.Services.AddHostedService<DatabaseMigrator>();

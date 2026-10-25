@@ -1,20 +1,86 @@
 using InvestmentLab.BuildingBlocks.Modules;
+using InvestmentLab.BuildingBlocks.Persistence;
+using InvestmentLab.Identity.Profiles.Api;
+using InvestmentLab.Identity.Profiles.Application;
+using InvestmentLab.Identity.Profiles.Application.GetProfile;
+using InvestmentLab.Identity.Profiles.Application.UpdateProfile;
+using InvestmentLab.Identity.Profiles.Infrastructure;
+using InvestmentLab.Identity.Shared.Infrastructure;
+using InvestmentLab.Identity.Users.Api;
+using InvestmentLab.Identity.Users.Application;
+using InvestmentLab.Identity.Users.Application.Login;
+using InvestmentLab.Identity.Users.Application.Register;
+using InvestmentLab.Identity.Users.Infrastructure;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace InvestmentLab.Identity;
 
 public sealed class IdentityModule : IModule
 {
-    public const string Schema = "identity";
+    public const string Schema = IdentityDbContext.SchemaName;
+    public const string CookieName = "investmentlab.auth";
 
     public string Name => "Identity";
 
     public void AddServices(IHostApplicationBuilder builder)
     {
+        builder.AddModuleDbContext<IdentityDbContext>(Schema);
+
+        var services = builder.Services;
+        services.AddAuthentication(IdentityConstants.ApplicationScheme).AddIdentityCookies();
+        services.ConfigureApplicationCookie(cookie =>
+        {
+            // BFF: the Angular app is served from the same origin, so a strict, http-only cookie is enough.
+            cookie.Cookie.Name = CookieName;
+            cookie.Cookie.HttpOnly = true;
+            cookie.Cookie.SameSite = SameSiteMode.Strict;
+            cookie.ExpireTimeSpan = TimeSpan.FromDays(14);
+            cookie.SlidingExpiration = true;
+            // An API answers 401/403 instead of redirecting to a login page.
+            cookie.Events.OnRedirectToLogin = context => Respond(context.Response, StatusCodes.Status401Unauthorized);
+            cookie.Events.OnRedirectToAccessDenied = context => Respond(context.Response, StatusCodes.Status403Forbidden);
+        });
+
+        services.AddIdentityCore<User>(identity =>
+            {
+                identity.User.RequireUniqueEmail = true;
+                identity.Password.RequiredLength = 10;
+                identity.Password.RequireNonAlphanumeric = false;
+                identity.Password.RequireUppercase = false;
+                identity.Password.RequireDigit = false;
+                identity.Lockout.MaxFailedAccessAttempts = 5;
+            })
+            .AddSignInManager();
+        services.AddScoped<UserStore>();
+        services.AddScoped<IUserStore<User>>(provider => provider.GetRequiredService<UserStore>());
+
+        // Every endpoint needs a signed-in user unless it says AllowAnonymous (login, register, health).
+        services.AddAuthorizationBuilder()
+            .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
+
+        services.AddScoped<IUserAccounts, UserAccounts>();
+        services.AddScoped<RegisterHandler>();
+        services.AddScoped<LoginHandler>();
+
+        services.AddScoped<IUserProfileRepository, UserProfileRepository>();
+        services.AddScoped<GetProfileHandler>();
+        services.AddScoped<UpdateProfileHandler>();
     }
 
-    public void MapEndpoints(IEndpointRouteBuilder endpoints)
+    private static Task Respond(HttpResponse response, int statusCode)
     {
+        response.StatusCode = statusCode;
+        return Task.CompletedTask;
     }
+
+    public void MapEndpoints(IEndpointRouteBuilder endpoints) =>
+        endpoints.MapGroup("/api/identity")
+            .MapUsers()
+            .MapProfiles();
 }

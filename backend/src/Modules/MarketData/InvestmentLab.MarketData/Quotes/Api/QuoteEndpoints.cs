@@ -1,4 +1,5 @@
 using InvestmentLab.BuildingBlocks.Http;
+using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.MarketData.Contracts.Quotes;
 using InvestmentLab.MarketData.Quotes.Application.CorrectQuote;
 using InvestmentLab.MarketData.Quotes.Application.IngestDailyQuotes;
@@ -13,9 +14,6 @@ public sealed record CorrectQuoteRequest(DateOnly TradingDate, decimal Close, de
 
 internal static class QuoteEndpoints
 {
-    // Until Identity (stage 3) there is no signed-in user to blame.
-    private const string UnknownAuthor = "unknown";
-
     public static RouteGroupBuilder MapQuotes(this RouteGroupBuilder group)
     {
         var quotes = group.MapGroup("/quotes").WithTags("Quotes");
@@ -32,9 +30,9 @@ internal static class QuoteEndpoints
             .WithName("GetQuoteHistory");
 
         quotes.MapPost("/{instrumentId:guid}/corrections", async (
-                Guid instrumentId, CorrectQuoteRequest body, CorrectQuoteHandler handler, CancellationToken ct) =>
+                Guid instrumentId, CorrectQuoteRequest body, CorrectQuoteHandler handler, ICurrentUser user, CancellationToken ct) =>
                 (await handler.Handle(
-                    new CorrectQuoteCommand(instrumentId, body.TradingDate, body.Close, body.AdjustedClose, body.Reason), UnknownAuthor, ct))
+                    new CorrectQuoteCommand(instrumentId, body.TradingDate, body.Close, body.AdjustedClose, body.Reason), user.RequiredId.ToString(), ct))
                 .ToHttpResult())
             .WithName("CorrectQuote");
 

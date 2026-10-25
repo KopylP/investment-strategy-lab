@@ -24,7 +24,11 @@ internal sealed class YFinanceQuoteProvider(HttpClient http) : IQuoteProvider
 
         return new FetchedQuotes(
             [.. body.Series.Select(series => new FetchedSeries(series.Symbol,
-                [.. series.Dates.Select((date, i) => new FetchedQuote(date, ToPrice(series.Close[i]), ToPrice(series.AdjustedClose[i])))]))],
+                [
+                    .. series.Dates.Select((date, i) =>
+                        new FetchedQuote(date, ToPrice(series.Close[i]), ToPrice(series.AdjustedClose[i])))
+                ]))
+            ],
             body.Missing);
     }
 
