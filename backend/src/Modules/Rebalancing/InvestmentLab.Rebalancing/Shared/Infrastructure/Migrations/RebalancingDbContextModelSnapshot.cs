@@ -183,6 +183,10 @@ namespace InvestmentLab.Rebalancing.Shared.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("superseded_by");
 
+                    b.Property<string>("TaxEstimate")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("tax_estimate");
+
                     b.Property<string>("Trigger")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -213,6 +217,16 @@ namespace InvestmentLab.Rebalancing.Shared.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("jsonb")
                         .HasColumnName("allocations");
+
+                    b.Property<decimal?>("EstimatedGainPln")
+                        .HasPrecision(20, 8)
+                        .HasColumnType("numeric(20,8)")
+                        .HasColumnName("estimated_gain_pln");
+
+                    b.Property<decimal?>("EstimatedTaxPln")
+                        .HasPrecision(20, 8)
+                        .HasColumnType("numeric(20,8)")
+                        .HasColumnName("estimated_tax_pln");
 
                     b.Property<string>("Fills")
                         .IsRequired()

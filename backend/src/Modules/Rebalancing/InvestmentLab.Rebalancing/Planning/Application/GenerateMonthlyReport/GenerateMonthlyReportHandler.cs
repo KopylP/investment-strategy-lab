@@ -4,6 +4,7 @@ using InvestmentLab.Rebalancing.Planning.Domain;
 using InvestmentLab.Rebalancing.Reports.Domain;
 using InvestmentLab.Rebalancing.Reviews.Domain;
 using InvestmentLab.Strategies.Contracts;
+using InvestmentLab.Taxation.Contracts;
 
 namespace InvestmentLab.Rebalancing.Planning.Application.GenerateMonthlyReport;
 
@@ -22,6 +23,7 @@ public sealed class GenerateMonthlyReportHandler(
     IPlanSettingsRepository settings,
     IReportRepository reports,
     IPlanReviewer reviewer,
+    SaleTaxes taxes,
     TimeProvider clock)
 {
     public async Task<Result<ReportId>> Handle(GenerateMonthlyReportCommand command, ReportTrigger trigger, CancellationToken cancellationToken)
@@ -135,6 +137,7 @@ public sealed class GenerateMonthlyReportHandler(
         draft = draft with { Review = await reviewer.ReviewAsync(draft, cancellationToken) };
 
         var report = RebalancingReport.Generate(draft, now);
+        await taxes.EstimateAsync(report, asOf, cancellationToken);
         reports.Add(report);
         foreach (var open in periodReports.Where(each => each.IsOpen && each.Kind is ReportKind.Monthly or ReportKind.Recalculation))
         {

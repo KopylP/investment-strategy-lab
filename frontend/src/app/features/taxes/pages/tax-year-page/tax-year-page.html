@@ -1,0 +1,152 @@
+<app-page-header title="Податки" subtitle="Белка: FIFO на рівні рахунку, курс NBP останнього робочого дня перед угодою, 19%, річне сальдо">
+  @if (yearOptions().length > 1) {
+    <p-selectbutton [options]="yearOptions()" optionLabel="label" optionValue="value" [ngModel]="store.year()" (ngModelChange)="$event && store.selectedYear.set($event)" [allowEmpty]="false" />
+  }
+</app-page-header>
+
+<p-message severity="secondary" styleClass="mb-4"
+  text="Це оцінка. Авторитетні — PIT-8C брокера і ваш податковий консультант. Дату курсу, ставку й правила задає податкова політика рахунку." />
+
+@if (store.isLoading() && !store.details() && !store.years().length) {
+  <div class="card"><p-skeleton height="12rem" /></div>
+} @else if (store.loadError()) {
+  <div class="card"><p-message severity="error" text="Не вдалося порахувати податки" /></div>
+} @else if (!store.years().length) {
+  <div class="card">
+    <app-empty-state icon="pi pi-percentage" title="Оподатковуваних подій ще немає" text="Податок з’являється з першим продажем або дивідендом. Купівлі вже формують лоти FIFO." />
+  </div>
+} @else if (store.details(); as details) {
+  @let s = details.summary;
+  @for (warning of details.warnings; track $index) {
+    <p-message severity="warn" styleClass="mb-3" [text]="warning" />
+  }
+  <div class="grid gap-4 grid-cols-2 lg:grid-cols-4 mb-4">
+    <div class="card mb-0">
+      <div class="text-muted-color text-sm mb-2">Податок до сплати · {{ details.year }}</div>
+      <div class="text-3xl font-semibold">{{ s.taxDue | money: 'PLN' : 0 }}</div>
+      <div class="text-sm text-muted-color mt-2">{{ details.policyCode }}{{ details.policyCode === 'PL-BELKA' ? ' · 19%' : ' · не оподатковується' }}</div>
+    </div>
+    <div class="card mb-0">
+      <div class="text-muted-color text-sm mb-2">Дохід (зиск)</div>
+      <div class="text-2xl font-semibold" [appSignedValue]="s.gain">{{ s.gain | money: 'PLN' }}</div>
+      <div class="text-sm text-muted-color mt-2">виручка {{ s.revenue | money: 'PLN' }} − витрати {{ s.costs | money: 'PLN' }}</div>
+    </div>
+    <div class="card mb-0">
+      <div class="text-muted-color text-sm mb-2">Податкова база</div>
+      <div class="text-2xl font-semibold">{{ s.taxBase | money: 'PLN' : 0 }}</div>
+      <div class="text-sm text-muted-color mt-2">збитки минулих років: −{{ s.carryforwardUsed | money: 'PLN' }}</div>
+    </div>
+    <div class="card mb-0">
+      <div class="text-muted-color text-sm mb-2">Дивіденди</div>
+      <div class="text-2xl font-semibold">{{ s.dividendIncome | money: 'PLN' }}</div>
+      <div class="text-sm text-muted-color mt-2">податок {{ s.dividendTax | money: 'PLN' : 0 }}</div>
+    </div>
+  </div>
+
+  @if (s.lossToCarry > 0) {
+    <p-message severity="info" styleClass="mb-4" [text]="'Збиток року ' + (s.lossToCarry | money: 'PLN') + ' можна відносити на наступні 5 років, до 50% на рік — це враховується автоматично.'" />
+  }
+
+  <div class="card">
+    <h2 class="text-lg font-semibold mb-4">Реалізації (продажі)</h2>
+    @if (details.realizations.length) {
+      <p-table [value]="details.realizations" dataKey="saleTransactionId" [tableStyle]="{ 'min-width': '56rem' }" size="small">
+        <ng-template #header>
+          <tr><th class="w-10"></th><th>Дата</th><th>ETF</th><th class="text-right">Штук</th><th class="text-right">Виручка</th><th class="text-right">Витрати</th><th class="text-right">Зиск</th><th>Курс NBP</th></tr>
+        </ng-template>
+        <ng-template #body let-r let-expanded="expanded">
+          <tr>
+            <td><p-button [pRowToggler]="r" [text]="true" [rounded]="true" severity="secondary" [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" ariaLabel="Лоти" /></td>
+            <td>{{ r.soldOn | date }}</td>
+            <td class="font-medium">{{ store.symbol(r.instrumentId) }}</td>
+            <td class="text-right">{{ r.quantity | quantity }}</td>
+            <td class="text-right">{{ r.proceedsPln | money: 'PLN' }}</td>
+            <td class="text-right">{{ r.costPln | money: 'PLN' }}</td>
+            <td class="text-right font-medium" [appSignedValue]="r.gainPln">{{ r.gainPln | money: 'PLN' }}</td>
+            <td class="text-sm">{{ r.fxRate }} <span class="text-muted-color">· {{ r.fxRateDate | date }}</span></td>
+          </tr>
+        </ng-template>
+        <ng-template #expandedrow let-r>
+          <tr>
+            <td></td>
+            <td colspan="7">
+              <div class="font-medium text-sm mb-2">Закриті лоти (FIFO)</div>
+              @for (lot of r.lots; track $index) {
+                <div class="flex justify-between gap-4 text-sm py-1 max-w-xl">
+                  <span>куплено {{ lot.acquiredOn | date }}</span>
+                  <span>{{ lot.quantity | quantity }} шт. · витрати {{ lot.costPln | money: 'PLN' }}</span>
+                </div>
+              }
+              @if (r.unmatchedQuantity > 0) {
+                <p-message severity="warn" size="small" [text]="r.unmatchedQuantity + ' шт. без купівлі в журналі — собівартість нульова'" />
+              }
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    } @else {
+      <div class="text-muted-color">Продажів цього року немає.</div>
+    }
+  </div>
+
+  @if (details.dividends.length) {
+    <div class="card">
+      <h2 class="text-lg font-semibold mb-4">Дивіденди</h2>
+      <p-table [value]="details.dividends" size="small">
+        <ng-template #header><tr><th>Дата</th><th>ETF</th><th class="text-right">Сума</th><th class="text-right">У PLN</th><th>Курс</th></tr></ng-template>
+        <ng-template #body let-d>
+          <tr><td>{{ d.receivedOn | date }}</td><td>{{ store.symbol(d.instrumentId) }}</td><td class="text-right">{{ d.amount | money: store.account()?.baseCurrency ?? 'EUR' }}</td><td class="text-right">{{ d.amountPln | money: 'PLN' }}</td><td>{{ d.fxRate }}</td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+
+  @if (details.openLots.length) {
+    <div class="card">
+      <h2 class="text-lg font-semibold mb-4">Відкриті лоти (собівартість для майбутніх продажів)</h2>
+      <p-table [value]="details.openLots" size="small" [tableStyle]="{ 'min-width': '40rem' }">
+        <ng-template #header><tr><th>Куплено</th><th>ETF</th><th class="text-right">Штук</th><th class="text-right">Витрати, PLN</th><th>Курс</th></tr></ng-template>
+        <ng-template #body let-lot>
+          <tr><td>{{ lot.acquiredOn | date }}</td><td class="font-medium">{{ store.symbol(lot.instrumentId) }}</td><td class="text-right">{{ lot.quantity | quantity }}</td><td class="text-right">{{ lot.costPln | money: 'PLN' }}</td><td>{{ lot.fxRate }}</td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+
+  <div class="text-sm text-muted-color mb-4">{{ details.fxRule }} · пораховано {{ details.computedAt | dateTime }}</div>
+}
+
+@if (store.account()) {
+  <div class="card">
+    <h2 class="text-lg font-semibold mb-2">Збитки минулих років</h2>
+    <p class="text-muted-color mt-0 mb-4">Збиток з PIT-38 до початку журналу: зменшує зиск наступних 5 років, щонайбільше на 50% збитку за рік.</p>
+    @if (store.losses().length) {
+      <p-table [value]="store.losses()" size="small" styleClass="mb-4">
+        <ng-template #header><tr><th>Рік</th><th class="text-right">Збиток</th><th class="text-right">Уже використано раніше</th><th class="w-12"></th></tr></ng-template>
+        <ng-template #body let-loss>
+          <tr>
+            <td>{{ loss.year }}</td>
+            <td class="text-right">{{ loss.amount | money: 'PLN' }}</td>
+            <td class="text-right">{{ loss.alreadyUsed | money: 'PLN' }}</td>
+            <td><p-button icon="pi pi-trash" [text]="true" severity="danger" ariaLabel="Видалити" (onClick)="confirmRemove(loss)" /></td>
+          </tr>
+        </ng-template>
+      </p-table>
+    }
+    <div class="flex flex-wrap items-end gap-3">
+      <div class="flex flex-col gap-2">
+        <label for="loss-year" class="font-medium text-sm">Рік</label>
+        <p-inputnumber inputId="loss-year" [ngModel]="lossYear()" (ngModelChange)="lossYear.set($event)" [useGrouping]="false" [min]="2000" [max]="2100" />
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="loss-amount" class="font-medium text-sm">Збиток</label>
+        <p-inputnumber inputId="loss-amount" [ngModel]="lossAmount()" (ngModelChange)="lossAmount.set($event)" mode="currency" currency="PLN" locale="uk-UA" [min]="0" />
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="loss-used" class="font-medium text-sm">Уже використано</label>
+        <p-inputnumber inputId="loss-used" [ngModel]="lossUsed()" (ngModelChange)="lossUsed.set($event)" mode="currency" currency="PLN" locale="uk-UA" [min]="0" />
+      </div>
+      <p-button label="Додати" icon="pi pi-plus" [disabled]="!lossYear() || !lossAmount()" [loading]="store.saving()" (onClick)="addLoss()" />
+    </div>
+  </div>
+}

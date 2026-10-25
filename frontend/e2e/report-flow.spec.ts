@@ -46,6 +46,7 @@ test('a new user goes from registration to a partly executed monthly report', as
   await expectToast(page, 'Відмічено як виконане');
 
   const buy = rows.filter({ hasText: /^.*Купити/ }).first();
+  const bought = ((await buy.locator('.font-medium').first().textContent()) ?? '').replace('Купити', '').trim();
   await buy.locator('.p-splitbutton-dropdown').click();
   await page.getByRole('menuitem', { name: 'Частково виконано' }).click();
   const dialog = page.getByRole('dialog');
@@ -65,6 +66,24 @@ test('a new user goes from registration to a partly executed monthly report', as
   await expect(page.getByText('Внесок', { exact: true }).first()).toBeVisible();
   await expect(page.getByText('Купівля', { exact: true }).first()).toBeVisible();
   await shot('11-journal');
+
+  // A manual sale of part of the bought position → a realisation in the tax year.
+  await page.getByRole('button', { name: 'Угода' }).click();
+  const trade = page.getByRole('dialog');
+  await trade.getByText('Продаж', { exact: true }).click();
+  await trade.locator('#trade-instrument').click();
+  await page.locator('.p-select-overlay input').fill(bought);
+  await page.getByRole('option').first().click();
+  await trade.locator('#trade-quantity').fill('0,05');
+  await trade.locator('#trade-price').fill('50');
+  await trade.locator('#trade-price').blur();
+  await trade.getByRole('button', { name: 'Записати' }).click();
+  await expectToast(page, 'Угоду записано');
+
+  await page.goto('/taxes');
+  await expect(page.getByRole('heading', { name: 'Реалізації (продажі)' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: bought }).first()).toBeVisible();
+  await shot('11b-taxes');
 
   await page.goto('/holdings');
   await expect(page.getByRole('heading', { name: 'EU momentum' })).toBeVisible();

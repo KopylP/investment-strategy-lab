@@ -20,6 +20,10 @@ export class ApiClient {
   put<T = void>(url: string, body: unknown): Promise<T> {
     return firstValueFrom(this.http.put<T>(url, body));
   }
+
+  delete<T = void>(url: string): Promise<T> {
+    return firstValueFrom(this.http.delete<T>(url));
+  }
 }
 
 function toParams(query?: Query): HttpParams | undefined {
