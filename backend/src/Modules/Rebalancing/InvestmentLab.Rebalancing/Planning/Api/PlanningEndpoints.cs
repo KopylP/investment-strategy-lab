@@ -35,6 +35,10 @@ internal static class PlanningEndpoints
                 (await handler.Get(accountId, ct)).ToHttpResult())
             .WithName("GetPlanSettings");
 
+        account.MapGet("/report-schedule", async (Guid accountId, PlanSettingsHandler handler, CancellationToken ct) =>
+                (await handler.Schedule(accountId, ct)).ToHttpResult())
+            .WithName("GetReportSchedule");
+
         account.MapPut("/settings", async (Guid accountId, ChangePlanSettingsCommand body, PlanSettingsHandler handler, CancellationToken ct) =>
                 (await handler.Change(accountId, body, ct)).ToHttpResult())
             .WithName("ChangePlanSettings");

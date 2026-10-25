@@ -18,9 +18,11 @@ public interface IPlanSettingsRepository
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }
 
+public sealed record SubPortfolioCadence(Guid SubPortfolioId, string SubPortfolioName, string StrategyName, ReportCadence Cadence);
+
 /// <summary>What planning reads from other modules for one account: setup, holdings, instrument labels and prices.</summary>
 public sealed class PlanningInputs(
-    IAccountSetupQueries accounts, IHoldingsQueries holdings, IInstrumentCatalog instruments, IQuoteHistory quotes, IFxRates fxRates)
+    IAccountSetupQueries accounts, IHoldingsQueries holdings, IInstrumentCatalog instruments, IQuoteHistory quotes, IFxRates fxRates, IStrategyDirectory strategies)
 {
     private const string YahooPrefix = "yfinance:";
 
@@ -82,6 +84,15 @@ public sealed class PlanningInputs(
             : (await fxRates.GetFxRate(currency, "PLN", asOf.AddDays(1), cancellationToken))?.Rate;
 
         return await InPln(from) is { } fromPln && await InPln(to) is { } toPln && toPln > 0m ? fromPln / toPln : null;
+    }
+
+    /// <summary>The reports each planned sub-portfolio's strategy asks for (its "reporting" parameters).</summary>
+    public async Task<IReadOnlyList<SubPortfolioCadence>> CadencesAsync(AccountSetupDto account, CancellationToken cancellationToken)
+    {
+        var directory = (await strategies.GetStrategies(cancellationToken)).ToDictionary(strategy => strategy.Id);
+        return [.. Planned(account).Select(sub => directory.TryGetValue(sub.StrategyId!.Value, out var strategy)
+            ? new SubPortfolioCadence(sub.Id, sub.Name, strategy.Name, ReportCadence.Of(strategy.Reporting.Rebalance, strategy.Reporting.RiskReview))
+            : new SubPortfolioCadence(sub.Id, sub.Name, "", ReportCadence.Classic))];
     }
 
     public static IEnumerable<SubPortfolioSetupDto> Planned(AccountSetupDto account) =>

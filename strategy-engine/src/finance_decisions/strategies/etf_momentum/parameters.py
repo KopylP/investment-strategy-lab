@@ -5,6 +5,8 @@ Defaults come from the dataclasses in config.py, so the two never drift apart.
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pydantic.alias_generators import to_camel
 
@@ -56,7 +58,25 @@ class RiskParameters(_Parameters):
         return RiskSettings(**self.model_dump())
 
 
+class ReportingParameters(_Parameters):
+    """Which reports the strategy needs and how often; the service schedules them (Sunday evening, Europe/Warsaw)."""
+
+    rebalance: Literal["weekly", "monthly", "quarterly"] = Field(
+        "monthly",
+        title="Ребаланс",
+        description="Як часто стратегія переглядає склад портфеля: рапорт із внеском, купівлями й продажами.",
+        json_schema_extra={"x-enumLabels": {"weekly": "Щотижня (неділя)", "monthly": "Щомісяця (перша неділя)", "quarterly": "Щокварталу (перша неділя кварталу)"}},
+    )
+    risk_review: Literal["off", "weekly"] = Field(
+        "weekly",
+        title="Перевірка ризику",
+        description="Між ребалансами: стоп-лоси, просідання, VIX — продаж лише за сигналом виходу.",
+        json_schema_extra={"x-enumLabels": {"off": "Вимкнено", "weekly": "Щотижня (неділя)"}},
+    )
+
+
 class EtfMomentumParameters(_Parameters):
+    reporting: ReportingParameters = Field(default_factory=ReportingParameters, title="Рапорти")
     scanner: ScannerParameters = Field(default_factory=ScannerParameters)
     risk: RiskParameters = Field(default_factory=RiskParameters)
     weak_market_invest_pct: float = Field(PlanSettings.weak_market_invest_pct, ge=0, le=1, description="Частка внеску, яка інвестується, коли ринок слабкий.")

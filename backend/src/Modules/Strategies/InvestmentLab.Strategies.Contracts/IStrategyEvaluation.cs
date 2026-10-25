@@ -126,4 +126,10 @@ public interface IStrategyDirectory
     Task<IReadOnlyList<StrategySummaryDto>> GetStrategies(CancellationToken cancellationToken);
 }
 
-public sealed record StrategySummaryDto(Guid Id, string Name, string TypeCode, int LatestVersion, IReadOnlyList<Guid> Universe, Guid? CashInstrumentId);
+public sealed record StrategySummaryDto(Guid Id, string Name, string TypeCode, int LatestVersion, IReadOnlyList<Guid> Universe, Guid? CashInstrumentId, StrategyReportingDto Reporting);
+
+/// <summary>Which reports the strategy needs: rebalance Weekly/Monthly/Quarterly, risk review Off/Weekly (its "reporting" parameters).</summary>
+public sealed record StrategyReportingDto(string Rebalance, string RiskReview)
+{
+    public static StrategyReportingDto Default => new("Monthly", "Weekly");
+}
