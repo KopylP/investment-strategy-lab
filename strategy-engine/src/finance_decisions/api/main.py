@@ -4,19 +4,20 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 
-from . import catalog, decide, prices, risk
+from . import catalog, decide, prices, risk, symbols
 
 
 def create_app() -> FastAPI:
     app = FastAPI(
         title="Investment Lab Strategy Engine",
         version="1",
-        description="Strategy decisions, risk checks and market quotes for the Investment Lab backend.",
+        description="Strategy decisions, risk checks, market quotes and symbol lookup for the Investment Lab backend.",
     )
     app.include_router(catalog.router)
     app.include_router(decide.router)
     app.include_router(risk.router)
     app.include_router(prices.router)
+    app.include_router(symbols.router)
 
     @app.get("/health", tags=["health"])
     def health() -> dict[str, str]:

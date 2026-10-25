@@ -444,6 +444,126 @@
     ]
   },
   {
+    "kind": "Stock",
+    "isin": "US0378331005",
+    "name": "Apple",
+    "exchange": "XNAS",
+    "tradingCurrency": "USD",
+    "group": "Технології США / Nasdaq-100",
+    "isAccumulating": null,
+    "providerSymbols": [
+      "yfinance:AAPL"
+    ]
+  },
+  {
+    "kind": "Stock",
+    "isin": "US67066G1040",
+    "name": "NVIDIA",
+    "exchange": "XNAS",
+    "tradingCurrency": "USD",
+    "group": "Технології США / Nasdaq-100",
+    "isAccumulating": null,
+    "providerSymbols": [
+      "yfinance:NVDA"
+    ]
+  },
+  {
+    "kind": "Stock",
+    "isin": "US11135F1012",
+    "name": "Broadcom",
+    "exchange": "XNAS",
+    "tradingCurrency": "USD",
+    "group": "Технології США / Nasdaq-100",
+    "isAccumulating": null,
+    "providerSymbols": [
+      "yfinance:AVGO"
+    ]
+  },
+  {
+    "kind": "Stock",
+    "isin": "IL0011334468",
+    "name": "CyberArk Software",
+    "exchange": "XNAS",
+    "tradingCurrency": "USD",
+    "group": "Технології США / Nasdaq-100",
+    "isAccumulating": null,
+    "providerSymbols": [
+      "yfinance:CYBR"
+    ]
+  },
+  {
+    "kind": "Stock",
+    "isin": "US57636Q1040",
+    "name": "Mastercard",
+    "exchange": "XNYS",
+    "tradingCurrency": "USD",
+    "group": "Фінанси США",
+    "isAccumulating": null,
+    "providerSymbols": [
+      "yfinance:MA"
+    ]
+  },
+  {
+    "kind": "Stock",
+    "isin": "US8356993076",
+    "name": "Sony Group (ADR)",
+    "exchange": "XNYS",
+    "tradingCurrency": "USD",
+    "group": "Японія",
+    "isAccumulating": null,
+    "providerSymbols": [
+      "yfinance:SONY"
+    ]
+  },
+  {
+    "kind": "Stock",
+    "isin": "US8923313071",
+    "name": "Toyota Motor (ADR)",
+    "exchange": "XNYS",
+    "tradingCurrency": "USD",
+    "group": "Японія",
+    "isAccumulating": null,
+    "providerSymbols": [
+      "yfinance:TM"
+    ]
+  },
+  {
+    "kind": "Stock",
+    "isin": null,
+    "name": "Sony Financial Group (ADR)",
+    "exchange": "OTC",
+    "tradingCurrency": "USD",
+    "group": "Японія",
+    "isAccumulating": null,
+    "providerSymbols": [
+      "yfinance:SFGYY"
+    ]
+  },
+  {
+    "kind": "Stock",
+    "isin": "DE0007236101",
+    "name": "Siemens",
+    "exchange": "XETR",
+    "tradingCurrency": "EUR",
+    "group": "Акції єврозони",
+    "isAccumulating": null,
+    "providerSymbols": [
+      "yfinance:SIE.DE"
+    ]
+  },
+  {
+    "kind": "Stock",
+    "isin": "NL0010273215",
+    "name": "ASML Holding",
+    "exchange": "XETR",
+    "tradingCurrency": "EUR",
+    "group": "Акції єврозони",
+    "isAccumulating": null,
+    "providerSymbols": [
+      "yfinance:ASME.DE"
+    ]
+  },
+  {
     "kind": "Index",
     "isin": null,
     "name": "CBOE Volatility Index",

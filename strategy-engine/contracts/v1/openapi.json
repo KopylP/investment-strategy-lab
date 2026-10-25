@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Investment Lab Strategy Engine",
-    "description": "Strategy decisions, risk checks and market quotes for the Investment Lab backend.",
+    "description": "Strategy decisions, risk checks, market quotes and symbol lookup for the Investment Lab backend.",
     "version": "1"
   },
   "paths": {
@@ -159,6 +159,47 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PricesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/symbols/lookup": {
+      "post": {
+        "tags": [
+          "symbols"
+        ],
+        "summary": "Lookup",
+        "operationId": "lookup_v1_symbols_lookup_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SymbolLookupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SymbolLookupResponse"
                 }
               }
             }
@@ -1265,6 +1306,108 @@
           "currency"
         ],
         "title": "SubPortfolioSnapshot"
+      },
+      "SymbolInfo": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "quoteType": {
+            "type": "string",
+            "title": "Quotetype"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "symbol",
+          "name",
+          "currency",
+          "quoteType"
+        ],
+        "title": "SymbolInfo"
+      },
+      "SymbolLookupRequest": {
+        "properties": {
+          "queries": {
+            "items": {
+              "$ref": "#/components/schemas/SymbolQuery"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Queries"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "queries"
+        ],
+        "title": "SymbolLookupRequest"
+      },
+      "SymbolLookupResponse": {
+        "properties": {
+          "results": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/SymbolInfo"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "results"
+        ],
+        "title": "SymbolLookupResponse",
+        "description": "One entry per query, in order; ``null`` when no candidate exists."
+      },
+      "SymbolQuery": {
+        "properties": {
+          "candidates": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Candidates"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "candidates"
+        ],
+        "title": "SymbolQuery",
+        "description": "Yahoo symbols to try in order; the first one that exists (in ``currency``, when given) wins."
       },
       "TargetWeight": {
         "properties": {

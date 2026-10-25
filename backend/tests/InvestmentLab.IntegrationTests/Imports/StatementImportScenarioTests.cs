@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using InvestmentLab.IntegrationTests.MarketData;
 using InvestmentLab.IntegrationTests.Portfolio;
+using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Portfolio.Contracts.Holdings;
 using InvestmentLab.Portfolio.Transactions.Application.ImportStatement;
 
@@ -38,7 +39,7 @@ public sealed class StatementImportScenarioTests(MarketDataApiFactory factory) :
         preview.Rows.Count.ShouldBe(6);
         var sxr8 = preview.Mappings.Single(mapping => mapping.Ticker == "SXR8");
         sxr8.InstrumentId.ShouldNotBeNull();                                  // found in the catalog as SXR8.DE
-        preview.Mappings.Single(mapping => mapping.Ticker == "AAPL").RegisterAs.ShouldBe("AAPL");
+        preview.Mappings.Single(mapping => mapping.Ticker == "AAPL").InstrumentName.ShouldBe("Apple");  // stocks of the statement are in the catalog too
         preview.Counts.NeedsMapping.ShouldBe(3);                              // no strategy says which sleeve for the buys (the dividend falls back to the cash sleeve)
 
         var configured = await SendAsync(client, HttpMethod.Put, $"{url}/{preview.Id}", new
@@ -92,6 +93,41 @@ public sealed class StatementImportScenarioTests(MarketDataApiFactory factory) :
         undone.Status.ShouldBe("Undone");
         var after = await client.GetFromJsonAsync<AccountHoldingsDto>($"/api/portfolio/accounts/{account.Id}/holdings", ct);
         after!.SubPortfolios.ShouldAllBe(sub => sub.Positions.Count == 0 && sub.Cash == 0m);
+    }
+
+    [Fact]
+    public async Task Unknown_tickers_are_looked_up_on_yahoo_and_a_single_sleeve_is_chosen_so_the_import_only_needs_confirming()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var client = await factory.CreateSignedInClientAsync(ct);
+        (await client.PostAsync("/api/market-data/fx-rates/ingest", null, ct)).EnsureSuccessStatusCode();
+        var opened = await client.PostAsJsonAsync("/api/portfolio/accounts", new
+        {
+            name = "Revolut",
+            broker = "Revolut",
+            baseCurrency = "EUR",
+            subPortfolios = new object[] { new { name = "Акції", targetSharePercent = 100m } },
+        }, ct);
+        var account = (await opened.Content.ReadFromJsonAsync<AccountSetupDto>(ct))!;
+        const string statement = """
+            Date,Ticker,Type,Quantity,Price per share,Total Amount,Currency,FX Rate
+            2026-06-01T09:00:00.100Z,,CASH TOP-UP,,,EUR 1000,EUR,0.2340
+            2026-06-02T10:15:30.200Z,RHM,BUY - MARKET,1,EUR 100,EUR 100,EUR,0.2340
+            2026-06-03T15:30:00.300Z,ZZZZ,BUY - MARKET,1,USD 10,USD 10,USD,0.2564
+            """;
+
+        var preview = await SendAsync(client, HttpMethod.Post, $"/api/portfolio/accounts/{account.Id}/statement-imports",
+            new { fileName = "revolut.csv", content = statement }, ct);
+
+        var rheinmetall = preview.Mappings.Single(mapping => mapping.Ticker == "RHM");
+        (rheinmetall.InstrumentId, rheinmetall.RegisterAs, rheinmetall.InstrumentName).ShouldBe((null, "RHM.DE", "Rheinmetall AG"));
+        var unknown = preview.Mappings.Single(mapping => mapping.Ticker == "ZZZZ");
+        (unknown.RegisterAs, unknown.InstrumentName).ShouldBe(("ZZZZ", null));      // Yahoo has nothing: the ticker as it is
+        preview.Mappings.ShouldAllBe(mapping => mapping.SubPortfolioId == account.SubPortfolios[0].Id);
+        preview.Counts.NeedsMapping.ShouldBe(0);
+
+        var confirmed = await SendAsync(client, HttpMethod.Post, $"/api/portfolio/accounts/{account.Id}/statement-imports/{preview.Id}/confirm", new { }, ct);
+        confirmed.Mappings.Single(mapping => mapping.Ticker == "RHM").InstrumentName.ShouldBe("Rheinmetall AG");
     }
 
     private static async Task<StatementImportDto> SendAsync(HttpClient client, HttpMethod method, string url, object body, CancellationToken ct)

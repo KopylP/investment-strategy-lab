@@ -70,3 +70,18 @@ def _column(raw: pd.DataFrame, field: str, symbol: str, symbol_count: int) -> pd
     if symbol_count == 1 and field in raw.columns:
         return raw[field]
     return None
+
+
+def symbol_info(symbol: str) -> dict[str, str] | None:
+    """Name, currency and quote type (EQUITY, ETF, ...) of a Yahoo symbol, or None when Yahoo does not know it."""
+    try:
+        info = yf.Ticker(symbol).info or {}
+    except Exception:
+        return None
+    if not info.get("quoteType") or not info.get("currency"):
+        return None
+    return {
+        "name": info.get("longName") or info.get("shortName") or symbol,
+        "currency": str(info["currency"]),
+        "quote_type": str(info["quoteType"]),
+    }

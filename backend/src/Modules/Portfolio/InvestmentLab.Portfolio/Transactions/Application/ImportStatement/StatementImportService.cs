@@ -110,9 +110,18 @@ public sealed class StatementImportService(
         if (!Enum.TryParse<ImportMode>(command.Mode, ignoreCase: true, out var mode))
             return Error.Validation("statement_import.mode_invalid", $"'{command.Mode}' is not Merge, UpdateImported, Replace or FromScratch.");
 
-        var mappings = statement.Mappings.Select(mapping => command.Mappings.FirstOrDefault(input => string.Equals(input.Ticker, mapping.Ticker, StringComparison.OrdinalIgnoreCase)) is { } input
-            ? mapping with { InstrumentId = input.InstrumentId, RegisterAs = input.InstrumentId is null ? input.RegisterAs?.Trim().ToUpperInvariant() : null, SubPortfolioId = input.SubPortfolioId }
-            : mapping).ToList();
+        var mappings = statement.Mappings.Select(mapping =>
+        {
+            if (command.Mappings.FirstOrDefault(input => string.Equals(input.Ticker, mapping.Ticker, StringComparison.OrdinalIgnoreCase)) is not { } input)
+                return mapping;
+            var symbol = input.InstrumentId is null ? input.RegisterAs?.Trim().ToUpperInvariant() : null;
+            // The looked-up name belongs to the looked-up symbol: a symbol typed by hand is looked up below.
+            return mapping with { InstrumentId = input.InstrumentId, RegisterAs = symbol, SubPortfolioId = input.SubPortfolioId, RegisterName = symbol == mapping.RegisterAs ? mapping.RegisterName : null };
+        }).ToList();
+        var typed = Enumerable.Range(0, mappings.Count).Where(i => mappings[i].RegisterAs is not null && mappings[i].RegisterAs != statement.Mappings[i].RegisterAs).ToList();
+        var found = await registry.ResolveAsync([.. typed.Select(i => new BrokerTickerDto(mappings[i].RegisterAs!, mappings[i].Currency, IsYahooSymbol: true))], cancellationToken);
+        foreach (var (i, listed) in typed.Zip(found))
+            mappings[i] = mappings[i] with { RegisterName = listed?.Name };
         var configured = statement.Configure(mode, command.FromDate, command.CashSubPortfolioId, mappings);
         if (configured.IsFailure)
             return configured.Error;
@@ -134,7 +143,7 @@ public sealed class StatementImportService(
         {
             if (mapping is { InstrumentId: null, RegisterAs: { Length: > 0 } symbol })
             {
-                var registered = await registry.RegisterAsync(new NewInstrumentDto(symbol, mapping.Ticker, mapping.Currency, "Stock"), cancellationToken);
+                var registered = await registry.RegisterAsync(new NewInstrumentDto(symbol, mapping.RegisterName ?? mapping.Ticker, mapping.Currency, "Stock"), cancellationToken);
                 if (registered.InstrumentId is null)
                     return Error.Validation("statement_import.instrument_not_registered", $"{mapping.Ticker}: {registered.Error}");
                 mappings.Add(mapping with { InstrumentId = registered.InstrumentId, RegisterAs = null });
@@ -269,7 +278,7 @@ public sealed class StatementImportService(
             account.BaseCurrency.Code,
             [.. statement.Mappings.Select(mapping => new TickerMappingDto(mapping.Ticker, mapping.Currency, mapping.InstrumentId, mapping.RegisterAs, mapping.SubPortfolioId,
                 statement.Rows.Count(row => string.Equals(row.Ticker, mapping.Ticker, StringComparison.OrdinalIgnoreCase)),
-                mapping.InstrumentId is { } id && names.TryGetValue(id, out var name) ? name : null))],
+                mapping.InstrumentId is { } id ? names.GetValueOrDefault(id) : mapping.RegisterName))],
             [.. statement.Rows.Select(row =>
             {
                 var outcome = byNumber.GetValueOrDefault(row.Number);
@@ -381,21 +390,35 @@ public sealed class StatementImportService(
                 .Select(symbol => (Symbol: symbol[YahooPrefix.Length..].ToUpperInvariant(), Instrument: instrument)))
             .ToList();
         var universes = (await strategies.GetStrategies(cancellationToken)).ToDictionary(strategy => strategy.Id, strategy => strategy.Universe);
+        // With a single sub-portfolio there is nothing to choose: every ticker goes there.
+        var only = account.ActiveSubPortfolios.ToList() is [var single] ? single.Id.Value : (Guid?)null;
 
-        return [.. rows.Where(row => row.NeedsInstrument && row.Ticker is not null)
+        var tickers = rows.Where(row => row.NeedsInstrument && row.Ticker is not null)
             .GroupBy(row => row.Ticker!, StringComparer.OrdinalIgnoreCase)
-            .Select(group =>
-            {
-                var currency = group.First().Currency;
-                var ticker = group.Key.ToUpperInvariant();
-                var match = symbols.FirstOrDefault(s => s.Symbol == ticker && s.Instrument.TradingCurrency == currency).Instrument
-                    ?? symbols.FirstOrDefault(s => s.Symbol.StartsWith(ticker + ".", StringComparison.Ordinal) && s.Instrument.TradingCurrency == currency).Instrument
-                    ?? symbols.FirstOrDefault(s => s.Symbol == ticker || s.Symbol.StartsWith(ticker + ".", StringComparison.Ordinal)).Instrument;
-                var sub = match is null
-                    ? null
-                    : account.ActiveSubPortfolios.FirstOrDefault(s => s.Strategy is { } strategy && universes.TryGetValue(strategy.StrategyId, out var universe) && universe.Contains(match.Id))?.Id.Value;
-                return new TickerMapping(ticker, currency, match?.Id, match is null ? (currency == "EUR" ? $"{ticker}.DE" : ticker) : null, sub);
-            })];
+            .Select(group => (Ticker: group.Key.ToUpperInvariant(), group.First().Currency))
+            .Select(ticker => (ticker.Ticker, ticker.Currency, Match: symbols.FirstOrDefault(s => s.Symbol == ticker.Ticker && s.Instrument.TradingCurrency == ticker.Currency).Instrument
+                ?? symbols.FirstOrDefault(s => s.Symbol.StartsWith(ticker.Ticker + ".", StringComparison.Ordinal) && s.Instrument.TradingCurrency == ticker.Currency).Instrument
+                ?? symbols.FirstOrDefault(s => s.Symbol == ticker.Ticker || s.Symbol.StartsWith(ticker.Ticker + ".", StringComparison.Ordinal)).Instrument))
+            .ToList();
+
+        // Tickers the catalog lacks are looked up on Yahoo (the right exchange, the real name), so a new stock needs no typing.
+        var unknown = tickers.Where(ticker => ticker.Match is null).ToList();
+        var listed = unknown.Zip(await registry.ResolveAsync([.. unknown.Select(ticker => new BrokerTickerDto(ticker.Ticker, ticker.Currency))], cancellationToken))
+            .ToDictionary(pair => pair.First.Ticker, pair => pair.Second);
+
+        return [.. tickers.Select(ticker =>
+        {
+            var found = listed.GetValueOrDefault(ticker.Ticker);
+            var match = ticker.Match ?? (found is null ? null : symbols.FirstOrDefault(s => s.Symbol == found.YahooSymbol.ToUpperInvariant()).Instrument);
+            var sub = only ?? (match is null
+                ? null
+                : account.ActiveSubPortfolios.FirstOrDefault(s => s.Strategy is { } strategy && universes.TryGetValue(strategy.StrategyId, out var universe) && universe.Contains(match.Id))?.Id.Value);
+            if (match is not null)
+                return new TickerMapping(ticker.Ticker, ticker.Currency, match.Id, null, sub);
+            return found is null
+                ? new TickerMapping(ticker.Ticker, ticker.Currency, null, ticker.Currency == "EUR" ? $"{ticker.Ticker}.DE" : ticker.Ticker, sub)
+                : new TickerMapping(ticker.Ticker, ticker.Currency, null, found.YahooSymbol, sub, found.Name);
+        })];
     }
 
     private static Guid? SuggestCashSubPortfolio(InvestmentAccount account, IReadOnlyList<StatementRow> rows, IReadOnlyList<TickerMapping> mappings)

@@ -86,7 +86,8 @@ public enum RowDecision
 /// <summary>Where a ticker of the statement goes: an instrument of the catalog (or a new one) and a sub-portfolio.</summary>
 /// <param name="InstrumentId">Null: not chosen yet; with <paramref name="RegisterAs"/> a new instrument is created on confirmation.</param>
 /// <param name="RegisterAs">Yahoo symbol for a new instrument (e.g. <c>AAPL</c>, <c>QDVE.DE</c>).</param>
-public sealed record TickerMapping(string Ticker, string Currency, Guid? InstrumentId, string? RegisterAs, Guid? SubPortfolioId);
+/// <param name="RegisterName">The name Yahoo gives <paramref name="RegisterAs"/> when the symbol was looked up there.</param>
+public sealed record TickerMapping(string Ticker, string Currency, Guid? InstrumentId, string? RegisterAs, Guid? SubPortfolioId, string? RegisterName = null);
 
 /// <summary>What the import plans for one row, and after confirmation what happened.</summary>
 public sealed record RowOutcome(int Number, RowDecision Decision, string? Note, Guid? ExistingTransactionId, bool WillRecord, bool WillReverseExisting, string? Result);
