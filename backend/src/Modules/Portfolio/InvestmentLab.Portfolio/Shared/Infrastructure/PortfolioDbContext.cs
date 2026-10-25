@@ -3,6 +3,8 @@ using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Portfolio.Accounts.Domain;
 using InvestmentLab.Portfolio.Accounts.Infrastructure;
+using InvestmentLab.Portfolio.Transactions.Domain;
+using InvestmentLab.Portfolio.Transactions.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -19,6 +21,8 @@ public sealed class PortfolioDbContext(DbContextOptions<PortfolioDbContext> opti
     private static readonly UserId Nobody = UserId.Of(Guid.AllBitsSet);
 
     public DbSet<InvestmentAccount> Accounts => Set<InvestmentAccount>();
+    public DbSet<Transaction> Transactions => Set<Transaction>();
+    public DbSet<HoldingRow> HoldingRows => Set<HoldingRow>();
 
     protected override string Schema => SchemaName;
 
@@ -39,6 +43,8 @@ public sealed class PortfolioDbContext(DbContextOptions<PortfolioDbContext> opti
     {
         modelBuilder.ApplyConfiguration(new InvestmentAccountConfiguration(this));
         modelBuilder.ApplyConfiguration(new SubPortfolioConfiguration());
+        modelBuilder.ApplyConfiguration(new TransactionConfiguration(this));
+        modelBuilder.ApplyConfiguration(new HoldingRowConfiguration(this));
     }
 }
 

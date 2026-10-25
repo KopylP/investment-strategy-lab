@@ -10,7 +10,23 @@ using InvestmentLab.Portfolio.Accounts.Application.GetAccount;
 using InvestmentLab.Portfolio.Accounts.Application.OpenAccount;
 using InvestmentLab.Portfolio.Accounts.Application.RetireSubPortfolio;
 using InvestmentLab.Portfolio.Accounts.Infrastructure;
+using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.Portfolio.Contracts.Accounts;
+using InvestmentLab.Portfolio.Contracts.Holdings;
+using InvestmentLab.Portfolio.Contracts.Transactions;
+using InvestmentLab.Portfolio.Holdings.Api;
+using InvestmentLab.Portfolio.Holdings.Application.GetHoldings;
+using InvestmentLab.Portfolio.Holdings.Infrastructure;
+using InvestmentLab.Portfolio.Transactions.Api;
+using InvestmentLab.Portfolio.Transactions.Application;
+using InvestmentLab.Portfolio.Transactions.Application.GetTransactions;
+using InvestmentLab.Portfolio.Transactions.Application.ImportPositions;
+using InvestmentLab.Portfolio.Transactions.Application.Integration;
+using InvestmentLab.Portfolio.Transactions.Application.RecordCashMovement;
+using InvestmentLab.Portfolio.Transactions.Application.RecordInternalTransfer;
+using InvestmentLab.Portfolio.Transactions.Application.RecordTrade;
+using InvestmentLab.Portfolio.Transactions.Application.ReverseTransaction;
+using InvestmentLab.Portfolio.Transactions.Infrastructure;
 using InvestmentLab.Portfolio.Shared.Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
@@ -39,9 +55,28 @@ public sealed class PortfolioModule : IModule
         services.AddScoped<RetireSubPortfolioHandler>();
         services.AddScoped<GetAccountHandler>();
         services.AddScoped<IAccountSetupQueries, AccountSetupQueries>();
+
+        services.AddScoped<ITransactionJournal, TransactionJournal>();
+        services.AddScoped<TransactionRecorder>();
+        services.AddScoped<RecordTradeHandler>();
+        services.AddScoped<RecordCashMovementHandler>();
+        services.AddScoped<RecordInternalTransferHandler>();
+        services.AddScoped<ReverseTransactionHandler>();
+        services.AddScoped<GetTransactionsHandler>();
+        services.AddScoped<ImportPositionsHandler>();
+        services.AddIntegrationEventHandler<RecordTradeV1, PortfolioCommandHandlers>();
+        services.AddIntegrationEventHandler<RecordContributionV1, PortfolioCommandHandlers>();
+        services.AddIntegrationEventHandler<ReverseTransactionV1, PortfolioCommandHandlers>();
+
+        services.AddScoped<IHoldingsReader, HoldingsReader>();
+        services.AddScoped<GetHoldingsHandler>();
+        services.AddScoped<IHoldingsQueries, HoldingsQueries>();
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>
         endpoints.MapGroup("/api/portfolio")
-            .MapAccounts();
+            .MapAccounts()
+            .MapTransactions()
+            .MapImport()
+            .MapHoldings();
 }

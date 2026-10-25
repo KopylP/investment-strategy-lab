@@ -51,5 +51,6 @@ internal sealed class SubPortfolioConfiguration : IEntityTypeConfiguration<SubPo
             guardrails.Ignore(g => g.AllowLeverage);
         });
         sub.Ignore(s => s.IsActive);
+        sub.HasIndex("AccountId", nameof(SubPortfolio.Position)).IsUnique();
     }
 }

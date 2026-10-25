@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace InvestmentLab.Portfolio.Shared.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class AddAccounts : Migration
+    public partial class AddPortfolio : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -35,6 +35,27 @@ namespace InvestmentLab.Portfolio.Shared.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "holdings",
+                schema: "portfolio",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    account_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    owner_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    sub_portfolio_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    instrument_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    quantity = table.Column<decimal>(type: "numeric(20,8)", precision: 20, scale: 8, nullable: false),
+                    amount = table.Column<decimal>(type: "numeric(20,8)", precision: 20, scale: 8, nullable: false),
+                    currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
+                    lots = table.Column<string>(type: "jsonb", nullable: false),
+                    as_of = table.Column<DateOnly>(type: "date", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_holdings", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "outbox_messages",
                 schema: "portfolio",
                 columns: table => new
@@ -53,6 +74,27 @@ namespace InvestmentLab.Portfolio.Shared.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "transactions",
+                schema: "portfolio",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    account_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    owner_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    kind = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    occurred_on = table.Column<DateOnly>(type: "date", nullable: false),
+                    source_kind = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    source_reference = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    details = table.Column<string>(type: "jsonb", nullable: false),
+                    reversal_of = table.Column<Guid>(type: "uuid", nullable: true),
+                    recorded_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_transactions", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "sub_portfolios",
                 schema: "portfolio",
                 columns: table => new
@@ -64,6 +106,7 @@ namespace InvestmentLab.Portfolio.Shared.Infrastructure.Migrations
                     strategy_pinned_version = table.Column<int>(type: "integer", nullable: true),
                     cash_instrument_id = table.Column<Guid>(type: "uuid", nullable: true),
                     status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    position = table.Column<int>(type: "integer", nullable: false),
                     account_id = table.Column<Guid>(type: "uuid", nullable: true),
                     max_monthly_turnover = table.Column<decimal>(type: "numeric", nullable: true),
                     max_position_weight = table.Column<decimal>(type: "numeric", nullable: true)
@@ -87,6 +130,14 @@ namespace InvestmentLab.Portfolio.Shared.Infrastructure.Migrations
                 column: "owner_id");
 
             migrationBuilder.CreateIndex(
+                name: "ix_holdings_account_id_sub_portfolio_id_instrument_id",
+                schema: "portfolio",
+                table: "holdings",
+                columns: new[] { "account_id", "sub_portfolio_id", "instrument_id" },
+                unique: true)
+                .Annotation("Npgsql:NullsDistinct", false);
+
+            migrationBuilder.CreateIndex(
                 name: "ix_outbox_messages_occurred_at",
                 schema: "portfolio",
                 table: "outbox_messages",
@@ -94,21 +145,52 @@ namespace InvestmentLab.Portfolio.Shared.Infrastructure.Migrations
                 filter: "processed_at IS NULL");
 
             migrationBuilder.CreateIndex(
-                name: "ix_sub_portfolios_account_id",
+                name: "ix_sub_portfolios_account_id_position",
                 schema: "portfolio",
                 table: "sub_portfolios",
-                column: "account_id");
+                columns: new[] { "account_id", "position" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_transactions_account_id_occurred_on",
+                schema: "portfolio",
+                table: "transactions",
+                columns: new[] { "account_id", "occurred_on" });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_transactions_reversal_of",
+                schema: "portfolio",
+                table: "transactions",
+                column: "reversal_of",
+                unique: true,
+                filter: "reversal_of IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_transactions_source_reference",
+                schema: "portfolio",
+                table: "transactions",
+                column: "source_reference",
+                unique: true,
+                filter: "source_reference IS NOT NULL");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "holdings",
+                schema: "portfolio");
+
+            migrationBuilder.DropTable(
                 name: "outbox_messages",
                 schema: "portfolio");
 
             migrationBuilder.DropTable(
                 name: "sub_portfolios",
+                schema: "portfolio");
+
+            migrationBuilder.DropTable(
+                name: "transactions",
                 schema: "portfolio");
 
             migrationBuilder.DropTable(
