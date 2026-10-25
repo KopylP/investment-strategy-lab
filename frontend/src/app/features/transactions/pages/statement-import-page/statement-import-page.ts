@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ConfirmationService } from 'primeng/api';
@@ -54,6 +54,16 @@ export class StatementImportPage {
   private readonly confirmation = inject(ConfirmationService);
 
   protected readonly onlyChanges = signal(false);
+
+  /** `?importId=` opens an upload started elsewhere (the report's "load operations"). */
+  readonly importId = input<string>();
+
+  constructor() {
+    effect(() => {
+      const importId = this.importId();
+      if (importId) void this.store.open(importId);
+    });
+  }
 
   protected readonly modes: { label: string; value: ImportMode }[] = [
     { label: 'Доповнити', value: 'Merge' },

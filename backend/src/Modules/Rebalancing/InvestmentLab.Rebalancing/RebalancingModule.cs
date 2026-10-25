@@ -13,6 +13,7 @@ using InvestmentLab.Rebalancing.Planning.Infrastructure;
 using InvestmentLab.Rebalancing.Reports.Api;
 using InvestmentLab.Rebalancing.Reports.Application.GetReport;
 using InvestmentLab.Rebalancing.Reports.Application.Integration;
+using InvestmentLab.Rebalancing.Reports.Application.LoadOperations;
 using InvestmentLab.Rebalancing.Reports.Application.MarkActions;
 using InvestmentLab.Rebalancing.Reports.Domain;
 using InvestmentLab.Rebalancing.Reports.Infrastructure;
@@ -39,6 +40,7 @@ public sealed class RebalancingModule : IModule
         services.AddScoped<IReportQueries, ReportQueries>();
         services.AddScoped<ReportQueriesHandler>();
         services.AddScoped<MarkingHandler>();
+        services.AddScoped<LoadOperationsHandler>();
         services.AddIntegrationEventHandler<TransactionRecordedV1, TransactionResults>();
         services.AddIntegrationEventHandler<TransactionRejectedV1, TransactionResults>();
 
