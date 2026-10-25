@@ -13,7 +13,7 @@
     <div class="text-xs text-muted-color text-center mt-2">зовнішнє кільце — факт, внутрішнє — ціль</div>
   </div>
   }
-  <p-table [value]="dashboard().subPortfolios" styleClass="w-full" size="small" [tableStyle]="{ 'min-width': '28rem' }">
+  <p-table [value]="dashboard().subPortfolios" class="w-full min-w-0" styleClass="w-full" size="small" [tableStyle]="{ 'min-width': '28rem' }">
     <ng-template #header>
       <tr><th>Під-портфель</th><th class="text-right">Вартість</th><th class="text-right">Факт</th><th class="text-right">Ціль</th><th class="text-right">TWR</th></tr>
     </ng-template>
