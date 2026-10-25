@@ -1,10 +1,18 @@
+@if (dashboard().subPortfolios.length <= 1) {
+  <p class="text-sm text-muted-color mt-0 mb-3">
+    Тут порівнюється фактична частка кожного під-портфеля з цільовою. У вас один під-портфель (ціль 100%), тож порівнювати нічого —
+    склад за інструментами дивіться в <a routerLink="/holdings" class="text-primary">позиціях</a>.
+  </p>
+}
 <div class="flex flex-col 2xl:flex-row gap-6 items-center">
+  @if (dashboard().subPortfolios.length > 1) {
   <div class="w-48 shrink-0">
     @for (chart of [data()]; track chart) {
       <p-chart type="doughnut" [data]="chart" [options]="options()" />
     }
     <div class="text-xs text-muted-color text-center mt-2">зовнішнє кільце — факт, внутрішнє — ціль</div>
   </div>
+  }
   <p-table [value]="dashboard().subPortfolios" styleClass="w-full" size="small" [tableStyle]="{ 'min-width': '28rem' }">
     <ng-template #header>
       <tr><th>Під-портфель</th><th class="text-right">Вартість</th><th class="text-right">Факт</th><th class="text-right">Ціль</th><th class="text-right">TWR</th></tr>

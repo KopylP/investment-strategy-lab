@@ -44,6 +44,11 @@ export class OverviewStore {
   readonly dashboard = computed(() => (this.dashboardResource.hasValue() ? this.dashboardResource.value() : undefined));
   readonly isLoading = this.dashboardResource.isLoading;
   readonly loadError = this.dashboardResource.error;
+  /** Gain over the money paid in, as a fraction of it (what a broker app shows next to the total). */
+  readonly gainPct = computed(() => {
+    const d = this.dashboard();
+    return d && d.netContributions > 0 ? d.gain / d.netContributions : null;
+  });
   readonly hasHistory = computed(() => (this.dashboard()?.series.length ?? 0) > 0);
 
   readonly reports = computed(() => this.reportsResource.value() ?? []);
