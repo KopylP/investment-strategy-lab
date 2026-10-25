@@ -1,0 +1,199 @@
+{
+  "version": 1,
+  "name": "trim-winner-far-above-target",
+  "source": "synthetic",
+  "asOf": "2026-10-05",
+  "currency": "EUR",
+  "topN": 4,
+  "cashInstrument": "CASHX",
+  "settings": {
+    "minTrade": 25.0,
+    "trimBand": 0.1,
+    "fractionalShares": true,
+    "weakMarketInvestPct": 0.5
+  },
+  "decision": {
+    "marketOk": true,
+    "investFraction": 1.0,
+    "targets": [
+      {
+        "key": "AAA",
+        "weight": 0.25
+      },
+      {
+        "key": "BBB",
+        "weight": 0.25
+      },
+      {
+        "key": "CCC",
+        "weight": 0.25
+      },
+      {
+        "key": "DDD",
+        "weight": 0.25
+      }
+    ],
+    "scores": [
+      {
+        "key": "AAA",
+        "rank": 1,
+        "momentum": 0.29,
+        "status": "selected",
+        "reason": "ранг 1 за моментумом"
+      },
+      {
+        "key": "BBB",
+        "rank": 2,
+        "momentum": 0.27999999999999997,
+        "status": "selected",
+        "reason": "ранг 2 за моментумом"
+      },
+      {
+        "key": "CCC",
+        "rank": 3,
+        "momentum": 0.27,
+        "status": "selected",
+        "reason": "ранг 3 за моментумом"
+      },
+      {
+        "key": "DDD",
+        "rank": 4,
+        "momentum": 0.26,
+        "status": "selected",
+        "reason": "ранг 4 за моментумом"
+      }
+    ]
+  },
+  "contribution": 100.0,
+  "portfolio": {
+    "cash": 0.0,
+    "holdings": [
+      {
+        "key": "AAA",
+        "quantity": 100.0
+      },
+      {
+        "key": "BBB",
+        "quantity": 5.0
+      },
+      {
+        "key": "CCC",
+        "quantity": 2.0
+      },
+      {
+        "key": "DDD",
+        "quantity": 4.0
+      }
+    ],
+    "costBasis": {
+      "AAA": 5.0,
+      "BBB": 20.0,
+      "CCC": 50.0,
+      "DDD": 25.0
+    }
+  },
+  "prices": {
+    "AAA": 10.0,
+    "BBB": 20.0,
+    "CASHX": 100.0,
+    "CCC": 50.0,
+    "DDD": 25.0
+  },
+  "names": {},
+  "expected": {
+    "orders": [
+      {
+        "action": "sell",
+        "kind": "trim",
+        "ticker": "AAA",
+        "name": "AAA",
+        "amount": 650.0,
+        "shares": 65.0,
+        "price": 10.0,
+        "reason": "вага вище цілі 25% більш ніж на 10%: продати надлишок"
+      },
+      {
+        "action": "buy",
+        "kind": "buy",
+        "ticker": "BBB",
+        "name": "BBB",
+        "amount": 250.0,
+        "shares": 12.5,
+        "price": 20.0,
+        "reason": "докупити до цілі 25% портфеля (ранг 2, моментум +28.0%)"
+      },
+      {
+        "action": "buy",
+        "kind": "buy",
+        "ticker": "CCC",
+        "name": "CCC",
+        "amount": 250.0,
+        "shares": 5.0,
+        "price": 50.0,
+        "reason": "докупити до цілі 25% портфеля (ранг 3, моментум +27.0%)"
+      },
+      {
+        "action": "buy",
+        "kind": "buy",
+        "ticker": "DDD",
+        "name": "DDD",
+        "amount": 250.0,
+        "shares": 10.0,
+        "price": 25.0,
+        "reason": "докупити до цілі 25% портфеля (ранг 4, моментум +26.0%)"
+      }
+    ],
+    "totalBefore": 1300.0,
+    "totalAfter": 1400.0,
+    "parkedBefore": 0.0,
+    "parkedAfter": 0.0,
+    "allocation": [
+      {
+        "ticker": "AAA",
+        "role": "pick",
+        "valueBefore": 1000.0,
+        "valueAfter": 350.0,
+        "weightBefore": 0.7692307692307693,
+        "weightAfter": 0.25,
+        "targetWeight": 0.25
+      },
+      {
+        "ticker": "BBB",
+        "role": "pick",
+        "valueBefore": 100.0,
+        "valueAfter": 350.0,
+        "weightBefore": 0.07692307692307693,
+        "weightAfter": 0.25,
+        "targetWeight": 0.25
+      },
+      {
+        "ticker": "CCC",
+        "role": "pick",
+        "valueBefore": 100.0,
+        "valueAfter": 350.0,
+        "weightBefore": 0.07692307692307693,
+        "weightAfter": 0.25,
+        "targetWeight": 0.25
+      },
+      {
+        "ticker": "DDD",
+        "role": "pick",
+        "valueBefore": 100.0,
+        "valueAfter": 350.0,
+        "weightBefore": 0.07692307692307693,
+        "weightAfter": 0.25,
+        "targetWeight": 0.25
+      },
+      {
+        "ticker": "CASHX",
+        "role": "cash",
+        "valueBefore": 0.0,
+        "valueAfter": 0.0,
+        "weightBefore": 0.0,
+        "weightAfter": 0.0,
+        "targetWeight": null
+      }
+    ],
+    "notes": []
+  }
+}

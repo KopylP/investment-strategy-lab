@@ -56,6 +56,29 @@ All strategy-specific code, docs, templates, configurations, indicators, and run
 
 There are no root-level strategy wrappers. Run strategies through module entrypoints with command-line flags or environment variables.
 
+## HTTP API (strategy engine for the .NET backend)
+
+The Aspire AppHost in `backend/` starts it automatically. To run it alone:
+
+```bash
+uv run uvicorn finance_decisions.api.main:app --reload
+```
+
+| Endpoint | What |
+|---|---|
+| `GET /v1/strategies` | Strategy types with the JSON Schema and defaults of their parameters. |
+| `POST /v1/strategies/{code}/decide` | Targets (weights, invest fraction, rationale) for one sub-portfolio. Prices come in the request; data after `asOf` is ignored. |
+| `POST /v1/strategies/{code}/risk` | Weekly exit checks: per-position status, exit prices, `exit`/`warn` signals. |
+| `POST /v1/prices` | Daily `close` and `adjustedClose` from Yahoo Finance for the backend's MarketData module. |
+| `GET /health` | Liveness for Aspire. |
+
+The contract lives in [`contracts/v1/openapi.json`](contracts/v1/openapi.json). After changing
+`finance_decisions/api/contracts.py`, regenerate it with `uv run python tools/export_contract.py`; CI fails when it is stale.
+
+Golden fixtures for the .NET rebalancer (the port of `plan.py`) are written to
+`backend/tests/InvestmentLab.GoldenTests/Fixtures/` by `uv run python tools/export_golden_fixtures.py`
+(synthetic scenarios + the last 12 months of the live strategy on real prices).
+
 ## Local Setup
 
 ```bash

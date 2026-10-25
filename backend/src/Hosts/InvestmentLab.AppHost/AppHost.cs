@@ -12,9 +12,16 @@ if (!ephemeral)
 
 var database = postgres.AddDatabase("investmentlab");
 
+// Python strategy engine (FastAPI). `uv sync` runs before start; code reloads on change.
+var strategyEngine = builder.AddUvicornApp("strategy-engine", "../../../../strategy-engine", "finance_decisions.api.main:app")
+    .WithUv()
+    .WithHttpHealthCheck("/health")
+    .WithUrlForEndpoint("http", _ => new ResourceUrlAnnotation { Url = "/docs", DisplayText = "Swagger (strategy engine)" });
+
 builder.AddProject<Projects.InvestmentLab_Api>("api")
     .WithReference(database)
     .WaitFor(database)
+    .WithReference(strategyEngine)
     .WithHttpHealthCheck("/health")
     .WithUrlForEndpoint("https", _ => new ResourceUrlAnnotation { Url = "/scalar", DisplayText = "Scalar (API docs)" });
 

@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 from datetime import date
 import logging
 from pathlib import Path
+from typing import Callable
 
 import numpy as np
 import pandas as pd
@@ -22,9 +23,9 @@ import pandas as pd
 from finance_decisions.market_data import download_close_prices
 from finance_decisions.models import Position, aggregate_positions
 from .config import StrategyConfig, load_strategy_config
-from .plan import build_plan
+from .plan import MonthlyPlan, build_plan
 from .risk import analyze_portfolio_risk
-from .scanner import scan_etfs
+from .scanner import ScanResult, scan_etfs
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +54,20 @@ class BacktestResult:
     metrics: dict[str, dict[str, float]]
     yearly: list[dict]
     picks_log: list[dict] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class PlanCapture:
+    """Inputs and output of one monthly ``build_plan`` call (used to export golden fixtures)."""
+
+    day: pd.Timestamp
+    scan: ScanResult
+    holdings: dict[str, float]
+    prices: dict[str, float]
+    cash: float
+    contribution: float
+    cost_basis: dict[str, float]
+    plan: MonthlyPlan
 
 
 class _Book:
@@ -112,6 +127,7 @@ def run_backtest(
     contribution: float | None = None,
     initial: float = 0.0,
     years: int | None = None,
+    plan_observer: Callable[[PlanCapture], None] | None = None,
 ) -> BacktestResult:
     contribution = config.plan.monthly_contribution if contribution is None else contribution
     years = years or config.backtest.years
@@ -167,6 +183,8 @@ def run_backtest(
                 contribution=flow,
                 cost_basis=costs,
             )
+            if plan_observer is not None:
+                plan_observer(PlanCapture(day, scan, holdings, today_prices.to_dict(), book.cash, flow, costs, plan))
             book.cash += flow
             for order in plan.orders:
                 if order.action == "sell":

@@ -4,7 +4,7 @@ import logging
 import os
 from pathlib import Path
 
-from finance_decisions.helpers import latest_value
+from finance_decisions.helpers import holdings_by_value, latest_value
 from finance_decisions.market_data import download_close_prices
 from finance_decisions.models import Portfolio, load_portfolio
 from finance_decisions.notifications import send_telegram
@@ -106,11 +106,6 @@ def run_monthly_scanner(
     logger.info(f"\nReports written to: {report_dir}")
     _notify(format_monthly_telegram(result, plan))
     return 0
-
-
-def holdings_by_value(holdings: dict[str, float], prices: dict[str, float | None]) -> list[str]:
-    """Held tickers, largest position first."""
-    return sorted(holdings, key=lambda ticker: holdings[ticker] * (prices.get(ticker) or 0.0), reverse=True)
 
 
 def _notify(text: str) -> None:

@@ -12,6 +12,8 @@ dependencies = [
   "numpy",
   "yfinance",
   "jinja2>=3.1.6",
+  "fastapi>=0.162.0",
+  "uvicorn>=0.54.0",
 ]
 
 [tool.setuptools.packages.find]
@@ -28,5 +30,6 @@ pythonpath = ["src"]
 
 [dependency-groups]
 dev = [
+    "httpx2>=2.16.0",
     "pytest>=9.1.1",
 ]

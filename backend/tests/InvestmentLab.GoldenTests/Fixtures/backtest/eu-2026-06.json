@@ -1,0 +1,220 @@
+{
+  "version": 1,
+  "name": "eu-2026-06",
+  "source": "backtest",
+  "asOf": "2026-06-01",
+  "currency": "EUR",
+  "topN": 4,
+  "cashInstrument": "XEON.DE",
+  "settings": {
+    "minTrade": 25.0,
+    "trimBand": 0.1,
+    "fractionalShares": true,
+    "weakMarketInvestPct": 0.5
+  },
+  "decision": {
+    "marketOk": true,
+    "investFraction": 1.0,
+    "targets": [
+      {
+        "key": "QDVI.DE",
+        "weight": 0.25
+      },
+      {
+        "key": "XDJE.DE",
+        "weight": 0.25
+      },
+      {
+        "key": "IS3N.DE",
+        "weight": 0.25
+      },
+      {
+        "key": "QDVF.DE",
+        "weight": 0.25
+      }
+    ],
+    "scores": [
+      {
+        "key": "QDVI.DE",
+        "rank": 1,
+        "momentum": 0.49337025089275244,
+        "status": "selected",
+        "reason": "ранг 1 за моментумом"
+      },
+      {
+        "key": "XDJE.DE",
+        "rank": 2,
+        "momentum": 0.3349729807112827,
+        "status": "selected",
+        "reason": "ранг 2 за моментумом"
+      },
+      {
+        "key": "IS3N.DE",
+        "rank": 3,
+        "momentum": 0.2620241774186438,
+        "status": "selected",
+        "reason": "ранг 3 за моментумом"
+      },
+      {
+        "key": "QDVF.DE",
+        "rank": 4,
+        "momentum": 0.2449889322092358,
+        "status": "selected",
+        "reason": "ранг 4 за моментумом"
+      },
+      {
+        "key": "4GLD.DE",
+        "rank": 13,
+        "momentum": 0.07986289578874417,
+        "status": "reserve",
+        "reason": "проходить фільтри, але є сильніші (ранг 13)"
+      }
+    ]
+  },
+  "contribution": 227.0,
+  "portfolio": {
+    "cash": 0.0,
+    "holdings": [
+      {
+        "key": "XDJE.DE",
+        "quantity": 15.306476451607828
+      },
+      {
+        "key": "QDVI.DE",
+        "quantity": 100.81314646431565
+      },
+      {
+        "key": "IS3N.DE",
+        "quantity": 30.784515278440225
+      },
+      {
+        "key": "4GLD.DE",
+        "quantity": 10.7273115765408
+      },
+      {
+        "key": "XEON.DE",
+        "quantity": 0.022277122219454437
+      }
+    ],
+    "costBasis": {
+      "4GLD.DE": 120.29859478074475,
+      "IS3N.DE": 39.658364402148784,
+      "QDVI.DE": 10.84986279486153,
+      "XDJE.DE": 64.35907376061525,
+      "XEON.DE": 148.78700256347656
+    }
+  },
+  "prices": {
+    "4GLD.DE": 123.83000183105469,
+    "IS3N.DE": 48.941001892089844,
+    "QDVF.DE": 10.295999526977539,
+    "QDVI.DE": 16.468000411987305,
+    "XDJE.DE": 100.70289611816406,
+    "XEON.DE": 149.25999450683594
+  },
+  "names": {
+    "4GLD.DE": "Xetra-Gold",
+    "IS3N.DE": "iShares Core MSCI EM IMI",
+    "QDVF.DE": "iShares S&P 500 Energy",
+    "QDVI.DE": "iShares Edge MSCI USA Value Factor",
+    "XDJE.DE": "Xtrackers Nikkei 225 (EUR hedged)",
+    "XEON.DE": "Xtrackers EUR Overnight Rate Swap (кеш)"
+  },
+  "expected": {
+    "orders": [
+      {
+        "action": "sell",
+        "kind": "exit",
+        "ticker": "4GLD.DE",
+        "name": "Xetra-Gold",
+        "amount": 1328.3630121653414,
+        "shares": 10.7273115765408,
+        "price": 123.83000183105469,
+        "reason": "випав із вибірки: проходить фільтри, але є сильніші (ранг 13)"
+      },
+      {
+        "action": "buy",
+        "kind": "buy",
+        "ticker": "IS3N.DE",
+        "name": "iShares Core MSCI EM IMI",
+        "amount": 56.70257488415035,
+        "shares": 1.1585903984796637,
+        "price": 48.941001892089844,
+        "reason": "докупити до цілі 25% портфеля (ранг 3, моментум +26.2%)"
+      },
+      {
+        "action": "buy",
+        "kind": "buy",
+        "ticker": "QDVF.DE",
+        "name": "iShares S&P 500 Energy",
+        "amount": 1478.0968213305096,
+        "shares": 143.56030392752115,
+        "price": 10.295999526977539,
+        "reason": "нова позиція, ціль 25% портфеля (ранг 4, моментум +24.5%)"
+      }
+    ],
+    "totalBefore": 6039.910561344132,
+    "totalAfter": 6266.910561344132,
+    "parkedBefore": 3.325083140103882,
+    "parkedAfter": 23.88869909078585,
+    "allocation": [
+      {
+        "ticker": "QDVI.DE",
+        "role": "pick",
+        "valueBefore": 1660.1909375080866,
+        "valueAfter": 1660.1909375080866,
+        "weightBefore": 0.27487011945730283,
+        "weightAfter": 0.2649137754970621,
+        "targetWeight": 0.25
+      },
+      {
+        "ticker": "XDJE.DE",
+        "role": "pick",
+        "valueBefore": 1541.4065080413877,
+        "valueAfter": 1541.4065080413877,
+        "weightBefore": 0.2552035319705729,
+        "weightAfter": 0.2459595510344711,
+        "targetWeight": 0.25
+      },
+      {
+        "ticker": "IS3N.DE",
+        "role": "pick",
+        "valueBefore": 1506.6250204892117,
+        "valueAfter": 1563.327595373362,
+        "weightBefore": 0.2494449222694988,
+        "weightAfter": 0.24945746074889866,
+        "targetWeight": 0.25
+      },
+      {
+        "ticker": "QDVF.DE",
+        "role": "pick",
+        "valueBefore": 0.0,
+        "valueAfter": 1478.0968213305096,
+        "weightBefore": 0.0,
+        "weightAfter": 0.2358573346247798,
+        "targetWeight": 0.25
+      },
+      {
+        "ticker": "4GLD.DE",
+        "role": "exit",
+        "valueBefore": 1328.3630121653414,
+        "valueAfter": 0.0,
+        "weightBefore": 0.21993090769703805,
+        "weightAfter": 0.0,
+        "targetWeight": 0.0
+      },
+      {
+        "ticker": "XEON.DE",
+        "role": "cash",
+        "valueBefore": 3.325083140103882,
+        "valueAfter": 23.88869909078585,
+        "weightBefore": 0.0005505186055874166,
+        "weightAfter": 0.0038118780947884127,
+        "targetWeight": null
+      }
+    ],
+    "notes": [
+      "Пропущено дрібні покупки (менше €25.00): XDJE.DE."
+    ]
+  }
+}

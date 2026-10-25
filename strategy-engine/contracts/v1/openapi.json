@@ -1,0 +1,1367 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Investment Lab Strategy Engine",
+    "description": "Strategy decisions, risk checks and market quotes for the Investment Lab backend.",
+    "version": "1"
+  },
+  "paths": {
+    "/v1/strategies": {
+      "get": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "List Strategy Types",
+        "operationId": "list_strategy_types_v1_strategies_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StrategyTypeDescriptor"
+                  },
+                  "type": "array",
+                  "title": "Response List Strategy Types V1 Strategies Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/strategies/{code}/decide": {
+      "post": {
+        "tags": [
+          "strategies"
+        ],
+        "summary": "Decide",
+        "operationId": "decide_v1_strategies__code__decide_post",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Code"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluationContext"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StrategyDecision"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/strategies/{code}/risk": {
+      "post": {
+        "tags": [
+          "strategies"
+        ],
+        "summary": "Assess Risk",
+        "operationId": "assess_risk_v1_strategies__code__risk_post",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Code"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluationContext"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskAssessment"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/prices": {
+      "post": {
+        "tags": [
+          "prices"
+        ],
+        "summary": "Prices",
+        "operationId": "prices_v1_prices_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PricesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PricesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "EvaluationContext": {
+        "properties": {
+          "asOf": {
+            "type": "string",
+            "format": "date",
+            "title": "Asof"
+          },
+          "parameters": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Parameters"
+          },
+          "universe": {
+            "items": {
+              "$ref": "#/components/schemas/UniverseMember"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Universe"
+          },
+          "cashInstrumentKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cashinstrumentkey"
+          },
+          "marketSeries": {
+            "items": {
+              "$ref": "#/components/schemas/PriceSeries"
+            },
+            "type": "array",
+            "title": "Marketseries"
+          },
+          "subPortfolio": {
+            "$ref": "#/components/schemas/SubPortfolioSnapshot"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "asOf",
+          "universe",
+          "marketSeries",
+          "subPortfolio"
+        ],
+        "title": "EvaluationContext",
+        "description": "Everything a strategy may look at. Data after ``asOf`` is ignored."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Holding": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Key"
+          },
+          "lots": {
+            "items": {
+              "$ref": "#/components/schemas/Lot"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Lots"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "lots"
+        ],
+        "title": "Holding"
+      },
+      "InstrumentScore": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "group": {
+            "type": "string",
+            "title": "Group"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price"
+          },
+          "momentum": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Momentum"
+          },
+          "return1M": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return1M"
+          },
+          "return3M": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return3M"
+          },
+          "return12M": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return12M"
+          },
+          "volatility": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volatility"
+          },
+          "sharpe": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sharpe"
+          },
+          "drawdown": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Drawdown"
+          },
+          "aboveMovingAverage": {
+            "type": "boolean",
+            "title": "Abovemovingaverage"
+          },
+          "lastDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lastdate"
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "weight": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "name",
+          "group",
+          "price",
+          "momentum",
+          "return1M",
+          "return3M",
+          "return12M",
+          "volatility",
+          "sharpe",
+          "drawdown",
+          "aboveMovingAverage",
+          "lastDate",
+          "rank",
+          "status",
+          "reason",
+          "weight"
+        ],
+        "title": "InstrumentScore"
+      },
+      "Lot": {
+        "properties": {
+          "quantity": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Quantity"
+          },
+          "price": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Price"
+          },
+          "acquiredOn": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acquiredon"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "quantity",
+          "price"
+        ],
+        "title": "Lot"
+      },
+      "MarketRegime": {
+        "properties": {
+          "isFavorable": {
+            "type": "boolean",
+            "title": "Isfavorable"
+          },
+          "benchmarkPrice": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmarkprice"
+          },
+          "benchmarkMovingAverage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmarkmovingaverage"
+          },
+          "volatilityIndex": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volatilityindex"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Reasons"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "isFavorable",
+          "benchmarkPrice",
+          "benchmarkMovingAverage",
+          "volatilityIndex",
+          "reasons"
+        ],
+        "title": "MarketRegime"
+      },
+      "PortfolioRisk": {
+        "properties": {
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "cost": {
+            "type": "number",
+            "title": "Cost"
+          },
+          "pnlPct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pnlpct"
+          },
+          "drawdown": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Drawdown"
+          },
+          "peakDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Peakdate"
+          },
+          "exitLimitHit": {
+            "type": "boolean",
+            "title": "Exitlimithit"
+          },
+          "alerts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Alerts"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "value",
+          "cost",
+          "pnlPct",
+          "drawdown",
+          "peakDate",
+          "exitLimitHit",
+          "alerts"
+        ],
+        "title": "PortfolioRisk"
+      },
+      "PositionRisk": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "quantity": {
+            "type": "number",
+            "title": "Quantity"
+          },
+          "averageCost": {
+            "type": "number",
+            "title": "Averagecost"
+          },
+          "currentPrice": {
+            "type": "number",
+            "title": "Currentprice"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "pnlPct": {
+            "type": "number",
+            "title": "Pnlpct"
+          },
+          "drawdownFromHigh": {
+            "type": "number",
+            "title": "Drawdownfromhigh"
+          },
+          "aboveMovingAverage": {
+            "type": "boolean",
+            "title": "Abovemovingaverage"
+          },
+          "movingAverage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Movingaverage"
+          },
+          "exitPrice": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exitprice"
+          },
+          "exitRule": {
+            "type": "string",
+            "title": "Exitrule"
+          },
+          "exitDistance": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exitdistance"
+          },
+          "stopPrice": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stopprice"
+          },
+          "maExitPrice": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maexitprice"
+          },
+          "trailExitPrice": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trailexitprice"
+          },
+          "alerts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Alerts"
+          },
+          "sell": {
+            "type": "boolean",
+            "title": "Sell"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "status",
+          "quantity",
+          "averageCost",
+          "currentPrice",
+          "value",
+          "pnlPct",
+          "drawdownFromHigh",
+          "aboveMovingAverage",
+          "movingAverage",
+          "exitPrice",
+          "exitRule",
+          "exitDistance",
+          "stopPrice",
+          "maExitPrice",
+          "trailExitPrice",
+          "alerts",
+          "sell"
+        ],
+        "title": "PositionRisk"
+      },
+      "PriceSeries": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Key"
+          },
+          "role": {
+            "$ref": "#/components/schemas/SeriesRole",
+            "default": "instrument"
+          },
+          "dates": {
+            "items": {
+              "type": "string",
+              "format": "date"
+            },
+            "type": "array",
+            "title": "Dates"
+          },
+          "adjustedClose": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Adjustedclose"
+          },
+          "close": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Close"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "dates",
+          "adjustedClose"
+        ],
+        "title": "PriceSeries",
+        "description": "Daily closes of one series, columnar. ``adjustedClose`` drives the signals."
+      },
+      "PricesRequest": {
+        "properties": {
+          "symbols": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Symbols"
+          },
+          "start": {
+            "type": "string",
+            "format": "date",
+            "title": "Start"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "symbols",
+          "start"
+        ],
+        "title": "PricesRequest"
+      },
+      "PricesResponse": {
+        "properties": {
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/QuoteSeries"
+            },
+            "type": "array",
+            "title": "Series"
+          },
+          "missing": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "series",
+          "missing"
+        ],
+        "title": "PricesResponse"
+      },
+      "QuoteSeries": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol"
+          },
+          "dates": {
+            "items": {
+              "type": "string",
+              "format": "date"
+            },
+            "type": "array",
+            "title": "Dates"
+          },
+          "close": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Close"
+          },
+          "adjustedClose": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Adjustedclose"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "symbol",
+          "dates",
+          "close",
+          "adjustedClose"
+        ],
+        "title": "QuoteSeries"
+      },
+      "Rationale": {
+        "properties": {
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "riskFreeRate": {
+            "type": "number",
+            "title": "Riskfreerate"
+          },
+          "scores": {
+            "items": {
+              "$ref": "#/components/schemas/InstrumentScore"
+            },
+            "type": "array",
+            "title": "Scores"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "summary",
+          "riskFreeRate",
+          "scores"
+        ],
+        "title": "Rationale"
+      },
+      "RiskAssessment": {
+        "properties": {
+          "strategyCode": {
+            "type": "string",
+            "title": "Strategycode"
+          },
+          "engineVersion": {
+            "type": "string",
+            "title": "Engineversion"
+          },
+          "asOf": {
+            "type": "string",
+            "format": "date",
+            "title": "Asof"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "ok | watch | act"
+          },
+          "marketAlerts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Marketalerts"
+          },
+          "positions": {
+            "items": {
+              "$ref": "#/components/schemas/PositionRisk"
+            },
+            "type": "array",
+            "title": "Positions"
+          },
+          "portfolio": {
+            "$ref": "#/components/schemas/PortfolioRisk"
+          },
+          "signals": {
+            "items": {
+              "$ref": "#/components/schemas/RiskSignal"
+            },
+            "type": "array",
+            "title": "Signals"
+          },
+          "actions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Actions"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "strategyCode",
+          "engineVersion",
+          "asOf",
+          "status",
+          "marketAlerts",
+          "positions",
+          "portfolio",
+          "signals",
+          "actions"
+        ],
+        "title": "RiskAssessment"
+      },
+      "RiskSignal": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/RiskSignalKind"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "exitPrice": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exitprice"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "kind",
+          "reason"
+        ],
+        "title": "RiskSignal"
+      },
+      "RiskSignalKind": {
+        "type": "string",
+        "enum": [
+          "warn",
+          "exit"
+        ],
+        "title": "RiskSignalKind"
+      },
+      "SeriesRole": {
+        "type": "string",
+        "enum": [
+          "instrument",
+          "benchmark",
+          "volatilityIndex"
+        ],
+        "title": "SeriesRole"
+      },
+      "StrategyDecision": {
+        "properties": {
+          "strategyCode": {
+            "type": "string",
+            "title": "Strategycode"
+          },
+          "engineVersion": {
+            "type": "string",
+            "title": "Engineversion"
+          },
+          "asOf": {
+            "type": "string",
+            "format": "date",
+            "title": "Asof"
+          },
+          "investFraction": {
+            "type": "number",
+            "title": "Investfraction"
+          },
+          "targets": {
+            "items": {
+              "$ref": "#/components/schemas/TargetWeight"
+            },
+            "type": "array",
+            "title": "Targets"
+          },
+          "market": {
+            "$ref": "#/components/schemas/MarketRegime"
+          },
+          "rationale": {
+            "$ref": "#/components/schemas/Rationale"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "strategyCode",
+          "engineVersion",
+          "asOf",
+          "investFraction",
+          "targets",
+          "market",
+          "rationale"
+        ],
+        "title": "StrategyDecision",
+        "description": "Targets, not orders: the backend's rebalancer turns them into trades."
+      },
+      "StrategyTypeDescriptor": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "engine": {
+            "type": "string",
+            "title": "Engine"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "supportsState": {
+            "type": "boolean",
+            "title": "Supportsstate"
+          },
+          "requiredSeriesRoles": {
+            "items": {
+              "$ref": "#/components/schemas/SeriesRole"
+            },
+            "type": "array",
+            "title": "Requiredseriesroles"
+          },
+          "parametersSchema": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Parametersschema"
+          },
+          "defaultParameters": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Defaultparameters"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "description",
+          "engine",
+          "version",
+          "supportsState",
+          "requiredSeriesRoles",
+          "parametersSchema",
+          "defaultParameters"
+        ],
+        "title": "StrategyTypeDescriptor"
+      },
+      "SubPortfolioSnapshot": {
+        "properties": {
+          "currency": {
+            "type": "string",
+            "maxLength": 3,
+            "minLength": 3,
+            "title": "Currency"
+          },
+          "cash": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Cash",
+            "default": 0.0
+          },
+          "contribution": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Contribution",
+            "default": 0.0
+          },
+          "holdings": {
+            "items": {
+              "$ref": "#/components/schemas/Holding"
+            },
+            "type": "array",
+            "title": "Holdings"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "currency"
+        ],
+        "title": "SubPortfolioSnapshot"
+      },
+      "TargetWeight": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "weight": {
+            "type": "number",
+            "title": "Weight"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "weight"
+        ],
+        "title": "TargetWeight"
+      },
+      "UniverseMember": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Key"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key"
+        ],
+        "title": "UniverseMember"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

@@ -1,0 +1,233 @@
+{
+  "version": 1,
+  "name": "eu-2026-01",
+  "source": "backtest",
+  "asOf": "2026-01-02",
+  "currency": "EUR",
+  "topN": 4,
+  "cashInstrument": "XEON.DE",
+  "settings": {
+    "minTrade": 25.0,
+    "trimBand": 0.1,
+    "fractionalShares": true,
+    "weakMarketInvestPct": 0.5
+  },
+  "decision": {
+    "marketOk": true,
+    "investFraction": 1.0,
+    "targets": [
+      {
+        "key": "4GLD.DE",
+        "weight": 0.25
+      },
+      {
+        "key": "XDJE.DE",
+        "weight": 0.25
+      },
+      {
+        "key": "QDVI.DE",
+        "weight": 0.25
+      },
+      {
+        "key": "IS3N.DE",
+        "weight": 0.25
+      }
+    ],
+    "scores": [
+      {
+        "key": "4GLD.DE",
+        "rank": 1,
+        "momentum": 0.3372216137616768,
+        "status": "selected",
+        "reason": "ранг 1 за моментумом"
+      },
+      {
+        "key": "XDJE.DE",
+        "rank": 2,
+        "momentum": 0.2667234688404827,
+        "status": "selected",
+        "reason": "ранг 2 за моментумом"
+      },
+      {
+        "key": "QDVI.DE",
+        "rank": 3,
+        "momentum": 0.23253757885625692,
+        "status": "selected",
+        "reason": "ранг 3 за моментумом"
+      },
+      {
+        "key": "IS3N.DE",
+        "rank": 5,
+        "momentum": 0.1455713613370302,
+        "status": "buffer",
+        "reason": "вже в портфелі, ранг 5 у межах буфера 8"
+      },
+      {
+        "key": "NQSE.DE",
+        "rank": 11,
+        "momentum": 0.1166840208238531,
+        "status": "reserve",
+        "reason": "проходить фільтри, але є сильніші (ранг 11)"
+      }
+    ]
+  },
+  "contribution": 227.0,
+  "portfolio": {
+    "cash": -1.4210854715202004e-14,
+    "holdings": [
+      {
+        "key": "NQSE.DE",
+        "quantity": 61.06365312581018
+      },
+      {
+        "key": "XDJE.DE",
+        "quantity": 12.395494435253068
+      },
+      {
+        "key": "QDVI.DE",
+        "quantity": 84.27868367556661
+      },
+      {
+        "key": "IS3N.DE",
+        "quantity": 23.896113641193047
+      }
+    ],
+    "costBasis": {
+      "IS3N.DE": 39.05248550099563,
+      "NQSE.DE": 13.337005678904841,
+      "QDVI.DE": 10.649978712020102,
+      "XDJE.DE": 60.158091610265025
+    }
+  },
+  "prices": {
+    "4GLD.DE": 118.22000122070312,
+    "IS3N.DE": 39.13999938964844,
+    "NQSE.DE": 14.821999549865723,
+    "QDVI.DE": 11.197999954223633,
+    "XDJE.DE": 75.51043701171875,
+    "XEON.DE": 148.10499572753906
+  },
+  "names": {
+    "4GLD.DE": "Xetra-Gold",
+    "IS3N.DE": "iShares Core MSCI EM IMI",
+    "NQSE.DE": "iShares Nasdaq-100 (EUR hedged)",
+    "QDVI.DE": "iShares Edge MSCI USA Value Factor",
+    "XDJE.DE": "Xtrackers Nikkei 225 (EUR hedged)",
+    "XEON.DE": "Xtrackers EUR Overnight Rate Swap (кеш)"
+  },
+  "expected": {
+    "orders": [
+      {
+        "action": "sell",
+        "kind": "exit",
+        "ticker": "NQSE.DE",
+        "name": "iShares Nasdaq-100 (EUR hedged)",
+        "amount": 905.0854391439151,
+        "shares": 61.06365312581018,
+        "price": 14.821999549865723,
+        "reason": "випав із вибірки: проходить фільтри, але є сильніші (ранг 11)"
+      },
+      {
+        "action": "buy",
+        "kind": "buy",
+        "ticker": "4GLD.DE",
+        "name": "Xetra-Gold",
+        "amount": 986.7803025496227,
+        "shares": 8.346982679414944,
+        "price": 118.22000122070312,
+        "reason": "нова позиція, ціль 25% портфеля (ранг 1, моментум +33.7%)"
+      },
+      {
+        "action": "buy",
+        "kind": "buy",
+        "ticker": "XDJE.DE",
+        "name": "Xtrackers Nikkei 225 (EUR hedged)",
+        "amount": 50.79110076733559,
+        "shares": 0.6726368271375933,
+        "price": 75.51043701171875,
+        "reason": "докупити до цілі 25% портфеля (ранг 2, моментум +26.7%)"
+      },
+      {
+        "action": "buy",
+        "kind": "buy",
+        "ticker": "QDVI.DE",
+        "name": "iShares Edge MSCI USA Value Factor",
+        "amount": 43.02760660859974,
+        "shares": 3.84243675517883,
+        "price": 11.197999954223633,
+        "reason": "докупити до цілі 25% портфеля (ранг 3, моментум +23.3%)"
+      },
+      {
+        "action": "buy",
+        "kind": "buy",
+        "ticker": "IS3N.DE",
+        "name": "iShares Core MSCI EM IMI",
+        "amount": 51.4864292183571,
+        "shares": 1.3154427700878808,
+        "price": 39.13999938964844,
+        "reason": "докупити до цілі 25% портфеля (ранг 5, моментум +14.6%)"
+      }
+    ],
+    "totalBefore": 3720.1212101984906,
+    "totalAfter": 3947.1212101984906,
+    "parkedBefore": -1.4210854715202004e-14,
+    "parkedAfter": 0.0,
+    "allocation": [
+      {
+        "ticker": "4GLD.DE",
+        "role": "pick",
+        "valueBefore": 0.0,
+        "valueAfter": 986.7803025496227,
+        "weightBefore": 0.0,
+        "weightAfter": 0.25,
+        "targetWeight": 0.25
+      },
+      {
+        "ticker": "XDJE.DE",
+        "role": "pick",
+        "valueBefore": 935.9892017822871,
+        "valueAfter": 986.7803025496227,
+        "weightBefore": 0.25160180244028835,
+        "weightAfter": 0.25,
+        "targetWeight": 0.25
+      },
+      {
+        "ticker": "QDVI.DE",
+        "role": "pick",
+        "valueBefore": 943.7526959410229,
+        "valueAfter": 986.7803025496227,
+        "weightBefore": 0.25368869523761245,
+        "weightAfter": 0.25,
+        "targetWeight": 0.25
+      },
+      {
+        "ticker": "IS3N.DE",
+        "role": "pick",
+        "valueBefore": 935.2938733312656,
+        "valueAfter": 986.7803025496227,
+        "weightBefore": 0.25141489228017977,
+        "weightAfter": 0.25,
+        "targetWeight": 0.25
+      },
+      {
+        "ticker": "NQSE.DE",
+        "role": "exit",
+        "valueBefore": 905.0854391439151,
+        "valueAfter": 0.0,
+        "weightBefore": 0.2432946100419194,
+        "weightAfter": 0.0,
+        "targetWeight": 0.0
+      },
+      {
+        "ticker": "XEON.DE",
+        "role": "cash",
+        "valueBefore": -1.4210854715202004e-14,
+        "valueAfter": 0.0,
+        "weightBefore": -3.819997766804961e-18,
+        "weightAfter": 0.0,
+        "targetWeight": null
+      }
+    ],
+    "notes": []
+  }
+}

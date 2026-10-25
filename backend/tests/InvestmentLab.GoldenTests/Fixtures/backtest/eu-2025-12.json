@@ -1,0 +1,205 @@
+{
+  "version": 1,
+  "name": "eu-2025-12",
+  "source": "backtest",
+  "asOf": "2025-12-01",
+  "currency": "EUR",
+  "topN": 4,
+  "cashInstrument": "XEON.DE",
+  "settings": {
+    "minTrade": 25.0,
+    "trimBand": 0.1,
+    "fractionalShares": true,
+    "weakMarketInvestPct": 0.5
+  },
+  "decision": {
+    "marketOk": true,
+    "investFraction": 1.0,
+    "targets": [
+      {
+        "key": "XDJE.DE",
+        "weight": 0.25
+      },
+      {
+        "key": "QDVI.DE",
+        "weight": 0.25
+      },
+      {
+        "key": "NQSE.DE",
+        "weight": 0.25
+      },
+      {
+        "key": "IS3N.DE",
+        "weight": 0.25
+      }
+    ],
+    "scores": [
+      {
+        "key": "XDJE.DE",
+        "rank": 1,
+        "momentum": 0.3416798318830341,
+        "status": "selected",
+        "reason": "ранг 1 за моментумом"
+      },
+      {
+        "key": "QDVI.DE",
+        "rank": 3,
+        "momentum": 0.23690204862935382,
+        "status": "selected",
+        "reason": "ранг 3 за моментумом"
+      },
+      {
+        "key": "NQSE.DE",
+        "rank": 5,
+        "momentum": 0.17733291682739116,
+        "status": "buffer",
+        "reason": "вже в портфелі, ранг 5 у межах буфера 8"
+      },
+      {
+        "key": "IS3N.DE",
+        "rank": 6,
+        "momentum": 0.17551342341210052,
+        "status": "buffer",
+        "reason": "вже в портфелі, ранг 6 у межах буфера 8"
+      }
+    ]
+  },
+  "contribution": 227.0,
+  "portfolio": {
+    "cash": -1.1368683772161603e-13,
+    "holdings": [
+      {
+        "key": "NQSE.DE",
+        "quantity": 57.25962640154924
+      },
+      {
+        "key": "XDJE.DE",
+        "quantity": 11.598398240227187
+      },
+      {
+        "key": "QDVI.DE",
+        "quantity": 81.3491855400144
+      },
+      {
+        "key": "IS3N.DE",
+        "quantity": 21.90277114651234
+      }
+    ],
+    "costBasis": {
+      "IS3N.DE": 39.1510009765625,
+      "NQSE.DE": 13.231308401289484,
+      "QDVI.DE": 10.644000053405762,
+      "XDJE.DE": 59.238459844230306
+    }
+  },
+  "prices": {
+    "IS3N.DE": 37.970001220703125,
+    "NQSE.DE": 14.928000450134277,
+    "QDVI.DE": 10.815999984741211,
+    "XDJE.DE": 73.53948211669922,
+    "XEON.DE": 147.80099487304688
+  },
+  "names": {
+    "IS3N.DE": "iShares Core MSCI EM IMI",
+    "NQSE.DE": "iShares Nasdaq-100 (EUR hedged)",
+    "QDVI.DE": "iShares Edge MSCI USA Value Factor",
+    "XDJE.DE": "Xtrackers Nikkei 225 (EUR hedged)",
+    "XEON.DE": "Xtrackers EUR Overnight Rate Swap (кеш)"
+  },
+  "expected": {
+    "orders": [
+      {
+        "action": "buy",
+        "kind": "buy",
+        "ticker": "XDJE.DE",
+        "name": "Xtrackers Nikkei 225 (EUR hedged)",
+        "amount": 58.618041379394754,
+        "shares": 0.7970961950258808,
+        "price": 73.53948211669922,
+        "reason": "докупити до цілі 25% портфеля (ранг 1, моментум +34.2%)"
+      },
+      {
+        "action": "buy",
+        "kind": "buy",
+        "ticker": "QDVI.DE",
+        "name": "iShares Edge MSCI USA Value Factor",
+        "amount": 31.685451789432022,
+        "shares": 2.929498135552202,
+        "price": 10.815999984741211,
+        "reason": "докупити до цілі 25% портфеля (ранг 3, моментум +23.7%)"
+      },
+      {
+        "action": "buy",
+        "kind": "buy",
+        "ticker": "NQSE.DE",
+        "name": "iShares Nasdaq-100 (EUR hedged)",
+        "amount": 56.786512652090096,
+        "shares": 3.8040267242609374,
+        "price": 14.928000450134277,
+        "reason": "докупити до цілі 25% портфеля (ранг 5, моментум +17.7%)"
+      },
+      {
+        "action": "buy",
+        "kind": "buy",
+        "ticker": "IS3N.DE",
+        "name": "iShares Core MSCI EM IMI",
+        "amount": 79.90999417908301,
+        "shares": 2.1045560076387915,
+        "price": 37.970001220703125,
+        "reason": "докупити до цілі 25% портфеля (ранг 6, моментум +17.6%)"
+      }
+    ],
+    "totalBefore": 3419.232965395751,
+    "totalAfter": 3646.232965395751,
+    "parkedBefore": -1.1368683772161603e-13,
+    "parkedAfter": 0.0,
+    "allocation": [
+      {
+        "ticker": "XDJE.DE",
+        "role": "pick",
+        "valueBefore": 852.940199969543,
+        "valueAfter": 911.5582413489377,
+        "weightBefore": 0.24945366653916237,
+        "weightAfter": 0.25,
+        "targetWeight": 0.25
+      },
+      {
+        "ticker": "QDVI.DE",
+        "role": "pick",
+        "valueBefore": 879.8727895595057,
+        "valueAfter": 911.5582413489377,
+        "weightBefore": 0.2573304593352465,
+        "weightAfter": 0.25,
+        "targetWeight": 0.25
+      },
+      {
+        "ticker": "NQSE.DE",
+        "role": "pick",
+        "valueBefore": 854.7717286968476,
+        "valueAfter": 911.5582413489377,
+        "weightBefore": 0.24998932139094948,
+        "weightAfter": 0.25,
+        "targetWeight": 0.25
+      },
+      {
+        "ticker": "IS3N.DE",
+        "role": "pick",
+        "valueBefore": 831.6482471698547,
+        "valueAfter": 911.5582413489377,
+        "weightBefore": 0.24322655273464164,
+        "weightAfter": 0.25,
+        "targetWeight": 0.25
+      },
+      {
+        "ticker": "XEON.DE",
+        "role": "cash",
+        "valueBefore": -1.1368683772161603e-13,
+        "valueAfter": 0.0,
+        "weightBefore": -3.32492225221798e-17,
+        "weightAfter": 0.0,
+        "targetWeight": null
+      }
+    ],
+    "notes": []
+  }
+}

@@ -1,0 +1,251 @@
+{
+  "version": 1,
+  "name": "eu-2025-11",
+  "source": "backtest",
+  "asOf": "2025-11-03",
+  "currency": "EUR",
+  "topN": 4,
+  "cashInstrument": "XEON.DE",
+  "settings": {
+    "minTrade": 25.0,
+    "trimBand": 0.1,
+    "fractionalShares": true,
+    "weakMarketInvestPct": 0.5
+  },
+  "decision": {
+    "marketOk": true,
+    "investFraction": 1.0,
+    "targets": [
+      {
+        "key": "XDJE.DE",
+        "weight": 0.25
+      },
+      {
+        "key": "NQSE.DE",
+        "weight": 0.25
+      },
+      {
+        "key": "QDVI.DE",
+        "weight": 0.25
+      },
+      {
+        "key": "IS3N.DE",
+        "weight": 0.25
+      }
+    ],
+    "scores": [
+      {
+        "key": "XDJE.DE",
+        "rank": 1,
+        "momentum": 0.468479989424176,
+        "status": "selected",
+        "reason": "ранг 1 за моментумом"
+      },
+      {
+        "key": "NQSE.DE",
+        "rank": 3,
+        "momentum": 0.3273674695151507,
+        "status": "selected",
+        "reason": "ранг 3 за моментумом"
+      },
+      {
+        "key": "QDVI.DE",
+        "rank": 5,
+        "momentum": 0.26570510284540316,
+        "status": "selected",
+        "reason": "ранг 5 за моментумом"
+      },
+      {
+        "key": "IS3N.DE",
+        "rank": 6,
+        "momentum": 0.2537929933846812,
+        "status": "selected",
+        "reason": "ранг 6 за моментумом"
+      },
+      {
+        "key": "4GLD.DE",
+        "rank": 9,
+        "momentum": 0.18443491321442007,
+        "status": "reserve",
+        "reason": "проходить фільтри, але є сильніші (ранг 9)"
+      },
+      {
+        "key": "IQQA.DE",
+        "rank": 10,
+        "momentum": 0.1161774679871268,
+        "status": "reserve",
+        "reason": "проходить фільтри, але є сильніші (ранг 10)"
+      }
+    ]
+  },
+  "contribution": 227.0,
+  "portfolio": {
+    "cash": 0.0,
+    "holdings": [
+      {
+        "key": "4GLD.DE",
+        "quantity": 7.229499416884019
+      },
+      {
+        "key": "IQQA.DE",
+        "quantity": 35.68869238493042
+      },
+      {
+        "key": "NQSE.DE",
+        "quantity": 52.77658735574026
+      },
+      {
+        "key": "XDJE.DE",
+        "quantity": 11.598398240227187
+      }
+    ],
+    "costBasis": {
+      "4GLD.DE": 93.41905672865191,
+      "IQQA.DE": 20.491164343318164,
+      "NQSE.DE": 13.055755924295472,
+      "XDJE.DE": 59.238459844230306
+    }
+  },
+  "prices": {
+    "4GLD.DE": 111.5999984741211,
+    "IQQA.DE": 21.478256225585938,
+    "IS3N.DE": 39.1510009765625,
+    "NQSE.DE": 15.29800033569336,
+    "QDVI.DE": 10.644000053405762,
+    "XDJE.DE": 77.56063079833984,
+    "XEON.DE": 147.61399841308594
+  },
+  "names": {
+    "4GLD.DE": "Xetra-Gold",
+    "IQQA.DE": "iShares Euro Dividend",
+    "IS3N.DE": "iShares Core MSCI EM IMI",
+    "NQSE.DE": "iShares Nasdaq-100 (EUR hedged)",
+    "QDVI.DE": "iShares Edge MSCI USA Value Factor",
+    "XDJE.DE": "Xtrackers Nikkei 225 (EUR hedged)",
+    "XEON.DE": "Xtrackers EUR Overnight Rate Swap (кеш)"
+  },
+  "expected": {
+    "orders": [
+      {
+        "action": "sell",
+        "kind": "exit",
+        "ticker": "4GLD.DE",
+        "name": "Xetra-Gold",
+        "amount": 806.8121238929159,
+        "shares": 7.229499416884019,
+        "price": 111.5999984741211,
+        "reason": "випав із вибірки: проходить фільтри, але є сильніші (ранг 9)"
+      },
+      {
+        "action": "sell",
+        "kind": "exit",
+        "ticker": "IQQA.DE",
+        "name": "iShares Euro Dividend",
+        "amount": 766.5308793996533,
+        "shares": 35.68869238493042,
+        "price": 21.478256225585938,
+        "reason": "випав із вибірки: проходить фільтри, але є сильніші (ранг 10)"
+      },
+      {
+        "action": "buy",
+        "kind": "buy",
+        "ticker": "NQSE.DE",
+        "name": "iShares Nasdaq-100 (EUR hedged)",
+        "amount": 68.58153282771217,
+        "shares": 4.483039045808977,
+        "price": 15.29800033569336,
+        "reason": "докупити до цілі 25% портфеля (ранг 3, моментум +32.7%)"
+      },
+      {
+        "action": "buy",
+        "kind": "buy",
+        "ticker": "QDVI.DE",
+        "name": "iShares Edge MSCI USA Value Factor",
+        "amount": 865.8807352324285,
+        "shares": 81.3491855400144,
+        "price": 10.644000053405762,
+        "reason": "нова позиція, ціль 25% портфеля (ранг 5, моментум +26.6%)"
+      },
+      {
+        "action": "buy",
+        "kind": "buy",
+        "ticker": "IS3N.DE",
+        "name": "iShares Core MSCI EM IMI",
+        "amount": 865.8807352324285,
+        "shares": 22.11643926424212,
+        "price": 39.1510009765625,
+        "reason": "нова позиція, ціль 25% портфеля (ранг 6, моментум +25.4%)"
+      }
+    ],
+    "totalBefore": 3280.298338139809,
+    "totalAfter": 3507.298338139809,
+    "parkedBefore": 0.0,
+    "parkedAfter": 0.0,
+    "allocation": [
+      {
+        "ticker": "XDJE.DE",
+        "role": "pick",
+        "valueBefore": 899.5790837623754,
+        "valueAfter": 899.5790837623754,
+        "weightBefore": 0.27423697207751796,
+        "weightAfter": 0.25648775696666043,
+        "targetWeight": 0.25
+      },
+      {
+        "ticker": "NQSE.DE",
+        "role": "pick",
+        "valueBefore": 807.3762510848644,
+        "valueAfter": 875.9577839125766,
+        "weightBefore": 0.24612890897683143,
+        "weightAfter": 0.24975285802951244,
+        "targetWeight": 0.25
+      },
+      {
+        "ticker": "QDVI.DE",
+        "role": "pick",
+        "valueBefore": 0.0,
+        "valueAfter": 865.8807352324285,
+        "weightBefore": 0.0,
+        "weightAfter": 0.24687969250191355,
+        "targetWeight": 0.25
+      },
+      {
+        "ticker": "IS3N.DE",
+        "role": "pick",
+        "valueBefore": 0.0,
+        "valueAfter": 865.8807352324285,
+        "weightBefore": 0.0,
+        "weightAfter": 0.24687969250191355,
+        "targetWeight": 0.25
+      },
+      {
+        "ticker": "4GLD.DE",
+        "role": "exit",
+        "valueBefore": 806.8121238929159,
+        "valueAfter": 0.0,
+        "weightBefore": 0.24595693462151458,
+        "weightAfter": 0.0,
+        "targetWeight": 0.0
+      },
+      {
+        "ticker": "IQQA.DE",
+        "role": "exit",
+        "valueBefore": 766.5308793996533,
+        "valueAfter": 0.0,
+        "weightBefore": 0.23367718432413603,
+        "weightAfter": 0.0,
+        "targetWeight": 0.0
+      },
+      {
+        "ticker": "XEON.DE",
+        "role": "cash",
+        "valueBefore": 0.0,
+        "valueAfter": 0.0,
+        "weightBefore": 0.0,
+        "weightAfter": 0.0,
+        "targetWeight": null
+      }
+    ],
+    "notes": []
+  }
+}

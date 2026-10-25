@@ -20,21 +20,24 @@ jobs:
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v6
         with:
-          python-version: "3.11"
-          cache: "pip"
-          cache-dependency-path: strategy-engine/requirements*.txt
+          enable-cache: true
+          cache-dependency-glob: strategy-engine/uv.lock
 
       - name: Install dependencies
-        run: pip install -r requirements-dev.txt
+        run: uv sync --locked
 
       - name: Run tests
-        run: pytest -q
+        run: uv run pytest -q
 
+      # The OpenAPI snapshot is the contract with .NET; it must be regenerated together with code changes.
+      - name: Check contract snapshot is current
+        run: |
+          uv run python tools/export_contract.py
+          git diff --exit-code -- contracts/
