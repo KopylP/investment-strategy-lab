@@ -11,7 +11,8 @@
    ```
 2. Скопіювати папку `deploy/home-assistant/investlab` у спільну папку `addons` Home Assistant:
    - через add-on **Samba share**: Finder → `smb://homeassistant.local/addons` → перетягнути `investlab`;
-   - або через **Advanced SSH & Web Terminal**: `scp -r deploy/home-assistant/investlab root@homeassistant.local:/addons/`.
+   - або через **Terminal & SSH** (ключ у `authorized_keys`, порт 22): `rsync -az --delete deploy/home-assistant/investlab root@homeassistant.local:/local_apps/`
+     (у нових версіях HA спільна папка `addons` усередині SSH-доповнення називається `/local_apps`, у старих — `/addons`).
 3. Home Assistant → Налаштування → Доповнення → Магазин доповнень → ⋮ → **Перевірити оновлення** → розділ «Local add-ons» → **Investment Lab** → Встановити (образ збирається на пристрої, ~5–10 хв на Raspberry Pi).
 4. Увімкнути «Показувати на бічній панелі», «Watchdog», запустити.
 5. Відкрити `http://homeassistant.local:8099/investlab` або панель «Investment Lab».
