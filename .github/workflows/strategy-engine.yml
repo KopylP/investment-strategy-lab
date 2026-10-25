@@ -2,7 +2,13 @@ name: Strategy Engine
 
 on:
   push:
+    paths:
+      - "strategy-engine/**"
+      - ".github/workflows/strategy-engine.yml"
   pull_request:
+    paths:
+      - "strategy-engine/**"
+      - ".github/workflows/strategy-engine.yml"
   workflow_dispatch:
 
 jobs:
