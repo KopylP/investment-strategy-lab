@@ -1,3 +1,4 @@
+using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.Portfolio.Accounts.Domain;
 using InvestmentLab.Portfolio.Holdings.Domain;
 using InvestmentLab.Portfolio.Shared.Infrastructure;
@@ -16,7 +17,7 @@ internal sealed class TransactionJournal(PortfolioDbContext db) : ITransactionJo
         await db.Transactions.Where(entry => entry.AccountId == accountId).ToListAsync(cancellationToken);
 
     public Task<bool> SourceExistsAsync(string sourceReference, CancellationToken cancellationToken) =>
-        db.Transactions.IgnoreQueryFilters([PortfolioDbContext.OwnerFilter]).AnyAsync(entry => entry.Source.Reference == sourceReference, cancellationToken);
+        db.Transactions.IgnoreQueryFilters([ModuleDbContext.OwnerFilter]).AnyAsync(entry => entry.Source.Reference == sourceReference, cancellationToken);
 
     public void Add(Transaction transaction) => db.Transactions.Add(transaction);
 
