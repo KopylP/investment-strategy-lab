@@ -2,6 +2,7 @@ import { computed, inject, Injectable, resource, signal } from '@angular/core';
 import { ApiClient } from '../../../core/api/api-client';
 import { AccountContext } from '../../../core/context/account-context';
 import { DisplayCurrency } from '../../../core/context/display-currency';
+import { ChartTheme } from '../../../shared/charts/chart-theme';
 import { InstrumentCatalog } from '../../../core/context/instrument-catalog';
 import { AccountHoldings, LatestPrice, Lot, toIsoDate } from '../../../shared/models/api';
 
@@ -45,6 +46,7 @@ export class HoldingsStore {
   private readonly accounts = inject(AccountContext);
   private readonly instruments = inject(InstrumentCatalog);
   private readonly fx = inject(DisplayCurrency);
+  private readonly theme = inject(ChartTheme);
 
   readonly asOf = signal<Date | null>(null);
 
@@ -121,6 +123,22 @@ export class HoldingsStore {
     const costBasis = sleeves.reduce((sum, sleeve) => sum + sleeve.costBasis, 0);
     const pnl = sleeves.reduce((sum, sleeve) => sum + sleeve.pnl, 0);
     return { value, cash, invested: value - cash, costBasis, pnl, pnlPct: costBasis ? pnl / costBasis : null };
+  });
+
+  readonly positionCount = computed(() => new Set(this.sleeves().flatMap((sleeve) => sleeve.positions.map((position) => position.instrumentId))).size);
+
+  /** Shares of the whole account by instrument (summed over sub-portfolios) and cash, biggest first. */
+  readonly composition = computed(() => {
+    const total = this.totals().value;
+    if (!total) return [];
+    const byInstrument = new Map<string, number>();
+    for (const position of this.sleeves().flatMap((sleeve) => sleeve.positions))
+      byInstrument.set(position.symbol, (byInstrument.get(position.symbol) ?? 0) + position.value);
+    const palette = this.theme.palette();
+    const colors = [...palette.series, palette.gain, palette.tax];
+    const slices = [...byInstrument].sort((left, right) => right[1] - left[1]).map(([label, value], index) => ({ label, weight: value / total, color: colors[index % colors.length] }));
+    const cash = this.totals().cash;
+    return cash > 0 ? [...slices, { label: 'Кеш', weight: cash / total, color: palette.neutral }] : slices;
   });
 
   readonly staleQuotes = computed(() => this.sleeves().some((sleeve) => sleeve.positions.some((position) => position.isStale)));

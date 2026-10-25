@@ -52,7 +52,8 @@ public sealed class StrategySetupFactory(IStrategyTypes types, IInstrumentCatalo
             return StrategyErrors.InvalidParameters("expected a JSON object.");
 
         var json = merged.ToJsonString();
-        var evaluation = JsonSchema.FromText(type.ParametersSchema)
+        // Engines publish Pydantic schemas (draft 2020-12, no "$schema") with UI hints such as "x-enumLabels".
+        var evaluation = JsonSchema.FromText(type.ParametersSchema, new BuildOptions { Dialect = Dialect.Draft202012 })
             .Evaluate(JsonDocument.Parse(json).RootElement, new EvaluationOptions { OutputFormat = OutputFormat.List });
         if (evaluation.IsValid)
             return json;

@@ -1,4 +1,5 @@
 using InvestmentLab.Api;
+using InvestmentLab.Api.Hosting;
 using InvestmentLab.BuildingBlocks.Modules;
 using Scalar.AspNetCore;
 
@@ -15,8 +16,13 @@ builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = 
         context.ProblemDetails.Detail = $"{error.GetType().Name}: {error.Message} {error.InnerException?.Message}";
 });
 builder.AddModules(Modules.All());
+builder.AddSelfHosting();
 
 var app = builder.Build();
+
+app.UseSelfHosting();
+// After the path base: routes are matched on the path without "/investlab".
+app.UseRouting();
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
@@ -31,6 +37,7 @@ if (app.Environment.IsDevelopment())
 
 app.MapDefaultEndpoints();
 app.MapModules();
+app.MapFrontend();
 
 app.Run();
 
