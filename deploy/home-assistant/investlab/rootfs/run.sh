@@ -39,8 +39,9 @@ export Strategies__StrategyEngineUrl="http://127.0.0.1:8000"
 export MarketData__StrategyEngineUrl="http://127.0.0.1:8000"
 export InvestmentLab__PathBase="/investlab"
 export InvestmentLab__DataDirectory="/data"
-# Ingress (Home Assistant panel) always talks plain http to 8098; 8099 is the direct port.
-export Kestrel__Endpoints__Ingress__Url="http://0.0.0.0:8098"
+# Ingress (Home Assistant panel) always talks plain http to 8098; 8099 is the direct port. "*" listens on IPv6 and IPv4:
+# browsers reach homeassistant.local over IPv6 first.
+export Kestrel__Endpoints__Ingress__Url="http://*:8098"
 
 if [ "$(option ssl)" = "true" ]; then
   CERT="/ssl/$(option certfile)"; KEY="/ssl/$(option keyfile)"
@@ -54,11 +55,11 @@ if [ "$(option ssl)" = "true" ]; then
         -addext "subjectAltName=DNS:homeassistant.local,DNS:homeassistant,DNS:localhost" -keyout "$KEY" -out "$CERT" 2>/dev/null
     fi
   fi
-  export Kestrel__Endpoints__Direct__Url="https://0.0.0.0:8099"
+  export Kestrel__Endpoints__Direct__Url="https://*:8099"
   export Kestrel__Endpoints__Direct__Certificate__Path="$CERT"
   export Kestrel__Endpoints__Direct__Certificate__KeyPath="$KEY"
 else
-  export Kestrel__Endpoints__Direct__Url="http://0.0.0.0:8099"
+  export Kestrel__Endpoints__Direct__Url="http://*:8099"
 fi
 
 cd /app/api
