@@ -55,14 +55,15 @@ public sealed class MarketDataModule : IModule
         services.AddScoped<IQuoteHistory, QuoteHistory>();
         services.AddScoped<IngestDailyQuotesHandler>();
         services.AddScoped<CorrectQuoteHandler>();
-        services.AddScheduledJob<NightlyQuotesJob>(NightlyQuotesJob.Schedule);
+        services.AddScheduledJob<NightlyQuotesJob>(NightlyQuotesJob.Schedule, runAtStartup: true);
         AddYFinance(builder);
 
         services.AddScoped<FxRateStore>();
         services.AddScoped<IFxRateStore>(provider => provider.GetRequiredService<FxRateStore>());
         services.AddScoped<IFxRates>(provider => provider.GetRequiredService<FxRateStore>());
         services.AddScoped<IngestFxRatesHandler>();
-        services.AddScheduledJob<DailyFxRatesJob>(DailyFxRatesJob.Schedule);
+        services.AddScheduledJob<DailyFxRatesJob>(DailyFxRatesJob.Schedule, runAtStartup: true);
+        services.AddScoped<IFxRateBackfill>(provider => provider.GetRequiredService<IngestFxRatesHandler>());
         services.AddHttpClient<NbpFxRateProvider>(http => http.BaseAddress = new Uri(NbpFxRateProvider.BaseAddress));
         services.AddScoped<IFxRateProvider>(provider => provider.GetRequiredService<NbpFxRateProvider>());
     }

@@ -69,6 +69,7 @@ public sealed class StatementImportService(
     IInstrumentRegistry registry,
     IStrategyDirectory strategies,
     IFxRates fxRates,
+    IFxRateBackfill fxBackfill,
     TimeProvider clock)
 {
     private const string YahooPrefix = "yfinance:";
@@ -89,6 +90,9 @@ public sealed class StatementImportService(
             return parsed.Error;
 
         var statement = StatementImport.Upload(account.Id, account.OwnerId, fileName, parsed.Value, clock.GetUtcNow());
+        // Rows in other currencies need the NBP rates of their days: a fresh install (or an old statement) loads them now.
+        if (statement.Rows.Any(row => !string.Equals(row.Currency, account.BaseCurrency.Code, StringComparison.OrdinalIgnoreCase)))
+            await fxBackfill.EnsureSinceAsync(statement.Rows.Min(row => row.OccurredOn), cancellationToken);
         var mappings = await SuggestMappingsAsync(account, statement.Rows, cancellationToken);
         statement.Configure(ImportMode.Merge, null, SuggestCashSubPortfolio(account, statement.Rows, mappings), mappings);
         imports.Add(statement);
@@ -326,8 +330,8 @@ public sealed class StatementImportService(
             var settlement = !string.Equals(row.Currency, accountCurrency, StringComparison.OrdinalIgnoreCase) && factor != 0m && row.Amount > 0m && row.Kind != StatementRowKind.Unsupported && Currency.TryOf(row.Currency) is { IsSuccess: true } own
                 ? Money.Of(row.Amount, own.Value)
                 : null;
-            priced.Add(new PricedRow(row, instrument, factor == 0m ? null : sub, row.Quantity ?? 0m, (row.Price ?? 0m) * factor, row.Amount * factor, settlement,
-                PricedRow.FeeOf(row) * factor));
+            priced.Add(new PricedRow(row, instrument, sub, row.Quantity ?? 0m, (row.Price ?? 0m) * factor, row.Amount * factor, settlement,
+                PricedRow.FeeOf(row) * factor, MissingRate: factor == 0m));
         }
         return priced;
     }

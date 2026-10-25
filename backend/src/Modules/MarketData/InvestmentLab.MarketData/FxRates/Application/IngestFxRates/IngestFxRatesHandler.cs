@@ -1,4 +1,5 @@
 using InvestmentLab.BuildingBlocks.Scheduling;
+using InvestmentLab.MarketData.Contracts.FxRates;
 using InvestmentLab.MarketData.FxRates.Domain;
 using Microsoft.Extensions.Logging;
 
@@ -7,7 +8,7 @@ namespace InvestmentLab.MarketData.FxRates.Application.IngestFxRates;
 public sealed record FxIngestReport(IReadOnlyDictionary<string, int> RatesAdded);
 
 /// <summary>Stores NBP rates of the trading currencies from the day after the newest stored one, or two years back.</summary>
-public sealed class IngestFxRatesHandler(IFxRateStore store, IFxRateProvider provider, TimeProvider clock)
+public sealed class IngestFxRatesHandler(IFxRateStore store, IFxRateProvider provider, TimeProvider clock, ILogger<IngestFxRatesHandler> logger) : IFxRateBackfill
 {
     public const int InitialHistoryYears = 2;
     public static readonly Currency[] Currencies = [Currency.EUR, Currency.USD];
@@ -30,6 +31,31 @@ public sealed class IngestFxRatesHandler(IFxRateStore store, IFxRateProvider pro
 
         await store.SaveChangesAsync(cancellationToken);
         return new FxIngestReport(added);
+    }
+
+    public async Task<bool> EnsureSinceAsync(DateOnly since, CancellationToken cancellationToken)
+    {
+        // The rate of a day is the table before it, so a few days earlier are needed too.
+        var from = since.AddDays(-FxRateResolver.MaxAgeDays);
+        try
+        {
+            foreach (var currency in Currencies)
+            {
+                var first = await store.FirstEffectiveDateAsync(provider.Source, currency, Currency.PLN, cancellationToken);
+                var until = first?.AddDays(-1) ?? DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
+                if (from <= until)
+                    foreach (var rate in await provider.FetchAsync(currency, from, until, cancellationToken))
+                        store.Add(rate);
+            }
+            await store.SaveChangesAsync(cancellationToken);
+            await Handle(cancellationToken);
+            return true;
+        }
+        catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning(exception, "NBP rates since {Since} could not be loaded", since);
+            return false;
+        }
     }
 }
 

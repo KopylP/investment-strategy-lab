@@ -1,16 +1,15 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { UIChart } from 'primeng/chart';
 import { DisplayCurrency } from '../../../../core/context/display-currency';
 import { ChartTheme } from '../../../../shared/charts/chart-theme';
+import { LiveChart } from '../../../../shared/charts/live-chart';
 import { formatDate, formatMoney, formatPeriod } from '../../../../shared/pipes/format';
 import { DashboardDto } from '../../data-access/dashboard-api';
 
 /** Value over time against the money paid in, with the "everything as planned" line and report markers. */
 @Component({
   selector: 'app-value-chart',
-  imports: [UIChart],
-  // A fresh chart per data/theme change: p-chart does not redraw reliably when data and options change together.
-  template: `@for (chart of [options()]; track chart) { <p-chart type="line" [data]="data()" [options]="chart" height="22rem" /> }`,
+  imports: [LiveChart],
+  template: `<app-live-chart [data]="data()" [options]="options()" height="22rem" />`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ValueChart {

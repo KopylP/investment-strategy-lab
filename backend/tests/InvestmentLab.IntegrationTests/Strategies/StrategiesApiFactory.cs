@@ -32,6 +32,7 @@ public sealed class StrategiesApiFactory : WebApplicationFactory<api::Program>, 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseSetting("ConnectionStrings:investmentlab", _postgres.GetConnectionString());
+        builder.UseSetting("Scheduling:RunAtStartup", "false");                 // tests run the jobs themselves
         builder.UseSetting("Strategies:StrategyEngineUrl", StrategyEngineUrl ?? throw new InvalidOperationException("Set StrategyEngineUrl first."));
         builder.ConfigureTestServices(services =>
         {

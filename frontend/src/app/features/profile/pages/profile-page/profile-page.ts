@@ -24,7 +24,6 @@ export class ProfilePage {
   protected readonly profile = linkedSignal<UserProfile | undefined>(() => this.profileResource.value());
   protected readonly saving = signal(false);
 
-  protected readonly currencies = ['EUR', 'USD', 'PLN'].map((code) => ({ label: code, value: code }));
   protected readonly locales = [{ label: 'Українська', value: 'uk-UA' }, { label: 'English', value: 'en-US' }];
   protected readonly timeZones = ['Europe/Warsaw', 'Europe/Kyiv', 'Europe/Berlin', 'Europe/London', 'America/New_York'].map((zone) => ({ label: zone, value: zone }));
 
@@ -37,9 +36,9 @@ export class ProfilePage {
     if (!profile) return;
     this.saving.set(true);
     try {
-      const saved = await this.auth.updateProfile(profile);
+      // The display currency is switched in the top bar: this form must not bring back the one it loaded with.
+      const saved = await this.auth.updateProfile({ ...profile, displayCurrency: this.display.code() ?? profile.displayCurrency });
       this.profileResource.set(saved);
-      this.display.useSaved(saved.displayCurrency);
       this.messages.add({ severity: 'success', summary: 'Профіль збережено' });
     } catch (error) {
       this.messages.add({ severity: 'error', summary: 'Не збережено', detail: toProblemMessage(error) });

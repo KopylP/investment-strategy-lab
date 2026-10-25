@@ -14,7 +14,8 @@ import { formatMoney } from '../../pipes/format';
       @if (inline()) {
         <span class="text-muted-color text-[0.8em] whitespace-nowrap"> ({{ original }})</span>
       } @else {
-        <span class="block text-muted-color text-xs font-normal whitespace-nowrap">{{ original }}</span>
+        <!-- Scales with the amount above (a hero figure gets a readable line), never below 0.75rem. -->
+        <span class="block text-muted-color text-[max(0.75rem,0.36em)] font-medium tracking-normal leading-snug mt-0.5 whitespace-nowrap">{{ original }}</span>
       }
     }
   `,

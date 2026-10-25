@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { UIChart } from 'primeng/chart';
+import { LiveChart } from './live-chart';
 import { formatDate, formatMoney, formatQuantity } from '../pipes/format';
 import { ChartTheme, withAlpha } from './chart-theme';
 
@@ -23,8 +23,8 @@ export interface TradeMarker {
  */
 @Component({
   selector: 'app-price-chart',
-  imports: [UIChart],
-  template: `@for (chart of [options()]; track chart) { <p-chart type="line" [data]="data()" [options]="chart" [plugins]="[tradeLines()]" [height]="height()" /> }`,
+  imports: [LiveChart],
+  template: `<app-live-chart [data]="data()" [options]="options()" [plugins]="[tradeLines()]" [height]="height()" />`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PriceChart {

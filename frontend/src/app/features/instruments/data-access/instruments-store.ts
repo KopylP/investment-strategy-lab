@@ -1,4 +1,4 @@
-import { computed, inject, Injectable, resource, signal } from '@angular/core';
+import { computed, inject, Injectable, linkedSignal, resource, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { ApiClient, toProblemMessage } from '../../../core/api/api-client';
 import { AccountContext } from '../../../core/context/account-context';
@@ -138,7 +138,15 @@ export class InstrumentsStore {
   });
 
   readonly selected = computed(() => this.rows().find((row) => row.id === this.selectedId()) ?? null);
-  readonly detailPoints = computed(() => (this.detailResource.hasValue() ? this.detailResource.value().points : []));
+  /** Another period of the same instrument loads behind the current chart: the line is swapped, not blanked. */
+  readonly detailPoints = linkedSignal<{ points: QuotePoint[] | undefined; loading: boolean; id: string | null }, QuotePoint[]>({
+    source: () => ({
+      points: this.detailResource.hasValue() ? this.detailResource.value().points : undefined,
+      loading: this.detailResource.isLoading(),
+      id: this.selectedId() ?? null,
+    }),
+    computation: (next, previous) => next.points ?? (next.loading && previous?.source.id === next.id ? previous.value : []),
+  });
   readonly detailError = computed(() => !!this.detailResource.error());
 
   /** Period statistics of the chosen instrument (adjusted close: dividends of distributing ETFs count as return). */

@@ -8,7 +8,7 @@ interface LatestFxRates {
 }
 
 /**
- * The currency the user wants to see money in (profile setting). Amounts are converted through PLN at the latest NBP
+ * The currency the user wants to see money in (chosen in the top bar, kept in the profile). Amounts are converted through PLN at the latest NBP
  * mid rates — good for reading, not for taxes. Without a rate the amount stays in its own currency.
  */
 @Injectable({ providedIn: 'root' })
@@ -62,11 +62,6 @@ export class DisplayCurrency {
     const profile = this.profileResource.value() ?? (await this.auth.getProfile());
     const saved = await this.auth.updateProfile({ ...profile, displayCurrency: code });
     this.profileResource.set(saved);
-  }
-
-  /** The profile page saved a new display currency. */
-  useSaved(code: string): void {
-    this.chosen.set(code);
   }
 
   reloadRates(): void {

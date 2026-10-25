@@ -142,6 +142,14 @@
       </ng-template>
     </p-table>
 
+    @if (current.status === 'Preview' && blockers(); as why) {
+      <p-message severity="warn" styleClass="mt-4">
+        <div>
+          <div class="font-medium">Імпорт поки неможливий</div>
+          @for (reason of why; track reason) { <div class="text-sm">{{ reason }}</div> }
+        </div>
+      </p-message>
+    }
     <div class="flex flex-wrap justify-end gap-2 mt-4">
       @if (current.status === 'Preview') {
         <p-button label="Інший файл" [text]="true" severity="secondary" (onClick)="store.reset()" />

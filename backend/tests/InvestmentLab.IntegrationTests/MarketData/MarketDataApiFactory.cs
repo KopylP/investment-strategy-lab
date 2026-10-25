@@ -32,6 +32,7 @@ public sealed class MarketDataApiFactory : WebApplicationFactory<api::Program>, 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseSetting("ConnectionStrings:investmentlab", _postgres.GetConnectionString());
+        builder.UseSetting("Scheduling:RunAtStartup", "false");                 // tests run the jobs themselves
         builder.ConfigureTestServices(services =>
         {
             services.AddSingleton<IQuoteProvider>(Quotes);

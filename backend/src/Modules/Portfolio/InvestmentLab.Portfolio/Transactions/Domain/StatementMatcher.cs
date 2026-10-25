@@ -6,7 +6,9 @@ namespace InvestmentLab.Portfolio.Transactions.Domain;
 /// Broker commission hidden in the total: Revolut's "Total Amount" is quantity × price plus the fee on a buy (minus it on
 /// a sale). In the account currency.
 /// </param>
-public sealed record PricedRow(StatementRow Row, Guid? InstrumentId, Guid? SubPortfolioId, decimal Quantity, decimal Price, decimal Amount, Money? Settlement = null, decimal Fee = 0m)
+/// <param name="MissingRate">The row is in another currency and no NBP rate of its day is stored: it cannot be converted.</param>
+public sealed record PricedRow(StatementRow Row, Guid? InstrumentId, Guid? SubPortfolioId, decimal Quantity, decimal Price, decimal Amount, Money? Settlement = null, decimal Fee = 0m,
+    bool MissingRate = false)
 {
     /// <summary>Differences up to this are rounding of the total, not a fee.</summary>
     private const decimal RoundingNoise = 0.015m;
@@ -68,9 +70,9 @@ public static class StatementMatcher
                 outcomes.Add(new RowOutcome(row.Number, RowDecision.OutOfScope, null, null, false, false, null));
                 continue;
             }
-            if (priced.SubPortfolioId is null || row.NeedsInstrument && priced.InstrumentId is null)
+            if (priced.MissingRate || priced.SubPortfolioId is null || row.NeedsInstrument && priced.InstrumentId is null)
             {
-                outcomes.Add(new RowOutcome(row.Number, RowDecision.NeedsMapping, null, null, false, false, null));
+                outcomes.Add(new RowOutcome(row.Number, RowDecision.NeedsMapping, WhyUnmapped(priced), null, false, false, null));
                 continue;
             }
 
@@ -141,4 +143,12 @@ public static class StatementMatcher
 
     private static bool Close(decimal left, decimal right, decimal tolerance) =>
         right == 0m ? left == 0m : Math.Abs(left - right) / Math.Abs(right) <= tolerance;
+
+    private static string WhyUnmapped(PricedRow priced) => priced switch
+    {
+        { MissingRate: true } => $"немає курсу NBP {priced.Row.Currency} на {priced.Row.OccurredOn:dd.MM.yyyy}",
+        { Row.NeedsInstrument: true, InstrumentId: null } => $"{priced.Row.Ticker}: не вибрано інструмент",
+        { Row.NeedsInstrument: true } => $"{priced.Row.Ticker}: не вибрано під-портфель",
+        _ => "не вибрано під-портфель для коштів",
+    };
 }

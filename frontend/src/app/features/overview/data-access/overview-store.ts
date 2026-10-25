@@ -1,4 +1,4 @@
-import { computed, inject, Injectable, resource, signal } from '@angular/core';
+import { computed, inject, Injectable, linkedSignal, resource, signal } from '@angular/core';
 import { ApiClient } from '../../../core/api/api-client';
 import { AccountContext } from '../../../core/context/account-context';
 import { DashboardDto } from './dashboard-api';
@@ -41,7 +41,15 @@ export class OverviewStore {
   readonly strategiesLoaded = computed(() => this.strategiesResource.hasValue());
   readonly hasStrategyAssigned = computed(() => this.account()?.subPortfolios.some((sub) => sub.status === 'Active' && sub.strategyId) ?? false);
 
-  readonly dashboard = computed(() => (this.dashboardResource.hasValue() ? this.dashboardResource.value() : undefined));
+  /** While another period of the same account loads, the last dashboard stays: the chart swaps data instead of blinking. */
+  readonly dashboard = linkedSignal<{ value: DashboardDto | undefined; loading: boolean; accountId: string | null }, DashboardDto | undefined>({
+    source: () => ({
+      value: this.dashboardResource.hasValue() ? this.dashboardResource.value() : undefined,
+      loading: this.dashboardResource.isLoading(),
+      accountId: this.accounts.currentId() ?? null,
+    }),
+    computation: (next, previous) => next.value ?? (next.loading && previous?.value?.accountId === next.accountId ? previous.value : undefined),
+  });
   readonly isLoading = this.dashboardResource.isLoading;
   readonly loadError = this.dashboardResource.error;
   /** Gain over the money paid in, as a fraction of it (what a broker app shows next to the total). */

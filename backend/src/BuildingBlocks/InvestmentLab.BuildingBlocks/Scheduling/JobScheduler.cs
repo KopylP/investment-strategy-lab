@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -5,26 +6,31 @@ using Microsoft.Extensions.Logging;
 
 namespace InvestmentLab.BuildingBlocks.Scheduling;
 
-public sealed record ScheduledJobRegistration(Type JobType, DailySchedule Schedule);
+/// <param name="RunAtStartup">Also run once when the host starts, so a fresh install does not wait for the first occurrence.</param>
+public sealed record ScheduledJobRegistration(Type JobType, DailySchedule Schedule, bool RunAtStartup = false);
 
 public static class SchedulingRegistration
 {
     extension(IServiceCollection services)
     {
-        public IServiceCollection AddScheduledJob<TJob>(DailySchedule schedule)
+        public IServiceCollection AddScheduledJob<TJob>(DailySchedule schedule, bool runAtStartup = false)
             where TJob : class, IScheduledJob
         {
             services.TryAddScoped<TJob>();
-            services.AddSingleton(new ScheduledJobRegistration(typeof(TJob), schedule));
+            services.AddSingleton(new ScheduledJobRegistration(typeof(TJob), schedule, runAtStartup));
             return services;
         }
     }
 }
 
-/// <summary>Runs every registered job at its next occurrence; a failed run is logged and waits for the next one.</summary>
+/// <summary>
+/// Runs every registered job at its next occurrence (and the startup ones right away, unless
+/// <c>Scheduling:RunAtStartup</c> is false, as in tests); a failed run is logged and waits for the next one.
+/// </summary>
 internal sealed class JobScheduler(
     IEnumerable<ScheduledJobRegistration> jobs,
     IServiceScopeFactory scopes,
+    IConfiguration configuration,
     TimeProvider clock,
     ILogger<JobScheduler> logger) : BackgroundService
 {
@@ -33,6 +39,12 @@ internal sealed class JobScheduler(
 
     private async Task RunForeverAsync(ScheduledJobRegistration job, CancellationToken stoppingToken)
     {
+        if (job.RunAtStartup && configuration.GetValue("Scheduling:RunAtStartup", true))
+        {
+            logger.LogInformation("Job {Job} runs at startup", job.JobType.Name);
+            await RunOnceAsync(job, stoppingToken);
+        }
+
         while (!stoppingToken.IsCancellationRequested)
         {
             var next = job.Schedule.NextOccurrenceAfter(clock.GetUtcNow());

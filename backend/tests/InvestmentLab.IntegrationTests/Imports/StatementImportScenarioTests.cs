@@ -96,11 +96,11 @@ public sealed class StatementImportScenarioTests(MarketDataApiFactory factory) :
     }
 
     [Fact]
-    public async Task Unknown_tickers_are_looked_up_on_yahoo_and_a_single_sleeve_is_chosen_so_the_import_only_needs_confirming()
+    public async Task Unknown_tickers_are_looked_up_on_yahoo_rates_are_loaded_and_a_single_sleeve_is_chosen_so_the_import_only_needs_confirming()
     {
         var ct = TestContext.Current.CancellationToken;
         var client = await factory.CreateSignedInClientAsync(ct);
-        (await client.PostAsync("/api/market-data/fx-rates/ingest", null, ct)).EnsureSuccessStatusCode();
+        // No FX ingest here: uploading a statement in dollars loads the NBP rates it needs.
         var opened = await client.PostAsJsonAsync("/api/portfolio/accounts", new
         {
             name = "Revolut",

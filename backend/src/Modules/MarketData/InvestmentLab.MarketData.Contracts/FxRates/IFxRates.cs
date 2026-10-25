@@ -13,4 +13,11 @@ public interface IFxRates
     Task<IReadOnlyList<FxRateDto>> GetFxRateHistory(string baseCurrency, string quoteCurrency, DateOnly from, DateOnly to, CancellationToken cancellationToken);
 }
 
+/// <summary>Loads NBP history on demand, e.g. for a statement older than what the daily job keeps.</summary>
+public interface IFxRateBackfill
+{
+    /// <summary>Stores the missing rates from <paramref name="since"/> (and the tables just before it) to today; false when NBP could not be reached.</summary>
+    Task<bool> EnsureSinceAsync(DateOnly since, CancellationToken cancellationToken);
+}
+
 public sealed record FxRateDto(string Source, string Base, string Quote, DateOnly EffectiveDate, decimal Rate, string? TableNumber);
