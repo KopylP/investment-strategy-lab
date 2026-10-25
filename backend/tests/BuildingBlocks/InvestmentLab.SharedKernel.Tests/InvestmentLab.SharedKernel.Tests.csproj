@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../../../src/BuildingBlocks/InvestmentLab.SharedKernel/InvestmentLab.SharedKernel.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="InvestmentLab.SharedKernel" />
+  </ItemGroup>
+</Project>

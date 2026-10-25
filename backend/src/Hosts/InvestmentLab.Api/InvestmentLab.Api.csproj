@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <PackageReference Include="Aspire.Npgsql" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Scalar.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../InvestmentLab.ServiceDefaults/InvestmentLab.ServiceDefaults.csproj" />
+    <ProjectReference Include="../../BuildingBlocks/InvestmentLab.BuildingBlocks/InvestmentLab.BuildingBlocks.csproj" />
+    <ProjectReference Include="../../Modules/Identity/InvestmentLab.Identity/InvestmentLab.Identity.csproj" />
+    <ProjectReference Include="../../Modules/MarketData/InvestmentLab.MarketData/InvestmentLab.MarketData.csproj" />
+    <ProjectReference Include="../../Modules/Strategies/InvestmentLab.Strategies/InvestmentLab.Strategies.csproj" />
+    <ProjectReference Include="../../Modules/Portfolio/InvestmentLab.Portfolio/InvestmentLab.Portfolio.csproj" />
+    <ProjectReference Include="../../Modules/Rebalancing/InvestmentLab.Rebalancing/InvestmentLab.Rebalancing.csproj" />
+    <ProjectReference Include="../../Modules/Taxation/InvestmentLab.Taxation/InvestmentLab.Taxation.csproj" />
+    <ProjectReference Include="../../Modules/Performance/InvestmentLab.Performance/InvestmentLab.Performance.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="InvestmentLab.IntegrationTests" />
+  </ItemGroup>
+</Project>

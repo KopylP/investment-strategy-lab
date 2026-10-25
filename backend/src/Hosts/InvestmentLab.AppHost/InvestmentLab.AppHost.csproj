@@ -1,0 +1,16 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.6.4">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UserSecretsId>investment-lab-apphost</UserSecretsId>
+    <!-- Dashboard and DCP come as NuGet packages, so `dotnet run` and Rider work without the Aspire CLI. -->
+    <NoWarn>$(NoWarn);ASPIRE010</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../InvestmentLab.Api/InvestmentLab.Api.csproj" />
+  </ItemGroup>
+</Project>
