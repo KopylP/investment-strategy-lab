@@ -1,0 +1,207 @@
+{
+  "version": 1,
+  "name": "eu-2026-04",
+  "source": "backtest",
+  "asOf": "2026-04-01",
+  "currency": "EUR",
+  "topN": 4,
+  "cashInstrument": "XEON.DE",
+  "settings": {
+    "minTrade": 25.0,
+    "trimBand": 0.1,
+    "fractionalShares": true,
+    "weakMarketInvestPct": 0.5
+  },
+  "decision": {
+    "marketOk": false,
+    "investFraction": 0.5,
+    "targets": [
+      {
+        "key": "4GLD.DE",
+        "weight": 0.25
+      },
+      {
+        "key": "XDJE.DE",
+        "weight": 0.25
+      },
+      {
+        "key": "QDVI.DE",
+        "weight": 0.25
+      },
+      {
+        "key": "IS3N.DE",
+        "weight": 0.25
+      }
+    ],
+    "scores": [
+      {
+        "key": "4GLD.DE",
+        "rank": 3,
+        "momentum": 0.22456743371410437,
+        "status": "selected",
+        "reason": "ранг 3 за моментумом"
+      },
+      {
+        "key": "XDJE.DE",
+        "rank": 4,
+        "momentum": 0.16892053881257096,
+        "status": "selected",
+        "reason": "ранг 4 за моментумом"
+      },
+      {
+        "key": "QDVI.DE",
+        "rank": 5,
+        "momentum": 0.15693544746906674,
+        "status": "buffer",
+        "reason": "вже в портфелі, ранг 5 у межах буфера 8"
+      },
+      {
+        "key": "IS3N.DE",
+        "rank": 6,
+        "momentum": 0.06679697902651882,
+        "status": "buffer",
+        "reason": "вже в портфелі, ранг 6 у межах буфера 8"
+      }
+    ]
+  },
+  "contribution": 227.0,
+  "portfolio": {
+    "cash": 0.0,
+    "holdings": [
+      {
+        "key": "XDJE.DE",
+        "quantity": 14.336939882459252
+      },
+      {
+        "key": "QDVI.DE",
+        "quantity": 100.81314646431565
+      },
+      {
+        "key": "IS3N.DE",
+        "quantity": 28.463686835931753
+      },
+      {
+        "key": "4GLD.DE",
+        "quantity": 8.697257809251473
+      }
+    ],
+    "costBasis": {
+      "4GLD.DE": 118.57602503107188,
+      "IS3N.DE": 39.408477881291184,
+      "QDVI.DE": 10.84986279486153,
+      "XDJE.DE": 62.862871771977304
+    }
+  },
+  "prices": {
+    "4GLD.DE": 132.4600067138672,
+    "IS3N.DE": 40.64099884033203,
+    "QDVI.DE": 11.904000282287598,
+    "XDJE.DE": 81.61093139648438,
+    "XEON.DE": 148.78700256347656
+  },
+  "names": {
+    "4GLD.DE": "Xetra-Gold",
+    "IS3N.DE": "iShares Core MSCI EM IMI",
+    "QDVI.DE": "iShares Edge MSCI USA Value Factor",
+    "XDJE.DE": "Xtrackers Nikkei 225 (EUR hedged)",
+    "XEON.DE": "Xtrackers EUR Overnight Rate Swap (кеш)"
+  },
+  "expected": {
+    "orders": [
+      {
+        "action": "buy",
+        "kind": "buy",
+        "ticker": "4GLD.DE",
+        "name": "Xetra-Gold",
+        "amount": 45.29291714791394,
+        "shares": 0.3419365457662493,
+        "price": 132.4600067138672,
+        "reason": "докупити до цілі 25% портфеля (ранг 3, моментум +22.5%)"
+      },
+      {
+        "action": "buy",
+        "kind": "buy",
+        "ticker": "XDJE.DE",
+        "name": "Xtrackers Nikkei 225 (EUR hedged)",
+        "amount": 27.587133885894012,
+        "shares": 0.33803233725969223,
+        "price": 81.61093139648438,
+        "reason": "докупити до цілі 25% портфеля (ранг 4, моментум +16.9%)"
+      },
+      {
+        "action": "buy",
+        "kind": "buy",
+        "ticker": "IS3N.DE",
+        "name": "iShares Core MSCI EM IMI",
+        "amount": 40.61994896619205,
+        "shares": 0.9994820532284976,
+        "price": 40.64099884033203,
+        "reason": "докупити до цілі 25% портфеля (ранг 6, моментум +6.7%)"
+      },
+      {
+        "action": "buy",
+        "kind": "park",
+        "ticker": "XEON.DE",
+        "name": "Xtrackers EUR Overnight Rate Swap (кеш)",
+        "amount": 113.5,
+        "shares": 0.7628354496326238,
+        "price": 148.78700256347656,
+        "reason": "парковка: гроші, які цього місяця не інвестуються"
+      }
+    ],
+    "totalBefore": 4678.962232648778,
+    "totalAfter": 4905.962232648778,
+    "parkedBefore": 0.0,
+    "parkedAfter": 113.50000000000091,
+    "allocation": [
+      {
+        "ticker": "4GLD.DE",
+        "role": "pick",
+        "valueBefore": 1152.038827805684,
+        "valueAfter": 1197.3317449535978,
+        "weightBefore": 0.24621674006406982,
+        "weightAfter": 0.2440564537952316,
+        "targetWeight": 0.25
+      },
+      {
+        "ticker": "XDJE.DE",
+        "role": "pick",
+        "valueBefore": 1170.0510171829028,
+        "valueAfter": 1197.6381510687968,
+        "weightBefore": 0.2500663521108467,
+        "weightAfter": 0.2441189096602931,
+        "targetWeight": 0.25
+      },
+      {
+        "ticker": "QDVI.DE",
+        "role": "pick",
+        "valueBefore": 1200.0797239695144,
+        "valueAfter": 1200.0797239695144,
+        "weightBefore": 0.2564841655689417,
+        "weightAfter": 0.24461658428250463,
+        "targetWeight": 0.25
+      },
+      {
+        "ticker": "IS3N.DE",
+        "role": "pick",
+        "valueBefore": 1156.7926636906766,
+        "valueAfter": 1197.4126126568685,
+        "weightBefore": 0.2472327422561417,
+        "weightAfter": 0.2440729373512469,
+        "targetWeight": 0.25
+      },
+      {
+        "ticker": "XEON.DE",
+        "role": "cash",
+        "valueBefore": 0.0,
+        "valueAfter": 113.50000000000091,
+        "weightBefore": 0.0,
+        "weightAfter": 0.02313511491072387,
+        "targetWeight": null
+      }
+    ],
+    "notes": [
+      "Ринок слабкий: інвестуємо 50% внеску (€113.50), решту (€113.50) паркуємо в XEON.DE. Через стан ринку поточні позиції не продаємо."
+    ]
+  }
+}

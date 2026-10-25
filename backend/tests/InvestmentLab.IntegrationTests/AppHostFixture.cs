@@ -5,7 +5,7 @@ using Aspire.Hosting;
 namespace InvestmentLab.IntegrationTests;
 
 /// <summary>
-/// Starts the whole Aspire AppHost once per test run, with a throwaway Postgres (requires Docker).
+/// Starts the whole Aspire AppHost once per test run, with a throwaway Postgres (requires Docker and uv).
 /// </summary>
 public sealed class AppHostFixture : IAsyncLifetime
 {
@@ -25,10 +25,13 @@ public sealed class AppHostFixture : IAsyncLifetime
         _app = await builder.BuildAsync(timeout.Token);
         await _app.StartAsync(timeout.Token);
         await _app.ResourceNotifications.WaitForResourceHealthyAsync("api", timeout.Token);
+        await _app.ResourceNotifications.WaitForResourceHealthyAsync("strategy-engine", timeout.Token);
     }
 
     // Plain http: CI agents have no trusted dev certificate.
     public HttpClient CreateApiClient() => App.CreateHttpClient("api", "http");
+
+    public HttpClient CreateStrategyEngineClient() => App.CreateHttpClient("strategy-engine", "http");
 
     public async ValueTask DisposeAsync()
     {

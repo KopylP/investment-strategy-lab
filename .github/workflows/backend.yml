@@ -4,10 +4,12 @@ on:
   push:
     paths:
       - "backend/**"
+      - "strategy-engine/**"
       - ".github/workflows/backend.yml"
   pull_request:
     paths:
       - "backend/**"
+      - "strategy-engine/**"
       - ".github/workflows/backend.yml"
   workflow_dispatch:
 
@@ -30,6 +32,13 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           global-json-file: backend/global.json
+
+      # The AppHost starts the Python strategy engine through uv in integration tests.
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: strategy-engine/uv.lock
 
       - name: Restore
         run: dotnet restore InvestmentLab.slnx

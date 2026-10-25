@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "name": "no-picks-park-everything",
+  "source": "synthetic",
+  "asOf": "2026-10-05",
+  "currency": "EUR",
+  "topN": 4,
+  "cashInstrument": "CASHX",
+  "settings": {
+    "minTrade": 25.0,
+    "trimBand": 0.1,
+    "fractionalShares": true,
+    "weakMarketInvestPct": 0.5
+  },
+  "decision": {
+    "marketOk": true,
+    "investFraction": 1.0,
+    "targets": [],
+    "scores": []
+  },
+  "contribution": 227.0,
+  "portfolio": {
+    "cash": 0.0,
+    "holdings": [],
+    "costBasis": {}
+  },
+  "prices": {
+    "CASHX": 100.0
+  },
+  "names": {},
+  "expected": {
+    "orders": [
+      {
+        "action": "buy",
+        "kind": "park",
+        "ticker": "CASHX",
+        "name": "CASHX",
+        "amount": 227.0,
+        "shares": 2.27,
+        "price": 100.0,
+        "reason": "парковка: гроші, які цього місяця не інвестуються"
+      }
+    ],
+    "totalBefore": 0.0,
+    "totalAfter": 227.0,
+    "parkedBefore": 0.0,
+    "parkedAfter": 227.0,
+    "allocation": [
+      {
+        "ticker": "CASHX",
+        "role": "cash",
+        "valueBefore": 0.0,
+        "valueAfter": 227.0,
+        "weightBefore": 0.0,
+        "weightAfter": 1.0,
+        "targetWeight": null
+      }
+    ],
+    "notes": [
+      "Жоден ETF не пройшов фільтри: усі гроші лишаються в CASHX."
+    ]
+  }
+}

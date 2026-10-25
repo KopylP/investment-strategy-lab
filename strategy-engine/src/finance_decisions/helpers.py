@@ -57,6 +57,11 @@ def latest_rolling_high(series: pd.Series, period: int) -> float | None:
     return float(clean.rolling(period, min_periods=1).max().iloc[-1])
 
 
+def holdings_by_value(holdings: dict[str, float], prices: dict[str, float | None]) -> list[str]:
+    """Held tickers, largest position first."""
+    return sorted(holdings, key=lambda ticker: holdings[ticker] * (prices.get(ticker) or 0.0), reverse=True)
+
+
 def safe_division(numerator: float, denominator: float, default: float = 0.0) -> float:
     """Divide *numerator* by *denominator*, returning *default* when the
     denominator is zero or very close to zero."""
