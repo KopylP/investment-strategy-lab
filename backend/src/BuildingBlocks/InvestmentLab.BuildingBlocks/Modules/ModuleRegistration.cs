@@ -1,6 +1,10 @@
+using InvestmentLab.BuildingBlocks.Messaging;
+using InvestmentLab.BuildingBlocks.Persistence;
+using InvestmentLab.BuildingBlocks.Scheduling;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
 namespace InvestmentLab.BuildingBlocks.Modules;
@@ -14,6 +18,12 @@ public static class ModuleRegistration
             module.AddServices(builder);
 
         builder.Services.AddSingleton<IReadOnlyList<IModule>>(modules);
+        builder.Services.TryAddSingleton(TimeProvider.System);
+
+        // Order matters: schemas exist before the outbox is polled or a job runs.
+        builder.Services.AddHostedService<DatabaseMigrator>();
+        builder.Services.AddHostedService<OutboxDispatcher>();
+        builder.Services.AddHostedService<JobScheduler>();
         return builder;
     }
 
