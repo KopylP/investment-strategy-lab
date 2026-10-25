@@ -1,0 +1,458 @@
+[
+  {
+    "kind": "Etf",
+    "isin": "IE00B5BMR087",
+    "name": "iShares Core S&P 500",
+    "exchange": "XETR",
+    "tradingCurrency": "EUR",
+    "group": "Акції США: S&P 500",
+    "isAccumulating": true,
+    "providerSymbols": [
+      "yfinance:SXR8.DE"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "IE00B53SZB19",
+    "name": "iShares Nasdaq-100",
+    "exchange": "XETR",
+    "tradingCurrency": "EUR",
+    "group": "Технології США / Nasdaq-100",
+    "isAccumulating": true,
+    "providerSymbols": [
+      "yfinance:SXRV.DE"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "IE00BF4RFH31",
+    "name": "iShares MSCI World Small Cap",
+    "exchange": "XETR",
+    "tradingCurrency": "EUR",
+    "group": "Малі компанії світу",
+    "isAccumulating": true,
+    "providerSymbols": [
+      "yfinance:IUSN.DE"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "IE0008471009",
+    "name": "iShares Core EURO STOXX 50",
+    "exchange": "XETR",
+    "tradingCurrency": "EUR",
+    "group": "Акції єврозони",
+    "isAccumulating": false,
+    "providerSymbols": [
+      "yfinance:EUN2.DE"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "IE00BKM4GZ66",
+    "name": "iShares Core MSCI EM IMI",
+    "exchange": "XETR",
+    "tradingCurrency": "EUR",
+    "group": "Ринки, що розвиваються",
+    "isAccumulating": true,
+    "providerSymbols": [
+      "yfinance:IS3N.DE"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "DE000A0S9GB0",
+    "name": "Xetra-Gold",
+    "exchange": "XETR",
+    "tradingCurrency": "EUR",
+    "group": "Золото",
+    "isAccumulating": null,
+    "providerSymbols": [
+      "yfinance:4GLD.DE"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "IE00BDFL4P12",
+    "name": "iShares Diversified Commodity Swap",
+    "exchange": "XETR",
+    "tradingCurrency": "EUR",
+    "group": "Сировина",
+    "isAccumulating": true,
+    "providerSymbols": [
+      "yfinance:SXRS.DE"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "IE00BSKRJZ44",
+    "name": "iShares $ Treasury Bond 20+yr",
+    "exchange": "XETR",
+    "tradingCurrency": "EUR",
+    "group": "Довгі облігації США",
+    "isAccumulating": false,
+    "providerSymbols": [
+      "yfinance:IS04.DE"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "IE00B2NPKV68",
+    "name": "iShares J.P. Morgan $ EM Bond",
+    "exchange": "XETR",
+    "tradingCurrency": "EUR",
+    "group": "Облігації ринків, що розвиваються",
+    "isAccumulating": false,
+    "providerSymbols": [
+      "yfinance:IUS7.DE"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "IE00B0M62X26",
+    "name": "iShares € Inflation Linked Govt Bond",
+    "exchange": "XETR",
+    "tradingCurrency": "EUR",
+    "group": "Інфляційні облігації єврозони",
+    "isAccumulating": true,
+    "providerSymbols": [
+      "yfinance:IBCI.DE"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "IE00B0M62S72",
+    "name": "iShares Euro Dividend",
+    "exchange": "XETR",
+    "tradingCurrency": "EUR",
+    "group": "Акції єврозони",
+    "isAccumulating": false,
+    "providerSymbols": [
+      "yfinance:IQQA.DE"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "LU1875395870",
+    "name": "Xtrackers Nikkei 225 (EUR hedged)",
+    "exchange": "XETR",
+    "tradingCurrency": "EUR",
+    "group": "Японія",
+    "isAccumulating": false,
+    "providerSymbols": [
+      "yfinance:XDJE.DE"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "IE00B3WJKG14",
+    "name": "iShares S&P 500 Information Technology",
+    "exchange": "XETR",
+    "tradingCurrency": "EUR",
+    "group": "Технології США / Nasdaq-100",
+    "isAccumulating": true,
+    "providerSymbols": [
+      "yfinance:QDVE.DE"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "IE00B42NKQ00",
+    "name": "iShares S&P 500 Energy",
+    "exchange": "XETR",
+    "tradingCurrency": "EUR",
+    "group": "Енергетика США",
+    "isAccumulating": true,
+    "providerSymbols": [
+      "yfinance:QDVF.DE"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "IE00B43HR379",
+    "name": "iShares S&P 500 Health Care",
+    "exchange": "XETR",
+    "tradingCurrency": "EUR",
+    "group": "Охорона здоров'я США",
+    "isAccumulating": true,
+    "providerSymbols": [
+      "yfinance:QDVG.DE"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "IE00BD1F4M44",
+    "name": "iShares Edge MSCI USA Value Factor",
+    "exchange": "XETR",
+    "tradingCurrency": "EUR",
+    "group": "Акції США: стиль Value",
+    "isAccumulating": true,
+    "providerSymbols": [
+      "yfinance:QDVI.DE"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "IE00BYVQ9F29",
+    "name": "iShares Nasdaq-100 (EUR hedged)",
+    "exchange": "XETR",
+    "tradingCurrency": "EUR",
+    "group": "Технології США / Nasdaq-100",
+    "isAccumulating": true,
+    "providerSymbols": [
+      "yfinance:NQSE.DE"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "LU0290358497",
+    "name": "Xtrackers EUR Overnight Rate Swap",
+    "exchange": "XETR",
+    "tradingCurrency": "EUR",
+    "group": "Кеш: грошовий ринок",
+    "isAccumulating": true,
+    "providerSymbols": [
+      "yfinance:XEON.DE"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "US78462F1030",
+    "name": "SPDR S&P 500",
+    "exchange": "ARCX",
+    "tradingCurrency": "USD",
+    "group": "Акції США: S&P 500",
+    "isAccumulating": false,
+    "providerSymbols": [
+      "yfinance:SPY"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "US46090E1038",
+    "name": "Invesco QQQ (Nasdaq-100)",
+    "exchange": "XNAS",
+    "tradingCurrency": "USD",
+    "group": "Технології США / Nasdaq-100",
+    "isAccumulating": false,
+    "providerSymbols": [
+      "yfinance:QQQ"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "US4642876555",
+    "name": "iShares Russell 2000",
+    "exchange": "ARCX",
+    "tradingCurrency": "USD",
+    "group": "Малі компанії США",
+    "isAccumulating": false,
+    "providerSymbols": [
+      "yfinance:IWM"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "US4642874659",
+    "name": "iShares MSCI EAFE",
+    "exchange": "ARCX",
+    "tradingCurrency": "USD",
+    "group": "Розвинені ринки поза США",
+    "isAccumulating": false,
+    "providerSymbols": [
+      "yfinance:EFA"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "US4642872349",
+    "name": "iShares MSCI Emerging Markets",
+    "exchange": "ARCX",
+    "tradingCurrency": "USD",
+    "group": "Ринки, що розвиваються",
+    "isAccumulating": false,
+    "providerSymbols": [
+      "yfinance:EEM"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "US78463V1070",
+    "name": "SPDR Gold Shares",
+    "exchange": "ARCX",
+    "tradingCurrency": "USD",
+    "group": "Дорогоцінні метали",
+    "isAccumulating": null,
+    "providerSymbols": [
+      "yfinance:GLD"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "US46428Q1094",
+    "name": "iShares Silver Trust",
+    "exchange": "ARCX",
+    "tradingCurrency": "USD",
+    "group": "Дорогоцінні метали",
+    "isAccumulating": null,
+    "providerSymbols": [
+      "yfinance:SLV"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "US4642874329",
+    "name": "iShares 20+ Year Treasury Bond",
+    "exchange": "XNAS",
+    "tradingCurrency": "USD",
+    "group": "Держоблігації США",
+    "isAccumulating": false,
+    "providerSymbols": [
+      "yfinance:TLT"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "US4642874402",
+    "name": "iShares 7-10 Year Treasury Bond",
+    "exchange": "XNAS",
+    "tradingCurrency": "USD",
+    "group": "Держоблігації США",
+    "isAccumulating": false,
+    "providerSymbols": [
+      "yfinance:IEF"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "US4642872422",
+    "name": "iShares iBoxx $ Investment Grade Corporate Bond",
+    "exchange": "ARCX",
+    "tradingCurrency": "USD",
+    "group": "Корпоративні облігації США",
+    "isAccumulating": false,
+    "providerSymbols": [
+      "yfinance:LQD"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "US9229085538",
+    "name": "Vanguard Real Estate",
+    "exchange": "ARCX",
+    "tradingCurrency": "USD",
+    "group": "Нерухомість США",
+    "isAccumulating": false,
+    "providerSymbols": [
+      "yfinance:VNQ"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "US91232N2071",
+    "name": "United States Oil Fund",
+    "exchange": "ARCX",
+    "tradingCurrency": "USD",
+    "group": "Енергетика та нафта",
+    "isAccumulating": null,
+    "providerSymbols": [
+      "yfinance:USO"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "US46140H1068",
+    "name": "Invesco DB Agriculture",
+    "exchange": "ARCX",
+    "tradingCurrency": "USD",
+    "group": "Сільгосп сировина",
+    "isAccumulating": null,
+    "providerSymbols": [
+      "yfinance:DBA"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "US81369Y5069",
+    "name": "Energy Select Sector SPDR",
+    "exchange": "ARCX",
+    "tradingCurrency": "USD",
+    "group": "Енергетика та нафта",
+    "isAccumulating": false,
+    "providerSymbols": [
+      "yfinance:XLE"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "US81369Y8030",
+    "name": "Technology Select Sector SPDR",
+    "exchange": "ARCX",
+    "tradingCurrency": "USD",
+    "group": "Технології США / Nasdaq-100",
+    "isAccumulating": false,
+    "providerSymbols": [
+      "yfinance:XLK"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "US81369Y2090",
+    "name": "Health Care Select Sector SPDR",
+    "exchange": "ARCX",
+    "tradingCurrency": "USD",
+    "group": "Охорона здоров'я США",
+    "isAccumulating": false,
+    "providerSymbols": [
+      "yfinance:XLV"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "US81369Y6059",
+    "name": "Financial Select Sector SPDR",
+    "exchange": "ARCX",
+    "tradingCurrency": "USD",
+    "group": "Фінанси США",
+    "isAccumulating": false,
+    "providerSymbols": [
+      "yfinance:XLF"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "US81369Y8865",
+    "name": "Utilities Select Sector SPDR",
+    "exchange": "ARCX",
+    "tradingCurrency": "USD",
+    "group": "Комунальні послуги США",
+    "isAccumulating": false,
+    "providerSymbols": [
+      "yfinance:XLU"
+    ]
+  },
+  {
+    "kind": "Etf",
+    "isin": "US78468R6633",
+    "name": "SPDR Bloomberg 1-3 Month T-Bill",
+    "exchange": "ARCX",
+    "tradingCurrency": "USD",
+    "group": "Кеш: грошовий ринок",
+    "isAccumulating": false,
+    "providerSymbols": [
+      "yfinance:BIL"
+    ]
+  },
+  {
+    "kind": "Index",
+    "isin": null,
+    "name": "CBOE Volatility Index",
+    "exchange": "XCBO",
+    "tradingCurrency": "USD",
+    "group": null,
+    "isAccumulating": null,
+    "providerSymbols": [
+      "yfinance:^VIX"
+    ]
+  }
+]

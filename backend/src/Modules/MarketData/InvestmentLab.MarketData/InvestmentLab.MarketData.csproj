@@ -1,2 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Instruments/Infrastructure/Seed/instruments.json" />
+  </ItemGroup>
 </Project>

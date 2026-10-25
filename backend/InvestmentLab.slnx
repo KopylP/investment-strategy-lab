@@ -42,6 +42,9 @@
     <Project Path="tests/InvestmentLab.ArchitectureTests/InvestmentLab.ArchitectureTests.csproj" />
     <Project Path="tests/InvestmentLab.IntegrationTests/InvestmentLab.IntegrationTests.csproj" />
   </Folder>
+  <Folder Name="/tests/Modules/">
+    <Project Path="tests/Modules/InvestmentLab.MarketData.Tests/InvestmentLab.MarketData.Tests.csproj" />
+  </Folder>
   <Folder Name="/tests/BuildingBlocks/">
     <Project Path="tests/BuildingBlocks/InvestmentLab.BuildingBlocks.Tests/InvestmentLab.BuildingBlocks.Tests.csproj" />
     <Project Path="tests/BuildingBlocks/InvestmentLab.SharedKernel.Tests/InvestmentLab.SharedKernel.Tests.csproj" />
