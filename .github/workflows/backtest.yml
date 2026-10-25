@@ -14,6 +14,9 @@ on:
 jobs:
   backtest:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: strategy-engine
     env:
       STRATEGY_CONFIG: src/finance_decisions/strategies/etf_momentum/config/strategy.toml
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -27,6 +30,7 @@ jobs:
         with:
           python-version: "3.11"
           cache: "pip"
+          cache-dependency-path: strategy-engine/requirements*.txt
 
       - name: Install dependencies
         run: pip install -r requirements.txt
@@ -41,5 +45,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backtest-report
-          path: reports/latest/etf-momentum/backtest
+          path: strategy-engine/reports/latest/etf-momentum/backtest
           retention-days: 90
