@@ -6,6 +6,7 @@ import { Message } from 'primeng/message';
 import { SelectButton } from 'primeng/selectbutton';
 import { Skeleton } from 'primeng/skeleton';
 import { Tag } from 'primeng/tag';
+import { Tooltip } from 'primeng/tooltip';
 import { DateTimePipe, DatePipe, MoneyPipe, PeriodPipe, SignedPercentPipe } from '../../../../shared/pipes/format-pipes';
 import { Money } from '../../../../shared/ui/money/money';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
@@ -18,7 +19,7 @@ import { ValueChart } from '../../ui/value-chart/value-chart';
 @Component({
   selector: 'app-overview-page',
   imports: [
-    FormsModule, RouterLink, Button, Message, SelectButton, Skeleton, Tag, PageHeader, SignedValue, ValueChart, DrawdownChart, AllocationCard, Money,
+    FormsModule, RouterLink, Button, Message, SelectButton, Skeleton, Tag, Tooltip, PageHeader, SignedValue, ValueChart, DrawdownChart, AllocationCard, Money,
     MoneyPipe, SignedPercentPipe, PeriodPipe, DateTimePipe, DatePipe,
   ],
   providers: [OverviewStore],

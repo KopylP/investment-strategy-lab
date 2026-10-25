@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { UIChart } from 'primeng/chart';
 import { TableModule } from 'primeng/table';
 import { ChartTheme, withAlpha } from '../../../../shared/charts/chart-theme';
@@ -10,7 +11,7 @@ import { DashboardDto } from '../../data-access/dashboard-api';
 /** Sub-portfolios: actual share against target, value and return. */
 @Component({
   selector: 'app-allocation-card',
-  imports: [UIChart, TableModule, Money, PercentPipe, SignedPercentPipe, SignedValue],
+  imports: [RouterLink, UIChart, TableModule, Money, PercentPipe, SignedPercentPipe, SignedValue],
   templateUrl: './allocation-card.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
