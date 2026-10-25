@@ -1,4 +1,5 @@
 using InvestmentLab.BuildingBlocks.Persistence;
+using InvestmentLab.MarketData.FxRates.Domain;
 using InvestmentLab.MarketData.Instruments.Domain;
 using InvestmentLab.MarketData.Quotes.Domain;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,7 @@ public sealed class MarketDataDbContext(DbContextOptions<MarketDataDbContext> op
     public DbSet<Instrument> Instruments => Set<Instrument>();
     public DbSet<DailyQuote> DailyQuotes => Set<DailyQuote>();
     public DbSet<QuoteCorrection> QuoteCorrections => Set<QuoteCorrection>();
+    public DbSet<FxRate> FxRates => Set<FxRate>();
 
     protected override string Schema => SchemaName;
 

@@ -67,6 +67,43 @@ namespace InvestmentLab.MarketData.Shared.Infrastructure.Migrations
                     b.ToTable("outbox_messages", "marketdata");
                 });
 
+            modelBuilder.Entity("InvestmentLab.MarketData.FxRates.Domain.FxRate", b =>
+                {
+                    b.Property<string>("Source")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("source");
+
+                    b.Property<string>("Base")
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("base");
+
+                    b.Property<string>("Quote")
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("quote");
+
+                    b.Property<DateOnly>("EffectiveDate")
+                        .HasColumnType("date")
+                        .HasColumnName("effective_date");
+
+                    b.Property<decimal>("Rate")
+                        .HasPrecision(20, 8)
+                        .HasColumnType("numeric(20,8)")
+                        .HasColumnName("rate");
+
+                    b.Property<string>("TableNumber")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("table_number");
+
+                    b.HasKey("Source", "Base", "Quote", "EffectiveDate")
+                        .HasName("pk_fx_rates");
+
+                    b.ToTable("fx_rates", "marketdata");
+                });
+
             modelBuilder.Entity("InvestmentLab.MarketData.Instruments.Domain.Instrument", b =>
                 {
                     b.Property<Guid>("Id")
