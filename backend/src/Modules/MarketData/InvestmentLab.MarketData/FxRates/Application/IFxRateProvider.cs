@@ -16,6 +16,9 @@ public interface IFxRateStore
 
     Task<IReadOnlyList<FxRate>> RatesBetweenAsync(Currency @base, Currency quote, DateOnly from, DateOnly to, CancellationToken cancellationToken);
 
+    /// <summary>The newest NBP rate of every currency against PLN (display conversions, not taxes).</summary>
+    Task<IReadOnlyList<FxRate>> LatestToPlnAsync(CancellationToken cancellationToken);
+
     void Add(FxRate rate);
 
     Task SaveChangesAsync(CancellationToken cancellationToken);

@@ -20,7 +20,6 @@ internal sealed class FxRateStore(MarketDataDbContext db) : IFxRateStore, IFxRat
                 && rate.EffectiveDate >= from && rate.EffectiveDate <= to)
             .ToListAsync(cancellationToken);
 
-    /// <summary>The newest NBP rate of every currency against PLN (display conversions, not taxes).</summary>
     public async Task<IReadOnlyList<FxRate>> LatestToPlnAsync(CancellationToken cancellationToken)
     {
         var rates = await db.FxRates.AsNoTracking()

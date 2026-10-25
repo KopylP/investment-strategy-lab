@@ -1,4 +1,6 @@
+using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.BuildingBlocks.Modules;
+using InvestmentLab.Identity.Contracts;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.Strategies.Catalog.Api;
 using InvestmentLab.Strategies.Catalog.Application;
@@ -55,6 +57,7 @@ public sealed class StrategiesModule : IModule
         services.AddScoped<ArchiveStrategyHandler>();
         services.AddScoped<GetStrategyHandler>();
         services.AddScoped<CreateDefaultStrategiesHandler>();
+        services.AddIntegrationEventHandler<UserRegisteredV1, DefaultStrategiesForNewUser>();
 
         services.AddScoped<IStrategyEngine, PythonStrategyEngine>();
         services.AddScoped<IStrategyReader, StrategyReader>();

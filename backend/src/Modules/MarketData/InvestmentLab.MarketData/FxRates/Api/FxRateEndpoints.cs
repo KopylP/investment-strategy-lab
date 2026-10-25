@@ -1,6 +1,6 @@
 using InvestmentLab.MarketData.Contracts.FxRates;
 using InvestmentLab.MarketData.FxRates.Application.IngestFxRates;
-using InvestmentLab.MarketData.FxRates.Infrastructure;
+using InvestmentLab.MarketData.FxRates.Application;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -18,7 +18,7 @@ internal static class FxRateEndpoints
             .WithName("IngestFxRates");
 
         // Latest NBP mid rates to PLN for every currency: the UI converts any amount to the display currency through PLN.
-        fxRates.MapGet("/latest", async (FxRateStore store, CancellationToken ct) =>
+        fxRates.MapGet("/latest", async (IFxRateStore store, CancellationToken ct) =>
             {
                 var rates = await store.LatestToPlnAsync(ct);
                 return TypedResults.Ok(new LatestFxRatesDto(
