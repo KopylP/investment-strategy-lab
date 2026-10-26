@@ -229,6 +229,45 @@ namespace InvestmentLab.Taxation.Shared.Infrastructure.Migrations
                     b.ToTable("broker_statements", "taxation");
                 });
 
+            modelBuilder.Entity("InvestmentLab.Taxation.Declarations.Domain.Pit8CStatement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<decimal>("Costs")
+                        .HasPrecision(20, 8)
+                        .HasColumnType("numeric(20,8)")
+                        .HasColumnName("costs");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_id");
+
+                    b.Property<decimal>("Revenue")
+                        .HasPrecision(20, 8)
+                        .HasColumnType("numeric(20,8)")
+                        .HasColumnName("revenue");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer")
+                        .HasColumnName("year");
+
+                    b.HasKey("Id")
+                        .HasName("pk_pit8c_statements");
+
+                    b.HasIndex("AccountId", "Year")
+                        .IsUnique()
+                        .HasDatabaseName("ix_pit8c_statements_account_id_year");
+
+                    b.ToTable("pit8c_statements", "taxation");
+                });
+
             modelBuilder.Entity("InvestmentLab.Taxation.Ledger.Domain.TaxAccount", b =>
                 {
                     b.Property<Guid>("AccountId")

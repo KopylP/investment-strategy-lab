@@ -61,7 +61,7 @@ public sealed class FifoLotMatcher : ILotMatcher
             if (left <= 0m)
                 break;
             var taken = Math.Min(lot.Quantity, left);
-            var cost = lot.Quantity == taken ? lot.Cost : decimal.Round(lot.Cost * taken / lot.Quantity, 2);
+            var cost = lot.Quantity == taken ? lot.Cost : decimal.Round(lot.Cost * taken / lot.Quantity, 2, MidpointRounding.AwayFromZero);
             var gross = lot.Quantity == taken ? lot.Gross : lot.Gross * taken / lot.Quantity;
             matches.Add(new LotMatch(lot.BuyTransactionId, lot.AcquiredOn, taken, cost, Gross: gross, FxRate: lot.FxRate));
             lot.Consume(taken, cost, gross);
@@ -82,7 +82,7 @@ public sealed class FlatRate(Percentage rate) : ITaxRateSchedule
 public sealed class Pl5Years50Percent : ILossCarryforwardRule
 {
     public decimal UsableIn(LossYear loss, int year) =>
-        year > loss.Year && year <= loss.Year + 5 ? decimal.Round(loss.Amount / 2m, 2) : 0m;
+        year > loss.Year && year <= loss.Year + 5 ? Math.Floor(loss.Amount / 2m * 100m) / 100m : 0m;   // "nie może przekroczyć 50%": down to the grosz
 }
 
 public sealed class NoCarryforward : ILossCarryforwardRule
@@ -107,7 +107,8 @@ public sealed class BelkaTaxPolicy : ITaxPolicy
 
     // 2: dividends taxed on gross with credit for the tax withheld abroad (PIT-38 part G).
     // 3: the sale's fee is a cost, not taken off the revenue (PIT-38 poz. 22/23).
-    public int Version => 3;
+    // 4: dividends say whether the tax withheld abroad is known; half-grosz amounts round away from zero.
+    public int Version => 4;
     public bool IsTaxed => true;
     public string FxRule => "NBP, остання таблиця A перед днем угоди";
     public ILotMatcher LotMatcher { get; } = new FifoLotMatcher();

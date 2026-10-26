@@ -85,6 +85,7 @@ public sealed class TaxCalculatorTests
         sale.Attributions.ShouldBe([new GainAttribution(Eu, 240m), new GainAttribution(Us, 160m)]);
         var year = computation.Year(2025)!.Summary;
         year.DividendIncome.ShouldBe(210m);
+        computation.Year(2025)!.Dividends.Single().WithholdingKnown.ShouldBeFalse();   // no broker report: gross is what was received
         year.DividendTax.ShouldBe(40m);                   // 210 × 19% = 39.90
         year.TaxDue.ShouldBe(year.CapitalTax + 40m);
     }

@@ -76,8 +76,9 @@ public sealed record Realization(
 /// A dividend: <see cref="Amount"/> and <see cref="AmountPln"/> as received (net); <see cref="GrossPln"/> before the tax
 /// withheld abroad (<see cref="WithheldPln"/>), known from the broker's report — without it gross is the net amount.
 /// </summary>
+/// <see cref="WithholdingKnown"/>: the broker's report said what was withheld; otherwise gross is only what was received.
 public sealed record DividendIncome(Guid TransactionId, DateOnly ReceivedOn, Guid InstrumentId, decimal Amount, decimal AmountPln, decimal FxRate, decimal GrossPln = 0m,
-    decimal WithheldPln = 0m, string? Currency = null);
+    decimal WithheldPln = 0m, string? Currency = null, bool WithholdingKnown = false);
 
 /// <summary>A loss of a tax year (computed, or entered by the user for years before the journal with what was already used of it).</summary>
 public sealed record LossYear(int Year, decimal Amount, decimal AlreadyUsed = 0m);
@@ -148,7 +149,8 @@ public static class TaxCalculator
                     var net = Pln(entry.Amount, entry.FxRate);
                     var gross = entry.Withholding is { } withholding ? Pln(entry.Amount * withholding.GrossPerNet, entry.FxRate) : net;
                     var withheld = entry.Withholding is { } paidAbroad ? Pln(entry.Amount * paidAbroad.WithheldPerNet, entry.FxRate) : 0m;
-                    dividends.Add(new DividendIncome(entry.TransactionId, entry.OccurredOn, entry.InstrumentId, entry.Amount, net, entry.FxRate, gross, withheld, entry.Currency));
+                    dividends.Add(new DividendIncome(entry.TransactionId, entry.OccurredOn, entry.InstrumentId, entry.Amount, net, entry.FxRate, gross, withheld, entry.Currency,
+                        entry.Withholding is not null));
                     break;
             }
         }
@@ -182,7 +184,7 @@ public static class TaxCalculator
 
             results.Add(new TaxYearResult(
                 new TaxYearSummary(year, revenue, costs, gain, used, taxBase, capitalTax, dividendIncome, dividendTax, capitalTax + dividendTax, loss,
-                    policy.IsTaxed ? decimal.Round(dividendCredit, 2) : 0m),
+                    policy.IsTaxed ? decimal.Round(dividendCredit, 2, MidpointRounding.AwayFromZero) : 0m),
                 sold,
                 received,
                 uses));
@@ -230,7 +232,7 @@ public static class TaxCalculator
                 break;
             var taken = Math.Min(lot.Quantity, unmatched);
             var share = taken / lot.Quantity;
-            added.Add(new LotMatch(Guid.Empty, lot.AcquiredOn, taken, decimal.Round(lot.CostPln * share, 2), FromBroker: true, Gross: lot.Cost * share));
+            added.Add(new LotMatch(Guid.Empty, lot.AcquiredOn, taken, decimal.Round(lot.CostPln * share, 2, MidpointRounding.AwayFromZero), FromBroker: true, Gross: lot.Cost * share));
             unmatched -= taken;
         }
 
@@ -240,7 +242,7 @@ public static class TaxCalculator
             var delta = brokerCost - added.Sum(match => match.Gross) - ownGross;
             // Under half a percent is rounding of prices and rates, not a different cost basis.
             if (Math.Abs(delta) > Math.Max(0.02m, ownGross * 0.005m))
-                own = [.. own.Select(match => match with { CostPln = match.CostPln + decimal.Round(delta * match.Gross / ownGross * match.FxRate, 2), FromBroker = true })];
+                own = [.. own.Select(match => match with { CostPln = match.CostPln + decimal.Round(delta * match.Gross / ownGross * match.FxRate, 2, MidpointRounding.AwayFromZero), FromBroker = true })];
         }
         return [.. own, .. added];
     }

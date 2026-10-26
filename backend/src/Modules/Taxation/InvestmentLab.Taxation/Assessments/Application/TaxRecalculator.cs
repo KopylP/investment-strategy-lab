@@ -3,7 +3,8 @@ using InvestmentLab.Taxation.Contracts;
 
 namespace InvestmentLab.Taxation.Assessments.Application;
 
-public sealed record RecomputeOutcome(IReadOnlyList<int> ChangedYears, IReadOnlyList<string> Warnings);
+/// <param name="Incomplete">What the figures are missing (NBP rates, purchases of sold units): a return is not filled from them.</param>
+public sealed record RecomputeOutcome(IReadOnlyList<int> ChangedYears, IReadOnlyList<string> Warnings, IReadOnlyList<string> Incomplete);
 
 /// <summary>Rebuilds every tax year of an account from the ledger (§6.7 RecomputeAssessment); unchanged years stay as they are.</summary>
 public sealed class TaxRecalculator(TaxInputs inputs, IAssessmentRepository assessments, TimeProvider clock)
@@ -44,6 +45,6 @@ public sealed class TaxRecalculator(TaxInputs inputs, IAssessmentRepository asse
         List<string> warnings = [.. computation.Warnings];
         if (missing.Count > 0)
             warnings.Insert(0, $"Немає курсу NBP для {missing.Count} операцій ({string.Join(", ", missing.Take(5))}…): вони не враховані. Оновіть курси NBP.");
-        return new RecomputeOutcome(changed, warnings);
+        return new RecomputeOutcome(changed, warnings, warnings);
     }
 }

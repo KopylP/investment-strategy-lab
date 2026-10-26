@@ -79,3 +79,25 @@ Run: `dotnet test --project backend/tests/Modules/InvestmentLab.Taxation.Tests` 
 ## Out of scope
 
 Personal data (parts A, B), 1.5 % OPP (part J), bank account (part M), e-Deklaracje XML.
+
+## Review 1 (agent, 2026-10-26) — what changed
+
+| # | Finding | Outcome |
+|---|---------|---------|
+| 1 | Foreign dividends of XTB/mBank fell out of part G | **Fixed.** Part G takes every foreign dividend of every taxed account (XTB guide §21, mBank 2026 guide); only ISIN `PL` stays out, with a note to check it was taxed when held abroad. |
+| 2 | Dividend without the broker's report = gross = net, silently | **Fixed as a warning.** `DividendIncome.WithholdingKnown`; the form names such dividends and says poz. 47/48 assume nothing was withheld. |
+| 3 | NBP rate from the trade day, not the settlement day (art. 17 ust. 1ab) | **Open — the user decides.** A note states which date is used and the other reading. |
+| 4 | Losses counted twice | **Fixed.** One entered loss per year (two different ones are an error); an entered year stands instead of the journal's computed loss; "already used" = used in returns for years outside the journal (UI says so). |
+| 5 | Incomplete data still filled the form | **Fixed.** Missing NBP rates or sold units without a purchase return `tax.declaration_incomplete` with the reasons. |
+| 6 | Row 1 from our numbers | **Fixed.** PIT-8C poz. 35/36 per account and year (`pit8c_statements`), row 1 and everything below follow them. |
+| 7 | `SaleOfIncome` revenue net of the fee | Open (low): the fee is not known for that entry. |
+| 8 | PL dividends on a foreign broker | Note added (see 1). |
+| 9 | Deadline on a weekend/holiday | **Fixed** (`Pit38Form.Deadline`, art. 12 § 5 OP). |
+| 10 | Banker's rounding; half of a loss | **Fixed:** away from zero everywhere; half of a loss rounds down to the grosz. Policy v4. |
+| 11 | poz. 47 base to whole złoty? | Open — no MF position found. |
+| 12 | Account fees, foreign interest | Open (not in the journal). |
+| 13 | Gap years offered, PIT/ZG with poz. 28 = 0, XS/EU as countries | **Fixed.** |
+| D1 | KIS treaty rate 15% wrong for JP/IT | **Fixed:** 10% for JP and IT. |
+| D10 | Crypto | Note added. |
+
+PDF: `Pit38PdfPrinter` writes the figures on the official PIT-38(18) and PIT/ZG(8) (measured boxes, read back in `Pit38PdfPrinterTests`).

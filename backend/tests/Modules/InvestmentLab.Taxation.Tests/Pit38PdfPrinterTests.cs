@@ -12,7 +12,8 @@ public sealed class Pit38PdfPrinterTests
     private static TaxDeclaration Declaration() => new Pit38Form().Fill(new DeclarationInput(2025, [
         new DeclarationAccount("Revolut EUR", "Revolut", new BelkaTaxPolicy(),
             [new TaxYearSummary(2025, 8385.00m, 6895.05m, 1489.95m, 0m, 0m, 0m, 1002.63m, 0m, 0m, 0m, 150.25m)],
-            [Sale(Apple, 1200m), Sale(Asml, 289.95m)], []),
+            [Sale(Apple, 1200m), Sale(Asml, 289.95m)],
+            [new DividendIncome(Guid.NewGuid(), new DateOnly(2025, 5, 1), Apple, 852.38m, 852.38m, 1m, 1002.63m, 150.25m, WithholdingKnown: true)]),
         new DeclarationAccount("XTB PLN", "XTB", new BelkaTaxPolicy(), [new TaxYearSummary(2025, 12000m, 11500.50m, 499.50m, 0m, 0m, 0m, 0m, 0m, 0m, 0m)], [], []),
     ], [], id => id == Apple ? "US" : id == Asml ? "NL" : null));
 

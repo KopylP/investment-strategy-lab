@@ -2,7 +2,7 @@ import { computed, inject, Injectable, resource, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { ApiClient, toProblemMessage } from '../../../core/api/api-client';
 import { AccountContext } from '../../../core/context/account-context';
-import { DeclarationForm, TaxDeclaration } from './declarations';
+import { DeclarationForm, Pit8CAmounts, TaxDeclaration } from './declarations';
 
 export interface TaxYearSummary {
   year: number;
@@ -137,6 +137,16 @@ export class TaxesStore {
   readonly declaration = computed(() => (this.declarationResource.hasValue() ? this.declarationResource.value() : undefined));
   readonly declarationLoading = this.declarationResource.isLoading;
   readonly declarationError = this.declarationResource.error;
+  /** Why the return was not filled (missing NBP rates, sold units without a purchase, conflicting losses). */
+  readonly declarationProblem = computed(() => toProblemMessage(this.declarationResource.error()));
+
+  async setPit8C(accountId: string, amounts: Pit8CAmounts): Promise<boolean> {
+    return this.change(() => this.api.put(`/api/taxation/declarations/${this.year()}/pit-8c/${accountId}`, amounts), 'Суми PIT-8C збережено');
+  }
+
+  async removePit8C(accountId: string): Promise<boolean> {
+    return this.change(() => this.api.delete(`/api/taxation/declarations/${this.year()}/pit-8c/${accountId}`), 'Суми PIT-8C видалено');
+  }
 
   readonly pdfLoading = signal(false);
 
@@ -208,6 +218,7 @@ export class TaxesStore {
       this.yearsResource.reload();
       this.detailsResource.reload();
       this.formsResource.reload();
+      this.declarationResource.reload();
       return true;
     } catch (error) {
       this.messages.add({ severity: 'error', summary: 'Не збережено', detail: toProblemMessage(error) });

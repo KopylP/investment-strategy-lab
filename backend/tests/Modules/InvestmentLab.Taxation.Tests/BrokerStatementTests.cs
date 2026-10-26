@@ -74,6 +74,7 @@ public sealed class BrokerStatementTests
         var dividend = computation.Year(2025)!.Dividends.ShouldHaveSingleItem();
         dividend.GrossPln.ShouldBe(400m);
         dividend.WithheldPln.ShouldBe(60m);
+        dividend.WithholdingKnown.ShouldBeTrue();
         var year = computation.Year(2025)!.Summary;
         year.DividendIncome.ShouldBe(400m);
         year.DividendTaxCredit.ShouldBe(60m);
