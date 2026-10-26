@@ -5,9 +5,10 @@ import { Button } from 'primeng/button';
 import { Message } from 'primeng/message';
 import { SelectButton } from 'primeng/selectbutton';
 import { Skeleton } from 'primeng/skeleton';
+import { TableModule } from 'primeng/table';
 import { Tag } from 'primeng/tag';
 import { Tooltip } from 'primeng/tooltip';
-import { DateTimePipe, DatePipe, MoneyPipe, PeriodPipe, SignedPercentPipe } from '../../../../shared/pipes/format-pipes';
+import { DateTimePipe, DatePipe, MoneyPipe, PercentPipe, PeriodPipe, SignedPercentPipe } from '../../../../shared/pipes/format-pipes';
 import { Money } from '../../../../shared/ui/money/money';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { SignedValue } from '../../../../shared/ui/signed-value';
@@ -19,8 +20,8 @@ import { ValueChart } from '../../ui/value-chart/value-chart';
 @Component({
   selector: 'app-overview-page',
   imports: [
-    FormsModule, RouterLink, Button, Message, SelectButton, Skeleton, Tag, Tooltip, PageHeader, SignedValue, ValueChart, DrawdownChart, AllocationCard, Money,
-    MoneyPipe, SignedPercentPipe, PeriodPipe, DateTimePipe, DatePipe,
+    FormsModule, RouterLink, Button, Message, SelectButton, Skeleton, TableModule, Tag, Tooltip, PageHeader, SignedValue, ValueChart, DrawdownChart, AllocationCard, Money,
+    MoneyPipe, PercentPipe, SignedPercentPipe, PeriodPipe, DateTimePipe, DatePipe,
   ],
   providers: [OverviewStore],
   templateUrl: './overview-page.html',

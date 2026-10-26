@@ -17,7 +17,6 @@ public sealed class PerformanceDbContext(DbContextOptions<PerformanceDbContext> 
     public DbSet<ValuationSnapshot> Snapshots => Set<ValuationSnapshot>();
     public DbSet<RecalculationMarker> Markers => Set<RecalculationMarker>();
     public DbSet<PlannedReport> PlannedReports => Set<PlannedReport>();
-    public DbSet<TaxYearTotal> TaxTotals => Set<TaxYearTotal>();
 
     protected override string Schema => SchemaName;
 
@@ -52,13 +51,6 @@ public sealed class PerformanceDbContext(DbContextOptions<PerformanceDbContext> 
             report.HasIndex(r => r.AccountId);
             report.Ignore(r => r.CountsForPlan);
             HasOwnerFilter(report, r => r.OwnerId);
-        });
-
-        modelBuilder.Entity<TaxYearTotal>(total =>
-        {
-            total.ToTable("tax_year_totals");
-            total.HasKey(t => new { t.AccountId, t.Year });
-            HasOwnerFilter(total, t => t.OwnerId);
         });
     }
 }

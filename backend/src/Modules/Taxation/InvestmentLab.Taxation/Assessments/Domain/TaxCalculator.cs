@@ -6,6 +6,7 @@ namespace InvestmentLab.Taxation.Assessments.Domain;
 /// A taxable event in the account currency with the PLN rate the policy picked for it.
 /// <paramref name="FxRate"/> is PLN for one unit of the account currency (1 for PLN accounts).
 /// </summary>
+/// <param name="AccountId">Lots are matched within one account (FIFO per securities account); the year nets all accounts.</param>
 public sealed record TaxEvent(
     Guid TransactionId,
     DateOnly OccurredOn,
@@ -18,11 +19,13 @@ public sealed record TaxEvent(
     decimal Amount,
     IReadOnlyList<EntryAllocation> Allocations,
     decimal FxRate,
-    DateOnly? FxRateDate);
+    DateOnly? FxRateDate,
+    Guid AccountId = default);
 
 /// <summary>Units still held from one purchase; cost in PLN including the purchase fee.</summary>
-public sealed class OpenLot(Guid buyTransactionId, DateOnly acquiredOn, int sequence, Guid instrumentId, decimal quantity, decimal cost, decimal fxRate)
+public sealed class OpenLot(Guid buyTransactionId, DateOnly acquiredOn, int sequence, Guid instrumentId, decimal quantity, decimal cost, decimal fxRate, Guid accountId = default)
 {
+    public Guid AccountId { get; } = accountId;
     public Guid BuyTransactionId { get; } = buyTransactionId;
     public DateOnly AcquiredOn { get; } = acquiredOn;
     public int Sequence { get; } = sequence;
@@ -37,10 +40,10 @@ public sealed class OpenLot(Guid buyTransactionId, DateOnly acquiredOn, int sequ
         Cost -= cost;
     }
 
-    public OpenLotSnapshot Snapshot() => new(BuyTransactionId, AcquiredOn, InstrumentId, Quantity, Cost, FxRate);
+    public OpenLotSnapshot Snapshot() => new(BuyTransactionId, AcquiredOn, InstrumentId, Quantity, Cost, FxRate, AccountId);
 }
 
-public sealed record OpenLotSnapshot(Guid BuyTransactionId, DateOnly AcquiredOn, Guid InstrumentId, decimal Quantity, decimal CostPln, decimal FxRate);
+public sealed record OpenLotSnapshot(Guid BuyTransactionId, DateOnly AcquiredOn, Guid InstrumentId, decimal Quantity, decimal CostPln, decimal FxRate, Guid AccountId = default);
 
 public sealed record LotMatch(Guid BuyTransactionId, DateOnly AcquiredOn, decimal Quantity, decimal CostPln);
 
@@ -60,9 +63,10 @@ public sealed record Realization(
     DateOnly? FxRateDate,
     IReadOnlyList<LotMatch> Lots,
     IReadOnlyList<GainAttribution> Attributions,
-    decimal UnmatchedQuantity);
+    decimal UnmatchedQuantity,
+    Guid AccountId = default);
 
-public sealed record DividendIncome(Guid TransactionId, DateOnly ReceivedOn, Guid InstrumentId, decimal Amount, decimal AmountPln, decimal FxRate);
+public sealed record DividendIncome(Guid TransactionId, DateOnly ReceivedOn, Guid InstrumentId, decimal Amount, decimal AmountPln, decimal FxRate, Guid AccountId = default);
 
 /// <summary>A loss of a tax year (computed, or entered by the user for years before the journal with what was already used of it).</summary>
 public sealed record LossYear(int Year, decimal Amount, decimal AlreadyUsed = 0m);
@@ -95,14 +99,15 @@ public sealed record TaxComputation(IReadOnlyList<TaxYearResult> Years, IReadOnl
 }
 
 /// <summary>
-/// Pure computation over the whole history of an account (D8): lots across all years, losses carried forward,
-/// every year rebuilt from scratch. Same input, same result.
+/// Pure computation over the whole history of a taxpayer (D8): lots across all years, matched within each account,
+/// gains and losses of all accounts netted per year (one PIT-38), losses carried forward, every year rebuilt from
+/// scratch. Same input, same result.
 /// </summary>
 public static class TaxCalculator
 {
     public static TaxComputation Compute(IReadOnlyList<TaxEvent> events, ITaxPolicy policy, IReadOnlyList<LossYear> earlierLosses)
     {
-        var lots = new Dictionary<Guid, List<OpenLot>>();
+        var lots = new Dictionary<(Guid Account, Guid Instrument), List<OpenLot>>();
         var realizations = new List<Realization>();
         var dividends = new List<DividendIncome>();
         var warnings = new List<string>();
@@ -113,15 +118,15 @@ public static class TaxCalculator
             {
                 case TaxableKind.Buy:
                     var cost = Pln(entry.Quantity * entry.Price, entry.FxRate) + Pln(entry.Fee, entry.FxRate);
-                    Lots(lots, entry.InstrumentId).Add(new OpenLot(entry.TransactionId, entry.OccurredOn, entry.Sequence, entry.InstrumentId, entry.Quantity, cost, entry.FxRate));
+                    Lots(lots, entry).Add(new OpenLot(entry.TransactionId, entry.OccurredOn, entry.Sequence, entry.InstrumentId, entry.Quantity, cost, entry.FxRate, entry.AccountId));
                     break;
 
                 case TaxableKind.Sell:
-                    realizations.Add(Sell(entry, Lots(lots, entry.InstrumentId), policy, warnings));
+                    realizations.Add(Sell(entry, Lots(lots, entry), policy, warnings));
                     break;
 
                 case TaxableKind.Dividend:
-                    dividends.Add(new DividendIncome(entry.TransactionId, entry.OccurredOn, entry.InstrumentId, entry.Amount, Pln(entry.Amount, entry.FxRate), entry.FxRate));
+                    dividends.Add(new DividendIncome(entry.TransactionId, entry.OccurredOn, entry.InstrumentId, entry.Amount, Pln(entry.Amount, entry.FxRate), entry.FxRate, entry.AccountId));
                     break;
             }
         }
@@ -190,11 +195,12 @@ public static class TaxCalculator
             ? sale.Allocations.Select(allocation => new GainAttribution(allocation.SubPortfolioId, decimal.Round(gain * allocation.Quantity / total, 2))).ToList()
             : [];
 
-        return new Realization(sale.TransactionId, sale.OccurredOn, sale.InstrumentId, sale.Quantity, proceeds, cost, gain, sale.FxRate, sale.FxRateDate, matches, attributions, unmatched);
+        return new Realization(sale.TransactionId, sale.OccurredOn, sale.InstrumentId, sale.Quantity, proceeds, cost, gain, sale.FxRate, sale.FxRateDate, matches, attributions, unmatched,
+            sale.AccountId);
     }
 
-    private static List<OpenLot> Lots(Dictionary<Guid, List<OpenLot>> lots, Guid instrumentId) =>
-        lots.TryGetValue(instrumentId, out var list) ? list : lots[instrumentId] = [];
+    private static List<OpenLot> Lots(Dictionary<(Guid Account, Guid Instrument), List<OpenLot>> lots, TaxEvent entry) =>
+        lots.TryGetValue((entry.AccountId, entry.InstrumentId), out var list) ? list : lots[(entry.AccountId, entry.InstrumentId)] = [];
 
     private static decimal Pln(decimal amount, decimal rate) => decimal.Round(amount * rate, 2, MidpointRounding.AwayFromZero);
 

@@ -1,11 +1,28 @@
-<app-page-header title="Податки" subtitle="Белка: FIFO на рівні рахунку, курс NBP останнього робочого дня перед угодою, 19%, річне сальдо">
+<app-page-header title="Податки" subtitle="Белка, один PIT-38 на всі рахунки: FIFO в межах рахунку, курс NBP останнього робочого дня перед угодою, 19%, річне сальдо всіх брокерів">
   @if (yearOptions().length > 1) {
     <p-selectbutton [options]="yearOptions()" optionLabel="label" optionValue="value" [ngModel]="store.year()" (ngModelChange)="$event && store.selectedYear.set($event)" [allowEmpty]="false" />
   }
 </app-page-header>
 
 <p-message severity="secondary" styleClass="mb-4"
-  text="Це оцінка. Авторитетні — PIT-8C брокера і ваш податковий консультант. Дату курсу, ставку й правила задає податкова політика рахунку." />
+  text="Це оцінка. Авторитетні — PIT-8C брокерів і ваш податковий консультант. Прибутки й збитки всіх рахунків сальдуються в одному PIT-38, як у декларації." />
+
+@if (store.taxAccounts().length) {
+  <div class="flex flex-wrap items-center gap-2 mb-4 text-sm">
+    <span class="text-muted-color">У PIT-38:</span>
+    @for (account of store.taxedAccounts(); track account.id) {
+      <p-tag [value]="account.name" severity="secondary" />
+    } @empty {
+      <span class="text-muted-color">жодного рахунку</span>
+    }
+    @if (store.untaxedAccounts().length) {
+      <span class="text-muted-color ml-2">не оподатковуються:</span>
+      @for (account of store.untaxedAccounts(); track account.id) {
+        <p-tag [value]="account.name + ' · ' + account.policyCode" severity="info" />
+      }
+    }
+  </div>
+}
 
 @if (store.isLoading() && !store.details() && !store.years().length) {
   <div class="card"><p-skeleton height="12rem" /></div>
@@ -24,7 +41,7 @@
     <div class="card mb-0">
       <div class="text-muted-color text-sm mb-2">Податок до сплати · {{ details.year }}</div>
       <div class="text-3xl font-semibold">{{ s.taxDue | money: 'PLN' : 0 }}</div>
-      <div class="text-sm text-muted-color mt-2">{{ details.policyCode }}{{ details.policyCode === 'PL-BELKA' ? ' · 19%' : ' · не оподатковується' }}</div>
+      <div class="text-sm text-muted-color mt-2">{{ details.policyCode }} · 19% · {{ store.taxedAccounts().length }} {{ store.taxedAccounts().length === 1 ? 'рахунок' : 'рахунки' }}</div>
     </div>
     <div class="card mb-0">
       <div class="text-muted-color text-sm mb-2">Дохід (зиск)</div>
@@ -52,13 +69,14 @@
     @if (details.realizations.length) {
       <p-table [value]="details.realizations" dataKey="saleTransactionId" [tableStyle]="{ 'min-width': '56rem' }" size="small">
         <ng-template #header>
-          <tr><th class="w-10"></th><th>Дата</th><th>ETF</th><th class="text-right">Штук</th><th class="text-right">Виручка</th><th class="text-right">Витрати</th><th class="text-right">Зиск</th><th>Курс NBP</th></tr>
+          <tr><th class="w-10"></th><th>Дата</th><th>ETF</th>@if (store.showAccount()) { <th>Рахунок</th> }<th class="text-right">Штук</th><th class="text-right">Виручка</th><th class="text-right">Витрати</th><th class="text-right">Зиск</th><th>Курс NBP</th></tr>
         </ng-template>
         <ng-template #body let-r let-expanded="expanded">
           <tr>
             <td><p-button [pRowToggler]="r" [text]="true" [rounded]="true" severity="secondary" [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" ariaLabel="Лоти" /></td>
             <td>{{ r.soldOn | date }}</td>
             <td class="font-medium">{{ store.symbol(r.instrumentId) }}</td>
+            @if (store.showAccount()) { <td class="text-sm">{{ store.accountName(r.accountId) }}</td> }
             <td class="text-right">{{ r.quantity | quantity }}</td>
             <td class="text-right">{{ r.proceedsPln | money: 'PLN' }}</td>
             <td class="text-right">{{ r.costPln | money: 'PLN' }}</td>
@@ -69,7 +87,7 @@
         <ng-template #expandedrow let-r>
           <tr>
             <td></td>
-            <td colspan="7">
+            <td [attr.colspan]="store.showAccount() ? 8 : 7">
               <div class="font-medium text-sm mb-2">Закриті лоти (FIFO)</div>
               @for (lot of r.lots; track $index) {
                 <div class="flex justify-between gap-4 text-sm py-1 max-w-xl">
@@ -93,9 +111,9 @@
     <div class="card">
       <h2 class="text-lg font-semibold mb-4">Дивіденди</h2>
       <p-table [value]="details.dividends" size="small">
-        <ng-template #header><tr><th>Дата</th><th>ETF</th><th class="text-right">Сума</th><th class="text-right">У PLN</th><th>Курс</th></tr></ng-template>
+        <ng-template #header><tr><th>Дата</th><th>ETF</th>@if (store.showAccount()) { <th>Рахунок</th> }<th class="text-right">Сума</th><th class="text-right">У PLN</th><th>Курс</th></tr></ng-template>
         <ng-template #body let-d>
-          <tr><td>{{ d.receivedOn | date }}</td><td>{{ store.symbol(d.instrumentId) }}</td><td class="text-right">{{ d.amount | money: store.account()?.baseCurrency ?? 'EUR' }}</td><td class="text-right">{{ d.amountPln | money: 'PLN' }}</td><td>{{ d.fxRate }}</td></tr>
+          <tr><td>{{ d.receivedOn | date }}</td><td>{{ store.symbol(d.instrumentId) }}</td>@if (store.showAccount()) { <td class="text-sm">{{ store.accountName(d.accountId) }}</td> }<td class="text-right">{{ d.amount | money: store.currencyOf(d.accountId) }}</td><td class="text-right">{{ d.amountPln | money: 'PLN' }}</td><td>{{ d.fxRate }}</td></tr>
         </ng-template>
       </p-table>
     </div>
@@ -105,9 +123,9 @@
     <div class="card">
       <h2 class="text-lg font-semibold mb-4">Відкриті лоти (собівартість для майбутніх продажів)</h2>
       <p-table [value]="details.openLots" size="small" [tableStyle]="{ 'min-width': '40rem' }">
-        <ng-template #header><tr><th>Куплено</th><th>ETF</th><th class="text-right">Штук</th><th class="text-right">Витрати, PLN</th><th>Курс</th></tr></ng-template>
+        <ng-template #header><tr><th>Куплено</th><th>ETF</th>@if (store.showAccount()) { <th>Рахунок</th> }<th class="text-right">Штук</th><th class="text-right">Витрати, PLN</th><th>Курс</th></tr></ng-template>
         <ng-template #body let-lot>
-          <tr><td>{{ lot.acquiredOn | date }}</td><td class="font-medium">{{ store.symbol(lot.instrumentId) }}</td><td class="text-right">{{ lot.quantity | quantity }}</td><td class="text-right">{{ lot.costPln | money: 'PLN' }}</td><td>{{ lot.fxRate }}</td></tr>
+          <tr><td>{{ lot.acquiredOn | date }}</td><td class="font-medium">{{ store.symbol(lot.instrumentId) }}</td>@if (store.showAccount()) { <td class="text-sm">{{ store.accountName(lot.accountId) }}</td> }<td class="text-right">{{ lot.quantity | quantity }}</td><td class="text-right">{{ lot.costPln | money: 'PLN' }}</td><td>{{ lot.fxRate }}</td></tr>
         </ng-template>
       </p-table>
     </div>
@@ -116,10 +134,10 @@
   <div class="text-sm text-muted-color mb-4">{{ details.fxRule }} · пораховано {{ details.computedAt | dateTime }}</div>
 }
 
-@if (store.account()) {
+@if (store.hasAccounts()) {
   <div class="card">
     <h2 class="text-lg font-semibold mb-2">Збитки минулих років</h2>
-    <p class="text-muted-color mt-0 mb-4">Збиток з PIT-38 до початку журналу: зменшує зиск наступних 5 років, щонайбільше на 50% збитку за рік.</p>
+    <p class="text-muted-color mt-0 mb-4">Збиток з PIT-38 до початку журналу (один на всіх брокерів): зменшує зиск наступних 5 років, щонайбільше на 50% збитку за рік.</p>
     @if (store.losses().length) {
       <p-table [value]="store.losses()" size="small" styleClass="mb-4">
         <ng-template #header><tr><th>Рік</th><th class="text-right">Збиток</th><th class="text-right">Уже використано раніше</th><th class="w-12"></th></tr></ng-template>

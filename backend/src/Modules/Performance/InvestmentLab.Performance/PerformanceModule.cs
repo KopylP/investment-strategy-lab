@@ -10,7 +10,6 @@ using InvestmentLab.Performance.Valuation.Application.Integration;
 using InvestmentLab.Performance.Valuation.Infrastructure;
 using InvestmentLab.Portfolio.Contracts.Transactions;
 using InvestmentLab.Rebalancing.Contracts;
-using InvestmentLab.Taxation.Contracts;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
@@ -40,7 +39,6 @@ public sealed class PerformanceModule : IModule
         services.AddIntegrationEventHandler<QuoteCorrectedV1, PerformanceEventHandlers>();
         services.AddIntegrationEventHandler<ReportGeneratedV1, PerformanceEventHandlers>();
         services.AddIntegrationEventHandler<ReportSupersededV1, PerformanceEventHandlers>();
-        services.AddIntegrationEventHandler<TaxAssessmentUpdatedV1, PerformanceEventHandlers>();
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>

@@ -11,9 +11,9 @@ namespace InvestmentLab.Taxation.Assessments.Application;
 
 public interface IAssessmentRepository
 {
-    Task<IReadOnlyList<TaxAssessment>> ForAccountAsync(Guid accountId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<TaxAssessment>> ForOwnerAsync(UserId ownerId, CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<LossCarryforward>> LossesAsync(Guid accountId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<LossCarryforward>> LossesAsync(UserId ownerId, CancellationToken cancellationToken);
 
     void Add(TaxAssessment assessment);
 
@@ -23,7 +23,21 @@ public interface IAssessmentRepository
 
     void Publish<TEvent>(TEvent integrationEvent, DateTimeOffset occurredAt) where TEvent : class;
 
+    /// <summary>
+    /// Runs <paramref name="work"/> in one transaction holding the taxpayer's lock: a request and event handlers of
+    /// different accounts recompute the same years, so they queue up instead of inserting the same year twice.
+    /// </summary>
+    Task<T> SerializedAsync<T>(UserId ownerId, Func<Task<T>> work, CancellationToken cancellationToken);
+
     Task SaveChangesAsync(CancellationToken cancellationToken);
+}
+
+/// <summary>A taxpayer's accounts as Taxation knows them; only the taxed ones (Belka) make up the yearly PIT-38.</summary>
+public sealed record Taxpayer(UserId OwnerId, IReadOnlyList<TaxAccount> Accounts, IReadOnlyDictionary<Guid, string> Names)
+{
+    public IReadOnlyList<TaxAccount> Taxed { get; } = [.. Accounts.Where(account => TaxPolicies.For(account.PolicyCode).IsTaxed)];
+
+    public ITaxPolicy Policy => TaxPolicies.For(Taxed.FirstOrDefault()?.PolicyCode);
 }
 
 /// <summary>Turns the ledger copy into tax events with NBP rates (last table before the transaction day, §6.7).</summary>
@@ -71,24 +85,43 @@ public sealed class TaxInputs(ITaxLedgerRepository ledger, IAssessmentRepository
         return account;
     }
 
-    public async Task<(IReadOnlyList<TaxEvent> Events, IReadOnlyList<string> Missing)> EventsAsync(TaxAccount account, CancellationToken cancellationToken)
+    public async Task<UserId?> OwnerOfAsync(Guid accountId, CancellationToken cancellationToken) =>
+        await accounts.GetAccountSetup(accountId, cancellationToken) is { } setup ? UserId.Of(setup.OwnerId) : null;
+
+    /// <summary>Every account of the owner, each caught up from the journal (background work sees all accounts, so they are filtered).</summary>
+    public async Task<Taxpayer> TaxpayerAsync(UserId ownerId, CancellationToken cancellationToken)
     {
-        var entries = (await ledger.EntriesAsync(account.AccountId, cancellationToken)).Where(entry => !entry.IsReversed)
-            .OrderBy(entry => entry.OccurredOn).ThenBy(entry => entry.RecordedAt).ToList();
+        var setups = (await accounts.GetAccountSetups(cancellationToken)).Where(setup => setup.OwnerId == ownerId.Value).OrderBy(setup => setup.Name).ToList();
+        var known = new List<TaxAccount>();
+        foreach (var setup in setups)
+            if (await EnsureAccountAsync(setup.Id, cancellationToken) is { } account)
+                known.Add(account);
+        return new Taxpayer(ownerId, known, setups.ToDictionary(setup => setup.Id, setup => setup.Name));
+    }
+
+    /// <summary>Tax events of the accounts in journal order; each carries its account, so lots never cross accounts.</summary>
+    public async Task<(IReadOnlyList<TaxEvent> Events, IReadOnlyList<string> Missing)> EventsAsync(IReadOnlyList<TaxAccount> taxAccounts, CancellationToken cancellationToken)
+    {
         var rates = new Dictionary<(string, DateOnly), FxRateDto?>();
         var events = new List<TaxEvent>();
         var missing = new List<string>();
-        for (var index = 0; index < entries.Count; index++)
+        var sequence = 0;
+        foreach (var account in taxAccounts)
         {
-            var entry = entries[index];
-            var (rate, date) = await RateAsync(entry.Currency, entry.OccurredOn, rates, cancellationToken);
-            if (rate is null)
+            var entries = (await ledger.EntriesAsync(account.AccountId, cancellationToken)).Where(entry => !entry.IsReversed)
+                .OrderBy(entry => entry.OccurredOn).ThenBy(entry => entry.RecordedAt).ToList();
+            foreach (var entry in entries)
             {
-                missing.Add($"{entry.Currency} {entry.OccurredOn:yyyy-MM-dd}");
-                continue;
+                var index = sequence++;
+                var (rate, date) = await RateAsync(entry.Currency, entry.OccurredOn, rates, cancellationToken);
+                if (rate is null)
+                {
+                    missing.Add($"{entry.Currency} {entry.OccurredOn:yyyy-MM-dd}");
+                    continue;
+                }
+                events.Add(new TaxEvent(entry.TransactionId, entry.OccurredOn, index, entry.Kind, entry.InstrumentId, entry.Quantity, entry.Price, entry.Fee, entry.Amount,
+                    entry.Allocations, rate.Value, date, account.AccountId));
             }
-            events.Add(new TaxEvent(entry.TransactionId, entry.OccurredOn, index, entry.Kind, entry.InstrumentId, entry.Quantity, entry.Price, entry.Fee, entry.Amount,
-                entry.Allocations, rate.Value, date));
         }
         return (events, missing);
     }
@@ -96,8 +129,8 @@ public sealed class TaxInputs(ITaxLedgerRepository ledger, IAssessmentRepository
     public async Task<(decimal? Rate, DateOnly? Date)> RateAsync(string currency, DateOnly transactionDate, CancellationToken cancellationToken) =>
         await RateAsync(currency, transactionDate, [], cancellationToken);
 
-    public async Task<IReadOnlyList<LossYear>> LossesAsync(Guid accountId, CancellationToken cancellationToken) =>
-        [.. (await assessments.LossesAsync(accountId, cancellationToken)).Select(loss => loss.ToLossYear())];
+    public async Task<IReadOnlyList<LossYear>> LossesAsync(UserId ownerId, CancellationToken cancellationToken) =>
+        [.. (await assessments.LossesAsync(ownerId, cancellationToken)).Select(loss => loss.ToLossYear())];
 
     /// <summary>Fingerprint of everything a year depends on: events up to its end, rates, carried losses, the policy.</summary>
     public static string HashFor(int year, IReadOnlyList<TaxEvent> events, IReadOnlyList<LossYear> losses, ITaxPolicy policy)
@@ -106,7 +139,7 @@ public sealed class TaxInputs(ITaxLedgerRepository ledger, IAssessmentRepository
         {
             policy = $"{policy.Code}/{policy.Version}",
             events = events.Where(e => e.OccurredOn.Year <= year)
-                .Select(e => new { e.TransactionId, e.OccurredOn, e.Kind, e.Quantity, e.Price, e.Fee, e.Amount, e.FxRate, e.Allocations }),
+                .Select(e => new { e.TransactionId, e.AccountId, e.OccurredOn, e.Kind, e.Quantity, e.Price, e.Fee, e.Amount, e.FxRate, e.Allocations }),
             losses,
         });
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(input)));

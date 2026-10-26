@@ -1,6 +1,7 @@
-import { computed, DestroyRef, inject, Injectable, resource, signal } from '@angular/core';
+import { computed, DestroyRef, effect, inject, Injectable, resource, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { toProblemMessage } from '../../../core/api/api-client';
+import { AccountContext } from '../../../core/context/account-context';
 import { OpenActionsBadge } from '../../../core/notifications/open-actions-badge';
 import { FillInput, ReportActionVm } from '../models/report-vm';
 import { ReportsApi } from './reports-api';
@@ -15,6 +16,7 @@ export class ReportDetailStore {
   private readonly api = inject(ReportsApi);
   private readonly messages = inject(MessageService);
   private readonly badge = inject(OpenActionsBadge);
+  private readonly accounts = inject(AccountContext);
 
   private readonly reportId = signal<string | undefined>(undefined);
   private readonly busyActionId = signal<string | undefined>(undefined);
@@ -37,6 +39,11 @@ export class ReportDetailStore {
 
   constructor() {
     inject(DestroyRef).onDestroy(() => this.refreshTimers.forEach(clearTimeout));
+    // Opened from a link (a notification, another account's list): the top bar follows the report's account.
+    effect(() => {
+      const accountId = this.report()?.summary.accountId;
+      if (accountId && accountId !== this.accounts.currentId()) this.accounts.focus(accountId);
+    });
   }
 
   open(reportId: string): void {
