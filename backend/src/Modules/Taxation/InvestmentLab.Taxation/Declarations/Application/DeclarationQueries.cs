@@ -15,7 +15,7 @@ public sealed record DeclarationDto(TaxDeclaration Declaration, IReadOnlyList<st
 /// it is offered only to people who have one; each account is recomputed first.
 /// </summary>
 public sealed class DeclarationQueries(
-    IEnumerable<ITaxDeclarationForm> forms, IAccountSetupQueries accounts, TaxRecalculator recalculator, IAssessmentRepository assessments, IInstrumentCatalog instruments)
+    IEnumerable<ITaxDeclarationForm> forms, IEnumerable<IDeclarationPrinter> printers, IAccountSetupQueries accounts, TaxRecalculator recalculator, IAssessmentRepository assessments, IInstrumentCatalog instruments)
 {
     public async Task<IReadOnlyList<DeclarationFormDto>> Available(int year, CancellationToken cancellationToken)
     {
@@ -38,6 +38,18 @@ public sealed class DeclarationQueries(
         var input = new DeclarationInput(year, [.. mine.Select(account => account.Account)], losses,
             id => isins.GetValueOrDefault(id) is { Length: >= 2 } isin ? isin[..2].ToUpperInvariant() : null);
         return new DeclarationDto(form.Fill(input), [.. mine.SelectMany(account => account.Warnings)]);
+    }
+
+    /// <summary>The filled return on its official form, as a PDF.</summary>
+    public async Task<Result<(byte[] Content, string FileName)>> Pdf(int year, string code, CancellationToken cancellationToken)
+    {
+        var filled = await Fill(year, code, cancellationToken);
+        if (filled.IsFailure)
+            return filled.Error;
+        var declaration = filled.Value.Declaration;
+        if (printers.FirstOrDefault(printer => printer.Form == declaration.Form) is not { } printer)
+            return Error.NotFound("tax.form_not_printable", $"{declaration.Form} has no PDF.");
+        return (printer.Print(declaration), $"{declaration.Form}-{year}.pdf");
     }
 
     private static bool HasTaxableYear(IReadOnlyList<Declared> declared, ITaxDeclarationForm form, int year) =>

@@ -24,6 +24,11 @@ export class ApiClient {
   delete<T = void>(url: string): Promise<T> {
     return firstValueFrom(this.http.delete<T>(url));
   }
+
+  /** A file the API sends (a PDF), as a blob to hand to the browser. */
+  blob(url: string): Promise<Blob> {
+    return firstValueFrom(this.http.get(url, { responseType: 'blob' }));
+  }
 }
 
 function toParams(query?: Query): HttpParams | undefined {

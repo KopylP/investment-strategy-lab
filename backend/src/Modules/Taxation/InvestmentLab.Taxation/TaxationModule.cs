@@ -12,6 +12,7 @@ using InvestmentLab.Taxation.Contracts;
 using InvestmentLab.Taxation.Declarations.Api;
 using InvestmentLab.Taxation.Declarations.Application;
 using InvestmentLab.Taxation.Declarations.Domain;
+using InvestmentLab.Taxation.Declarations.Infrastructure;
 using InvestmentLab.Taxation.Ledger.Domain;
 using InvestmentLab.Taxation.Ledger.Infrastructure;
 using InvestmentLab.Taxation.Shared.Infrastructure;
@@ -41,6 +42,7 @@ public sealed class TaxationModule : IModule
         services.AddScoped<DeclarationQueries>();
         // Optional returns, one per form; another country's form is one more line here.
         services.AddSingleton<ITaxDeclarationForm, Pit38Form>();
+        services.AddSingleton<IDeclarationPrinter, Pit38PdfPrinter>();
         services.AddScoped<ITaxEstimator, TaxEstimator>();
         services.AddScoped<IBrokerStatementRepository, BrokerStatementRepository>();
         services.AddSingleton<IBrokerStatementParser, RevolutPnlPdfParser>();
