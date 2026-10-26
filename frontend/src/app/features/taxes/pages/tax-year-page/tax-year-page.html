@@ -2,14 +2,11 @@
   @if (yearOptions().length > 1) {
     <p-selectbutton [options]="yearOptions()" optionLabel="label" optionValue="value" [ngModel]="store.year()" (ngModelChange)="$event && store.selectedYear.set($event)" [allowEmpty]="false" />
   }
-  @for (form of store.forms(); track form.code) {
-    <p-button [label]="form.code + ' за ' + store.year()" icon="pi pi-file-edit" severity="secondary" [outlined]="true" [pTooltip]="form.title + ': усі ваші рахунки разом, поле за полем'"
-              tooltipPosition="bottom" (onClick)="store.declarationCode.set(form.code)" />
-  }
 </app-page-header>
 
 <app-declaration-dialog [visible]="!!store.declarationCode()" [loading]="store.declarationLoading()" [declaration]="store.declaration()?.declaration ?? null"
-                        [warnings]="store.declaration()?.warnings ?? []" (closed)="store.declarationCode.set(null)" />
+                        [warnings]="store.declaration()?.warnings ?? []" [pdfLoading]="store.pdfLoading()" (pdf)="store.downloadDeclarationPdf()"
+                        (closed)="store.declarationCode.set(null)" />
 @if (store.declarationCode() && store.declarationError()) {
   <p-message severity="error" styleClass="mb-3" text="Не вдалося заповнити декларацію" />
 }
@@ -30,35 +27,55 @@
   @for (warning of details.warnings; track $index) {
     <p-message severity="warn" styleClass="mb-3" [text]="warning" />
   }
-  <div class="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4 mb-3 sm:mb-4">
-    <div class="card mb-0">
-      <div class="text-muted-color text-xs sm:text-sm mb-1 sm:mb-2">Податок до сплати · {{ details.year }}</div>
-      <div class="text-2xl sm:text-3xl font-semibold">{{ s.taxDue | money: 'PLN' : 0 }}</div>
-      <div class="text-xs sm:text-sm text-muted-color mt-1 sm:mt-2">{{ details.policyCode }}{{ details.policyCode === 'PL-BELKA' ? ' · 19%' : ' · не оподатковується' }}</div>
-    </div>
-    <div class="card mb-0">
-      <div class="text-muted-color text-xs sm:text-sm mb-1 sm:mb-2">Дохід (зиск)</div>
-      <div class="text-xl sm:text-2xl font-semibold" [appSignedValue]="s.gain">{{ s.gain | money: 'PLN' }}</div>
-      <div class="text-xs sm:text-sm text-muted-color mt-1 sm:mt-2">виручка {{ s.revenue | money: 'PLN' }} − витрати {{ s.costs | money: 'PLN' }}</div>
-    </div>
-    <div class="card mb-0">
-      <div class="text-muted-color text-xs sm:text-sm mb-1 sm:mb-2">Податкова база</div>
-      <div class="text-xl sm:text-2xl font-semibold">{{ s.taxBase | money: 'PLN' : 0 }}</div>
-      <div class="text-xs sm:text-sm text-muted-color mt-1 sm:mt-2">збитки минулих років: −{{ s.carryforwardUsed | money: 'PLN' }}</div>
-    </div>
-    <div class="card mb-0">
-      <div class="text-muted-color text-xs sm:text-sm mb-1 sm:mb-2">Дивіденди</div>
-      <div class="text-xl sm:text-2xl font-semibold">{{ s.dividendIncome | money: 'PLN' }}</div>
-      <div class="text-xs sm:text-sm text-muted-color mt-1 sm:mt-2">
-        податок {{ s.dividendTax | money: 'PLN' : 0 }}
-        @if (s.dividendTaxCredit) { · за кордоном утримано {{ s.dividendTaxCredit | money: 'PLN' }} }
+  <!-- Hero: the tax of the year and the return to file; the rest in one quiet strip, as on the overview. -->
+  <div class="card">
+    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+      <div>
+        <div class="text-muted-color text-sm">Податок до сплати · {{ details.year }}</div>
+        <div class="text-4xl sm:text-5xl font-bold tracking-tight mt-1 leading-tight">{{ s.taxDue | money: 'PLN' : 0 }}</div>
+        <div class="text-sm text-muted-color mt-2">
+          @if (details.policyCode === 'PL-BELKA') {
+            з продажів {{ s.capitalTax | money: 'PLN' : 0 }} · з дивідендів {{ s.dividendTax | money: 'PLN' : 0 }} · 19%
+          } @else {
+            {{ details.policyCode }} · не оподатковується
+          }
+        </div>
       </div>
+      @if (store.forms().length) {
+        <div class="flex flex-wrap gap-2">
+          @for (form of store.forms(); track form.code) {
+            <p-button [label]="form.code + ' за ' + details.year" icon="pi pi-file-edit" [pTooltip]="form.title + ': усі ваші рахунки разом, поле за полем, і PDF на бланку'"
+                      tooltipPosition="bottom" (onClick)="store.declarationCode.set(form.code)" styleClass="w-full sm:w-auto" class="w-full sm:w-auto" />
+          }
+        </div>
+      }
     </div>
   </div>
 
-  @if (s.lossToCarry > 0) {
-    <p-message severity="info" styleClass="mb-4" [text]="'Збиток року ' + (s.lossToCarry | money: 'PLN') + ' можна відносити на наступні 5 років, до 50% на рік — це враховується автоматично.'" />
-  }
+  <div class="card py-4">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-y-4">
+      <div class="px-1 sm:px-4 lg:border-r border-surface">
+        <div class="text-muted-color text-xs uppercase tracking-wide">Дохід (зиск)</div>
+        <div class="text-xl font-semibold mt-1" [appSignedValue]="s.gain">{{ s.gain | money: 'PLN' }}</div>
+        <div class="text-xs text-muted-color">виручка {{ s.revenue | money: 'PLN' : 0 }} − витрати {{ s.costs | money: 'PLN' : 0 }}</div>
+      </div>
+      <div class="px-1 sm:px-4 lg:border-r border-surface">
+        <div class="text-muted-color text-xs uppercase tracking-wide">Податкова база</div>
+        <div class="text-xl font-semibold mt-1">{{ s.taxBase | money: 'PLN' : 0 }}</div>
+        <div class="text-xs text-muted-color">{{ s.carryforwardUsed ? 'мінус збитки минулих років ' + (s.carryforwardUsed | money: 'PLN' : 0) : 'без збитків минулих років' }}</div>
+      </div>
+      <div class="px-1 sm:px-4 lg:border-r border-surface">
+        <div class="text-muted-color text-xs uppercase tracking-wide">Дивіденди брутто</div>
+        <div class="text-xl font-semibold mt-1">{{ s.dividendIncome | money: 'PLN' }}</div>
+        <div class="text-xs text-muted-color">утримано за кордоном {{ s.dividendTaxCredit | money: 'PLN' }}</div>
+      </div>
+      <div class="px-1 sm:px-4">
+        <div class="text-muted-color text-xs uppercase tracking-wide">Збиток до перенесення</div>
+        <div class="text-xl font-semibold mt-1">{{ s.lossToCarry ? (s.lossToCarry | money: 'PLN') : '—' }}</div>
+        <div class="text-xs text-muted-color">5 років, до 50% на рік</div>
+      </div>
+    </div>
+  </div>
 
   <div class="card">
     <h2 class="text-lg font-semibold mb-4">Реалізації (продажі)</h2>

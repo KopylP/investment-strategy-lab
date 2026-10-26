@@ -138,6 +138,28 @@ export class TaxesStore {
   readonly declarationLoading = this.declarationResource.isLoading;
   readonly declarationError = this.declarationResource.error;
 
+  readonly pdfLoading = signal(false);
+
+  /** The filled return on the official form (PIT-38 with its PIT/ZG), saved as a file. */
+  async downloadDeclarationPdf(): Promise<void> {
+    const code = this.declarationCode();
+    const year = this.year();
+    if (!code || !year) return;
+    this.pdfLoading.set(true);
+    try {
+      const pdf = await this.api.blob(`/api/taxation/declarations/${year}/${encodeURIComponent(code)}/pdf`);
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(pdf);
+      link.download = `${code}-${year}.pdf`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 10_000);
+    } catch (error) {
+      this.messages.add({ severity: 'error', summary: 'PDF не створено', detail: toProblemMessage(error) });
+    } finally {
+      this.pdfLoading.set(false);
+    }
+  }
+
   readonly account = this.accounts.current;
   readonly years = computed(() => this.yearsResource.value() ?? []);
   readonly isLoading = computed(() => this.yearsResource.isLoading() || this.detailsResource.isLoading());

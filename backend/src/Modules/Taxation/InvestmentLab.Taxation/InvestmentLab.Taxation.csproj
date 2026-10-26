@@ -5,6 +5,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The Ministry's PIT-38(18) and PIT/ZG(8) and the font the amounts are written in (DejaVu Sans, free licence). -->
+    <EmbeddedResource Include="Declarations/Infrastructure/Forms/*.pdf;Declarations/Infrastructure/Forms/*.ttf" LogicalName="Forms/%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="../../MarketData/InvestmentLab.MarketData.Contracts/InvestmentLab.MarketData.Contracts.csproj" />
     <ProjectReference Include="../../Portfolio/InvestmentLab.Portfolio.Contracts/InvestmentLab.Portfolio.Contracts.csproj" />
   </ItemGroup>

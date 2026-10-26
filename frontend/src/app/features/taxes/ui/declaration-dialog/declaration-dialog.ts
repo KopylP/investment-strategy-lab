@@ -5,14 +5,13 @@ import { Button } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
 import { Message } from 'primeng/message';
 import { Skeleton } from 'primeng/skeleton';
-import { TableModule } from 'primeng/table';
 import { DatePipe, MoneyPipe } from '../../../../shared/pipes/format-pipes';
 import { DeclarationField, formValue, TaxDeclaration } from '../../data-access/declarations';
 
 /** The filled return, field by field with its "poz." number, each value one click from the clipboard. */
 @Component({
   selector: 'app-declaration-dialog',
-  imports: [NgTemplateOutlet, Dialog, Button, Message, Skeleton, TableModule, MoneyPipe, DatePipe],
+  imports: [NgTemplateOutlet, Dialog, Button, Message, Skeleton, MoneyPipe, DatePipe],
   templateUrl: './declaration-dialog.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -23,7 +22,9 @@ export class DeclarationDialog {
   readonly warnings = input<string[]>([]);
   readonly loading = input(false);
   readonly visible = input(false);
+  readonly pdfLoading = input(false);
   readonly closed = output<void>();
+  readonly pdf = output<void>();
 
   protected readonly formValue = formValue;
 

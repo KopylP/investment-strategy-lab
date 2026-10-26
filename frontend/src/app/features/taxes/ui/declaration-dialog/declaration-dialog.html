@@ -1,10 +1,11 @@
 <p-dialog [header]="declaration() ? declaration()!.form + ' за ' + declaration()!.year : 'Декларація'" [modal]="true" [visible]="visible()" (visibleChange)="!$event && closed.emit()"
-          [style]="{ width: '56rem' }" [breakpoints]="{ '768px': '100vw' }" [dismissableMask]="true" [draggable]="false">
+          [style]="{ width: '56rem' }" styleClass="app-sheet" [dismissableMask]="true" [draggable]="false">
   @if (loading() && !declaration()) {
     <p-skeleton height="20rem" />
   } @else if (declaration(); as d) {
-    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-      <span class="text-sm text-muted-color">{{ d.title }} · подати з 15 лютого до {{ d.deadline | date }}</span>
+    <div class="text-sm text-muted-color mb-3">{{ d.title }} · подати з 15 лютого до {{ d.deadline | date }}</div>
+    <div class="flex flex-wrap gap-2 mb-3">
+      <p-button label="PDF на бланку" icon="pi pi-file-pdf" size="small" [loading]="pdfLoading()" (onClick)="pdf.emit()" />
       <p-button label="Копіювати все" icon="pi pi-copy" size="small" severity="secondary" [outlined]="true" (onClick)="copyAll(d)" />
     </div>
 
@@ -14,20 +15,22 @@
       <p-message severity="warn" styleClass="mb-2" [text]="warning" />
     }
 
-    <p-table [value]="d.accounts" size="small" styleClass="mb-4" [tableStyle]="{ 'min-width': '30rem' }">
-      <ng-template #header>
-        <tr><th>Рахунок</th><th>Як іде в декларацію</th><th class="text-right">Przychód</th><th class="text-right">Koszty</th><th class="text-right hidden sm:table-cell">Дивіденди брутто</th></tr>
-      </ng-template>
-      <ng-template #body let-a>
-        <tr>
-          <td><div class="font-medium">{{ a.name }}</div><div class="text-xs text-muted-color">{{ a.broker }}</div></td>
-          <td class="text-sm">{{ a.treatment }}</td>
-          <td class="text-right whitespace-nowrap">{{ a.revenue | money: 'PLN' }}</td>
-          <td class="text-right whitespace-nowrap">{{ a.costs | money: 'PLN' }}</td>
-          <td class="text-right whitespace-nowrap hidden sm:table-cell">{{ a.dividendsGross | money: 'PLN' }}</td>
-        </tr>
-      </ng-template>
-    </p-table>
+    <h3 class="text-base font-semibold mt-4 mb-2">Рахунки</h3>
+    <div class="flex flex-col mb-2">
+      @for (a of d.accounts; track a.name) {
+        <div class="flex items-start justify-between gap-3 py-2 border-b border-surface-200 dark:border-surface-700">
+          <div class="min-w-0">
+            <div class="font-medium">{{ a.name }} <span class="text-xs text-muted-color font-normal">· {{ a.broker }}</span></div>
+            <div class="text-xs text-muted-color">{{ a.treatment }}</div>
+          </div>
+          <div class="text-right text-sm tabular-nums whitespace-nowrap">
+            <div>{{ a.revenue | money: 'PLN' }} <span class="text-muted-color text-xs">виручка</span></div>
+            <div>{{ a.costs | money: 'PLN' }} <span class="text-muted-color text-xs">витрати</span></div>
+            @if (a.dividendsGross) { <div>{{ a.dividendsGross | money: 'PLN' }} <span class="text-muted-color text-xs">дивіденди</span></div> }
+          </div>
+        </div>
+      }
+    </div>
 
     @for (section of d.sections; track section.code) {
       <h3 class="text-base font-semibold mt-4 mb-2">{{ section.code }}. {{ section.title }}</h3>
