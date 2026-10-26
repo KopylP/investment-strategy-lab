@@ -1,13 +1,15 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Button } from 'primeng/button';
+import { InputNumber } from 'primeng/inputnumber';
 import { Message } from 'primeng/message';
 import { SelectButton } from 'primeng/selectbutton';
 import { Skeleton } from 'primeng/skeleton';
+import { TableModule } from 'primeng/table';
 import { Tag } from 'primeng/tag';
 import { Tooltip } from 'primeng/tooltip';
-import { DateTimePipe, DatePipe, MoneyPipe, PeriodPipe, SignedPercentPipe } from '../../../../shared/pipes/format-pipes';
+import { DateTimePipe, DatePipe, MoneyPipe, PercentPipe, PeriodPipe, SignedPercentPipe } from '../../../../shared/pipes/format-pipes';
 import { Money } from '../../../../shared/ui/money/money';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { SignedValue } from '../../../../shared/ui/signed-value';
@@ -15,13 +17,14 @@ import { Viewport } from '../../../../shared/ui/viewport';
 import { OverviewStore } from '../../data-access/overview-store';
 import { AllocationCard } from '../../ui/allocation-card/allocation-card';
 import { DrawdownChart } from '../../ui/drawdown-chart/drawdown-chart';
+import { TaxProgressChart } from '../../ui/tax-progress-chart/tax-progress-chart';
 import { ValueChart } from '../../ui/value-chart/value-chart';
 
 @Component({
   selector: 'app-overview-page',
   imports: [
-    FormsModule, RouterLink, Button, Message, SelectButton, Skeleton, Tag, Tooltip, PageHeader, SignedValue, ValueChart, DrawdownChart, AllocationCard, Money,
-    MoneyPipe, SignedPercentPipe, PeriodPipe, DateTimePipe, DatePipe,
+    FormsModule, RouterLink, Button, InputNumber, Message, SelectButton, Skeleton, TableModule, Tag, Tooltip, PageHeader, SignedValue, ValueChart, DrawdownChart, AllocationCard, TaxProgressChart, Money,
+    MoneyPipe, PercentPipe, SignedPercentPipe, PeriodPipe, DateTimePipe, DatePipe,
   ],
   providers: [OverviewStore],
   templateUrl: './overview-page.html',
@@ -29,6 +32,10 @@ import { ValueChart } from '../../ui/value-chart/value-chart';
 })
 export class OverviewPage {
   protected readonly store = inject(OverviewStore);
+
+  /** The threshold field, in percent; follows the saved setting until edited. */
+  protected readonly thresholdPercent = signal<number | null>(null);
+
   protected readonly viewport = inject(Viewport);
 
   /** On a phone the six periods keep to one row. */
@@ -40,4 +47,11 @@ export class OverviewPage {
     { label: this.viewport.phone() ? 'YTD' : 'З початку року', value: 'YTD' },
     { label: 'Усе', value: 'ALL' },
   ]);
+
+  constructor() {
+    effect(() => {
+      const share = this.store.tax()?.alertShare;
+      if (share !== undefined) this.thresholdPercent.set(share === null ? null : Math.round(share * 10000) / 100);
+    });
+  }
 }

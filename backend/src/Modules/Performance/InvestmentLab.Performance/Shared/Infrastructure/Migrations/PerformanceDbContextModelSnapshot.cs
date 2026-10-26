@@ -149,35 +149,6 @@ namespace InvestmentLab.Performance.Shared.Infrastructure.Migrations
                     b.ToTable("recalculation_markers", "performance");
                 });
 
-            modelBuilder.Entity("InvestmentLab.Performance.Valuation.Domain.TaxYearTotal", b =>
-                {
-                    b.Property<Guid>("AccountId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("account_id");
-
-                    b.Property<int>("Year")
-                        .HasColumnType("integer")
-                        .HasColumnName("year");
-
-                    b.Property<DateTimeOffset>("ComputedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("computed_at");
-
-                    b.Property<Guid>("OwnerId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("owner_id");
-
-                    b.Property<decimal>("TaxDuePln")
-                        .HasPrecision(20, 8)
-                        .HasColumnType("numeric(20,8)")
-                        .HasColumnName("tax_due_pln");
-
-                    b.HasKey("AccountId", "Year")
-                        .HasName("pk_tax_year_totals");
-
-                    b.ToTable("tax_year_totals", "performance");
-                });
-
             modelBuilder.Entity("InvestmentLab.Performance.Valuation.Domain.ValuationSnapshot", b =>
                 {
                     b.Property<long>("Id")

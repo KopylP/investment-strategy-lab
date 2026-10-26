@@ -69,24 +69,3 @@ public sealed class RecalculationMarker
 
     public void Built(DateTimeOffset at, DateOnly through) => (DirtyFrom, BuiltAt, BuiltThrough) = (null, at, through);
 }
-
-/// <summary>Latest tax due per year, from Taxation's events (the dashboard's tax widget).</summary>
-public sealed class TaxYearTotal
-{
-    public Guid AccountId { get; private set; }
-    public UserId OwnerId { get; private set; }
-    public int Year { get; private set; }
-    public decimal TaxDuePln { get; private set; }
-    public DateTimeOffset ComputedAt { get; private set; }
-
-    private TaxYearTotal() { }
-
-    public static TaxYearTotal Of(Guid accountId, UserId ownerId, int year) => new() { AccountId = accountId, OwnerId = ownerId, Year = year };
-
-    public void Update(decimal taxDuePln, DateTimeOffset computedAt)
-    {
-        if (computedAt < ComputedAt)
-            return;
-        (TaxDuePln, ComputedAt) = (taxDuePln, computedAt);
-    }
-}

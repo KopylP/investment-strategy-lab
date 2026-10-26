@@ -6,21 +6,28 @@ using Microsoft.AspNetCore.Routing;
 
 namespace InvestmentLab.Taxation.Assessments.Api;
 
+/// <summary>Tax belongs to the signed-in taxpayer (one PIT-38 over all their accounts), so no account in the routes.</summary>
 internal static class TaxEndpoints
 {
     public static RouteGroupBuilder MapAssessments(this RouteGroupBuilder group)
     {
-        var account = group.MapGroup("/accounts/{accountId:guid}").WithTags("Taxes");
+        var taxes = group.MapGroup("").WithTags("Taxes");
 
-        account.MapGet("/years", async (Guid accountId, TaxQueries queries, CancellationToken ct) => (await queries.Years(accountId, ct)).ToHttpResult())
+        taxes.MapGet("/years", async (TaxQueries queries, CancellationToken ct) => TypedResults.Ok(await queries.Overview(ct)))
             .WithName("GetTaxYears");
-        account.MapGet("/years/{year:int}", async (Guid accountId, int year, TaxQueries queries, CancellationToken ct) => (await queries.Year(accountId, year, ct)).ToHttpResult())
+        taxes.MapGet("/years/{year:int}", async (int year, TaxQueries queries, CancellationToken ct) => (await queries.Year(year, ct)).ToHttpResult())
             .WithName("GetTaxYear");
-        account.MapGet("/losses", async (Guid accountId, TaxQueries queries, CancellationToken ct) => TypedResults.Ok(await queries.Losses(accountId, ct)))
+        taxes.MapGet("/progress/{year:int}", async (int year, TaxQueries queries, CancellationToken ct) => TypedResults.Ok(await queries.Progress(year, ct)))
+            .WithName("GetTaxProgress");
+        taxes.MapGet("/settings", async (TaxQueries queries, CancellationToken ct) => TypedResults.Ok(await queries.Settings(ct)))
+            .WithName("GetTaxSettings");
+        taxes.MapPut("/settings", async (TaxSettingsDto body, TaxQueries queries, CancellationToken ct) => (await queries.ChangeSettings(body, ct)).ToHttpResult())
+            .WithName("ChangeTaxSettings");
+        taxes.MapGet("/losses", async (TaxQueries queries, CancellationToken ct) => TypedResults.Ok(await queries.Losses(ct)))
             .WithName("GetLossCarryforwards");
-        account.MapPost("/losses", async (Guid accountId, RecordLossCommand body, TaxQueries queries, CancellationToken ct) => (await queries.RecordLoss(accountId, body, ct)).ToHttpResult())
+        taxes.MapPost("/losses", async (RecordLossCommand body, TaxQueries queries, CancellationToken ct) => (await queries.RecordLoss(body, ct)).ToHttpResult())
             .WithName("RecordLossCarryforward");
-        account.MapDelete("/losses/{lossId:guid}", async (Guid accountId, Guid lossId, TaxQueries queries, CancellationToken ct) => (await queries.RemoveLoss(accountId, lossId, ct)).ToHttpResult())
+        taxes.MapDelete("/losses/{lossId:guid}", async (Guid lossId, TaxQueries queries, CancellationToken ct) => (await queries.RemoveLoss(lossId, ct)).ToHttpResult())
             .WithName("RemoveLossCarryforward");
 
         return group;

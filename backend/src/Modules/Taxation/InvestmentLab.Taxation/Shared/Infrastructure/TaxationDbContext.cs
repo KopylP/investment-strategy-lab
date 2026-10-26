@@ -20,6 +20,7 @@ public sealed class TaxationDbContext(DbContextOptions<TaxationDbContext> option
     public DbSet<TaxLedgerEntry> Entries => Set<TaxLedgerEntry>();
     public DbSet<TaxAssessment> Assessments => Set<TaxAssessment>();
     public DbSet<LossCarryforward> Losses => Set<LossCarryforward>();
+    public DbSet<TaxSettings> Settings => Set<TaxSettings>();
     public DbSet<BrokerStatement> BrokerStatements => Set<BrokerStatement>();
     public DbSet<Pit8CStatement> Pit8CStatements => Set<Pit8CStatement>();
 
@@ -54,7 +55,7 @@ public sealed class TaxationDbContext(DbContextOptions<TaxationDbContext> option
         {
             assessment.ToTable("assessments");
             assessment.HasKey(a => a.Id);
-            assessment.HasIndex(a => new { a.AccountId, a.Year }).IsUnique();
+            assessment.HasIndex(a => new { a.OwnerId, a.Year }).IsUnique();
             assessment.Property(a => a.PolicyCode).HasMaxLength(20);
             assessment.Property(a => a.InputHash).HasMaxLength(64);
             assessment.Property(a => a.Summary).HasJsonConversion();
@@ -68,8 +69,16 @@ public sealed class TaxationDbContext(DbContextOptions<TaxationDbContext> option
         {
             loss.ToTable("loss_carryforwards");
             loss.HasKey(l => l.Id);
-            loss.HasIndex(l => l.AccountId);
+            loss.HasIndex(l => l.OwnerId);
             HasOwnerFilter(loss, l => l.OwnerId);
+        });
+
+        modelBuilder.Entity<TaxSettings>(settings =>
+        {
+            settings.ToTable("settings");
+            settings.HasKey(s => s.OwnerId);
+            settings.Property(s => s.AlertShare).HasPrecision(5, 4);
+            HasOwnerFilter(settings, s => s.OwnerId);
         });
 
         modelBuilder.Entity<BrokerStatement>(statement =>

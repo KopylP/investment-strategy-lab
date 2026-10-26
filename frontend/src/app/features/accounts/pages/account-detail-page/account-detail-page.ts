@@ -15,6 +15,7 @@ import { Tag } from 'primeng/tag';
 import { InstrumentCatalog } from '../../../../core/context/instrument-catalog';
 import { SubPortfolioSetup, symbolOf, toIsoDate } from '../../../../shared/models/api';
 import { PercentPipe } from '../../../../shared/pipes/format-pipes';
+import { FileDrop } from '../../../../shared/ui/file-drop';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { AccountDetailStore } from '../../data-access/account-detail-store';
 import { PlanSettingsForm, PlanSettingsVm } from '../../ui/plan-settings-form/plan-settings-form';
@@ -34,7 +35,7 @@ import { Viewport } from '../../../../shared/ui/viewport';
   selector: 'app-account-detail-page',
   imports: [ReportScheduleCard, StrategyPicker,
     FormsModule, RouterLink, Button, DatePicker, Dialog, InputNumber, InputText, Message, Select, Skeleton, TableModule, Tag,
-    PageHeader, PlanSettingsForm, PercentPipe,
+    PageHeader, PlanSettingsForm, FileDrop, PercentPipe,
   ],
   providers: [AccountDetailStore],
   templateUrl: './account-detail-page.html',

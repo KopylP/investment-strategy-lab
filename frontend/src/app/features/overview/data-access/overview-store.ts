@@ -1,10 +1,13 @@
 import { computed, inject, Injectable, linkedSignal, resource, signal } from '@angular/core';
-import { ApiClient } from '../../../core/api/api-client';
+import { MessageService } from 'primeng/api';
+import { ApiClient, toProblemMessage } from '../../../core/api/api-client';
 import { AccountContext } from '../../../core/context/account-context';
+import { DisplayCurrency } from '../../../core/context/display-currency';
 import { DashboardDto } from './dashboard-api';
 
 interface ReportSummary {
   id: string;
+  accountId: string;
   period: string;
   kind: string;
   status: string;
@@ -13,33 +16,72 @@ interface ReportSummary {
   generatedAt: string;
 }
 
+/** The year's PIT-38 tax as it stood after each taxable day (Taxation's progress). */
+export interface TaxProgress {
+  year: number;
+  taxDue: number;
+  gain: number;
+  dividends: number;
+  taxedAccounts: number;
+  points: { date: string; gain: number; dividends: number; taxDue: number }[];
+  /** Warn above this share (0..1) of all accounts' value; null — off. */
+  alertShare: number | null;
+  incomplete: string[];
+}
+
 export type DashboardPeriod = '1M' | '3M' | '6M' | '1Y' | 'YTD' | 'ALL';
 
-/** The home screen: setup progress, what needs attention now, and how the money did (Performance). */
+/** The home screen: setup progress, what needs attention now, and how the money did (Performance) — one account or all. */
 @Injectable()
 export class OverviewStore {
   private readonly api = inject(ApiClient);
   private readonly accounts = inject(AccountContext);
+  private readonly display = inject(DisplayCurrency);
+  private readonly messages = inject(MessageService);
 
   readonly period = signal<DashboardPeriod>('ALL');
 
   private readonly strategiesResource = resource({ loader: () => this.api.get<unknown[]>('/api/strategies') });
 
   private readonly dashboardResource = resource({
-    params: () => (this.accounts.currentId() ? { accountId: this.accounts.currentId()!, period: this.period() } : undefined),
-    loader: ({ params }) => this.api.get<DashboardDto>(`/api/performance/accounts/${params.accountId}/dashboard`, { period: params.period }),
+    params: () => {
+      if (this.accounts.isAll()) return { url: '/api/performance/dashboard', currency: this.display.code() ?? undefined, period: this.period() };
+      const accountId = this.accounts.currentId();
+      return accountId ? { url: `/api/performance/accounts/${accountId}/dashboard`, currency: undefined, period: this.period() } : undefined;
+    },
+    loader: ({ params }) => this.api.get<DashboardDto>(params.url, { period: params.period, currency: params.currency }),
   });
 
   private readonly reportsResource = resource({
-    params: () => this.accounts.currentId(),
-    loader: ({ params: accountId }) => this.api.get<ReportSummary[]>('/api/rebalancing/reports', { accountId }),
+    params: () => (this.accounts.isAll() ? { all: true } : this.accounts.currentId() ? { accountId: this.accounts.currentId() } : undefined),
+    loader: ({ params }) => this.api.get<ReportSummary[]>('/api/rebalancing/reports', 'accountId' in params ? { accountId: params.accountId } : undefined),
+  });
+
+  /** Tax is the person's (one PIT-38 over all accounts), whichever account is shown. */
+  readonly taxYear = new Date().getFullYear();
+  private readonly taxResource = resource({
+    params: () => (this.accounts.current() ? this.taxYear : undefined),
+    loader: ({ params: year }) => this.api.get<TaxProgress>(`/api/taxation/progress/${year}`),
+  });
+
+  /** The threshold compares the tax with everything the person holds: all accounts, in PLN like the tax. */
+  private readonly totalResource = resource({
+    params: () => (this.tax()?.alertShare != null ? true : undefined),
+    loader: () => this.api.get<DashboardDto>('/api/performance/dashboard', { currency: 'PLN', period: '1M' }),
   });
 
   readonly accountsLoaded = this.accounts.hasLoaded;
   readonly account = this.accounts.current;
+  readonly isAll = this.accounts.isAll;
+  readonly allAccounts = this.accounts.accounts;
   readonly hasStrategies = computed(() => (this.strategiesResource.value()?.length ?? 0) > 0);
   readonly strategiesLoaded = computed(() => this.strategiesResource.hasValue());
-  readonly hasStrategyAssigned = computed(() => this.account()?.subPortfolios.some((sub) => sub.status === 'Active' && sub.strategyId) ?? false);
+  /** Accounts on screen whose active sub-portfolios have no strategy: their reports would not know what to buy. */
+  readonly withoutStrategy = computed(() =>
+    (this.isAll() ? this.allAccounts() : this.account() ? [this.account()!] : []).filter(
+      (account) => !account.subPortfolios.some((sub) => sub.status === 'Active' && sub.strategyId),
+    ),
+  );
 
   /** While another period of the same account loads, the last dashboard stays: the chart swaps data instead of blinking. */
   readonly dashboard = linkedSignal<{ value: DashboardDto | undefined; loading: boolean; accountId: string | null }, DashboardDto | undefined>({
@@ -60,10 +102,52 @@ export class OverviewStore {
   readonly hasHistory = computed(() => (this.dashboard()?.series.length ?? 0) > 0);
 
   readonly reports = computed(() => this.reportsResource.value() ?? []);
-  readonly openReport = computed(() => this.reports().find((report) => report.kind !== 'RiskReview' && (report.status === 'New' || report.status === 'InProgress')));
+  readonly openReports = computed(() => this.reports().filter((report) => report.kind !== 'RiskReview' && (report.status === 'New' || report.status === 'InProgress')));
   readonly latestRisk = computed(() => this.reports().find((report) => report.kind === 'RiskReview'));
   readonly planGap = computed(() => {
     const dashboard = this.dashboard();
     return dashboard?.planValue != null ? dashboard.value - dashboard.planValue : null;
   });
+
+  readonly tax = computed(() => (this.taxResource.hasValue() ? this.taxResource.value() : undefined));
+  readonly allAccountsValuePln = computed(() => (this.totalResource.hasValue() ? (this.totalResource.value()?.value ?? null) : null));
+  /** The threshold in PLN and where the tax stands against it. */
+  readonly taxAlert = computed(() => {
+    const tax = this.tax();
+    const value = this.allAccountsValuePln();
+    if (!tax || tax.alertShare === null || !value) return null;
+    const limit = value * tax.alertShare;
+    return { share: tax.alertShare, limit, ratio: tax.taxDue / value, exceeded: tax.taxDue > limit };
+  });
+  /** How much the tax grew over the last 30 days. */
+  readonly taxLast30Days = computed(() => {
+    const tax = this.tax();
+    if (!tax) return 0;
+    const since = new Date();
+    since.setDate(since.getDate() - 30);
+    const before = [...tax.points].reverse().find((point) => new Date(point.date) < since)?.taxDue ?? 0;
+    return tax.taxDue - before;
+  });
+  readonly savingThreshold = signal(false);
+
+  async saveThreshold(percent: number | null): Promise<void> {
+    this.savingThreshold.set(true);
+    try {
+      await this.api.put('/api/taxation/settings', { alertShare: percent ? percent / 100 : null });
+      this.messages.add({ severity: 'success', summary: percent ? `Поріг: ${percent}% вартості рахунків` : 'Поріг вимкнено' });
+      this.taxResource.reload();
+    } catch (error) {
+      this.messages.add({ severity: 'error', summary: 'Поріг не збережено', detail: toProblemMessage(error) });
+    } finally {
+      this.savingThreshold.set(false);
+    }
+  }
+
+  accountName(id: string): string {
+    return this.allAccounts().find((account) => account.id === id)?.name ?? '';
+  }
+
+  showAccount(id: string): void {
+    this.accounts.choose(id);
+  }
 }

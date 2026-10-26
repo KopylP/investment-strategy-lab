@@ -1,16 +1,26 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRouteSnapshot, NavigationEnd, Router, RouterLink } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { Menu } from 'primeng/menu';
 import { Select } from 'primeng/select';
 import { SelectButton } from 'primeng/selectbutton';
 import { Tooltip } from 'primeng/tooltip';
+import { filter, map } from 'rxjs';
 import { AuthStore } from '../auth/auth-store';
-import { AccountContext } from '../context/account-context';
+import { AccountContext, AccountScope } from '../context/account-context';
 import { DisplayCurrency } from '../context/display-currency';
 import { Viewport } from '../../shared/ui/viewport';
 import { LayoutService } from './layout-service';
+
+const allAccounts = 'all';
+
+function scopeOf(route: ActivatedRouteSnapshot): AccountScope {
+  let deepest = route;
+  while (deepest.firstChild) deepest = deepest.firstChild;
+  return (deepest.data['accountScope'] as AccountScope | undefined) ?? 'account';
+}
 
 @Component({
   selector: 'app-topbar',
@@ -28,6 +38,21 @@ export class AppTopbar {
 
   protected readonly email = computed(() => this.auth.user()?.email ?? '');
 
+  /** What the open screen is about: one account, or optionally all accounts. */
+  protected readonly scope = toSignal(
+    this.router.events.pipe(
+      filter((event) => event instanceof NavigationEnd),
+      map(() => scopeOf(this.router.routerState.snapshot.root)),
+    ),
+    { initialValue: scopeOf(this.router.routerState.snapshot.root) },
+  );
+
+  protected readonly accountOptions = computed(() =>
+    this.scope() === 'all' ? [{ id: allAccounts, name: 'Усі рахунки' }, ...this.accounts.accounts()] : this.accounts.accounts(),
+  );
+
+  protected readonly selectedAccount = computed(() => (this.scope() === 'all' && this.accounts.isAll() ? allAccounts : this.accounts.currentId()));
+
   /** On a phone the account switch and the theme move here, so the bar keeps room for the display currency. */
   protected readonly userMenu = computed<MenuItem[]>(() => {
     const phone = this.viewport.phone();
@@ -37,9 +62,9 @@ export class AppTopbar {
         ? [
             {
               label: 'Рахунок',
-              items: accounts.map((account) => ({
-                label: `${account.name} · ${account.baseCurrency}`,
-                icon: account.id === this.accounts.currentId() ? 'pi pi-check' : 'pi pi-wallet',
+              items: this.accountOptions().map((account) => ({
+                label: 'baseCurrency' in account ? `${account.name} · ${account.baseCurrency}` : account.name,
+                icon: account.id === this.selectedAccount() ? 'pi pi-check' : 'pi pi-wallet',
                 command: () => this.chooseAccount(account.id),
               })),
             },
@@ -67,7 +92,8 @@ export class AppTopbar {
   }
 
   protected chooseAccount(accountId: string): void {
-    this.accounts.choose(accountId);
+    if (accountId === allAccounts) this.accounts.chooseAll();
+    else this.accounts.choose(accountId);
   }
 
   private async signOut(): Promise<void> {

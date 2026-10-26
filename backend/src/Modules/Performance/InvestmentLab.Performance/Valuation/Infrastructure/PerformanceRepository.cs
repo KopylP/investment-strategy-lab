@@ -51,13 +51,5 @@ internal sealed class PerformanceRepository(PerformanceDbContext db) : IPerforma
 
     public void AddPlannedReport(PlannedReport report) => db.PlannedReports.Add(report);
 
-    public async Task<IReadOnlyList<TaxYearTotal>> TaxTotalsAsync(Guid accountId, CancellationToken cancellationToken) =>
-        await db.TaxTotals.Where(total => total.AccountId == accountId).ToListAsync(cancellationToken);
-
-    public Task<TaxYearTotal?> FindTaxTotalAsync(Guid accountId, int year, CancellationToken cancellationToken) =>
-        db.TaxTotals.SingleOrDefaultAsync(total => total.AccountId == accountId && total.Year == year, cancellationToken);
-
-    public void AddTaxTotal(TaxYearTotal total) => db.TaxTotals.Add(total);
-
     public Task SaveChangesAsync(CancellationToken cancellationToken) => db.SaveChangesAsync(cancellationToken);
 }

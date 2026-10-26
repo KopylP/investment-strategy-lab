@@ -5,12 +5,11 @@ using InvestmentLab.Performance.Shadow.Domain;
 using InvestmentLab.Performance.Valuation.Domain;
 using InvestmentLab.Portfolio.Contracts.Transactions;
 using InvestmentLab.Rebalancing.Contracts;
-using InvestmentLab.Taxation.Contracts;
 
 namespace InvestmentLab.Performance.Valuation.Application.Integration;
 
 /// <summary>
-/// Marks snapshots outdated from the day a change reaches back to (D9), keeps copies of plans and tax totals.
+/// Marks snapshots outdated from the day a change reaches back to (D9), keeps copies of plans.
 /// Rebuilding happens on the next read or in the nightly job.
 /// </summary>
 internal sealed class PerformanceEventHandlers(IPerformanceRepository store)
@@ -19,8 +18,7 @@ internal sealed class PerformanceEventHandlers(IPerformanceRepository store)
         IIntegrationEventHandler<DailyQuotesIngestedV1>,
         IIntegrationEventHandler<QuoteCorrectedV1>,
         IIntegrationEventHandler<ReportGeneratedV1>,
-        IIntegrationEventHandler<ReportSupersededV1>,
-        IIntegrationEventHandler<TaxAssessmentUpdatedV1>
+        IIntegrationEventHandler<ReportSupersededV1>
 {
     public Task Handle(TransactionRecordedV1 recorded, CancellationToken cancellationToken) =>
         MarkDirtyAsync(recorded.AccountId, recorded.OwnerId, recorded.OccurredOn, cancellationToken);
@@ -48,18 +46,6 @@ internal sealed class PerformanceEventHandlers(IPerformanceRepository store)
             return;
         report.Supersede();
         await MarkDirtyAsync(report.AccountId, report.OwnerId.Value, report.MarketAsOf, cancellationToken);
-    }
-
-    public async Task Handle(TaxAssessmentUpdatedV1 updated, CancellationToken cancellationToken)
-    {
-        var total = await store.FindTaxTotalAsync(updated.AccountId, updated.Year, cancellationToken);
-        if (total is null)
-        {
-            total = TaxYearTotal.Of(updated.AccountId, UserId.Of(updated.OwnerId), updated.Year);
-            store.AddTaxTotal(total);
-        }
-        total.Update(updated.TaxDuePln, updated.ComputedAt);
-        await store.SaveChangesAsync(cancellationToken);
     }
 
     private async Task MarkDirtyAsync(Guid accountId, Guid ownerId, DateOnly from, CancellationToken cancellationToken)

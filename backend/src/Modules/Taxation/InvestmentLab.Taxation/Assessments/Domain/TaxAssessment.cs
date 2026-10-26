@@ -1,13 +1,12 @@
 namespace InvestmentLab.Taxation.Assessments.Domain;
 
 /// <summary>
-/// The tax of one account for one year (key: account + year). Rebuilt from the whole history whenever its input
-/// changes; <see cref="InputHash"/> makes a recomputation with the same input a no-op.
+/// The tax of one taxpayer for one year (key: owner + year) — one PIT-38 over all taxed accounts. Rebuilt from the
+/// whole history whenever its input changes; <see cref="InputHash"/> makes a recomputation with the same input a no-op.
 /// </summary>
 public sealed class TaxAssessment
 {
     public Guid Id { get; private set; }
-    public Guid AccountId { get; private set; }
     public UserId OwnerId { get; private set; }
     public int Year { get; private set; }
     public string PolicyCode { get; private set; }
@@ -19,10 +18,9 @@ public sealed class TaxAssessment
     public List<DividendIncome> Dividends { get; private set; }
     public List<CarryforwardUse> CarryforwardUses { get; private set; }
 
-    private TaxAssessment(Guid accountId, UserId ownerId, int year)
+    private TaxAssessment(UserId ownerId, int year)
     {
         Id = Guid.CreateVersion7();
-        AccountId = accountId;
         OwnerId = ownerId;
         Year = year;
         PolicyCode = "";
@@ -36,7 +34,7 @@ public sealed class TaxAssessment
     // EF Core.
     private TaxAssessment() => (PolicyCode, InputHash, Summary, Realizations, Dividends, CarryforwardUses) = (null!, null!, null!, null!, null!, null!);
 
-    public static TaxAssessment Start(Guid accountId, UserId ownerId, int year) => new(accountId, ownerId, year);
+    public static TaxAssessment Start(UserId ownerId, int year) => new(ownerId, year);
 
     /// <returns>False when nothing changed.</returns>
     public bool Recompute(TaxYearResult result, ITaxPolicy policy, string inputHash, DateTimeOffset now)
@@ -56,23 +54,43 @@ public sealed class TaxAssessment
     }
 }
 
+/// <summary>The taxpayer's own tax settings.</summary>
+public sealed class TaxSettings
+{
+    public UserId OwnerId { get; private set; }
+
+    /// <summary>Warn when this year's tax exceeds this share (0..1) of the value of all accounts; null — no warning.</summary>
+    public decimal? AlertShare { get; private set; }
+
+    private TaxSettings() { }
+
+    public static TaxSettings For(UserId ownerId) => new() { OwnerId = ownerId };
+
+    public Result Change(decimal? alertShare)
+    {
+        if (alertShare is <= 0m or > 1m)
+            return Error.Validation("tax.alert_share_out_of_range", "The threshold is a share above 0 and at most 100%.");
+        AlertShare = alertShare is { } share ? decimal.Round(share, 4) : null;
+        return Result.Success();
+    }
+}
+
 /// <summary>A loss from a year before the journal, entered by the user (e.g. from an earlier PIT-38).</summary>
 public sealed class LossCarryforward
 {
     public Guid Id { get; private set; }
-    public Guid AccountId { get; private set; }
     public UserId OwnerId { get; private set; }
     public int Year { get; private set; }
     public decimal Amount { get; private set; }
     public decimal AlreadyUsed { get; private set; }
 
-    private LossCarryforward(Guid accountId, UserId ownerId, int year, decimal amount, decimal alreadyUsed) =>
-        (Id, AccountId, OwnerId, Year, Amount, AlreadyUsed) = (Guid.CreateVersion7(), accountId, ownerId, year, amount, alreadyUsed);
+    private LossCarryforward(UserId ownerId, int year, decimal amount, decimal alreadyUsed) =>
+        (Id, OwnerId, Year, Amount, AlreadyUsed) = (Guid.CreateVersion7(), ownerId, year, amount, alreadyUsed);
 
     // EF Core.
     private LossCarryforward() { }
 
-    public static Result<LossCarryforward> Record(Guid accountId, UserId ownerId, int year, decimal amount, decimal alreadyUsed)
+    public static Result<LossCarryforward> Record(UserId ownerId, int year, decimal amount, decimal alreadyUsed)
     {
         if (amount <= 0m)
             return Error.Validation("tax.loss_not_positive", "A loss is a positive amount.");
@@ -80,7 +98,7 @@ public sealed class LossCarryforward
             return Error.Validation("tax.loss_used_out_of_range", "Already used must be between 0 and the loss.");
         if (year is < 2000 or > 2100)
             return Error.Validation("tax.loss_year_invalid", $"{year} is not a tax year.");
-        return new LossCarryforward(accountId, ownerId, year, decimal.Round(amount, 2), decimal.Round(alreadyUsed, 2));
+        return new LossCarryforward(ownerId, year, decimal.Round(amount, 2), decimal.Round(alreadyUsed, 2));
     }
 
     public LossYear ToLossYear() => new(Year, Amount, AlreadyUsed);
