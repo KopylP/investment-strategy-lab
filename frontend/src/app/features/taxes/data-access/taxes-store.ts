@@ -29,6 +29,27 @@ export interface Realization {
   fxRateDate: string | null;
   lots: { buyTransactionId: string; acquiredOn: string; quantity: number; costPln: number }[];
   unmatchedQuantity: number;
+  accountId: string;
+}
+
+/** An account of the taxpayer; IKE / IKZE accounts are not taxed and stay out of PIT-38. */
+export interface TaxAccount {
+  id: string;
+  name: string;
+  policyCode: string;
+  isTaxed: boolean;
+}
+
+export interface TaxYearListItem {
+  year: number;
+  policyCode: string;
+  computedAt: string;
+  summary: TaxYearSummary;
+}
+
+export interface TaxOverview {
+  years: TaxYearListItem[];
+  accounts: TaxAccount[];
 }
 
 export interface TaxYearDetails {
@@ -38,10 +59,11 @@ export interface TaxYearDetails {
   computedAt: string;
   summary: TaxYearSummary;
   realizations: Realization[];
-  dividends: { transactionId: string; receivedOn: string; instrumentId: string; amount: number; amountPln: number; fxRate: number }[];
+  dividends: { transactionId: string; receivedOn: string; instrumentId: string; amount: number; amountPln: number; fxRate: number; accountId: string }[];
   carryforwardUses: { lossYear: number; amount: number }[];
-  openLots: { buyTransactionId: string; acquiredOn: string; instrumentId: string; quantity: number; costPln: number; fxRate: number }[];
+  openLots: { buyTransactionId: string; acquiredOn: string; instrumentId: string; quantity: number; costPln: number; fxRate: number; accountId: string }[];
   instruments: Record<string, string>;
+  accounts: TaxAccount[];
   warnings: string[];
 }
 
@@ -52,7 +74,10 @@ export interface LossCarryforward {
   alreadyUsed: number;
 }
 
-/** Belka per year: realisations FIFO in PLN, carried losses, the tax due. Always recomputed on read. */
+/**
+ * Belka per year for the signed-in taxpayer — one PIT-38 over all taxed accounts: FIFO within each account, gains and
+ * losses of all brokers netted, carried losses, the tax due. Always recomputed on read; not tied to the chosen account.
+ */
 @Injectable()
 export class TaxesStore {
   private readonly api = inject(ApiClient);
@@ -61,41 +86,52 @@ export class TaxesStore {
 
   readonly selectedYear = signal<number | null>(null);
 
-  private readonly yearsResource = resource({
-    params: () => this.accounts.currentId(),
-    loader: ({ params: accountId }) => this.api.get<{ year: number; summary: TaxYearSummary; policyCode: string }[]>(`/api/taxation/accounts/${accountId}/years`),
+  private readonly overviewResource = resource({
+    loader: () => this.api.get<TaxOverview>('/api/taxation/years'),
   });
 
   private readonly detailsResource = resource({
-    params: () => (this.accounts.currentId() && this.year() ? { accountId: this.accounts.currentId()!, year: this.year()! } : undefined),
-    loader: ({ params }) => this.api.get<TaxYearDetails>(`/api/taxation/accounts/${params.accountId}/years/${params.year}`),
+    params: () => this.year() ?? undefined,
+    loader: ({ params: year }) => this.api.get<TaxYearDetails>(`/api/taxation/years/${year}`),
   });
 
   private readonly lossesResource = resource({
-    params: () => this.accounts.currentId(),
-    loader: ({ params: accountId }) => this.api.get<LossCarryforward[]>(`/api/taxation/accounts/${accountId}/losses`),
+    loader: () => this.api.get<LossCarryforward[]>('/api/taxation/losses'),
   });
 
-  readonly account = this.accounts.current;
-  readonly years = computed(() => this.yearsResource.value() ?? []);
-  readonly isLoading = computed(() => this.yearsResource.isLoading() || this.detailsResource.isLoading());
-  readonly loadError = this.yearsResource.error;
+  readonly hasAccounts = computed(() => this.accounts.accounts().length > 0);
+  readonly years = computed(() => this.overviewResource.value()?.years ?? []);
+  readonly taxAccounts = computed(() => this.overviewResource.value()?.accounts ?? []);
+  readonly taxedAccounts = computed(() => this.taxAccounts().filter((account) => account.isTaxed));
+  readonly untaxedAccounts = computed(() => this.taxAccounts().filter((account) => !account.isTaxed));
+  /** The account column matters only when more than one account goes into PIT-38. */
+  readonly showAccount = computed(() => this.taxedAccounts().length > 1);
+  readonly isLoading = computed(() => this.overviewResource.isLoading() || this.detailsResource.isLoading());
+  readonly loadError = this.overviewResource.error;
   readonly year = computed(() => this.selectedYear() ?? this.years()[0]?.year ?? null);
   readonly details = computed(() => (this.detailsResource.hasValue() ? this.detailsResource.value() : undefined));
   readonly losses = computed(() => this.lossesResource.value() ?? []);
-  readonly isTaxed = computed(() => !this.years()[0] || this.years()[0].policyCode === 'PL-BELKA');
   readonly saving = signal(false);
 
   symbol(id: string): string {
     return this.details()?.instruments[id] ?? id.slice(0, 8);
   }
 
+  accountName(id: string): string {
+    return this.taxAccounts().find((account) => account.id === id)?.name ?? '';
+  }
+
+  /** Amounts of a dividend are in its account's currency. */
+  currencyOf(accountId: string): string {
+    return this.accounts.accounts().find((account) => account.id === accountId)?.baseCurrency ?? 'EUR';
+  }
+
   async addLoss(year: number, amount: number, alreadyUsed: number): Promise<boolean> {
-    return this.change(() => this.api.post(`/api/taxation/accounts/${this.requireAccount()}/losses`, { year, amount, alreadyUsed }), 'Збиток додано');
+    return this.change(() => this.api.post('/api/taxation/losses', { year, amount, alreadyUsed }), 'Збиток додано');
   }
 
   async removeLoss(loss: LossCarryforward): Promise<boolean> {
-    return this.change(() => this.api.delete(`/api/taxation/accounts/${this.requireAccount()}/losses/${loss.id}`), 'Збиток видалено');
+    return this.change(() => this.api.delete(`/api/taxation/losses/${loss.id}`), 'Збиток видалено');
   }
 
   private async change(command: () => Promise<unknown>, success: string): Promise<boolean> {
@@ -104,7 +140,7 @@ export class TaxesStore {
       await command();
       this.messages.add({ severity: 'success', summary: success });
       this.lossesResource.reload();
-      this.yearsResource.reload();
+      this.overviewResource.reload();
       this.detailsResource.reload();
       return true;
     } catch (error) {
@@ -113,11 +149,5 @@ export class TaxesStore {
     } finally {
       this.saving.set(false);
     }
-  }
-
-  private requireAccount(): string {
-    const id = this.accounts.currentId();
-    if (!id) throw new Error('No account');
-    return id;
   }
 }

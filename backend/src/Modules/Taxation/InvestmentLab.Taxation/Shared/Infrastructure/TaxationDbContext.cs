@@ -50,7 +50,7 @@ public sealed class TaxationDbContext(DbContextOptions<TaxationDbContext> option
         {
             assessment.ToTable("assessments");
             assessment.HasKey(a => a.Id);
-            assessment.HasIndex(a => new { a.AccountId, a.Year }).IsUnique();
+            assessment.HasIndex(a => new { a.OwnerId, a.Year }).IsUnique();
             assessment.Property(a => a.PolicyCode).HasMaxLength(20);
             assessment.Property(a => a.InputHash).HasMaxLength(64);
             assessment.Property(a => a.Summary).HasJsonConversion();
@@ -64,7 +64,7 @@ public sealed class TaxationDbContext(DbContextOptions<TaxationDbContext> option
         {
             loss.ToTable("loss_carryforwards");
             loss.HasKey(l => l.Id);
-            loss.HasIndex(l => l.AccountId);
+            loss.HasIndex(l => l.OwnerId);
             HasOwnerFilter(loss, l => l.OwnerId);
         });
     }

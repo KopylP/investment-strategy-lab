@@ -27,12 +27,6 @@ public interface IPerformanceRepository
 
     void AddPlannedReport(PlannedReport report);
 
-    Task<IReadOnlyList<TaxYearTotal>> TaxTotalsAsync(Guid accountId, CancellationToken cancellationToken);
-
-    Task<TaxYearTotal?> FindTaxTotalAsync(Guid accountId, int year, CancellationToken cancellationToken);
-
-    void AddTaxTotal(TaxYearTotal total);
-
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }
 

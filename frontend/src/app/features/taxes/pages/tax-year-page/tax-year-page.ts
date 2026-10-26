@@ -7,6 +7,7 @@ import { Message } from 'primeng/message';
 import { SelectButton } from 'primeng/selectbutton';
 import { Skeleton } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
+import { Tag } from 'primeng/tag';
 import { DatePipe, DateTimePipe, MoneyPipe, QuantityPipe } from '../../../../shared/pipes/format-pipes';
 import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
@@ -16,7 +17,7 @@ import { LossCarryforward, TaxesStore } from '../../data-access/taxes-store';
 @Component({
   selector: 'app-tax-year-page',
   imports: [
-    FormsModule, Button, InputNumber, Message, SelectButton, Skeleton, TableModule, PageHeader, EmptyState, SignedValue,
+    FormsModule, Button, InputNumber, Message, SelectButton, Skeleton, TableModule, Tag, PageHeader, EmptyState, SignedValue,
     MoneyPipe, QuantityPipe, DatePipe, DateTimePipe,
   ],
   providers: [TaxesStore],

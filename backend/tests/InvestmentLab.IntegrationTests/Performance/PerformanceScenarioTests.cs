@@ -44,8 +44,21 @@ public sealed class PerformanceScenarioTests(MarketDataApiFactory factory) : ICl
         rebuilt.Series[5].NetContributions.ShouldBe(1500m);
         rebuilt.Xirr.ShouldNotBeNull();
 
+        // A second account with cash only: the all-accounts dashboard sums both, day by day.
+        var other = await PortfolioScenarioTests.OpenTwoSleeveAccountAsync(client, ct);
+        await PostAsync(client, $"/api/portfolio/accounts/{other.Id}/contributions",
+            new { amount = 360m, occurredOn = days[0], allocations = new[] { new { subPortfolioId = other.SubPortfolios[0].Id, amount = 360m } } }, ct);
+        var all = await client.GetFromJsonAsync<DashboardDto>("/api/performance/dashboard?currency=EUR", ct);
+        all!.AccountId.ShouldBeNull();
+        all.Value.ShouldBe(2000m);
+        all.NetContributions.ShouldBe(1860m);
+        all.Series[0].Value.ShouldBe(1000m + 360m);
+        all.Accounts.Select(a => a.Value).ShouldBe([1640m, 360m], ignoreOrder: true);
+        all.Accounts.Sum(a => a.Share).ShouldBe(1m);
+
         var stranger = await factory.CreateSignedInClientAsync(ct);
         (await stranger.GetAsync($"/api/performance/accounts/{account.Id}/dashboard", ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await stranger.GetFromJsonAsync<DashboardDto>("/api/performance/dashboard", ct))!.Accounts.ShouldBeEmpty();
     }
 
     private static async Task PostAsync(HttpClient client, string url, object body, CancellationToken ct)

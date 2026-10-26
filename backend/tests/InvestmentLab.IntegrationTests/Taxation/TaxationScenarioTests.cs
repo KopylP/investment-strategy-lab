@@ -9,12 +9,13 @@ namespace InvestmentLab.IntegrationTests.Taxation;
 
 /// <summary>
 /// Stage 7 end to end: trades in EUR → Taxation copies them from Portfolio's events → FIFO realisation in PLN at the
-/// NBP rate of the business day before → Belka of the year; reversing the sale takes the tax back.
+/// NBP rate of the business day before → Belka of the year; reversing the sale takes the tax back. Two accounts of one
+/// taxpayer: lots stay within each account, gains and losses net in one PIT-38.
 /// </summary>
 public sealed class TaxationScenarioTests(MarketDataApiFactory factory) : IClassFixture<MarketDataApiFactory>
 {
     [Fact]
-    public async Task Trades_become_a_yearly_belka_assessment_and_a_reversal_recomputes_it()
+    public async Task Trades_of_all_accounts_become_one_yearly_belka_assessment_and_a_reversal_recomputes_it()
     {
         var ct = TestContext.Current.CancellationToken;
         var client = await factory.CreateSignedInClientAsync(ct);
@@ -29,23 +30,35 @@ public sealed class TaxationScenarioTests(MarketDataApiFactory factory) : IClass
         await TradeAsync(client, account, etf, "Buy", 10m, 120m, 1m, new DateOnly(year, 3, 11), sleeve, ct);
         var sale = await TradeAsync(client, account, etf, "Sell", 15m, 130m, 2m, new DateOnly(year, 6, 10), sleeve, ct);
 
+        // Another broker, a cheaper lot bought before the first account's second one: FIFO must not take it.
+        var other = await PortfolioScenarioTests.OpenTwoSleeveAccountAsync(client, ct);
+        var otherSleeve = other.SubPortfolios[0].Id;
+        await TradeAsync(client, other, etf, "Buy", 10m, 100m, 0m, new DateOnly(year, 2, 10), otherSleeve, ct);
+        await TradeAsync(client, other, etf, "Sell", 10m, 90m, 0m, new DateOnly(year, 7, 10), otherSleeve, ct);
+
         // The fake NBP table A has EUR at 4.30 every business day.
-        // Proceeds 1950 × 4.30 − 2 × 4.30 = 8376.40; cost 4304.30 + half of 5164.30 = 6886.45; gain 1489.95 → base 1490 → 19% = 283.10 → 283.
-        var assessed = await EventuallyAsync(client, account.Id, year, details => details.Summary.TaxDue == 283m, ct);
-        var realization = assessed.Realizations.ShouldHaveSingleItem();
+        // First account: proceeds 1950 × 4.30 − 2 × 4.30 = 8376.40; cost 4304.30 + half of 5164.30 = 6886.45; gain 1489.95.
+        // Second account: 3870 − 4300 = −430. One PIT-38: 1059.95 → base 1060 → 19% = 201.40 → 201.
+        var assessed = await EventuallyAsync(client, year, details => details.Realizations.Count == 2 && details.Summary.TaxDue == 201m, ct);
+        assessed.Summary.Gain.ShouldBe(1059.95m);
+        assessed.Accounts.Select(a => a.Id).ShouldBe([account.Id, other.Id], ignoreOrder: true);
+        assessed.Realizations.Single(r => r.AccountId == other.Id).GainPln.ShouldBe(-430m);
+        var realization = assessed.Realizations.Single(r => r.AccountId == account.Id);
         realization.ProceedsPln.ShouldBe(8376.40m);
         realization.CostPln.ShouldBe(6886.45m);
         realization.FxRate.ShouldBe(4.30m);
         realization.FxRateDate.ShouldNotBeNull().ShouldBeLessThan(new DateOnly(year, 6, 10));
-        assessed.Summary.TaxBase.ShouldBe(1490m);
+        assessed.Summary.TaxBase.ShouldBe(1060m);
         realization.Attributions.ShouldHaveSingleItem().SubPortfolioId.ShouldBe(sleeve);
 
         (await client.PostAsJsonAsync($"/api/portfolio/accounts/{account.Id}/transactions/{sale}/reverse", new { reason = "помилка" }, ct)).EnsureSuccessStatusCode();
-        var reversed = await EventuallyAsync(client, account.Id, year, details => details.Realizations.Count == 0, ct);
+        var reversed = await EventuallyAsync(client, year, details => details.Realizations.Count == 1, ct);
         reversed.Summary.TaxDue.ShouldBe(0m);
+        reversed.Summary.LossToCarry.ShouldBe(430m);
 
         var stranger = await factory.CreateSignedInClientAsync(ct);
-        (await stranger.GetAsync($"/api/taxation/accounts/{account.Id}/years", ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await stranger.GetFromJsonAsync<TaxOverviewDto>("/api/taxation/years", ct))!.Years.ShouldBeEmpty();
+        (await stranger.GetAsync($"/api/taxation/years/{year}", ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     private static async Task<Guid> TradeAsync(
@@ -59,12 +72,12 @@ public sealed class TaxationScenarioTests(MarketDataApiFactory factory) : IClass
         return (await response.Content.ReadFromJsonAsync<RecordedRow>(ct))!.TransactionId;
     }
 
-    private static async Task<TaxYearDetailsDto> EventuallyAsync(HttpClient client, Guid accountId, int year, Func<TaxYearDetailsDto, bool> condition, CancellationToken ct)
+    private static async Task<TaxYearDetailsDto> EventuallyAsync(HttpClient client, int year, Func<TaxYearDetailsDto, bool> condition, CancellationToken ct)
     {
         var deadline = DateTime.UtcNow.AddSeconds(30);
         while (true)
         {
-            var response = await client.GetAsync($"/api/taxation/accounts/{accountId}/years/{year}", ct);
+            var response = await client.GetAsync($"/api/taxation/years/{year}", ct);
             if (response.IsSuccessStatusCode && await response.Content.ReadFromJsonAsync<TaxYearDetailsDto>(ct) is { } details && condition(details))
                 return details;
             if (DateTime.UtcNow > deadline)

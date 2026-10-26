@@ -89,6 +89,25 @@ public sealed class TaxCalculatorTests
     }
 
     [Fact]
+    public void Lots_stay_within_their_account_and_one_year_nets_all_accounts()
+    {
+        Guid revolut = Guid.NewGuid(), xtb = Guid.NewGuid();
+        var computation = TaxCalculator.Compute([
+            Buy("2025-01-10", 10m, 100m, 0m, 4m) with { AccountId = revolut },
+            Buy("2025-02-10", 10m, 50m, 0m, 4m) with { AccountId = xtb },       // cheaper, but another account's lot
+            Sell("2025-06-10", 10m, 120m, 0m, 4m) with { AccountId = revolut },  // gain 800 against the Revolut lot
+            Sell("2025-07-10", 10m, 30m, 0m, 4m) with { AccountId = xtb },       // loss 800 against the XTB lot
+        ], Belka, []);
+
+        var year = computation.Year(2025)!;
+        year.Realizations.Single(r => r.AccountId == revolut).CostPln.ShouldBe(4000m);
+        year.Realizations.Single(r => r.AccountId == xtb).GainPln.ShouldBe(-800m);
+        year.Summary.Gain.ShouldBe(0m);
+        year.Summary.TaxDue.ShouldBe(0m);
+        year.Summary.LossToCarry.ShouldBe(0m);
+    }
+
+    [Fact]
     public void Selling_more_than_bought_warns_and_ike_is_not_taxed()
     {
         var computation = TaxCalculator.Compute([Sell("2025-06-10", 5m, 100m, 0m, 4m)], new NoTaxPolicy("PL-IKE"), []);

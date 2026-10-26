@@ -1,4 +1,4 @@
-import { computed, inject, Injectable, resource, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, resource, signal, untracked } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { ApiClient, toProblemMessage } from '../../../core/api/api-client';
 import { AccountContext } from '../../../core/context/account-context';
@@ -79,6 +79,9 @@ export class StatementImportStore {
   });
 
   readonly account = this.accounts.current;
+  readonly accountOptions = this.accounts.accounts;
+  /** The account the open import belongs to; switching the account in the top bar closes the wizard instead of mixing them. */
+  private readonly importAccountId = signal<string | undefined>(undefined);
   readonly history = computed(() => this.historyResource.value() ?? []);
   readonly unmappedCount = computed(() => this.current()?.mappings.filter((mapping) => !mapping.subPortfolioId).length ?? 0);
   readonly canConfirm = computed(() => {
@@ -86,11 +89,23 @@ export class StatementImportStore {
     return !!current && current.status === 'Preview' && current.counts.needsMapping === 0 && (current.counts.toRecord > 0 || current.counts.toReverse > 0);
   });
 
+  constructor() {
+    effect(() => {
+      const accountId = this.accounts.currentId();
+      if (untracked(this.current) && untracked(this.importAccountId) !== accountId) this.current.set(null);
+    });
+  }
+
+  chooseAccount(accountId: string): void {
+    this.accounts.choose(accountId);
+  }
+
   async upload(file: File): Promise<void> {
     const accountId = this.accounts.currentId();
     if (!accountId) return;
     await this.run('upload', async () => {
       const content = await file.text();
+      this.importAccountId.set(accountId);
       this.current.set(await this.api.post<StatementImport>(`/api/portfolio/accounts/${accountId}/statement-imports`, { fileName: file.name, content }));
     });
   }
@@ -98,6 +113,7 @@ export class StatementImportStore {
   async open(importId: string): Promise<void> {
     const accountId = this.accounts.currentId();
     if (!accountId) return;
+    this.importAccountId.set(accountId);
     await this.run('plan', async () => this.current.set(await this.api.get<StatementImport>(`/api/portfolio/accounts/${accountId}/statement-imports/${importId}`)));
   }
 

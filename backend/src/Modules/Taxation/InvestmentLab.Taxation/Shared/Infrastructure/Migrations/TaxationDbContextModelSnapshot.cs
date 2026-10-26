@@ -74,10 +74,6 @@ namespace InvestmentLab.Taxation.Shared.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<Guid>("AccountId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("account_id");
-
                     b.Property<decimal>("AlreadyUsed")
                         .HasPrecision(20, 8)
                         .HasColumnType("numeric(20,8)")
@@ -99,8 +95,8 @@ namespace InvestmentLab.Taxation.Shared.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_loss_carryforwards");
 
-                    b.HasIndex("AccountId")
-                        .HasDatabaseName("ix_loss_carryforwards_account_id");
+                    b.HasIndex("OwnerId")
+                        .HasDatabaseName("ix_loss_carryforwards_owner_id");
 
                     b.ToTable("loss_carryforwards", "taxation");
                 });
@@ -111,10 +107,6 @@ namespace InvestmentLab.Taxation.Shared.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
-
-                    b.Property<Guid>("AccountId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("account_id");
 
                     b.Property<string>("CarryforwardUses")
                         .IsRequired()
@@ -167,9 +159,9 @@ namespace InvestmentLab.Taxation.Shared.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_assessments");
 
-                    b.HasIndex("AccountId", "Year")
+                    b.HasIndex("OwnerId", "Year")
                         .IsUnique()
-                        .HasDatabaseName("ix_assessments_account_id_year");
+                        .HasDatabaseName("ix_assessments_owner_id_year");
 
                     b.ToTable("assessments", "taxation");
                 });
