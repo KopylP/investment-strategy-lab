@@ -5,8 +5,8 @@
       Якщо ви вже виконали план у Revolut, завантажте свіжу виписку (CSV): нові операції потраплять у журнал, а вже імпортовані не задублюються.
     </p>
     <div class="flex flex-wrap items-center gap-3">
-      <label class="p-button p-button-outlined p-button-secondary p-button-sm cursor-pointer">
-        <i class="pi pi-upload mr-2"></i>Вибрати CSV
+      <label appFileDrop class="p-button p-button-outlined p-button-secondary p-button-sm cursor-pointer">
+        <i class="pi pi-upload mr-2"></i>Вибрати або перетягнути CSV
         <input type="file" accept=".csv,text/csv" class="hidden" (change)="onFile($event)" [disabled]="busy() !== null" />
       </label>
       @if (busy() === 'upload') { <span class="text-sm text-muted-color">Розбираю виписку…</span> }

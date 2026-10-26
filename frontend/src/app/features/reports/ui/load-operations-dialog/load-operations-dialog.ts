@@ -8,6 +8,7 @@ import { Tag } from 'primeng/tag';
 import { ApiClient, toProblemMessage } from '../../../../core/api/api-client';
 import { InstrumentCatalog } from '../../../../core/context/instrument-catalog';
 import { DatePipe, MoneyPipe, QuantityPipe } from '../../../../shared/pipes/format-pipes';
+import { FileDrop } from '../../../../shared/ui/file-drop';
 import { LoadOperationsPreviewDto, MatchedOperationDto } from '../../models/report-dto';
 import { ReportActionVm } from '../../models/report-vm';
 import { ReportsApi } from '../../data-access/reports-api';
@@ -31,7 +32,7 @@ interface StatementUpload {
  */
 @Component({
   selector: 'app-load-operations-dialog',
-  imports: [RouterLink, Button, Message, Skeleton, Tag, DatePipe, MoneyPipe, QuantityPipe],
+  imports: [RouterLink, Button, Message, Skeleton, Tag, FileDrop, DatePipe, MoneyPipe, QuantityPipe],
   templateUrl: './load-operations-dialog.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
