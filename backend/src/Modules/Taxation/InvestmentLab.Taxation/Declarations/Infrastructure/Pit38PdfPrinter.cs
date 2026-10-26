@@ -39,7 +39,7 @@ public sealed class Pit38PdfPrinter : IDeclarationPrinter
         [26] = new Amount(1, 221.9, 200.8), [27] = new Amount(1, 332.4, 200.8), [28] = new Amount(1, 441.7, 200.8), [29] = new Amount(1, 552.7, 200.8),
         [30] = new Amount(1, 546.5, 151.8, ZlotyEnd: InPrintedZl),
         [31] = new Whole(1, 564, 125.3),
-        [32] = new Amount(1, 182.1, 100.3),
+        [32] = new Amount(1, 187.5, 100.3),
         [33] = new Amount(1, 546.5, 100.8, ZlotyEnd: InPrintedZl),
         [34] = new Amount(1, 546.5, 75.2, ZlotyEnd: InPrintedZl),
         [35] = new Whole(1, 564, 48.8),

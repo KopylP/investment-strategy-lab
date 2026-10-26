@@ -27,6 +27,8 @@ export interface TaxDeclaration {
   accounts: DeclarationAccountLine[];
   notes: { text: string; action: boolean; short: string | null }[];
   taxDue: number;
+  /** Figures the form does not ask for but the return is filed from (gross foreign dividends, tax withheld abroad). */
+  facts: { label: string; amount: number }[] | null;
 }
 
 /** Revenue (poz. 35) and costs (poz. 36) on a broker's PIT-8C. */
@@ -47,6 +49,8 @@ export interface DeclarationAccountLine {
   /** Row 1: the broker sends PIT-8C, whose amounts stand instead of ours once entered. */
   takesPit8C: boolean;
   pit8C: Pit8CAmounts | null;
+  /** Another account of the same broker whose PIT-8C covers this one. */
+  pit8CCoveredBy: string | null;
 }
 
 export interface DeclarationForm {

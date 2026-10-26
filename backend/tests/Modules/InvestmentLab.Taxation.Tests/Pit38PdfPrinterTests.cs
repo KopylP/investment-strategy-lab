@@ -44,6 +44,8 @@ public sealed class Pit38PdfPrinterTests
         Line(1, 200.8, 359, 468).ShouldBe("198945");           // poz. 28: 1989 | 45
         Line(1, 125.3, 465, 570).ShouldBe("1989");             // poz. 31
         Line(1, 100.3, 124, 210).ShouldBe("1900");             // poz. 32: 19 | 00 %
+        written.Where(w => w.Number == 1 && Math.Abs(w.letter.StartBaseLine.Y - 100.3) < 0.5 && w.letter.StartBaseLine.X is > 124 and < 210)
+            .Select(w => w.letter.StartBaseLine.X).OrderBy(x => x).Skip(2).First().ShouldBeGreaterThan(187.5);   // the grosze after the printed comma
         Line(1, 48.8, 465, 570).ShouldBe("378");               // poz. 35: 1989 × 19% = 377.91
         Line(1, 699.5, 285, 360).ShouldBe("2025");             // poz. 4
         Line(2, 497.7, 465, 570).ShouldBe("19050");            // poz. 47: 190 | 50

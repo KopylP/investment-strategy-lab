@@ -29,7 +29,7 @@ public sealed class Pit8CStatement
     {
         if (revenue < 0m || costs < 0m)
             return Error.Validation("tax.pit8c_negative", "PIT-8C amounts are not negative.");
-        (Revenue, Costs) = (decimal.Round(revenue, 2), decimal.Round(costs, 2));
+        (Revenue, Costs) = (decimal.Round(revenue, 2, MidpointRounding.AwayFromZero), decimal.Round(costs, 2, MidpointRounding.AwayFromZero));
         return Result.Success();
     }
 
