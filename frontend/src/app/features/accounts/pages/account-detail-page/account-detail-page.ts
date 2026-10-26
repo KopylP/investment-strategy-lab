@@ -29,6 +29,7 @@ interface SubPortfolioDraft {
 import { ReportScheduleCard } from '../../ui/report-schedule/report-schedule';
 import { describeStrategy } from '../../../strategies/models/strategy-summary';
 import { StrategyPicker } from '../../../strategies/ui/strategy-picker/strategy-picker';
+import { Viewport } from '../../../../shared/ui/viewport';
 @Component({
   selector: 'app-account-detail-page',
   imports: [ReportScheduleCard, StrategyPicker,
@@ -43,6 +44,7 @@ export class AccountDetailPage {
   protected readonly store = inject(AccountDetailStore);
   protected readonly instruments = inject(InstrumentCatalog);
   private readonly confirm = inject(ConfirmationService);
+  protected readonly viewport = inject(Viewport);
 
   readonly accountId = input.required<string>();
 

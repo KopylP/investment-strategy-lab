@@ -27,18 +27,22 @@
         <p-button label="Згенерувати рапорт" icon="pi pi-bolt" (onClick)="openGenerate()" />
       </app-empty-state>
     } @else {
-      <p-table [value]="store.reports()" [paginator]="store.reports().length > 12" [rows]="12" [tableStyle]="{ 'min-width': '48rem' }"
+      <p-table [value]="store.reports()" [paginator]="store.reports().length > 12" [rows]="12" tableStyleClass="sm:min-w-[48rem]"
                dataKey="id">
         <ng-template #header>
-          <tr><th>Рапорт</th><th>Статус</th><th class="text-right">Дій</th><th class="text-right">Внесок</th><th>Згенеровано</th></tr>
+          <tr><th>Рапорт</th><th class="hidden sm:table-cell">Статус</th><th class="text-right">Дій</th><th class="text-right hidden sm:table-cell">Внесок</th><th class="hidden sm:table-cell">Згенеровано</th></tr>
         </ng-template>
         <ng-template #body let-report>
           <tr>
             <td>
               <a [routerLink]="['/reports', report.id]" class="font-medium">{{ report.title }}</a>
-              <div class="text-sm text-muted-color">{{ report.kindLabel }} · {{ report.triggerLabel }}</div>
+              <div class="hidden sm:block text-sm text-muted-color">{{ report.kindLabel }} · {{ report.triggerLabel }}</div>
+              <!-- Phone: status and date under the title instead of their own columns. -->
+              <div class="sm:hidden flex items-center gap-2 mt-1 text-xs text-muted-color">
+                <app-report-status-tag [status]="report.status" />{{ report.generatedAt | date }}
+              </div>
             </td>
-            <td><app-report-status-tag [status]="report.status" /></td>
+            <td class="hidden sm:table-cell"><app-report-status-tag [status]="report.status" /></td>
             <td class="text-right">
               @if (report.actionsOpen && (report.status === 'New' || report.status === 'InProgress')) {
                 <p-tag [value]="report.actionsOpen + ' з ' + report.actionsTotal" severity="warn" />
@@ -46,8 +50,8 @@
                 {{ report.actionsTotal }}
               }
             </td>
-            <td class="text-right">{{ report.contribution | money: report.currency }}</td>
-            <td class="text-muted-color">{{ report.generatedAt | dateTime }}</td>
+            <td class="text-right hidden sm:table-cell">{{ report.contribution | money: report.currency }}</td>
+            <td class="text-muted-color hidden sm:table-cell">{{ report.generatedAt | dateTime }}</td>
           </tr>
         </ng-template>
       </p-table>

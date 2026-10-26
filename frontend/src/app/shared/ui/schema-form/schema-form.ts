@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, model } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, model } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Fieldset } from 'primeng/fieldset';
 import { InputNumber } from 'primeng/inputnumber';
@@ -6,6 +6,8 @@ import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { Tooltip } from 'primeng/tooltip';
+import { formatQuantity } from '../../pipes/format';
+import { Viewport } from '../viewport';
 
 type JsonValue = string | number | boolean | null | JsonObject | JsonValue[];
 export interface JsonObject {
@@ -57,12 +59,23 @@ export class SchemaForm {
   readonly value = model.required<JsonObject>();
   readonly disabled = input(false);
 
+  protected readonly viewport = inject(Viewport);
+
   protected readonly groups = computed(() => toGroups(this.schema()));
 
   protected read(path: string[]): JsonValue {
     let node: JsonValue = this.value();
     for (const key of path) node = node && typeof node === 'object' && !Array.isArray(node) ? (node[key] ?? null) : null;
     return node;
+  }
+
+  /** A read-only value as text: "так" / "ні", an enum's label, a number in the user's locale. */
+  protected shown(field: FieldVm): string {
+    const value = this.read(field.path);
+    if (value === null) return '—';
+    if (field.kind === 'boolean') return value ? 'так' : 'ні';
+    if (field.kind === 'enum') return field.options?.find((option) => option.value === value)?.label ?? String(value);
+    return typeof value === 'number' ? formatQuantity(value) : String(value);
   }
 
   protected write(path: string[], next: JsonValue): void {

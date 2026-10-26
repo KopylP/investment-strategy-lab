@@ -36,3 +36,18 @@ export function formatPeriod(period: string): string {
   const name = new Intl.DateTimeFormat(locale, { month: 'long' }).format(new Date(year, month - 1, 1));
   return `${name} ${year}`;
 }
+
+/** "26.04.2026" → "26.04.26": a chart axis label on a phone. */
+export function shortenDate(label: string): string {
+  return /^\d{2}\.\d{2}\.\d{4}$/.test(label) ? `${label.slice(0, 6)}${label.slice(8)}` : label;
+}
+
+/**
+ * An axis number without the currency ("1 150", "125 тис.") — the currency is in the figure above the chart. Short
+ * scale only from 100 000: below it neighbouring ticks would round to the same label.
+ */
+export function formatAxisNumber(value: number, digits = 0): string {
+  return Math.abs(value) >= 100_000
+    ? new Intl.NumberFormat(locale, { notation: 'compact', maximumFractionDigits: 1 }).format(value)
+    : new Intl.NumberFormat(locale, { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(value);
+}

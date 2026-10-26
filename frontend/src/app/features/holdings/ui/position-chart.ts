@@ -11,7 +11,7 @@ import { toIsoDate } from '../../../shared/models/api';
   imports: [PriceChart, Skeleton],
   template: `
     @if (history.hasValue() && history.value().points.length > 1) {
-      <app-price-chart [points]="history.value().points" [currency]="currency()" [trades]="markers()" height="15rem" />
+      <app-price-chart [points]="history.value().points" [currency]="currency()" [trades]="markers()" height="15rem" phoneHeight="12rem" />
     } @else if (history.isLoading()) {
       <p-skeleton height="15rem" />
     }

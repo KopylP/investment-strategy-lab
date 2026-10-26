@@ -4,7 +4,7 @@
   <div class="card"><p-message severity="error" text="Рахунок не знайдено" /></div>
 } @else if (store.account(); as account) {
   <app-page-header [title]="account.name" [subtitle]="account.broker + ' · ' + account.baseCurrency + ' · податки ' + account.taxPolicyCode">
-    <p-button label="Імпорт positions.json" icon="pi pi-upload" severity="secondary" [outlined]="true" (onClick)="openImport()" />
+    <p-button [label]="viewport.phone() ? 'Імпорт' : 'Імпорт positions.json'" icon="pi pi-upload" severity="secondary" [outlined]="true" (onClick)="openImport()" />
     <p-button label="Рапорти" icon="pi pi-list-check" routerLink="/reports" />
   </app-page-header>
 
@@ -21,13 +21,21 @@
         }
       </div>
     </div>
-    <p-table [value]="store.active()" [tableStyle]="{ 'min-width': '52rem' }" dataKey="id">
+    <p-table [value]="store.active()" tableStyleClass="sm:min-w-[52rem]" dataKey="id">
       <ng-template #header>
-        <tr><th>Під-портфель</th><th class="w-40">Цільова частка</th><th>Стратегія</th><th>Паркування</th><th>Обмеження</th><th class="w-12"></th></tr>
+        <tr><th>Під-портфель</th><th class="sm:w-40">Частка<span class="hidden sm:inline"> цільова</span></th><th>Стратегія</th><th class="hidden sm:table-cell">Паркування</th><th class="hidden sm:table-cell">Обмеження</th><th class="w-12"></th></tr>
       </ng-template>
       <ng-template #body let-sub>
         <tr>
-          <td class="font-medium">{{ sub.name }}</td>
+          <td>
+            <div class="font-medium">{{ sub.name }}</div>
+            <!-- Phone: parking and limits under the name instead of their own columns. -->
+            <div class="sm:hidden text-xs text-muted-color">
+              кеш: {{ sub.cashInstrumentId ? instruments.symbol(sub.cashInstrumentId) : 'як у стратегії' }}
+              @if (sub.maxPositionWeight) { · позиція ≤ {{ sub.maxPositionWeight | percent: 0 }} }
+              @if (sub.maxMonthlyTurnover) { · оборот ≤ {{ sub.maxMonthlyTurnover | percent: 0 }} }
+            </div>
+          </td>
           <td>
             @if (editingShares()) {
               <p-inputnumber [ngModel]="shares()[sub.id]" (ngModelChange)="setShare(sub.id, $event)" suffix=" %" [min]="0" [max]="100" [maxFractionDigits]="2" fluid />
@@ -43,11 +51,11 @@
                 <i class="pi pi-pencil text-xs text-muted-color"></i>
                 @if (sub.pinnedStrategyVersion) { <p-tag [value]="'закріплено v' + sub.pinnedStrategyVersion" severity="secondary" /> }
               </div>
-              <div class="text-xs text-muted-color">{{ blurbOf(sub.strategyId) }}</div>
+              <div class="hidden sm:block text-xs text-muted-color">{{ blurbOf(sub.strategyId) }}</div>
             </button>
           </td>
-          <td>{{ sub.cashInstrumentId ? instruments.symbol(sub.cashInstrumentId) : 'як у стратегії' }}</td>
-          <td class="text-sm text-muted-color">
+          <td class="hidden sm:table-cell">{{ sub.cashInstrumentId ? instruments.symbol(sub.cashInstrumentId) : 'як у стратегії' }}</td>
+          <td class="text-sm text-muted-color hidden sm:table-cell">
             @if (sub.maxPositionWeight) { позиція ≤ {{ sub.maxPositionWeight | percent: 0 }} }
             @if (sub.maxMonthlyTurnover) { · оборот ≤ {{ sub.maxMonthlyTurnover | percent: 0 }} }
             @if (!sub.maxPositionWeight && !sub.maxMonthlyTurnover) { — }
@@ -61,7 +69,7 @@
       </ng-template>
       @if (editingShares()) {
         <ng-template #footer>
-          <tr><td>Разом</td><td>{{ sharesTotal() }} %</td><td colspan="4" class="text-sm text-muted-color">має бути рівно 100%</td></tr>
+          <tr><td>Разом</td><td>{{ sharesTotal() }} %</td><td colspan="4" class="text-sm text-muted-color">має бути 100%</td></tr>
         </ng-template>
       }
     </p-table>

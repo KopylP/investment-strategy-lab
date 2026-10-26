@@ -9,6 +9,7 @@ import { Tooltip } from 'primeng/tooltip';
 import { AuthStore } from '../auth/auth-store';
 import { AccountContext } from '../context/account-context';
 import { DisplayCurrency } from '../context/display-currency';
+import { Viewport } from '../../shared/ui/viewport';
 import { LayoutService } from './layout-service';
 
 @Component({
@@ -23,14 +24,39 @@ export class AppTopbar {
   protected readonly display = inject(DisplayCurrency);
   private readonly auth = inject(AuthStore);
   private readonly router = inject(Router);
+  protected readonly viewport = inject(Viewport);
 
   protected readonly email = computed(() => this.auth.user()?.email ?? '');
 
-  protected readonly userMenu: MenuItem[] = [
-    { label: 'Профіль', icon: 'pi pi-user', command: () => void this.router.navigate(['/profile']) },
-    { separator: true },
-    { label: 'Вийти', icon: 'pi pi-sign-out', command: () => void this.signOut() },
-  ];
+  /** On a phone the account switch and the theme move here, so the bar keeps room for the display currency. */
+  protected readonly userMenu = computed<MenuItem[]>(() => {
+    const phone = this.viewport.phone();
+    const accounts = this.accounts.accounts();
+    const accountItems: MenuItem[] =
+      phone && accounts.length > 1
+        ? [
+            {
+              label: 'Рахунок',
+              items: accounts.map((account) => ({
+                label: `${account.name} · ${account.baseCurrency}`,
+                icon: account.id === this.accounts.currentId() ? 'pi pi-check' : 'pi pi-wallet',
+                command: () => this.chooseAccount(account.id),
+              })),
+            },
+            { separator: true },
+          ]
+        : [];
+    const themeItems: MenuItem[] = phone
+      ? [{ label: this.layout.isDarkTheme() ? 'Світла тема' : 'Темна тема', icon: this.layout.isDarkTheme() ? 'pi pi-sun' : 'pi pi-moon', command: () => this.toggleDarkMode() }]
+      : [];
+    return [
+      ...accountItems,
+      { label: 'Профіль', icon: 'pi pi-user', command: () => void this.router.navigate(['/profile']) },
+      ...themeItems,
+      { separator: true },
+      { label: 'Вийти', icon: 'pi pi-sign-out', command: () => void this.signOut() },
+    ];
+  });
 
   protected toggleDarkMode(): void {
     this.layout.layoutConfig.update((config) => ({ ...config, darkTheme: !config.darkTheme }));

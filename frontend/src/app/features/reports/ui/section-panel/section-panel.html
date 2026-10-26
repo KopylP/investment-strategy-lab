@@ -1,5 +1,5 @@
 @let s = section();
-<div class="flex flex-col gap-6">
+<div class="flex flex-col gap-4 sm:gap-6">
   @if (s.error) {
     <p-message severity="error" [text]="'Стратегія не відповіла: ' + s.error + '. Позиції під-портфеля цього разу не змінюються.'" />
   }
@@ -37,17 +37,17 @@
   @if (s.orders.length) {
     <div>
       <h3 class="text-lg font-semibold mt-4 mb-3">Ордери під-портфеля (до неттінгу)</h3>
-      <p-table [value]="s.orders" [tableStyle]="{ 'min-width': '40rem' }" size="small">
+      <p-table [value]="s.orders" tableStyleClass="sm:min-w-[40rem]" size="small">
         <ng-template #header>
-          <tr><th>Дія</th><th>ETF</th><th class="text-right">Штук</th><th class="text-right">Сума</th><th>Чому</th></tr>
+          <tr><th>Дія</th><th>ETF</th><th class="text-right hidden sm:table-cell">Штук</th><th class="text-right">Сума</th><th class="hidden sm:table-cell">Чому</th></tr>
         </ng-template>
         <ng-template #body let-order>
           <tr>
             <td><p-tag [value]="order.kindLabel" [severity]="order.severity" /></td>
             <td class="font-medium">{{ order.symbol }}</td>
-            <td class="text-right">{{ order.quantity | quantity }}</td>
-            <td class="text-right">{{ order.amount | money: currency() }}</td>
-            <td class="text-sm text-muted-color">{{ order.reason }}</td>
+            <td class="text-right hidden sm:table-cell">{{ order.quantity | quantity }}</td>
+            <td class="text-right whitespace-nowrap">{{ order.amount | money: currency() }}</td>
+            <td class="text-sm text-muted-color hidden sm:table-cell">{{ order.reason }}</td>
           </tr>
         </ng-template>
       </p-table>
@@ -57,9 +57,9 @@
   @if (s.allocation.length) {
     <div>
       <h3 class="text-lg font-semibold mt-4 mb-3">До → після</h3>
-      <p-table [value]="s.allocation" [tableStyle]="{ 'min-width': '40rem' }" size="small">
+      <p-table [value]="s.allocation" tableStyleClass="sm:min-w-[40rem]" size="small">
         <ng-template #header>
-          <tr><th>Позиція</th><th class="text-right">Було</th><th class="text-right">Вага</th><th class="text-right">Стане</th><th class="text-right">Вага</th><th class="text-right">Ціль</th></tr>
+          <tr><th>Позиція</th><th class="text-right hidden sm:table-cell">Було</th><th class="text-right">Вага</th><th class="text-right hidden sm:table-cell">Стане</th><th class="text-right">Вага</th><th class="text-right">Ціль</th></tr>
         </ng-template>
         <ng-template #body let-row>
           <tr>
@@ -67,19 +67,20 @@
               {{ row.label }}
               @if (row.role === 'Exit') { <p-tag value="вихід" severity="danger" styleClass="ml-2" /> }
             </td>
-            <td class="text-right">{{ row.valueBefore | money: currency() }}</td>
+            <td class="text-right hidden sm:table-cell">{{ row.valueBefore | money: currency() }}</td>
             <td class="text-right text-muted-color">{{ row.weightBefore | percent }}</td>
-            <td class="text-right">{{ row.valueAfter | money: currency() }}</td>
+            <td class="text-right hidden sm:table-cell">{{ row.valueAfter | money: currency() }}</td>
             <td class="text-right">{{ row.weightAfter | percent }}</td>
             <td class="text-right text-muted-color">{{ row.targetWeight === null ? '—' : (row.targetWeight | percent: 0) }}</td>
           </tr>
         </ng-template>
         <ng-template #footer>
-          <tr>
+          <!-- The totals are amounts; a phone shows only the weights, so the row has nothing to sum. -->
+          <tr class="hidden sm:table-row">
             <td>Разом</td>
-            <td class="text-right">{{ s.totalBefore | money: currency() }}</td>
+            <td class="text-right hidden sm:table-cell">{{ s.totalBefore | money: currency() }}</td>
             <td></td>
-            <td class="text-right">{{ s.totalAfter | money: currency() }}</td>
+            <td class="text-right hidden sm:table-cell">{{ s.totalAfter | money: currency() }}</td>
             <td></td>
             <td></td>
           </tr>
@@ -91,32 +92,32 @@
   @if (s.scores.length) {
     <div>
       <h3 class="text-lg font-semibold mt-4 mb-3">Чому саме ці ETF</h3>
-      <p-table [value]="s.scores" [tableStyle]="{ 'min-width': '56rem' }" size="small" [scrollable]="true">
+      <p-table [value]="s.scores" tableStyleClass="sm:min-w-[56rem]" size="small" [scrollable]="true">
         <ng-template #header>
           <tr>
-            <th>Ранг</th><th>ETF</th><th class="text-right">Моментум</th><th class="text-right">1 міс</th><th class="text-right">3 міс</th>
-            <th class="text-right">12 міс</th><th class="text-right">Волатильність</th><th>MA200</th><th>Рішення</th>
+            <th class="hidden sm:table-cell">Ранг</th><th>ETF</th><th class="text-right">Моментум</th><th class="text-right hidden sm:table-cell">1 міс</th><th class="text-right hidden sm:table-cell">3 міс</th>
+            <th class="text-right hidden sm:table-cell">12 міс</th><th class="text-right hidden sm:table-cell">Волатильність</th><th>MA200</th><th>Рішення</th>
           </tr>
         </ng-template>
         <ng-template #body let-score>
           <tr>
-            <td>{{ score.rank ?? '—' }}</td>
+            <td class="hidden sm:table-cell">{{ score.rank ?? '—' }}</td>
             <td>
-              <div class="font-medium">{{ score.symbol }}</div>
-              <div class="text-xs text-muted-color">{{ score.name }} · {{ score.group }}</div>
+              <div class="font-medium">@if (score.rank) {<span class="sm:hidden text-muted-color font-normal">{{ score.rank }}. </span>}{{ score.symbol }}</div>
+              <div class="hidden sm:block text-xs text-muted-color">{{ score.name }} · {{ score.group }}</div>
             </td>
             <td class="text-right" [appSignedValue]="score.momentum">{{ score.momentum | signedPercent }}</td>
-            <td class="text-right" [appSignedValue]="score.return1m">{{ score.return1m | signedPercent }}</td>
-            <td class="text-right" [appSignedValue]="score.return3m">{{ score.return3m | signedPercent }}</td>
-            <td class="text-right" [appSignedValue]="score.return12m">{{ score.return12m | signedPercent }}</td>
-            <td class="text-right">{{ score.volatility | percent }}</td>
+            <td class="text-right hidden sm:table-cell" [appSignedValue]="score.return1m">{{ score.return1m | signedPercent }}</td>
+            <td class="text-right hidden sm:table-cell" [appSignedValue]="score.return3m">{{ score.return3m | signedPercent }}</td>
+            <td class="text-right hidden sm:table-cell" [appSignedValue]="score.return12m">{{ score.return12m | signedPercent }}</td>
+            <td class="text-right hidden sm:table-cell">{{ score.volatility | percent }}</td>
             <td><i class="pi" [class.pi-arrow-up]="score.aboveMovingAverage" [class.pi-arrow-down]="!score.aboveMovingAverage"
                    [appSignedValue]="score.aboveMovingAverage ? 1 : -1" [pTooltip]="score.aboveMovingAverage ? 'Ціна вище MA200' : 'Ціна нижче MA200'"></i></td>
             <td>
               @if (score.isTarget) {
                 <p-tag [value]="'ціль ' + (score.targetWeight | percent: 0)" severity="success" />
               }
-              <div class="text-xs text-muted-color mt-1">{{ score.reason }}</div>
+              <div class="hidden sm:block text-xs text-muted-color mt-1">{{ score.reason }}</div>
             </td>
           </tr>
         </ng-template>
@@ -134,17 +135,17 @@
       @for (alert of risk.marketAlerts.concat(risk.portfolioAlerts); track $index) {
         <p-message severity="warn" [text]="alert" />
       }
-      <p-table [value]="risk.positionsVm" [tableStyle]="{ 'min-width': '48rem' }" size="small">
+      <p-table [value]="risk.positionsVm" tableStyleClass="sm:min-w-[48rem]" size="small">
         <ng-template #header>
-          <tr><th>ETF</th><th class="text-right">Вартість</th><th class="text-right">P&amp;L</th><th class="text-right">Від піку</th><th class="text-right">Вихід</th><th>Сигнали</th></tr>
+          <tr><th>ETF</th><th class="text-right hidden sm:table-cell">Вартість</th><th class="text-right">P&amp;L</th><th class="text-right">Від піку</th><th class="text-right hidden sm:table-cell">Вихід</th><th>Сигнали</th></tr>
         </ng-template>
         <ng-template #body let-position>
           <tr>
             <td class="font-medium">{{ position.symbol }}</td>
-            <td class="text-right">{{ position.value | money: currency() }}</td>
+            <td class="text-right hidden sm:table-cell">{{ position.value | money: currency() }}</td>
             <td class="text-right" [appSignedValue]="position.pnlPct">{{ position.pnlPct | signedPercent }}</td>
             <td class="text-right" [appSignedValue]="position.drawdownFromHigh">{{ position.drawdownFromHigh | signedPercent }}</td>
-            <td class="text-right">
+            <td class="text-right hidden sm:table-cell">
               {{ position.exitPrice === null ? '—' : (position.exitPrice | money: currency()) }}
               <div class="text-xs text-muted-color">{{ position.exitRule }}</div>
             </td>

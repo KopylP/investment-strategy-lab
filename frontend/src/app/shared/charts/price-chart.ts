@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { LiveChart } from './live-chart';
-import { formatDate, formatMoney, formatQuantity } from '../pipes/format';
+import { formatAxisNumber, formatDate, formatMoney, formatQuantity, shortenDate } from '../pipes/format';
+import { Viewport } from '../ui/viewport';
 import { ChartTheme, withAlpha } from './chart-theme';
 
 export interface PricePoint {
@@ -24,16 +25,18 @@ export interface TradeMarker {
 @Component({
   selector: 'app-price-chart',
   imports: [LiveChart],
-  template: `<app-live-chart [data]="data()" [options]="options()" [plugins]="[tradeLines()]" [height]="height()" />`,
+  template: `<app-live-chart [data]="data()" [options]="options()" [plugins]="[tradeLines()]" [height]="viewport.phone() ? phoneHeight() : height()" />`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PriceChart {
   private readonly theme = inject(ChartTheme);
+  protected readonly viewport = inject(Viewport);
 
   readonly points = input.required<PricePoint[]>();
   readonly currency = input.required<string>();
   readonly trades = input<TradeMarker[]>([]);
   readonly height = input('18rem');
+  readonly phoneHeight = input('14rem');
 
   private readonly color = computed(() => {
     const points = this.points();
@@ -116,11 +119,13 @@ export class PriceChart {
     const closes = this.points().map((point) => point.close);
     // Narrow ranges need cents on the axis, or neighbouring ticks read the same ("18 EUR", "18 EUR").
     const digits = Math.max(...closes) - Math.min(...closes) < 50 ? 2 : 0;
+    // On a phone: three unrotated dates and prices without the currency (it is in the price above the chart).
+    const phone = this.viewport.phone();
     return {
       maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { display: byIndex.size > 0, labels: { color: palette.text, usePointStyle: true, filter: (item: { text: string }) => item.text !== 'Ціна закриття' } },
+        legend: { display: byIndex.size > 0, labels: { color: palette.text, usePointStyle: true, ...(phone ? { boxWidth: 6, boxHeight: 6, padding: 10, font: { size: 11 } } : {}), filter: (item: { text: string }) => item.text !== 'Ціна закриття' } },
         tooltip: {
           filter: (item: { raw: unknown }) => item.raw !== null,
           callbacks: {
@@ -135,8 +140,18 @@ export class PriceChart {
         },
       },
       scales: {
-        x: { ticks: { color: palette.muted, maxTicksLimit: 6, maxRotation: 0 }, grid: { display: false } },
-        y: { position: 'right', ticks: { color: palette.muted, callback: (value: number) => formatMoney(value, currency, digits) }, grid: { color: palette.grid } },
+        x: phone
+          ? {
+              ticks: {
+                color: palette.muted, maxTicksLimit: 3, maxRotation: 0, font: { size: 10 },
+                callback(this: { getLabelForValue: (value: number) => string }, value: number) { return shortenDate(this.getLabelForValue(value)); },
+              },
+              grid: { display: false },
+            }
+          : { ticks: { color: palette.muted, maxTicksLimit: 6, maxRotation: 0 }, grid: { display: false } },
+        y: phone
+          ? { position: 'right', ticks: { color: palette.muted, maxTicksLimit: 5, font: { size: 10 }, callback: (value: number) => formatAxisNumber(value, digits) }, grid: { color: palette.grid } }
+          : { position: 'right', ticks: { color: palette.muted, callback: (value: number) => formatMoney(value, currency, digits) }, grid: { color: palette.grid } },
       },
     };
   });

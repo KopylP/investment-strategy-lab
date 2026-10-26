@@ -4,7 +4,7 @@
 
 @if (!store.current()) {
   <div class="card">
-    <label class="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-surface rounded-xl p-10 cursor-pointer hover:bg-emphasis transition-colors">
+    <label class="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-surface rounded-xl p-6 sm:p-10 cursor-pointer hover:bg-emphasis transition-colors">
       <i class="pi text-4xl text-primary" [class.pi-upload]="store.busy() !== 'upload'" [class.pi-spin]="store.busy() === 'upload'" [class.pi-spinner]="store.busy() === 'upload'"></i>
       <span class="text-lg font-medium">Вибрати CSV-виписку Revolut</span>
       <span class="text-sm text-muted-color text-center max-w-lg">У застосунку Revolut: брокерський рахунок → документи → виписка операцій, формат CSV. Нічого не записується, поки ви не підтвердите.</span>
@@ -16,17 +16,20 @@
     <div class="card">
       <h2 class="text-lg font-semibold mb-4">Попередні імпорти</h2>
       <p-table [value]="store.history()" size="small">
-        <ng-template #header><tr><th>Файл</th><th>Завантажено</th><th>Режим</th><th>Стан</th><th class="text-right">Записано</th><th></th></tr></ng-template>
+        <ng-template #header><tr><th>Файл</th><th class="hidden sm:table-cell">Завантажено</th><th class="hidden sm:table-cell">Режим</th><th>Стан</th><th class="text-right hidden sm:table-cell">Записано</th><th></th></tr></ng-template>
         <ng-template #body let-item>
           <tr>
-            <td><a class="text-primary cursor-pointer" (click)="store.open(item.id)">{{ item.fileName }}</a></td>
-            <td>{{ item.uploadedAt | dateTime }}</td>
-            <td>{{ item.mode }}</td>
+            <td class="break-all">
+              <a class="text-primary cursor-pointer" (click)="store.open(item.id)">{{ item.fileName }}</a>
+              <div class="sm:hidden text-xs text-muted-color">{{ item.uploadedAt | dateTime }} · записано {{ item.recorded }}</div>
+            </td>
+            <td class="hidden sm:table-cell">{{ item.uploadedAt | dateTime }}</td>
+            <td class="hidden sm:table-cell">{{ item.mode }}</td>
             <td><p-tag [value]="item.status === 'Confirmed' ? 'імпортовано' : item.status === 'Undone' ? 'скасовано' : 'чернетка'" [severity]="item.status === 'Confirmed' ? 'success' : 'secondary'" /></td>
-            <td class="text-right">{{ item.recorded }}</td>
+            <td class="text-right hidden sm:table-cell">{{ item.recorded }}</td>
             <td class="text-right">
               @if (item.status === 'Confirmed') {
-                <p-button label="Скасувати" icon="pi pi-undo" size="small" [text]="true" severity="danger" [loading]="store.busy() === 'undo'" (onClick)="confirmUndo(item.id)" />
+                <p-button [label]="viewport.phone() ? undefined : 'Скасувати'" icon="pi pi-undo" size="small" [text]="true" severity="danger" ariaLabel="Скасувати імпорт" [loading]="store.busy() === 'undo'" (onClick)="confirmUndo(item.id)" />
               }
             </td>
           </tr>
@@ -46,8 +49,8 @@
         <h2 class="text-lg font-semibold m-0">1. Інструменти й під-портфелі</h2>
         <span class="text-sm text-muted-color">{{ current.fileName }} · {{ current.rows.length }} рядків · рахунок у {{ current.accountCurrency }}</span>
       </div>
-      <p-table [value]="current.mappings" [tableStyle]="{ 'min-width': '52rem' }" size="small">
-        <ng-template #header><tr><th>Тікер у виписці</th><th>Інструмент</th><th>Під-портфель</th></tr></ng-template>
+      <p-table [value]="current.mappings" tableStyleClass="sm:min-w-[52rem]" size="small">
+        <ng-template #header><tr><th>Тікер<span class="hidden sm:inline"> у виписці</span></th><th>Інструмент<span class="sm:hidden"> і під-портфель</span></th><th class="hidden sm:table-cell">Під-портфель</th></tr></ng-template>
         <ng-template #body let-mapping>
           <tr>
             <td>
@@ -59,7 +62,7 @@
                 <p-select [options]="instrumentOptions()" optionLabel="label" optionValue="value" [ngModel]="instrumentValue(mapping)"
                           (ngModelChange)="chooseInstrument(mapping, $event)" [filter]="true" placeholder="Вибрати" appendTo="body" styleClass="w-full" />
                 @if (mapping.instrumentId === null && mapping.registerAs !== null) {
-                  <div class="flex items-center gap-2">
+                  <div class="flex flex-wrap items-center gap-2">
                     <span class="text-xs text-muted-color whitespace-nowrap">Символ Yahoo</span>
                     <input pInputText [ngModel]="mapping.registerAs" (change)="setSymbol(mapping, $any($event.target).value)" class="w-40" />
                     @if (mapping.instrumentName) {
@@ -69,9 +72,12 @@
                     }
                   </div>
                 }
+                <!-- Phone: the sub-portfolio under the instrument instead of a third column. -->
+                <p-select [options]="current.subPortfolios" optionLabel="name" optionValue="id" [ngModel]="mapping.subPortfolioId"
+                          (ngModelChange)="chooseSub(mapping, $event)" placeholder="Під-портфель" appendTo="body" class="sm:hidden" styleClass="w-full" />
               </div>
             </td>
-            <td>
+            <td class="hidden sm:table-cell">
               <p-select [options]="current.subPortfolios" optionLabel="name" optionValue="id" [ngModel]="mapping.subPortfolioId"
                         (ngModelChange)="chooseSub(mapping, $event)" placeholder="Вибрати" appendTo="body" styleClass="w-full" />
             </td>
@@ -121,18 +127,24 @@
     <label class="flex items-center gap-2 mb-3 text-sm">
       <p-toggleswitch [ngModel]="onlyChanges()" (ngModelChange)="onlyChanges.set($event)" /> лише те, що зміниться
     </label>
-    <p-table [value]="rows()" [tableStyle]="{ 'min-width': '60rem' }" size="small" [paginator]="rows().length > 30" [rows]="30">
+    <p-table [value]="rows()" tableStyleClass="sm:min-w-[60rem]" size="small" [paginator]="rows().length > 30" [rows]="30">
       <ng-template #header>
-        <tr><th>Дата</th><th>Операція</th><th>Тікер</th><th class="text-right">Кількість</th><th class="text-right">Сума</th><th class="text-right">У {{ current.accountCurrency }}</th><th>Рішення</th></tr>
+        <tr><th>Дата</th><th class="hidden sm:table-cell">Операція</th><th>Тікер</th><th class="text-right hidden sm:table-cell">Кількість</th><th class="text-right">Сума</th><th class="text-right hidden sm:table-cell">У {{ current.accountCurrency }}</th><th>Рішення</th></tr>
       </ng-template>
       <ng-template #body let-row>
         <tr>
-          <td class="whitespace-nowrap">{{ row.occurredOn | date }}</td>
-          <td>{{ row.kindLabel }}</td>
-          <td class="font-medium">{{ row.ticker ?? '—' }}</td>
-          <td class="text-right">{{ row.quantity === null ? '' : (row.quantity | quantity) }}</td>
+          <td class="whitespace-nowrap">
+            {{ row.occurredOn | date }}
+            <div class="sm:hidden text-xs text-muted-color">{{ row.kindLabel }}</div>
+          </td>
+          <td class="hidden sm:table-cell">{{ row.kindLabel }}</td>
+          <td>
+            <div class="font-medium">{{ row.ticker ?? '—' }}</div>
+            @if (row.quantity !== null) { <div class="sm:hidden text-xs text-muted-color">{{ row.quantity | quantity }} шт.</div> }
+          </td>
+          <td class="text-right hidden sm:table-cell">{{ row.quantity === null ? '' : (row.quantity | quantity) }}</td>
           <td class="text-right whitespace-nowrap">{{ row.amount | money: row.currency }}</td>
-          <td class="text-right whitespace-nowrap">{{ row.currency === current.accountCurrency ? '' : (row.amountInAccountCurrency | money: current.accountCurrency) }}</td>
+          <td class="text-right whitespace-nowrap hidden sm:table-cell">{{ row.currency === current.accountCurrency ? '' : (row.amountInAccountCurrency | money: current.accountCurrency) }}</td>
           <td>
             <p-tag [value]="row.decisionLabel" [severity]="row.decisionSeverity" />
             @if (row.note) { <div class="text-xs text-muted-color mt-1">{{ row.note }}</div> }

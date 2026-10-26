@@ -8,7 +8,7 @@ import { Message } from 'primeng/message';
 import { Skeleton } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
 import { Tag } from 'primeng/tag';
-import { DateTimePipe, MoneyPipe } from '../../../../shared/pipes/format-pipes';
+import { DatePipe, DateTimePipe, MoneyPipe } from '../../../../shared/pipes/format-pipes';
 import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { ReportListStore } from '../../data-access/report-list-store';
@@ -16,7 +16,7 @@ import { ReportStatusTag } from '../../ui/report-status-tag/report-status-tag';
 
 @Component({
   selector: 'app-report-list-page',
-  imports: [FormsModule, RouterLink, Button, Dialog, InputNumber, Message, Skeleton, TableModule, Tag, PageHeader, EmptyState, ReportStatusTag, MoneyPipe, DateTimePipe],
+  imports: [FormsModule, RouterLink, Button, Dialog, InputNumber, Message, Skeleton, TableModule, Tag, PageHeader, EmptyState, ReportStatusTag, MoneyPipe, DatePipe, DateTimePipe],
   providers: [ReportListStore],
   templateUrl: './report-list-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

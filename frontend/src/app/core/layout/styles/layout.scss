@@ -8,6 +8,7 @@
 @use './_topbar';
 @use './_menu';
 @use './_footer';
-@use './_responsive';
 @use './_utils';
 @use './_typography';
+// Last: the phone rules override the card and heading defaults above.
+@use './_responsive';

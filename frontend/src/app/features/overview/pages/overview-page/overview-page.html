@@ -50,7 +50,7 @@
         <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-4">
           <div>
             <div class="text-muted-color text-sm">Вартість портфеля · {{ d.asOf | date }}</div>
-            <div class="text-5xl font-bold tracking-tight mt-1 leading-tight"><app-money [amount]="d.value" [currency]="d.currency" [digits]="0" /></div>
+            <div class="text-4xl sm:text-5xl font-bold tracking-tight mt-1 leading-tight"><app-money [amount]="d.value" [currency]="d.currency" [digits]="0" /></div>
             <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3">
               <span class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-semibold"
                 [style.background]="d.gain >= 0 ? 'color-mix(in srgb, var(--p-finance-gain) 14%, transparent)' : 'color-mix(in srgb, var(--p-finance-loss) 14%, transparent)'"
@@ -62,7 +62,7 @@
               <span class="text-sm text-muted-color">прибуток понад внесене · внесено <app-money [amount]="d.netContributions" [currency]="d.currency" [digits]="0" [hideOriginal]="true" /></span>
             </div>
           </div>
-          <p-selectbutton [options]="periods" optionLabel="label" optionValue="value" [ngModel]="store.period()" (ngModelChange)="$event && store.period.set($event)" [allowEmpty]="false" size="small" />
+          <p-selectbutton [options]="periods()" optionLabel="label" optionValue="value" [ngModel]="store.period()" (ngModelChange)="$event && store.period.set($event)" [allowEmpty]="false" size="small" />
         </div>
 
         @defer (on idle) {
@@ -73,7 +73,7 @@
         @if (store.planGap(); as gap) {
           <div class="text-sm mt-2">
             План vs факт: <span [appSignedValue]="gap">{{ gap >= 0 ? '+' : '' }}<app-money [amount]="gap" [currency]="d.currency" [digits]="0" [inline]="true" /></span>
-            <span class="text-muted-color"> — різниця з «якби все за планом». Точки на лінії — дні рапортів.</span>
+            <span class="hidden sm:inline text-muted-color"> — різниця з «якби все за планом». Точки на лінії — дні рапортів.</span>
           </div>
         }
       </div>
@@ -81,28 +81,28 @@
       <!-- Secondary metrics: one quiet strip instead of five equal tiles. -->
       <div class="card py-4">
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-y-4">
-          <div class="px-4 lg:border-r border-surface">
+          <div class="px-1 sm:px-4 lg:border-r border-surface">
             <div class="text-muted-color text-xs uppercase tracking-wide flex items-center gap-1">
               Дохідність TWR <i class="pi pi-info-circle text-xs" pTooltip="Як працювала стратегія, без впливу того, коли й скільки ви вносили. Для порівняння з індексами й фондами."></i>
             </div>
             <div class="text-xl font-semibold mt-1" [appSignedValue]="d.twr">{{ d.twr | signedPercent }}</div>
             <div class="text-xs text-muted-color">{{ d.twrAnnualized === null ? 'за період' : (d.twrAnnualized | signedPercent) + ' річних' }}</div>
           </div>
-          <div class="px-4 lg:border-r border-surface">
+          <div class="px-1 sm:px-4 lg:border-r border-surface">
             <div class="text-muted-color text-xs uppercase tracking-wide flex items-center gap-1">
               Ваша дохідність XIRR <i class="pi pi-info-circle text-xs" pTooltip="Річна дохідність саме ваших грошей — з урахуванням дат і сум внесків та виводів."></i>
             </div>
             <div class="text-xl font-semibold mt-1" [appSignedValue]="d.xirr">{{ d.xirr === null ? '—' : (d.xirr | signedPercent) }}</div>
             <div class="text-xs text-muted-color">річних</div>
           </div>
-          <div class="px-4 lg:border-r border-surface">
+          <div class="px-1 sm:px-4 lg:border-r border-surface">
             <div class="text-muted-color text-xs uppercase tracking-wide flex items-center gap-1">
               Просідання <i class="pi pi-info-circle text-xs" pTooltip="Наскільки вартість зараз нижча за найвищий пік (без впливу внесків)."></i>
             </div>
             <div class="text-xl font-semibold mt-1" [appSignedValue]="d.currentDrawdown">{{ d.currentDrawdown | signedPercent }}</div>
             <div class="text-xs text-muted-color">найбільше {{ d.maxDrawdown | signedPercent }}</div>
           </div>
-          <div class="px-4">
+          <div class="px-1 sm:px-4">
             <div class="text-muted-color text-xs uppercase tracking-wide">Податок {{ (d.asOf ?? '').slice(0, 4) }}</div>
             <div class="text-xl font-semibold mt-1">{{ d.taxDueThisYearPln === null ? '—' : (d.taxDueThisYearPln | money: 'PLN' : 0) }}</div>
             <a routerLink="/taxes" class="text-xs text-primary">деталі →</a>

@@ -14,6 +14,7 @@ import { Money } from '../../../../shared/ui/money/money';
 import { PositionChart } from '../../ui/position-chart';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { SignedValue } from '../../../../shared/ui/signed-value';
+import { Viewport } from '../../../../shared/ui/viewport';
 import { HoldingsStore } from '../../data-access/holdings-store';
 
 @Component({
@@ -28,5 +29,6 @@ import { HoldingsStore } from '../../data-access/holdings-store';
 })
 export class HoldingsPage {
   protected readonly store = inject(HoldingsStore);
+  protected readonly viewport = inject(Viewport);
   protected readonly today = new Date();
 }

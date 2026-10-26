@@ -14,6 +14,8 @@ import { Sparkline } from '../../../../shared/ui/sparkline';
 import { ChartPeriod, InstrumentFilter, InstrumentsStore } from '../../data-access/instruments-store';
 import { PriceChart } from '../../../../shared/charts/price-chart';
 import { AccountTrades } from '../../../../shared/data/account-trades';
+import { LayoutService } from '../../../../core/layout/layout-service';
+import { Viewport } from '../../../../shared/ui/viewport';
 
 const kindLabels: Record<string, string> = { Etf: 'ETF', Stock: 'Акція', Index: 'Індекс', FxPair: 'Валюта' };
 
@@ -30,6 +32,8 @@ const kindLabels: Record<string, string> = { Etf: 'ETF', Stock: 'Акція', In
 export class InstrumentListPage {
   protected readonly store = inject(InstrumentsStore);
   protected readonly trades = inject(AccountTrades);
+  protected readonly viewport = inject(Viewport);
+  private readonly layout = inject(LayoutService);
 
   protected readonly periods: { label: string; value: ChartPeriod }[] = ['1M', '3M', '6M', '1Y', '3Y'].map((value) => ({
     label: value.replace('M', 'М').replace('Y', 'Р'),
@@ -46,6 +50,12 @@ export class InstrumentListPage {
       { label: `Інше ${counts.other}`, value: 'other' },
     ];
     return all.filter((filter) => filter.value === 'all' || counts[filter.value] > 0);
+  }
+
+  /** Below `lg` the list and the details replace each other, so the new one starts at its top. */
+  protected toggle(id: string): void {
+    this.store.select(id);
+    if (this.layout.isMobile()) window.scrollTo({ top: 0 });
   }
 
   protected kindLabel(kind: string): string {

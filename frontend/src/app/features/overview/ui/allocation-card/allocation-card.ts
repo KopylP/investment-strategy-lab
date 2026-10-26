@@ -6,6 +6,7 @@ import { ChartTheme, withAlpha } from '../../../../shared/charts/chart-theme';
 import { PercentPipe, SignedPercentPipe } from '../../../../shared/pipes/format-pipes';
 import { Money } from '../../../../shared/ui/money/money';
 import { SignedValue } from '../../../../shared/ui/signed-value';
+import { Viewport } from '../../../../shared/ui/viewport';
 import { DashboardDto } from '../../data-access/dashboard-api';
 
 /** Sub-portfolios: actual share against target, value and return. */
@@ -17,6 +18,7 @@ import { DashboardDto } from '../../data-access/dashboard-api';
 })
 export class AllocationCard {
   private readonly theme = inject(ChartTheme);
+  protected readonly viewport = inject(Viewport);
 
   readonly dashboard = input.required<DashboardDto>();
 

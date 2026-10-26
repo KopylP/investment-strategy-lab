@@ -1,12 +1,12 @@
 <app-page-header title="Інструменти й котирування" [subtitle]="'Ціни закриття щоночі о 22:30 (пн–пт)' + (store.lastQuoteDate() ? ' · останні — ' + (store.lastQuoteDate() | date) : '')">
   <p-button label="Курси NBP" icon="pi pi-euro" severity="secondary" [outlined]="true" [loading]="store.busy() === 'fx'" (onClick)="store.ingestFxRates()" />
-  <p-button label="Оновити котирування" icon="pi pi-cloud-download" [loading]="store.busy() === 'quotes'" (onClick)="store.ingestQuotes()" />
+  <p-button [label]="viewport.phone() ? 'Котирування' : 'Оновити котирування'" icon="pi pi-cloud-download" [loading]="store.busy() === 'quotes'" (onClick)="store.ingestQuotes()" />
 </app-page-header>
 
 <div class="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] items-start">
   <!-- Market list -->
   <div class="card mb-0 p-0 overflow-hidden" [class]="store.selected() ? 'hidden lg:block' : ''">
-    <div class="p-4 flex flex-col gap-3 border-b border-surface">
+    <div class="p-3 sm:p-4 flex flex-col gap-3 border-b border-surface">
       <p-iconfield>
         <p-inputicon styleClass="pi pi-search" />
         <input pInputText type="search" placeholder="Тікер, назва або ISIN" [ngModel]="store.search()" (ngModelChange)="store.search.set($event)" class="w-full" />
@@ -19,11 +19,12 @@
     @if (store.isLoading() && !store.rows().length) {
       <div class="p-4 flex flex-col gap-3">@for (i of [1, 2, 3, 4, 5, 6]; track i) { <p-skeleton height="2.75rem" /> }</div>
     } @else {
-      <ul class="list-none m-0 p-0 max-h-[70vh] overflow-y-auto">
+      <!-- Its own scroll only beside the details; on a narrow screen the page scrolls. -->
+      <ul class="list-none m-0 p-0 lg:max-h-[70vh] lg:overflow-y-auto">
         @for (row of store.visibleRows(); track row.id) {
           <li>
-            <button type="button" (click)="store.select(row.id)"
-              class="w-full text-left flex items-center gap-3 px-4 py-3 border-0 border-b border-surface bg-transparent cursor-pointer text-color hover:bg-emphasis transition-colors"
+            <button type="button" (click)="toggle(row.id)"
+              class="w-full text-left flex items-center gap-3 px-3 sm:px-4 py-3 border-0 border-b border-surface bg-transparent cursor-pointer text-color hover:bg-emphasis transition-colors"
               [class.bg-emphasis]="store.selectedId() === row.id">
               <div class="w-10 h-10 shrink-0 rounded-full flex items-center justify-center text-xs font-bold"
                 style="background: color-mix(in srgb, var(--p-primary-500) 14%, transparent); color: var(--p-primary-500)">
@@ -55,7 +56,7 @@
     <div class="card mb-0 lg:sticky lg:top-24">
       <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
-          <button type="button" class="lg:hidden mb-3 p-0 border-0 bg-transparent text-primary cursor-pointer" (click)="store.select(row.id)"><i class="pi pi-arrow-left mr-1"></i>До списку</button>
+          <button type="button" class="lg:hidden mb-3 p-0 border-0 bg-transparent text-primary cursor-pointer" (click)="toggle(row.id)"><i class="pi pi-arrow-left mr-1"></i>До списку</button>
           <div class="flex flex-wrap items-center gap-2">
             <h2 class="text-2xl font-bold m-0">{{ row.symbol }}</h2>
             <p-tag [value]="kindLabel(row.kind)" severity="secondary" />
@@ -70,7 +71,7 @@
 
       <div class="flex flex-wrap items-end justify-between gap-3 mt-4">
         <div>
-          <div class="text-4xl font-bold tracking-tight">{{ row.price ? (row.price.close | money: row.currency) : '—' }}</div>
+          <div class="text-3xl sm:text-4xl font-bold tracking-tight">{{ row.price ? (row.price.close | money: row.currency) : '—' }}</div>
           <div class="text-sm mt-1">
             @if (store.detailStats(); as stats) {
               <span [appSignedValue]="stats.change" class="font-semibold">{{ stats.change | signedPercent }}</span>
@@ -110,7 +111,7 @@
         <div><div class="text-xs text-muted-color uppercase">ISIN</div><div>{{ row.isin ?? '—' }}</div></div>
         <div><div class="text-xs text-muted-color uppercase">Біржа</div><div>{{ row.exchange }}</div></div>
         <div><div class="text-xs text-muted-color uppercase">Валюта</div><div>{{ row.currency }}</div></div>
-        <div><div class="text-xs text-muted-color uppercase">Котирування з позначками</div><div>{{ store.detailStats()?.flagged ?? 0 }}</div></div>
+        <div class="hidden sm:block"><div class="text-xs text-muted-color uppercase">Котирування з позначками</div><div>{{ store.detailStats()?.flagged ?? 0 }}</div></div>
       </div>
     </div>
   } @else {
