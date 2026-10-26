@@ -14,6 +14,7 @@ import { ToggleSwitch } from 'primeng/toggleswitch';
 import { InstrumentCatalog } from '../../../../core/context/instrument-catalog';
 import { fromIsoDate, symbolOf, toIsoDate } from '../../../../shared/models/api';
 import { DatePipe, DateTimePipe, MoneyPipe, QuantityPipe } from '../../../../shared/pipes/format-pipes';
+import { FileDrop } from '../../../../shared/ui/file-drop';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { ImportMode, RowDecision, StatementImportStore, TickerMapping } from '../../data-access/statement-import-store';
 
@@ -41,7 +42,7 @@ const kinds: Record<string, string> = {
 @Component({
   selector: 'app-statement-import-page',
   imports: [
-    FormsModule, RouterLink, Button, DatePicker, InputText, Message, Select, SelectButton, TableModule, Tag, ToggleSwitch, PageHeader,
+    FormsModule, RouterLink, Button, DatePicker, InputText, Message, Select, SelectButton, TableModule, Tag, ToggleSwitch, PageHeader, FileDrop,
     MoneyPipe, QuantityPipe, DatePipe, DateTimePipe,
   ],
   providers: [StatementImportStore],
