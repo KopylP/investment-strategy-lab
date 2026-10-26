@@ -36,6 +36,10 @@
     <PackageVersion Include="JsonSchema.Net" Version="9.4.1" />
   </ItemGroup>
 
+  <ItemGroup Label="Documents">
+    <PackageVersion Include="PdfPig" Version="0.1.16" />
+  </ItemGroup>
+
   <ItemGroup Label="Tests">
     <PackageVersion Include="xunit.v3" Version="4.0.2" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />

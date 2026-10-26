@@ -174,6 +174,61 @@ namespace InvestmentLab.Taxation.Shared.Infrastructure.Migrations
                     b.ToTable("assessments", "taxation");
                 });
 
+            modelBuilder.Entity("InvestmentLab.Taxation.BrokerStatements.Domain.BrokerStatement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<string>("Broker")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("broker");
+
+                    b.Property<string>("Dividends")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("dividends");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(260)
+                        .HasColumnType("character varying(260)")
+                        .HasColumnName("file_name");
+
+                    b.Property<string>("Lots")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("lots");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_id");
+
+                    b.Property<DateTimeOffset>("UploadedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("uploaded_at");
+
+                    b.Property<string>("Warnings")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("warnings");
+
+                    b.HasKey("Id")
+                        .HasName("pk_broker_statements");
+
+                    b.HasIndex("AccountId")
+                        .HasDatabaseName("ix_broker_statements_account_id");
+
+                    b.ToTable("broker_statements", "taxation");
+                });
+
             modelBuilder.Entity("InvestmentLab.Taxation.Ledger.Domain.TaxAccount", b =>
                 {
                     b.Property<Guid>("AccountId")

@@ -59,8 +59,9 @@ public sealed class FifoLotMatcher : ILotMatcher
                 break;
             var taken = Math.Min(lot.Quantity, left);
             var cost = lot.Quantity == taken ? lot.Cost : decimal.Round(lot.Cost * taken / lot.Quantity, 2);
-            matches.Add(new LotMatch(lot.BuyTransactionId, lot.AcquiredOn, taken, cost));
-            lot.Consume(taken, cost);
+            var gross = lot.Quantity == taken ? lot.Gross : lot.Gross * taken / lot.Quantity;
+            matches.Add(new LotMatch(lot.BuyTransactionId, lot.AcquiredOn, taken, cost, Gross: gross, FxRate: lot.FxRate));
+            lot.Consume(taken, cost, gross);
             if (lot.Quantity == 0m)
                 lots.Remove(lot);
             left -= taken;
@@ -99,7 +100,9 @@ public sealed class BelkaTaxPolicy : ITaxPolicy
     public const string PolicyCode = "PL-BELKA";
 
     public string Code => PolicyCode;
-    public int Version => 1;
+
+    // 2: dividends taxed on gross with credit for the tax withheld abroad (PIT-38 part G).
+    public int Version => 2;
     public bool IsTaxed => true;
     public string FxRule => "NBP, остання таблиця A перед днем угоди";
     public ILotMatcher LotMatcher { get; } = new FifoLotMatcher();

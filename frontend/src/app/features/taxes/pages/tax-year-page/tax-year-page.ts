@@ -7,16 +7,18 @@ import { Message } from 'primeng/message';
 import { SelectButton } from 'primeng/selectbutton';
 import { Skeleton } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
+import { Tag } from 'primeng/tag';
+import { Tooltip } from 'primeng/tooltip';
 import { DatePipe, DateTimePipe, MoneyPipe, QuantityPipe } from '../../../../shared/pipes/format-pipes';
 import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { SignedValue } from '../../../../shared/ui/signed-value';
-import { LossCarryforward, TaxesStore } from '../../data-access/taxes-store';
+import { BrokerStatement, LossCarryforward, Realization, TaxesStore } from '../../data-access/taxes-store';
 
 @Component({
   selector: 'app-tax-year-page',
   imports: [
-    FormsModule, Button, InputNumber, Message, SelectButton, Skeleton, TableModule, PageHeader, EmptyState, SignedValue,
+    FormsModule, Button, InputNumber, Message, SelectButton, Skeleton, TableModule, Tag, Tooltip, PageHeader, EmptyState, SignedValue,
     MoneyPipe, QuantityPipe, DatePipe, DateTimePipe,
   ],
   providers: [TaxesStore],
@@ -37,6 +39,30 @@ export class TaxYearPage {
     const amount = this.lossAmount();
     if (!year || !amount) return;
     if (await this.store.addLoss(year, amount, this.lossUsed() ?? 0)) this.lossAmount.set(null);
+  }
+
+  /** Differences under a złoty are the broker's own rounding and rates, not a disagreement. */
+  protected brokerDifference(sale: Realization): boolean {
+    return sale.brokerGainPln !== null && Math.abs(sale.gainPln - sale.brokerGainPln) >= 1;
+  }
+
+  protected async uploadBroker(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (file) await this.store.uploadBrokerStatement(file);
+  }
+
+  protected confirmRemoveBroker(statement: BrokerStatement): void {
+    this.confirm.confirm({
+      header: 'Видалити звіт брокера?',
+      message: 'Податок з дивідендів знову рахуватиметься без зарахування утриманого за кордоном, а собівартість зі звіту більше не братиметься.',
+      acceptLabel: 'Видалити',
+      rejectLabel: 'Ні',
+      acceptButtonProps: { severity: 'danger' },
+      rejectButtonProps: { severity: 'secondary', text: true },
+      accept: () => void this.store.removeBrokerStatement(statement),
+    });
   }
 
   protected confirmRemove(loss: LossCarryforward): void {

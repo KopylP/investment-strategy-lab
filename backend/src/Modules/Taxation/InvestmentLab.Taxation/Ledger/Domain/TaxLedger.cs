@@ -12,7 +12,8 @@ public sealed record EntryAllocation(Guid SubPortfolioId, decimal Quantity);
 
 /// <summary>
 /// Taxation's own copy of a journal entry that matters for tax (trade or dividend), taken from Portfolio's events.
-/// Amounts are in the account currency; <see cref="IsReversed"/> entries are left out of every computation.
+/// Amounts are in <see cref="Currency"/>: the currency the entry was settled in (the account's, or e.g. USD for a US
+/// stock on a EUR account); <see cref="IsReversed"/> entries are left out of every computation.
 /// </summary>
 public sealed class TaxLedgerEntry
 {
@@ -68,6 +69,20 @@ public sealed class TaxLedgerEntry
         new(transactionId, accountId, ownerId, occurredOn, recordedAt, TaxableKind.Dividend, instrumentId, 0m, 0m, 0m, amount, currency, allocations);
 
     public void Reverse() => IsReversed = true;
+
+    /// <summary>Takes the numbers of a fresh copy of the same journal entry (the copy rules changed); keeps order and reversal.</summary>
+    public void Restate(TaxLedgerEntry current)
+    {
+        Kind = current.Kind;
+        OccurredOn = current.OccurredOn;
+        InstrumentId = current.InstrumentId;
+        Quantity = current.Quantity;
+        Price = current.Price;
+        Fee = current.Fee;
+        Amount = current.Amount;
+        Currency = current.Currency;
+        Allocations = current.Allocations;
+    }
 
     public int TaxYear => OccurredOn.Year;
 }
