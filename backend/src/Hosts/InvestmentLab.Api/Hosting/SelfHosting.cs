@@ -6,7 +6,8 @@ namespace InvestmentLab.Api.Hosting;
 /// <summary>
 /// Running without Aspire (the Home Assistant add-on, a VPS): the API serves the built Angular app from wwwroot, under
 /// a configurable path base (<c>InvestmentLab:PathBase</c>, e.g. <c>/investlab</c>) or the path Home Assistant Ingress
-/// announces in <c>X-Ingress-Path</c> (only when the Supervisor sends it); cookie keys live in <c>InvestmentLab:DataDirectory</c> so sign-ins survive restarts.
+/// announces in <c>X-Ingress-Path</c> (only when the Supervisor sends it; with <c>HomeAssistant:IngressOnly</c> nothing
+/// else gets in); cookie keys live in <c>InvestmentLab:DataDirectory</c> so sign-ins survive restarts.
 /// </summary>
 public static class SelfHosting
 {
@@ -21,6 +22,17 @@ public static class SelfHosting
     /// <summary>Path base first (before routing), then the app's static files.</summary>
     public static void UseSelfHosting(this WebApplication app)
     {
+        // The Home Assistant add-on is reachable only through the Supervisor: another add-on on its network that finds
+        // the ingress port gets nothing, not even the login form.
+        if (app.Configuration.GetValue<bool>("HomeAssistant:IngressOnly"))
+            app.Use((context, next) =>
+            {
+                if (context.IsFromHomeAssistantIngress())
+                    return next(context);
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                return Task.CompletedTask;
+            });
+
         if (app.Configuration["InvestmentLab:PathBase"] is { Length: > 1 } configured)
         {
             var pathBase = configured.TrimEnd('/');
