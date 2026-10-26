@@ -5,9 +5,13 @@ export function formatMoney(amount: number | null | undefined, currency: string,
   return new Intl.NumberFormat(locale, { style: 'currency', currency, minimumFractionDigits: digits, maximumFractionDigits: digits }).format(amount);
 }
 
+/**
+ * A quantity exactly as stored: the API keeps up to 8 decimals (fractional shares), so all 8 are shown — fewer would
+ * round, and a rounded-up quantity is more than the plan or the holding has.
+ */
 export function formatQuantity(quantity: number | null | undefined): string {
   if (quantity === null || quantity === undefined) return '—';
-  return new Intl.NumberFormat(locale, { maximumFractionDigits: 6 }).format(quantity);
+  return new Intl.NumberFormat(locale, { maximumFractionDigits: 8 }).format(quantity);
 }
 
 export function formatPercent(fraction: number | null | undefined, digits = 1): string {
