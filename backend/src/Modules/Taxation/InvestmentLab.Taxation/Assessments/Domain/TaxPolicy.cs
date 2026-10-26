@@ -37,6 +37,9 @@ public interface ITaxPolicy
 {
     string Code { get; }
     int Version { get; }
+
+    /// <summary>The country whose rules these are (ISO code); declaration forms pick their accounts by it.</summary>
+    string Jurisdiction { get; }
     bool IsTaxed { get; }
     string FxRule { get; }
     ILotMatcher LotMatcher { get; }
@@ -100,9 +103,11 @@ public sealed class BelkaTaxPolicy : ITaxPolicy
     public const string PolicyCode = "PL-BELKA";
 
     public string Code => PolicyCode;
+    public string Jurisdiction => TaxPolicies.Poland;
 
     // 2: dividends taxed on gross with credit for the tax withheld abroad (PIT-38 part G).
-    public int Version => 2;
+    // 3: the sale's fee is a cost, not taken off the revenue (PIT-38 poz. 22/23).
+    public int Version => 3;
     public bool IsTaxed => true;
     public string FxRule => "NBP, остання таблиця A перед днем угоди";
     public ILotMatcher LotMatcher { get; } = new FifoLotMatcher();
@@ -115,6 +120,7 @@ public sealed class BelkaTaxPolicy : ITaxPolicy
 public sealed class NoTaxPolicy(string code) : ITaxPolicy
 {
     public string Code => code;
+    public string Jurisdiction => TaxPolicies.Poland;
     public int Version => 1;
     public bool IsTaxed => false;
     public string FxRule => "NBP, остання таблиця A перед днем угоди";
@@ -126,6 +132,8 @@ public sealed class NoTaxPolicy(string code) : ITaxPolicy
 
 public static class TaxPolicies
 {
+    public const string Poland = "PL";
+
     public static ITaxPolicy For(string? code) => code?.ToUpperInvariant() switch
     {
         "PL-IKE" or "PL-IKZE" => new NoTaxPolicy(code.ToUpperInvariant()),

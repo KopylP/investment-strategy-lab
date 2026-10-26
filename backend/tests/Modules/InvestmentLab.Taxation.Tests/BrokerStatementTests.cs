@@ -91,7 +91,7 @@ public sealed class BrokerStatementTests
         var sale = computation.Year(2025)!.Realizations.ShouldHaveSingleItem();
         sale.UnmatchedQuantity.ShouldBe(0m);
         sale.Lots.ShouldHaveSingleItem().ShouldBe(new LotMatch(Guid.Empty, new(2025, 10, 8), 0.56779242m, 8.30m, FromBroker: true, Gross: 2.27m));
-        sale.CostPln.ShouldBe(8.30m);
+        sale.CostPln.ShouldBe(8.30m + 4.00m);             // the broker's lot + the sale's fee 1.09 × 3.67
         sale.BrokerGainPln.ShouldBe(1.09m);
         computation.Warnings.ShouldBeEmpty();
     }

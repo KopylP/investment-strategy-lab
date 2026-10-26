@@ -9,6 +9,9 @@ using InvestmentLab.Taxation.Assessments.Infrastructure;
 using InvestmentLab.Taxation.BrokerStatements.Domain;
 using InvestmentLab.Taxation.BrokerStatements.Infrastructure;
 using InvestmentLab.Taxation.Contracts;
+using InvestmentLab.Taxation.Declarations.Api;
+using InvestmentLab.Taxation.Declarations.Application;
+using InvestmentLab.Taxation.Declarations.Domain;
 using InvestmentLab.Taxation.Ledger.Domain;
 using InvestmentLab.Taxation.Ledger.Infrastructure;
 using InvestmentLab.Taxation.Shared.Infrastructure;
@@ -35,6 +38,9 @@ public sealed class TaxationModule : IModule
         services.AddScoped<TaxInputs>();
         services.AddScoped<TaxRecalculator>();
         services.AddScoped<TaxQueries>();
+        services.AddScoped<DeclarationQueries>();
+        // Optional returns, one per form; another country's form is one more line here.
+        services.AddSingleton<ITaxDeclarationForm, Pit38Form>();
         services.AddScoped<ITaxEstimator, TaxEstimator>();
         services.AddScoped<IBrokerStatementRepository, BrokerStatementRepository>();
         services.AddSingleton<IBrokerStatementParser, RevolutPnlPdfParser>();
@@ -44,5 +50,5 @@ public sealed class TaxationModule : IModule
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>
-        endpoints.MapGroup("/api/taxation").MapAssessments().MapBrokerStatements();
+        endpoints.MapGroup("/api/taxation").MapAssessments().MapBrokerStatements().MapDeclarations();
 }

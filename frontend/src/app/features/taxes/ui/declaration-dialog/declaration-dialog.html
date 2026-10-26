@@ -1,0 +1,64 @@
+<p-dialog [header]="declaration() ? declaration()!.form + ' за ' + declaration()!.year : 'Декларація'" [modal]="true" [visible]="visible()" (visibleChange)="!$event && closed.emit()"
+          [style]="{ width: '56rem' }" [breakpoints]="{ '768px': '100vw' }" [dismissableMask]="true" [draggable]="false">
+  @if (loading() && !declaration()) {
+    <p-skeleton height="20rem" />
+  } @else if (declaration(); as d) {
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+      <span class="text-sm text-muted-color">{{ d.title }} · подати з 15 лютого до {{ d.deadline | date }}</span>
+      <p-button label="Копіювати все" icon="pi pi-copy" size="small" severity="secondary" [outlined]="true" (onClick)="copyAll(d)" />
+    </div>
+
+    <p-message severity="secondary" styleClass="mb-3"
+      text="Чернетка для e-Urząd Skarbowy / Twój e-PIT. Звірте суми з PIT-8C і звітами брокерів; за спірних випадків — з податковим консультантом." />
+    @for (warning of warnings(); track $index) {
+      <p-message severity="warn" styleClass="mb-2" [text]="warning" />
+    }
+
+    <p-table [value]="d.accounts" size="small" styleClass="mb-4" [tableStyle]="{ 'min-width': '30rem' }">
+      <ng-template #header>
+        <tr><th>Рахунок</th><th>Як іде в декларацію</th><th class="text-right">Przychód</th><th class="text-right">Koszty</th><th class="text-right hidden sm:table-cell">Дивіденди брутто</th></tr>
+      </ng-template>
+      <ng-template #body let-a>
+        <tr>
+          <td><div class="font-medium">{{ a.name }}</div><div class="text-xs text-muted-color">{{ a.broker }}</div></td>
+          <td class="text-sm">{{ a.treatment }}</td>
+          <td class="text-right whitespace-nowrap">{{ a.revenue | money: 'PLN' }}</td>
+          <td class="text-right whitespace-nowrap">{{ a.costs | money: 'PLN' }}</td>
+          <td class="text-right whitespace-nowrap hidden sm:table-cell">{{ a.dividendsGross | money: 'PLN' }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    @for (section of d.sections; track section.code) {
+      <h3 class="text-base font-semibold mt-4 mb-2">{{ section.code }}. {{ section.title }}</h3>
+      <ng-container *ngTemplateOutlet="fields; context: { $implicit: section.fields }" />
+    }
+    @for (attachment of d.attachments; track attachment.title) {
+      <h3 class="text-base font-semibold mt-5 mb-2">{{ attachment.title }}</h3>
+      <ng-container *ngTemplateOutlet="fields; context: { $implicit: attachment.fields }" />
+    }
+
+    @if (d.notes.length) {
+      <h3 class="text-base font-semibold mt-5 mb-2">Що варто знати</h3>
+      <ul class="m-0 pl-5 text-sm flex flex-col gap-1">
+        @for (note of d.notes; track $index) { <li>{{ note }}</li> }
+      </ul>
+    }
+  }
+</p-dialog>
+
+<ng-template #fields let-fields>
+  <div class="flex flex-col">
+    @for (field of fields; track field.position) {
+      <div class="flex items-center gap-3 py-2 border-b border-surface-200 dark:border-surface-700">
+        <span class="w-14 shrink-0 text-sm text-muted-color">poz. {{ field.position }}</span>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm">{{ field.label }}</div>
+          @if (field.hint) { <div class="text-xs text-muted-color">{{ field.hint }}</div> }
+        </div>
+        <span class="font-semibold tabular-nums whitespace-nowrap" [class.text-muted-color]="field.amount === 0">{{ formValue(field) }}</span>
+        <p-button icon="pi pi-copy" [text]="true" [rounded]="true" size="small" severity="secondary" [ariaLabel]="'Копіювати poz. ' + field.position" (onClick)="copy(field)" />
+      </div>
+    }
+  </div>
+</ng-template>
