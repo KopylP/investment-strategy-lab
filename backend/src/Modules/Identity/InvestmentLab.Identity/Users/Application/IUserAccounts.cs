@@ -16,7 +16,8 @@ public interface IUserAccounts
     Task<CurrentUserDto?> FindAsync(UserId userId, CancellationToken cancellationToken);
 }
 
-public sealed record CurrentUserDto(Guid Id, string Email);
+/// <param name="ViaHomeAssistant">Signed in by the Home Assistant panel: there is nothing to sign out of.</param>
+public sealed record CurrentUserDto(Guid Id, string Email, bool ViaHomeAssistant = false);
 
 public static class UserErrors
 {

@@ -1,10 +1,13 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { DOCUMENT } from '@angular/common';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { ApiClient } from '../api/api-client';
 
 export interface CurrentUser {
   id: string;
   email: string;
+  /** Signed in by the Home Assistant panel: there is nothing to sign out of. */
+  viaHomeAssistant: boolean;
 }
 
 export interface UserProfile {
@@ -21,6 +24,9 @@ export class AuthStore {
 
   readonly user = this.userState.asReadonly();
   readonly isSignedIn = computed(() => !!this.userState());
+
+  /** Opened from Home Assistant's sidebar (its Ingress path is the page's base): signing in once links the account. */
+  readonly inHomeAssistantPanel = inject(DOCUMENT).baseURI.includes('/api/hassio_ingress/');
 
   /** Resolves once: null when nobody is signed in. */
   async ensureLoaded(): Promise<CurrentUser | null> {

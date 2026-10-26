@@ -78,8 +78,8 @@ export class AppTopbar {
       ...accountItems,
       { label: 'Профіль', icon: 'pi pi-user', command: () => void this.router.navigate(['/profile']) },
       ...themeItems,
-      { separator: true },
-      { label: 'Вийти', icon: 'pi pi-sign-out', command: () => void this.signOut() },
+      // In the Home Assistant panel Home Assistant signs the user in again at once.
+      ...(this.auth.user()?.viaHomeAssistant ? [] : [{ separator: true }, { label: 'Вийти', icon: 'pi pi-sign-out', command: () => void this.signOut() }]),
     ];
   });
 

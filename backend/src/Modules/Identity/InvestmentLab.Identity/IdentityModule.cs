@@ -1,5 +1,6 @@
 using InvestmentLab.BuildingBlocks.Modules;
 using InvestmentLab.BuildingBlocks.Persistence;
+using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Identity.Profiles.Api;
 using InvestmentLab.Identity.Profiles.Application;
 using InvestmentLab.Identity.Profiles.Application.GetProfile;
@@ -11,6 +12,7 @@ using InvestmentLab.Identity.Users.Application;
 using InvestmentLab.Identity.Users.Application.Login;
 using InvestmentLab.Identity.Users.Application.Register;
 using InvestmentLab.Identity.Users.Infrastructure;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -25,6 +27,7 @@ public sealed class IdentityModule : IModule
 {
     public const string Schema = IdentityDbContext.SchemaName;
     public const string CookieName = "investmentlab.auth";
+    private const string AuthenticationScheme = "InvestmentLab";
 
     public string Name => "Identity";
 
@@ -33,7 +36,12 @@ public sealed class IdentityModule : IModule
         builder.AddModuleDbContext<IdentityDbContext>(Schema);
 
         var services = builder.Services;
-        services.AddAuthentication(IdentityConstants.ApplicationScheme).AddIdentityCookies();
+        // The cookie, except in the Home Assistant panel, where Home Assistant has already said who the user is.
+        services.AddAuthentication(AuthenticationScheme)
+            .AddPolicyScheme(AuthenticationScheme, null, policy => policy.ForwardDefaultSelector = context =>
+                context.HomeAssistantUserId() is null ? IdentityConstants.ApplicationScheme : HomeAssistantAuthenticationHandler.SchemeName)
+            .AddScheme<AuthenticationSchemeOptions, HomeAssistantAuthenticationHandler>(HomeAssistantAuthenticationHandler.SchemeName, null)
+            .AddIdentityCookies();
         services.ConfigureApplicationCookie(cookie =>
         {
             // BFF: the Angular app is served from the same origin, so a strict, http-only cookie is enough.

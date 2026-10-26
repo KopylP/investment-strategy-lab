@@ -1,3 +1,4 @@
+using InvestmentLab.BuildingBlocks.Security;
 using Microsoft.AspNetCore.DataProtection;
 
 namespace InvestmentLab.Api.Hosting;
@@ -5,12 +6,10 @@ namespace InvestmentLab.Api.Hosting;
 /// <summary>
 /// Running without Aspire (the Home Assistant add-on, a VPS): the API serves the built Angular app from wwwroot, under
 /// a configurable path base (<c>InvestmentLab:PathBase</c>, e.g. <c>/investlab</c>) or the path Home Assistant Ingress
-/// announces in <c>X-Ingress-Path</c>; cookie keys live in <c>InvestmentLab:DataDirectory</c> so sign-ins survive restarts.
+/// announces in <c>X-Ingress-Path</c> (only when the Supervisor sends it); cookie keys live in <c>InvestmentLab:DataDirectory</c> so sign-ins survive restarts.
 /// </summary>
 public static class SelfHosting
 {
-    private const string IngressHeader = "X-Ingress-Path";
-
     public static void AddSelfHosting(this WebApplicationBuilder builder)
     {
         if (builder.Configuration["InvestmentLab:DataDirectory"] is { Length: > 0 } dataDirectory)
@@ -28,7 +27,7 @@ public static class SelfHosting
             // "http://homeassistant.local:8099/" lands on the app instead of a 404.
             app.Use((context, next) =>
             {
-                if (context.Request.Path == "/" && !context.Request.Headers.ContainsKey(IngressHeader))
+                if (context.Request.Path == "/" && !context.IsFromHomeAssistantIngress())
                 {
                     context.Response.Redirect($"{pathBase}/");
                     return Task.CompletedTask;
@@ -41,7 +40,7 @@ public static class SelfHosting
         // Home Assistant Ingress strips its prefix and tells it in a header; links must keep it.
         app.Use((context, next) =>
         {
-            if (context.Request.Headers[IngressHeader].ToString() is { Length: > 1 } ingress)
+            if (context.Request.Headers[HomeAssistantIngress.PathHeader].ToString() is { Length: > 1 } ingress && context.IsFromHomeAssistantIngress())
                 context.Request.PathBase = new PathString(ingress.TrimEnd('/')) + context.Request.PathBase;
             return next(context);
         });
