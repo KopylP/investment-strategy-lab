@@ -110,6 +110,8 @@ export class OverviewStore {
   });
 
   readonly tax = computed(() => (this.taxResource.hasValue() ? this.taxResource.value() : undefined));
+  /** Why the tax could not be computed (shown instead of the chart, never hidden). */
+  readonly taxError = computed(() => (this.taxResource.error() ? toProblemMessage(this.taxResource.error()) : null));
   readonly allAccountsValuePln = computed(() => (this.totalResource.hasValue() ? (this.totalResource.value()?.value ?? null) : null));
   /** The threshold in PLN and where the tax stands against it. */
   readonly taxAlert = computed(() => {
