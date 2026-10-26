@@ -1,5 +1,9 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, effect, inject, input, untracked, viewChild } from '@angular/core';
 import Chart, { type ChartConfiguration } from 'chart.js/auto';
+import { tapAwayTooltip } from './tap-away-tooltip';
+
+// Every chart of the app, p-chart's too: they share the one Chart.js registry.
+Chart.register(tapAwayTooltip);
 
 /**
  * A Chart.js chart created once and updated in place: new data or options swap into the same canvas, so changing a
