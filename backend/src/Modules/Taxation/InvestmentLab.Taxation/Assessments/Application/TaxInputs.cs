@@ -21,6 +21,10 @@ public interface IAssessmentRepository
 
     void RemoveLoss(LossCarryforward loss);
 
+    Task<TaxSettings?> SettingsAsync(UserId ownerId, CancellationToken cancellationToken);
+
+    void AddSettings(TaxSettings settings);
+
     void Publish<TEvent>(TEvent integrationEvent, DateTimeOffset occurredAt) where TEvent : class;
 
     /// <summary>

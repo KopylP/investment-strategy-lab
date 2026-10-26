@@ -87,6 +87,9 @@ public sealed record TaxYearSummary(
     decimal TaxDue,
     decimal LossToCarry);
 
+/// <summary>The year's tax as it stood at the end of <paramref name="Date"/>, PLN.</summary>
+public sealed record TaxTimelinePoint(DateOnly Date, decimal Gain, decimal DividendIncome, decimal TaxDue);
+
 public sealed record TaxYearResult(
     TaxYearSummary Summary,
     IReadOnlyList<Realization> Realizations,
@@ -176,6 +179,21 @@ public static class TaxCalculator
         }
 
         return new TaxComputation(results, [.. lots.Values.SelectMany(list => list).Select(lot => lot.Snapshot())], warnings);
+    }
+
+    /// <summary>
+    /// How the tax of <paramref name="year"/> grew: the year as it stood after each day with a sale or a dividend
+    /// (netting, carried losses and rounding as on that day), oldest first.
+    /// </summary>
+    public static IReadOnlyList<TaxTimelinePoint> Timeline(IReadOnlyList<TaxEvent> events, ITaxPolicy policy, IReadOnlyList<LossYear> earlierLosses, int year)
+    {
+        var days = events.Where(e => e.OccurredOn.Year == year && e.Kind is TaxableKind.Sell or TaxableKind.Dividend)
+            .Select(e => e.OccurredOn).Distinct().Order();
+        return [.. days.Select(day =>
+        {
+            var summary = Compute([.. events.Where(e => e.OccurredOn <= day)], policy, earlierLosses).Year(year)?.Summary;
+            return new TaxTimelinePoint(day, summary?.Gain ?? 0m, summary?.DividendIncome ?? 0m, summary?.TaxDue ?? 0m);
+        })];
     }
 
     private static Realization Sell(TaxEvent sale, List<OpenLot> lots, ITaxPolicy policy, List<string> warnings)

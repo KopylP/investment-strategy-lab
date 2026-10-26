@@ -4,7 +4,9 @@ using InvestmentLab.Taxation.Contracts;
 namespace InvestmentLab.Taxation.Assessments.Application;
 
 /// <param name="Computation">The whole computation (open lots included), so readers need not repeat it.</param>
-public sealed record RecomputeOutcome(IReadOnlyList<int> ChangedYears, IReadOnlyList<string> Warnings, Taxpayer Taxpayer, TaxComputation Computation);
+/// <param name="Events">Its input, for readers that replay part of it (the year's timeline).</param>
+public sealed record RecomputeOutcome(
+    IReadOnlyList<int> ChangedYears, IReadOnlyList<string> Warnings, Taxpayer Taxpayer, TaxComputation Computation, IReadOnlyList<TaxEvent> Events, IReadOnlyList<LossYear> Losses);
 
 /// <summary>
 /// Rebuilds every tax year of a taxpayer from the ledgers of all their taxed accounts (§6.7 RecomputeAssessment): one
@@ -57,6 +59,6 @@ public sealed class TaxRecalculator(TaxInputs inputs, IAssessmentRepository asse
         List<string> warnings = [.. computation.Warnings];
         if (missing.Count > 0)
             warnings.Insert(0, $"Немає курсу NBP для {missing.Count} операцій ({string.Join(", ", missing.Take(5))}…): вони не враховані. Оновіть курси NBP.");
-        return new RecomputeOutcome(changed, warnings, taxpayer, computation);
+        return new RecomputeOutcome(changed, warnings, taxpayer, computation, events, losses);
     }
 }

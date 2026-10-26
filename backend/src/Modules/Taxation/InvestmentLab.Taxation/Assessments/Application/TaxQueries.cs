@@ -26,6 +26,12 @@ public sealed record TaxYearDetailsDto(
     IReadOnlyList<TaxAccountDto> Accounts,
     IReadOnlyList<string> Warnings);
 
+/// <param name="Points">The year after each day with a sale or a dividend, oldest first.</param>
+public sealed record TaxTimelineDto(int Year, IReadOnlyList<TaxTimelinePoint> Points);
+
+/// <param name="AlertShare">Warn when this year's tax exceeds this share (0..1) of all accounts' value; null — off.</param>
+public sealed record TaxSettingsDto(decimal? AlertShare);
+
 public sealed record LossCarryforwardDto(Guid Id, int Year, decimal Amount, decimal AlreadyUsed);
 
 public sealed record RecordLossCommand(int Year, decimal Amount, decimal AlreadyUsed = 0m);
@@ -66,6 +72,31 @@ public sealed class TaxQueries(TaxRecalculator recalculator, IAssessmentReposito
 
         return new TaxYearDetailsDto(year, assessment.PolicyCode, outcome.Taxpayer.Policy.FxRule, assessment.ComputedAt, assessment.Summary, assessment.Realizations,
             assessment.Dividends, assessment.CarryforwardUses, openLots, labels, AccountsOf(outcome.Taxpayer), outcome.Warnings);
+    }
+
+    public async Task<TaxTimelineDto> Timeline(int year, CancellationToken cancellationToken)
+    {
+        var outcome = await recalculator.RecomputeOwnerAsync(currentUser.RequiredId, cancellationToken);
+        return new TaxTimelineDto(year, TaxCalculator.Timeline(outcome.Events, outcome.Taxpayer.Policy, outcome.Losses, year));
+    }
+
+    public async Task<TaxSettingsDto> Settings(CancellationToken cancellationToken) =>
+        new((await assessments.SettingsAsync(currentUser.RequiredId, cancellationToken))?.AlertShare);
+
+    public async Task<Result<TaxSettingsDto>> ChangeSettings(TaxSettingsDto command, CancellationToken cancellationToken)
+    {
+        var owner = currentUser.RequiredId;
+        var settings = await assessments.SettingsAsync(owner, cancellationToken);
+        if (settings is null)
+        {
+            settings = TaxSettings.For(owner);
+            assessments.AddSettings(settings);
+        }
+        var changed = settings.Change(command.AlertShare);
+        if (changed.IsFailure)
+            return changed.Error;
+        await assessments.SaveChangesAsync(cancellationToken);
+        return new TaxSettingsDto(settings.AlertShare);
     }
 
     public async Task<IReadOnlyList<LossCarryforwardDto>> Losses(CancellationToken cancellationToken) =>

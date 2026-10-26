@@ -108,6 +108,25 @@ public sealed class TaxCalculatorTests
     }
 
     [Fact]
+    public void The_timeline_shows_the_tax_after_each_taxable_day_and_a_later_loss_takes_it_back()
+    {
+        var events = new List<TaxEvent>
+        {
+            Buy("2025-01-10", 10m, 100m, 0m, 4m),
+            Buy("2025-01-10", 10m, 100m, 0m, 4m, Other),
+            Sell("2025-03-10", 5m, 150m, 0m, 4m),            // gain 1000 → 190
+            Sell("2025-05-10", 5m, 200m, 0m, 4m),            // gain 2000 more → 3000 → 570
+        };
+        events.Add(new TaxEvent(Guid.NewGuid(), DateOnly.Parse("2025-08-10"), _sequence++, TaxableKind.Sell, Other, 10m, 50m, 0m, 500m, [new(Eu, 10m)], 4m, null));  // loss 2000
+
+        var timeline = TaxCalculator.Timeline(events, Belka, [], 2025);
+
+        timeline.Select(point => point.Date.ToString("MM-dd")).ShouldBe(["03-10", "05-10", "08-10"]);
+        timeline.Select(point => point.TaxDue).ShouldBe([190m, 570m, 190m]);
+        timeline[^1].TaxDue.ShouldBe(TaxCalculator.Compute(events, Belka, []).Year(2025)!.Summary.TaxDue);
+    }
+
+    [Fact]
     public void Selling_more_than_bought_warns_and_ike_is_not_taxed()
     {
         var computation = TaxCalculator.Compute([Sell("2025-06-10", 5m, 100m, 0m, 4m)], new NoTaxPolicy("PL-IKE"), []);
