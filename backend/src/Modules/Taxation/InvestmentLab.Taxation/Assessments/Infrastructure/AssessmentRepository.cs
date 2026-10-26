@@ -13,6 +13,11 @@ internal sealed class AssessmentRepository(TaxationDbContext db) : IAssessmentRe
     public async Task<IReadOnlyList<LossCarryforward>> LossesAsync(UserId ownerId, CancellationToken cancellationToken) =>
         await db.Losses.Where(loss => loss.OwnerId == ownerId).ToListAsync(cancellationToken);
 
+    public Task<TaxSettings?> SettingsAsync(UserId ownerId, CancellationToken cancellationToken) =>
+        db.Settings.SingleOrDefaultAsync(settings => settings.OwnerId == ownerId, cancellationToken);
+
+    public void AddSettings(TaxSettings settings) => db.Settings.Add(settings);
+
     public void Add(TaxAssessment assessment) => db.Assessments.Add(assessment);
 
     public void AddLoss(LossCarryforward loss) => db.Losses.Add(loss);

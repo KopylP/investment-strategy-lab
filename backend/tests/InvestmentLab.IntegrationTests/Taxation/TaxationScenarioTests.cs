@@ -51,6 +51,14 @@ public sealed class TaxationScenarioTests(MarketDataApiFactory factory) : IClass
         assessed.Summary.TaxBase.ShouldBe(1060m);
         realization.Attributions.ShouldHaveSingleItem().SubPortfolioId.ShouldBe(sleeve);
 
+        // How the year grew: after the first account's gain (283) and after the second account's loss (201).
+        var timeline = await client.GetFromJsonAsync<TaxTimelineDto>($"/api/taxation/years/{year}/timeline", ct);
+        timeline!.Points.Select(point => point.TaxDue).ShouldBe([283m, 201m]);
+
+        (await client.PutAsJsonAsync("/api/taxation/settings", new TaxSettingsDto(0.02m), ct)).EnsureSuccessStatusCode();
+        (await client.GetFromJsonAsync<TaxSettingsDto>("/api/taxation/settings", ct))!.AlertShare.ShouldBe(0.02m);
+        (await client.PutAsJsonAsync("/api/taxation/settings", new TaxSettingsDto(1.5m), ct)).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+
         (await client.PostAsJsonAsync($"/api/portfolio/accounts/{account.Id}/transactions/{sale}/reverse", new { reason = "помилка" }, ct)).EnsureSuccessStatusCode();
         var reversed = await EventuallyAsync(client, year, details => details.Realizations.Count == 1, ct);
         reversed.Summary.TaxDue.ShouldBe(0m);
@@ -59,6 +67,7 @@ public sealed class TaxationScenarioTests(MarketDataApiFactory factory) : IClass
         var stranger = await factory.CreateSignedInClientAsync(ct);
         (await stranger.GetFromJsonAsync<TaxOverviewDto>("/api/taxation/years", ct))!.Years.ShouldBeEmpty();
         (await stranger.GetAsync($"/api/taxation/years/{year}", ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await stranger.GetFromJsonAsync<TaxSettingsDto>("/api/taxation/settings", ct))!.AlertShare.ShouldBeNull();
     }
 
     private static async Task<Guid> TradeAsync(

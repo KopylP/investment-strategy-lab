@@ -17,6 +17,12 @@ internal static class TaxEndpoints
             .WithName("GetTaxYears");
         taxes.MapGet("/years/{year:int}", async (int year, TaxQueries queries, CancellationToken ct) => (await queries.Year(year, ct)).ToHttpResult())
             .WithName("GetTaxYear");
+        taxes.MapGet("/years/{year:int}/timeline", async (int year, TaxQueries queries, CancellationToken ct) => TypedResults.Ok(await queries.Timeline(year, ct)))
+            .WithName("GetTaxTimeline");
+        taxes.MapGet("/settings", async (TaxQueries queries, CancellationToken ct) => TypedResults.Ok(await queries.Settings(ct)))
+            .WithName("GetTaxSettings");
+        taxes.MapPut("/settings", async (TaxSettingsDto body, TaxQueries queries, CancellationToken ct) => (await queries.ChangeSettings(body, ct)).ToHttpResult())
+            .WithName("ChangeTaxSettings");
         taxes.MapGet("/losses", async (TaxQueries queries, CancellationToken ct) => TypedResults.Ok(await queries.Losses(ct)))
             .WithName("GetLossCarryforwards");
         taxes.MapPost("/losses", async (RecordLossCommand body, TaxQueries queries, CancellationToken ct) => (await queries.RecordLoss(body, ct)).ToHttpResult())
