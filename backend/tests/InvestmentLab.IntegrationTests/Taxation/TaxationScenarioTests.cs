@@ -4,6 +4,8 @@ using InvestmentLab.IntegrationTests.MarketData;
 using InvestmentLab.IntegrationTests.Portfolio;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Taxation.Assessments.Application;
+using InvestmentLab.Taxation.Declarations.Application;
+using InvestmentLab.Taxation.Declarations.Domain;
 
 namespace InvestmentLab.IntegrationTests.Taxation;
 
@@ -30,15 +32,23 @@ public sealed class TaxationScenarioTests(MarketDataApiFactory factory) : IClass
         var sale = await TradeAsync(client, account, etf, "Sell", 15m, 130m, 2m, new DateOnly(year, 6, 10), sleeve, ct);
 
         // The fake NBP table A has EUR at 4.30 every business day.
-        // Proceeds 1950 × 4.30 − 2 × 4.30 = 8376.40; cost 4304.30 + half of 5164.30 = 6886.45; gain 1489.95 → base 1490 → 19% = 283.10 → 283.
+        // Proceeds 1950 × 4.30 = 8385.00; cost 4304.30 + half of 5164.30 + fee 2 × 4.30 = 6895.05; gain 1489.95 → base 1490 → 19% = 283.10 → 283.
         var assessed = await EventuallyAsync(client, account.Id, year, details => details.Summary.TaxDue == 283m, ct);
         var realization = assessed.Realizations.ShouldHaveSingleItem();
-        realization.ProceedsPln.ShouldBe(8376.40m);
-        realization.CostPln.ShouldBe(6886.45m);
+        realization.ProceedsPln.ShouldBe(8385.00m);
+        realization.CostPln.ShouldBe(6895.05m);
         realization.FxRate.ShouldBe(4.30m);
         realization.FxRateDate.ShouldNotBeNull().ShouldBeLessThan(new DateOnly(year, 6, 10));
         assessed.Summary.TaxBase.ShouldBe(1490m);
         realization.Attributions.ShouldHaveSingleItem().SubPortfolioId.ShouldBe(sleeve);
+
+        // PIT-38 of the person: an XTB account goes to row 1 (PIT-8C).
+        (await client.GetFromJsonAsync<List<DeclarationFormDto>>($"/api/taxation/declarations/{year}", ct))!.ShouldHaveSingleItem().Code.ShouldBe("PIT-38");
+        var pit38 = (await client.GetFromJsonAsync<DeclarationRow>($"/api/taxation/declarations/{year}/pit-38", ct))!.Declaration;
+        var fields = pit38.Sections.SelectMany(section => section.Fields).ToDictionary(field => field.Position, field => field.Amount);
+        (fields[20], fields[21], fields[22]).ShouldBe((8385.00m, 6895.05m, 0m));
+        (fields[31], fields[35], fields[51]).ShouldBe((1490m, 283m, 283m));
+        (await client.GetAsync($"/api/taxation/declarations/{year - 5}/pit-38", ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
 
         (await client.PostAsJsonAsync($"/api/portfolio/accounts/{account.Id}/transactions/{sale}/reverse", new { reason = "помилка" }, ct)).EnsureSuccessStatusCode();
         var reversed = await EventuallyAsync(client, account.Id, year, details => details.Realizations.Count == 0, ct);
@@ -74,6 +84,8 @@ public sealed class TaxationScenarioTests(MarketDataApiFactory factory) : IClass
     }
 
     private sealed record InstrumentRow(Guid Id, string Kind);
+
+    private sealed record DeclarationRow(TaxDeclaration Declaration);
 
     private sealed record RecordedRow(Guid TransactionId);
 }

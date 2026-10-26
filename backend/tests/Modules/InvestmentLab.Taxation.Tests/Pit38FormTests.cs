@@ -1,0 +1,340 @@
+using InvestmentLab.Taxation.Assessments.Domain;
+using InvestmentLab.Taxation.Declarations.Domain;
+
+namespace InvestmentLab.Taxation.Tests;
+
+/// <summary>PIT-38(18) as the Ministry's brochure for 2025 fills it; the positions are the form's "poz." numbers.</summary>
+public sealed class Pit38FormTests
+{
+    private static readonly Guid Apple = Guid.NewGuid(), Vwce = Guid.NewGuid(), Orlen = Guid.NewGuid(), Asml = Guid.NewGuid(), NoIsin = Guid.NewGuid();
+    private static readonly Pit38Form Form = new();
+    private static readonly ITaxPolicy Belka = new BelkaTaxPolicy(), Ike = TaxPolicies.For("PL-IKE");
+
+    private static TaxYearSummary Year(int year, decimal revenue, decimal costs, decimal dividends = 0m, decimal credit = 0m) =>
+        new(year, revenue, costs, revenue - costs, 0m, 0m, 0m, dividends, 0m, 0m, 0m, credit);
+
+    private static Realization Sale(Guid instrument, decimal gain) =>
+        new(Guid.NewGuid(), new DateOnly(2025, 6, 1), instrument, 1m, 0m, 0m, gain, 4m, null, [], [], 0m);
+
+    private static DividendIncome Paid(decimal gross, decimal withheld) =>
+        new(Guid.NewGuid(), new DateOnly(2025, 5, 1), Apple, gross - withheld, gross - withheld, 1m, GrossPln: gross, WithheldPln: withheld);
+
+    private static DeclarationAccount Account(string broker, IReadOnlyList<TaxYearSummary> years, IReadOnlyList<Realization>? sales = null,
+        IReadOnlyList<DividendIncome>? dividends = null, ITaxPolicy? policy = null) =>
+        new($"{broker} EUR", broker, policy ?? Belka, years, sales ?? [], dividends ?? []);
+
+    private static string? Country(Guid id) =>
+        id == Apple ? "US" : id == Vwce ? "IE" : id == Orlen ? "PL" : id == Asml ? "NL" : null;
+
+    private static TaxDeclaration Fill(params DeclarationAccount[] accounts) => Fill(2025, [], accounts);
+
+    private static TaxDeclaration Fill(int year, IReadOnlyList<LossYear> losses, params DeclarationAccount[] accounts) =>
+        Form.Fill(new DeclarationInput(year, accounts, losses, Country));
+
+    private static decimal? Poz(TaxDeclaration declaration, int position) =>
+        declaration.Sections.SelectMany(section => section.Fields).Single(field => field.Position == position).Amount;
+
+    // Part C: rows and netting
+
+    [Fact]
+    public void Brokers_with_PIT_8C_go_to_row_1_others_to_row_2_and_their_gains_and_losses_net()
+    {
+        var declaration = Fill(
+            Account("XTB", [Year(2025, 5000m, 5400m)]),
+            Account("Revolut", [Year(2025, 10000m, 9000m)]));
+
+        (Poz(declaration, 20), Poz(declaration, 21)).ShouldBe((5000m, 5400m));
+        (Poz(declaration, 22), Poz(declaration, 23)).ShouldBe((10000m, 9000m));
+        (Poz(declaration, 24), Poz(declaration, 25)).ShouldBe((0m, 0m));
+        (Poz(declaration, 26), Poz(declaration, 27)).ShouldBe((15000m, 14400m));
+        (Poz(declaration, 28), Poz(declaration, 29)).ShouldBe((600m, 0m));
+        Poz(declaration, 31).ShouldBe(600m);
+        Poz(declaration, 32).ShouldBe(19m);
+        Poz(declaration, 33).ShouldBe(114.00m);
+        Poz(declaration, 34).ShouldBe(0m);
+        Poz(declaration, 35).ShouldBe(114m);
+        Poz(declaration, 51).ShouldBe(114m);
+        Poz(declaration, 52).ShouldBe(0m);
+    }
+
+    [Fact]
+    public void Several_foreign_brokers_add_up_in_row_2()
+    {
+        var declaration = Fill(Account("Revolut", [Year(2025, 1000m, 800m)]), Account("Interactive Brokers", [Year(2025, 3000m, 2500m)]));
+
+        (Poz(declaration, 20), Poz(declaration, 21)).ShouldBe((0m, 0m));
+        (Poz(declaration, 22), Poz(declaration, 23)).ShouldBe((4000m, 3300m));
+        Poz(declaration, 28).ShouldBe(700m);
+    }
+
+    [Fact]
+    public void A_year_with_a_loss_shows_it_in_poz_29_leaves_part_D_at_zero_and_says_to_file_anyway()
+    {
+        var declaration = Fill(Account("Revolut", [Year(2025, 1000m, 1500m)]));
+
+        (Poz(declaration, 28), Poz(declaration, 29)).ShouldBe((0m, 500m));
+        Poz(declaration, 30).ShouldBe(0m);
+        Poz(declaration, 31).ShouldBe(0m);
+        Poz(declaration, 35).ShouldBe(0m);
+        declaration.Notes.ShouldContain(note => note.Contains("збиток"));
+    }
+
+    [Theory]
+    [InlineData("600.49", 600, "114.00", 114)]
+    [InlineData("600.50", 601, "114.19", 114)]
+    [InlineData("602.50", 603, "114.57", 115)]
+    public void The_base_is_whole_zloty_the_tax_has_grosze_and_the_tax_due_is_whole_zloty_half_rounding_up(string gain, int p31, string p33, int p35)
+    {
+        var declaration = Fill(Account("Revolut", [Year(2025, 1000m + Parse(gain), 1000m)]));
+
+        Poz(declaration, 31).ShouldBe(p31);
+        Poz(declaration, 33).ShouldBe(Parse(p33));
+        Poz(declaration, 35).ShouldBe(p35);
+    }
+
+    // Part D: losses of earlier years
+
+    [Fact]
+    public void Earlier_losses_are_the_persons_netted_across_accounts_and_deducted_at_most_half_a_year()
+    {
+        // 2024: one account lost 1000, the other gained 200 — the person lost 800, so 2025 may deduct 400, not 500.
+        var declaration = Fill(
+            Account("Revolut", [Year(2024, 1000m, 2000m), Year(2025, 3000m, 1000m)]),
+            Account("Trading 212", [Year(2024, 700m, 500m)]));
+
+        Poz(declaration, 28).ShouldBe(2000m);
+        Poz(declaration, 30).ShouldBe(400m);
+        Poz(declaration, 31).ShouldBe(1600m);
+        Poz(declaration, 35).ShouldBe(304m);
+    }
+
+    [Fact]
+    public void A_loss_of_one_account_in_a_year_another_account_gained_more_is_no_loss_to_carry()
+    {
+        var declaration = Fill(
+            Account("Revolut", [Year(2024, 0m, 1000m), Year(2025, 1000m, 0m)]),
+            Account("Trading 212", [Year(2024, 1500m, 0m)]));
+
+        Poz(declaration, 30).ShouldBe(0m);
+        Poz(declaration, 31).ShouldBe(1000m);
+    }
+
+    [Fact]
+    public void Losses_entered_by_the_user_count_with_what_was_already_used_and_expire_after_five_years()
+    {
+        var declaration = Fill(2025, [new LossYear(2019, 5000m), new LossYear(2022, 3000m, AlreadyUsed: 2000m)], Account("Revolut", [Year(2025, 5000m, 1000m)]));
+
+        Poz(declaration, 30).ShouldBe(1000m);   // 2019 expired; 2022 has 1000 left (under its half, 1500)
+        Poz(declaration, 31).ShouldBe(3000m);
+    }
+
+    [Fact]
+    public void A_loss_is_usable_in_its_fifth_year_and_older_losses_go_first()
+    {
+        var declaration = Fill(2025, [new LossYear(2020, 1000m), new LossYear(2023, 1000m)], Account("Revolut", [Year(2025, 700m, 100m)]));
+
+        Poz(declaration, 30).ShouldBe(600m);   // 500 of 2020 (its last year), 100 of 2023
+        Poz(declaration, 31).ShouldBe(0m);
+    }
+
+    [Fact]
+    public void The_deduction_never_exceeds_the_years_income()
+    {
+        var declaration = Fill(Account("Revolut", [Year(2024, 0m, 10000m), Year(2025, 1000m, 0m)]));
+
+        Poz(declaration, 30).ShouldBe(1000m);
+        Poz(declaration, 31).ShouldBe(0m);
+        Poz(declaration, 35).ShouldBe(0m);
+    }
+
+    [Fact]
+    public void What_earlier_years_deducted_is_no_longer_there()
+    {
+        // 2022 loss 1000: 2023 takes 300 (its whole gain), 2024 takes 500 (the half), 2025 the last 200.
+        var declaration = Fill(Account("Revolut", [Year(2022, 0m, 1000m), Year(2023, 300m, 0m), Year(2024, 1000m, 0m), Year(2025, 1000m, 0m)]));
+
+        Poz(declaration, 30).ShouldBe(200m);
+        Poz(declaration, 31).ShouldBe(800m);
+    }
+
+    [Fact]
+    public void A_later_years_loss_does_not_reduce_an_earlier_year()
+    {
+        var declaration = Fill(Account("Revolut", [Year(2025, 1000m, 0m), Year(2026, 0m, 5000m)]));
+
+        Poz(declaration, 30).ShouldBe(0m);
+        Poz(declaration, 31).ShouldBe(1000m);
+    }
+
+    // Part G: foreign dividends
+
+    [Fact]
+    public void Foreign_dividends_are_taxed_in_part_G_less_the_tax_withheld_abroad_but_not_those_of_a_Polish_payer()
+    {
+        var declaration = Fill(
+            Account("Revolut", [Year(2025, 0m, 0m, dividends: 1000m, credit: 150m)]),
+            Account("XTB", [Year(2025, 0m, 0m, dividends: 5000m, credit: 750m)]));
+
+        Poz(declaration, 46).ShouldBe(0m);
+        Poz(declaration, 47).ShouldBe(190.00m);
+        Poz(declaration, 48).ShouldBe(150m);
+        Poz(declaration, 49).ShouldBe(40m);
+        Poz(declaration, 51).ShouldBe(40m);
+    }
+
+    [Fact]
+    public void Poz_47_keeps_grosze_and_poz_49_is_whole_zloty()
+    {
+        // 1002.63 × 19% = 190.4997 → 190.50; less 150.25 = 40.25 → 40.
+        var declaration = Fill(Account("Revolut", [Year(2025, 0m, 0m, dividends: 1002.63m, credit: 150.25m)]));
+
+        Poz(declaration, 47).ShouldBe(190.50m);
+        Poz(declaration, 48).ShouldBe(150.25m);
+        Poz(declaration, 49).ShouldBe(40m);
+    }
+
+    [Fact]
+    public void A_dividend_nothing_was_withheld_from_is_taxed_in_full()
+    {
+        var declaration = Fill(Account("Revolut", [Year(2025, 0m, 0m, dividends: 500m)]));
+
+        Poz(declaration, 47).ShouldBe(95m);
+        Poz(declaration, 48).ShouldBe(0m);
+        Poz(declaration, 49).ShouldBe(95m);
+    }
+
+    [Fact]
+    public void A_capital_loss_does_not_reduce_the_dividend_tax()
+    {
+        var declaration = Fill(Account("Revolut", [Year(2025, 1000m, 3000m, dividends: 1000m, credit: 150m)]));
+
+        Poz(declaration, 35).ShouldBe(0m);
+        Poz(declaration, 49).ShouldBe(40m);
+        Poz(declaration, 51).ShouldBe(40m);
+    }
+
+    [Fact]
+    public void Tax_withheld_over_the_treaty_rate_is_credited_up_to_19_percent_with_the_tax_offices_reading_in_a_note()
+    {
+        // 30% withheld (no W-8BEN): the courts credit up to 19%, KIS only the treaty's 15%.
+        var declaration = Fill(Account("Revolut", [Year(2025, 0m, 0m, dividends: 1000m, credit: 190m)], dividends: [Paid(1000m, 300m)]));
+
+        Poz(declaration, 48).ShouldBe(190m);
+        Poz(declaration, 49).ShouldBe(0m);
+        declaration.Notes.ShouldContain(note => note.Contains("poz. 49 = 40 zł"));
+    }
+
+    [Fact]
+    public void Tax_withheld_at_the_treaty_rate_needs_no_note()
+    {
+        var declaration = Fill(Account("Revolut", [Year(2025, 0m, 0m, dividends: 1000m, credit: 150m)], dividends: [Paid(1000m, 150m)]));
+
+        declaration.Notes.ShouldNotContain(note => note.Contains("KIS"));
+    }
+
+    // PIT/ZG and the attachment count
+
+    [Fact]
+    public void PIT_ZG_is_one_per_country_of_the_instruments_sold_with_a_net_gain_in_country_order()
+    {
+        var declaration = Fill(Account("Revolut", [Year(2025, 5000m, 3000m)],
+            sales: [Sale(Apple, 1000m), Sale(Apple, -100m), Sale(Vwce, -100m), Sale(Asml, 300m)]));
+
+        declaration.Attachments.Select(attachment => attachment.Fields.Single(field => field.Position == 7).Text).ShouldBe(["NL", "US"]);
+        var us = declaration.Attachments.Single(attachment => attachment.Title.Contains("Stany Zjednoczone"));
+        us.Fields.Single(field => field.Position == 6).Text.ShouldBe("Stany Zjednoczone Ameryki");
+        us.Fields.Single(field => field.Position == 29).Amount.ShouldBe(900m);
+        us.Fields.Single(field => field.Position == 30).Amount.ShouldBe(0m);
+        Poz(declaration, 72).ShouldBe(2m);
+    }
+
+    [Fact]
+    public void Polish_papers_and_sales_reported_on_PIT_8C_need_no_PIT_ZG()
+    {
+        var declaration = Fill(
+            Account("Revolut", [Year(2025, 2000m, 1000m)], sales: [Sale(Orlen, 1000m)]),
+            Account("XTB", [Year(2025, 2000m, 1000m)], sales: [Sale(Apple, 1000m)]));
+
+        declaration.Attachments.ShouldBeEmpty();
+        Poz(declaration, 72).ShouldBe(0m);
+    }
+
+    [Fact]
+    public void A_sale_without_an_isin_is_named_in_a_note()
+    {
+        var declaration = Fill(Account("Revolut", [Year(2025, 2000m, 1000m)], sales: [Sale(NoIsin, 1000m)]));
+
+        declaration.Attachments.ShouldBeEmpty();
+        declaration.Notes.ShouldContain(note => note.Contains("без ISIN"));
+    }
+
+    // Accounts, form and notes
+
+    [Fact]
+    public void IKE_accounts_are_left_out_and_named()
+    {
+        var declaration = Fill(Account("Revolut", [Year(2025, 2000m, 1000m)]), Account("XTB", [Year(2025, 9000m, 1000m, dividends: 500m)], policy: Ike));
+
+        Poz(declaration, 26).ShouldBe(2000m);
+        Poz(declaration, 47).ShouldBe(0m);
+        declaration.Accounts.Single(account => account.Broker == "XTB").Treatment.ShouldBe("Не оподатковується");
+        declaration.Notes.ShouldContain(note => note.Contains("XTB EUR") && note.Contains("IKE"));
+    }
+
+    [Fact]
+    public void Every_account_is_listed_with_how_it_is_declared_even_without_events_in_the_year()
+    {
+        var declaration = Fill(Account("Revolut", [Year(2025, 2000m, 1000m)]), Account("XTB", [Year(2024, 100m, 50m)]));
+
+        declaration.Accounts.Select(account => (account.Broker, account.Treatment, account.Revenue))
+            .ShouldBe([("Revolut", "Рядок 2 · дивіденди в G", 2000m), ("XTB", "Рядок 1 (PIT-8C)", 0m)]);
+    }
+
+    [Fact]
+    public void The_return_is_due_on_30_April_of_the_next_year()
+    {
+        var declaration = Fill(Account("Revolut", [Year(2025, 2000m, 1000m)]));
+
+        declaration.Form.ShouldBe("PIT-38");
+        declaration.Deadline.ShouldBe(new DateOnly(2026, 4, 30));
+    }
+
+    [Fact]
+    public void Notes_point_at_PIT_8C_the_one_time_deduction_and_a_form_not_yet_published()
+    {
+        var declaration = Fill(2026, [new LossYear(2024, 1000m)], Account("XTB", [Year(2026, 2000m, 1000m)]));
+
+        declaration.Notes.ShouldContain(note => note.Contains("PIT-8C"));
+        declaration.Notes.ShouldContain(note => note.Contains("5 000 000"));
+        declaration.Notes.ShouldContain(note => note.Contains("2026"));
+    }
+
+    [Fact]
+    public void Without_PIT_8C_brokers_or_deducted_losses_those_notes_are_absent()
+    {
+        var declaration = Fill(Account("Revolut", [Year(2025, 2000m, 1000m)]));
+
+        declaration.Notes.ShouldNotContain(note => note.Contains("PIT-8C"));
+        declaration.Notes.ShouldNotContain(note => note.Contains("5 000 000"));
+    }
+
+    [Fact]
+    public void The_form_declares_Polish_accounts()
+    {
+        Form.Jurisdiction.ShouldBe(Belka.Jurisdiction);
+        Form.Jurisdiction.ShouldBe(Ike.Jurisdiction);
+    }
+
+    [Theory]
+    [InlineData("XTB", true)]
+    [InlineData("XTB S.A.", true)]
+    [InlineData("mBank", true)]
+    [InlineData("Revolut", false)]
+    [InlineData("Trading 212", false)]
+    [InlineData("Interactive Brokers", false)]
+    [InlineData("Інший", false)]
+    public void Polish_brokers_are_recognised_by_whole_words(string broker, bool issues) =>
+        PolishBrokers.IssuesPit8C(broker).ShouldBe(issues);
+
+    private static decimal Parse(string value) => decimal.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
+}

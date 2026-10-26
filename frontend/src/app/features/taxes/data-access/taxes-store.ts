@@ -2,6 +2,7 @@ import { computed, inject, Injectable, resource, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { ApiClient, toProblemMessage } from '../../../core/api/api-client';
 import { AccountContext } from '../../../core/context/account-context';
+import { DeclarationForm, TaxDeclaration } from './declarations';
 
 export interface TaxYearSummary {
   year: number;
@@ -119,6 +120,24 @@ export class TaxesStore {
     loader: ({ params: accountId }) => this.api.get<LossCarryforward[]>(`/api/taxation/accounts/${accountId}/losses`),
   });
 
+  /** Forms the user's accounts call for in the selected year (none for IKE-only or foreign policies yet). */
+  private readonly formsResource = resource({
+    params: () => this.year() ?? undefined,
+    loader: ({ params: year }) => this.api.get<DeclarationForm[]>(`/api/taxation/declarations/${year}`),
+  });
+
+  readonly declarationCode = signal<string | null>(null);
+
+  private readonly declarationResource = resource({
+    params: () => (this.declarationCode() && this.year() ? { code: this.declarationCode()!, year: this.year()! } : undefined),
+    loader: ({ params }) => this.api.get<{ declaration: TaxDeclaration; warnings: string[] }>(`/api/taxation/declarations/${params.year}/${encodeURIComponent(params.code)}`),
+  });
+
+  readonly forms = computed(() => this.formsResource.value() ?? []);
+  readonly declaration = computed(() => (this.declarationResource.hasValue() ? this.declarationResource.value() : undefined));
+  readonly declarationLoading = this.declarationResource.isLoading;
+  readonly declarationError = this.declarationResource.error;
+
   readonly account = this.accounts.current;
   readonly years = computed(() => this.yearsResource.value() ?? []);
   readonly isLoading = computed(() => this.yearsResource.isLoading() || this.detailsResource.isLoading());
@@ -166,6 +185,7 @@ export class TaxesStore {
       this.brokerResource.reload();
       this.yearsResource.reload();
       this.detailsResource.reload();
+      this.formsResource.reload();
       return true;
     } catch (error) {
       this.messages.add({ severity: 'error', summary: 'Не збережено', detail: toProblemMessage(error) });

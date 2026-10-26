@@ -56,7 +56,7 @@ public sealed record LotMatch(Guid BuyTransactionId, DateOnly AcquiredOn, decima
 /// <summary>Gain of a sale charged to the sub-portfolio that sold.</summary>
 public sealed record GainAttribution(Guid SubPortfolioId, decimal GainPln);
 
-/// <summary>A sale matched with the lots it closed: proceeds and cost in PLN; <see cref="BrokerGainPln"/> is the broker's own figure, to compare.</summary>
+/// <summary>A sale matched with the lots it closed: proceeds (before the sale's fee) and cost (the lots' and the sale's fee) in PLN; <see cref="BrokerGainPln"/> is the broker's own figure, to compare.</summary>
 public sealed record Realization(
     Guid SaleTransactionId,
     DateOnly SoldOn,
@@ -167,20 +167,7 @@ public static class TaxCalculator
             var costs = sold.Sum(r => r.CostPln);
             var gain = revenue - costs;
 
-            var uses = new List<CarryforwardUse>();
-            var left = Math.Max(0m, gain);
-            foreach (var pool in losses.Where(pool => pool.Loss.Year < year).OrderBy(pool => pool.Loss.Year))
-            {
-                if (left <= 0m)
-                    break;
-                var usable = Math.Min(Math.Min(policy.LossCarryforward.UsableIn(pool.Loss, year), pool.Remaining), left);
-                if (usable <= 0m)
-                    continue;
-                pool.Use(usable);
-                uses.Add(new CarryforwardUse(pool.Loss.Year, usable));
-                left -= usable;
-            }
-
+            var uses = LossPool.UseAgainst(losses, year, gain, policy.LossCarryforward);
             var used = uses.Sum(use => use.Amount);
             var taxBase = policy.IsTaxed ? policy.Rounding.Base(Math.Max(0m, gain - used)) : 0m;
             var capitalTax = policy.Rounding.Tax(taxBase * policy.RateSchedule.Rate.Value);
@@ -214,8 +201,9 @@ public static class TaxCalculator
         if (unmatched > 0m)
             warnings.Add($"Продаж {sale.OccurredOn:yyyy-MM-dd}: {unmatched} шт. без купівлі в журналі — їхня собівартість вважається нульовою.");
 
-        var proceeds = Pln(sale.Quantity * sale.Price, sale.FxRate) - Pln(sale.Fee, sale.FxRate);
-        var cost = matches.Sum(match => match.CostPln);
+        // PIT-38: the revenue is the whole price; the sale's fee is a cost, like the purchase's.
+        var proceeds = Pln(sale.Quantity * sale.Price, sale.FxRate);
+        var cost = matches.Sum(match => match.CostPln) + Pln(sale.Fee, sale.FxRate);
         var gain = proceeds - cost;
 
         var total = sale.Allocations.Sum(allocation => allocation.Quantity);
@@ -278,12 +266,30 @@ public static class TaxCalculator
         lots.TryGetValue(instrumentId, out var list) ? list : lots[instrumentId] = [];
 
     private static decimal Pln(decimal amount, decimal rate) => decimal.Round(amount * rate, 2, MidpointRounding.AwayFromZero);
+}
 
-    private sealed class LossPool(LossYear loss)
+/// <summary>What is left of one year's loss to deduct from later gains.</summary>
+public sealed class LossPool(LossYear loss)
+{
+    public LossYear Loss { get; } = loss;
+    public decimal Remaining { get; private set; } = Math.Max(0m, loss.Amount - loss.AlreadyUsed);
+
+    /// <summary>Deducts the earlier losses from <paramref name="year"/>'s gain, oldest first, as far as the rule allows.</summary>
+    public static IReadOnlyList<CarryforwardUse> UseAgainst(IEnumerable<LossPool> pools, int year, decimal gain, ILossCarryforwardRule rule)
     {
-        public LossYear Loss { get; } = loss;
-        public decimal Remaining { get; private set; } = Math.Max(0m, loss.Amount - loss.AlreadyUsed);
-
-        public void Use(decimal amount) => Remaining -= amount;
+        var uses = new List<CarryforwardUse>();
+        var left = Math.Max(0m, gain);
+        foreach (var pool in pools.Where(pool => pool.Loss.Year < year).OrderBy(pool => pool.Loss.Year))
+        {
+            if (left <= 0m)
+                break;
+            var usable = Math.Min(Math.Min(rule.UsableIn(pool.Loss, year), pool.Remaining), left);
+            if (usable <= 0m)
+                continue;
+            pool.Remaining -= usable;
+            uses.Add(new CarryforwardUse(pool.Loss.Year, usable));
+            left -= usable;
+        }
+        return uses;
     }
 }

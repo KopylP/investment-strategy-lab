@@ -2,7 +2,17 @@
   @if (yearOptions().length > 1) {
     <p-selectbutton [options]="yearOptions()" optionLabel="label" optionValue="value" [ngModel]="store.year()" (ngModelChange)="$event && store.selectedYear.set($event)" [allowEmpty]="false" />
   }
+  @for (form of store.forms(); track form.code) {
+    <p-button [label]="form.code + ' за ' + store.year()" icon="pi pi-file-edit" severity="secondary" [outlined]="true" [pTooltip]="form.title + ': усі ваші рахунки разом, поле за полем'"
+              tooltipPosition="bottom" (onClick)="store.declarationCode.set(form.code)" />
+  }
 </app-page-header>
+
+<app-declaration-dialog [visible]="!!store.declarationCode()" [loading]="store.declarationLoading()" [declaration]="store.declaration()?.declaration ?? null"
+                        [warnings]="store.declaration()?.warnings ?? []" (closed)="store.declarationCode.set(null)" />
+@if (store.declarationCode() && store.declarationError()) {
+  <p-message severity="error" styleClass="mb-3" text="Не вдалося заповнити декларацію" />
+}
 
 <p-message severity="secondary" styleClass="mb-4"
   text="Це оцінка. Авторитетні — PIT-8C брокера і ваш податковий консультант. Дату курсу, ставку й правила задає податкова політика рахунку." />

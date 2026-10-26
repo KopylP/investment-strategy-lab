@@ -13,12 +13,13 @@ import { DatePipe, DateTimePipe, MoneyPipe, QuantityPipe } from '../../../../sha
 import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { SignedValue } from '../../../../shared/ui/signed-value';
+import { DeclarationDialog } from '../../ui/declaration-dialog/declaration-dialog';
 import { BrokerStatement, LossCarryforward, Realization, TaxesStore } from '../../data-access/taxes-store';
 
 @Component({
   selector: 'app-tax-year-page',
   imports: [
-    FormsModule, Button, InputNumber, Message, SelectButton, Skeleton, TableModule, Tag, Tooltip, PageHeader, EmptyState, SignedValue,
+    FormsModule, Button, InputNumber, Message, SelectButton, Skeleton, TableModule, Tag, Tooltip, PageHeader, EmptyState, SignedValue, DeclarationDialog,
     MoneyPipe, QuantityPipe, DatePipe, DateTimePipe,
   ],
   providers: [TaxesStore],
