@@ -2,10 +2,12 @@ using InvestmentLab.Taxation.Declarations.Domain;
 
 namespace InvestmentLab.Taxation.Declarations.Application;
 
-/// <summary>Prints a filled return on the official form of its <see cref="Form"/>; a form without a printer has no PDF.</summary>
+/// <summary>Prints a filled return as a PDF of one <see cref="Kind"/>: "summary" (what to type where) or "form" (the official form).</summary>
 public interface IDeclarationPrinter
 {
-    string Form { get; }
+    string Kind { get; }
+
+    bool Prints(TaxDeclaration declaration);
 
     byte[] Print(TaxDeclaration declaration);
 }

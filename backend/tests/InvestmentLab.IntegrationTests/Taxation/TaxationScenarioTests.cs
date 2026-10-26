@@ -49,6 +49,13 @@ public sealed class TaxationScenarioTests(MarketDataApiFactory factory) : IClass
         (fields[20], fields[21], fields[22]).ShouldBe((8385.00m, 6895.05m, 0m));
         (fields[31], fields[35], fields[51]).ShouldBe((1490m, 283m, 283m));
         (await client.GetAsync($"/api/taxation/declarations/{year - 5}/pit-38", ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        foreach (var kind in new[] { "summary", "form" })
+        {
+            var pdf = await client.GetAsync($"/api/taxation/declarations/{year}/pit-38/pdf?kind={kind}", ct);
+            pdf.StatusCode.ShouldBe(HttpStatusCode.OK);
+            pdf.Content.Headers.ContentType!.MediaType.ShouldBe("application/pdf");
+            (await pdf.Content.ReadAsByteArrayAsync(ct)).Take(4).ShouldBe("%PDF"u8.ToArray());
+        }
 
         (await client.PostAsJsonAsync($"/api/portfolio/accounts/{account.Id}/transactions/{sale}/reverse", new { reason = "помилка" }, ct)).EnsureSuccessStatusCode();
         var reversed = await EventuallyAsync(client, account.Id, year, details => details.Realizations.Count == 0, ct);

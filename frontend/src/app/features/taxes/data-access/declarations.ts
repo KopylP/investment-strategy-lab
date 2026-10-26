@@ -7,6 +7,8 @@ export interface DeclarationField {
   amount: number | null;
   text: string | null;
   hint: string | null;
+  /** The online form works it out from the others: to check, not to type. */
+  computed: boolean;
 }
 
 export interface DeclarationSection {
@@ -23,7 +25,8 @@ export interface TaxDeclaration {
   sections: DeclarationSection[];
   attachments: { form: string; title: string; fields: DeclarationField[] }[];
   accounts: DeclarationAccountLine[];
-  notes: string[];
+  notes: { text: string; action: boolean; short: string | null }[];
+  taxDue: number;
 }
 
 /** Revenue (poz. 35) and costs (poz. 36) on a broker's PIT-8C. */

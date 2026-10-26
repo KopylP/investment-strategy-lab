@@ -42,6 +42,7 @@ public sealed class TaxationModule : IModule
         services.AddScoped<DeclarationQueries>();
         // Optional returns, one per form; another country's form is one more line here.
         services.AddSingleton<ITaxDeclarationForm, Pit38Form>();
+        services.AddSingleton<IDeclarationPrinter, DeclarationSummaryPrinter>();
         services.AddSingleton<IDeclarationPrinter, Pit38PdfPrinter>();
         services.AddScoped<IPit8CRepository, Pit8CRepository>();
         services.AddScoped<ITaxEstimator, TaxEstimator>();
