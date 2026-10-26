@@ -20,6 +20,12 @@ internal static class DeclarationEndpoints
                     ? Results.File(pdf.Value.Content, "application/pdf", pdf.Value.FileName)
                     : pdf.Error.ToProblem())
             .WithName("GetDeclarationPdf");
+        declarations.MapPut("/pit-8c/{accountId:guid}", async (int year, Guid accountId, Pit8CCommand body, DeclarationQueries queries, CancellationToken ct) =>
+                (await queries.SetPit8C(year, accountId, body, ct)).ToHttpResult())
+            .WithName("SetPit8C");
+        declarations.MapDelete("/pit-8c/{accountId:guid}", async (int year, Guid accountId, DeclarationQueries queries, CancellationToken ct) =>
+                (await queries.RemovePit8C(year, accountId, ct)).ToHttpResult())
+            .WithName("RemovePit8C");
         return group;
     }
 }

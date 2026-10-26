@@ -22,8 +22,28 @@ export interface TaxDeclaration {
   deadline: string;
   sections: DeclarationSection[];
   attachments: { form: string; title: string; fields: DeclarationField[] }[];
-  accounts: { name: string; broker: string; treatment: string; revenue: number; costs: number; dividendsGross: number; dividendsWithheld: number }[];
+  accounts: DeclarationAccountLine[];
   notes: string[];
+}
+
+/** Revenue (poz. 35) and costs (poz. 36) on a broker's PIT-8C. */
+export interface Pit8CAmounts {
+  revenue: number;
+  costs: number;
+}
+
+export interface DeclarationAccountLine {
+  accountId: string;
+  name: string;
+  broker: string;
+  treatment: string;
+  revenue: number;
+  costs: number;
+  dividendsGross: number;
+  dividendsWithheld: number;
+  /** Row 1: the broker sends PIT-8C, whose amounts stand instead of ours once entered. */
+  takesPit8C: boolean;
+  pit8C: Pit8CAmounts | null;
 }
 
 export interface DeclarationForm {

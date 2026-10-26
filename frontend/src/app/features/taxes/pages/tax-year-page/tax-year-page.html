@@ -6,10 +6,9 @@
 
 <app-declaration-dialog [visible]="!!store.declarationCode()" [loading]="store.declarationLoading()" [declaration]="store.declaration()?.declaration ?? null"
                         [warnings]="store.declaration()?.warnings ?? []" [pdfLoading]="store.pdfLoading()" (pdf)="store.downloadDeclarationPdf()"
+                        [problem]="store.declarationError() ? store.declarationProblem() : null" [saving]="store.saving()"
+                        (pit8c)="store.setPit8C($event.accountId, $event.amounts)" (pit8cRemoved)="store.removePit8C($event)"
                         (closed)="store.declarationCode.set(null)" />
-@if (store.declarationCode() && store.declarationError()) {
-  <p-message severity="error" styleClass="mb-3" text="Не вдалося заповнити декларацію" />
-}
 
 <p-message severity="secondary" styleClass="mb-4"
   text="Це оцінка. Авторитетні — PIT-8C брокера і ваш податковий консультант. Дату курсу, ставку й правила задає податкова політика рахунку." />
@@ -225,7 +224,7 @@
 
   <div class="card">
     <h2 class="text-lg font-semibold mb-2">Збитки минулих років</h2>
-    <p class="text-sm sm:text-base text-muted-color mt-0 mb-4">Збиток з PIT-38 до початку журналу: зменшує зиск наступних 5 років, щонайбільше на 50% збитку за рік.</p>
+    <p class="text-sm sm:text-base text-muted-color mt-0 mb-4">Збиток з поданого PIT-38: зменшує зиск наступних 5 років, щонайбільше на 50% збитку за рік. Один збиток на рік — для декларації він ваш, не рахунку, і стоїть замість порахованого з журналу. «Уже використано» — відраховане в деклараціях за роки, яких немає в журналі.</p>
     @if (store.losses().length) {
       <p-table [value]="store.losses()" size="small" styleClass="mb-4">
         <ng-template #header><tr><th>Рік</th><th class="text-right">Збиток</th><th class="text-right">Використано<span class="hidden sm:inline"> раніше</span></th><th class="w-12"></th></tr></ng-template>

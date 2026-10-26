@@ -3,6 +3,7 @@ using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Taxation.Assessments.Domain;
 using InvestmentLab.Taxation.BrokerStatements.Domain;
+using InvestmentLab.Taxation.Declarations.Domain;
 using InvestmentLab.Taxation.Ledger.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -20,6 +21,7 @@ public sealed class TaxationDbContext(DbContextOptions<TaxationDbContext> option
     public DbSet<TaxAssessment> Assessments => Set<TaxAssessment>();
     public DbSet<LossCarryforward> Losses => Set<LossCarryforward>();
     public DbSet<BrokerStatement> BrokerStatements => Set<BrokerStatement>();
+    public DbSet<Pit8CStatement> Pit8CStatements => Set<Pit8CStatement>();
 
     protected override string Schema => SchemaName;
 
@@ -81,6 +83,15 @@ public sealed class TaxationDbContext(DbContextOptions<TaxationDbContext> option
             statement.Property(s => s.Dividends).HasJsonConversion();
             statement.Property(s => s.Warnings).HasJsonConversion();
             statement.Ignore(s => s.Span);
+            HasOwnerFilter(statement, s => s.OwnerId);
+        });
+
+        modelBuilder.Entity<Pit8CStatement>(statement =>
+        {
+            statement.ToTable("pit8c_statements");
+            statement.HasKey(s => s.Id);
+            statement.HasIndex(s => new { s.AccountId, s.Year }).IsUnique();
+            statement.Ignore(s => s.Amounts);
             HasOwnerFilter(statement, s => s.OwnerId);
         });
     }

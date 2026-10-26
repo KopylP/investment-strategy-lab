@@ -1,6 +1,8 @@
 <p-dialog [header]="declaration() ? declaration()!.form + ' за ' + declaration()!.year : 'Декларація'" [modal]="true" [visible]="visible()" (visibleChange)="!$event && closed.emit()"
           [style]="{ width: '56rem' }" styleClass="app-sheet" [dismissableMask]="true" [draggable]="false">
-  @if (loading() && !declaration()) {
+  @if (problem()) {
+    <p-message severity="error" [text]="problem()!" />
+  } @else if (loading() && !declaration()) {
     <p-skeleton height="20rem" />
   } @else if (declaration(); as d) {
     <div class="text-sm text-muted-color mb-3">{{ d.title }} · подати з 15 лютого до {{ d.deadline | date }}</div>
@@ -22,6 +24,16 @@
           <div class="min-w-0">
             <div class="font-medium">{{ a.name }} <span class="text-xs text-muted-color font-normal">· {{ a.broker }}</span></div>
             <div class="text-xs text-muted-color">{{ a.treatment }}</div>
+            @if (a.takesPit8C) {
+              @if (a.pit8C) {
+                <div class="text-xs mt-1">PIT-8C: {{ a.pit8C.revenue | money: 'PLN' }} / {{ a.pit8C.costs | money: 'PLN' }}
+                  <a class="text-primary cursor-pointer ml-1" (click)="edit(a)">змінити</a>
+                  <a class="text-muted-color cursor-pointer ml-1" (click)="pit8cRemoved.emit(a.accountId)">прибрати</a>
+                </div>
+              } @else {
+                <a class="text-xs text-primary cursor-pointer" (click)="edit(a)">Ввести суми з PIT-8C</a>
+              }
+            }
           </div>
           <div class="text-right text-sm tabular-nums whitespace-nowrap">
             <div>{{ a.revenue | money: 'PLN' }} <span class="text-muted-color text-xs">виручка</span></div>
@@ -29,6 +41,24 @@
             @if (a.dividendsGross) { <div>{{ a.dividendsGross | money: 'PLN' }} <span class="text-muted-color text-xs">дивіденди</span></div> }
           </div>
         </div>
+        @if (editing()?.accountId === a.accountId) {
+          <div class="grid grid-cols-2 gap-2 py-2 border-b border-surface-200 dark:border-surface-700">
+            <div class="flex flex-col gap-1">
+              <label class="text-xs text-muted-color" [for]="'pit8c-revenue-' + a.accountId">PIT-8C poz. 35 (przychód)</label>
+              <p-inputnumber [inputId]="'pit8c-revenue-' + a.accountId" [ngModel]="editing()!.revenue" (ngModelChange)="editing.update(draft => draft && { ...draft, revenue: $event })"
+                             mode="currency" currency="PLN" locale="uk-UA" [min]="0" fluid />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs text-muted-color" [for]="'pit8c-costs-' + a.accountId">PIT-8C poz. 36 (koszty)</label>
+              <p-inputnumber [inputId]="'pit8c-costs-' + a.accountId" [ngModel]="editing()!.costs" (ngModelChange)="editing.update(draft => draft && { ...draft, costs: $event })"
+                             mode="currency" currency="PLN" locale="uk-UA" [min]="0" fluid />
+            </div>
+            <div class="col-span-2 flex gap-2 justify-end">
+              <p-button label="Скасувати" size="small" severity="secondary" [text]="true" (onClick)="editing.set(null)" />
+              <p-button label="Зберегти" size="small" [loading]="saving()" [disabled]="editing()!.revenue === null || editing()!.costs === null" (onClick)="save()" />
+            </div>
+          </div>
+        }
       }
     </div>
 

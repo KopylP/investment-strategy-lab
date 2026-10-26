@@ -1,17 +1,19 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { InputNumber } from 'primeng/inputnumber';
 import { MessageService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
 import { Message } from 'primeng/message';
 import { Skeleton } from 'primeng/skeleton';
 import { DatePipe, MoneyPipe } from '../../../../shared/pipes/format-pipes';
-import { DeclarationField, formValue, TaxDeclaration } from '../../data-access/declarations';
+import { DeclarationAccountLine, DeclarationField, formValue, Pit8CAmounts, TaxDeclaration } from '../../data-access/declarations';
 
 /** The filled return, field by field with its "poz." number, each value one click from the clipboard. */
 @Component({
   selector: 'app-declaration-dialog',
-  imports: [NgTemplateOutlet, Dialog, Button, Message, Skeleton, MoneyPipe, DatePipe],
+  imports: [NgTemplateOutlet, FormsModule, InputNumber, Dialog, Button, Message, Skeleton, MoneyPipe, DatePipe],
   templateUrl: './declaration-dialog.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -23,8 +25,27 @@ export class DeclarationDialog {
   readonly loading = input(false);
   readonly visible = input(false);
   readonly pdfLoading = input(false);
+  /** Why the return could not be filled; shown in place of it. */
+  readonly problem = input<string | null>(null);
+  readonly saving = input(false);
   readonly closed = output<void>();
   readonly pdf = output<void>();
+  readonly pit8c = output<{ accountId: string; amounts: Pit8CAmounts }>();
+  readonly pit8cRemoved = output<string>();
+
+  /** The account whose PIT-8C amounts are being typed, with the draft. */
+  protected readonly editing = signal<{ accountId: string; revenue: number | null; costs: number | null } | null>(null);
+
+  protected edit(account: DeclarationAccountLine): void {
+    this.editing.set({ accountId: account.accountId, revenue: account.pit8C?.revenue ?? null, costs: account.pit8C?.costs ?? null });
+  }
+
+  protected save(): void {
+    const draft = this.editing();
+    if (!draft || draft.revenue === null || draft.costs === null) return;
+    this.pit8c.emit({ accountId: draft.accountId, amounts: { revenue: draft.revenue, costs: draft.costs } });
+    this.editing.set(null);
+  }
 
   protected readonly formValue = formValue;
 

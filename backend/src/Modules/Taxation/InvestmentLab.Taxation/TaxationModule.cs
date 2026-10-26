@@ -43,6 +43,7 @@ public sealed class TaxationModule : IModule
         // Optional returns, one per form; another country's form is one more line here.
         services.AddSingleton<ITaxDeclarationForm, Pit38Form>();
         services.AddSingleton<IDeclarationPrinter, Pit38PdfPrinter>();
+        services.AddScoped<IPit8CRepository, Pit8CRepository>();
         services.AddScoped<ITaxEstimator, TaxEstimator>();
         services.AddScoped<IBrokerStatementRepository, BrokerStatementRepository>();
         services.AddSingleton<IBrokerStatementParser, RevolutPnlPdfParser>();

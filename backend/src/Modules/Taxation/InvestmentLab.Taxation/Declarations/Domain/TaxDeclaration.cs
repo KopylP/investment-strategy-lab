@@ -19,9 +19,13 @@ public interface ITaxDeclarationForm
     TaxDeclaration Fill(DeclarationInput input);
 }
 
-/// <summary>One account's tax years; <paramref name="Sales"/> and <paramref name="Dividends"/> are those of the declared year.</summary>
+/// <summary>
+/// One account's tax years; <paramref name="Sales"/> and <paramref name="Dividends"/> are those of the declared year,
+/// <paramref name="Pit8C"/> what its broker's PIT-8C says of the year, once the person entered it.
+/// </summary>
 public sealed record DeclarationAccount(
-    string Name, string Broker, ITaxPolicy Policy, IReadOnlyList<TaxYearSummary> Years, IReadOnlyList<Realization> Sales, IReadOnlyList<DividendIncome> Dividends)
+    string Name, string Broker, ITaxPolicy Policy, IReadOnlyList<TaxYearSummary> Years, IReadOnlyList<Realization> Sales, IReadOnlyList<DividendIncome> Dividends,
+    Guid AccountId = default, Pit8CAmounts? Pit8C = null)
 {
     public TaxYearSummary? In(int year) => Years.FirstOrDefault(summary => summary.Year == year);
 }
@@ -39,8 +43,14 @@ public sealed record DeclarationSection(string Code, string Title, IReadOnlyList
 
 public sealed record DeclarationAttachment(string Form, string Title, IReadOnlyList<DeclarationField> Fields);
 
+/// <summary>Revenue (poz. 35) and costs (poz. 36) of a year on a broker's PIT-8C.</summary>
+public sealed record Pit8CAmounts(decimal Revenue, decimal Costs);
+
 /// <param name="Treatment">How the form takes the account, in the app's language.</param>
-public sealed record DeclarationAccountLine(string Name, string Broker, string Treatment, decimal Revenue, decimal Costs, decimal DividendsGross, decimal DividendsWithheld);
+/// <param name="TakesPit8C">The account's sales go to row 1, where its broker's PIT-8C amounts belong.</param>
+public sealed record DeclarationAccountLine(
+    string Name, string Broker, string Treatment, decimal Revenue, decimal Costs, decimal DividendsGross, decimal DividendsWithheld,
+    Guid AccountId = default, bool TakesPit8C = false, Pit8CAmounts? Pit8C = null);
 
 public sealed record TaxDeclaration(
     string Form,
