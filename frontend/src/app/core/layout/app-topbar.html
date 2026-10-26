@@ -21,7 +21,7 @@
         (ngModelChange)="chooseAccount($event)"
         size="small"
         ariaLabel="Рахунок"
-        class="hidden sm:flex min-w-48" />
+        class="hidden sm:flex self-center min-w-48" />
     } @else if (accounts.current(); as account) {
       <span class="hidden sm:inline text-muted-color self-center">{{ account.name }} · {{ account.baseCurrency }}</span>
     }
