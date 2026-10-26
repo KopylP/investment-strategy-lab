@@ -4,6 +4,7 @@ import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { InputNumber } from 'primeng/inputnumber';
 import { Message } from 'primeng/message';
+import { Select } from 'primeng/select';
 import { SelectButton } from 'primeng/selectbutton';
 import { Skeleton } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
@@ -11,6 +12,7 @@ import { Tag } from 'primeng/tag';
 import { Tooltip } from 'primeng/tooltip';
 import { DatePipe, DateTimePipe, MoneyPipe, QuantityPipe } from '../../../../shared/pipes/format-pipes';
 import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
+import { FileDrop } from '../../../../shared/ui/file-drop';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { SignedValue } from '../../../../shared/ui/signed-value';
 import { DeclarationDialog } from '../../ui/declaration-dialog/declaration-dialog';
@@ -19,7 +21,7 @@ import { BrokerStatement, LossCarryforward, Realization, TaxesStore } from '../.
 @Component({
   selector: 'app-tax-year-page',
   imports: [
-    FormsModule, Button, InputNumber, Message, SelectButton, Skeleton, TableModule, Tag, Tooltip, PageHeader, EmptyState, SignedValue, DeclarationDialog,
+    FormsModule, Button, InputNumber, Message, Select, SelectButton, Skeleton, TableModule, Tag, Tooltip, PageHeader, EmptyState, SignedValue, DeclarationDialog, FileDrop,
     MoneyPipe, QuantityPipe, DatePipe, DateTimePipe,
   ],
   providers: [TaxesStore],

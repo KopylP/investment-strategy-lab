@@ -35,6 +35,22 @@ export interface Realization {
   unmatchedQuantity: number;
   /** The broker's own gain of the sale (its report), to compare with ours. */
   brokerGainPln: number | null;
+  accountId: string;
+}
+
+/** An account of the taxpayer; IKE / IKZE accounts are not taxed and stay out of PIT-38. */
+export interface TaxAccount {
+  id: string;
+  name: string;
+  broker: string;
+  currency: string;
+  policyCode: string;
+  isTaxed: boolean;
+}
+
+export interface TaxOverview {
+  years: { year: number; policyCode: string; computedAt: string; summary: TaxYearSummary }[];
+  accounts: TaxAccount[];
 }
 
 export interface DividendIncome {
@@ -49,6 +65,7 @@ export interface DividendIncome {
   /** Before the tax withheld abroad; 0 in years computed before the broker reports existed. */
   grossPln: number;
   withheldPln: number;
+  accountId: string;
 }
 
 export interface BrokerStatement {
@@ -80,8 +97,9 @@ export interface TaxYearDetails {
   realizations: Realization[];
   dividends: DividendIncome[];
   carryforwardUses: { lossYear: number; amount: number }[];
-  openLots: { buyTransactionId: string; acquiredOn: string; instrumentId: string; quantity: number; costPln: number; fxRate: number }[];
+  openLots: { buyTransactionId: string; acquiredOn: string; instrumentId: string; quantity: number; costPln: number; fxRate: number; accountId: string }[];
   instruments: Record<string, string>;
+  accounts: TaxAccount[];
   warnings: string[];
 }
 
@@ -92,7 +110,11 @@ export interface LossCarryforward {
   alreadyUsed: number;
 }
 
-/** Belka per year: realisations FIFO in PLN, carried losses, the tax due. Always recomputed on read. */
+/**
+ * Belka per year for the signed-in person — one PIT-38 over all taxed accounts: FIFO within each account, gains and
+ * losses of all brokers netted, carried losses, the tax due. Always recomputed on read. Broker reports belong to an
+ * account (the chosen one).
+ */
 @Injectable()
 export class TaxesStore {
   private readonly api = inject(ApiClient);
@@ -102,13 +124,13 @@ export class TaxesStore {
   readonly selectedYear = signal<number | null>(null);
 
   private readonly yearsResource = resource({
-    params: () => this.accounts.currentId(),
-    loader: ({ params: accountId }) => this.api.get<{ year: number; summary: TaxYearSummary; policyCode: string }[]>(`/api/taxation/accounts/${accountId}/years`),
+    params: () => (this.accounts.current() ? true : undefined),
+    loader: () => this.api.get<TaxOverview>('/api/taxation/years'),
   });
 
   private readonly detailsResource = resource({
-    params: () => (this.accounts.currentId() && this.year() ? { accountId: this.accounts.currentId()!, year: this.year()! } : undefined),
-    loader: ({ params }) => this.api.get<TaxYearDetails>(`/api/taxation/accounts/${params.accountId}/years/${params.year}`),
+    params: () => this.year() ?? undefined,
+    loader: ({ params: year }) => this.api.get<TaxYearDetails>(`/api/taxation/years/${year}`),
   });
 
   private readonly brokerResource = resource({
@@ -117,8 +139,8 @@ export class TaxesStore {
   });
 
   private readonly lossesResource = resource({
-    params: () => this.accounts.currentId(),
-    loader: ({ params: accountId }) => this.api.get<LossCarryforward[]>(`/api/taxation/accounts/${accountId}/losses`),
+    params: () => (this.accounts.current() ? true : undefined),
+    loader: () => this.api.get<LossCarryforward[]>('/api/taxation/losses'),
   });
 
   /** Forms the user's accounts call for in the selected year (none for IKE-only or foreign policies yet). */
@@ -175,26 +197,41 @@ export class TaxesStore {
   }
 
   readonly account = this.accounts.current;
-  readonly years = computed(() => this.yearsResource.value() ?? []);
+  readonly allAccounts = this.accounts.accounts;
+  readonly years = computed(() => (this.yearsResource.hasValue() ? (this.yearsResource.value()?.years ?? []) : []));
+  readonly taxAccounts = computed(() => (this.yearsResource.hasValue() ? (this.yearsResource.value()?.accounts ?? []) : []));
+  readonly taxedAccounts = computed(() => this.taxAccounts().filter((account) => account.isTaxed));
+  readonly untaxedAccounts = computed(() => this.taxAccounts().filter((account) => !account.isTaxed));
+  /** The account column matters only when more than one account goes into PIT-38. */
+  readonly showAccount = computed(() => this.taxedAccounts().length > 1);
   readonly isLoading = computed(() => this.yearsResource.isLoading() || this.detailsResource.isLoading());
   readonly loadError = this.yearsResource.error;
   readonly year = computed(() => this.selectedYear() ?? this.years()[0]?.year ?? null);
   readonly details = computed(() => (this.detailsResource.hasValue() ? this.detailsResource.value() : undefined));
   readonly losses = computed(() => this.lossesResource.value() ?? []);
   readonly broker = computed(() => this.brokerResource.value());
-  readonly isTaxed = computed(() => !this.years()[0] || this.years()[0].policyCode === 'PL-BELKA');
+  readonly isTaxed = computed(() => this.taxedAccounts().length > 0);
   readonly saving = signal(false);
 
   symbol(id: string): string {
     return this.details()?.instruments[id] ?? id.slice(0, 8);
   }
 
+  accountName(id: string): string {
+    return this.taxAccounts().find((account) => account.id === id)?.name ?? '';
+  }
+
+  /** Broker reports go to an account: the one chosen here (and in the top bar). */
+  chooseAccount(id: string): void {
+    this.accounts.choose(id);
+  }
+
   async addLoss(year: number, amount: number, alreadyUsed: number): Promise<boolean> {
-    return this.change(() => this.api.post(`/api/taxation/accounts/${this.requireAccount()}/losses`, { year, amount, alreadyUsed }), 'Збиток додано');
+    return this.change(() => this.api.post('/api/taxation/losses', { year, amount, alreadyUsed }), 'Збиток додано');
   }
 
   async removeLoss(loss: LossCarryforward): Promise<boolean> {
-    return this.change(() => this.api.delete(`/api/taxation/accounts/${this.requireAccount()}/losses/${loss.id}`), 'Збиток видалено');
+    return this.change(() => this.api.delete(`/api/taxation/losses/${loss.id}`), 'Збиток видалено');
   }
 
   /** The broker's P&L report (PDF) goes as base64 inside JSON, like the CSV statement goes as text. */

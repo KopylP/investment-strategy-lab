@@ -237,4 +237,42 @@ public sealed class TaxCalculatorTests
         year.DividendTax.ShouldBe(39m);
         year.TaxDue.ShouldBe(39m);
     }
+
+    [Fact]
+    public void Lots_stay_within_their_account_and_one_year_nets_all_accounts()
+    {
+        Guid revolut = Guid.NewGuid(), xtb = Guid.NewGuid();
+        var computation = TaxCalculator.Compute([
+            Buy("2025-01-10", 10m, 100m, 0m, 4m) with { AccountId = revolut },
+            Buy("2025-02-10", 10m, 50m, 0m, 4m) with { AccountId = xtb },       // cheaper, but another account's lot
+            Sell("2025-06-10", 10m, 120m, 0m, 4m) with { AccountId = revolut },  // gain 800 against the Revolut lot
+            Sell("2025-07-10", 10m, 30m, 0m, 4m) with { AccountId = xtb },       // loss 800 against the XTB lot
+        ], Belka, []);
+
+        var year = computation.Year(2025)!;
+        year.Realizations.Single(r => r.AccountId == revolut).CostPln.ShouldBe(4000m);
+        year.Realizations.Single(r => r.AccountId == xtb).GainPln.ShouldBe(-800m);
+        year.Summary.Gain.ShouldBe(0m);
+        year.Summary.TaxDue.ShouldBe(0m);
+        year.Summary.LossToCarry.ShouldBe(0m);
+    }
+
+    [Fact]
+    public void The_timeline_shows_the_tax_after_each_taxable_day_and_a_later_loss_takes_it_back()
+    {
+        List<TaxEvent> events =
+        [
+            Buy("2025-01-10", 10m, 100m, 0m, 4m),
+            Buy("2025-01-10", 10m, 100m, 0m, 4m, Other),
+            Sell("2025-03-10", 5m, 150m, 0m, 4m),            // gain 1000 → 190
+            Sell("2025-05-10", 5m, 200m, 0m, 4m),            // gain 2000 more → 3000 → 570
+        ];
+        events.Add(new TaxEvent(Guid.NewGuid(), DateOnly.Parse("2025-08-10"), _sequence++, TaxableKind.Sell, Other, 10m, 50m, 0m, 500m, [new(Eu, 10m)], 4m, null));  // loss 2000
+
+        var timeline = TaxCalculator.Timeline(events, Belka, [], 2025);
+
+        timeline.Select(point => point.Date.ToString("MM-dd")).ShouldBe(["03-10", "05-10", "08-10"]);
+        timeline.Select(point => point.TaxDue).ShouldBe([190m, 570m, 190m]);
+        timeline[^1].TaxDue.ShouldBe(TaxCalculator.Compute(events, Belka, []).Year(2025)!.Summary.TaxDue);
+    }
 }

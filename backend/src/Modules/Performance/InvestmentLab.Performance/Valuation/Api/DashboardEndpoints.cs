@@ -14,6 +14,10 @@ internal static class DashboardEndpoints
                 (await queries.Get(accountId, period, ct)).ToHttpResult())
             .WithTags("Performance")
             .WithName("GetDashboard");
+        group.MapGet("/dashboard", async (string? currency, string? period, DashboardQueries queries, CancellationToken ct) =>
+                (await queries.GetAll(currency, period, ct)).ToHttpResult())
+            .WithTags("Performance")
+            .WithName("GetAllAccountsDashboard");
         return group;
     }
 }

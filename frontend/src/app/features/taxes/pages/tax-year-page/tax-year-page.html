@@ -1,4 +1,4 @@
-<app-page-header title="Податки" subtitle="Белка: FIFO на рівні рахунку, курс NBP останнього робочого дня перед угодою, 19%, річне сальдо">
+<app-page-header title="Податки" subtitle="Белка, один PIT-38 на всі рахунки: FIFO в межах рахунку, курс NBP останнього робочого дня перед угодою, 19%, річне сальдо всіх брокерів">
   @if (yearOptions().length > 1) {
     <p-selectbutton [options]="yearOptions()" optionLabel="label" optionValue="value" [ngModel]="store.year()" (ngModelChange)="$event && store.selectedYear.set($event)" [allowEmpty]="false" />
   }
@@ -11,7 +11,24 @@
                         (closed)="store.declarationCode.set(null)" />
 
 <p-message severity="secondary" styleClass="mb-4"
-  text="Це оцінка. Авторитетні — PIT-8C брокера і ваш податковий консультант. Дату курсу, ставку й правила задає податкова політика рахунку." />
+  text="Це оцінка. Авторитетні — PIT-8C брокерів і ваш податковий консультант. Прибутки й збитки всіх рахунків сальдуються в одному PIT-38, як у декларації." />
+
+@if (store.taxAccounts().length > 1) {
+  <div class="flex flex-wrap items-center gap-2 mb-4 text-sm">
+    <span class="text-muted-color">У PIT-38:</span>
+    @for (account of store.taxedAccounts(); track account.id) {
+      <p-tag [value]="account.name" severity="secondary" />
+    } @empty {
+      <span class="text-muted-color">жодного рахунку</span>
+    }
+    @if (store.untaxedAccounts().length) {
+      <span class="text-muted-color ml-2">не оподатковуються:</span>
+      @for (account of store.untaxedAccounts(); track account.id) {
+        <p-tag [value]="account.name + ' · ' + account.policyCode" severity="info" />
+      }
+    }
+  </div>
+}
 
 @if (store.isLoading() && !store.details() && !store.years().length) {
   <div class="card"><p-skeleton height="12rem" /></div>
@@ -34,7 +51,7 @@
         <div class="text-4xl sm:text-5xl font-bold tracking-tight mt-1 leading-tight">{{ s.taxDue | money: 'PLN' : 0 }}</div>
         <div class="text-sm text-muted-color mt-2">
           @if (details.policyCode === 'PL-BELKA') {
-            з продажів {{ s.capitalTax | money: 'PLN' : 0 }} · з дивідендів {{ s.dividendTax | money: 'PLN' : 0 }} · 19%
+            з продажів {{ s.capitalTax | money: 'PLN' : 0 }} · з дивідендів {{ s.dividendTax | money: 'PLN' : 0 }} · 19%@if (store.showAccount()) { · {{ store.taxedAccounts().length }} рахунки разом }
           } @else {
             {{ details.policyCode }} · не оподатковується
           }
@@ -81,13 +98,14 @@
     @if (details.realizations.length) {
       <p-table [value]="details.realizations" dataKey="saleTransactionId" tableStyleClass="sm:min-w-[56rem]" size="small">
         <ng-template #header>
-          <tr><th class="w-10"></th><th>Дата</th><th>ETF</th><th class="text-right hidden sm:table-cell">Штук</th><th class="text-right hidden sm:table-cell">Виручка</th><th class="text-right hidden sm:table-cell">Витрати</th><th class="text-right">Зиск</th><th class="hidden sm:table-cell">Курс NBP</th></tr>
+          <tr><th class="w-10"></th><th>Дата</th><th>ETF</th>@if (store.showAccount()) { <th class="hidden sm:table-cell">Рахунок</th> }<th class="text-right hidden sm:table-cell">Штук</th><th class="text-right hidden sm:table-cell">Виручка</th><th class="text-right hidden sm:table-cell">Витрати</th><th class="text-right">Зиск</th><th class="hidden sm:table-cell">Курс NBP</th></tr>
         </ng-template>
         <ng-template #body let-r let-expanded="expanded">
           <tr>
             <td><p-button [pRowToggler]="r" [text]="true" [rounded]="true" severity="secondary" [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" ariaLabel="Лоти" /></td>
             <td>{{ r.soldOn | date }}</td>
-            <td class="font-medium">{{ store.symbol(r.instrumentId) }}</td>
+            <td class="font-medium">{{ store.symbol(r.instrumentId) }}@if (store.showAccount()) { <div class="sm:hidden text-xs text-muted-color font-normal">{{ store.accountName(r.accountId) }}</div> }</td>
+            @if (store.showAccount()) { <td class="text-sm hidden sm:table-cell">{{ store.accountName(r.accountId) }}</td> }
             <td class="text-right hidden sm:table-cell">{{ r.quantity | quantity }}</td>
             <td class="text-right hidden sm:table-cell">{{ r.proceedsPln | money: 'PLN' }}</td>
             <td class="text-right hidden sm:table-cell">{{ r.costPln | money: 'PLN' }}</td>
@@ -105,7 +123,7 @@
         <ng-template #expandedrow let-r>
           <tr>
             <td class="hidden sm:table-cell"></td>
-            <td colspan="8">
+            <td [attr.colspan]="store.showAccount() ? 9 : 8">
               <!-- Phone: the sale's numbers that have no column there. -->
               <div class="sm:hidden grid grid-cols-2 gap-x-4 gap-y-1 text-sm mb-3">
                 <span class="text-muted-color">Штук</span><span class="text-right">{{ r.quantity | quantity }}</span>
@@ -147,7 +165,7 @@
       <p-table [value]="details.dividends" size="small">
         <ng-template #header>
           <tr>
-            <th>Дата</th><th>ETF</th><th class="text-right hidden sm:table-cell">Отримано</th><th class="text-right">Брутто, PLN</th>
+            <th>Дата</th><th>ETF</th>@if (store.showAccount()) { <th class="hidden sm:table-cell">Рахунок</th> }<th class="text-right hidden sm:table-cell">Отримано</th><th class="text-right">Брутто, PLN</th>
             <th class="text-right">Утримано<span class="hidden sm:inline"> за кордоном</span></th><th class="hidden sm:table-cell">Курс</th>
           </tr>
         </ng-template>
@@ -155,6 +173,7 @@
           <tr>
             <td>{{ d.receivedOn | date }}</td>
             <td>{{ store.symbol(d.instrumentId) }}</td>
+            @if (store.showAccount()) { <td class="text-sm hidden sm:table-cell">{{ store.accountName(d.accountId) }}</td> }
             <td class="text-right hidden sm:table-cell">{{ d.amount | money: d.currency ?? store.account()?.baseCurrency ?? 'EUR' }}</td>
             <td class="text-right">{{ (d.grossPln || d.amountPln) | money: 'PLN' }}</td>
             <td class="text-right">{{ d.withheldPln ? (d.withheldPln | money: 'PLN') : '—' }}</td>
@@ -169,9 +188,9 @@
     <div class="card">
       <h2 class="text-lg font-semibold mb-4">Відкриті лоти<span class="hidden sm:inline"> (собівартість для майбутніх продажів)</span></h2>
       <p-table [value]="details.openLots" size="small" tableStyleClass="sm:min-w-[40rem]">
-        <ng-template #header><tr><th>Куплено</th><th>ETF</th><th class="text-right">Штук</th><th class="text-right">Витрати, PLN</th><th class="hidden sm:table-cell">Курс</th></tr></ng-template>
+        <ng-template #header><tr><th>Куплено</th><th>ETF</th>@if (store.showAccount()) { <th class="hidden sm:table-cell">Рахунок</th> }<th class="text-right">Штук</th><th class="text-right">Витрати, PLN</th><th class="hidden sm:table-cell">Курс</th></tr></ng-template>
         <ng-template #body let-lot>
-          <tr><td>{{ lot.acquiredOn | date }}</td><td class="font-medium">{{ store.symbol(lot.instrumentId) }}</td><td class="text-right">{{ lot.quantity | quantity }}</td><td class="text-right whitespace-nowrap">{{ lot.costPln | money: 'PLN' }}</td><td class="hidden sm:table-cell">{{ lot.fxRate }}</td></tr>
+          <tr><td>{{ lot.acquiredOn | date }}</td><td class="font-medium">{{ store.symbol(lot.instrumentId) }}</td>@if (store.showAccount()) { <td class="text-sm hidden sm:table-cell">{{ store.accountName(lot.accountId) }}</td> }<td class="text-right">{{ lot.quantity | quantity }}</td><td class="text-right whitespace-nowrap">{{ lot.costPln | money: 'PLN' }}</td><td class="hidden sm:table-cell">{{ lot.fxRate }}</td></tr>
         </ng-template>
       </p-table>
     </div>
@@ -184,9 +203,15 @@
   <!-- The broker's P&L report: what the journal cannot know (tax withheld abroad, cost of shares from a spin-off). -->
   <div class="card">
     <div class="flex flex-wrap items-start justify-between gap-3 mb-2">
-      <h2 class="text-lg font-semibold m-0">Звіт брокера (P&amp;L)</h2>
-      <label class="p-button p-button-sm p-button-outlined cursor-pointer" [class.p-disabled]="store.saving()">
-        <i class="pi mr-2" [class.pi-upload]="!store.saving()" [class.pi-spinner]="store.saving()" [class.pi-spin]="store.saving()"></i>Завантажити PDF
+      <div class="flex flex-wrap items-center gap-3">
+        <h2 class="text-lg font-semibold m-0">Звіт брокера (P&amp;L)</h2>
+        @if (store.allAccounts().length > 1) {
+          <p-select [options]="store.allAccounts()" optionLabel="name" optionValue="id" [ngModel]="store.account()?.id" (ngModelChange)="store.chooseAccount($event)"
+            size="small" ariaLabel="Рахунок звіту брокера" class="min-w-48" />
+        }
+      </div>
+      <label appFileDrop class="p-button p-button-sm p-button-outlined cursor-pointer" [class.p-disabled]="store.saving()">
+        <i class="pi mr-2" [class.pi-upload]="!store.saving()" [class.pi-spinner]="store.saving()" [class.pi-spin]="store.saving()"></i>Завантажити або перетягнути PDF
         <input type="file" accept=".pdf,application/pdf" class="hidden" (change)="uploadBroker($event)" />
       </label>
     </div>
@@ -224,6 +249,7 @@
 
   <div class="card">
     <h2 class="text-lg font-semibold mb-2">Збитки минулих років</h2>
+    <p class="text-sm text-muted-color mt-0 mb-2">Ваші, а не рахунку: один запис на рік для всіх брокерів.</p>
     <p class="text-sm sm:text-base text-muted-color mt-0 mb-4">Збиток з поданого PIT-38: зменшує зиск наступних 5 років, щонайбільше на 50% збитку за рік. Один збиток на рік — для декларації він ваш, не рахунку, і стоїть замість порахованого з журналу. «Уже використано» — відраховане в деклараціях за роки, яких немає в журналі.</p>
     @if (store.losses().length) {
       <p-table [value]="store.losses()" size="small" styleClass="mb-4">

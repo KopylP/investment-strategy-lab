@@ -44,7 +44,7 @@ export class AccountDetailStore {
 
   open(id: string): void {
     this.id.set(id);
-    this.context.choose(id);
+    this.context.focus(id);
   }
 
   strategyName(id: string | null): string {
