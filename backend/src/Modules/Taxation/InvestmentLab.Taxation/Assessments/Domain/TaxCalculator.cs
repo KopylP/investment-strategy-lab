@@ -1,10 +1,12 @@
+using InvestmentLab.Taxation.BrokerStatements.Domain;
 using InvestmentLab.Taxation.Ledger.Domain;
 
 namespace InvestmentLab.Taxation.Assessments.Domain;
 
 /// <summary>
-/// A taxable event in the account currency with the PLN rate the policy picked for it.
-/// <paramref name="FxRate"/> is PLN for one unit of the account currency (1 for PLN accounts).
+/// A taxable event in the currency it was settled in, with the PLN rate the policy picked for it.
+/// <paramref name="FxRate"/> is PLN for one unit of that currency (1 for PLN).
+/// <paramref name="Broker"/> and <paramref name="Withholding"/> come from the broker's tax report, when one was uploaded.
 /// </summary>
 public sealed record TaxEvent(
     Guid TransactionId,
@@ -18,10 +20,13 @@ public sealed record TaxEvent(
     decimal Amount,
     IReadOnlyList<EntryAllocation> Allocations,
     decimal FxRate,
-    DateOnly? FxRateDate);
+    DateOnly? FxRateDate,
+    SaleFacts? Broker = null,
+    WithholdingFacts? Withholding = null,
+    string? Currency = null);
 
-/// <summary>Units still held from one purchase; cost in PLN including the purchase fee.</summary>
-public sealed class OpenLot(Guid buyTransactionId, DateOnly acquiredOn, int sequence, Guid instrumentId, decimal quantity, decimal cost, decimal fxRate)
+/// <summary>Units still held from one purchase; cost in PLN including the purchase fee, <see cref="Gross"/> in the trade's currency without it.</summary>
+public sealed class OpenLot(Guid buyTransactionId, DateOnly acquiredOn, int sequence, Guid instrumentId, decimal quantity, decimal cost, decimal fxRate, decimal gross = 0m)
 {
     public Guid BuyTransactionId { get; } = buyTransactionId;
     public DateOnly AcquiredOn { get; } = acquiredOn;
@@ -30,11 +35,13 @@ public sealed class OpenLot(Guid buyTransactionId, DateOnly acquiredOn, int sequ
     public decimal Quantity { get; private set; } = quantity;
     public decimal Cost { get; private set; } = cost;
     public decimal FxRate { get; } = fxRate;
+    public decimal Gross { get; private set; } = gross;
 
-    public void Consume(decimal quantity, decimal cost)
+    public void Consume(decimal quantity, decimal cost, decimal gross)
     {
         Quantity -= quantity;
         Cost -= cost;
+        Gross -= gross;
     }
 
     public OpenLotSnapshot Snapshot() => new(BuyTransactionId, AcquiredOn, InstrumentId, Quantity, Cost, FxRate);
@@ -42,12 +49,14 @@ public sealed class OpenLot(Guid buyTransactionId, DateOnly acquiredOn, int sequ
 
 public sealed record OpenLotSnapshot(Guid BuyTransactionId, DateOnly AcquiredOn, Guid InstrumentId, decimal Quantity, decimal CostPln, decimal FxRate);
 
-public sealed record LotMatch(Guid BuyTransactionId, DateOnly AcquiredOn, decimal Quantity, decimal CostPln);
+/// <param name="FromBroker">The cost basis is the broker's: a lot the journal has no buy for (shares from a spin-off), or one whose cost the broker changed (a spin-off carved part of it out).</param>
+/// <param name="Gross">Cost without the fee in the trade's currency; <paramref name="FxRate"/> is the purchase's rate.</param>
+public sealed record LotMatch(Guid BuyTransactionId, DateOnly AcquiredOn, decimal Quantity, decimal CostPln, bool FromBroker = false, decimal Gross = 0m, decimal FxRate = 0m);
 
 /// <summary>Gain of a sale charged to the sub-portfolio that sold.</summary>
 public sealed record GainAttribution(Guid SubPortfolioId, decimal GainPln);
 
-/// <summary>A sale matched with the lots it closed: proceeds and cost in PLN.</summary>
+/// <summary>A sale matched with the lots it closed: proceeds and cost in PLN; <see cref="BrokerGainPln"/> is the broker's own figure, to compare.</summary>
 public sealed record Realization(
     Guid SaleTransactionId,
     DateOnly SoldOn,
@@ -60,16 +69,25 @@ public sealed record Realization(
     DateOnly? FxRateDate,
     IReadOnlyList<LotMatch> Lots,
     IReadOnlyList<GainAttribution> Attributions,
-    decimal UnmatchedQuantity);
+    decimal UnmatchedQuantity,
+    decimal? BrokerGainPln = null);
 
-public sealed record DividendIncome(Guid TransactionId, DateOnly ReceivedOn, Guid InstrumentId, decimal Amount, decimal AmountPln, decimal FxRate);
+/// <summary>
+/// A dividend: <see cref="Amount"/> and <see cref="AmountPln"/> as received (net); <see cref="GrossPln"/> before the tax
+/// withheld abroad (<see cref="WithheldPln"/>), known from the broker's report — without it gross is the net amount.
+/// </summary>
+public sealed record DividendIncome(Guid TransactionId, DateOnly ReceivedOn, Guid InstrumentId, decimal Amount, decimal AmountPln, decimal FxRate, decimal GrossPln = 0m,
+    decimal WithheldPln = 0m, string? Currency = null);
 
 /// <summary>A loss of a tax year (computed, or entered by the user for years before the journal with what was already used of it).</summary>
 public sealed record LossYear(int Year, decimal Amount, decimal AlreadyUsed = 0m);
 
 public sealed record CarryforwardUse(int LossYear, decimal Amount);
 
-/// <summary>The year in numbers, PLN: what was sold, what it cost, what is taxable and what is due.</summary>
+/// <summary>
+/// The year in numbers, PLN: what was sold, what it cost, what is taxable and what is due. <see cref="DividendIncome"/>
+/// is gross; <see cref="DividendTaxCredit"/> is the tax paid abroad that reduces the Polish dividend tax.
+/// </summary>
 public sealed record TaxYearSummary(
     int Year,
     decimal Revenue,
@@ -81,7 +99,8 @@ public sealed record TaxYearSummary(
     decimal DividendIncome,
     decimal DividendTax,
     decimal TaxDue,
-    decimal LossToCarry);
+    decimal LossToCarry,
+    decimal DividendTaxCredit = 0m);
 
 public sealed record TaxYearResult(
     TaxYearSummary Summary,
@@ -113,15 +132,23 @@ public static class TaxCalculator
             {
                 case TaxableKind.Buy:
                     var cost = Pln(entry.Quantity * entry.Price, entry.FxRate) + Pln(entry.Fee, entry.FxRate);
-                    Lots(lots, entry.InstrumentId).Add(new OpenLot(entry.TransactionId, entry.OccurredOn, entry.Sequence, entry.InstrumentId, entry.Quantity, cost, entry.FxRate));
+                    Lots(lots, entry.InstrumentId).Add(new OpenLot(entry.TransactionId, entry.OccurredOn, entry.Sequence, entry.InstrumentId, entry.Quantity, cost, entry.FxRate,
+                        entry.Quantity * entry.Price));
                     break;
 
                 case TaxableKind.Sell:
                     realizations.Add(Sell(entry, Lots(lots, entry.InstrumentId), policy, warnings));
                     break;
 
+                case TaxableKind.Dividend when entry.Broker is { } sold:
+                    realizations.Add(SaleOfIncome(entry, sold));
+                    break;
+
                 case TaxableKind.Dividend:
-                    dividends.Add(new DividendIncome(entry.TransactionId, entry.OccurredOn, entry.InstrumentId, entry.Amount, Pln(entry.Amount, entry.FxRate), entry.FxRate));
+                    var net = Pln(entry.Amount, entry.FxRate);
+                    var gross = entry.Withholding is { } withholding ? Pln(entry.Amount * withholding.GrossPerNet, entry.FxRate) : net;
+                    var withheld = entry.Withholding is { } paidAbroad ? Pln(entry.Amount * paidAbroad.WithheldPerNet, entry.FxRate) : 0m;
+                    dividends.Add(new DividendIncome(entry.TransactionId, entry.OccurredOn, entry.InstrumentId, entry.Amount, net, entry.FxRate, gross, withheld, entry.Currency));
                     break;
             }
         }
@@ -157,14 +184,18 @@ public static class TaxCalculator
             var used = uses.Sum(use => use.Amount);
             var taxBase = policy.IsTaxed ? policy.Rounding.Base(Math.Max(0m, gain - used)) : 0m;
             var capitalTax = policy.Rounding.Tax(taxBase * policy.RateSchedule.Rate.Value);
-            var dividendIncome = received.Sum(d => d.AmountPln);
-            var dividendTax = policy.IsTaxed ? policy.Rounding.Tax(policy.Rounding.Base(dividendIncome) * policy.RateSchedule.Rate.Value) : 0m;
+            // PIT-38 part G: the rate on gross dividends, less the tax paid abroad up to that rate, rounded once at the end.
+            var rate = policy.RateSchedule.Rate.Value;
+            var dividendIncome = received.Sum(d => d.GrossPln);
+            var dividendCredit = received.Sum(d => Math.Min(d.WithheldPln, d.GrossPln * rate));
+            var dividendTax = policy.IsTaxed ? policy.Rounding.Tax(Math.Max(0m, dividendIncome * rate - dividendCredit)) : 0m;
             var loss = gain < 0m ? -gain : 0m;
             if (loss > 0m && policy.IsTaxed)
                 losses.Add(new LossPool(new LossYear(year, loss)));
 
             results.Add(new TaxYearResult(
-                new TaxYearSummary(year, revenue, costs, gain, used, taxBase, capitalTax, dividendIncome, dividendTax, capitalTax + dividendTax, loss),
+                new TaxYearSummary(year, revenue, costs, gain, used, taxBase, capitalTax, dividendIncome, dividendTax, capitalTax + dividendTax, loss,
+                    policy.IsTaxed ? decimal.Round(dividendCredit, 2) : 0m),
                 sold,
                 received,
                 uses));
@@ -176,8 +207,10 @@ public static class TaxCalculator
     private static Realization Sell(TaxEvent sale, List<OpenLot> lots, ITaxPolicy policy, List<string> warnings)
     {
         var held = lots.Sum(lot => lot.Quantity);
-        var matches = policy.LotMatcher.Take(lots, Math.Min(sale.Quantity, held));
+        List<LotMatch> matches = [.. policy.LotMatcher.Take(lots, Math.Min(sale.Quantity, held))];
         var unmatched = sale.Quantity - matches.Sum(match => match.Quantity);
+        if (sale.Broker is { } broker)
+            matches = WithBrokerCost(matches, broker, ref unmatched);
         if (unmatched > 0m)
             warnings.Add($"Продаж {sale.OccurredOn:yyyy-MM-dd}: {unmatched} шт. без купівлі в журналі — їхня собівартість вважається нульовою.");
 
@@ -190,7 +223,55 @@ public static class TaxCalculator
             ? sale.Allocations.Select(allocation => new GainAttribution(allocation.SubPortfolioId, decimal.Round(gain * allocation.Quantity / total, 2))).ToList()
             : [];
 
-        return new Realization(sale.TransactionId, sale.OccurredOn, sale.InstrumentId, sale.Quantity, proceeds, cost, gain, sale.FxRate, sale.FxRateDate, matches, attributions, unmatched);
+        return new Realization(sale.TransactionId, sale.OccurredOn, sale.InstrumentId, sale.Quantity, proceeds, cost, gain, sale.FxRate, sale.FxRateDate, matches, attributions, unmatched,
+            sale.Broker?.GainPln);
+    }
+
+    /// <summary>
+    /// The broker's cost basis where it knows more than the journal. Units the journal never bought (a spin-off, a
+    /// transfer in) take the broker's lots that none of ours stands for. Our own lots take the broker's cost in the
+    /// trade's currency when it differs (a spin-off carved part of the parent's cost out), converted at each purchase's
+    /// own NBP rate, with our purchase fee kept.
+    /// </summary>
+    private static List<LotMatch> WithBrokerCost(List<LotMatch> own, SaleFacts broker, ref decimal unmatched)
+    {
+        var added = new List<LotMatch>();
+        foreach (var lot in broker.Lots.Where(lot => !own.Any(match => Math.Abs(match.AcquiredOn.DayNumber - lot.AcquiredOn.DayNumber) <= 3)))
+        {
+            if (unmatched <= 0m)
+                break;
+            var taken = Math.Min(lot.Quantity, unmatched);
+            var share = taken / lot.Quantity;
+            added.Add(new LotMatch(Guid.Empty, lot.AcquiredOn, taken, decimal.Round(lot.CostPln * share, 2), FromBroker: true, Gross: lot.Cost * share));
+            unmatched -= taken;
+        }
+
+        var ownGross = own.Sum(match => match.Gross);
+        if (broker.Cost is { } brokerCost && ownGross > 0m)
+        {
+            var delta = brokerCost - added.Sum(match => match.Gross) - ownGross;
+            // Under half a percent is rounding of prices and rates, not a different cost basis.
+            if (Math.Abs(delta) > Math.Max(0.02m, ownGross * 0.005m))
+                own = [.. own.Select(match => match with { CostPln = match.CostPln + decimal.Round(delta * match.Gross / ownGross * match.FxRate, 2), FromBroker = true })];
+        }
+        return [.. own, .. added];
+    }
+
+    /// <summary>
+    /// Income the journal recorded for shares sold without a buy (a spin-off), which the broker reports as a sale: the
+    /// income (already net of the sale fee) is the proceeds, the broker's lots are the cost.
+    /// </summary>
+    private static Realization SaleOfIncome(TaxEvent income, SaleFacts sold)
+    {
+        var proceeds = Pln(income.Amount, income.FxRate);
+        var cost = sold.Lots.Sum(lot => lot.CostPln);
+        var gain = proceeds - cost;
+        var total = income.Allocations.Sum(allocation => allocation.Quantity);
+        var attributions = total > 0m
+            ? income.Allocations.Select(allocation => new GainAttribution(allocation.SubPortfolioId, decimal.Round(gain * allocation.Quantity / total, 2))).ToList()
+            : [];
+        return new Realization(income.TransactionId, income.OccurredOn, income.InstrumentId, sold.Lots.Sum(lot => lot.Quantity), proceeds, cost, gain, income.FxRate, income.FxRateDate,
+            [.. sold.Lots.Select(lot => new LotMatch(Guid.Empty, lot.AcquiredOn, lot.Quantity, lot.CostPln, FromBroker: true, Gross: lot.Cost))], attributions, 0m, sold.GainPln);
     }
 
     private static List<OpenLot> Lots(Dictionary<Guid, List<OpenLot>> lots, Guid instrumentId) =>

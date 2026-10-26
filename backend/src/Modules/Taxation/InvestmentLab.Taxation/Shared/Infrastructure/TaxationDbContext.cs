@@ -2,6 +2,7 @@ using System.Text.Json;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Taxation.Assessments.Domain;
+using InvestmentLab.Taxation.BrokerStatements.Domain;
 using InvestmentLab.Taxation.Ledger.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -18,6 +19,7 @@ public sealed class TaxationDbContext(DbContextOptions<TaxationDbContext> option
     public DbSet<TaxLedgerEntry> Entries => Set<TaxLedgerEntry>();
     public DbSet<TaxAssessment> Assessments => Set<TaxAssessment>();
     public DbSet<LossCarryforward> Losses => Set<LossCarryforward>();
+    public DbSet<BrokerStatement> BrokerStatements => Set<BrokerStatement>();
 
     protected override string Schema => SchemaName;
 
@@ -66,6 +68,20 @@ public sealed class TaxationDbContext(DbContextOptions<TaxationDbContext> option
             loss.HasKey(l => l.Id);
             loss.HasIndex(l => l.AccountId);
             HasOwnerFilter(loss, l => l.OwnerId);
+        });
+
+        modelBuilder.Entity<BrokerStatement>(statement =>
+        {
+            statement.ToTable("broker_statements");
+            statement.HasKey(s => s.Id);
+            statement.HasIndex(s => s.AccountId);
+            statement.Property(s => s.Broker).HasMaxLength(40);
+            statement.Property(s => s.FileName).HasMaxLength(260);
+            statement.Property(s => s.Lots).HasJsonConversion();
+            statement.Property(s => s.Dividends).HasJsonConversion();
+            statement.Property(s => s.Warnings).HasJsonConversion();
+            statement.Ignore(s => s.Span);
+            HasOwnerFilter(statement, s => s.OwnerId);
         });
     }
 }

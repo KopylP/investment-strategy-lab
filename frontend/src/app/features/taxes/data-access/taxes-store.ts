@@ -15,6 +15,8 @@ export interface TaxYearSummary {
   dividendTax: number;
   taxDue: number;
   lossToCarry: number;
+  /** Tax paid abroad on the year's dividends that reduces the Polish tax. */
+  dividendTaxCredit: number;
 }
 
 export interface Realization {
@@ -27,8 +29,44 @@ export interface Realization {
   gainPln: number;
   fxRate: number;
   fxRateDate: string | null;
-  lots: { buyTransactionId: string; acquiredOn: string; quantity: number; costPln: number }[];
+  lots: { buyTransactionId: string; acquiredOn: string; quantity: number; costPln: number; fromBroker: boolean }[];
   unmatchedQuantity: number;
+  /** The broker's own gain of the sale (its report), to compare with ours. */
+  brokerGainPln: number | null;
+}
+
+export interface DividendIncome {
+  transactionId: string;
+  receivedOn: string;
+  instrumentId: string;
+  /** As received (net), in {@link currency} (the dividend's own; missing in years computed before it was kept). */
+  amount: number;
+  currency: string | null;
+  amountPln: number;
+  fxRate: number;
+  /** Before the tax withheld abroad; 0 in years computed before the broker reports existed. */
+  grossPln: number;
+  withheldPln: number;
+}
+
+export interface BrokerStatement {
+  id: string;
+  broker: string;
+  fileName: string;
+  uploadedAt: string;
+  from: string;
+  to: string;
+  sales: number;
+  dividends: number;
+  warnings: string[];
+}
+
+export interface BrokerStatements {
+  statements: BrokerStatement[];
+  sales: number;
+  matchedSales: number;
+  dividends: number;
+  matchedDividends: number;
 }
 
 export interface TaxYearDetails {
@@ -38,7 +76,7 @@ export interface TaxYearDetails {
   computedAt: string;
   summary: TaxYearSummary;
   realizations: Realization[];
-  dividends: { transactionId: string; receivedOn: string; instrumentId: string; amount: number; amountPln: number; fxRate: number }[];
+  dividends: DividendIncome[];
   carryforwardUses: { lossYear: number; amount: number }[];
   openLots: { buyTransactionId: string; acquiredOn: string; instrumentId: string; quantity: number; costPln: number; fxRate: number }[];
   instruments: Record<string, string>;
@@ -71,6 +109,11 @@ export class TaxesStore {
     loader: ({ params }) => this.api.get<TaxYearDetails>(`/api/taxation/accounts/${params.accountId}/years/${params.year}`),
   });
 
+  private readonly brokerResource = resource({
+    params: () => this.accounts.currentId(),
+    loader: ({ params: accountId }) => this.api.get<BrokerStatements>(`/api/taxation/accounts/${accountId}/broker-statements`),
+  });
+
   private readonly lossesResource = resource({
     params: () => this.accounts.currentId(),
     loader: ({ params: accountId }) => this.api.get<LossCarryforward[]>(`/api/taxation/accounts/${accountId}/losses`),
@@ -83,6 +126,7 @@ export class TaxesStore {
   readonly year = computed(() => this.selectedYear() ?? this.years()[0]?.year ?? null);
   readonly details = computed(() => (this.detailsResource.hasValue() ? this.detailsResource.value() : undefined));
   readonly losses = computed(() => this.lossesResource.value() ?? []);
+  readonly broker = computed(() => this.brokerResource.value());
   readonly isTaxed = computed(() => !this.years()[0] || this.years()[0].policyCode === 'PL-BELKA');
   readonly saving = signal(false);
 
@@ -98,12 +142,28 @@ export class TaxesStore {
     return this.change(() => this.api.delete(`/api/taxation/accounts/${this.requireAccount()}/losses/${loss.id}`), 'Збиток видалено');
   }
 
+  /** The broker's P&L report (PDF) goes as base64 inside JSON, like the CSV statement goes as text. */
+  async uploadBrokerStatement(file: File): Promise<boolean> {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    return this.change(
+      () => this.api.post(`/api/taxation/accounts/${this.requireAccount()}/broker-statements`, { fileName: file.name, contentBase64: btoa(binary) }),
+      'Звіт брокера враховано',
+    );
+  }
+
+  async removeBrokerStatement(statement: BrokerStatement): Promise<boolean> {
+    return this.change(() => this.api.delete(`/api/taxation/accounts/${this.requireAccount()}/broker-statements/${statement.id}`), 'Звіт брокера видалено');
+  }
+
   private async change(command: () => Promise<unknown>, success: string): Promise<boolean> {
     this.saving.set(true);
     try {
       await command();
       this.messages.add({ severity: 'success', summary: success });
       this.lossesResource.reload();
+      this.brokerResource.reload();
       this.yearsResource.reload();
       this.detailsResource.reload();
       return true;

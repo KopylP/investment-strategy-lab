@@ -10,6 +10,10 @@
       <span class="text-sm text-muted-color text-center max-w-lg">У застосунку Revolut: брокерський рахунок → документи → виписка операцій, формат CSV. Нічого не записується, поки ви не підтвердите.</span>
       <input type="file" accept=".csv,text/csv" class="hidden" (change)="readFile($event)" />
     </label>
+    <p class="text-sm text-muted-color mt-3 mb-0">
+      <i class="pi pi-info-circle text-xs mr-1"></i>Податок, утриманий з дивідендів за кордоном, і собівартість акцій після спін-офу є лише у звіті P&amp;L (PDF) —
+      завантажте його на сторінці <a routerLink="/taxes" class="text-primary">«Податки»</a>.
+    </p>
   </div>
 
   @if (store.history().length) {
