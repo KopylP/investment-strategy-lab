@@ -56,16 +56,16 @@ public sealed class DeclarationQueries(
         return new DeclarationDto(form.Fill(input), [.. mine.SelectMany(account => account.Warnings)]);
     }
 
-    /// <summary>The filled return on its official form, as a PDF.</summary>
-    public async Task<Result<(byte[] Content, string FileName)>> Pdf(int year, string code, CancellationToken cancellationToken)
+    /// <summary>The filled return as a PDF: a cheat sheet of what to type where ("summary"), or the official form ("form").</summary>
+    public async Task<Result<(byte[] Content, string FileName)>> Pdf(int year, string code, string kind, CancellationToken cancellationToken)
     {
         var filled = await Fill(year, code, cancellationToken);
         if (filled.IsFailure)
             return filled.Error;
         var declaration = filled.Value.Declaration;
-        if (printers.FirstOrDefault(printer => printer.Form == declaration.Form) is not { } printer)
-            return Error.NotFound("tax.form_not_printable", $"{declaration.Form} has no PDF.");
-        return (printer.Print(declaration), $"{declaration.Form}-{year}.pdf");
+        if (printers.FirstOrDefault(printer => printer.Kind == kind && printer.Prints(declaration)) is not { } printer)
+            return Error.NotFound("tax.form_not_printable", $"{declaration.Form} has no {kind} PDF.");
+        return (printer.Print(declaration), $"{declaration.Form}-{year}-{(kind == "form" ? "formularz" : "sciaga")}.pdf");
     }
 
     /// <summary>Records (or corrects) what a broker's PIT-8C says of an account's year.</summary>

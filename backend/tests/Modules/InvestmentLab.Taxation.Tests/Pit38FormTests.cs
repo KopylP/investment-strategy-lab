@@ -77,7 +77,7 @@ public sealed class Pit38FormTests
         Poz(declaration, 30).ShouldBe(0m);
         Poz(declaration, 31).ShouldBe(0m);
         Poz(declaration, 35).ShouldBe(0m);
-        declaration.Notes.ShouldContain(note => note.Contains("збиток"));
+        declaration.Notes.ShouldContain(note => note.Text.Contains("збиток"));
     }
 
     [Theory]
@@ -198,7 +198,7 @@ public sealed class Pit38FormTests
         Poz(declaration, 48).ShouldBe(900m);
         Poz(declaration, 49).ShouldBe(240m);
         Poz(declaration, 51).ShouldBe(240m);
-        declaration.Notes.ShouldContain(note => note.Contains("польських компаній"));
+        declaration.Notes.ShouldContain(note => note.Text.Contains("польських компаній"));
     }
 
     [Fact]
@@ -207,7 +207,7 @@ public sealed class Pit38FormTests
         var declaration = Fill(Account("Revolut", [Year(2025, 0m, 0m)], dividends: [Paid(500m, 0m, Orlen)]));
 
         Poz(declaration, 47).ShouldBe(0m);
-        declaration.Notes.ShouldContain(note => note.Contains("poz. 46"));
+        declaration.Notes.ShouldContain(note => note.Text.Contains("poz. 46"));
     }
 
     [Fact]
@@ -229,7 +229,7 @@ public sealed class Pit38FormTests
         Poz(declaration, 47).ShouldBe(95m);
         Poz(declaration, 48).ShouldBe(0m);
         Poz(declaration, 49).ShouldBe(95m);
-        declaration.Notes.ShouldNotContain(note => note.Contains("без даних"));
+        declaration.Notes.ShouldNotContain(note => note.Text.Contains("без даних"));
     }
 
     [Fact]
@@ -238,7 +238,7 @@ public sealed class Pit38FormTests
         var declaration = Fill(Account("XTB", [Year(2025, 0m, 0m)], dividends: [Paid(85m, 0m, known: false)]));
 
         Poz(declaration, 47).ShouldBe(16.15m);
-        declaration.Notes.ShouldContain(note => note.Contains("1 іноземних дивідендів без даних"));
+        declaration.Notes.ShouldContain(note => note.Text.Contains("1 іноземних дивідендів без даних"));
     }
 
     [Fact]
@@ -269,7 +269,7 @@ public sealed class Pit38FormTests
 
         Poz(declaration, 48).ShouldBe(190m);
         Poz(declaration, 49).ShouldBe(0m);
-        declaration.Notes.ShouldContain(note => note.Contains("poz. 49 = 40 zł"));
+        declaration.Notes.ShouldContain(note => note.Text.Contains("poz. 49 = 40 zł"));
     }
 
     [Fact]
@@ -278,7 +278,7 @@ public sealed class Pit38FormTests
         var declaration = Fill(Account("Revolut", [Year(2025, 0m, 0m)], dividends: [Paid(1000m, 150m, Toyota)]));
 
         Poz(declaration, 49).ShouldBe(40m);
-        declaration.Notes.ShouldContain(note => note.Contains("poz. 49 = 90 zł"));
+        declaration.Notes.ShouldContain(note => note.Text.Contains("poz. 49 = 90 zł"));
     }
 
     [Fact]
@@ -286,7 +286,7 @@ public sealed class Pit38FormTests
     {
         var declaration = Fill(Account("Revolut", [Year(2025, 0m, 0m)], dividends: [Paid(1000m, 150m)]));
 
-        declaration.Notes.ShouldNotContain(note => note.Contains("KIS"));
+        declaration.Notes.ShouldNotContain(note => note.Text.Contains("KIS"));
     }
 
     // Row 1 from the broker's PIT-8C
@@ -301,7 +301,7 @@ public sealed class Pit38FormTests
         (Poz(declaration, 20), Poz(declaration, 21)).ShouldBe((5100m, 5350m));
         Poz(declaration, 28).ShouldBe(750m);
         Poz(declaration, 35).ShouldBe(143m);         // 750 × 19% = 142.50
-        declaration.Notes.ShouldNotContain(note => note.Contains("введіть суми з PIT-8C"));
+        declaration.Notes.ShouldNotContain(note => note.Text.Contains("введіть суми з PIT-8C"));
         declaration.Accounts.Single(account => account.Broker == "XTB").Pit8C.ShouldBe(new Pit8CAmounts(5100m, 5350m));
     }
 
@@ -311,7 +311,7 @@ public sealed class Pit38FormTests
         var declaration = Fill(Account("XTB", [Year(2025, 5000m, 4000m)]));
 
         Poz(declaration, 20).ShouldBe(5000m);
-        declaration.Notes.ShouldContain(note => note.Contains("введіть суми з PIT-8C"));
+        declaration.Notes.ShouldContain(note => note.Text.Contains("введіть суми з PIT-8C"));
         declaration.Accounts.Single().TakesPit8C.ShouldBeTrue();
     }
 
@@ -359,7 +359,7 @@ public sealed class Pit38FormTests
         var declaration = Fill(Account("Revolut", [Year(2025, 2000m, 1000m)], sales: [Sale(Eurobond, 1000m)]));
 
         declaration.Attachments.ShouldBeEmpty();
-        declaration.Notes.ShouldContain(note => note.Contains("XS/EU"));
+        declaration.Notes.ShouldContain(note => note.Text.Contains("XS/EU"));
     }
 
     [Fact]
@@ -368,7 +368,7 @@ public sealed class Pit38FormTests
         var declaration = Fill(Account("Revolut", [Year(2025, 2000m, 1000m)], sales: [Sale(NoIsin, 1000m)]));
 
         declaration.Attachments.ShouldBeEmpty();
-        declaration.Notes.ShouldContain(note => note.Contains("без країни"));
+        declaration.Notes.ShouldContain(note => note.Text.Contains("без країни"));
     }
 
     // Accounts, form and notes
@@ -381,7 +381,7 @@ public sealed class Pit38FormTests
         Poz(declaration, 26).ShouldBe(2000m);
         Poz(declaration, 47).ShouldBe(0m);
         declaration.Accounts.Single(account => account.Broker == "XTB").Treatment.ShouldBe("Не оподатковується");
-        declaration.Notes.ShouldContain(note => note.Contains("XTB EUR") && note.Contains("IKE"));
+        declaration.Notes.ShouldContain(note => note.Text.Contains("XTB EUR") && note.Text.Contains("IKE"));
     }
 
     [Fact]
@@ -415,9 +415,9 @@ public sealed class Pit38FormTests
     {
         var declaration = Fill(2026, [new LossYear(2024, 1000m)], Account("XTB", [Year(2026, 2000m, 1000m)]));
 
-        declaration.Notes.ShouldContain(note => note.Contains("PIT-8C"));
-        declaration.Notes.ShouldContain(note => note.Contains("5 000 000"));
-        declaration.Notes.ShouldContain(note => note.Contains("2026"));
+        declaration.Notes.ShouldContain(note => note.Text.Contains("PIT-8C"));
+        declaration.Notes.ShouldContain(note => note.Text.Contains("5 000 000"));
+        declaration.Notes.ShouldContain(note => note.Text.Contains("2026"));
     }
 
     [Fact]
@@ -425,8 +425,31 @@ public sealed class Pit38FormTests
     {
         var declaration = Fill(Account("Revolut", [Year(2025, 2000m, 1000m)]));
 
-        declaration.Notes.ShouldNotContain(note => note.Contains("PIT-8C"));
-        declaration.Notes.ShouldNotContain(note => note.Contains("5 000 000"));
+        declaration.Notes.ShouldNotContain(note => note.Text.Contains("PIT-8C"));
+        declaration.Notes.ShouldNotContain(note => note.Text.Contains("5 000 000"));
+    }
+
+    [Fact]
+    public void Totals_and_tax_are_marked_as_worked_out_by_the_online_form_and_the_rest_as_typed()
+    {
+        var declaration = Fill(Account("Revolut", [Year(2025, 2000m, 1000m)]));
+        var fields = declaration.Sections.SelectMany(section => section.Fields).ToList();
+
+        fields.Where(field => field.Computed).Select(field => field.Position).ShouldBe([26, 27, 28, 29, 31, 32, 33, 35, 49, 51, 52, 72]);
+        declaration.TaxDue.ShouldBe(Poz(declaration, 51)!.Value);
+    }
+
+    [Fact]
+    public void Things_to_do_before_filing_are_actions_with_a_short_line_and_explanations_are_not()
+    {
+        var declaration = Fill(Account("XTB", [Year(2025, 1000m, 2000m)], dividends: [Paid(85m, 0m, known: false)]));
+
+        declaration.Notes.Where(note => note.Action).ShouldAllBe(note => note.Short != null);
+        declaration.Notes.Where(note => note.Action).Select(note => note.Short!).ShouldContain(note => note.Contains("PIT-8C"));
+        declaration.Notes.Where(note => note.Action).Select(note => note.Short!).ShouldContain(note => note.Contains("Збиток"));
+        declaration.Notes.Where(note => note.Action).Select(note => note.Short!).ShouldContain(note => note.Contains("без даних"));
+        declaration.Notes.Single(note => note.Text.Contains("art. 11a")).Action.ShouldBeFalse();
+        declaration.Facts!.Single().Label.ShouldBe("Дивіденди з-за кордону брутто");
     }
 
     [Fact]

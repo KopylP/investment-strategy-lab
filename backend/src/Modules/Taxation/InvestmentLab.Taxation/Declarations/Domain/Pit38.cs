@@ -93,58 +93,76 @@ public sealed class Pit38Form : ITaxDeclarationForm
                 new(23, "Koszty – wiersz 2", p23, Hint: "Купівля проданих лотів (FIFO) і комісії купівлі та продажу"),
                 new(24, "Przychód – wiersz 3 (art. 21 ust. 1 pkt 105a)", 0m, Hint: "Пільга IPO — не застосовується"),
                 new(25, "Koszty – wiersz 3", 0m),
-                new(26, "Razem przychód", p26, Hint: "poz. 20 + 22 − 24"),
-                new(27, "Razem koszty", p27, Hint: "poz. 21 + 23 − 25"),
-                new(28, "Dochód", p28),
-                new(29, "Strata", p29, Hint: p29 > 0m ? "Збиток можна віднімати від доходу наступних 5 років, до половини на рік" : null),
+                new(26, "Razem przychód", p26, Hint: "poz. 20 + 22 − 24", Computed: true),
+                new(27, "Razem koszty", p27, Hint: "poz. 21 + 23 − 25", Computed: true),
+                new(28, "Dochód", p28, Computed: true),
+                new(29, "Strata", p29, Hint: p29 > 0m ? "Збиток можна віднімати від доходу наступних 5 років, до половини на рік" : null, Computed: true),
             ]),
             new("D", "Obliczenie zobowiązania podatkowego", [
                 new(30, "Straty z lat ubiegłych", p30, Hint: "Не більше половини збитку кожного року за останні 5 років і не більше poz. 28"),
-                new(31, "Podstawa obliczenia podatku", p31, Hint: "poz. 28 − 30, до повних злотих"),
-                new(32, "Stawka podatku (%)", decimal.Round(rate * 100m, 0)),
-                new(33, "Podatek od dochodów z poz. 31", p33),
+                new(31, "Podstawa obliczenia podatku", p31, Hint: "poz. 28 − 30, до повних злотих", Computed: true),
+                new(32, "Stawka podatku (%)", decimal.Round(rate * 100m, 0), Computed: true),
+                new(33, "Podatek od dochodów z poz. 31", p33, Computed: true),
                 new(34, "Podatek zapłacony za granicą (art. 30b ust. 5a i 5b)", p34, Hint: "З продажів за кордоном податок не утримано"),
-                new(35, "Podatek należny", p35, Hint: "poz. 33 − 34, до повних злотих"),
+                new(35, "Podatek należny", p35, Hint: "poz. 33 − 34, до повних злотих", Computed: true),
             ]),
             new("G", "Podatek do zapłaty / nadpłata", [
                 new(46, "Zryczałtowany podatek niepobrany przez płatnika", 0m),
                 new(47, "Zryczałtowany podatek od przychodów zagranicznych (art. 30a ust. 1 pkt 1–5)", p47, Hint: "19% від іноземних дивідендів брутто (до утримання за кордоном), усіх брокерів"),
                 new(48, "Podatek zapłacony za granicą (art. 30a ust. 9)", p48, Hint: "Утриманий за кордоном податок, не більше 19% кожного дивіденду"),
-                new(49, "Różnica", p49, Hint: "poz. 47 − 48, до повних злотих"),
+                new(49, "Różnica", p49, Hint: "poz. 47 − 48, до повних злотих", Computed: true),
                 new(50, "Zaliczki przekazane spółce nieruchomościowej", 0m),
-                new(51, "Podatek do zapłaty", p51, Hint: "poz. 35 + 45 + 46 + 49 − 50"),
-                new(52, "Nadpłata", 0m),
+                new(51, "Podatek do zapłaty", p51, Hint: "poz. 35 + 45 + 46 + 49 − 50", Computed: true),
+                new(52, "Nadpłata", 0m, Computed: true),
             ]),
             new("L", "Informacje o załącznikach", [
-                new(72, "Liczba załączników PIT/ZG", attachments.Count, Hint: "Один PIT/ZG на кожну країну з доходом від продажів; дивіденди в нього не входять"),
+                new(72, "Liczba załączników PIT/ZG", attachments.Count, Hint: "Один PIT/ZG на кожну країну з доходом від продажів; дивіденди в нього не входять", Computed: true),
             ]),
         };
 
-        var notes = new List<string>
+        var notes = new List<DeclarationNote>
         {
-            "Суми в PLN за середнім курсом NBP останнього робочого дня перед датою угоди чи виплати (art. 11a). Закон пов’язує дохід з переходом власності (art. 17 ust. 1ab) — частина брокерів і порадників бере курс дня перед датою розрахунку (T+1 США, T+2 ЄС), тоді суми трохи інші.",
-            "Номери позицій — за формою PIT-38(18) і брошурою Міністерства фінансів за 2025 рік." + (year == 2025 ? "" : $" Форми за {year} рік ще немає — перевірте номери, коли її опублікують."),
-            "Частини E/F (криптовалюти) не заповнені: якщо маєте крипто, впишіть їх самі.",
+            new("Суми в PLN за середнім курсом NBP останнього робочого дня перед датою угоди чи виплати (art. 11a). Закон пов’язує дохід з переходом власності (art. 17 ust. 1ab) — частина брокерів і порадників бере курс дня перед датою розрахунку (T+1 США, T+2 ЄС), тоді суми трохи інші."),
+            year == 2025
+                ? new("Номери позицій — за формою PIT-38(18) і брошурою Міністерства фінансів за 2025 рік.")
+                : new($"Номери позицій — за формою PIT-38(18) за 2025 рік; форми за {year} рік ще немає — перевірте номери, коли її опублікують.", true,
+                    $"Номери poz. — за формою 2025 року: звірте з формою за {year}."),
+            new("Частини E/F (криптовалюти) не заповнені: якщо маєте крипто, впишіть їх самі."),
         };
         if (withoutPit8C.Count > 0)
-            notes.Add($"Рядок 1 — {string.Join(", ", withoutPit8C.Select(account => account.Name))}: введіть суми з PIT-8C брокера (poz. 35 і 36), і решта форми перерахується від них.");
+            notes.Add(new($"Рядок 1 — {string.Join(", ", withoutPit8C.Select(account => account.Name))}: введіть суми з PIT-8C брокера (poz. 35 і 36), і решта форми перерахується від них.", true,
+                $"poz. 20/21: впишіть poz. 35/36 з PIT-8C ({string.Join(", ", withoutPit8C.Select(account => account.Broker).Distinct())}), тут — наш розрахунок."));
         if (withholdingUnknown.Count > 0)
-            notes.Add($"{withholdingUnknown.Count} іноземних дивідендів без даних про утриманий за кордоном податок: poz. 47 рахується з отриманої суми, poz. 48 — без нього, тож податок завищено. Завантажте звіт брокера (Revolut P&L) або перевірте суми брутто й утримане самі. Якщо за кордоном нічого не утримали (напр. ірландські ETF), усе правильно.");
+            notes.Add(new($"{withholdingUnknown.Count} іноземних дивідендів без даних про утриманий за кордоном податок: poz. 47 рахується з отриманої суми, poz. 48 — без нього, тож податок завищено. Завантажте звіт брокера (Revolut P&L) або перевірте суми брутто й утримане самі. Якщо за кордоном нічого не утримали (напр. ірландські ETF), усе правильно.", true,
+                $"{withholdingUnknown.Count} дивідендів без даних про утримане за кордоном: звірте poz. 47/48 з виписками брокера."));
         if (polish.Count > 0)
-            notes.Add($"{polish.Count} дивідендів польських компаній не в розділі G: податок утримує польський платник." +
-                (polish.Any(paid => row2.Contains(paid.Account)) ? " На іноземному брокері перевірте, що 19% справді утримали — інакше їх треба вписати в poz. 46." : ""));
+        {
+            var abroad = polish.Any(paid => row2.Contains(paid.Account));
+            notes.Add(new($"{polish.Count} дивідендів польських компаній не в розділі G: податок утримує польський платник." +
+                (abroad ? " На іноземному брокері перевірте, що 19% справді утримали — інакше їх треба вписати в poz. 46." : ""), abroad,
+                abroad ? "Дивіденди польських компаній на іноземному брокері: якщо 19% не утримали — впишіть у poz. 46." : null));
+        }
         if (accounts.Any(account => !account.Policy.IsTaxed))
-            notes.Add($"Не входять: {string.Join(", ", accounts.Where(account => !account.Policy.IsTaxed).Select(account => account.Name))} (IKE/IKZE не оподатковуються).");
+            notes.Add(new($"Не входять: {string.Join(", ", accounts.Where(account => !account.Policy.IsTaxed).Select(account => account.Name))} (IKE/IKZE не оподатковуються)."));
         if (p29 > 0m)
-            notes.Add("За рік збиток: подайте PIT-38 усе одно — без нього збиток не можна буде відняти в наступні роки.");
+            notes.Add(new("За рік збиток: подайте PIT-38 усе одно — без нього збиток не можна буде відняти в наступні роки.", true,
+                "Збиток: подайте PIT-38 усе одно, щоб відняти його в наступні роки."));
         if (p30 > 0m)
-            notes.Add("poz. 30 — за правилом «до 50% збитку року». Закон дозволяє й раз за 5 років відняти до 5 000 000 zł одного збитку — тоді суму змініть самі.");
+            notes.Add(new("poz. 30 — за правилом «до 50% збитку року». Закон дозволяє й раз за 5 років відняти до 5 000 000 zł одного збитку — тоді суму змініть самі."));
         if (attachments.Count > 0)
-            notes.Add("PIT/ZG: країна — за ISIN цінного папера. Чи обов’язковий PIT/ZG, коли за кордоном податку з продажу не утримано, — спірно (брошура МФ пов’язує його з методом пропорційного відрахування), але e-Urząd вимагає його для доходу з-за кордону, і він нічого не змінює в податку.");
+            notes.Add(new("PIT/ZG: країна — за ISIN цінного папера. Чи обов’язковий PIT/ZG, коли за кордоном податку з продажу не утримано, — спірно (брошура МФ пов’язує його з методом пропорційного відрахування), але e-Urząd вимагає його для доходу з-за кордону, і він нічого не змінює в податку."));
         if (unknownCountry > 0)
-            notes.Add($"{unknownCountry} продажів без країни в ISIN (немає ISIN або XS/EU): їх немає в PIT/ZG — перевірте країну емітента.");
+            notes.Add(new($"{unknownCountry} продажів без країни в ISIN (немає ISIN або XS/EU): їх немає в PIT/ZG — перевірте країну емітента.", true,
+                $"{unknownCountry} продажів без країни в ISIN — їх немає в PIT/ZG."));
         if (overTreaty.Count > 0 && kisP49 != p49)
-            notes.Add($"{overTreaty.Count} дивідендів з утриманням понад ставку договору (немає W-8BEN?). Тут залік до 19% (art. 30a ust. 9, NSA); податкова (KIS) зараховує лише за ставкою договору — тоді poz. 48 = {kisCredit:N2}, poz. 49 = {kisP49:N0} zł.");
+            notes.Add(new($"{overTreaty.Count} дивідендів з утриманням понад ставку договору (немає W-8BEN?). Тут залік до 19% (art. 30a ust. 9, NSA); податкова (KIS) зараховує лише за ставкою договору — тоді poz. 48 = {kisCredit:N2}, poz. 49 = {kisP49:N0} zł.", true,
+                $"Утримано понад ставку договору: за позицією KIS poz. 48 = {kisCredit:N2}, poz. 49 = {kisP49:N0} zł."));
+
+        var facts = new List<DeclarationFact>
+        {
+            new("Дивіденди з-за кордону брутто", foreign.Sum(dividend => dividend.GrossPln)),
+            new("Утримано за кордоном з них", foreign.Sum(dividend => dividend.WithheldPln)),
+        };
 
         string Treatment(DeclarationAccount account) =>
             !account.Policy.IsTaxed ? "Не оподатковується" : row1.Contains(account) ? "Рядок 1 (PIT-8C) · дивіденди в G" : "Рядок 2 · дивіденди в G";
@@ -153,7 +171,7 @@ public sealed class Pit38Form : ITaxDeclarationForm
                 account.AccountId, row1.Contains(account), account.Pit8C)
             : new DeclarationAccountLine(account.Name, account.Broker, Treatment(account), 0m, 0m, 0m, 0m, account.AccountId, row1.Contains(account), account.Pit8C)).ToList();
 
-        return new TaxDeclaration(Code, Title, year, Deadline(year), sections, attachments, lines, notes);
+        return new TaxDeclaration(Code, Title, year, Deadline(year), sections, attachments, lines, notes, p51, facts.Where(fact => fact.Amount != 0m).ToList());
     }
 
     /// <summary>30 April of the next year, moved to the next working day past a weekend, 1 May or 3 May (art. 12 § 5 Ordynacji).</summary>

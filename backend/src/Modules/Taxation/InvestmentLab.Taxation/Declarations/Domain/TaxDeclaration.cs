@@ -37,7 +37,15 @@ public sealed record DeclarationInput(int Year, IReadOnlyList<DeclarationAccount
 /// <param name="Position">The position number on the form ("poz.").</param>
 /// <param name="Amount">An amount in the form's currency; null for a text field (<paramref name="Text"/>).</param>
 /// <param name="Hint">Where the value comes from, in the app's language.</param>
-public sealed record DeclarationField(int Position, string Label, decimal? Amount, string? Text = null, string? Hint = null);
+/// <param name="Computed">The online form (e-Urząd, Twój e-PIT) works it out from the others: to check, not to type.</param>
+public sealed record DeclarationField(int Position, string Label, decimal? Amount, string? Text = null, string? Hint = null, bool Computed = false);
+
+/// <param name="Action">Something to do or decide before filing (not only to know).</param>
+/// <param name="Short">The same in one line, for the cheat sheet.</param>
+public sealed record DeclarationNote(string Text, bool Action = false, string? Short = null);
+
+/// <summary>A figure the form does not ask for but the person files from (gross dividends, what was withheld abroad).</summary>
+public sealed record DeclarationFact(string Label, decimal Amount);
 
 public sealed record DeclarationSection(string Code, string Title, IReadOnlyList<DeclarationField> Fields);
 
@@ -60,4 +68,6 @@ public sealed record TaxDeclaration(
     IReadOnlyList<DeclarationSection> Sections,
     IReadOnlyList<DeclarationAttachment> Attachments,
     IReadOnlyList<DeclarationAccountLine> Accounts,
-    IReadOnlyList<string> Notes);
+    IReadOnlyList<DeclarationNote> Notes,
+    decimal TaxDue = 0m,
+    IReadOnlyList<DeclarationFact>? Facts = null);

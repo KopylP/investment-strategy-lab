@@ -7,7 +7,10 @@
   } @else if (declaration(); as d) {
     <div class="text-sm text-muted-color mb-3">{{ d.title }} · подати з 15 лютого до {{ d.deadline | date }}</div>
     <div class="flex flex-wrap gap-2 mb-3">
-      <p-button label="PDF на бланку" icon="pi pi-file-pdf" size="small" [loading]="pdfLoading()" (onClick)="pdf.emit()" />
+      <p-button label="Шпаргалка PDF" icon="pi pi-file-pdf" size="small" [loading]="pdfLoading() === 'summary'" (onClick)="pdf.emit('summary')"
+                pTooltip="Одна сторінка: що куди вписати в e-Urząd, з номерами poz." tooltipPosition="bottom" />
+      <p-button label="PDF на бланку" icon="pi pi-file" size="small" severity="secondary" [outlined]="true" [loading]="pdfLoading() === 'form'" (onClick)="pdf.emit('form')"
+                pTooltip="Офіційна форма PIT-38 і PIT/ZG з вписаними сумами — для паперу" tooltipPosition="bottom" />
       <p-button label="Копіювати все" icon="pi pi-copy" size="small" severity="secondary" [outlined]="true" (onClick)="copyAll(d)" />
     </div>
 
@@ -74,7 +77,7 @@
     @if (d.notes.length) {
       <h3 class="text-base font-semibold mt-5 mb-2">Що варто знати</h3>
       <ul class="m-0 pl-5 text-sm flex flex-col gap-1">
-        @for (note of d.notes; track $index) { <li>{{ note }}</li> }
+        @for (note of d.notes; track $index) { <li [class.font-medium]="note.action">{{ note.text }}</li> }
       </ul>
     }
   }
@@ -86,7 +89,7 @@
       <div class="flex items-center gap-3 py-2 border-b border-surface-200 dark:border-surface-700">
         <span class="w-14 shrink-0 text-sm text-muted-color">poz. {{ field.position }}</span>
         <div class="flex-1 min-w-0">
-          <div class="text-sm">{{ field.label }}</div>
+          <div class="text-sm">{{ field.label }} @if (field.computed) { <span class="text-xs text-muted-color">· рахує форма</span> }</div>
           @if (field.hint) { <div class="text-xs text-muted-color">{{ field.hint }}</div> }
         </div>
         <span class="font-semibold tabular-nums whitespace-nowrap" [class.text-muted-color]="field.amount === 0">{{ formValue(field) }}</span>

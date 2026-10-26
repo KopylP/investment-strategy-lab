@@ -148,25 +148,25 @@ export class TaxesStore {
     return this.change(() => this.api.delete(`/api/taxation/declarations/${this.year()}/pit-8c/${accountId}`), 'Суми PIT-8C видалено');
   }
 
-  readonly pdfLoading = signal(false);
+  readonly pdfLoading = signal<'summary' | 'form' | null>(null);
 
-  /** The filled return on the official form (PIT-38 with its PIT/ZG), saved as a file. */
-  async downloadDeclarationPdf(): Promise<void> {
+  /** The filled return as a file: a cheat sheet of what to type where, or the official form (PIT-38 with its PIT/ZG). */
+  async downloadDeclarationPdf(kind: 'summary' | 'form'): Promise<void> {
     const code = this.declarationCode();
     const year = this.year();
     if (!code || !year) return;
-    this.pdfLoading.set(true);
+    this.pdfLoading.set(kind);
     try {
-      const pdf = await this.api.blob(`/api/taxation/declarations/${year}/${encodeURIComponent(code)}/pdf`);
+      const pdf = await this.api.blob(`/api/taxation/declarations/${year}/${encodeURIComponent(code)}/pdf?kind=${kind}`);
       const link = document.createElement('a');
       link.href = URL.createObjectURL(pdf);
-      link.download = `${code}-${year}.pdf`;
+      link.download = `${code}-${year}-${kind === 'form' ? 'formularz' : 'sciaga'}.pdf`;
       link.click();
       setTimeout(() => URL.revokeObjectURL(link.href), 10_000);
     } catch (error) {
       this.messages.add({ severity: 'error', summary: 'PDF не створено', detail: toProblemMessage(error) });
     } finally {
-      this.pdfLoading.set(false);
+      this.pdfLoading.set(null);
     }
   }
 

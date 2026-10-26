@@ -25,7 +25,9 @@ public sealed class Pit38PdfPrinter : IDeclarationPrinter
     /// <summary>Box 1 of poz. 6, "złożenie zeznania" (a correction is ticked by hand).</summary>
     private static readonly PdfPoint FilingBox = new(75.6, 507.5);
 
-    public string Form => "PIT-38";
+    public string Kind => "form";
+
+    public bool Prints(TaxDeclaration declaration) => declaration.Form == "PIT-38";
 
     /// <summary>Positions of PIT-38(18) by "poz." number; the year is position 4.</summary>
     public static readonly IReadOnlyDictionary<int, Box> Pit38 = new Dictionary<int, Box>
@@ -125,14 +127,7 @@ public sealed class Pit38PdfPrinter : IDeclarationPrinter
         ? Math.Abs(amount).ToString("0.00", CultureInfo.InvariantCulture).Replace('.', ',')
         : decimal.Round(Math.Abs(amount), 0, MidpointRounding.AwayFromZero).ToString("0", CultureInfo.InvariantCulture);
 
-    private static byte[] Resource(string name)
-    {
-        using var stream = typeof(Pit38PdfPrinter).Assembly.GetManifestResourceStream($"Forms/{name}")
-            ?? throw new InvalidOperationException($"Form resource {name} is missing.");
-        using var copy = new MemoryStream();
-        stream.CopyTo(copy);
-        return copy.ToArray();
-    }
+    private static byte[] Resource(string name) => FormResources.Load(name);
 
     /// <summary>Where a value goes on a page (1-based), in points from the page's bottom left.</summary>
     public abstract record Box(int Page);

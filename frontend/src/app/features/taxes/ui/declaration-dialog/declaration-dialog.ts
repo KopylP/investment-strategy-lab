@@ -7,13 +7,14 @@ import { Button } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
 import { Message } from 'primeng/message';
 import { Skeleton } from 'primeng/skeleton';
+import { Tooltip } from 'primeng/tooltip';
 import { DatePipe, MoneyPipe } from '../../../../shared/pipes/format-pipes';
 import { DeclarationAccountLine, DeclarationField, formValue, Pit8CAmounts, TaxDeclaration } from '../../data-access/declarations';
 
 /** The filled return, field by field with its "poz." number, each value one click from the clipboard. */
 @Component({
   selector: 'app-declaration-dialog',
-  imports: [NgTemplateOutlet, FormsModule, InputNumber, Dialog, Button, Message, Skeleton, MoneyPipe, DatePipe],
+  imports: [NgTemplateOutlet, FormsModule, InputNumber, Dialog, Button, Message, Skeleton, Tooltip, MoneyPipe, DatePipe],
   templateUrl: './declaration-dialog.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -24,12 +25,12 @@ export class DeclarationDialog {
   readonly warnings = input<string[]>([]);
   readonly loading = input(false);
   readonly visible = input(false);
-  readonly pdfLoading = input(false);
+  readonly pdfLoading = input<'summary' | 'form' | null>(null);
   /** Why the return could not be filled; shown in place of it. */
   readonly problem = input<string | null>(null);
   readonly saving = input(false);
   readonly closed = output<void>();
-  readonly pdf = output<void>();
+  readonly pdf = output<'summary' | 'form'>();
   readonly pit8c = output<{ accountId: string; amounts: Pit8CAmounts }>();
   readonly pit8cRemoved = output<string>();
 

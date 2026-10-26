@@ -15,8 +15,8 @@ internal static class DeclarationEndpoints
             .WithName("GetDeclarationForms");
         declarations.MapGet("/{code}", async (int year, string code, DeclarationQueries queries, CancellationToken ct) => (await queries.Fill(year, code, ct)).ToHttpResult())
             .WithName("GetDeclaration");
-        declarations.MapGet("/{code}/pdf", async (int year, string code, DeclarationQueries queries, CancellationToken ct) =>
-                await queries.Pdf(year, code, ct) is var pdf && pdf.IsSuccess
+        declarations.MapGet("/{code}/pdf", async (int year, string code, string? kind, DeclarationQueries queries, CancellationToken ct) =>
+                await queries.Pdf(year, code, kind ?? "summary", ct) is var pdf && pdf.IsSuccess
                     ? Results.File(pdf.Value.Content, "application/pdf", pdf.Value.FileName)
                     : pdf.Error.ToProblem())
             .WithName("GetDeclarationPdf");
