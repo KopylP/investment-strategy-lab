@@ -14,6 +14,11 @@
     &:last-child {
         margin-bottom: 0;
     }
+
+    /* A card that lays out its own padding (e.g. a list running edge to edge); the utility alone loses to .card. */
+    &.p-0 {
+        padding: 0;
+    }
 }
 
 .p-toast {

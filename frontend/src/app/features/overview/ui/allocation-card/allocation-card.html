@@ -1,30 +1,52 @@
-@if (dashboard().subPortfolios.length <= 1) {
-  <p class="text-sm text-muted-color mt-0 mb-3">
-    Тут порівнюється фактична частка кожного під-портфеля з цільовою. У вас один під-портфель (ціль 100%), тож порівнювати нічого —
-    склад за інструментами дивіться в <a routerLink="/holdings" class="text-primary">позиціях</a>.
-  </p>
-}
-<div class="flex flex-col 2xl:flex-row gap-6 items-center">
-  @if (dashboard().subPortfolios.length > 1) {
-  <div class="w-48 shrink-0">
-    @for (chart of [data()]; track chart) {
-      <p-chart type="doughnut" [data]="chart" [options]="options()" />
+@if (viewport.phone()) {
+  <!-- Phone: one bar per sub-portfolio (fill = actual share, tick = target) instead of the rings and a five-column table. -->
+  <div class="flex flex-col gap-4">
+    @for (sub of dashboard().subPortfolios; track sub.name; let i = $index) {
+      <div>
+        <div class="flex items-baseline justify-between gap-2">
+          <span class="font-medium truncate"><i class="pi pi-circle-fill text-[0.6rem] mr-2" [style.color]="colors()[i % colors().length]"></i>{{ sub.name }}</span>
+          <span class="font-medium"><app-money [amount]="sub.value" [currency]="dashboard().currency" [digits]="0" [hideOriginal]="true" /></span>
+        </div>
+        <div class="relative h-2 rounded-full mt-2" style="background: var(--p-content-border-color)">
+          <div class="h-full rounded-full" [style.width.%]="sub.actualShare * 100" [style.background]="colors()[i % colors().length]"></div>
+          <div class="absolute -top-1 -bottom-1 w-0.5 rounded-full" style="background: var(--p-text-color)" [style.left.%]="sub.targetShare * 100"></div>
+        </div>
+        <div class="flex justify-between gap-2 text-xs text-muted-color mt-1.5">
+          <span>факт {{ sub.actualShare | percent }} · ціль {{ sub.targetShare | percent: 0 }}</span>
+          <span>TWR <span [appSignedValue]="sub.twr">{{ sub.twr | signedPercent }}</span></span>
+        </div>
+      </div>
     }
-    <div class="text-xs text-muted-color text-center mt-2">зовнішнє кільце — факт, внутрішнє — ціль</div>
   </div>
+} @else {
+  @if (dashboard().subPortfolios.length <= 1) {
+    <p class="text-sm text-muted-color mt-0 mb-3">
+      Тут порівнюється фактична частка кожного під-портфеля з цільовою. У вас один під-портфель (ціль 100%), тож порівнювати нічого —
+      склад за інструментами дивіться в <a routerLink="/holdings" class="text-primary">позиціях</a>.
+    </p>
   }
-  <p-table [value]="dashboard().subPortfolios" class="w-full min-w-0" styleClass="w-full" size="small" [tableStyle]="{ 'min-width': '28rem' }">
-    <ng-template #header>
-      <tr><th>Під-портфель</th><th class="text-right">Вартість</th><th class="text-right">Факт</th><th class="text-right">Ціль</th><th class="text-right">TWR</th></tr>
-    </ng-template>
-    <ng-template #body let-sub let-i="rowIndex">
-      <tr>
-        <td><i class="pi pi-circle-fill text-xs mr-2" [style.color]="colors()[i % colors().length]"></i>{{ sub.name }}</td>
-        <td class="text-right"><app-money [amount]="sub.value" [currency]="dashboard().currency" [digits]="0" /></td>
-        <td class="text-right font-medium">{{ sub.actualShare | percent }}</td>
-        <td class="text-right text-muted-color">{{ sub.targetShare | percent: 0 }}</td>
-        <td class="text-right" [appSignedValue]="sub.twr">{{ sub.twr | signedPercent }}</td>
-      </tr>
-    </ng-template>
-  </p-table>
-</div>
+  <div class="flex flex-col 2xl:flex-row gap-6 items-center">
+    @if (dashboard().subPortfolios.length > 1) {
+    <div class="w-48 shrink-0">
+      @for (chart of [data()]; track chart) {
+        <p-chart type="doughnut" [data]="chart" [options]="options()" />
+      }
+      <div class="text-xs text-muted-color text-center mt-2">зовнішнє кільце — факт, внутрішнє — ціль</div>
+    </div>
+    }
+    <p-table [value]="dashboard().subPortfolios" class="w-full min-w-0" styleClass="w-full" size="small" [tableStyle]="{ 'min-width': '28rem' }">
+      <ng-template #header>
+        <tr><th>Під-портфель</th><th class="text-right">Вартість</th><th class="text-right">Факт</th><th class="text-right">Ціль</th><th class="text-right">TWR</th></tr>
+      </ng-template>
+      <ng-template #body let-sub let-i="rowIndex">
+        <tr>
+          <td><i class="pi pi-circle-fill text-xs mr-2" [style.color]="colors()[i % colors().length]"></i>{{ sub.name }}</td>
+          <td class="text-right"><app-money [amount]="sub.value" [currency]="dashboard().currency" [digits]="0" /></td>
+          <td class="text-right font-medium">{{ sub.actualShare | percent }}</td>
+          <td class="text-right text-muted-color">{{ sub.targetShare | percent: 0 }}</td>
+          <td class="text-right" [appSignedValue]="sub.twr">{{ sub.twr | signedPercent }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+}

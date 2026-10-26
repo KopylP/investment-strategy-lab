@@ -44,7 +44,8 @@ const frequencies: Record<ScheduledReport['frequency'], string> = { Weekly: 'щ�
                 </div>
                 <div class="text-xs text-muted-color mt-1">{{ report.strategies.join(' · ') }}</div>
               </div>
-              <div class="text-right text-sm">
+              <!-- Wrapped under the text on a phone: one line instead of a right-aligned pair. -->
+              <div class="text-sm flex gap-1 sm:block sm:text-right">
                 <div class="text-muted-color">наступний</div>
                 <div class="font-semibold">{{ report.next | date }}, {{ report.kind === 'Rebalance' ? '20:00' : '19:00' }}</div>
               </div>

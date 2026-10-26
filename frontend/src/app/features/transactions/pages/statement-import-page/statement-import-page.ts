@@ -16,6 +16,7 @@ import { fromIsoDate, symbolOf, toIsoDate } from '../../../../shared/models/api'
 import { DatePipe, DateTimePipe, MoneyPipe, QuantityPipe } from '../../../../shared/pipes/format-pipes';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { ImportMode, RowDecision, StatementImportStore, TickerMapping } from '../../data-access/statement-import-store';
+import { Viewport } from '../../../../shared/ui/viewport';
 
 const newInstrument = '__new';
 
@@ -50,6 +51,7 @@ const kinds: Record<string, string> = {
 })
 export class StatementImportPage {
   protected readonly store = inject(StatementImportStore);
+  protected readonly viewport = inject(Viewport);
   private readonly catalog = inject(InstrumentCatalog);
   private readonly confirmation = inject(ConfirmationService);
 

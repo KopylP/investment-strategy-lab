@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { UIChart } from 'primeng/chart';
 import { ChartTheme, withAlpha } from '../../../../shared/charts/chart-theme';
-import { formatDate, formatSignedPercent } from '../../../../shared/pipes/format';
+import { formatDate, formatSignedPercent, shortenDate } from '../../../../shared/pipes/format';
+import { Viewport } from '../../../../shared/ui/viewport';
 import { DashboardDto } from '../../data-access/dashboard-api';
 
 /** How far below its best the time-weighted index was on each day. */
@@ -9,11 +10,12 @@ import { DashboardDto } from '../../data-access/dashboard-api';
   selector: 'app-drawdown-chart',
   imports: [UIChart],
   // A fresh chart per data/theme change: p-chart does not redraw reliably when data and options change together.
-  template: `@for (chart of [options()]; track chart) { <p-chart type="line" [data]="data()" [options]="chart" height="12rem" /> }`,
+  template: `@for (chart of [options()]; track chart) { <p-chart type="line" [data]="data()" [options]="chart" [height]="viewport.phone() ? '9rem' : '12rem'" /> }`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DrawdownChart {
   private readonly theme = inject(ChartTheme);
+  protected readonly viewport = inject(Viewport);
 
   readonly dashboard = input.required<DashboardDto>();
 
@@ -28,6 +30,7 @@ export class DrawdownChart {
 
   protected readonly options = computed(() => {
     const palette = this.theme.palette();
+    const phone = this.viewport.phone();
     return {
       maintainAspectRatio: false,
       animation: false,
@@ -36,8 +39,20 @@ export class DrawdownChart {
         tooltip: { callbacks: { label: (context: { parsed: { y: number } }) => formatSignedPercent(context.parsed.y) } },
       },
       scales: {
-        x: { ticks: { color: palette.muted, maxTicksLimit: 8 }, grid: { display: false } },
-        y: { max: 0, ticks: { color: palette.muted, callback: (value: number) => formatSignedPercent(value, 0) }, grid: { color: palette.grid } },
+        x: phone
+          ? {
+              ticks: {
+                color: palette.muted, maxTicksLimit: 4, maxRotation: 0, font: { size: 10 },
+                callback(this: { getLabelForValue: (value: number) => string }, value: number) { return shortenDate(this.getLabelForValue(value)); },
+              },
+              grid: { display: false },
+            }
+          : { ticks: { color: palette.muted, maxTicksLimit: 8 }, grid: { display: false } },
+        y: {
+          max: 0,
+          ticks: { color: palette.muted, maxTicksLimit: phone ? 4 : undefined, font: phone ? { size: 10 } : undefined, callback: (value: number) => formatSignedPercent(value, 0) },
+          grid: { color: palette.grid },
+        },
       },
     };
   });

@@ -2,19 +2,21 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { DisplayCurrency } from '../../../../core/context/display-currency';
 import { ChartTheme } from '../../../../shared/charts/chart-theme';
 import { LiveChart } from '../../../../shared/charts/live-chart';
-import { formatDate, formatMoney, formatPeriod } from '../../../../shared/pipes/format';
+import { formatAxisNumber, formatDate, formatMoney, formatPeriod, shortenDate } from '../../../../shared/pipes/format';
+import { Viewport } from '../../../../shared/ui/viewport';
 import { DashboardDto } from '../../data-access/dashboard-api';
 
 /** Value over time against the money paid in, with the "everything as planned" line and report markers. */
 @Component({
   selector: 'app-value-chart',
   imports: [LiveChart],
-  template: `<app-live-chart [data]="data()" [options]="options()" height="22rem" />`,
+  template: `<app-live-chart [data]="data()" [options]="options()" [height]="viewport.phone() ? '15rem' : '22rem'" />`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ValueChart {
   private readonly theme = inject(ChartTheme);
   private readonly display = inject(DisplayCurrency);
+  protected readonly viewport = inject(Viewport);
 
   /** The chart in the display currency at today's NBP rate (the shape is the account's; only the scale changes). */
   private readonly scale = computed(() => {
@@ -78,12 +80,18 @@ export class ValueChart {
     const { series, reports } = this.dashboard();
     const { currency } = this.scale();
     const reportDays = new Map(reports.map((report) => [formatDate(report.date), report]));
+    // A phone keeps the lines and drops the ink: a one-row legend, four unrotated dates, amounts without the currency.
+    const phone = this.viewport.phone();
     return {
       maintainAspectRatio: false,
       animation: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { labels: { color: palette.text, usePointStyle: true } },
+        legend: {
+          labels: phone
+            ? { color: palette.text, usePointStyle: true, boxWidth: 6, boxHeight: 6, padding: 10, font: { size: 11 } }
+            : { color: palette.text, usePointStyle: true },
+        },
         tooltip: {
           callbacks: {
             label: (context: { dataset: { label: string }; parsed: { y: number } }) => `${context.dataset.label}: ${formatMoney(context.parsed.y, currency, 0)}`,
@@ -94,10 +102,21 @@ export class ValueChart {
           },
         },
       },
-      scales: {
-        x: { ticks: { color: palette.muted, maxTicksLimit: series.length > 60 ? 8 : 12 }, grid: { display: false } },
-        y: { ticks: { color: palette.muted, callback: (value: number) => formatMoney(value, currency, 0) }, grid: { color: palette.grid } },
-      },
+      scales: phone
+        ? {
+            x: {
+              ticks: {
+                color: palette.muted, maxTicksLimit: 4, maxRotation: 0, font: { size: 10 },
+                callback(this: { getLabelForValue: (value: number) => string }, value: number) { return shortenDate(this.getLabelForValue(value)); },
+              },
+              grid: { display: false },
+            },
+            y: { ticks: { color: palette.muted, maxTicksLimit: 5, font: { size: 10 }, callback: (value: number) => formatAxisNumber(value) }, grid: { color: palette.grid } },
+          }
+        : {
+            x: { ticks: { color: palette.muted, maxTicksLimit: series.length > 60 ? 8 : 12 }, grid: { display: false } },
+            y: { ticks: { color: palette.muted, callback: (value: number) => formatMoney(value, currency, 0) }, grid: { color: palette.grid } },
+          },
     };
   });
 }

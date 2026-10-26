@@ -5,12 +5,20 @@
 } @else if (store.report(); as report) {
   <app-page-header [title]="report.summary.title" [subtitle]="report.summary.accountName + ' · котирування на ' + (report.summary.marketAsOf | date) + ' · згенеровано ' + (report.summary.generatedAt | dateTime) + ' ' + report.summary.triggerLabel">
     <app-report-status-tag [status]="report.summary.status" />
-    @if (report.summary.status !== 'Superseded') {
-      <p-button label="Згенерувати заново" icon="pi pi-refresh" severity="secondary" [outlined]="true" [loading]="store.busy() === 'regenerate'" (onClick)="confirmRegenerate()" />
-    }
-    @if (store.canMark()) {
-      <p-button label="Довантажити операції" icon="pi pi-download" (onClick)="openLoadOperations()" />
-      <p-button label="Закрити рапорт" icon="pi pi-lock" severity="secondary" [loading]="store.busy() === 'close'" (onClick)="confirmClose()" />
+    @if (viewport.phone()) {
+      <!-- Phone: the page is for marking actions; regenerate, load and close wait in a menu. -->
+      @if (pageActions().length) {
+        <p-button icon="pi pi-ellipsis-v" [text]="true" [rounded]="true" severity="secondary" ariaLabel="Дії з рапортом" (onClick)="pageMenu.toggle($event)" />
+        <p-menu #pageMenu [model]="pageActions()" [popup]="true" appendTo="body" />
+      }
+    } @else {
+      @if (report.summary.status !== 'Superseded') {
+        <p-button label="Згенерувати заново" icon="pi pi-refresh" severity="secondary" [outlined]="true" [loading]="store.busy() === 'regenerate'" (onClick)="confirmRegenerate()" />
+      }
+      @if (store.canMark()) {
+        <p-button label="Довантажити операції" icon="pi pi-download" (onClick)="openLoadOperations()" />
+        <p-button label="Закрити рапорт" icon="pi pi-lock" severity="secondary" [loading]="store.busy() === 'close'" (onClick)="confirmClose()" />
+      }
     }
   </app-page-header>
 
@@ -36,10 +44,10 @@
 
   <app-report-progress [report]="report" [progress]="store.progress()" />
 
-  <div class="card mt-4">
-    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+  <div class="card mt-3 sm:mt-4">
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-2 sm:mb-4">
       <h2 class="text-xl font-semibold m-0">Що зробити в брокера</h2>
-      <span class="text-sm text-muted-color">Порядок: внесок → продажі → перекази → купівлі → парковка</span>
+      <span class="hidden sm:inline text-sm text-muted-color">Порядок: внесок → продажі → перекази → купівлі → парковка</span>
     </div>
     @if (store.actions().length) {
       <app-report-actions-table
@@ -60,7 +68,7 @@
   }
 
   @if (report.sections.length) {
-    <div class="card mt-4">
+    <div class="card mt-3 sm:mt-4">
       <h2 class="text-xl font-semibold mb-4">Обґрунтування по під-портфелях</h2>
       <p-tabs [value]="report.sections[0].id" [scrollable]="true">
         <p-tablist>

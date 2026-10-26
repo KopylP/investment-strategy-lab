@@ -46,7 +46,7 @@
     <button type="button" class="layout-topbar-action" (click)="menu.toggle($event)" [attr.aria-label]="email()">
       <i class="pi pi-user"></i>
     </button>
-    <p-menu #menu [model]="userMenu" [popup]="true" appendTo="body">
+    <p-menu #menu [model]="userMenu()" [popup]="true" appendTo="body">
       <ng-template #start>
         <div class="px-3 py-2 text-sm text-muted-color">{{ email() }}</div>
       </ng-template>

@@ -18,6 +18,7 @@ import { DatePipe } from '../../../../shared/pipes/format-pipes';
 import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { SignedValue } from '../../../../shared/ui/signed-value';
+import { Viewport } from '../../../../shared/ui/viewport';
 import { CashInput, TradeInput, TransactionsStore, TransactionVm } from '../../data-access/transactions-store';
 import { CashDialog } from '../../ui/cash-dialog/cash-dialog';
 import { TradeDialog } from '../../ui/trade-dialog/trade-dialog';
@@ -37,6 +38,7 @@ export class LedgerPage {
   protected readonly store = inject(TransactionsStore);
   private readonly catalog = inject(InstrumentCatalog);
   private readonly confirm = inject(ConfirmationService);
+  protected readonly viewport = inject(Viewport);
 
   protected readonly tradeVisible = signal(false);
   protected readonly cashVisible = signal(false);
