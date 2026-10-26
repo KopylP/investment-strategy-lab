@@ -144,6 +144,12 @@
         </div>
       </div>
 
+      @if (store.taxError(); as error) {
+        <div class="card">
+          <h2 class="text-lg font-semibold mb-3">Податок</h2>
+          <p-message severity="warn" [text]="'Не вдалося порахувати податок: ' + error" />
+        </div>
+      }
       @if (store.tax(); as tax) {
         @if (tax.taxedAccounts) {
           <div class="card">
