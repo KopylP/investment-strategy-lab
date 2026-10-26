@@ -101,3 +101,24 @@ Personal data (parts A, B), 1.5 % OPP (part J), bank account (part M), e-Deklara
 | D10 | Crypto | Note added. |
 
 PDF: `Pit38PdfPrinter` writes the figures on the official PIT-38(18) and PIT/ZG(8) (measured boxes, read back in `Pit38PdfPrinterTests`).
+
+## Review 2 (agent, 2026-10-26) — cheat sheet, official form, review 1 fixes
+
+All amounts of a complex declaration (Revolut US/IE/NL/JP/XS/PL, XTB with PIT-8C, mBank without, IKE, entered and journal
+losses, US/JP/IT/IE/PL dividends) checked by hand: correct. Rounding per the form and brochure; official-form boxes measured.
+
+| # | Finding | Outcome |
+|---|---------|---------|
+| 1 | One PIT-8C per broker, entered per account → row 1 could double | **Fixed.** Accounts of one broker (`PolishBrokers.Key`) share the PIT-8C entered on any of them; the others say they are covered. |
+| 2 | Official form poz. 32: grosze over the printed comma | **Fixed** (comma at x 187.5, test checks the grosze start after it). |
+| 3 | KIS note amounts in the server culture ("1,234.56") | **Fixed:** written as the form takes them ("1234,56"). |
+| 4 | Earlier years' results from the journal, not the filed PIT-8C | **Fixed** for PIT-8C (all years loaded). Amounts actually deducted in earlier returns are assumed to be the maximum allowed — the poz. 30 note says so. |
+| 5 | A grosz over 15% flagged as "over treaty" | **Fixed** (one-grosz tolerance). |
+| 6 | "Withheld abroad" fact could be typed into poz. 48 | **Fixed:** labelled "у poz. 48 — не більше 19% кожного". |
+| 7 | Foreign issuers on GPW at a Polish broker may be taxed by the payer | Note added (remove them from poz. 47/48 if the statement shows 19% withheld). |
+| 8 | Treaty table incomplete (KR, IL?) | Open — not verified. |
+| 9 | PDF error shown as "Помилка 400" (blob body) | **Fixed.** |
+| 10 | `track a.name` | **Fixed** (`accountId`). |
+| 11 | Incomplete data of any year blocks every year | Kept (safe); no application-level tests yet. |
+| 12 | Banker's rounding in `Pit8CStatement`, "mBanku", grammar, `facts` in the UI | **Fixed.** |
+| — | Which fields the online form computes | Only 26–29, 31, 33, 35, 49, 51, 52 are marked (brochure p. 2: the e-form computes the tax and tax due); 32 and 72 are now "to type". |

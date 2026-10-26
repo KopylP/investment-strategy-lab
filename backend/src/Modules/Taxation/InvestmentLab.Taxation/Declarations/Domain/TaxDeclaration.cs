@@ -21,13 +21,15 @@ public interface ITaxDeclarationForm
 
 /// <summary>
 /// One account's tax years; <paramref name="Sales"/> and <paramref name="Dividends"/> are those of the declared year,
-/// <paramref name="Pit8C"/> what its broker's PIT-8C says of the year, once the person entered it.
+/// <paramref name="Pit8C"/> what its broker's PIT-8C said of each year, as the person entered it on this account.
 /// </summary>
 public sealed record DeclarationAccount(
     string Name, string Broker, ITaxPolicy Policy, IReadOnlyList<TaxYearSummary> Years, IReadOnlyList<Realization> Sales, IReadOnlyList<DividendIncome> Dividends,
-    Guid AccountId = default, Pit8CAmounts? Pit8C = null)
+    Guid AccountId = default, IReadOnlyDictionary<int, Pit8CAmounts>? Pit8C = null)
 {
     public TaxYearSummary? In(int year) => Years.FirstOrDefault(summary => summary.Year == year);
+
+    public Pit8CAmounts? Pit8COf(int year) => Pit8C?.GetValueOrDefault(year);
 }
 
 /// <param name="EarlierLosses">Losses from before the journal the person entered.</param>
@@ -56,9 +58,11 @@ public sealed record Pit8CAmounts(decimal Revenue, decimal Costs);
 
 /// <param name="Treatment">How the form takes the account, in the app's language.</param>
 /// <param name="TakesPit8C">The account's sales go to row 1, where its broker's PIT-8C amounts belong.</param>
+/// <param name="Pit8C">The PIT-8C amounts entered on this account.</param>
+/// <param name="Pit8CCoveredBy">Another account of the same broker whose entered PIT-8C covers this one (one PIT-8C per broker).</param>
 public sealed record DeclarationAccountLine(
     string Name, string Broker, string Treatment, decimal Revenue, decimal Costs, decimal DividendsGross, decimal DividendsWithheld,
-    Guid AccountId = default, bool TakesPit8C = false, Pit8CAmounts? Pit8C = null);
+    Guid AccountId = default, bool TakesPit8C = false, Pit8CAmounts? Pit8C = null, string? Pit8CCoveredBy = null);
 
 public sealed record TaxDeclaration(
     string Form,

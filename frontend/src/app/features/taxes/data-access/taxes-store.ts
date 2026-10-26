@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { computed, inject, Injectable, resource, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { ApiClient, toProblemMessage } from '../../../core/api/api-client';
@@ -164,7 +165,10 @@ export class TaxesStore {
       link.click();
       setTimeout(() => URL.revokeObjectURL(link.href), 10_000);
     } catch (error) {
-      this.messages.add({ severity: 'error', summary: 'PDF не створено', detail: toProblemMessage(error) });
+      // A blob response carries the problem details as a blob too: read them so the reason shows, not "Помилка 400".
+      const body = error instanceof HttpErrorResponse && error.error instanceof Blob ? await error.error.text().catch(() => '') : '';
+      const problem = body ? new HttpErrorResponse({ error: safeJson(body), status: (error as HttpErrorResponse).status }) : error;
+      this.messages.add({ severity: 'error', summary: 'PDF не створено', detail: toProblemMessage(problem) });
     } finally {
       this.pdfLoading.set(null);
     }
@@ -232,5 +236,13 @@ export class TaxesStore {
     const id = this.accounts.currentId();
     if (!id) throw new Error('No account');
     return id;
+  }
+}
+
+function safeJson(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { detail: text };
   }
 }

@@ -21,8 +21,10 @@ public sealed class Pit38FormTests
         new(Guid.NewGuid(), new DateOnly(2025, 5, 1), instrument ?? Apple, gross - withheld, gross - withheld, 1m, GrossPln: gross, WithheldPln: withheld, WithholdingKnown: known);
 
     private static DeclarationAccount Account(string broker, IReadOnlyList<TaxYearSummary> years, IReadOnlyList<Realization>? sales = null,
-        IReadOnlyList<DividendIncome>? dividends = null, ITaxPolicy? policy = null, Pit8CAmounts? pit8C = null) =>
-        new($"{broker} EUR", broker, policy ?? Belka, years, sales ?? [], dividends ?? [], Guid.NewGuid(), pit8C);
+        IReadOnlyList<DividendIncome>? dividends = null, ITaxPolicy? policy = null, Pit8CAmounts? pit8C = null, string? name = null,
+        IReadOnlyDictionary<int, Pit8CAmounts>? pit8CByYear = null) =>
+        new(name ?? $"{broker} EUR", broker, policy ?? Belka, years, sales ?? [], dividends ?? [], Guid.NewGuid(),
+            pit8CByYear ?? (pit8C is null ? null : new Dictionary<int, Pit8CAmounts> { [2025] = pit8C }));
 
     private static string? Country(Guid id) =>
         id == Apple ? "US" : id == Vwce ? "IE" : id == Orlen ? "PL" : id == Asml ? "NL" : id == Toyota ? "JP" : id == Eurobond ? "XS" : null;
@@ -238,7 +240,7 @@ public sealed class Pit38FormTests
         var declaration = Fill(Account("XTB", [Year(2025, 0m, 0m)], dividends: [Paid(85m, 0m, known: false)]));
 
         Poz(declaration, 47).ShouldBe(16.15m);
-        declaration.Notes.ShouldContain(note => note.Text.Contains("1 іноземних дивідендів без даних"));
+        declaration.Notes.ShouldContain(note => note.Text.Contains("без даних про утриманий за кордоном податок (1)"));
     }
 
     [Fact]
@@ -282,6 +284,32 @@ public sealed class Pit38FormTests
     }
 
     [Fact]
+    public void A_grosz_over_the_treaty_rate_is_rounding_not_a_missing_W_8BEN()
+    {
+        // 15% of 412.37 is 61.8555, withheld 61.86.
+        var declaration = Fill(Account("Revolut", [Year(2025, 0m, 0m)], dividends: [Paid(412.37m, 61.86m)]));
+
+        declaration.Notes.ShouldNotContain(note => note.Text.Contains("KIS"));
+    }
+
+    [Fact]
+    public void Amounts_in_notes_are_written_as_the_form_takes_them_whatever_the_servers_culture()
+    {
+        var culture = System.Globalization.CultureInfo.CurrentCulture;
+        System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
+        try
+        {
+            var declaration = Fill(Account("Revolut", [Year(2025, 0m, 0m)], dividends: [Paid(10000.5m, 3000m)]));
+
+            declaration.Notes.ShouldContain(note => note.Text.Contains("poz. 48 = 1500,08") && note.Short!.Contains("poz. 49 = 400 zł"));
+        }
+        finally
+        {
+            System.Globalization.CultureInfo.CurrentCulture = culture;
+        }
+    }
+
+    [Fact]
     public void Tax_withheld_at_the_treaty_rate_needs_no_note()
     {
         var declaration = Fill(Account("Revolut", [Year(2025, 0m, 0m)], dividends: [Paid(1000m, 150m)]));
@@ -303,6 +331,30 @@ public sealed class Pit38FormTests
         Poz(declaration, 35).ShouldBe(143m);         // 750 × 19% = 142.50
         declaration.Notes.ShouldNotContain(note => note.Text.Contains("введіть суми з PIT-8C"));
         declaration.Accounts.Single(account => account.Broker == "XTB").Pit8C.ShouldBe(new Pit8CAmounts(5100m, 5350m));
+    }
+
+    [Fact]
+    public void One_PIT_8C_covers_every_account_of_its_broker()
+    {
+        // XTB sends one PIT-8C per client: entered on one account, it stands for both, never added twice.
+        var declaration = Fill(
+            Account("XTB", [Year(2025, 5000m, 4000m)], name: "XTB PLN", pit8C: new Pit8CAmounts(8100m, 6050m)),
+            Account("XTB S.A.", [Year(2025, 3000m, 2000m)], name: "XTB USD"));
+
+        (Poz(declaration, 20), Poz(declaration, 21)).ShouldBe((8100m, 6050m));
+        declaration.Notes.ShouldNotContain(note => note.Text.Contains("введіть суми з PIT-8C"));
+        declaration.Accounts.Single(account => account.Name == "XTB USD").Pit8CCoveredBy.ShouldBe("XTB PLN");
+        declaration.Accounts.Single(account => account.Name == "XTB PLN").Pit8CCoveredBy.ShouldBeNull();
+    }
+
+    [Fact]
+    public void An_earlier_years_PIT_8C_makes_the_loss_carried_from_it()
+    {
+        // 2024: the journal says a loss of 900, the PIT-8C as filed 1000 — 2025 may deduct 500.
+        var declaration = Fill(Account("XTB", [Year(2024, 100m, 1000m), Year(2025, 5000m, 0m)],
+            pit8CByYear: new Dictionary<int, Pit8CAmounts> { [2024] = new(100m, 1100m), [2025] = new(5000m, 0m) }));
+
+        Poz(declaration, 30).ShouldBe(500m);
     }
 
     [Fact]
@@ -435,7 +487,7 @@ public sealed class Pit38FormTests
         var declaration = Fill(Account("Revolut", [Year(2025, 2000m, 1000m)]));
         var fields = declaration.Sections.SelectMany(section => section.Fields).ToList();
 
-        fields.Where(field => field.Computed).Select(field => field.Position).ShouldBe([26, 27, 28, 29, 31, 32, 33, 35, 49, 51, 52, 72]);
+        fields.Where(field => field.Computed).Select(field => field.Position).ShouldBe([26, 27, 28, 29, 31, 33, 35, 49, 51, 52]);
         declaration.TaxDue.ShouldBe(Poz(declaration, 51)!.Value);
     }
 
@@ -463,6 +515,7 @@ public sealed class Pit38FormTests
     [InlineData("XTB", true)]
     [InlineData("XTB S.A.", true)]
     [InlineData("mBank", true)]
+    [InlineData("mBanku", true)]
     [InlineData("Revolut", false)]
     [InlineData("Trading 212", false)]
     [InlineData("Interactive Brokers", false)]

@@ -107,7 +107,7 @@ public sealed class DeclarationQueries(
     private async Task<IReadOnlyList<Declared>> AccountsAsync(int year, CancellationToken cancellationToken)
     {
         var declared = new List<Declared>();
-        var statements = (await pit8C.ForYearAsync(year, cancellationToken)).ToDictionary(statement => statement.AccountId);
+        var statements = (await pit8C.AllAsync(cancellationToken)).ToLookup(statement => statement.AccountId);
         foreach (var setup in (await accounts.GetAccountSetups(cancellationToken)).OrderBy(setup => setup.Name))
         {
             // An account without a journal yet has nothing to declare.
@@ -117,7 +117,7 @@ public sealed class DeclarationQueries(
             var assessed = await assessments.ForAccountAsync(setup.Id, cancellationToken);
             var ofYear = assessed.FirstOrDefault(assessment => assessment.Year == year);
             var account = new DeclarationAccount(setup.Name, setup.Broker, TaxPolicies.For(setup.TaxPolicyCode), [.. assessed.Select(assessment => assessment.Summary)],
-                ofYear?.Realizations ?? [], ofYear?.Dividends ?? [], setup.Id, statements.GetValueOrDefault(setup.Id)?.Amounts);
+                ofYear?.Realizations ?? [], ofYear?.Dividends ?? [], setup.Id, statements[setup.Id].ToDictionary(statement => statement.Year, statement => statement.Amounts));
             declared.Add(new Declared(account, (await assessments.LossesAsync(setup.Id, cancellationToken)).Select(loss => loss.ToLossYear()).ToList(),
                 [.. outcome.Value.Warnings.Select(warning => $"{setup.Name}: {warning}")],
                 [.. outcome.Value.Incomplete.Select(problem => $"{setup.Name}: {problem}")]));
