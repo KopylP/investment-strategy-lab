@@ -86,7 +86,7 @@ Personal data (parts A, B), 1.5 % OPP (part J), bank account (part M), e-Deklara
 |---|---------|---------|
 | 1 | Foreign dividends of XTB/mBank fell out of part G | **Fixed.** Part G takes every foreign dividend of every taxed account (XTB guide §21, mBank 2026 guide); only ISIN `PL` stays out, with a note to check it was taxed when held abroad. |
 | 2 | Dividend without the broker's report = gross = net, silently | **Fixed as a warning.** `DividendIncome.WithholdingKnown`; the form names such dividends and says poz. 47/48 assume nothing was withheld. |
-| 3 | NBP rate from the trade day, not the settlement day (art. 17 ust. 1ab) | **Open — the user decides.** A note states which date is used and the other reading. |
+| 3 | NBP rate from the trade day, not the settlement day (art. 17 ust. 1ab) | **Decided by the user (2026-10-26): the business day before the trade date stays.** The form's note names the date used and the settlement-date reading. |
 | 4 | Losses counted twice | **Fixed.** One entered loss per year (two different ones are an error); an entered year stands instead of the journal's computed loss; "already used" = used in returns for years outside the journal (UI says so). |
 | 5 | Incomplete data still filled the form | **Fixed.** Missing NBP rates or sold units without a purchase return `tax.declaration_incomplete` with the reasons. |
 | 6 | Row 1 from our numbers | **Fixed.** PIT-8C poz. 35/36 per account and year (`pit8c_statements`), row 1 and everything below follow them. |
