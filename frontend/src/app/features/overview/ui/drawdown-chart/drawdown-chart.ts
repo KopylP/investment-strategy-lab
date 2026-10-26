@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { UIChart } from 'primeng/chart';
 import { ChartTheme, withAlpha } from '../../../../shared/charts/chart-theme';
+import { LiveChart } from '../../../../shared/charts/live-chart';
 import { formatDate, formatSignedPercent, shortenDate } from '../../../../shared/pipes/format';
 import { Viewport } from '../../../../shared/ui/viewport';
 import { DashboardDto } from '../../data-access/dashboard-api';
@@ -8,9 +8,8 @@ import { DashboardDto } from '../../data-access/dashboard-api';
 /** How far below its best the time-weighted index was on each day. */
 @Component({
   selector: 'app-drawdown-chart',
-  imports: [UIChart],
-  // A fresh chart per data/theme change: p-chart does not redraw reliably when data and options change together.
-  template: `@for (chart of [options()]; track chart) { <p-chart type="line" [data]="data()" [options]="chart" [height]="viewport.phone() ? '9rem' : '12rem'" /> }`,
+  imports: [LiveChart],
+  template: `<app-live-chart [data]="data()" [options]="options()" [height]="viewport.phone() ? '9rem' : '12rem'" />`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DrawdownChart {
@@ -34,6 +33,7 @@ export class DrawdownChart {
     return {
       maintainAspectRatio: false,
       animation: false,
+      interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: false },
         tooltip: { callbacks: { label: (context: { parsed: { y: number } }) => formatSignedPercent(context.parsed.y) } },
