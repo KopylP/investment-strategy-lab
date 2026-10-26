@@ -16,6 +16,7 @@ import { AuthStore } from '../../../../core/auth/auth-store';
 })
 export class LoginPage {
   private readonly auth = inject(AuthStore);
+  protected readonly inHomeAssistantPanel = this.auth.inHomeAssistantPanel;
   private readonly router = inject(Router);
 
   readonly returnUrl = input<string>();

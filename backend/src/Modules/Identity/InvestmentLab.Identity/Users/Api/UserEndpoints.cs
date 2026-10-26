@@ -3,6 +3,7 @@ using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Identity.Users.Application;
 using InvestmentLab.Identity.Users.Application.Login;
 using InvestmentLab.Identity.Users.Application.Register;
+using InvestmentLab.Identity.Users.Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -32,9 +33,9 @@ internal static class UserEndpoints
             })
             .WithName("Logout");
 
-        users.MapGet("/me", async (ICurrentUser user, IUserAccounts accounts, CancellationToken ct) =>
+        users.MapGet("/me", async (HttpContext context, ICurrentUser user, IUserAccounts accounts, CancellationToken ct) =>
                 await accounts.FindAsync(user.RequiredId, ct) is { } me
-                    ? Result<CurrentUserDto>.Success(me).ToHttpResult()
+                    ? Result<CurrentUserDto>.Success(me with { ViaHomeAssistant = context.User.HasClaim(claim => claim.Type == HomeAssistantAuthenticationHandler.UserClaim) }).ToHttpResult()
                     : UserErrors.NotFound(user.RequiredId).ToProblem())
             .WithName("GetCurrentUser");
 

@@ -42,6 +42,8 @@ export InvestmentLab__DataDirectory="/data"
 # Ingress (Home Assistant panel) always talks plain http to 8098; 8099 is the direct port. "*" listens on IPv6 and IPv4:
 # browsers reach homeassistant.local over IPv6 first.
 export Kestrel__Endpoints__Ingress__Url="http://*:8098"
+# Requests to 8098 from the Supervisor carry the Home Assistant user: the panel signs them in without a password.
+export HomeAssistant__IngressPort=8098
 
 if [ "$(option ssl)" = "true" ]; then
   CERT="/ssl/$(option certfile)"; KEY="/ssl/$(option keyfile)"
