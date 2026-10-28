@@ -1,0 +1,51 @@
+# Every push to main that changes what goes into the Home Assistant add-on bumps its patch version in config.yaml,
+# so deploy.sh finds a new version to update to. A push that already changes the version line keeps it as it is.
+# The bump commit is pushed with GITHUB_TOKEN, which does not start workflows: no loop.
+name: Add-on version
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - backend/**
+      - frontend/**
+      - strategy-engine/**
+      - deploy/home-assistant/investlab/**
+
+permissions:
+  contents: write
+
+concurrency:
+  group: addon-version
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Bump the patch version
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          CONFIG=deploy/home-assistant/investlab/config.yaml
+          # A new branch or a force push has no usable "before": compare with the previous commit then.
+          if ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then BEFORE="$(git rev-parse HEAD~1)"; fi
+          if git diff "$BEFORE" HEAD -- "$CONFIG" | grep -q '^[-+]version:'; then
+            echo "The version was set in this push: $(sed -n 's/^version: *//p' "$CONFIG")"
+            exit 0
+          fi
+          OLD="$(sed -n 's/^version: *"\{0,1\}\([^"]*\)"\{0,1\} *$/\1/p' "$CONFIG")"
+          NEW="$(echo "$OLD" | awk -F. -v OFS=. '{ $NF = $NF + 1; print }')"
+          sed -i "s/^version: .*/version: \"$NEW\"/" "$CONFIG"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
+          git commit -qm "Home Assistant add-on $NEW" -- "$CONFIG"
+          # Another push may have landed meanwhile: rebase the one-line bump onto it.
+          git pull -q --rebase origin main
+          git push origin HEAD:main
+          echo "Version $OLD -> $NEW"

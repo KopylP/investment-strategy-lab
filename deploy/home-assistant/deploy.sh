@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# One-command deploy to Home Assistant: bump the add-on version, build the artifacts (build.sh), copy the add-on folder
-# over SSH (the Terminal & SSH add-on) and let the Supervisor install it, or update/rebuild and restart it.
+# One-command deploy to Home Assistant: build the artifacts (build.sh), copy the add-on folder over SSH (the Terminal &
+# SSH add-on) and let the Supervisor install it, or update/rebuild and restart it. The version comes from main: every
+# merge there bumps it (.github/workflows/addon-version.yml), so pull first.
 #
-#   deploy/home-assistant/deploy.sh                    # bump patch version, build, copy, install or update
+#   deploy/home-assistant/deploy.sh                    # build, copy, install or update to the version in config.yaml
 #   deploy/home-assistant/deploy.sh --skip-build       # reuse the artifacts already in investlab/rootfs/app
-#   deploy/home-assistant/deploy.sh --no-bump          # same version: the add-on is rebuilt instead of updated
+#   deploy/home-assistant/deploy.sh --bump             # bump the patch version locally (a deploy off main)
 #   deploy/home-assistant/deploy.sh --version 1.1.0    # set an exact version
 #   HA_HOST=192.168.1.10 deploy/home-assistant/deploy.sh
 #
@@ -20,19 +21,19 @@ HA_HOST="${HA_HOST:-homeassistant.local}"
 HA_USER="${HA_USER:-root}"
 HA_PORT="${HA_PORT:-22}"
 BUILD=1
-BUMP=1
+BUMP=0
 NEW_VERSION=""
 START=1
 LOGS=1
 
-usage() { sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'; cat <<EOF
+usage() { sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; cat <<EOF
 
 Options:
   --host HOST        Home Assistant host (HA_HOST, default homeassistant.local)
   --user USER        SSH user (HA_USER, default root)
   --port PORT        SSH port (HA_PORT, default 22)
   --skip-build       do not run build.sh
-  --no-bump          keep the version in config.yaml
+  --bump             bump the patch version in config.yaml (the default keeps it)
   --version X.Y.Z    set this version instead of bumping the patch number
   --no-start         do not start the add-on after install/update
   --no-logs          do not show the add-on log at the end
@@ -46,6 +47,7 @@ while [ $# -gt 0 ]; do
     --user) HA_USER="$2"; shift 2 ;;
     --port) HA_PORT="$2"; shift 2 ;;
     --skip-build) BUILD=0; shift ;;
+    --bump) BUMP=1; shift ;;
     --no-bump) BUMP=0; shift ;;
     --version) NEW_VERSION="$2"; shift 2 ;;
     --no-start) START=0; shift ;;
