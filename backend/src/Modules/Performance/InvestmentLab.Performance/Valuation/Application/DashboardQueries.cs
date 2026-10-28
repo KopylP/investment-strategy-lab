@@ -3,7 +3,12 @@ using InvestmentLab.Portfolio.Contracts.Accounts;
 
 namespace InvestmentLab.Performance.Valuation.Application;
 
-public sealed record SeriesPointDto(DateOnly Date, decimal Value, decimal NetContributions, decimal TwrIndex, decimal? PlanValue, decimal Drawdown);
+/// <param name="PlanValue">Value of the "everything as planned" portfolio; null without a plan.</param>
+/// <param name="PlanNetContributions">Money paid into that portfolio: what the reports said to contribute.</param>
+public sealed record SeriesPointDto(DateOnly Date, decimal Value, decimal NetContributions, decimal TwrIndex, decimal? PlanValue, decimal? PlanNetContributions, decimal Drawdown);
+
+/// <summary>One day of the "everything as planned" portfolio.</summary>
+public sealed record PlanPoint(decimal Value, decimal Flow, decimal NetContributions);
 
 public sealed record SubPortfolioPerformanceDto(Guid Id, string Name, decimal Value, decimal TargetShare, decimal ActualShare, decimal? Twr, decimal NetContributions);
 
@@ -109,7 +114,7 @@ public sealed class DashboardQueries(SnapshotBuilder builder, IPerformanceReposi
         return summary with { AccountId = null, Currency = target, Accounts = rows, Reports = [.. reports.Where(report => report.Date >= start)] };
     }
 
-    private sealed record AccountHistory(IReadOnlyList<Snapshot> Series, IReadOnlyList<Snapshot> Subs, IReadOnlyDictionary<DateOnly, decimal>? Plan, IReadOnlyList<ReportMarkerDto> Reports);
+    private sealed record AccountHistory(IReadOnlyList<Snapshot> Series, IReadOnlyList<Snapshot> Subs, IReadOnlyDictionary<DateOnly, PlanPoint>? Plan, IReadOnlyList<ReportMarkerDto> Reports);
 
     private async Task<AccountHistory> HistoryAsync(AccountSetupDto account, CancellationToken cancellationToken)
     {
@@ -118,7 +123,7 @@ public sealed class DashboardQueries(SnapshotBuilder builder, IPerformanceReposi
         var planned = await store.PlannedReportsAsync(account.Id, cancellationToken);
         // Without a plan the shadow is the journal itself: nothing to compare.
         var plan = planned.Any(report => report.CountsForPlan)
-            ? (await store.SnapshotsAsync(account.Id, SnapshotScenario.FullPlan, DateOnly.MinValue, cancellationToken)).Where(s => s.SubPortfolioId is null).ToDictionary(s => s.Date, s => s.Value)
+            ? (await store.SnapshotsAsync(account.Id, SnapshotScenario.FullPlan, DateOnly.MinValue, cancellationToken)).Where(s => s.SubPortfolioId is null).ToDictionary(s => s.Date, s => new PlanPoint(s.Value, s.Flow, s.NetContributions))
             : null;
         var reports = planned.Where(report => !report.IsSuperseded).OrderBy(report => report.MarketAsOf)
             .Select(report => new ReportMarkerDto(report.ReportId, report.MarketAsOf, report.Kind, report.Period, account.Id)).ToList();
@@ -135,18 +140,18 @@ public sealed class DashboardQueries(SnapshotBuilder builder, IPerformanceReposi
     /// Sums the accounts day by day in the target currency: an account without a snapshot that day keeps its last value,
     /// its flow counts only on its own day; the time-weighted index is chained on the sum.
     /// </summary>
-    private static (IReadOnlyList<Snapshot> Series, IReadOnlyDictionary<DateOnly, decimal>? Plan) Combine(
+    private static (IReadOnlyList<Snapshot> Series, IReadOnlyDictionary<DateOnly, PlanPoint>? Plan) Combine(
         IReadOnlyList<(AccountSetupDto Account, AccountHistory History)> histories, IReadOnlyList<DateOnly> days, FxOn fx)
     {
         var anyPlan = histories.Any(entry => entry.History.Plan is not null);
         var cursors = histories.Select(_ => -1).ToArray();
         var lastPlan = new decimal[histories.Count];
         var series = new List<Snapshot>();
-        var plan = new Dictionary<DateOnly, decimal>();
-        decimal previous = 0m, index = 1m, contributions = 0m;
+        var plan = new Dictionary<DateOnly, PlanPoint>();
+        decimal previous = 0m, index = 1m, contributions = 0m, planContributions = 0m;
         foreach (var day in days)
         {
-            decimal value = 0m, flow = 0m, planned = 0m;
+            decimal value = 0m, flow = 0m, planned = 0m, planFlow = 0m;
             for (var i = 0; i < histories.Count; i++)
             {
                 var (account, history) = histories[i];
@@ -160,7 +165,13 @@ public sealed class DashboardQueries(SnapshotBuilder builder, IPerformanceReposi
                 if (snapshot.Date == day)
                     flow += snapshot.Flow * rate;
                 if (history.Plan?.TryGetValue(snapshot.Date, out var shadow) == true)
-                    lastPlan[i] = shadow;
+                {
+                    lastPlan[i] = shadow.Value;
+                    if (snapshot.Date == day)
+                        planFlow += shadow.Flow * rate;
+                }
+                else if (history.Plan is null && snapshot.Date == day)
+                    planFlow += snapshot.Flow * rate;
                 planned += (history.Plan is null ? snapshot.Value : lastPlan[i]) * rate;
             }
 
@@ -168,16 +179,17 @@ public sealed class DashboardQueries(SnapshotBuilder builder, IPerformanceReposi
             if (start > 0m)
                 index *= value / start;
             contributions += flow;
+            planContributions += planFlow;
             previous = value;
             series.Add(new Snapshot(day, null, decimal.Round(value, 2), 0m, decimal.Round(flow, 2), decimal.Round(contributions, 2), decimal.Round(index, 8)));
             if (anyPlan)
-                plan[day] = decimal.Round(planned, 2);
+                plan[day] = new PlanPoint(decimal.Round(planned, 2), decimal.Round(planFlow, 2), decimal.Round(planContributions, 2));
         }
         return (series, anyPlan ? plan : null);
     }
 
     /// <summary>Returns, drawdown and the chart of a daily series over the period.</summary>
-    private static (DashboardDto Summary, DateOnly Start, Snapshot? Before) Summarize(IReadOnlyList<Snapshot> history, IReadOnlyDictionary<DateOnly, decimal>? plan, string key)
+    private static (DashboardDto Summary, DateOnly Start, Snapshot? Before) Summarize(IReadOnlyList<Snapshot> history, IReadOnlyDictionary<DateOnly, PlanPoint>? plan, string key)
     {
         var last = history[^1];
         var start = PeriodStart(key, last.Date);
@@ -193,7 +205,8 @@ public sealed class DashboardQueries(SnapshotBuilder builder, IPerformanceReposi
         var series = window.Select(s =>
         {
             peak = Math.Max(peak, s.TwrIndex);
-            return new SeriesPointDto(s.Date, s.Value, s.NetContributions, s.TwrIndex / baseIndex, plan?.TryGetValue(s.Date, out var planned) == true ? planned : null,
+            var planned = plan?.GetValueOrDefault(s.Date);
+            return new SeriesPointDto(s.Date, s.Value, s.NetContributions, s.TwrIndex / baseIndex, planned?.Value, planned?.NetContributions,
                 peak > 0m ? decimal.Round(s.TwrIndex / peak - 1m, 6) : 0m);
         }).ToList();
 
@@ -205,7 +218,7 @@ public sealed class DashboardQueries(SnapshotBuilder builder, IPerformanceReposi
 
         var summary = new DashboardDto(
             null, "", last.Date, key, last.Value, last.NetContributions, last.Value - last.NetContributions,
-            periodTwr, annualized, xirr, drawdown.Max, drawdown.Current, plan?.TryGetValue(last.Date, out var planNow) == true ? planNow : null,
+            periodTwr, annualized, xirr, drawdown.Max, drawdown.Current, plan?.GetValueOrDefault(last.Date)?.Value,
             series, [], [], []);
         return (summary, start, before);
     }

@@ -1,16 +1,26 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { ToggleSwitch } from 'primeng/toggleswitch';
 import { DisplayCurrency } from '../../../../core/context/display-currency';
-import { ChartTheme } from '../../../../shared/charts/chart-theme';
+import { ChartTheme, withAlpha } from '../../../../shared/charts/chart-theme';
 import { LiveChart } from '../../../../shared/charts/live-chart';
 import { formatAxisNumber, formatDate, formatMoney, formatPeriod, shortenDate } from '../../../../shared/pipes/format';
 import { Viewport } from '../../../../shared/ui/viewport';
 import { DashboardDto } from '../../data-access/dashboard-api';
 
-/** Value over time against the money paid in, with the "everything as planned" line and report markers. */
+const showPlanKey = 'overview.valueChart.showPlan';
+
+/** Value over time against the money paid in, with the same two lines "everything as planned" and report markers. */
 @Component({
   selector: 'app-value-chart',
-  imports: [LiveChart],
-  template: `<app-live-chart [data]="data()" [options]="options()" [height]="viewport.phone() ? '15rem' : '22rem'" />`,
+  imports: [FormsModule, LiveChart, ToggleSwitch],
+  template: `
+    @if (hasPlan()) {
+      <label class="flex items-center justify-end gap-2 mb-2 text-sm text-muted-color">
+        <p-toggleswitch [ngModel]="showPlan()" (ngModelChange)="setShowPlan($event)" /> якби все за планом
+      </label>
+    }
+    <app-live-chart [data]="data()" [options]="options()" [height]="viewport.phone() ? '15rem' : '22rem'" />`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ValueChart {
@@ -28,13 +38,26 @@ export class ValueChart {
 
   readonly dashboard = input.required<DashboardDto>();
 
+  protected readonly hasPlan = computed(() => this.dashboard().series.some((point) => point.planValue !== null));
+  /** The plan lines are on unless switched off here; the choice is remembered on this device. */
+  protected readonly showPlan = signal(readShowPlan());
+
+  protected setShowPlan(show: boolean): void {
+    this.showPlan.set(show);
+    try {
+      localStorage.setItem(showPlanKey, String(show));
+    } catch {
+      /* private mode: the choice is just not remembered */
+    }
+  }
+
   protected readonly data = computed(() => {
     const { series, reports } = this.dashboard();
     const { rate } = this.scale();
     const scaled = (value: number | null) => (value === null ? null : value * rate);
     const palette = this.theme.palette();
     const reportDays = new Map(reports.map((report) => [report.date, report]));
-    const hasPlan = series.some((point) => point.planValue !== null);
+    const plan = palette.series[1];
     return {
       labels: series.map((point) => formatDate(point.date)),
       datasets: [
@@ -60,16 +83,30 @@ export class ValueChart {
           borderWidth: 1.5,
           fill: false,
         },
-        ...(hasPlan
-          ? [{
-              label: 'Якби все за планом',
-              data: series.map((point) => scaled(point.planValue)),
-              borderColor: palette.series[1],
-              pointRadius: 0,
-              borderWidth: 1.5,
-              tension: 0.2,
-              fill: false,
-            }]
+        // The plan drawn like the real pair, in one colour and dashed: its value and the money it would have paid in.
+        ...(this.hasPlan() && this.showPlan()
+          ? [
+              {
+                label: 'Вартість за планом',
+                data: series.map((point) => scaled(point.planValue)),
+                borderColor: plan,
+                borderDash: [6, 4],
+                pointRadius: 0,
+                borderWidth: 2,
+                tension: 0.2,
+                fill: false,
+              },
+              {
+                label: 'Внесено за планом',
+                data: series.map((point) => scaled(point.planNetContributions)),
+                borderColor: withAlpha(plan, 0.7),
+                borderDash: [2, 3],
+                stepped: true,
+                pointRadius: 0,
+                borderWidth: 1.5,
+                fill: false,
+              },
+            ]
           : []),
       ],
     };
@@ -119,4 +156,12 @@ export class ValueChart {
           },
     };
   });
+}
+
+function readShowPlan(): boolean {
+  try {
+    return localStorage.getItem(showPlanKey) !== 'false';
+  } catch {
+    return true;
+  }
 }
