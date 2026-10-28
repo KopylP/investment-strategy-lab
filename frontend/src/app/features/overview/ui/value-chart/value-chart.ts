@@ -83,14 +83,13 @@ export class ValueChart {
           borderWidth: 1.5,
           fill: false,
         },
-        // The plan drawn like the real pair, in one colour and dashed: its value and the money it would have paid in.
+        // The plan drawn like the real pair, in its own colour: its value solid, the money it would have paid in dashed.
         ...(this.hasPlan() && this.showPlan()
           ? [
               {
                 label: 'Вартість за планом',
                 data: series.map((point) => scaled(point.planValue)),
                 borderColor: plan,
-                borderDash: [6, 4],
                 pointRadius: 0,
                 borderWidth: 2,
                 tension: 0.2,
