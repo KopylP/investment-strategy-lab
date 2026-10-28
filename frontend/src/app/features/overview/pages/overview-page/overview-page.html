@@ -40,7 +40,7 @@
     @if (alert.exceeded) {
       <p-message severity="warn" styleClass="mb-4">
         <div class="flex flex-wrap items-center justify-between gap-3 w-full">
-          <span>Податок {{ store.taxYear }} — {{ store.tax()!.taxDue | money: 'PLN' : 0 }}, це {{ alert.ratio | percent }} вартості всіх рахунків: понад ваш поріг {{ alert.share | percent }} ({{ alert.limit | money: 'PLN' : 0 }}).</span>
+          <span>Податок {{ store.taxYear }} — {{ store.tax()!.taxDue | money: 'PLN' : 0 }}, це {{ alert.ratio | percent }} вартості всіх рахунків: понад поріг {{ alert.share | percent }} ({{ alert.limit | money: 'PLN' : 0 }}).</span>
           <p-button label="Податки" size="small" [text]="true" routerLink="/taxes" />
         </div>
       </p-message>
@@ -127,7 +127,7 @@
               } @else {
                 <div class="text-xl font-semibold mt-1 flex items-center gap-1">
                   {{ tax.taxDue | money: 'PLN' : 0 }}
-                  @if (store.taxAlert()?.exceeded) { <i class="pi pi-exclamation-triangle text-sm" [style.color]="'var(--p-finance-loss)'" pTooltip="Понад ваш поріг"></i> }
+                  @if (store.taxAlert()?.exceeded) { <i class="pi pi-exclamation-triangle text-sm" [style.color]="'var(--p-finance-loss)'" pTooltip="Понад поріг"></i> }
                 </div>
                 <div class="text-xs text-muted-color">
                   @if (tax.points.length) {
@@ -171,7 +171,7 @@
             }
             <div class="text-xs text-muted-color mt-2">
               PIT-38 за всіма рахунками на кожен день: зиски й збитки сальдуються, дивіденди — з урахуванням податку за кордоном.
-              @if (tax.alertShare !== null) { Пунктир — поріг: {{ tax.alertShare | percent }} поточної вартості всіх рахунків. }
+              @if (tax.alertShare !== null) { Червоним — понад поріг: {{ tax.alertShare | percent }} поточної вартості всіх рахунків. }
             </div>
           </div>
         }

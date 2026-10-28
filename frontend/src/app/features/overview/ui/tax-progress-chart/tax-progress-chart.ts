@@ -7,8 +7,8 @@ import { Viewport } from '../../../../shared/ui/viewport';
 import { TaxProgress } from '../../data-access/overview-store';
 
 /**
- * The year's PIT-38 tax day by day since 1 January (a step on every day with a sale or a dividend), with the person's
- * threshold as a dashed line when one is set.
+ * The year's PIT-38 tax day by day since 1 January (a step on every day with a sale or a dividend); above the threshold,
+ * when there is one, the line and its fill turn red. The threshold only colours: the axis keeps following the tax.
  */
 @Component({
   selector: 'app-tax-progress-chart',
@@ -50,26 +50,14 @@ export class TaxProgressChart {
         {
           label: 'Податок',
           data: days.map((day) => day.tax),
-          borderColor: palette.tax,
-          backgroundColor: withAlpha(palette.tax, 0.15),
+          borderColor: aboveThreshold(threshold, palette.tax, palette.loss),
+          backgroundColor: aboveThreshold(threshold, withAlpha(palette.tax, 0.15), withAlpha(palette.loss, 0.2)),
           fill: 'origin',
           stepped: true,
           borderWidth: 2,
           pointRadius: 0,
           pointHoverRadius: 4,
         },
-        ...(threshold !== null
-          ? [{
-              label: 'Поріг',
-              data: days.map(() => threshold),
-              borderColor: palette.loss,
-              borderDash: [6, 4],
-              borderWidth: 1.5,
-              pointRadius: 0,
-              pointHoverRadius: 0,
-              fill: false,
-            }]
-          : []),
       ],
     };
   });
@@ -77,13 +65,12 @@ export class TaxProgressChart {
   protected readonly options = computed(() => {
     const palette = this.theme.palette();
     const phone = this.viewport.phone();
-    const hasThreshold = this.threshold() !== null;
     return {
       maintainAspectRatio: false,
       animation: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { display: hasThreshold, labels: { color: palette.text, usePointStyle: true, boxWidth: 6, boxHeight: 6 } },
+        legend: { display: false },
         tooltip: {
           callbacks: { label: (context: { dataset: { label: string }; parsed: { y: number } }) => `${context.dataset.label}: ${formatMoney(context.parsed.y, 'PLN', 0)}` },
         },
@@ -104,4 +91,26 @@ export class TaxProgressChart {
       },
     };
   });
+}
+
+interface ChartContext {
+  chart: { ctx: CanvasRenderingContext2D; chartArea?: { top: number; bottom: number }; scales: { y?: { getPixelForValue: (value: number) => number } } };
+}
+
+/** A colour that switches at the threshold's height on the chart (a vertical gradient with a hard stop); null — always below. */
+function aboveThreshold(threshold: number | null, below: string, above: string): string | ((context: ChartContext) => string | CanvasGradient) {
+  if (threshold === null) return below;
+  return ({ chart }) => {
+    const { ctx, chartArea, scales } = chart;
+    if (!chartArea || !scales.y || chartArea.bottom <= chartArea.top) return below;
+    const at = (chartArea.bottom - scales.y.getPixelForValue(threshold)) / (chartArea.bottom - chartArea.top);
+    if (at >= 1) return below;
+    const stop = Math.max(0, at);
+    const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+    gradient.addColorStop(0, below);
+    gradient.addColorStop(stop, below);
+    gradient.addColorStop(stop, above);
+    gradient.addColorStop(1, above);
+    return gradient;
+  };
 }
