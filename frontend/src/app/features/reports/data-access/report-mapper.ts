@@ -1,6 +1,6 @@
 import { formatMoney, formatPeriod, formatQuantity } from '../../../shared/pipes/format';
-import { ActionKind, ReportActionDto, ReportDetailsDto, ReportSectionDto, ReportSummaryDto, SectionOrderDto } from '../models/report-dto';
-import { ReportActionVm, ReportProgressVm, ReportSummaryVm, ReportVm, SectionVm } from '../models/report-vm';
+import { ActionKind, ReportActionDto, ReportDetailsDto, ReportSectionDto, ReportSummaryDto, SectionColumnDto, SectionOrderDto, SectionScoreDto } from '../models/report-dto';
+import { ReportActionVm, ReportProgressVm, ReportSummaryVm, ReportVm, ScoreTableVm, SectionVm } from '../models/report-vm';
 
 const kindLabels: Record<ReportSummaryDto['kind'], string> = {
   Monthly: 'Щомісячний',
@@ -150,6 +150,63 @@ const orderLabels: Record<SectionOrderDto['kind'], { label: string; severity: Se
   Park: { label: 'Запаркувати', severity: 'secondary' },
 };
 
+/**
+ * The table etf-momentum drew before strategies described their own: older reports carry these metrics as fields,
+ * read under the same ids the strategy now sends.
+ */
+const legacyColumns: SectionColumnDto[] = [
+  { id: 'momentum', label: 'Моментум', format: 'signedPercent', hint: null, compact: true, trueHint: null, falseHint: null },
+  { id: 'return1m', label: '1 міс', format: 'signedPercent', hint: null, compact: false, trueHint: null, falseHint: null },
+  { id: 'return3m', label: '3 міс', format: 'signedPercent', hint: null, compact: false, trueHint: null, falseHint: null },
+  { id: 'return12m', label: '12 міс', format: 'signedPercent', hint: null, compact: false, trueHint: null, falseHint: null },
+  { id: 'volatility', label: 'Волатильність', format: 'percent', hint: null, compact: false, trueHint: null, falseHint: null },
+  { id: 'ma200', label: 'MA200', format: 'trend', hint: null, compact: true, trueHint: 'Ціна вище MA200', falseHint: 'Ціна нижче MA200' },
+];
+
+function legacyValues(score: SectionScoreDto): Record<string, number | boolean | null> {
+  return {
+    momentum: score.momentum,
+    return1m: score.return1m,
+    return3m: score.return3m,
+    return12m: score.return12m,
+    volatility: score.volatility,
+    ma200: score.aboveMovingAverage,
+  };
+}
+
+function toScoreTable(
+  section: ReportSectionDto,
+  targets: Map<string, number>,
+  symbol: (id: string | null) => string,
+  readable: (text: string) => string,
+): ScoreTableVm | null {
+  const decision = section.decision;
+  if (!decision?.scores.length) return null;
+  const described = decision.columns != null;
+  const columns = decision.columns ?? legacyColumns;
+  return {
+    title: decision.scoreTitle ?? (described ? 'Чому саме ці інструменти' : 'Чому саме ці ETF'),
+    instrumentLabel: decision.instrumentLabel ?? (described ? 'Інструмент' : 'ETF'),
+    columns,
+    rows: decision.scores
+      .map((score) => {
+        const values = described ? (score.values ?? {}) : legacyValues(score);
+        return {
+          symbol: symbol(score.instrumentId),
+          name: score.name,
+          group: score.group,
+          rank: score.rank,
+          values: columns.map((column) => values[column.id] ?? null),
+          status: score.status,
+          reason: readable(score.reason),
+          isTarget: targets.has(score.instrumentId),
+          targetWeight: targets.get(score.instrumentId) ?? null,
+        };
+      })
+      .sort((left, right) => (left.rank ?? 999) - (right.rank ?? 999)),
+  };
+}
+
 function toSectionVm(section: ReportSectionDto, symbol: (id: string | null) => string, readable: (text: string) => string): SectionVm {
   const targets = new Map(section.decision?.targets.map((target) => [target.instrumentId, target.weight]) ?? []);
   return {
@@ -182,24 +239,7 @@ function toSectionVm(section: ReportSectionDto, symbol: (id: string | null) => s
       weightAfter: row.weightAfter,
       targetWeight: row.targetWeight,
     })),
-    scores: (section.decision?.scores ?? [])
-      .map((score) => ({
-        symbol: symbol(score.instrumentId),
-        name: score.name,
-        group: score.group,
-        rank: score.rank,
-        momentum: score.momentum,
-        return1m: score.return1m,
-        return3m: score.return3m,
-        return12m: score.return12m,
-        volatility: score.volatility,
-        aboveMovingAverage: score.aboveMovingAverage,
-        status: score.status,
-        reason: readable(score.reason),
-        isTarget: targets.has(score.instrumentId),
-        targetWeight: targets.get(score.instrumentId) ?? null,
-      }))
-      .sort((left, right) => (left.rank ?? 999) - (right.rank ?? 999)),
+    scores: toScoreTable(section, targets, symbol, readable),
     totalBefore: section.totalBefore,
     totalAfter: section.totalAfter,
     parkedBefore: section.parkedBefore,

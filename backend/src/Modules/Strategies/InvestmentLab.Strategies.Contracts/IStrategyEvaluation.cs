@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace InvestmentLab.Strategies.Contracts;
 
 /// <summary>Runs a configured strategy for one sub-portfolio. Results are targets and signals, never orders.</summary>
@@ -56,9 +58,27 @@ public sealed record MarketRegimeDto(
     decimal? VolatilityIndex,
     IReadOnlyList<string> Reasons);
 
-public sealed record RationaleDto(string Summary, decimal RiskFreeRate, IReadOnlyList<InstrumentScoreDto> Scores);
+/// <summary>The "why" table: the strategy names its own columns, the report draws them as they come.</summary>
+/// <param name="Title">Heading of the table, e.g. "Чому саме ці ETF".</param>
+/// <param name="InstrumentLabel">Heading of its instrument column.</param>
+public sealed record RationaleDto(
+    string Summary,
+    decimal? RiskFreeRate,
+    IReadOnlyList<InstrumentScoreDto> Scores,
+    string? Title = null,
+    string? InstrumentLabel = null,
+    IReadOnlyList<RationaleColumnDto>? Columns = null);
 
-/// <summary>One row of the "why" table.</summary>
+/// <param name="Id">Key of the value in <see cref="InstrumentScoreDto.Values"/>.</param>
+/// <param name="Format">percent, signedPercent, number, money, trend (a bool as an arrow) or text.</param>
+/// <param name="Compact">Shown on a phone too.</param>
+public sealed record RationaleColumnDto(string Id, string Label, string Format, string? Hint, bool Compact, string? TrueHint, string? FalseHint);
+
+/// <summary>
+/// One row of the "why" table. <see cref="Rank"/>, <see cref="Momentum"/> (the strategy's main score), status and
+/// reason are common to every strategy; its own metrics are in <see cref="Values"/>. The other metrics are
+/// etf-momentum's, read by reports made before the columns existed.
+/// </summary>
 public sealed record InstrumentScoreDto(
     Guid InstrumentId,
     string Name,
@@ -71,12 +91,13 @@ public sealed record InstrumentScoreDto(
     decimal? Volatility,
     decimal? Sharpe,
     decimal? Drawdown,
-    bool AboveMovingAverage,
+    bool? AboveMovingAverage,
     DateOnly? LastDate,
     int? Rank,
     string Status,
     string Reason,
-    decimal? Weight);
+    decimal? Weight,
+    IReadOnlyDictionary<string, JsonElement>? Values = null);
 
 /// <param name="Status">ok, watch or act.</param>
 public sealed record RiskAssessmentDto(

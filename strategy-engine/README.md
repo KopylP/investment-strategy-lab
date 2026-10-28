@@ -184,6 +184,33 @@ PYTHONPATH=src python -m finance_decisions.strategies.my_strategy.scanner
 When a strategy becomes real, add a dedicated GitHub Actions workflow for it or
 extend an existing workflow with a matrix.
 
+### Plugging it into the app (reports included)
+
+The .NET backend and the Angular reports know no strategy by name; a new type needs no change there.
+
+1. Write `decide(context, parameters) -> StrategyDecision` and `assess_risk(context, parameters) -> RiskAssessment`
+   in the strategy package (see `etf_momentum/decision.py`), a pydantic model of its parameters (the app builds the
+   settings form from its JSON Schema) and `engine_version()`. Raise
+   `finance_decisions.strategies.errors.ContextError` when the context cannot be used (a missing series, no prices).
+2. Register it in `STRATEGY_TYPES` (`api/catalog.py`): code, name, description, parameters, the two functions,
+   the series roles it needs and `version=engine_version`.
+3. Describe the report's "why" table in `Rationale`:
+   - `title` and `instrument_label` — the heading and the first column ("Чому саме ці акції", "Акція");
+   - `columns` — `RationaleColumn(id, label, format, hint, compact, true_hint, false_hint)` in display order;
+     `format` is `percent`, `signedPercent`, `number`, `money`, `trend` (a bool drawn as an arrow) or `text`;
+     `compact=True` keeps the column on a phone; an id cannot be `key`;
+   - each `InstrumentScore` carries `values` under those ids, plus the common `rank`, `status`, `reason` (the text
+     under "Рішення") and, when the strategy has one, its main score in `momentum` (the backend quotes rank and score
+     in the reasons of its buy orders).
+   The momentum-specific fields of `InstrumentScore` (`return_1m`, `above_moving_average`, …) are optional; leave them out.
+4. Write the reasons and the summary in Ukrainian: the report shows them as they come. The report is a snapshot,
+   so text and columns of an old report never change when the strategy does.
+5. Regenerate the contract (`python tools/export_contract.py`) and test `decide` through the API like
+   `tests/test_api_contracts.py` does.
+
+What the backend still assumes: a decision is target weights plus the share of the contribution to invest, and a
+weak market parks the rest. A strategy that needs other order mechanics (stops, hedges) needs the rebalancer extended.
+
 ## Deploy To GitHub
 
 Use a private GitHub repository unless all positions and reports are safe to
