@@ -54,27 +54,6 @@ public sealed class TaxAssessment
     }
 }
 
-/// <summary>The taxpayer's own tax settings.</summary>
-public sealed class TaxSettings
-{
-    public UserId OwnerId { get; private set; }
-
-    /// <summary>Warn when this year's tax exceeds this share (0..1) of the value of all accounts; null — no warning.</summary>
-    public decimal? AlertShare { get; private set; }
-
-    private TaxSettings() { }
-
-    public static TaxSettings For(UserId ownerId) => new() { OwnerId = ownerId };
-
-    public Result Change(decimal? alertShare)
-    {
-        if (alertShare is <= 0m or > 1m)
-            return Error.Validation("tax.alert_share_out_of_range", "The threshold is a share above 0 and at most 100%.");
-        AlertShare = alertShare is { } share ? decimal.Round(share, 4) : null;
-        return Result.Success();
-    }
-}
-
 /// <summary>A loss from a year before the journal, entered by the user (e.g. from an earlier PIT-38).</summary>
 public sealed class LossCarryforward
 {

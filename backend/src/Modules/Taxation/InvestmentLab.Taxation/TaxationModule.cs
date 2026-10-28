@@ -1,3 +1,4 @@
+using System.Globalization;
 using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.BuildingBlocks.Modules;
 using InvestmentLab.BuildingBlocks.Persistence;
@@ -39,6 +40,8 @@ public sealed class TaxationModule : IModule
         services.AddScoped<TaxInputs>();
         services.AddScoped<TaxRecalculator>();
         services.AddScoped<TaxQueries>();
+        services.AddSingleton(new TaxAlertOptions(
+            decimal.TryParse(builder.Configuration["Taxation:AlertShare"], CultureInfo.InvariantCulture, out var share) && share is > 0m and <= 1m ? share : null));
         services.AddScoped<DeclarationQueries>();
         // Optional returns, one per form; another country's form is one more line here.
         services.AddSingleton<ITaxDeclarationForm, Pit38Form>();

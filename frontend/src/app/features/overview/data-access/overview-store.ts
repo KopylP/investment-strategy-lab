@@ -1,5 +1,4 @@
 import { computed, inject, Injectable, linkedSignal, resource, signal } from '@angular/core';
-import { MessageService } from 'primeng/api';
 import { ApiClient, toProblemMessage } from '../../../core/api/api-client';
 import { AccountContext } from '../../../core/context/account-context';
 import { DisplayCurrency } from '../../../core/context/display-currency';
@@ -24,7 +23,7 @@ export interface TaxProgress {
   dividends: number;
   taxedAccounts: number;
   points: { date: string; gain: number; dividends: number; taxDue: number }[];
-  /** Warn above this share (0..1) of all accounts' value; null — off. */
+  /** Warn above this share (0..1) of all accounts' value (the API's configuration); null — off. */
   alertShare: number | null;
   incomplete: string[];
 }
@@ -37,7 +36,6 @@ export class OverviewStore {
   private readonly api = inject(ApiClient);
   private readonly accounts = inject(AccountContext);
   private readonly display = inject(DisplayCurrency);
-  private readonly messages = inject(MessageService);
 
   readonly period = signal<DashboardPeriod>('ALL');
 
@@ -130,21 +128,6 @@ export class OverviewStore {
     const before = [...tax.points].reverse().find((point) => new Date(point.date) < since)?.taxDue ?? 0;
     return tax.taxDue - before;
   });
-  readonly savingThreshold = signal(false);
-
-  async saveThreshold(percent: number | null): Promise<void> {
-    this.savingThreshold.set(true);
-    try {
-      await this.api.put('/api/taxation/settings', { alertShare: percent ? percent / 100 : null });
-      this.messages.add({ severity: 'success', summary: percent ? `Поріг: ${percent}% вартості рахунків` : 'Поріг вимкнено' });
-      this.taxResource.reload();
-    } catch (error) {
-      this.messages.add({ severity: 'error', summary: 'Поріг не збережено', detail: toProblemMessage(error) });
-    } finally {
-      this.savingThreshold.set(false);
-    }
-  }
-
   accountName(id: string): string {
     return this.allAccounts().find((account) => account.id === id)?.name ?? '';
   }

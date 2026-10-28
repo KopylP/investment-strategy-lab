@@ -166,23 +166,6 @@ namespace InvestmentLab.Taxation.Shared.Infrastructure.Migrations
                     b.ToTable("assessments", "taxation");
                 });
 
-            modelBuilder.Entity("InvestmentLab.Taxation.Assessments.Domain.TaxSettings", b =>
-                {
-                    b.Property<Guid>("OwnerId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("owner_id");
-
-                    b.Property<decimal?>("AlertShare")
-                        .HasPrecision(5, 4)
-                        .HasColumnType("numeric(5,4)")
-                        .HasColumnName("alert_share");
-
-                    b.HasKey("OwnerId")
-                        .HasName("pk_settings");
-
-                    b.ToTable("settings", "taxation");
-                });
-
             modelBuilder.Entity("InvestmentLab.Taxation.BrokerStatements.Domain.BrokerStatement", b =>
                 {
                     b.Property<Guid>("Id")
