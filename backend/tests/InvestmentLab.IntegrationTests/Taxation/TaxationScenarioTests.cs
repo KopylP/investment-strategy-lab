@@ -71,9 +71,8 @@ public sealed class TaxationScenarioTests(MarketDataApiFactory factory) : IClass
         var netted = (await client.GetFromJsonAsync<DeclarationRow>($"/api/taxation/declarations/{year}/pit-38", ct))!.Declaration;
         netted.TaxDue.ShouldBe(201m);
 
-        (await client.PutAsJsonAsync("/api/taxation/settings", new TaxSettingsDto(0.02m), ct)).EnsureSuccessStatusCode();
-        (await client.GetFromJsonAsync<TaxProgressDto>($"/api/taxation/progress/{year}", ct))!.AlertShare.ShouldBe(0.02m);
-        (await client.PutAsJsonAsync("/api/taxation/settings", new TaxSettingsDto(1.5m), ct)).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        // The warning threshold is the same for everyone, from appsettings.json.
+        progress.AlertShare.ShouldBe(0.01m);
 
         (await client.PostAsJsonAsync($"/api/portfolio/accounts/{account.Id}/transactions/{sale}/reverse", new { reason = "помилка" }, ct)).EnsureSuccessStatusCode();
         // Only the second account's loss is left in the year.
@@ -85,7 +84,7 @@ public sealed class TaxationScenarioTests(MarketDataApiFactory factory) : IClass
         (await stranger.GetFromJsonAsync<TaxOverviewDto>("/api/taxation/years", ct))!.Years.ShouldBeEmpty();
         (await stranger.GetAsync($"/api/taxation/years/{year}", ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await stranger.GetFromJsonAsync<TaxProgressDto>($"/api/taxation/progress/{year}", ct))!.ShouldSatisfyAllConditions(
-            mine => mine.Points.ShouldBeEmpty(), mine => mine.AlertShare.ShouldBeNull());
+            mine => mine.Points.ShouldBeEmpty(), mine => mine.TaxDue.ShouldBe(0m));
     }
 
     private static async Task<Guid> TradeAsync(

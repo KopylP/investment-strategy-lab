@@ -25,10 +25,6 @@ public interface IAssessmentRepository
 
     void Publish<TEvent>(TEvent integrationEvent, DateTimeOffset occurredAt) where TEvent : class;
 
-    Task<TaxSettings?> SettingsAsync(UserId ownerId, CancellationToken cancellationToken);
-
-    void AddSettings(TaxSettings settings);
-
     Task SaveChangesAsync(CancellationToken cancellationToken);
 
     /// <summary>

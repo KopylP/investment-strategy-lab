@@ -29,14 +29,11 @@ public sealed record TaxYearDetailsDto(
 /// <summary>How the year's tax grows (the dashboard).</summary>
 /// <param name="TaxDue">So far: every taxed account netted, as one PIT-38.</param>
 /// <param name="Points">The year after each day with a sale or a dividend, oldest first.</param>
-/// <param name="AlertShare">The person's warning threshold: tax as a share (0..1) of all accounts' value; null — off.</param>
+/// <param name="AlertShare">The warning threshold (<see cref="TaxAlertOptions"/>): tax as a share (0..1) of all accounts' value; null — off.</param>
 /// <param name="Incomplete">What the figures miss (NBP rates, purchases of sold units): the amount may be too low.</param>
 public sealed record TaxProgressDto(
     int Year, decimal TaxDue, decimal Gain, decimal Dividends, int TaxedAccounts, IReadOnlyList<TaxTimelinePoint> Points, decimal? AlertShare,
     IReadOnlyList<string> Incomplete);
-
-/// <param name="AlertShare">Warn when this year's tax exceeds this share (0..1) of all accounts' value; null — off.</param>
-public sealed record TaxSettingsDto(decimal? AlertShare);
 
 public sealed record LossCarryforwardDto(Guid Id, int Year, decimal Amount, decimal AlreadyUsed);
 
@@ -46,7 +43,7 @@ public sealed record RecordLossCommand(int Year, decimal Amount, decimal Already
 /// Tax years of the signed-in taxpayer over all their taxed accounts; each read recomputes first, so what the user sees
 /// is never stale.
 /// </summary>
-public sealed class TaxQueries(TaxRecalculator recalculator, IAssessmentRepository assessments, IInstrumentCatalog instruments, ICurrentUser currentUser)
+public sealed class TaxQueries(TaxRecalculator recalculator, IAssessmentRepository assessments, IInstrumentCatalog instruments, ICurrentUser currentUser, TaxAlertOptions alert)
 {
     private const string YahooPrefix = "yfinance:";
 
@@ -85,28 +82,8 @@ public sealed class TaxQueries(TaxRecalculator recalculator, IAssessmentReposito
         var owner = currentUser.RequiredId;
         var outcome = await recalculator.RecomputeOwnerAsync(owner, cancellationToken);
         var summary = outcome.Computation.Year(year)?.Summary;
-        var settings = await assessments.SettingsAsync(owner, cancellationToken);
         return new TaxProgressDto(year, summary?.TaxDue ?? 0m, summary?.Gain ?? 0m, summary?.DividendIncome ?? 0m, outcome.Taxpayer.Taxed.Count,
-            TaxCalculator.Timeline(outcome.Events, outcome.Taxpayer.Policy, outcome.Losses, year), settings?.AlertShare, outcome.Incomplete);
-    }
-
-    public async Task<TaxSettingsDto> Settings(CancellationToken cancellationToken) =>
-        new((await assessments.SettingsAsync(currentUser.RequiredId, cancellationToken))?.AlertShare);
-
-    public async Task<Result<TaxSettingsDto>> ChangeSettings(TaxSettingsDto command, CancellationToken cancellationToken)
-    {
-        var owner = currentUser.RequiredId;
-        var settings = await assessments.SettingsAsync(owner, cancellationToken);
-        if (settings is null)
-        {
-            settings = TaxSettings.For(owner);
-            assessments.AddSettings(settings);
-        }
-        var changed = settings.Change(command.AlertShare);
-        if (changed.IsFailure)
-            return changed.Error;
-        await assessments.SaveChangesAsync(cancellationToken);
-        return new TaxSettingsDto(settings.AlertShare);
+            TaxCalculator.Timeline(outcome.Events, outcome.Taxpayer.Policy, outcome.Losses, year), alert.Share, outcome.Incomplete);
     }
 
     public async Task<IReadOnlyList<LossCarryforwardDto>> Losses(CancellationToken cancellationToken) =>
