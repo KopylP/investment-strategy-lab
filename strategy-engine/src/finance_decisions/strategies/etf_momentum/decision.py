@@ -11,12 +11,14 @@ from importlib.metadata import version
 import pandas as pd
 
 from finance_decisions.api.contracts import (
+    ColumnFormat,
     EvaluationContext,
     InstrumentScore,
     MarketRegime,
     PortfolioRisk,
     PositionRisk,
     Rationale,
+    RationaleColumn,
     RiskAssessment,
     RiskSignal,
     RiskSignalKind,
@@ -26,6 +28,7 @@ from finance_decisions.api.contracts import (
 )
 from finance_decisions.helpers import holdings_by_value, is_na, latest_value
 from finance_decisions.models import Position
+from finance_decisions.strategies.errors import ContextError
 from .parameters import EtfMomentumParameters
 from .risk import analyze_portfolio_risk
 from .scanner import MARKET_TICKERS, STATUS_FAILED, scan_etfs
@@ -34,10 +37,6 @@ STRATEGY_CODE = "etf-momentum"
 
 # The scanner and risk monitor read the market regime from these fixed columns.
 _ROLE_COLUMNS = {SeriesRole.BENCHMARK: "SPY", SeriesRole.VOLATILITY_INDEX: "^VIX"}
-
-
-class ContextError(ValueError):
-    """The evaluation context cannot be used by this strategy."""
 
 
 def engine_version() -> str:
@@ -73,9 +72,10 @@ def decide(context: EvaluationContext, parameters: EtfMomentumParameters) -> Str
     holdings = {holding.key: holding.quantity for holding in context.sub_portfolio.holdings}
     latest = {column: latest_value(frame[column]) for column in frame.columns}
 
+    settings = parameters.scanner.to_settings()
     scan = scan_etfs(
         frame,
-        settings=parameters.scanner.to_settings(),
+        settings=settings,
         etfs=[member.key for member in context.universe],
         current_positions=holdings_by_value(holdings, latest),
         groups=groups,
@@ -99,7 +99,14 @@ def decide(context: EvaluationContext, parameters: EtfMomentumParameters) -> Str
             volatility_index=scan.vix,
             reasons=scan.market_reasons,
         ),
-        rationale=Rationale(summary=_summary(scan, targets), risk_free_rate=scan.risk_free_rate, scores=scores),
+        rationale=Rationale(
+            summary=_summary(scan, targets),
+            title="Чому саме ці ETF",
+            instrument_label="ETF",
+            columns=_columns(settings.lookback_months),
+            risk_free_rate=scan.risk_free_rate,
+            scores=scores,
+        ),
         warnings=[f"{score.name}: {score.reason}" for score in scores if score.status == STATUS_FAILED and score.price is None],
     )
 
@@ -179,12 +186,34 @@ def _signals(report) -> list[RiskSignal]:
     return signals
 
 
+def _columns(lookback_months: int) -> list[RationaleColumn]:
+    """The "why" table of the report: the scanner's metrics and filters, in the order a reader checks them."""
+    return [
+        RationaleColumn(id="momentum", label="Моментум", format=ColumnFormat.SIGNED_PERCENT, compact=True,
+                        hint=f"Дохідність за {lookback_months} міс: за нею ранжуються ETF."),
+        RationaleColumn(id="return1m", label="1 міс", format=ColumnFormat.SIGNED_PERCENT),
+        RationaleColumn(id="return3m", label="3 міс", format=ColumnFormat.SIGNED_PERCENT),
+        RationaleColumn(id="return12m", label="12 міс", format=ColumnFormat.SIGNED_PERCENT),
+        RationaleColumn(id="volatility", label="Волатильність", format=ColumnFormat.PERCENT),
+        RationaleColumn(id="ma200", label="MA200", format=ColumnFormat.TREND, compact=True,
+                        true_hint="Ціна вище MA200", false_hint="Ціна нижче MA200"),
+    ]
+
+
 def _score(key: str, row: pd.Series) -> InstrumentScore:
     def number(column: str) -> float | None:
         value = row[column]
         return None if is_na(value) else float(value)
 
     rank = number("Rank")
+    values = {
+        "momentum": number("Momentum"),
+        "return1m": number("Return 1M"),
+        "return3m": number("Return 3M"),
+        "return12m": number("Return 12M"),
+        "volatility": number("Volatility"),
+        "ma200": bool(row["Above MA200"]),
+    }
     return InstrumentScore(
         key=str(key),
         name=str(row["Name"]),
@@ -203,6 +232,7 @@ def _score(key: str, row: pd.Series) -> InstrumentScore:
         status=str(row["Status"]),
         reason=str(row["Reason"]),
         weight=number("Weight"),
+        values=values,
     )
 
 

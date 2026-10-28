@@ -151,8 +151,12 @@ public sealed class PlanningInputs(
         [.. decision.Targets.Select(target => new SectionTarget(target.InstrumentId, target.Weight))],
         [.. decision.Rationale.Scores.Select(score => new SectionScore(
             score.InstrumentId, score.Name, score.Group, score.Price, score.Momentum, score.Return1m, score.Return3m, score.Return12m,
-            score.Volatility, score.AboveMovingAverage, score.Rank, score.Status, score.Reason))],
-        [.. decision.Warnings, .. extraWarnings]);
+            score.Volatility, score.AboveMovingAverage, score.Rank, score.Status, score.Reason, score.Values))],
+        [.. decision.Warnings, .. extraWarnings],
+        decision.Rationale.Title,
+        decision.Rationale.InstrumentLabel,
+        decision.Rationale.Columns?.Select(column => new SectionColumn(
+            column.Id, column.Label, column.Format, column.Hint, column.Compact, column.TrueHint, column.FalseHint)).ToList());
 
     public static StrategyTargets TargetsOf(StrategyDecisionDto decision) => new(
         decision.Market.IsFavorable,
