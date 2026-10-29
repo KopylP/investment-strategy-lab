@@ -1,4 +1,4 @@
-import { expect, type Page, test } from '@playwright/test';
+import { expect, type Locator, type Page, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -15,8 +15,8 @@ async function expectNoSidewaysScroll(page: Page, where: string): Promise<void> 
 const overlays = '.p-select-overlay, .p-datepicker-panel, .p-tieredmenu-overlay';
 
 /** Opens each visible dropdown, date picker and split-button menu of the page in turn and checks the width with it open. */
-async function openEachOverlay(page: Page, where: string): Promise<void> {
-  const triggers = page.locator('.p-select:visible, .p-datepicker-input:visible, .p-splitbutton-dropdown:visible');
+async function openEachOverlay(page: Page, where: string, within: Locator = page.locator('body')): Promise<void> {
+  const triggers = within.locator('.p-select:visible, .p-datepicker-input:visible, .p-splitbutton-dropdown:visible');
   const count = await triggers.count();
   for (let index = 0; index < count; index++) {
     const trigger = triggers.nth(index);
@@ -94,7 +94,7 @@ test('every page fits a phone, with any dropdown open, and the tab bar reaches t
     // The name starts with the icon font's glyph.
     await page.getByRole('button', { name: new RegExp(`${button}$`) }).click();
     await expect(page.getByRole('dialog')).toBeVisible();
-    await openEachOverlay(page, `ledger, dialog «${button}»`);
+    await openEachOverlay(page, `ledger, dialog «${button}»`, page.getByRole('dialog'));
   }
 
   // The topbar's profile menu.
