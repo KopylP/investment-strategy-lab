@@ -102,7 +102,7 @@ export class AccountDetailPage {
       message: 'Частку буде пропорційно розподілено між іншими під-портфелями. Позиції лишаються видимими, їх можна перенести внутрішнім переказом.',
       icon: 'pi pi-sign-out',
       acceptLabel: 'Вивести',
-      rejectLabel: 'Ні',
+      rejectLabel: 'Скасувати',
       acceptButtonProps: { severity: 'danger' },
       rejectButtonProps: { severity: 'secondary', text: true },
       accept: () => void this.store.retire(sub.id),

@@ -32,11 +32,11 @@
                 <div class="text-xs mt-1 text-muted-color">PIT-8C — один на брокера, введено на «{{ a.pit8CCoveredBy }}»</div>
               } @else if (a.pit8C) {
                 <div class="text-xs mt-1">PIT-8C: {{ a.pit8C.revenue | money: 'PLN' }} / {{ a.pit8C.costs | money: 'PLN' }}
-                  <a class="text-primary cursor-pointer ml-1" (click)="edit(a)">змінити</a>
-                  <a class="text-muted-color cursor-pointer ml-1" (click)="pit8cRemoved.emit(a.accountId)">прибрати</a>
+                  <button type="button" class="p-0 ml-1 border-0 bg-transparent text-primary cursor-pointer" (click)="edit(a)">змінити</button>
+                  <button type="button" class="p-0 ml-1 border-0 bg-transparent text-muted-color cursor-pointer" (click)="pit8cRemoved.emit(a.accountId)">прибрати</button>
                 </div>
               } @else {
-                <a class="text-xs text-primary cursor-pointer" (click)="edit(a)">Ввести суми з PIT-8C</a>
+                <button type="button" class="p-0 border-0 bg-transparent text-xs text-primary cursor-pointer" (click)="edit(a)">Ввести суми з PIT-8C</button>
               }
             }
           </div>

@@ -111,9 +111,21 @@
 
 /* Phones: tighter gutters and headings, a lower topbar, tables that fit without sideways scrolling. */
 @media (max-width: 575px) {
+    /* Tailwind's text-xs is 10.5px on a 14px root; a phone's smallest text is 11pt (HIG › Accessibility › Vision). */
+    :root {
+        --text-xs: 0.8125rem;
+    }
+
+    /* Side insets keep the bars and content clear of a notch in landscape (viewport-fit=cover in index.html). */
     .layout-topbar {
         height: 3.5rem;
-        padding: 0 0.75rem;
+        padding: 0 max(0.75rem, env(safe-area-inset-right)) 0 max(0.75rem, env(safe-area-inset-left));
+
+        /* 44px: a finger's target (HIG › Accessibility › Mobility). */
+        .layout-topbar-action {
+            width: 44px;
+            height: 44px;
+        }
 
         .layout-menu-button {
             margin-right: 0.25rem;
@@ -134,7 +146,7 @@
     }
 
     .layout-wrapper .layout-main-container {
-        padding: 4.25rem 0.75rem 0 0.75rem;
+        padding: 4.25rem max(0.75rem, env(safe-area-inset-right)) 0 max(0.75rem, env(safe-area-inset-left));
     }
 
     .layout-main {

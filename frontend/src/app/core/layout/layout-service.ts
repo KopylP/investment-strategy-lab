@@ -65,6 +65,15 @@ export class LayoutService {
 
             this.handleDarkModeTransition(config);
         });
+
+        // The system's appearance (Auto switches it through the day) is followed while no choice of the user's stands;
+        // a choice ends once the system comes round to it (HIG › Dark Mode: no app-specific appearance setting).
+        systemDarkQuery()?.addEventListener('change', (event) => {
+            if (storedDarkTheme() === event.matches) clearDarkTheme();
+            if (storedDarkTheme() === null && this.layoutConfig().darkTheme !== event.matches) {
+                this.layoutConfig.update((config) => ({ ...config, darkTheme: event.matches }));
+            }
+        });
     }
 
     private handleDarkModeTransition(config: LayoutConfig): void {
@@ -124,21 +133,43 @@ export class LayoutService {
 
 const darkThemeKey = 'investmentlab.dark';
 
-function readDarkTheme(): boolean {
+function systemDarkQuery(): MediaQueryList | undefined {
+    return window.matchMedia?.('(prefers-color-scheme: dark)');
+}
+
+/** The user's own choice, or null while the app follows the system. */
+function storedDarkTheme(): boolean | null {
     try {
         const stored = localStorage.getItem(darkThemeKey);
-        const dark = stored === null ? window.matchMedia?.('(prefers-color-scheme: dark)').matches === true : stored === 'true';
-        document.documentElement.classList.toggle('app-dark', dark);
-        return dark;
+        return stored === null ? null : stored === 'true';
     } catch {
-        return false;
+        return null;
     }
 }
 
+function readDarkTheme(): boolean {
+    const dark = storedDarkTheme() ?? systemDarkQuery()?.matches === true;
+    document.documentElement.classList.toggle('app-dark', dark);
+    return dark;
+}
+
+/** A choice the same as the system's is no choice: the app goes back to following the system. */
 function writeDarkTheme(dark: boolean): void {
+    if (dark === (systemDarkQuery()?.matches === true)) {
+        clearDarkTheme();
+        return;
+    }
     try {
         localStorage.setItem(darkThemeKey, String(dark));
     } catch {
         /* not remembered */
+    }
+}
+
+function clearDarkTheme(): void {
+    try {
+        localStorage.removeItem(darkThemeKey);
+    } catch {
+        /* nothing stored */
     }
 }

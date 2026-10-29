@@ -3,11 +3,12 @@ import { RouterOutlet } from '@angular/router';
 import { AppTopbar } from './app-topbar';
 import { AppSidebar } from './app-sidebar';
 import { AppFooter } from './app-footer';
+import { AppTabbar } from './app-tabbar';
 import { LayoutService } from './layout-service';
 
 @Component({
   selector: 'app-layout',
-  imports: [AppTopbar, AppSidebar, RouterOutlet, AppFooter],
+  imports: [AppTopbar, AppSidebar, RouterOutlet, AppFooter, AppTabbar],
   template: `<div class="layout-wrapper" [class]="containerClass()">
     <app-topbar />
     <app-sidebar />
@@ -17,6 +18,7 @@ import { LayoutService } from './layout-service';
       </div>
       <app-footer />
     </div>
+    <app-tabbar />
     <div class="layout-mask"></div>
   </div>`,
   changeDetection: ChangeDetectionStrategy.OnPush,

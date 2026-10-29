@@ -5,7 +5,8 @@ html {
 }
 
 body {
-    font-family: 'Lato', sans-serif;
+    /* The platform's own face (SF on Apple devices, Segoe UI on Windows, Roboto on Android): Lato was named but never loaded. */
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     color: var(--text-color);
     background-color: var(--surface-ground);
     margin: 0;
@@ -29,4 +30,40 @@ a {
     user-select: none;
     -webkit-user-select: none;
     -webkit-touch-callout: none;
+}
+
+/* Touch screens: icon buttons and tooltip icons answer a finger across 44px (HIG › Accessibility › Mobility) while
+   looking the same; the reach is an invisible ::after around them. */
+@media (hover: none) {
+    .p-button-icon-only,
+    i.app-tap-tooltip {
+        position: relative;
+
+        &::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: max(100%, 44px);
+            height: max(100%, 44px);
+            transform: translate(-50%, -50%);
+        }
+    }
+
+    /* PrimeNG clips a button to its box; an icon has no label to overflow. */
+    .p-button-icon-only {
+        overflow: visible;
+    }
+}
+
+/* Reduce Motion: no sliding sidebar, unfolding menus or other transitions; state changes land at once. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }

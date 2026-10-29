@@ -17,13 +17,15 @@ export const InvestmentLabPreset = definePreset(Aura, {
       900: '{indigo.900}',
       950: '{indigo.950}',
     },
-  },
-  extend: {
-    finance: {
-      gain: { light: '{green.600}', dark: '{green.400}' },
-      loss: { light: '{red.600}', dark: '{red.400}' },
-      neutral: '{surface.500}',
-      tax: '{amber.600}',
+    // Per colour scheme, so the dark mode switches them (a { light, dark } pair under `extend` is not switched: the light
+    // theme drew the dark shades). Light shades are 4.5:1 or more on white, for small text (HIG › Accessibility).
+    colorScheme: {
+      light: {
+        finance: { gain: '{green.700}', loss: '{red.600}', neutral: '{surface.500}', tax: '{amber.700}' },
+      },
+      dark: {
+        finance: { gain: '{green.400}', loss: '{red.400}', neutral: '{surface.500}', tax: '{amber.400}' },
+      },
     },
   },
 });

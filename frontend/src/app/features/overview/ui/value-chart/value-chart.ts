@@ -142,12 +142,12 @@ export class ValueChart {
         ? {
             x: {
               ticks: {
-                color: palette.muted, maxTicksLimit: 4, maxRotation: 0, font: { size: 10 },
+                color: palette.muted, maxTicksLimit: 4, maxRotation: 0, font: { size: 11 },
                 callback(this: { getLabelForValue: (value: number) => string }, value: number) { return shortenDate(this.getLabelForValue(value)); },
               },
               grid: { display: false },
             },
-            y: { ticks: { color: palette.muted, maxTicksLimit: 5, font: { size: 10 }, callback: (value: number) => formatAxisNumber(value) }, grid: { color: palette.grid } },
+            y: { ticks: { color: palette.muted, maxTicksLimit: 5, font: { size: 11 }, callback: (value: number) => formatAxisNumber(value) }, grid: { color: palette.grid } },
           }
         : {
             x: { ticks: { color: palette.muted, maxTicksLimit: series.length > 60 ? 8 : 12 }, grid: { display: false } },

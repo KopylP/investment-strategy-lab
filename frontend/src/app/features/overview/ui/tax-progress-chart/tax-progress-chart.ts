@@ -78,7 +78,7 @@ export class TaxProgressChart {
       scales: {
         x: {
           ticks: {
-            color: palette.muted, maxTicksLimit: phone ? 4 : 12, maxRotation: 0, font: phone ? { size: 10 } : undefined,
+            color: palette.muted, maxTicksLimit: phone ? 4 : 12, maxRotation: 0, font: phone ? { size: 11 } : undefined,
             callback(this: { getLabelForValue: (value: number) => string }, value: number) { return shortenDate(this.getLabelForValue(value)); },
           },
           grid: { display: false },

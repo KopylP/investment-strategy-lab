@@ -12,3 +12,5 @@
 @use './_typography';
 // Last: the phone rules override the card and heading defaults above.
 @use './_responsive';
+// After the phone rules: the tab bar adds its height to their bottom padding.
+@use './_tabbar';
