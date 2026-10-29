@@ -73,10 +73,26 @@ export interface SectionScoreDto {
   return3m: number | null;
   return12m: number | null;
   volatility: number | null;
-  aboveMovingAverage: boolean;
+  aboveMovingAverage: boolean | null;
   rank: number | null;
   status: string;
   reason: string;
+  /** The strategy's metrics under the ids of SectionDecisionDto.columns; absent in older reports. */
+  values?: Record<string, number | boolean | string | null> | null;
+}
+
+export type ColumnFormat = 'percent' | 'signedPercent' | 'number' | 'money' | 'trend' | 'text';
+
+/** A column of the "why" table as the strategy described it. */
+export interface SectionColumnDto {
+  id: string;
+  label: string;
+  format: ColumnFormat;
+  hint: string | null;
+  /** Shown on a phone too. */
+  compact: boolean;
+  trueHint: string | null;
+  falseHint: string | null;
 }
 
 export interface SectionDecisionDto {
@@ -87,6 +103,10 @@ export interface SectionDecisionDto {
   targets: { instrumentId: string; weight: number }[];
   scores: SectionScoreDto[];
   warnings: string[];
+  /** Null in reports made before strategies described their table. */
+  scoreTitle?: string | null;
+  instrumentLabel?: string | null;
+  columns?: SectionColumnDto[] | null;
 }
 
 export interface SectionOrderDto {

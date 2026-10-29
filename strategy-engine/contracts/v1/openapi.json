@@ -245,6 +245,19 @@
   },
   "components": {
     "schemas": {
+      "ColumnFormat": {
+        "type": "string",
+        "enum": [
+          "percent",
+          "signedPercent",
+          "number",
+          "money",
+          "trend",
+          "text"
+        ],
+        "title": "ColumnFormat",
+        "description": "How the report shows a value of a rationale column."
+      },
       "EvaluationContext": {
         "properties": {
           "asOf": {
@@ -361,16 +374,24 @@
             "type": "string",
             "title": "Group"
           },
-          "price": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "rank": {
             "anyOf": [
               {
-                "type": "number"
+                "type": "integer"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Price"
+            "title": "Rank"
           },
           "momentum": {
             "anyOf": [
@@ -382,6 +403,48 @@
               }
             ],
             "title": "Momentum"
+          },
+          "weight": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price"
+          },
+          "values": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Values"
           },
           "return1M": {
             "anyOf": [
@@ -450,7 +513,14 @@
             "title": "Drawdown"
           },
           "aboveMovingAverage": {
-            "type": "boolean",
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Abovemovingaverage"
           },
           "lastDate": {
@@ -464,36 +534,6 @@
               }
             ],
             "title": "Lastdate"
-          },
-          "rank": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Rank"
-          },
-          "status": {
-            "type": "string",
-            "title": "Status"
-          },
-          "reason": {
-            "type": "string",
-            "title": "Reason"
-          },
-          "weight": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Weight"
           }
         },
         "additionalProperties": false,
@@ -502,22 +542,11 @@
           "key",
           "name",
           "group",
-          "price",
-          "momentum",
-          "return1M",
-          "return3M",
-          "return12M",
-          "volatility",
-          "sharpe",
-          "drawdown",
-          "aboveMovingAverage",
-          "lastDate",
-          "rank",
           "status",
-          "reason",
-          "weight"
+          "reason"
         ],
-        "title": "InstrumentScore"
+        "title": "InstrumentScore",
+        "description": "One row of the \"why\" table. Only the identity, the decision and its reason are common to every strategy;\nthe strategy's own metrics go into ``values`` under the ids of ``Rationale.columns``."
       },
       "Lot": {
         "properties": {
@@ -1008,26 +1037,111 @@
             "type": "string",
             "title": "Summary"
           },
-          "riskFreeRate": {
-            "type": "number",
-            "title": "Riskfreerate"
-          },
           "scores": {
             "items": {
               "$ref": "#/components/schemas/InstrumentScore"
             },
             "type": "array",
             "title": "Scores"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "default": "Чому саме ці інструменти"
+          },
+          "instrumentLabel": {
+            "type": "string",
+            "title": "Instrumentlabel",
+            "default": "Інструмент"
+          },
+          "columns": {
+            "items": {
+              "$ref": "#/components/schemas/RationaleColumn"
+            },
+            "type": "array",
+            "title": "Columns"
+          },
+          "riskFreeRate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Riskfreerate"
           }
         },
         "additionalProperties": false,
         "type": "object",
         "required": [
           "summary",
-          "riskFreeRate",
           "scores"
         ],
         "title": "Rationale"
+      },
+      "RationaleColumn": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "format": {
+            "$ref": "#/components/schemas/ColumnFormat"
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint"
+          },
+          "compact": {
+            "type": "boolean",
+            "title": "Compact",
+            "default": false
+          },
+          "trueHint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Truehint"
+          },
+          "falseHint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Falsehint"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "format"
+        ],
+        "title": "RationaleColumn",
+        "description": "One column of the \"why\" table; the report draws whatever columns the strategy lists, in this order.\n\nThe id names the value in ``InstrumentScore.values``; it must not be ``key`` (the backend renames that one)."
       },
       "RiskAssessment": {
         "properties": {
