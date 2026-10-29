@@ -17,11 +17,12 @@ import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { SignedValue } from '../../../../shared/ui/signed-value';
 import { DeclarationDialog } from '../../ui/declaration-dialog/declaration-dialog';
 import { BrokerStatement, LossCarryforward, Realization, TaxesStore } from '../../data-access/taxes-store';
+import { TapTooltip } from '../../../../shared/ui/tap-tooltip';
 
 @Component({
   selector: 'app-tax-year-page',
   imports: [
-    FormsModule, Button, InputNumber, Message, Select, SelectButton, Skeleton, TableModule, Tag, Tooltip, PageHeader, EmptyState, SignedValue, DeclarationDialog, FileDrop,
+    FormsModule, Button, InputNumber, Message, Select, SelectButton, Skeleton, TableModule, Tag, Tooltip, TapTooltip, PageHeader, EmptyState, SignedValue, DeclarationDialog, FileDrop,
     MoneyPipe, QuantityPipe, DatePipe, DateTimePipe,
   ],
   providers: [TaxesStore],

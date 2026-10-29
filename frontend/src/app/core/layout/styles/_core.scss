@@ -22,3 +22,11 @@ a {
 .layout-wrapper {
     min-height: 100vh;
 }
+
+/* An element whose tooltip opens on a tap (TapTooltip): no text selection or callout from a long press. */
+.app-tap-tooltip {
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}

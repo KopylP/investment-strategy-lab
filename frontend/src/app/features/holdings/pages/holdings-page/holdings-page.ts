@@ -16,11 +16,12 @@ import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { SignedValue } from '../../../../shared/ui/signed-value';
 import { Viewport } from '../../../../shared/ui/viewport';
 import { HoldingsStore } from '../../data-access/holdings-store';
+import { TapTooltip } from '../../../../shared/ui/tap-tooltip';
 
 @Component({
   selector: 'app-holdings-page',
   imports: [
-    FormsModule, RouterLink, Button, DatePicker, Message, Skeleton, TableModule, Tooltip, PageHeader, EmptyState, SignedValue, Money, PositionChart,
+    FormsModule, RouterLink, Button, DatePicker, Message, Skeleton, TableModule, Tooltip, TapTooltip, PageHeader, EmptyState, SignedValue, Money, PositionChart,
     MoneyPipe, PercentPipe, QuantityPipe, SignedPercentPipe, DatePipe,
   ],
   providers: [HoldingsStore],

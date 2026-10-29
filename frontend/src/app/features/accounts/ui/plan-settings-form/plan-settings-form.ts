@@ -4,6 +4,7 @@ import { InputNumber } from 'primeng/inputnumber';
 import { SelectButton } from 'primeng/selectbutton';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { Tooltip } from 'primeng/tooltip';
+import { TapTooltip } from '../../../../shared/ui/tap-tooltip';
 
 /** Plan settings in the words of the user: percent instead of fractions. */
 export interface PlanSettingsVm {
@@ -18,7 +19,7 @@ export interface PlanSettingsVm {
 
 @Component({
   selector: 'app-plan-settings-form',
-  imports: [FormsModule, InputNumber, SelectButton, ToggleSwitch, Tooltip],
+  imports: [FormsModule, InputNumber, SelectButton, ToggleSwitch, Tooltip, TapTooltip],
   templateUrl: './plan-settings-form.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

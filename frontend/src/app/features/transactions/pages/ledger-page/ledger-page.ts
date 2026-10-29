@@ -24,10 +24,11 @@ import { CashDialog } from '../../ui/cash-dialog/cash-dialog';
 import { TradeDialog } from '../../ui/trade-dialog/trade-dialog';
 
 import { Money } from '../../../../shared/ui/money/money';
+import { TapTooltip } from '../../../../shared/ui/tap-tooltip';
 @Component({
   selector: 'app-ledger-page',
   imports: [Money,
-    FormsModule, RouterLink, Button, IconField, InputIcon, InputText, Message, Select, Skeleton, TableModule, Tag, Tooltip,
+    FormsModule, RouterLink, Button, IconField, InputIcon, InputText, Message, Select, Skeleton, TableModule, Tag, Tooltip, TapTooltip,
     PageHeader, EmptyState, SignedValue, TradeDialog, CashDialog, DatePipe,
   ],
   providers: [TransactionsStore],

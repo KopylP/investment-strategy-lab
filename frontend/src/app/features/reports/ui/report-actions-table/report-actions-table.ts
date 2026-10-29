@@ -12,9 +12,10 @@ import { ActionStatusTag } from '../action-status-tag/action-status-tag';
 
 import { Money } from '../../../../shared/ui/money/money';
 import { Viewport } from '../../../../shared/ui/viewport';
+import { TapTooltip } from '../../../../shared/ui/tap-tooltip';
 @Component({
   selector: 'app-report-actions-table',
-  imports: [Money, NgTemplateOutlet, TableModule, Button, SplitButton, Tooltip, Message, ActionStatusTag, QuantityPipe, DatePipe],
+  imports: [Money, NgTemplateOutlet, TableModule, Button, SplitButton, Tooltip, TapTooltip, Message, ActionStatusTag, QuantityPipe, DatePipe],
   templateUrl: './report-actions-table.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
