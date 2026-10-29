@@ -15,7 +15,7 @@ namespace InvestmentLab.IntegrationTests.Identity;
 /// The API as the Home Assistant add-on runs it (ingress on 8098). The test server has no sockets, so a request says
 /// where it comes from in <see cref="PeerHeader"/> ("172.30.32.2:8098" is the Supervisor on the ingress port).
 /// </summary>
-public sealed class HomeAssistantApiFactory : WebApplicationFactory<api::Program>, IAsyncLifetime
+public class HomeAssistantApiFactory : WebApplicationFactory<api::Program>, IAsyncLifetime
 {
     public const string PeerHeader = "X-Test-Peer";
     public const string Supervisor = "172.30.32.2:8098";
