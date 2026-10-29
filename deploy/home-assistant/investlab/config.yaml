@@ -14,7 +14,12 @@ ingress: true
 ingress_port: 8098
 panel_icon: mdi:chart-line
 panel_title: Investment Lab
+# Notifications: a scheduled report is announced in Home Assistant (its Core API through the Supervisor).
+homeassistant_api: true
 options:
   timezone: Europe/Warsaw
+  notify_services: []
 schema:
   timezone: str
+  notify_services:
+    - str
