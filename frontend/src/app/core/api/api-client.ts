@@ -61,6 +61,7 @@ const messages: Record<string, string> = {
   'transaction.not_enough_units': 'У під-портфелі немає стільки штук на цю дату.',
   'transaction.nothing_to_sell': 'У під-портфелі немає цього ETF.',
   'transaction.already_reversed': 'Операцію вже сторновано.',
+  'notification.no_channel': 'Сповіщення працюють лише в Home Assistant.',
 };
 
 export function toProblemMessage(error: unknown): string {

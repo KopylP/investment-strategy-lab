@@ -1,0 +1,46 @@
+<div class="card max-w-2xl">
+  <h2 class="text-lg font-semibold mb-1">Сповіщення</h2>
+  <p class="text-muted-color mb-4">Коли за розкладом готовий рапорт, на ці телефони прийде push (застосунок Home Assistant Companion).</p>
+
+  @if (error(); as message) {
+    <p-message severity="error" [text]="message" />
+  } @else if (settings(); as current) {
+    @if (current.channels.length === 0) {
+      <p>Сповіщення працюють, коли застосунок запущено як add-on Home Assistant.</p>
+    } @else {
+      <div class="flex flex-col gap-4">
+        @if (current.destinations.length === 0) {
+          <p>У Home Assistant немає жодного телефона з Companion. Встановіть застосунок і увійдіть у ньому — телефон з'явиться тут.</p>
+        } @else {
+          <ul class="flex flex-col gap-3 list-none p-0 m-0">
+            @for (destination of current.destinations; track destination.id) {
+              <li class="flex items-center gap-3 min-h-11">
+                <p-checkbox [inputId]="destination.id" [binary]="true" [ngModel]="destination.selected" (ngModelChange)="toggle(destination, $event)" [disabled]="saving()" />
+                <label [for]="destination.id" class="flex-1">{{ destination.label }}</label>
+                @if (destination.suggested) {
+                  <p-tag value="ваш" severity="info" />
+                }
+              </li>
+            }
+          </ul>
+          <p class="text-sm text-muted-color m-0">
+            @if (current.automatic) {
+              Вибрано автоматично: телефони вашої людини в Home Assistant (Налаштування → Люди).
+              @if (!current.destinations.some(each => each.suggested)) {
+                Вашого телефона там не знайдено — позначте його вручну.
+              }
+            } @else {
+              Вибрано вручну.
+              <p-button label="Повернути автоматичний вибір" [link]="true" size="small" (onClick)="backToAutomatic()" [disabled]="saving()" />
+            }
+          </p>
+        }
+        <div class="flex justify-end">
+          <p-button label="Надіслати тестове сповіщення" icon="pi pi-send" severity="secondary" [loading]="testing()" (onClick)="sendTest()" />
+        </div>
+      </div>
+    }
+  } @else {
+    <p-skeleton height="6rem" />
+  }
+</div>

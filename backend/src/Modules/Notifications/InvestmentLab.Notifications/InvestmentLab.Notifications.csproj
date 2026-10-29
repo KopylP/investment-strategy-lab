@@ -1,5 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../Identity/InvestmentLab.Identity.Contracts/InvestmentLab.Identity.Contracts.csproj" />
     <ProjectReference Include="../../Rebalancing/InvestmentLab.Rebalancing.Contracts/InvestmentLab.Rebalancing.Contracts.csproj" />
   </ItemGroup>
 </Project>

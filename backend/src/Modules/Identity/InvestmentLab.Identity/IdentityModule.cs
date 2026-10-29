@@ -1,6 +1,7 @@
 using InvestmentLab.BuildingBlocks.Modules;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.BuildingBlocks.Security;
+using InvestmentLab.Identity.Contracts;
 using InvestmentLab.Identity.Profiles.Api;
 using InvestmentLab.Identity.Profiles.Application;
 using InvestmentLab.Identity.Profiles.Application.GetProfile;
@@ -73,6 +74,7 @@ public sealed class IdentityModule : IModule
             .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
 
         services.AddScoped<IUserAccounts, UserAccounts>();
+        services.AddScoped<IHomeAssistantUsers, HomeAssistantUsers>();
         services.AddScoped<RegisterHandler>();
         services.AddScoped<LoginHandler>();
 
