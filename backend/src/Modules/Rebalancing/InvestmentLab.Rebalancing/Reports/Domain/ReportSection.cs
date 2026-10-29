@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace InvestmentLab.Rebalancing.Reports.Domain;
 
 /// <summary>
@@ -25,6 +27,8 @@ public sealed record ReportSection(
     string? Error);
 
 /// <param name="Scores">The "why" table: one row per scored instrument.</param>
+/// <param name="ScoreTitle">Heading of the table; null in reports made before strategies named their columns.</param>
+/// <param name="Columns">The strategy's own columns of the table, in order; null in those older reports.</param>
 public sealed record SectionDecision(
     bool MarketIsFavorable,
     decimal InvestFraction,
@@ -32,7 +36,13 @@ public sealed record SectionDecision(
     string Summary,
     IReadOnlyList<SectionTarget> Targets,
     IReadOnlyList<SectionScore> Scores,
-    IReadOnlyList<string> Warnings);
+    IReadOnlyList<string> Warnings,
+    string? ScoreTitle = null,
+    string? InstrumentLabel = null,
+    IReadOnlyList<SectionColumn>? Columns = null);
+
+/// <param name="Format">percent, signedPercent, number, money, trend or text.</param>
+public sealed record SectionColumn(string Id, string Label, string Format, string? Hint, bool Compact, string? TrueHint, string? FalseHint);
 
 public sealed record SectionTarget(Guid InstrumentId, decimal Weight);
 
@@ -46,10 +56,11 @@ public sealed record SectionScore(
     decimal? Return3m,
     decimal? Return12m,
     decimal? Volatility,
-    bool AboveMovingAverage,
+    bool? AboveMovingAverage,
     int? Rank,
     string Status,
-    string Reason);
+    string Reason,
+    IReadOnlyDictionary<string, JsonElement>? Values = null);
 
 /// <param name="Kind">Exit, Trim, Unpark, Buy or Park (before netting).</param>
 public sealed record SectionOrder(string Kind, Guid InstrumentId, decimal Quantity, decimal Price, decimal Amount, string Reason);

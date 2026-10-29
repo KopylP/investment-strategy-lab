@@ -102,30 +102,77 @@ class MarketRegime(ApiModel):
     reasons: list[str]
 
 
+class ColumnFormat(str, Enum):
+    """How the report shows a value of a rationale column."""
+
+    PERCENT = "percent"
+    SIGNED_PERCENT = "signedPercent"
+    NUMBER = "number"
+    MONEY = "money"
+    # A bool: an up arrow (true) or a down arrow (false).
+    TREND = "trend"
+    TEXT = "text"
+
+
+class RationaleColumn(ApiModel):
+    """One column of the "why" table; the report draws whatever columns the strategy lists, in this order.
+
+    The id names the value in ``InstrumentScore.values``; it must not be ``key`` (the backend renames that one).
+    """
+
+    id: str
+    label: str
+    format: ColumnFormat
+    # Header tooltip.
+    hint: str | None = None
+    # Shown on a phone too; the others only on a wider screen.
+    compact: bool = False
+    # Cell tooltips of a trend column.
+    true_hint: str | None = None
+    false_hint: str | None = None
+
+    @model_validator(mode="after")
+    def _id_is_not_key(self) -> "RationaleColumn":
+        if self.id == "key":
+            raise ValueError("a rationale column cannot be called 'key'")
+        return self
+
+
 class InstrumentScore(ApiModel):
+    """One row of the "why" table. Only the identity, the decision and its reason are common to every strategy;
+    the strategy's own metrics go into ``values`` under the ids of ``Rationale.columns``."""
+
     key: str
     name: str
     group: str
-    price: float | None
-    momentum: float | None
-    return_1m: float | None
-    return_3m: float | None
-    return_12m: float | None
-    volatility: float | None
-    sharpe: float | None
-    drawdown: float | None
-    above_moving_average: bool
-    last_date: date | None
-    rank: int | None
     status: str
     reason: str
-    weight: float | None
+    # Order of preference; the backend's order reasons quote it.
+    rank: int | None = None
+    # The strategy's main score as a fraction (momentum for etf-momentum); the backend's order reasons quote it too.
+    momentum: float | None = None
+    weight: float | None = None
+    price: float | None = None
+    values: dict[str, float | bool | str | None] = Field(default_factory=dict)
+    # etf-momentum's metrics, kept for the backend's older reports; a new strategy leaves them out and fills values.
+    return_1m: float | None = None
+    return_3m: float | None = None
+    return_12m: float | None = None
+    volatility: float | None = None
+    sharpe: float | None = None
+    drawdown: float | None = None
+    above_moving_average: bool | None = None
+    last_date: date | None = None
 
 
 class Rationale(ApiModel):
     summary: str
-    risk_free_rate: float
     scores: list[InstrumentScore]
+    # Heading of the "why" table and of its instrument column.
+    title: str = "Чому саме ці інструменти"
+    instrument_label: str = "Інструмент"
+    columns: list[RationaleColumn] = Field(default_factory=list)
+    risk_free_rate: float | None = None
 
 
 class StrategyDecision(ApiModel):

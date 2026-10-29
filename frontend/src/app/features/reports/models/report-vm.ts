@@ -1,4 +1,4 @@
-import { ActionKind, ActionStatus, FillDto, PlanReviewDto, ReportKind, ReportStatus, SectionRiskDto, TaxEstimateDto } from './report-dto';
+import { ActionKind, ActionStatus, FillDto, PlanReviewDto, ReportKind, ReportStatus, SectionColumnDto, SectionRiskDto, TaxEstimateDto } from './report-dto';
 
 export interface ReportSummaryVm {
   id: string;
@@ -58,17 +58,21 @@ export interface ReportActionVm {
   isSell: boolean;
 }
 
+/** The "why" table: whatever columns the strategy described, in its order. */
+export interface ScoreTableVm {
+  title: string;
+  instrumentLabel: string;
+  columns: SectionColumnDto[];
+  rows: ScoreVm[];
+}
+
 export interface ScoreVm {
   symbol: string;
   name: string;
   group: string;
   rank: number | null;
-  momentum: number | null;
-  return1m: number | null;
-  return3m: number | null;
-  return12m: number | null;
-  volatility: number | null;
-  aboveMovingAverage: boolean;
+  /** One per column of the table. */
+  values: (number | boolean | string | null)[];
   status: string;
   reason: string;
   isTarget: boolean;
@@ -109,7 +113,7 @@ export interface SectionVm {
   notes: string[];
   orders: SectionOrderVm[];
   allocation: SectionAllocationVm[];
-  scores: ScoreVm[];
+  scores: ScoreTableVm | null;
   totalBefore: number;
   totalAfter: number;
   parkedBefore: number;

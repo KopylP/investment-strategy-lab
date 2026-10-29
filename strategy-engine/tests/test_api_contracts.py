@@ -11,6 +11,7 @@ import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
+from finance_decisions.api.contracts import ColumnFormat, RationaleColumn
 from finance_decisions.api.main import create_app
 from finance_decisions.api.prices import get_quote_downloader
 from finance_decisions.api.symbols import get_symbol_info
@@ -134,6 +135,26 @@ def test_decide_matches_scanner_on_same_data(client: TestClient) -> None:
     scores = {score["key"]: score for score in decision["rationale"]["scores"]}
     assert scores["FFF"]["status"] == "failed"
     assert scores["AAA"]["momentum"] == pytest.approx(scan.table.loc["AAA", "Momentum"])
+
+
+def test_decide_describes_its_rationale_columns(client: TestClient) -> None:
+    response = client.post("/v1/strategies/etf-momentum/decide", json=_context(_frame()))
+
+    rationale = response.json()["rationale"]
+    assert rationale["title"] == "Чому саме ці ETF"
+    assert rationale["instrumentLabel"] == "ETF"
+    ids = [column["id"] for column in rationale["columns"]]
+    assert ids == ["momentum", "return1m", "return3m", "return12m", "volatility", "ma200"]
+    assert {column["format"] for column in rationale["columns"]} == {"signedPercent", "percent", "trend"}
+    for score in rationale["scores"]:
+        assert set(score["values"]) == set(ids)
+        assert score["values"]["momentum"] == score["momentum"]
+        assert score["values"]["ma200"] is score["aboveMovingAverage"]
+
+
+def test_rationale_column_cannot_be_called_key() -> None:
+    with pytest.raises(ValueError):
+        RationaleColumn(id="key", label="Key", format=ColumnFormat.TEXT)
 
 
 def test_weak_market_invests_only_part_of_contribution(client: TestClient) -> None:

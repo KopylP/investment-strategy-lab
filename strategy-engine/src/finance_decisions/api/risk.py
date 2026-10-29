@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, status
 
-from finance_decisions.strategies.etf_momentum.decision import ContextError
+from finance_decisions.strategies.errors import ContextError
 from .catalog import find_strategy_type
 from .contracts import EvaluationContext, RiskAssessment
 

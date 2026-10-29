@@ -89,14 +89,20 @@
     </div>
   }
 
-  @if (s.scores.length) {
+  @if (s.scores; as table) {
     <div>
-      <h3 class="text-lg font-semibold mt-4 mb-3">Чому саме ці ETF</h3>
-      <p-table [value]="s.scores" tableStyleClass="sm:min-w-[56rem]" size="small" [scrollable]="true">
+      <h3 class="text-lg font-semibold mt-4 mb-3">{{ table.title }}</h3>
+      <!-- The strategy names the columns; a phone shows only those it marks compact. -->
+      <p-table [value]="table.rows" [tableStyleClass]="table.columns.length > 3 ? 'sm:min-w-[56rem]' : 'sm:min-w-[40rem]'" size="small" [scrollable]="true">
         <ng-template #header>
           <tr>
-            <th class="hidden sm:table-cell">Ранг</th><th>ETF</th><th class="text-right">Моментум</th><th class="text-right hidden sm:table-cell">1 міс</th><th class="text-right hidden sm:table-cell">3 міс</th>
-            <th class="text-right hidden sm:table-cell">12 міс</th><th class="text-right hidden sm:table-cell">Волатильність</th><th>MA200</th><th>Рішення</th>
+            <th class="hidden sm:table-cell">Ранг</th><th>{{ table.instrumentLabel }}</th>
+            @for (column of table.columns; track column.id) {
+              <th [class]="cellClass(column)" [pTooltip]="column.hint ?? ''">
+                {{ column.label }}
+              </th>
+            }
+            <th>Рішення</th>
           </tr>
         </ng-template>
         <ng-template #body let-score>
@@ -106,13 +112,24 @@
               <div class="font-medium">@if (score.rank) {<span class="sm:hidden text-muted-color font-normal">{{ score.rank }}. </span>}{{ score.symbol }}</div>
               <div class="hidden sm:block text-xs text-muted-color">{{ score.name }} · {{ score.group }}</div>
             </td>
-            <td class="text-right" [appSignedValue]="score.momentum">{{ score.momentum | signedPercent }}</td>
-            <td class="text-right hidden sm:table-cell" [appSignedValue]="score.return1m">{{ score.return1m | signedPercent }}</td>
-            <td class="text-right hidden sm:table-cell" [appSignedValue]="score.return3m">{{ score.return3m | signedPercent }}</td>
-            <td class="text-right hidden sm:table-cell" [appSignedValue]="score.return12m">{{ score.return12m | signedPercent }}</td>
-            <td class="text-right hidden sm:table-cell">{{ score.volatility | percent }}</td>
-            <td><i class="pi" [class.pi-arrow-up]="score.aboveMovingAverage" [class.pi-arrow-down]="!score.aboveMovingAverage"
-                   [appSignedValue]="score.aboveMovingAverage ? 1 : -1" [pTooltip]="score.aboveMovingAverage ? 'Ціна вище MA200' : 'Ціна нижче MA200'"></i></td>
+            @for (column of table.columns; track column.id; let i = $index) {
+              @let value = score.values[i];
+              <td [class]="cellClass(column)">
+                @switch (column.format) {
+                  @case ('signedPercent') { <span [appSignedValue]="number(value)">{{ number(value) | signedPercent }}</span> }
+                  @case ('percent') { {{ number(value) | percent }} }
+                  @case ('money') { {{ number(value) | money: currency() }} }
+                  @case ('number') { {{ number(value) === null ? '—' : (number(value) | number: '1.0-2') }} }
+                  @case ('trend') {
+                    @if (value === null) { — } @else {
+                      <i class="pi" [class.pi-arrow-up]="value" [class.pi-arrow-down]="!value" [appSignedValue]="value ? 1 : -1"
+                         [pTooltip]="(value ? column.trueHint : column.falseHint) ?? ''"></i>
+                    }
+                  }
+                  @default { {{ value ?? '—' }} }
+                }
+              </td>
+            }
             <td>
               @if (score.isTarget) {
                 <p-tag [value]="'ціль ' + (score.targetWeight | percent: 0)" severity="success" />

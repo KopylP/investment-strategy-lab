@@ -25,6 +25,8 @@ class StrategyType:
     decide: Callable[[EvaluationContext, Any], StrategyDecision]
     assess_risk: Callable[[EvaluationContext, Any], RiskAssessment]
     required_series_roles: tuple[SeriesRole, ...]
+    # The engine version a decision of this type reports (strategy code / package version).
+    version: Callable[[], str]
 
     def descriptor(self) -> StrategyTypeDescriptor:
         return StrategyTypeDescriptor(
@@ -32,7 +34,7 @@ class StrategyType:
             name=self.name,
             description=self.description,
             engine="python",
-            version=etf_momentum.engine_version(),
+            version=self.version(),
             supports_state=False,
             required_series_roles=list(self.required_series_roles),
             parameters_schema=self.parameters.model_json_schema(by_alias=True),
@@ -59,6 +61,7 @@ STRATEGY_TYPES: dict[str, StrategyType] = {
         decide=etf_momentum.decide,
         assess_risk=etf_momentum.assess_risk,
         required_series_roles=(SeriesRole.INSTRUMENT, SeriesRole.BENCHMARK, SeriesRole.VOLATILITY_INDEX),
+        version=etf_momentum.engine_version,
     )
 }
 
