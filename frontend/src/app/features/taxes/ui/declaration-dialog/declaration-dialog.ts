@@ -10,11 +10,12 @@ import { Skeleton } from 'primeng/skeleton';
 import { Tooltip } from 'primeng/tooltip';
 import { DatePipe, MoneyPipe } from '../../../../shared/pipes/format-pipes';
 import { DeclarationAccountLine, DeclarationField, formValue, Pit8CAmounts, TaxDeclaration } from '../../data-access/declarations';
+import { TapTooltip } from '../../../../shared/ui/tap-tooltip';
 
 /** The filled return, field by field with its "poz." number, each value one click from the clipboard. */
 @Component({
   selector: 'app-declaration-dialog',
-  imports: [NgTemplateOutlet, FormsModule, InputNumber, Dialog, Button, Message, Skeleton, Tooltip, MoneyPipe, DatePipe],
+  imports: [NgTemplateOutlet, FormsModule, InputNumber, Dialog, Button, Message, Skeleton, Tooltip, TapTooltip, MoneyPipe, DatePipe],
   templateUrl: './declaration-dialog.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

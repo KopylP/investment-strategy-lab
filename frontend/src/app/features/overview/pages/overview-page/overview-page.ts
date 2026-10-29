@@ -18,11 +18,12 @@ import { AllocationCard } from '../../ui/allocation-card/allocation-card';
 import { DrawdownChart } from '../../ui/drawdown-chart/drawdown-chart';
 import { TaxProgressChart } from '../../ui/tax-progress-chart/tax-progress-chart';
 import { ValueChart } from '../../ui/value-chart/value-chart';
+import { TapTooltip } from '../../../../shared/ui/tap-tooltip';
 
 @Component({
   selector: 'app-overview-page',
   imports: [
-    FormsModule, RouterLink, Button, Message, SelectButton, Skeleton, TableModule, Tag, Tooltip, PageHeader, SignedValue, ValueChart, DrawdownChart, AllocationCard, TaxProgressChart, Money,
+    FormsModule, RouterLink, Button, Message, SelectButton, Skeleton, TableModule, Tag, Tooltip, TapTooltip, PageHeader, SignedValue, ValueChart, DrawdownChart, AllocationCard, TaxProgressChart, Money,
     MoneyPipe, PercentPipe, SignedPercentPipe, PeriodPipe, DateTimePipe, DatePipe,
   ],
   providers: [OverviewStore],

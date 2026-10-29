@@ -13,6 +13,7 @@ import { AccountContext, AccountScope } from '../context/account-context';
 import { DisplayCurrency } from '../context/display-currency';
 import { Viewport } from '../../shared/ui/viewport';
 import { LayoutService } from './layout-service';
+import { TapTooltip } from '../../shared/ui/tap-tooltip';
 
 const allAccounts = 'all';
 
@@ -24,7 +25,7 @@ function scopeOf(route: ActivatedRouteSnapshot): AccountScope {
 
 @Component({
   selector: 'app-topbar',
-  imports: [RouterLink, FormsModule, Select, SelectButton, Tooltip, Menu],
+  imports: [RouterLink, FormsModule, Select, SelectButton, Tooltip, TapTooltip, Menu],
   templateUrl: './app-topbar.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

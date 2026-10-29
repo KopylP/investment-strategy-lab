@@ -8,6 +8,7 @@ import { ToggleSwitch } from 'primeng/toggleswitch';
 import { Tooltip } from 'primeng/tooltip';
 import { formatQuantity } from '../../pipes/format';
 import { Viewport } from '../viewport';
+import { TapTooltip } from '../tap-tooltip';
 
 type JsonValue = string | number | boolean | null | JsonObject | JsonValue[];
 export interface JsonObject {
@@ -50,7 +51,7 @@ interface GroupVm {
 /** Fields for strategy parameters, built from the JSON Schema the engine publishes (§11.5). */
 @Component({
   selector: 'app-schema-form',
-  imports: [FormsModule, Fieldset, InputNumber, InputText, Select, ToggleSwitch, Tooltip],
+  imports: [FormsModule, Fieldset, InputNumber, InputText, Select, ToggleSwitch, Tooltip, TapTooltip],
   templateUrl: './schema-form.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
