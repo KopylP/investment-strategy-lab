@@ -1,12 +1,26 @@
 <div class="layout-topbar">
   <div class="layout-topbar-logo-container">
-    <button class="layout-menu-button layout-topbar-action" (click)="layout.onMenuToggle()" aria-label="Меню">
-      <i class="pi pi-bars"></i>
-    </button>
-    <a class="layout-topbar-logo" routerLink="/">
-      <i class="pi pi-chart-scatter text-primary text-2xl"></i>
-      <span>Investment Lab</span>
-    </a>
+    @if (viewport.phone()) {
+      <!-- A phone: the sections are in the tab bar and the settings in the profile menu, so the bar says which account
+           the screen shows and switches it (HIG › Navigation bars: no logo, the context instead). -->
+      @if (accounts.accounts().length > 1) {
+        <button type="button" class="layout-topbar-context" (click)="accountMenu.toggle($event)" aria-haspopup="menu" aria-label="Рахунок">
+          <span class="truncate">{{ accountLabel() }}</span>
+          <i class="pi pi-chevron-down"></i>
+        </button>
+        <p-menu #accountMenu [model]="accountMenuItems()" [popup]="true" appendTo="body" />
+      } @else {
+        <span class="layout-topbar-context truncate">{{ accountLabel() }}</span>
+      }
+    } @else {
+      <button class="layout-menu-button layout-topbar-action" (click)="layout.onMenuToggle()" aria-label="Меню">
+        <i class="pi pi-bars"></i>
+      </button>
+      <a class="layout-topbar-logo" routerLink="/">
+        <i class="pi pi-chart-scatter text-primary text-2xl"></i>
+        <span>Investment Lab</span>
+      </a>
+    }
   </div>
 
   <div class="layout-topbar-actions">

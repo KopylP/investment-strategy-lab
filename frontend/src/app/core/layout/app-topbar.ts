@@ -54,31 +54,38 @@ export class AppTopbar {
 
   protected readonly selectedAccount = computed(() => (this.scope() === 'all' && this.accounts.isAll() ? allAccounts : this.accounts.currentId()));
 
-  /** On a phone the account switch and the theme move here, so the bar keeps room for the display currency. */
+  /** The phone bar's title: the account the screen shows. */
+  protected readonly accountLabel = computed(() => {
+    if (this.selectedAccount() === allAccounts) return 'Усі рахунки';
+    const account = this.accounts.current();
+    return account ? `${account.name} · ${account.baseCurrency}` : 'Investment Lab';
+  });
+
+  protected readonly accountMenuItems = computed<MenuItem[]>(() =>
+    this.accountOptions().map((account) => ({
+      label: 'baseCurrency' in account ? `${account.name} · ${account.baseCurrency}` : account.name,
+      icon: account.id === this.selectedAccount() ? 'pi pi-check' : 'pi pi-wallet',
+      command: () => this.chooseAccount(account.id),
+    })),
+  );
+
+  /**
+   * On a phone there is no side menu (the sections are in the tab bar), so the settings and the theme are here —
+   * the account button of Apple's own apps.
+   */
   protected readonly userMenu = computed<MenuItem[]>(() => {
-    const phone = this.viewport.phone();
-    const accounts = this.accounts.accounts();
-    const accountItems: MenuItem[] =
-      phone && accounts.length > 1
-        ? [
-            {
-              label: 'Рахунок',
-              items: this.accountOptions().map((account) => ({
-                label: 'baseCurrency' in account ? `${account.name} · ${account.baseCurrency}` : account.name,
-                icon: account.id === this.selectedAccount() ? 'pi pi-check' : 'pi pi-wallet',
-                command: () => this.chooseAccount(account.id),
-              })),
-            },
-            { separator: true },
-          ]
-        : [];
-    const themeItems: MenuItem[] = phone
-      ? [{ label: this.layout.isDarkTheme() ? 'Світла тема' : 'Темна тема', icon: this.layout.isDarkTheme() ? 'pi pi-sun' : 'pi pi-moon', command: () => this.toggleDarkMode() }]
-      : [];
+    const go = (path: string) => () => void this.router.navigate([path]);
+    // Flat: in a p-menu with a group every top-level item becomes a group's heading.
+    const phoneItems: MenuItem[] = [
+      { label: 'Рахунки', icon: 'pi pi-wallet', command: go('/accounts') },
+      { label: 'Стратегії', icon: 'pi pi-sliders-h', command: go('/strategies') },
+      { label: 'Інструменти й котирування', icon: 'pi pi-chart-line', command: go('/instruments') },
+      { label: 'Профіль', icon: 'pi pi-user', command: go('/profile') },
+      { separator: true },
+      { label: this.layout.isDarkTheme() ? 'Світла тема' : 'Темна тема', icon: this.layout.isDarkTheme() ? 'pi pi-sun' : 'pi pi-moon', command: () => this.toggleDarkMode() },
+    ];
     return [
-      ...accountItems,
-      { label: 'Профіль', icon: 'pi pi-user', command: () => void this.router.navigate(['/profile']) },
-      ...themeItems,
+      ...(this.viewport.phone() ? phoneItems : [{ label: 'Профіль', icon: 'pi pi-user', command: go('/profile') }]),
       // In the Home Assistant panel Home Assistant signs the user in again at once.
       ...(this.auth.user()?.viaHomeAssistant ? [] : [{ separator: true }, { label: 'Вийти', icon: 'pi pi-sign-out', command: () => void this.signOut() }]),
     ];

@@ -1,3 +1,5 @@
+@use 'mixins' as *;
+
 @media screen and (min-width: 1960px) {
     .layout-main,
     .landing-wrapper {
@@ -127,15 +129,45 @@
             height: 44px;
         }
 
-        .layout-menu-button {
-            margin-right: 0.25rem;
+        /* The account it shows instead of the logo: takes what the actions leave and cuts a long name. */
+        .layout-topbar-logo-container {
+            flex: 1 1 auto;
+            min-width: 0;
         }
 
-        .layout-topbar-logo span {
-            display: none;
+        .layout-topbar-context {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            min-width: 0;
+            max-width: 100%;
+            min-height: 44px;
+            padding: 0 0.25rem;
+            border: none;
+            border-radius: var(--content-border-radius);
+            background: none;
+            color: var(--text-color);
+            font: inherit;
+            font-size: 1.0625rem;
+            font-weight: 600;
+
+            i {
+                flex: none;
+                font-size: 0.75rem;
+                color: var(--text-color-secondary);
+            }
+        }
+
+        button.layout-topbar-context {
+            cursor: pointer;
+
+            &:focus-visible {
+                @include focused();
+            }
         }
 
         .layout-topbar-actions {
+            flex: none;
             gap: 0.25rem;
         }
 

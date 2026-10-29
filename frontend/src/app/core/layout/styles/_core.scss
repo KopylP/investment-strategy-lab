@@ -4,6 +4,14 @@ html {
     line-height: 1.2;
 }
 
+/* Never sideways, whatever pokes out for a moment (an overlay while it opens or closes): in Home Assistant's panel the
+   app is an iframe, and iOS widens an iframe to its widest content and keeps it so. clip, unlike hidden, makes no
+   scroll container, so sticky headers keep working. */
+html,
+body {
+    overflow-x: clip;
+}
+
 body {
     /* The platform's own face (SF on Apple devices, Segoe UI on Windows, Roboto on Android): Lato was named but never loaded. */
     font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
