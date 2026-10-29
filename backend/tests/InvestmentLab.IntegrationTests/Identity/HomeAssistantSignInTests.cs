@@ -41,7 +41,7 @@ public sealed class HomeAssistantSignInTests(HomeAssistantApiFactory factory) : 
     }
 
     [Theory]
-    [InlineData("172.30.32.2:8099")]  // the direct port: anyone on the network can send these headers there
+    [InlineData("172.30.32.2:8099")]  // not the ingress port
     [InlineData("172.30.32.5:8098")]  // another add-on on the Supervisor's network
     public async Task Home_assistant_headers_count_only_from_the_supervisor_on_the_ingress_port(string peer)
     {

@@ -127,5 +127,5 @@ if [ "$LOGS" -eq 1 ]; then
   remote "ha $HA_CMD logs $SLUG" | tail -n 30 || true
 fi
 
-echo "Done: http://$HA_HOST:8099/investlab"
+echo "Done: Investment Lab in the Home Assistant sidebar (http://$HA_HOST:8123)"
 if [ "$VERSION" != "$OLD_VERSION" ]; then echo "config.yaml now says $VERSION: commit it."; fi

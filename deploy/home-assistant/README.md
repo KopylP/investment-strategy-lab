@@ -1,7 +1,7 @@
 # Home Assistant add-on
 
 Один контейнер: PostgreSQL + Python-рушій стратегій + .NET API, який роздає Angular-застосунок.
-Порт 8099 (`/investlab`, http або https) і Ingress-панель Home Assistant (8098, лише всередині).
+Доступ лише через Ingress-панель Home Assistant (порт 8098 усередині, назовні жодного порту).
 
 ## Встановлення як локального add-on
 
@@ -15,7 +15,7 @@
      (у нових версіях HA спільна папка `addons` усередині SSH-доповнення називається `/local_apps`, у старих — `/addons`).
 3. Home Assistant → Налаштування → Доповнення → Магазин доповнень → ⋮ → **Перевірити оновлення** → розділ «Local add-ons» → **Investment Lab** → Встановити (образ збирається на пристрої, ~5–10 хв на Raspberry Pi).
 4. Увімкнути «Показувати на бічній панелі», «Watchdog», запустити.
-5. Відкрити `http://homeassistant.local:8099/investlab` або панель «Investment Lab».
+5. Відкрити панель «Investment Lab» у бічному меню.
 
 ## Деплой одним скриптом
 
@@ -50,6 +50,7 @@ deploy/home-assistant/deploy.sh
 ```bash
 cd deploy/home-assistant/investlab
 docker build --build-arg BUILD_FROM=mcr.microsoft.com/dotnet/aspnet:10.0-noble-arm64v8 -t investlab-addon .
-mkdir -p /tmp/investlab && echo '{"ssl":false,"certfile":"fullchain.pem","keyfile":"privkey.pem","timezone":"Europe/Warsaw"}' > /tmp/investlab/options.json
-docker run --rm -v /tmp/investlab:/data -p 8099:8099 investlab-addon
+mkdir -p /tmp/investlab && echo '{"timezone":"Europe/Warsaw"}' > /tmp/investlab/options.json
+# Без Supervisor-а: пускати на 8098 будь-кого, вхід паролем; відкрити http://localhost:8098/
+docker run --rm -v /tmp/investlab:/data -p 8098:8098 -e HomeAssistant__IngressOnly=false investlab-addon
 ```

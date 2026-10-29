@@ -9,24 +9,12 @@ arch:
 init: false
 startup: application
 boot: auto
-# Sidebar panel through Home Assistant (its login, its HTTPS) on 8098; direct access on 8099/investlab.
+# Only the sidebar panel: the Supervisor proxies it to 8098 behind Home Assistant's login and HTTPS. No published port.
 ingress: true
 ingress_port: 8098
 panel_icon: mdi:chart-line
 panel_title: Investment Lab
-ports:
-  8099/tcp: 8099
-ports_description:
-  8099/tcp: "Веб-інтерфейс: http(s)://homeassistant.local:8099/investlab"
-map:
-  - ssl:ro
 options:
-  ssl: false
-  certfile: fullchain.pem
-  keyfile: privkey.pem
   timezone: Europe/Warsaw
 schema:
-  ssl: bool
-  certfile: str
-  keyfile: str
   timezone: str

@@ -37,32 +37,13 @@ ENGINE_PID=$!
 export ConnectionStrings__investmentlab="Host=127.0.0.1;Port=5432;Database=investmentlab;Username=postgres;Password=$DB_PASSWORD"
 export Strategies__StrategyEngineUrl="http://127.0.0.1:8000"
 export MarketData__StrategyEngineUrl="http://127.0.0.1:8000"
-export InvestmentLab__PathBase="/investlab"
 export InvestmentLab__DataDirectory="/data"
-# Ingress (Home Assistant panel) always talks plain http to 8098; 8099 is the direct port. "*" listens on IPv6 and IPv4:
-# browsers reach homeassistant.local over IPv6 first.
+# Only through Home Assistant: the Supervisor proxies the sidebar panel (Ingress) to 8098 over plain http, with its
+# login and its HTTPS in front. No port is published; anything else that reaches 8098 (another add-on) gets 403.
+# "*" listens on IPv6 and IPv4. HomeAssistant__IngressOnly=false lets a local docker run without Home Assistant in.
 export Kestrel__Endpoints__Ingress__Url="http://*:8098"
-# Requests to 8098 from the Supervisor carry the Home Assistant user: the panel signs them in without a password.
 export HomeAssistant__IngressPort=8098
-
-if [ "$(option ssl)" = "true" ]; then
-  CERT="/ssl/$(option certfile)"; KEY="/ssl/$(option keyfile)"
-  if [ ! -f "$CERT" ] || [ ! -f "$KEY" ]; then
-    # No certificate in /ssl: a self-signed one for the local network, made once and kept.
-    CERT=/data/tls/cert.pem; KEY=/data/tls/key.pem
-    if [ ! -f "$CERT" ]; then
-      echo "[investlab] /ssl has no certificate: creating a self-signed one for homeassistant.local"
-      mkdir -p /data/tls
-      openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj "/CN=homeassistant.local" \
-        -addext "subjectAltName=DNS:homeassistant.local,DNS:homeassistant,DNS:localhost" -keyout "$KEY" -out "$CERT" 2>/dev/null
-    fi
-  fi
-  export Kestrel__Endpoints__Direct__Url="https://*:8099"
-  export Kestrel__Endpoints__Direct__Certificate__Path="$CERT"
-  export Kestrel__Endpoints__Direct__Certificate__KeyPath="$KEY"
-else
-  export Kestrel__Endpoints__Direct__Url="http://*:8099"
-fi
+export HomeAssistant__IngressOnly="${HomeAssistant__IngressOnly:-true}"
 
 cd /app/api
 dotnet InvestmentLab.Api.dll &
