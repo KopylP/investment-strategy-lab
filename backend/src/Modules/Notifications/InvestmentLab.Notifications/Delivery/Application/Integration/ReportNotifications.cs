@@ -49,7 +49,7 @@ internal static class ReportNotification
             ? $"{account}цього разу нічого купувати чи продавати не треба."
             : $"{account}{actions} {ActionsWord(actions)} до виконання.";
 
-        return new Notification(Topic, TagOf(report.ReportId), title, message, new Dictionary<string, object?>
+        return new Notification(report.OwnerId, Topic, TagOf(report.ReportId), title, message, new Dictionary<string, object?>
         {
             ["report_id"] = report.ReportId,
             ["account_id"] = report.AccountId,

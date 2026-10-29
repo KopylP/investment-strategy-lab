@@ -8,10 +8,11 @@ import { toProblemMessage } from '../../../../core/api/api-client';
 import { AuthStore, UserProfile } from '../../../../core/auth/auth-store';
 import { DisplayCurrency } from '../../../../core/context/display-currency';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
+import { NotificationSettingsCard } from '../../ui/notification-settings/notification-settings';
 
 @Component({
   selector: 'app-profile-page',
-  imports: [FormsModule, Button, Select, Skeleton, PageHeader],
+  imports: [FormsModule, Button, Select, Skeleton, PageHeader, NotificationSettingsCard],
   templateUrl: './profile-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

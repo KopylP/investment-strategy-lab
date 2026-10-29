@@ -18,8 +18,5 @@ panel_title: Investment Lab
 homeassistant_api: true
 options:
   timezone: Europe/Warsaw
-  notify_services: []
 schema:
   timezone: str
-  notify_services:
-    - str
