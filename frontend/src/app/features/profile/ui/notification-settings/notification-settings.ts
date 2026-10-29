@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal, resource, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
@@ -27,7 +28,7 @@ export interface NotificationSettings {
 /** Where the user's report notifications are pushed, and a test notification to check it. */
 @Component({
   selector: 'app-notification-settings',
-  imports: [FormsModule, Button, Checkbox, Message, Skeleton, Tag],
+  imports: [FormsModule, NgTemplateOutlet, Button, Checkbox, Message, Skeleton, Tag],
   templateUrl: './notification-settings.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -40,6 +41,11 @@ export class NotificationSettingsCard {
   protected readonly error = computed(() => (this.settingsResource.error() ? toProblemMessage(this.settingsResource.error()) : null));
   protected readonly saving = signal(false);
   protected readonly testing = signal(false);
+
+  /** The user's own phones and whatever they picked; the household's other phones only on request. */
+  protected readonly own = computed(() => this.settings()?.destinations.filter((each) => each.suggested || each.selected) ?? []);
+  protected readonly others = computed(() => this.settings()?.destinations.filter((each) => !each.suggested && !each.selected) ?? []);
+  protected readonly showOthers = signal(false);
 
   protected async toggle(destination: NotificationDestination, selected: boolean): Promise<void> {
     const current = this.settings();

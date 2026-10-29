@@ -12,28 +12,43 @@
         @if (current.destinations.length === 0) {
           <p>У Home Assistant немає жодного телефона з Companion. Встановіть застосунок і увійдіть у ньому — телефон з'явиться тут.</p>
         } @else {
-          <ul class="flex flex-col gap-3 list-none p-0 m-0">
-            @for (destination of current.destinations; track destination.id) {
-              <li class="flex items-center gap-3 min-h-11">
-                <p-checkbox [inputId]="destination.id" [binary]="true" [ngModel]="destination.selected" (ngModelChange)="toggle(destination, $event)" [disabled]="saving()" />
-                <label [for]="destination.id" class="flex-1">{{ destination.label }}</label>
-                @if (destination.suggested) {
-                  <p-tag value="ваш" severity="info" />
-                }
-              </li>
-            }
-          </ul>
-          <p class="text-sm text-muted-color m-0">
-            @if (current.automatic) {
-              Вибрано автоматично: телефони вашої людини в Home Assistant (Налаштування → Люди).
-              @if (!current.destinations.some(each => each.suggested)) {
-                Вашого телефона там не знайдено — позначте його вручну.
+          @if (own().length > 0) {
+            <ul class="flex flex-col gap-3 list-none p-0 m-0">
+              @for (destination of own(); track destination.id) {
+                <ng-container *ngTemplateOutlet="row; context: { $implicit: destination }" />
               }
-            } @else {
+            </ul>
+          } @else {
+            <p class="m-0">Вашого телефона не знайдено: його немає у вашій людині в Home Assistant (Налаштування → Люди). Додайте його туди або виберіть серед інших пристроїв.</p>
+          }
+
+          @if (current.automatic) {
+            <p class="text-sm text-muted-color m-0">Вибрано автоматично: телефони вашої людини в Home Assistant.</p>
+          } @else {
+            <p class="text-sm text-muted-color m-0">
               Вибрано вручну.
               <p-button label="Повернути автоматичний вибір" [link]="true" size="small" (onClick)="backToAutomatic()" [disabled]="saving()" />
-            }
-          </p>
+            </p>
+          }
+
+          @if (others().length > 0) {
+            <div>
+              <p-button
+                [label]="(showOthers() ? 'Сховати інші пристрої' : 'Інші пристрої в Home Assistant') + ' (' + others().length + ')'"
+                [icon]="showOthers() ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
+                [link]="true"
+                size="small"
+                (onClick)="showOthers.set(!showOthers())"
+              />
+              @if (showOthers()) {
+                <ul class="flex flex-col gap-3 list-none p-0 m-0 mt-2">
+                  @for (destination of others(); track destination.id) {
+                    <ng-container *ngTemplateOutlet="row; context: { $implicit: destination }" />
+                  }
+                </ul>
+              }
+            </div>
+          }
         }
         <div class="flex justify-end">
           <p-button label="Надіслати тестове сповіщення" icon="pi pi-send" severity="secondary" [loading]="testing()" (onClick)="sendTest()" />
@@ -44,3 +59,13 @@
     <p-skeleton height="6rem" />
   }
 </div>
+
+<ng-template #row let-destination>
+  <li class="flex items-center gap-3 min-h-11">
+    <p-checkbox [inputId]="destination.id" [binary]="true" [ngModel]="destination.selected" (ngModelChange)="toggle(destination, $event)" [disabled]="saving()" />
+    <label [for]="destination.id" class="flex-1">{{ destination.label }}</label>
+    @if (destination.suggested) {
+      <p-tag value="ваш" severity="info" />
+    }
+  </li>
+</ng-template>
