@@ -62,10 +62,22 @@ export class TaxYearPage {
       header: 'Видалити звіт брокера?',
       message: 'Податок з дивідендів знову рахуватиметься без зарахування утриманого за кордоном, а собівартість зі звіту більше не братиметься.',
       acceptLabel: 'Видалити',
-      rejectLabel: 'Ні',
+      rejectLabel: 'Скасувати',
       acceptButtonProps: { severity: 'danger' },
       rejectButtonProps: { severity: 'secondary', text: true },
       accept: () => void this.store.removeBrokerStatement(statement),
+    });
+  }
+
+  protected confirmRemovePit8C(accountId: string): void {
+    this.confirm.confirm({
+      header: 'Прибрати суми PIT-8C?',
+      message: 'Виручка й витрати брокера в декларації знову рахуватимуться з ваших операцій, а не з його PIT-8C.',
+      acceptLabel: 'Прибрати',
+      rejectLabel: 'Скасувати',
+      acceptButtonProps: { severity: 'danger' },
+      rejectButtonProps: { severity: 'secondary', text: true },
+      accept: () => void this.store.removePit8C(accountId),
     });
   }
 
@@ -74,7 +86,7 @@ export class TaxYearPage {
       header: 'Видалити збиток?',
       message: `Збиток ${loss.year} року більше не зменшуватиме податок.`,
       acceptLabel: 'Видалити',
-      rejectLabel: 'Ні',
+      rejectLabel: 'Скасувати',
       acceptButtonProps: { severity: 'danger' },
       rejectButtonProps: { severity: 'secondary', text: true },
       accept: () => void this.store.removeLoss(loss),

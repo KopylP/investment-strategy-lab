@@ -42,7 +42,7 @@ export class DrawdownChart {
         x: phone
           ? {
               ticks: {
-                color: palette.muted, maxTicksLimit: 4, maxRotation: 0, font: { size: 10 },
+                color: palette.muted, maxTicksLimit: 4, maxRotation: 0, font: { size: 11 },
                 callback(this: { getLabelForValue: (value: number) => string }, value: number) { return shortenDate(this.getLabelForValue(value)); },
               },
               grid: { display: false },
@@ -50,7 +50,7 @@ export class DrawdownChart {
           : { ticks: { color: palette.muted, maxTicksLimit: 8 }, grid: { display: false } },
         y: {
           max: 0,
-          ticks: { color: palette.muted, maxTicksLimit: phone ? 4 : undefined, font: phone ? { size: 10 } : undefined, callback: (value: number) => formatSignedPercent(value, 0) },
+          ticks: { color: palette.muted, maxTicksLimit: phone ? 4 : undefined, font: phone ? { size: 11 } : undefined, callback: (value: number) => formatSignedPercent(value, 0) },
           grid: { color: palette.grid },
         },
       },

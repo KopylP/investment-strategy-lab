@@ -7,7 +7,7 @@
 <app-declaration-dialog [visible]="!!store.declarationCode()" [loading]="store.declarationLoading()" [declaration]="store.declaration()?.declaration ?? null"
                         [warnings]="store.declaration()?.warnings ?? []" [pdfLoading]="store.pdfLoading()" (pdf)="store.downloadDeclarationPdf($event)"
                         [problem]="store.declarationError() ? store.declarationProblem() : null" [saving]="store.saving()"
-                        (pit8c)="store.setPit8C($event.accountId, $event.amounts)" (pit8cRemoved)="store.removePit8C($event)"
+                        (pit8c)="store.setPit8C($event.accountId, $event.amounts)" (pit8cRemoved)="confirmRemovePit8C($event)"
                         (closed)="store.declarationCode.set(null)" />
 
 <p-message severity="secondary" styleClass="mb-4"

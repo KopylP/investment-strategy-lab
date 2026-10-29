@@ -143,14 +143,14 @@ export class PriceChart {
         x: phone
           ? {
               ticks: {
-                color: palette.muted, maxTicksLimit: 3, maxRotation: 0, font: { size: 10 },
+                color: palette.muted, maxTicksLimit: 3, maxRotation: 0, font: { size: 11 },
                 callback(this: { getLabelForValue: (value: number) => string }, value: number) { return shortenDate(this.getLabelForValue(value)); },
               },
               grid: { display: false },
             }
           : { ticks: { color: palette.muted, maxTicksLimit: 6, maxRotation: 0 }, grid: { display: false } },
         y: phone
-          ? { position: 'right', ticks: { color: palette.muted, maxTicksLimit: 5, font: { size: 10 }, callback: (value: number) => formatAxisNumber(value, digits) }, grid: { color: palette.grid } }
+          ? { position: 'right', ticks: { color: palette.muted, maxTicksLimit: 5, font: { size: 11 }, callback: (value: number) => formatAxisNumber(value, digits) }, grid: { color: palette.grid } }
           : { position: 'right', ticks: { color: palette.muted, callback: (value: number) => formatMoney(value, currency, digits) }, grid: { color: palette.grid } },
       },
     };

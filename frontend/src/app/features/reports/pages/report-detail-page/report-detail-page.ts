@@ -94,7 +94,7 @@ export class ReportDetailPage {
           : 'Дія знову стане очікуваною.',
       icon: 'pi pi-undo',
       acceptLabel: 'Скасувати відмітку',
-      rejectLabel: 'Ні',
+      rejectLabel: 'Залишити',
       acceptButtonProps: { severity: 'danger' },
       rejectButtonProps: { severity: 'secondary', text: true },
       accept: () => void this.store.undo(action),
@@ -107,7 +107,7 @@ export class ReportDetailPage {
       message: 'Дії без відмітки буде позначено як пропущені («закрито без відмітки»). Відмітки можна буде скасувати й пізніше.',
       icon: 'pi pi-lock',
       acceptLabel: 'Закрити',
-      rejectLabel: 'Ні',
+      rejectLabel: 'Скасувати',
       rejectButtonProps: { severity: 'secondary', text: true },
       accept: () => void this.store.close(),
     });
@@ -119,7 +119,7 @@ export class ReportDetailPage {
       message: 'Новий план рахується від фактичних позицій і кешу; цей рапорт буде замінено. Уже зроблені відмітки лишаються в журналі.',
       icon: 'pi pi-refresh',
       acceptLabel: 'Згенерувати',
-      rejectLabel: 'Ні',
+      rejectLabel: 'Скасувати',
       rejectButtonProps: { severity: 'secondary', text: true },
       accept: async () => {
         const reportId = await this.store.regenerate();

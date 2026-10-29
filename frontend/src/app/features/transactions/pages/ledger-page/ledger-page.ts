@@ -85,7 +85,7 @@ export class LedgerPage {
       message: 'Оригінал лишиться в журналі, а сторно скасує його вплив на позиції, кеш і податки.',
       icon: 'pi pi-replay',
       acceptLabel: 'Сторнувати',
-      rejectLabel: 'Ні',
+      rejectLabel: 'Скасувати',
       acceptButtonProps: { severity: 'danger' },
       rejectButtonProps: { severity: 'secondary', text: true },
       accept: () => void this.store.reverse(transaction, 'скасовано користувачем'),

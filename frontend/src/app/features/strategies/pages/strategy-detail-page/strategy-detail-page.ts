@@ -83,7 +83,7 @@ export class StrategyDetailPage {
       message: 'Нові версії створювати не можна буде; рапорти, що на неї посилаються, лишаються.',
       icon: 'pi pi-box',
       acceptLabel: 'Архівувати',
-      rejectLabel: 'Ні',
+      rejectLabel: 'Скасувати',
       acceptButtonProps: { severity: 'danger' },
       rejectButtonProps: { severity: 'secondary', text: true },
       accept: () => void this.store.archive(),
