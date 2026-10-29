@@ -180,6 +180,8 @@ internal static class ReportEventMapping
                 action.PlannedPrice,
                 action.PlannedAmount,
                 [.. action.Allocations.Select(allocation => new PlannedAllocationDto(allocation.SubPortfolioId, allocation.Quantity))],
-                action.FromSubPortfolioId))]);
+                action.FromSubPortfolioId))],
+            report.AccountName,
+            report.Trigger.ToString());
     }
 }

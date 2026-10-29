@@ -44,6 +44,10 @@ export InvestmentLab__DataDirectory="/data"
 export Kestrel__Endpoints__Ingress__Url="http://*:8098"
 export HomeAssistant__IngressPort=8098
 export HomeAssistant__IngressOnly="${HomeAssistant__IngressOnly:-true}"
+# Notifications go to Home Assistant with the SUPERVISOR_TOKEN the Supervisor passes in (homeassistant_api). The panel
+# lives at /hassio/ingress/<slug>; the container's hostname is the slug with "-" for "_" (local_investlab -> local-investlab).
+export Notifications__HomeAssistant__NotifyServices="$(jq -r '(.notify_services // []) | join(",")' "$OPTIONS" 2>/dev/null || true)"
+export Notifications__HomeAssistant__PanelPath="/hassio/ingress/${HOSTNAME/-/_}"
 
 cd /app/api
 dotnet InvestmentLab.Api.dll &

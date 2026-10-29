@@ -18,6 +18,10 @@
     <Project Path="src/Modules/MarketData/InvestmentLab.MarketData.Contracts/InvestmentLab.MarketData.Contracts.csproj" />
     <Project Path="src/Modules/MarketData/InvestmentLab.MarketData/InvestmentLab.MarketData.csproj" />
   </Folder>
+  <Folder Name="/src/Modules/Notifications/">
+    <Project Path="src/Modules/Notifications/InvestmentLab.Notifications.Contracts/InvestmentLab.Notifications.Contracts.csproj" />
+    <Project Path="src/Modules/Notifications/InvestmentLab.Notifications/InvestmentLab.Notifications.csproj" />
+  </Folder>
   <Folder Name="/src/Modules/Performance/">
     <Project Path="src/Modules/Performance/InvestmentLab.Performance.Contracts/InvestmentLab.Performance.Contracts.csproj" />
     <Project Path="src/Modules/Performance/InvestmentLab.Performance/InvestmentLab.Performance.csproj" />
@@ -45,6 +49,7 @@
   </Folder>
   <Folder Name="/tests/Modules/">
     <Project Path="tests/Modules/InvestmentLab.MarketData.Tests/InvestmentLab.MarketData.Tests.csproj" />
+    <Project Path="tests/Modules/InvestmentLab.Notifications.Tests/InvestmentLab.Notifications.Tests.csproj" />
     <Project Path="tests/Modules/InvestmentLab.Performance.Tests/InvestmentLab.Performance.Tests.csproj" />
     <Project Path="tests/Modules/InvestmentLab.Portfolio.Tests/InvestmentLab.Portfolio.Tests.csproj" />
     <Project Path="tests/Modules/InvestmentLab.Rebalancing.Tests/InvestmentLab.Rebalancing.Tests.csproj" />

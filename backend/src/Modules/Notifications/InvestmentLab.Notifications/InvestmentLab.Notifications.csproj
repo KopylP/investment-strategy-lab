@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../../Rebalancing/InvestmentLab.Rebalancing.Contracts/InvestmentLab.Rebalancing.Contracts.csproj" />
+  </ItemGroup>
+</Project>

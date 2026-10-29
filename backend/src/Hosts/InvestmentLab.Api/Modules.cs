@@ -1,6 +1,7 @@
 using InvestmentLab.BuildingBlocks.Modules;
 using InvestmentLab.Identity;
 using InvestmentLab.MarketData;
+using InvestmentLab.Notifications;
 using InvestmentLab.Performance;
 using InvestmentLab.Portfolio;
 using InvestmentLab.Rebalancing;
@@ -21,5 +22,6 @@ internal static class Modules
         new RebalancingModule(),
         new TaxationModule(),
         new PerformanceModule(),
+        new NotificationsModule(),
     ];
 }
