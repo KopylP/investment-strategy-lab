@@ -39,7 +39,7 @@ public sealed record Taxpayer(UserId OwnerId, IReadOnlyList<TaxAccount> Accounts
 {
     public IReadOnlyList<TaxAccount> Taxed { get; } = [.. Accounts.Where(account => TaxPolicies.For(account.PolicyCode).IsTaxed)];
 
-    public ITaxPolicy Policy => TaxPolicies.For(Taxed.FirstOrDefault()?.PolicyCode);
+    public ITaxPolicy Policy => TaxPolicies.For(Taxed.Count > 0 ? Taxed[0].PolicyCode : null);
 }
 
 /// <summary>

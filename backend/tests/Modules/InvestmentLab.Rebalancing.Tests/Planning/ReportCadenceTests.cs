@@ -25,7 +25,7 @@ public sealed class ReportCadenceTests
     };
 
     [Theory]
-    [MemberData(nameof(Times))]
+    [MemberData(nameof(Times), DisableDiscoveryEnumeration = true)]  // ReportCadence is not serializable
     public void Report_times_follow_the_schedule_the_strategy_sets(ReportCadence cadence, string now, string last, string next)
     {
         cadence.Last(At(now)).ShouldBe(At(last));

@@ -92,7 +92,13 @@ public sealed class TaxationScenarioTests(MarketDataApiFactory factory) : IClass
     {
         var response = await client.PostAsJsonAsync($"/api/portfolio/accounts/{account.Id}/trades", new
         {
-            instrumentId, side, quantity, price, fee, executedOn = on, allocations = new[] { new { subPortfolioId = sleeve, quantity } },
+            instrumentId,
+            side,
+            quantity,
+            price,
+            fee,
+            executedOn = on,
+            allocations = new[] { new { subPortfolioId = sleeve, quantity } },
         }, ct);
         response.StatusCode.ShouldBe(HttpStatusCode.OK, await response.Content.ReadAsStringAsync(ct));
         return (await response.Content.ReadFromJsonAsync<RecordedRow>(ct))!.TransactionId;

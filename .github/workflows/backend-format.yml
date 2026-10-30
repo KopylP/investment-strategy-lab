@@ -1,0 +1,65 @@
+# Every push that changes the backend is formatted by dotnet format, and what it changed is committed back to the
+# same branch ("Format backend"): pull before you push again. Anything left that dotnet format cannot fix fails the run.
+#
+# What gets formatted is set in backend/.editorconfig, not here:
+# - whitespace and line endings: the [*] / [*.cs] basics (indent, final newline, charset);
+# - code style (var, file-scoped namespaces, collection expressions…) and analyzers (CA…): each rule's severity —
+#   `none` switches it off, `suggestion`/`warning`/`error` turn it on, as the run below fixes everything from `info` up;
+# - files left alone: `generated_code = true` (EF Core migrations), or a section that sets a rule to `none` for them.
+# The format commit is pushed with GITHUB_TOKEN, which does not start workflows: no loop.
+name: Backend format
+
+on:
+  push:
+    paths:
+      - backend/**
+      - .github/workflows/backend-format.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: backend-format-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: backend/global.json
+
+      - name: Restore
+        run: dotnet restore InvestmentLab.slnx
+
+      - name: Format
+        run: dotnet format InvestmentLab.slnx --severity info --no-restore --verbosity minimal
+
+      - name: Commit what was formatted
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo "Already formatted"
+            exit 0
+          fi
+          git diff --stat
+          git config user.name "github-actions[bot]"
+          git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
+          git commit -qam "Format backend (dotnet format)"
+          # Another push may have landed meanwhile (on main: the add-on version bump): rebase onto it and retry.
+          for attempt in 1 2 3; do
+            git pull -q --rebase origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME" && exit 0
+            sleep $((attempt * 5))
+          done
+          exit 1
+
+      - name: Nothing left that dotnet format cannot fix
+        run: dotnet format InvestmentLab.slnx --verify-no-changes --severity info --no-restore --verbosity minimal

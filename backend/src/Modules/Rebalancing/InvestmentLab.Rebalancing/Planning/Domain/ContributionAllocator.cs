@@ -73,12 +73,12 @@ public static class ContributionAllocator
         var drift = subPortfolios
             .Select(sub => (Sub: sub, Excess: sub.Value + shares.First(share => share.SubPortfolioId == sub.SubPortfolioId).Amount - sub.TargetShare.Value * totalAfter))
             .ToList();
-        var over = drift.MaxBy(entry => entry.Excess);
-        var under = drift.MinBy(entry => entry.Excess);
-        if (over.Excess / totalAfter <= driftBand.Value && -under.Excess / totalAfter <= driftBand.Value)
+        var (over, overExcess) = drift.MaxBy(entry => entry.Excess);
+        var (under, underExcess) = drift.MinBy(entry => entry.Excess);
+        if (overExcess / totalAfter <= driftBand.Value && -underExcess / totalAfter <= driftBand.Value)
             return null;
 
-        var amount = decimal.Round(Math.Min(over.Excess, -under.Excess), 2);
-        return amount > 0m ? new TransferSuggestion(over.Sub.SubPortfolioId, under.Sub.SubPortfolioId, amount) : null;
+        var amount = decimal.Round(Math.Min(overExcess, -underExcess), 2);
+        return amount > 0m ? new TransferSuggestion(over.SubPortfolioId, under.SubPortfolioId, amount) : null;
     }
 }

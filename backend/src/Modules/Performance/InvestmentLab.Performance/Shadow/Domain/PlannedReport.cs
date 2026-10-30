@@ -49,12 +49,11 @@ public static class ShadowPortfolioSimulator
         var start = plans[0].MarketAsOf;
         var movements = actual.Where(movement => movement.Date < start).ToList();
         var sequence = movements.Count == 0 ? 0 : movements.Max(movement => movement.Sequence) + 1;
-        foreach (var plan in plans)
-        foreach (var action in plan.Actions)
-        foreach (var part in action.Allocations)
+        var parts = plans.SelectMany(plan => plan.Actions.SelectMany(action => action.Allocations.Select(part => (plan, action, part))));
+        foreach (var (plan, action, part) in parts)
         {
             var amount = part.Quantity * action.Price;
-            Movement? movement = action.Kind switch
+            var movement = action.Kind switch
             {
                 "Contribute" => new Movement(plan.MarketAsOf, sequence++, part.SubPortfolioId, null, 0m, part.Quantity, part.Quantity),
                 "Buy" or "Park" => new Movement(plan.MarketAsOf, sequence++, part.SubPortfolioId, action.InstrumentId, part.Quantity, -amount, 0m, TradePrice: action.Price),

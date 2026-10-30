@@ -142,7 +142,7 @@ public sealed class GenerateMonthlyReportHandler(
         if (await inputs.AccountAsync(command.AccountId, cancellationToken) is not { } account)
             return Error.NotFound("account.not_found", $"Account {command.AccountId} does not exist.");
         var all = PlanningInputs.Planned(account).ToList();
-        var planned = command.Scope is { } scope ? all.Where(sub => scope.SubPortfolioIds.Contains(sub.Id)).ToList() : all;
+        var planned = command.Scope is { } scope ? [.. all.Where(sub => scope.SubPortfolioIds.Contains(sub.Id))] : all;
         if (planned.Count == 0)
             return ReportErrors.NoActiveSubPortfolios(account.Id);
         if (command.Contribution is < 0m)

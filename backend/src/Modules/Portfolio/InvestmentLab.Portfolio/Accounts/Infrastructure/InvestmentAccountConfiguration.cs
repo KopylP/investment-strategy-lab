@@ -48,7 +48,6 @@ internal sealed class SubPortfolioConfiguration : IEntityTypeConfiguration<SubPo
         {
             guardrails.Property(g => g.MaxPositionWeight).HasColumnName("max_position_weight");
             guardrails.Property(g => g.MaxMonthlyTurnover).HasColumnName("max_monthly_turnover");
-            guardrails.Ignore(g => g.AllowLeverage);
         });
         sub.Ignore(s => s.IsActive);
         sub.HasIndex("AccountId", nameof(SubPortfolio.Position)).IsUnique();
