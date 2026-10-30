@@ -1,4 +1,5 @@
 using System.Text.Json;
+using InvestmentLab.Rebalancing.Contracts;
 using InvestmentLab.Rebalancing.Planning.Application.GenerateMonthlyReport;
 using InvestmentLab.Rebalancing.Planning.Application.GenerateRiskReview;
 using InvestmentLab.Rebalancing.Planning.Domain;
@@ -34,7 +35,7 @@ public sealed class ReportRequestProcessor(
             var asked = await StrategyRequestsAsync(request, cancellationToken);
             if (asked.IsFailure)
             {
-                request.Fail(asked.Error.Message, clock.GetUtcNow());
+                Fail(request, asked.Error.Message);
                 await requests.SaveChangesAsync(cancellationToken);
                 return;
             }
@@ -52,9 +53,17 @@ public sealed class ReportRequestProcessor(
             var made = await GenerateAsync(request, cancellationToken);
             if (made.IsSuccess)
                 return;
-            request.Fail(made.Error.Message, clock.GetUtcNow());
+            Fail(request, made.Error.Message);
         }
         await requests.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>No report: the request says why, and the user is told (<see cref="ReportRequestFailedV1"/>).</summary>
+    private void Fail(ReportRequest request, string error)
+    {
+        var now = clock.GetUtcNow();
+        request.Fail(error, now);
+        requests.Publish(request.ToFailedEvent(), now);
     }
 
     private async Task SubmitAsync(ReportRequest request, IReadOnlyDictionary<Guid, EvaluateStrategyRequest> asked, CancellationToken cancellationToken)
@@ -145,4 +154,23 @@ public sealed class ReportRequestProcessor(
     private static GenerateMonthlyReportCommand RebalanceOf(ReportRequest request) => new(request.AccountId, request.Contribution, request.AsOf, ScopeOf(request));
 
     private static GenerateRiskReviewCommand RiskReviewOf(ReportRequest request) => new(request.AccountId, request.AsOf, ScopeOf(request));
+}
+
+internal static class ReportRequestEventMapping
+{
+    extension(ReportRequest request)
+    {
+        public ReportRequestFailedV1 ToFailedEvent() => new(
+            request.Id.Value,
+            request.AccountId,
+            request.OwnerId.Value,
+            request.Code,
+            request.Title,
+            request.Kind.ToString(),
+            request.Trigger.ToString(),
+            YearMonth.Containing(request.AsOf).ToString(),
+            request.Error ?? "",
+            request.RequestedAt,
+            request.CompletedAt ?? request.RequestedAt);
+    }
 }

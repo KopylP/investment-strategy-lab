@@ -63,5 +63,7 @@ internal sealed class ReportRequestRepository(RebalancingDbContext db) : IReport
 
     public void Add(ReportRequest request) => db.ReportRequests.Add(request);
 
+    public void Publish<TEvent>(TEvent integrationEvent, DateTimeOffset occurredAt) where TEvent : class => db.Publish(integrationEvent, occurredAt);
+
     public Task SaveChangesAsync(CancellationToken cancellationToken) => db.SaveChangesAsync(cancellationToken);
 }

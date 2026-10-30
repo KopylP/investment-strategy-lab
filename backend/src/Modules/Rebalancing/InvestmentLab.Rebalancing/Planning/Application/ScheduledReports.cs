@@ -113,6 +113,7 @@ public sealed class ReportRequestsJob(
         if (await repository.FindAsync(requestId, cancellationToken) is not { } request || clock.GetUtcNow() < request.Deadline)
             return;
         request.Fail($"Рапорт не вдалося скласти: {exception.Message}", clock.GetUtcNow());
+        repository.Publish(request.ToFailedEvent(), clock.GetUtcNow());
         await repository.SaveChangesAsync(cancellationToken);
     }
 }

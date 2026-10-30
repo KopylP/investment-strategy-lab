@@ -4,6 +4,7 @@ namespace InvestmentLab.Rebalancing.Contracts;
 /// <param name="Kind">Monthly, Recalculation or RiskReview.</param>
 /// <param name="Trigger">Scheduled or OnDemand; null in events stored before it was added.</param>
 /// <param name="Title">The report's name as its strategy declares it; null in events stored before it was added.</param>
+/// <param name="RequestedAt">When it was asked for (its strategies thought until <paramref name="GeneratedAt"/>); null in events stored before it was added.</param>
 public sealed record ReportGeneratedV1(
     Guid ReportId,
     Guid AccountId,
@@ -16,7 +17,26 @@ public sealed record ReportGeneratedV1(
     IReadOnlyList<PlannedActionDto> Actions,
     string? AccountName = null,
     string? Trigger = null,
-    string? Title = null);
+    string? Title = null,
+    DateTimeOffset? RequestedAt = null);
+
+/// <summary>A report asked for could not be made: no strategy answered, or its deadline passed.</summary>
+/// <param name="Code">Which of the strategies' reports, e.g. "rebalance".</param>
+/// <param name="Kind">Monthly or RiskReview.</param>
+/// <param name="Trigger">Scheduled or OnDemand.</param>
+/// <param name="Period">yyyy-MM of the market date it was for.</param>
+public sealed record ReportRequestFailedV1(
+    Guid RequestId,
+    Guid AccountId,
+    Guid OwnerId,
+    string Code,
+    string Title,
+    string Kind,
+    string Trigger,
+    string Period,
+    string Error,
+    DateTimeOffset RequestedAt,
+    DateTimeOffset FailedAt);
 
 /// <param name="Kind">Contribute, Sell, Unpark, Transfer, Buy or Park. For Contribute the quantity is the amount and the price is 1.</param>
 public sealed record PlannedActionDto(
