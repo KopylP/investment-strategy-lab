@@ -6,8 +6,9 @@ import { AccountContext } from '../../../core/context/account-context';
 import { OpenActionsBadge } from '../../../core/notifications/open-actions-badge';
 import { ReportRequestDto } from '../models/report-dto';
 import { distinctReports, ScheduledReport } from '../models/report-schedule';
+import { ReportListRow } from '../models/report-vm';
 import { ReportsApi } from './reports-api';
-import { toSummaryVm } from './report-mapper';
+import { toRequestVm, toSummaryVm } from './report-mapper';
 
 /** How often reports being made are checked while the page is open. */
 const REQUEST_POLL_MS = 3000;
@@ -70,6 +71,12 @@ export class ReportListStore {
         !this.preparing().some((pending) => pending.code === request.code),
     ),
   );
+
+  /** The list: reports being made (and those that could not be) first, then the reports. */
+  readonly rows = computed<ReportListRow[]>(() => [
+    ...[...this.preparing(), ...this.failed()].map((request) => ({ id: request.id, request: toRequestVm(request) })),
+    ...this.reports().map((report) => ({ id: report.id, report })),
+  ]);
 
   /** The request the user just made (here or by "generate again"): its report opens when it is ready. */
   private awaited: string | null = this.route.snapshot.queryParamMap.get('request');

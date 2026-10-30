@@ -4,6 +4,7 @@ namespace InvestmentLab.Rebalancing.Planning.Application.RequestReport;
 
 /// <summary>A report asked for, as the app shows it while its strategies think («Готується») and once it is made or failed.</summary>
 /// <param name="Status">Pending, Completed or Failed.</param>
+/// <param name="AsOf">The market date the report is for: its period.</param>
 /// <param name="StrategiesAnswered">Of <paramref name="Strategies"/>, how many have answered (or failed) so far.</param>
 public sealed record ReportRequestDto(
     Guid Id,
@@ -13,6 +14,7 @@ public sealed record ReportRequestDto(
     string Kind,
     string Trigger,
     string Status,
+    DateOnly AsOf,
     DateTimeOffset RequestedAt,
     DateTimeOffset Deadline,
     DateTimeOffset? CompletedAt,
@@ -42,6 +44,7 @@ public sealed class ReportRequestQueriesHandler(IReportRequestRepository request
         request.Kind.ToString(),
         request.Trigger.ToString(),
         request.Status.ToString(),
+        request.AsOf,
         request.RequestedAt,
         request.Deadline,
         request.CompletedAt,
