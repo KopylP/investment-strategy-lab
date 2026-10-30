@@ -25,6 +25,7 @@ export interface InstrumentRow {
   symbol: string;
   name: string;
   isin: string | null;
+  description: string | null;
   kind: string;
   group: string;
   exchange: string;
@@ -107,6 +108,7 @@ export class InstrumentsStore {
           symbol: symbolOf(instrument),
           name: instrument.name,
           isin: instrument.isin,
+          description: instrument.description ?? null,
           kind: instrument.kind,
           group: instrument.group ?? '',
           exchange: instrument.exchange,

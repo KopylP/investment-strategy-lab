@@ -60,3 +60,22 @@ def test_download_quotes_handles_flat_columns_for_one_symbol(monkeypatch) -> Non
 
     assert list(result["AAA"]["close"]) == [10.0]
     assert list(result["AAA"]["adjusted_close"]) == [9.5]
+
+
+def test_symbol_info_carries_yahoos_description_when_there_is_one(monkeypatch) -> None:
+    infos = {
+        "AVGO": {"quoteType": "EQUITY", "currency": "USD", "longName": "Broadcom Inc.", "longBusinessSummary": " Broadcom Inc. designs semiconductors. \n"},
+        "XDJE.DE": {"quoteType": "ETF", "currency": "EUR", "shortName": "Xtrackers MSCI Japan ESG"},
+    }
+
+    class FakeTicker:
+        def __init__(self, symbol: str) -> None:
+            self.info = infos.get(symbol, {})
+
+    monkeypatch.setattr(market_data.yf, "Ticker", FakeTicker)
+
+    assert market_data.symbol_info("AVGO") == {
+        "name": "Broadcom Inc.", "currency": "USD", "quote_type": "EQUITY", "description": "Broadcom Inc. designs semiconductors.",
+    }
+    assert market_data.symbol_info("XDJE.DE")["description"] is None
+    assert market_data.symbol_info("NOPE") is None

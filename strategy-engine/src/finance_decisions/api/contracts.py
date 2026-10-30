@@ -343,6 +343,8 @@ class SymbolInfo(ApiModel):
     name: str
     currency: str
     quote_type: str
+    description: str | None = None
+    """What the company or fund is, as Yahoo writes it (English); ``null`` when Yahoo has none."""
 
 
 class SymbolLookupResponse(ApiModel):

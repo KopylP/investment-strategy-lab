@@ -110,6 +110,15 @@ namespace InvestmentLab.MarketData.Shared.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<DateTimeOffset?>("DescribedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("described_at");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(10000)
+                        .HasColumnType("character varying(10000)")
+                        .HasColumnName("description");
+
                     b.Property<string>("Exchange")
                         .IsRequired()
                         .HasMaxLength(10)

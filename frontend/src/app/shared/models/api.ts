@@ -34,6 +34,8 @@ export interface Instrument {
   group: string | null;
   isAccumulating: boolean | null;
   providerSymbols: string[];
+  /** What the company or fund is, as Yahoo writes it (English); null when Yahoo has none. */
+  description: string | null;
 }
 
 export interface Lot {

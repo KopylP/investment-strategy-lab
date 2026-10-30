@@ -13,14 +13,17 @@ import { ActionStatusTag } from '../action-status-tag/action-status-tag';
 import { Money } from '../../../../shared/ui/money/money';
 import { Viewport } from '../../../../shared/ui/viewport';
 import { TapTooltip } from '../../../../shared/ui/tap-tooltip';
+import { InstrumentAbout } from '../../../../shared/ui/instrument-about';
+import { InstrumentCatalog } from '../../../../core/context/instrument-catalog';
 @Component({
   selector: 'app-report-actions-table',
-  imports: [Money, NgTemplateOutlet, TableModule, Button, SplitButton, Tooltip, TapTooltip, Message, ActionStatusTag, QuantityPipe, DatePipe],
+  imports: [Money, NgTemplateOutlet, TableModule, Button, SplitButton, Tooltip, TapTooltip, InstrumentAbout, Message, ActionStatusTag, QuantityPipe, DatePipe],
   templateUrl: './report-actions-table.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ReportActionsTable {
   protected readonly viewport = inject(Viewport);
+  private readonly instruments = inject(InstrumentCatalog);
 
   readonly actions = input.required<ReportActionVm[]>();
   readonly busyActionId = input<string>();
@@ -43,6 +46,15 @@ export class ReportActionsTable {
         ]),
       ),
   );
+
+  /** What the instrument is (Yahoo's description), shown in the action's details. */
+  protected about(action: ReportActionVm): string | null {
+    return (action.instrumentId && this.instruments.byId().get(action.instrumentId)?.description) || null;
+  }
+
+  protected hasDetails(action: ReportActionVm): boolean {
+    return action.hasBreakdown || !!this.about(action);
+  }
 
   /** Phone cards whose breakdown (split by sub-portfolio, fills) is open. */
   protected readonly expanded = signal(new Set<string>());

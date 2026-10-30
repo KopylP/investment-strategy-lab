@@ -26,6 +26,14 @@ public sealed class Instrument : AggregateRoot<InstrumentId>
 
     public IReadOnlyList<ProviderSymbol> ProviderSymbols => _providerSymbols;
 
+    /// <summary>What the company or fund is, as Yahoo writes it (English); null when Yahoo has none.</summary>
+    public string? Description { get; private set; }
+
+    /// <summary>When Yahoo was last asked for the description; it is asked again after <see cref="DescriptionLifetime"/>.</summary>
+    public DateTimeOffset? DescribedAt { get; private set; }
+
+    public static readonly TimeSpan DescriptionLifetime = TimeSpan.FromDays(30);
+
     public static Result<Instrument> Register(
         InstrumentKind kind, Isin? isin, string name, string exchange, Currency tradingCurrency, InstrumentGroup? group, bool? isAccumulating)
     {
@@ -53,6 +61,16 @@ public sealed class Instrument : AggregateRoot<InstrumentId>
     {
         _providerSymbols.RemoveAll(existing => existing.Provider == symbol.Provider);
         _providerSymbols.Add(symbol);
+    }
+
+    public bool NeedsDescription(DateTimeOffset now) => DescribedAt is null || now - DescribedAt.Value >= DescriptionLifetime;
+
+    /// <summary>Yahoo's answer at <paramref name="at"/>; an empty one keeps the description there was (a fund's page loses it at times).</summary>
+    public void Describe(string? description, DateTimeOffset at)
+    {
+        if (!string.IsNullOrWhiteSpace(description))
+            Description = description.Trim();
+        DescribedAt = at;
     }
 
     public ProviderSymbol? SymbolFor(QuoteProvider provider) =>
