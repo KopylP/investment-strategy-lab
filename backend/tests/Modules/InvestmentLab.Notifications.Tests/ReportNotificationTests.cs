@@ -64,6 +64,25 @@ public sealed class ReportNotificationTests
     public void A_failure_the_user_saw_happen_is_not_announced() =>
         ReportNotification.For(Failed(trigger: "OnDemand", thought: TimeSpan.FromSeconds(5))).ShouldBeNull();
 
+    [Fact]
+    public void Says_when_the_next_report_of_the_kind_comes()
+    {
+        var next = new NextReport(new DateTime(2026, 11, 1, 20, 0, 0));
+
+        var notification = ReportNotification.For(Report(), next).ShouldNotBeNull();
+
+        notification.Message.ShouldBe("«Revolut»: 3 дії до виконання. Наступний — 01.11.2026 о 20:00.");
+        notification.Data["next"].ShouldBe("2026-11-01T20:00");
+        ReportNotification.For(Failed(error: "boom"), next)!.Message.ShouldBe("Причина: boom Наступний — 01.11.2026 о 20:00.");
+    }
+
+    [Fact]
+    public void A_report_that_does_not_come_on_schedule_says_the_next_is_only_on_demand_and_an_old_event_says_nothing()
+    {
+        ReportNotification.For(Report(), new NextReport(null))!.Message.ShouldBe("«Revolut»: 3 дії до виконання. Наступний — лише вручну.");
+        ReportNotification.For(Report(), null)!.Message.ShouldBe("«Revolut»: 3 дії до виконання.");
+    }
+
     [Theory]
     [InlineData(1, "1 дія")]
     [InlineData(5, "5 дій")]

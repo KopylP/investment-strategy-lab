@@ -1,4 +1,5 @@
 using System.Globalization;
+using InvestmentLab.Rebalancing.Contracts;
 using InvestmentLab.Rebalancing.Planning.Domain;
 
 namespace InvestmentLab.Rebalancing.Planning.Application;
@@ -72,6 +73,22 @@ public sealed class PlanSettingsHandler(PlanningInputs inputs, IPlanSettingsRepo
         return new ReportScheduleDto(current?.GenerateOnSchedule ?? true, ReportSchedules.TimeZone, [.. reports]);
     }
 
+    /// <summary>The soonest of the report's next times (its strategies may declare different ones); null when it does not come on schedule.</summary>
+    public async Task<DateTime?> NextAsync(Guid accountId, string code, CancellationToken cancellationToken)
+    {
+        if (await inputs.AccountAsync(accountId, cancellationToken) is not { } account)
+            return null;
+        var current = await settings.FindAsync(accountId, cancellationToken);
+        if (current is { GenerateOnSchedule: false })
+            return null;
+
+        var now = ReportSchedules.Local(clock.GetUtcNow()).DateTime;
+        return (await inputs.ReportsAsync(account, current, cancellationToken))
+            .Where(report => report.Code == code)
+            .SelectMany(report => report.SubPortfolios.Select(sub => report.CadenceOf(sub).Next(now)))
+            .Min();
+    }
+
     /// <summary>The report with this code comes at the user's time on this account, whatever its strategies say.</summary>
     public async Task<Result<ReportScheduleDto>> ChangeSchedule(Guid accountId, string code, ChangeReportScheduleCommand command, CancellationToken cancellationToken)
     {
@@ -130,4 +147,9 @@ public sealed class PlanSettingsHandler(PlanningInputs inputs, IPlanSettingsRepo
 
     private static PlanSettingsDto ToDto(PlanSettings settings) => new(
         settings.AccountId, settings.MonthlyContribution, settings.MinTrade, settings.TrimBand.Value, settings.AllowFractionalShares, settings.GenerateOnSchedule);
+}
+
+internal sealed class ReportScheduleQueries(PlanSettingsHandler handler) : IReportScheduleQueries
+{
+    public Task<DateTime?> NextAsync(Guid accountId, string code, CancellationToken cancellationToken) => handler.NextAsync(accountId, code, cancellationToken);
 }
