@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Investment Lab Strategy Engine",
-    "description": "Strategy decisions, risk checks, market quotes and symbol lookup for the Investment Lab backend.",
+    "description": "Strategy decisions, risk checks (also as background jobs), market quotes and symbol lookup for the Investment Lab backend.",
     "version": "1"
   },
   "paths": {
@@ -118,6 +118,152 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RiskAssessment"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/strategies/{code}/decide/jobs": {
+      "post": {
+        "tags": [
+          "jobs"
+        ],
+        "summary": "Submit Decision",
+        "operationId": "submit_decision_v1_strategies__code__decide_jobs_post",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Code"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluationContext"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StrategyJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/strategies/{code}/risk/jobs": {
+      "post": {
+        "tags": [
+          "jobs"
+        ],
+        "summary": "Submit Risk Assessment",
+        "operationId": "submit_risk_assessment_v1_strategies__code__risk_jobs_post",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Code"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluationContext"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StrategyJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "jobs"
+        ],
+        "summary": "Get Job",
+        "operationId": "get_job_v1_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StrategyJob"
                 }
               }
             }
@@ -547,6 +693,34 @@
         ],
         "title": "InstrumentScore",
         "description": "One row of the \"why\" table. Only the identity, the decision and its reason are common to every strategy;\nthe strategy's own metrics go into ``values`` under the ids of ``Rationale.columns``."
+      },
+      "JobError": {
+        "properties": {
+          "statusCode": {
+            "type": "integer",
+            "title": "Statuscode"
+          },
+          "detail": {
+            "title": "Detail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "statusCode",
+          "detail"
+        ],
+        "title": "JobError",
+        "description": "Why a job failed, as the synchronous endpoint would have answered: 422 — the context was refused, 500 — the strategy broke."
+      },
+      "JobStatus": {
+        "type": "string",
+        "enum": [
+          "running",
+          "succeeded",
+          "failed"
+        ],
+        "title": "JobStatus"
       },
       "Lot": {
         "properties": {
@@ -1424,6 +1598,57 @@
         ],
         "title": "StrategyDecision",
         "description": "Targets, not orders: the backend's rebalancer turns them into trades."
+      },
+      "StrategyJob": {
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "title": "Jobid"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "status": {
+            "$ref": "#/components/schemas/JobStatus"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JobError"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "jobId",
+          "code",
+          "action",
+          "status"
+        ],
+        "title": "StrategyJob",
+        "description": "A decision or risk assessment that runs in the background (a strategy may think for minutes or hours).\n\n``result`` is what ``/decide`` or ``/risk`` returns, once the job has succeeded."
       },
       "StrategyTypeDescriptor": {
         "properties": {

@@ -122,8 +122,8 @@ export class ReportDetailPage {
       rejectLabel: 'Скасувати',
       rejectButtonProps: { severity: 'secondary', text: true },
       accept: async () => {
-        const reportId = await this.store.regenerate();
-        if (reportId) await this.router.navigate(['/reports', reportId]);
+        const requestId = await this.store.regenerate();
+        if (requestId) await this.router.navigate(['/reports'], { queryParams: { request: requestId } });
       },
     });
   }

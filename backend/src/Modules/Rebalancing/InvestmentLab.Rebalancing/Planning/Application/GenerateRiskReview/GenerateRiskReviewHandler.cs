@@ -13,18 +13,40 @@ public sealed record GenerateRiskReviewCommand(Guid AccountId, DateOnly? AsOf = 
 /// <summary>
 /// Risk check (§7.4) — a strategy's report in "riskReview" mode: each strategy assesses what its sub-portfolio holds;
 /// exit signals become sells of the whole position, warnings are listed. A newer review of the same code supersedes an open older one.
+/// The strategies think in the background (<see cref="ReportRequest"/>): <see cref="StrategyRequestsAsync"/> says what
+/// to ask them (only sub-portfolios that hold something), <see cref="Handle"/> makes the report from their answers.
 /// </summary>
-public sealed class GenerateRiskReviewHandler(
-    PlanningInputs inputs, IStrategyEvaluation strategies, IReportRepository reports, SaleTaxes taxes, TimeProvider clock)
+public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepository reports, SaleTaxes taxes, TimeProvider clock)
 {
-    public async Task<Result<ReportId>> Handle(GenerateRiskReviewCommand command, ReportTrigger trigger, CancellationToken cancellationToken)
+    public async Task<Result<IReadOnlyDictionary<Guid, EvaluateStrategyRequest>>> StrategyRequestsAsync(
+        GenerateRiskReviewCommand command, CancellationToken cancellationToken)
+    {
+        var asOf = command.AsOf ?? DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
+        if (await inputs.AccountAsync(command.AccountId, cancellationToken) is not { } account)
+            return Error.NotFound("account.not_found", $"Account {command.AccountId} does not exist.");
+        var planned = PlannedOf(account, command);
+        if (planned.Count == 0)
+            return ReportErrors.NoActiveSubPortfolios(account.Id);
+
+        var snapshots = (await inputs.HoldingsAsync(account, cancellationToken)).SubPortfolios.ToDictionary(sub => sub.SubPortfolioId);
+        return planned
+            .Where(sub => snapshots.GetValueOrDefault(sub.Id) is { Positions.Count: > 0 })
+            .ToDictionary(sub => sub.Id, sub => new EvaluateStrategyRequest(
+                sub.StrategyId!.Value, sub.PinnedStrategyVersion, PlanningInputs.StateOf(account, snapshots[sub.Id]), 0m, asOf, sub.CashInstrumentId));
+    }
+
+    /// <param name="assessments">The strategies' answers by sub-portfolio; one missing is a strategy that did not answer.</param>
+    /// <param name="request">Completed with the report, in the same save.</param>
+    public async Task<Result<ReportId>> Handle(
+        GenerateRiskReviewCommand command, IReadOnlyDictionary<Guid, StrategyEvaluationResult<RiskAssessmentDto>> assessments,
+        ReportRequest request, CancellationToken cancellationToken)
     {
         var now = clock.GetUtcNow();
         var asOf = command.AsOf ?? DateOnly.FromDateTime(now.UtcDateTime);
 
         if (await inputs.AccountAsync(command.AccountId, cancellationToken) is not { } account)
             return Error.NotFound("account.not_found", $"Account {command.AccountId} does not exist.");
-        var planned = PlanningInputs.Planned(account).Where(sub => command.Scope?.SubPortfolioIds.Contains(sub.Id) ?? true).ToList();
+        var planned = PlannedOf(account, command);
         if (planned.Count == 0)
             return ReportErrors.NoActiveSubPortfolios(account.Id);
         var code = command.Scope?.Code ?? ReportDefaults.CodeOf(ReportKind.RiskReview);
@@ -47,8 +69,7 @@ public sealed class GenerateRiskReviewHandler(
             if (snapshot is null || snapshot.Positions.Count == 0)
                 continue;
 
-            var result = await strategies.AssessRiskAsync(new EvaluateStrategyRequest(
-                sub.StrategyId!.Value, sub.PinnedStrategyVersion, PlanningInputs.StateOf(account, snapshot), 0m, asOf, sub.CashInstrumentId), cancellationToken);
+            var result = assessments.GetValueOrDefault(sub.Id) ?? new(null, "strategy.no_answer", "стратегія не відповіла");
             if (!result.IsSuccess)
             {
                 warnings.Add($"Оцінка ризику під-портфеля «{sub.Name}» не вдалася: {result.ErrorMessage}.");
@@ -87,7 +108,7 @@ public sealed class GenerateRiskReviewHandler(
 
         var marketAsOf = prices.Count > 0 ? prices.Values.Max(price => price.Date) : asOf;
         var draft = ReportComposer.Compose(
-            new ReportHeader(account.Id, UserId.Of(account.OwnerId), account.Name, currency, YearMonth.Containing(asOf), ReportKind.RiskReview, trigger, marketAsOf, code, title),
+            new ReportHeader(account.Id, UserId.Of(account.OwnerId), account.Name, currency, YearMonth.Containing(asOf), ReportKind.RiskReview, request.Trigger, marketAsOf, code, title),
             null, outcomes, warnings);
 
         var report = RebalancingReport.Generate(draft, now);
@@ -99,7 +120,11 @@ public sealed class GenerateRiskReviewHandler(
             reports.Publish(new ReportSupersededV1(open.Id.Value, open.AccountId, report.Id.Value, now), now);
         }
         reports.Publish(report.ToGeneratedEvent(), now);
+        request.Complete(report.Id, now);
         await reports.SaveChangesAsync(cancellationToken);
         return report.Id;
     }
+
+    private static List<Portfolio.Contracts.Accounts.SubPortfolioSetupDto> PlannedOf(Portfolio.Contracts.Accounts.AccountSetupDto account, GenerateRiskReviewCommand command) =>
+        PlanningInputs.Planned(account).Where(sub => command.Scope?.SubPortfolioIds.Contains(sub.Id) ?? true).ToList();
 }

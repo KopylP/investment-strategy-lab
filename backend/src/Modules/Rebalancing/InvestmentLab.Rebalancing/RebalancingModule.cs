@@ -7,8 +7,8 @@ using InvestmentLab.Rebalancing.Contracts;
 using InvestmentLab.Rebalancing.Planning.Api;
 using InvestmentLab.Rebalancing.Planning.Application;
 using InvestmentLab.Rebalancing.Planning.Application.GenerateMonthlyReport;
-using InvestmentLab.Rebalancing.Planning.Application.GenerateReport;
 using InvestmentLab.Rebalancing.Planning.Application.GenerateRiskReview;
+using InvestmentLab.Rebalancing.Planning.Application.RequestReport;
 using InvestmentLab.Rebalancing.Planning.Domain;
 using InvestmentLab.Rebalancing.Planning.Infrastructure;
 using InvestmentLab.Rebalancing.Reports.Api;
@@ -51,8 +51,12 @@ public sealed class RebalancingModule : IModule
         services.AddScoped<PlanSettingsHandler>();
         services.AddScoped<GenerateMonthlyReportHandler>();
         services.AddScoped<GenerateRiskReviewHandler>();
-        services.AddScoped<GenerateReportHandler>();
+        services.AddScoped<IReportRequestRepository, ReportRequestRepository>();
+        services.AddScoped<RequestReportHandler>();
+        services.AddScoped<ReportRequestQueriesHandler>();
+        services.AddScoped<ReportRequestProcessor>();
         services.AddScheduledJob<StrategyReportsJob>(ReportSchedules.Check);
+        services.AddScheduledJob<ReportRequestsJob>(ReportSchedules.Requests);
 
         services.AddScoped<IPlanReviewer, NullPlanReviewer>();
     }

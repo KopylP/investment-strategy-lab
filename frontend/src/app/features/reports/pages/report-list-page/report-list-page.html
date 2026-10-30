@@ -3,7 +3,7 @@
     <!-- One button per report the account's strategies declare; the rebalance ones first and filled. -->
     @for (report of store.definitions(); track report.code) {
       <p-button [label]="report.name" [icon]="icon(report.mode)" [severity]="report.mode === 'rebalance' ? undefined : 'secondary'" [outlined]="report.mode !== 'rebalance'"
-                [loading]="store.generating() === report.code" [disabled]="!!store.generating()" (onClick)="start(report)" />
+                [loading]="store.generating() === report.code || store.isPreparing(report.code)" [disabled]="!!store.generating() || store.isPreparing(report.code)" (onClick)="start(report)" />
     }
   }
 </app-page-header>
@@ -15,6 +15,25 @@
     </app-empty-state>
   </div>
 } @else {
+  <!-- Reports being made: the strategies may think for minutes or hours (an AI agent); the report appears when they answer. -->
+  @for (request of store.preparing(); track request.id) {
+    <p-message severity="secondary" styleClass="mb-4">
+      <div class="flex items-center gap-3">
+        <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+        <span>
+          <span class="font-medium">«{{ request.title }}» готується</span> — стратегії рахують план{{
+            request.strategies > 1 ? ' (' + request.strategiesAnswered + ' з ' + request.strategies + ' відповіли)' : '' }}.
+          Запитано {{ request.requestedAt | dateTime }}; рапорт з’явиться тут, щойно буде готовий.
+        </span>
+      </div>
+    </p-message>
+  }
+  @for (request of store.failed(); track request.id) {
+    <p-message severity="error" styleClass="mb-4">
+      <span><span class="font-medium">«{{ request.title }}» не вдалося підготувати</span> ({{ request.requestedAt | dateTime }}): {{ request.error }}</span>
+    </p-message>
+  }
+
   @if (store.openReport(); as open) {
     <p-message severity="info" styleClass="mb-4">
       <span>Відкритий рапорт: <a [routerLink]="['/reports', open.id]" class="font-medium underline">{{ open.title }}</a> — {{ open.actionsOpen }} дій чекають на відмітку.</span>
@@ -25,7 +44,9 @@
     @if (store.isLoading() && !store.reports().length) {
       <p-skeleton height="10rem" />
     } @else if (!store.reports().length) {
-      @if (store.definitions()[0]; as first) {
+      @if (store.preparing().length) {
+        <app-empty-state icon="pi pi-hourglass" title="Перший рапорт готується" text="Стратегії оцінюють ринок; щойно план буде готовий, він з’явиться тут." />
+      } @else if (store.definitions()[0]; as first) {
         <app-empty-state icon="pi pi-list-check" title="Рапортів ще немає"
           text="Згенеруйте перший рапорт: стратегії оцінять ринок, а план покаже, що купити, продати чи запаркувати.">
           <p-button [label]="first.name" [icon]="icon(first.mode)" (onClick)="start(first)" />
@@ -71,7 +92,7 @@
 
 <p-dialog [header]="asking()?.name ?? ''" [modal]="true" [visible]="!!asking()" (visibleChange)="!$event && asking.set(null)" [style]="{ width: '30rem' }" [breakpoints]="{ '640px': '95vw' }">
   <div class="flex flex-col gap-4">
-    <p class="m-0 text-muted-color">{{ asking()?.description }} План рахується на останніх котируваннях у базі. Відкритий такий самий рапорт цього місяця буде замінено; уже зроблені відмітки лишаються в журналі.</p>
+    <p class="m-0 text-muted-color">{{ asking()?.description }} План рахується на останніх котируваннях у базі; стратегіям може знадобитися час, рапорт з’явиться, щойно буде готовий. Відкритий такий самий рапорт цього місяця буде замінено; уже зроблені відмітки лишаються в журналі.</p>
     <div class="flex flex-col gap-2">
       <label for="contribution" class="font-medium">Внесок цього місяця</label>
       <p-inputnumber inputId="contribution" [ngModel]="contribution()" (ngModelChange)="contribution.set($event)" mode="currency"

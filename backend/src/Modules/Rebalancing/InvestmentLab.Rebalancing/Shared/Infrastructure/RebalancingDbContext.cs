@@ -19,6 +19,7 @@ public sealed class RebalancingDbContext(DbContextOptions<RebalancingDbContext> 
 
     public DbSet<RebalancingReport> Reports => Set<RebalancingReport>();
     public DbSet<PlanSettings> PlanSettings => Set<PlanSettings>();
+    public DbSet<ReportRequest> ReportRequests => Set<ReportRequest>();
 
     protected override string Schema => SchemaName;
 
@@ -29,6 +30,7 @@ public sealed class RebalancingDbContext(DbContextOptions<RebalancingDbContext> 
         modelBuilder.ApplyConfiguration(new RebalancingReportConfiguration(this));
         modelBuilder.ApplyConfiguration(new ReportActionConfiguration());
         modelBuilder.ApplyConfiguration(new PlanSettingsConfiguration(this));
+        modelBuilder.ApplyConfiguration(new ReportRequestConfiguration(this));
     }
 }
 

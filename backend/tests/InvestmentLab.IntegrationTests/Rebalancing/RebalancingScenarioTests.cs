@@ -5,6 +5,7 @@ using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Portfolio.Contracts.Holdings;
 using InvestmentLab.Rebalancing.Planning.Api;
 using InvestmentLab.Rebalancing.Planning.Application;
+using InvestmentLab.Rebalancing.Planning.Application.RequestReport;
 using InvestmentLab.Rebalancing.Reports.Application.GetReport;
 using InvestmentLab.Strategies.Definitions.Application;
 
@@ -13,7 +14,8 @@ namespace InvestmentLab.IntegrationTests.Rebalancing;
 /// <summary>
 /// Stage 5 end to end (§7.2): monthly report from the real strategies → contribution marked → a buy partly filled →
 /// the journal and holdings follow → undoing the mark takes the entry back → a new report supersedes the open one
-/// and does not plan the contribution again.
+/// and does not plan the contribution again. Reports are asked for (202) and published once the strategies, run as
+/// background jobs of the engine, have answered.
 /// </summary>
 public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactory>
 {
@@ -50,8 +52,7 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
 
         // 1. The monthly report: contribution first, then buys for both sleeves.
         var asOf = SyntheticQuoteProvider.LastDay;
-        var generated = await PostAsync<GeneratedReportResponse>(client, $"/api/rebalancing/accounts/{account.Id}/reports", new { asOf }, ct);
-        var report = await ReportAsync(client, generated.ReportId, ct);
+        var report = await ReportAsync(client, await RequestReportAsync(client, account.Id, new { asOf }, ct), ct);
         report.Summary.Status.ShouldBe("New");
         report.Summary.Trigger.ShouldBe("OnDemand");
         (report.Summary.Code, report.Summary.Title).ShouldBe(("rebalance", "Ребаланс"));
@@ -72,8 +73,8 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
             .StatusCode.ShouldBe(HttpStatusCode.NotFound);
         var reset = await client.DeleteAsync($"/api/rebalancing/accounts/{account.Id}/report-schedule/rebalance", ct);
         (await reset.Content.ReadFromJsonAsync<ReportScheduleDto>(ct))!.Reports.Single(each => each.Code == "rebalance").Own.ShouldBeFalse();
-        var review = await PostAsync<GeneratedReportResponse>(client, $"/api/rebalancing/accounts/{account.Id}/reports", new { code = "risk-review", asOf }, ct);
-        (await ReportAsync(client, review.ReportId, ct)).Summary.ShouldSatisfyAllConditions(
+        var review = await RequestReportAsync(client, account.Id, new { code = "risk-review", asOf }, ct);
+        (await ReportAsync(client, review, ct)).Summary.ShouldSatisfyAllConditions(
             summary => summary.Kind.ShouldBe("RiskReview"), summary => summary.Title.ShouldBe("Перевірка ризику"));
         (await client.PostAsJsonAsync($"/api/rebalancing/accounts/{account.Id}/reports", new { code = "weekly-digest" }, ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         report.Sections.Count.ShouldBe(2);
@@ -109,15 +110,37 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
         (await ReportAsync(client, report.Summary.Id, ct)).Actions.First(action => action.Id == buy.Id).Status.ShouldBe("Pending");
 
         // 5. "Generate again" supersedes the open report and does not plan the paid contribution twice.
-        var again = await PostAsync<GeneratedReportResponse>(client, $"/api/rebalancing/accounts/{account.Id}/reports", new { asOf }, ct);
+        var again = await RequestReportAsync(client, account.Id, new { asOf }, ct);
         (await ReportAsync(client, report.Summary.Id, ct)).Summary.Status.ShouldBe("Superseded");
-        var replacement = await ReportAsync(client, again.ReportId, ct);
+        var replacement = await ReportAsync(client, again, ct);
         replacement.Actions.ShouldNotContain(action => action.Kind == "Contribute");
         replacement.Actions.Where(action => action.Kind is "Buy" or "Park").Sum(action => action.PlannedAmount).ShouldBe(1000m, 0.05m);
 
         // 6. Another user sees nothing of it.
         var stranger = await _factory.CreateSignedInClientAsync(ct);
-        (await stranger.GetAsync($"/api/rebalancing/reports/{again.ReportId}", ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await stranger.GetAsync($"/api/rebalancing/reports/{again}", ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await stranger.GetFromJsonAsync<List<ReportRequestDto>>("/api/rebalancing/report-requests", ct))!.ShouldBeEmpty();
+    }
+
+    /// <summary>Asks for a report (202, «Готується»), waits until its strategies have answered and returns the report.</summary>
+    private static async Task<Guid> RequestReportAsync(HttpClient client, Guid accountId, object body, CancellationToken ct)
+    {
+        var response = await client.PostAsJsonAsync($"/api/rebalancing/accounts/{accountId}/reports", body, ct);
+        response.StatusCode.ShouldBe(HttpStatusCode.Accepted, await response.Content.ReadAsStringAsync(ct));
+        var requested = (await response.Content.ReadFromJsonAsync<ReportRequestedResponse>(ct))!;
+        response.Headers.Location!.ToString().ShouldBe($"/api/rebalancing/report-requests/{requested.RequestId}");
+        (await client.GetFromJsonAsync<List<ReportRequestDto>>($"/api/rebalancing/report-requests?accountId={accountId}", ct))!
+            .ShouldContain(request => request.Id == requested.RequestId);
+
+        ReportRequestDto? request = null;
+        await EventuallyAsync(async () =>
+        {
+            request = await client.GetFromJsonAsync<ReportRequestDto>($"/api/rebalancing/report-requests/{requested.RequestId}", ct);
+            return request!.Status != "Pending";
+        }, ct);
+        request!.Status.ShouldBe("Completed", request.Error);
+        request.StrategiesAnswered.ShouldBe(request.Strategies);
+        return request.ReportId!.Value;
     }
 
     private static async Task<ReportDetailsDto> ReportAsync(HttpClient client, Guid reportId, CancellationToken ct) =>

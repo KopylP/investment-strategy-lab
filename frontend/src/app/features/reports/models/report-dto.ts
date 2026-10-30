@@ -27,6 +27,25 @@ export interface ReportSummaryDto {
   supersededBy: string | null;
 }
 
+/** A report asked for: «Готується» while its strategies think (minutes or hours for an AI agent), then made or failed. */
+export interface ReportRequestDto {
+  id: string;
+  accountId: string;
+  code: string;
+  title: string;
+  kind: ReportKind;
+  trigger: 'Scheduled' | 'OnDemand';
+  status: 'Pending' | 'Completed' | 'Failed';
+  requestedAt: string;
+  /** Strategies still silent by then count as not answered. */
+  deadline: string;
+  completedAt: string | null;
+  reportId: string | null;
+  error: string | null;
+  strategies: number;
+  strategiesAnswered: number;
+}
+
 export interface FillDto {
   number: number;
   quantity: number;

@@ -351,3 +351,30 @@ class SymbolLookupResponse(ApiModel):
     """One entry per query, in order; ``null`` when no candidate exists."""
 
     results: list[SymbolInfo | None]
+
+
+class JobStatus(str, Enum):
+    RUNNING = "running"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+
+
+class JobError(ApiModel):
+    """Why a job failed, as the synchronous endpoint would have answered: 422 — the context was refused, 500 — the strategy broke."""
+
+    status_code: int
+    detail: Any
+
+
+class StrategyJob(ApiModel):
+    """A decision or risk assessment that runs in the background (a strategy may think for minutes or hours).
+
+    ``result`` is what ``/decide`` or ``/risk`` returns, once the job has succeeded.
+    """
+
+    job_id: str
+    code: str
+    action: str
+    status: JobStatus
+    result: dict[str, Any] | None = None
+    error: JobError | None = None

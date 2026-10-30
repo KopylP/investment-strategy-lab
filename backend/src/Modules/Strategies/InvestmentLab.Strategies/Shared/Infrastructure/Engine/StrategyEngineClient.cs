@@ -32,6 +32,36 @@ public sealed class StrategyEngineClient(HttpClient http)
         return (answer, (int)response.StatusCode, null);
     }
 
+    /// <summary>Starts <paramref name="action"/> as a background job; returns the job id, or the engine's error text.</summary>
+    public async Task<(string? JobId, int StatusCode, string? Error)> SubmitJobAsync(
+        string typeCode, string action, EngineContext context, CancellationToken cancellationToken)
+    {
+        using var response = await http.PostAsJsonAsync($"/v1/strategies/{Uri.EscapeDataString(typeCode)}/{action}/jobs", context, Json, cancellationToken);
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        return response.IsSuccessStatusCode
+            ? (JsonNode.Parse(body)?["jobId"]?.GetValue<string>(), (int)response.StatusCode, null)
+            : (null, (int)response.StatusCode, body);
+    }
+
+    /// <summary>The job as the engine knows it (its result with keys renamed); null — the engine does not know it.</summary>
+    public async Task<EngineJob?> GetJobAsync(string jobId, CancellationToken cancellationToken)
+    {
+        using var response = await http.GetAsync($"/v1/jobs/{Uri.EscapeDataString(jobId)}", cancellationToken);
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            return null;
+        response.EnsureSuccessStatusCode();
+
+        var job = JsonNode.Parse(await response.Content.ReadAsStringAsync(cancellationToken))!;
+        var result = job["result"];
+        RenameKeys(result);
+        var error = job["error"];
+        return new EngineJob(
+            job["status"]!.GetValue<string>(),
+            result,
+            error?["statusCode"]?.GetValue<int>(),
+            error?["detail"] is { } detail ? detail.GetValueKind() == JsonValueKind.String ? detail.GetValue<string>() : detail.ToJsonString() : null);
+    }
+
     private static void RenameKeys(JsonNode? node)
     {
         switch (node)
@@ -84,3 +114,7 @@ public sealed record EngineSubPortfolio(string Currency, decimal Cash, decimal C
 public sealed record EngineHolding(string Key, IReadOnlyList<EngineLot> Lots);
 
 public sealed record EngineLot(decimal Quantity, decimal Price, DateOnly? AcquiredOn);
+
+/// <param name="Status">running, succeeded or failed.</param>
+/// <param name="ErrorStatusCode">A failed job: 422 — the context was refused, 500 — the strategy broke.</param>
+public sealed record EngineJob(string Status, JsonNode? Result, int? ErrorStatusCode, string? ErrorDetail);

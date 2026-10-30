@@ -1,0 +1,148 @@
+using System.Text.Json;
+using InvestmentLab.Rebalancing.Planning.Application.GenerateMonthlyReport;
+using InvestmentLab.Rebalancing.Planning.Application.GenerateRiskReview;
+using InvestmentLab.Rebalancing.Planning.Domain;
+using InvestmentLab.Rebalancing.Reports.Domain;
+using InvestmentLab.Strategies.Contracts;
+
+namespace InvestmentLab.Rebalancing.Planning.Application.RequestReport;
+
+/// <summary>
+/// Moves one pending <see cref="ReportRequest"/> on: submits its strategies to the engine as background jobs (again,
+/// when the engine lost one), collects their answers and, once every strategy has answered or the deadline passed,
+/// makes and publishes the report — or records why none could be made.
+/// </summary>
+public sealed class ReportRequestProcessor(
+    IReportRequestRepository requests,
+    IStrategyEvaluation strategies,
+    GenerateMonthlyReportHandler rebalance,
+    GenerateRiskReviewHandler riskReview,
+    TimeProvider clock)
+{
+    /// <summary>A job the engine keeps losing (it keeps restarting) is not submitted more often than this.</summary>
+    public const int MaxSubmissions = 5;
+
+    private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
+
+    public async Task AdvanceAsync(ReportRequest request, CancellationToken cancellationToken)
+    {
+        if (!request.IsPending)
+            return;
+
+        if (!request.RunsPlanned || request.Runs.Any(run => run is { IsDone: false, Job: null }))
+        {
+            var asked = await StrategyRequestsAsync(request, cancellationToken);
+            if (asked.IsFailure)
+            {
+                request.Fail(asked.Error.Message, clock.GetUtcNow());
+                await requests.SaveChangesAsync(cancellationToken);
+                return;
+            }
+
+            request.PlanRuns(asked.Value.Keys);
+            await SubmitAsync(request, asked.Value, cancellationToken);
+        }
+
+        await PollAsync(request, cancellationToken);
+        request.TimeOutWhenDue(clock.GetUtcNow());
+
+        if (request.IsReady)
+        {
+            // The report and the completed request are saved together.
+            var made = await GenerateAsync(request, cancellationToken);
+            if (made.IsSuccess)
+                return;
+            request.Fail(made.Error.Message, clock.GetUtcNow());
+        }
+        await requests.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task SubmitAsync(ReportRequest request, IReadOnlyDictionary<Guid, EvaluateStrategyRequest> asked, CancellationToken cancellationToken)
+    {
+        var task = TaskOf(request);
+        foreach (var run in request.Runs.Where(run => run is { IsDone: false, Job: null }).ToList())
+        {
+            if (!asked.TryGetValue(run.SubPortfolioId, out var ask))
+            {
+                request.RunFailed(run.SubPortfolioId, "strategy.not_asked", "під-портфель більше не входить у звіт");
+                continue;
+            }
+            if (run.Submissions >= MaxSubmissions)
+            {
+                request.RunFailed(run.SubPortfolioId, "strategy.job_lost", "рушій стратегій кілька разів втратив її задачу");
+                continue;
+            }
+
+            var submitted = await strategies.SubmitAsync(task, ask, cancellationToken);
+            if (submitted.IsSuccess)
+            {
+                var ticket = submitted.Value!;
+                request.Submitted(run.SubPortfolioId, new StrategyJob(ticket.JobId, ticket.Task.ToString(), ticket.StrategyId, ticket.StrategyVersion, ticket.CashInstrumentId));
+            }
+            else if (submitted.ErrorCode != StrategyErrorCodes.EngineUnavailable)
+                request.RunFailed(run.SubPortfolioId, submitted.ErrorCode!, submitted.ErrorMessage ?? submitted.ErrorCode!);
+            // An unavailable engine is asked again on the next run, until the deadline.
+        }
+    }
+
+    private async Task PollAsync(ReportRequest request, CancellationToken cancellationToken)
+    {
+        foreach (var run in request.Runs.Where(run => run is { IsDone: false, Job: not null }).ToList())
+        {
+            var job = run.Job!;
+            var ticket = new StrategyJobTicket(job.JobId, Enum.Parse<StrategyTask>(job.Task), job.StrategyId, job.StrategyVersion, job.CashInstrumentId);
+            var (state, answer, errorCode, errorMessage) = ticket.Task == StrategyTask.AssessRisk
+                ? Read(await strategies.PollRiskAsync(ticket, cancellationToken))
+                : Read(await strategies.PollDecisionAsync(ticket, cancellationToken));
+
+            switch (state)
+            {
+                case StrategyJobState.Lost:
+                    request.JobLost(run.SubPortfolioId);
+                    break;
+                case StrategyJobState.Finished when answer is not null:
+                    request.Answered(run.SubPortfolioId, answer);
+                    break;
+                case StrategyJobState.Finished:
+                    request.RunFailed(run.SubPortfolioId, errorCode ?? "strategy.failed", errorMessage ?? "стратегія не відповіла");
+                    break;
+            }
+        }
+    }
+
+    private static (StrategyJobState State, string? Answer, string? ErrorCode, string? ErrorMessage) Read<T>(StrategyJobPoll<T> poll) where T : class =>
+        poll.Result switch
+        {
+            { IsSuccess: true, Value: { } value } => (poll.State, JsonSerializer.Serialize(value, Json), null, null),
+            { } failed => (poll.State, null, failed.ErrorCode, failed.ErrorMessage),
+            null => (poll.State, null, null, null),
+        };
+
+    private Task<Result<IReadOnlyDictionary<Guid, EvaluateStrategyRequest>>> StrategyRequestsAsync(ReportRequest request, CancellationToken cancellationToken) =>
+        request.Kind == ReportKind.RiskReview
+            ? riskReview.StrategyRequestsAsync(RiskReviewOf(request), cancellationToken)
+            : rebalance.StrategyRequestsAsync(RebalanceOf(request), cancellationToken);
+
+    private async Task<Result<ReportId>> GenerateAsync(ReportRequest request, CancellationToken cancellationToken)
+    {
+        var made = request.Kind == ReportKind.RiskReview
+            ? await riskReview.Handle(RiskReviewOf(request), AnswersOf<RiskAssessmentDto>(request), request, cancellationToken)
+            : await rebalance.Handle(RebalanceOf(request), AnswersOf<StrategyDecisionDto>(request), request, cancellationToken);
+        return made;
+    }
+
+    private static Dictionary<Guid, StrategyEvaluationResult<T>> AnswersOf<T>(ReportRequest request) where T : class =>
+        request.Runs.ToDictionary(
+            run => run.SubPortfolioId,
+            run => run.Answer is { } answer
+                ? new StrategyEvaluationResult<T>(JsonSerializer.Deserialize<T>(answer, Json))
+                : new StrategyEvaluationResult<T>(null, run.ErrorCode ?? "strategy.no_answer", run.ErrorMessage ?? "стратегія не відповіла"));
+
+    private static StrategyTask TaskOf(ReportRequest request) => request.Kind == ReportKind.RiskReview ? StrategyTask.AssessRisk : StrategyTask.Decide;
+
+    private static ReportScope ScopeOf(ReportRequest request) => new(request.Code, request.Title, request.SubPortfolioIds.ToHashSet());
+
+    private static GenerateMonthlyReportCommand RebalanceOf(ReportRequest request) => new(request.AccountId, request.Contribution, request.AsOf, ScopeOf(request));
+
+    private static GenerateRiskReviewCommand RiskReviewOf(ReportRequest request) => new(request.AccountId, request.AsOf, ScopeOf(request));
+}

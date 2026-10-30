@@ -38,6 +38,36 @@ public sealed class EvaluateStrategyHandler(IStrategyReader strategies, IStrateg
         return assessment.IsSuccess ? assessment.Value with { StrategyId = strategy.Id.Value, StrategyVersion = version.Number } : assessment.Error;
     }
 
+    /// <summary>Starts the decision or risk assessment as a background job of the engine.</summary>
+    public async Task<Result<StrategyJobTicket>> Submit(StrategyTask task, EvaluateStrategyRequest request, CancellationToken cancellationToken)
+    {
+        var prepared = await PrepareAsync(request, cancellationToken);
+        if (prepared.IsFailure)
+            return prepared.Error;
+
+        var (strategy, version, context) = prepared.Value;
+        var jobId = await engine.SubmitAsync(strategy.TypeCode, task, context, cancellationToken);
+        return jobId.IsSuccess
+            ? new StrategyJobTicket(jobId.Value, task, strategy.Id.Value, version.Number, context.CashInstrumentId)
+            : jobId.Error;
+    }
+
+    public async Task<EngineJobPoll<StrategyDecisionDto>> PollDecision(StrategyJobTicket ticket, CancellationToken cancellationToken)
+    {
+        var poll = await engine.PollAsync<StrategyDecisionDto>(ticket.JobId, cancellationToken);
+        return poll.Result is { IsSuccess: true } result
+            ? poll with { Result = result.Value with { StrategyId = ticket.StrategyId, StrategyVersion = ticket.StrategyVersion, CashInstrumentId = ticket.CashInstrumentId } }
+            : poll;
+    }
+
+    public async Task<EngineJobPoll<RiskAssessmentDto>> PollRisk(StrategyJobTicket ticket, CancellationToken cancellationToken)
+    {
+        var poll = await engine.PollAsync<RiskAssessmentDto>(ticket.JobId, cancellationToken);
+        return poll.Result is { IsSuccess: true } result
+            ? poll with { Result = result.Value with { StrategyId = ticket.StrategyId, StrategyVersion = ticket.StrategyVersion } }
+            : poll;
+    }
+
     private async Task<Result<(Strategy Strategy, StrategyVersion Version, StrategyEvaluationContext Context)>> PrepareAsync(
         EvaluateStrategyRequest request, CancellationToken cancellationToken)
     {

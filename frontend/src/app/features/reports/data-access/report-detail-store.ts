@@ -85,17 +85,19 @@ export class ReportDetailStore {
     }
   }
 
-  /** "Generate again": a new plan from what is really held now; this report is superseded. */
+  /**
+   * "Generate again": a new plan from what is really held now; this report is superseded once the new one is made
+   * (the strategies think in the background). Returns the request to follow.
+   */
   async regenerate(): Promise<string | undefined> {
     const report = this.report();
     if (!report) return undefined;
     this.busyReport.set('regenerate');
     try {
       const accountId = report.summary.accountId;
-      const { reportId } = await this.api.generate(accountId, report.summary.code);
-      this.messages.add({ severity: 'success', summary: 'Новий рапорт готовий', detail: 'Попередній замінено' });
-      this.badge.refresh();
-      return reportId;
+      const { requestId } = await this.api.generate(accountId, report.summary.code);
+      this.messages.add({ severity: 'info', summary: 'Новий рапорт готується', detail: 'Коли він буде готовий, цей рапорт буде замінено' });
+      return requestId;
     } catch (error) {
       this.messages.add({ severity: 'error', summary: 'Не вдалося згенерувати', detail: toProblemMessage(error), life: 8000 });
       return undefined;
