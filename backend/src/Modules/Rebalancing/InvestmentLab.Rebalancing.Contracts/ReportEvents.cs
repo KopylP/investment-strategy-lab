@@ -5,6 +5,7 @@ namespace InvestmentLab.Rebalancing.Contracts;
 /// <param name="Trigger">Scheduled or OnDemand; null in events stored before it was added.</param>
 /// <param name="Title">The report's name as its strategy declares it; null in events stored before it was added.</param>
 /// <param name="RequestedAt">When it was asked for (its strategies thought until <paramref name="GeneratedAt"/>); null in events stored before it was added.</param>
+/// <param name="Code">Which of the strategies' reports, e.g. "rebalance"; null in events stored before it was added.</param>
 public sealed record ReportGeneratedV1(
     Guid ReportId,
     Guid AccountId,
@@ -18,7 +19,8 @@ public sealed record ReportGeneratedV1(
     string? AccountName = null,
     string? Trigger = null,
     string? Title = null,
-    DateTimeOffset? RequestedAt = null);
+    DateTimeOffset? RequestedAt = null,
+    string? Code = null);
 
 /// <summary>A report asked for could not be made: no strategy answered, or its deadline passed.</summary>
 /// <param name="Code">Which of the strategies' reports, e.g. "rebalance".</param>
@@ -59,4 +61,14 @@ public sealed record ReportSupersededV1(Guid ReportId, Guid AccountId, Guid Supe
 public interface IReportQueries
 {
     Task<int> GetOpenActionsCount(Guid accountId, CancellationToken cancellationToken);
+}
+
+/// <summary>When an account's reports come next, so whoever tells about one can say when to expect the next.</summary>
+public interface IReportScheduleQueries
+{
+    /// <summary>
+    /// Local date and time (in the service's time zone) the report with this code next comes on schedule; null when it
+    /// does not: off, made only on demand, automatic generation turned off, or no strategy of the account makes it.
+    /// </summary>
+    Task<DateTime?> NextAsync(Guid accountId, string code, CancellationToken cancellationToken);
 }

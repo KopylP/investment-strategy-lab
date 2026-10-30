@@ -30,6 +30,15 @@ export class ReportDetailStore {
 
   readonly report = computed(() => (this.reportResource.hasValue() ? this.reportResource.value() : undefined));
   readonly isLoading = this.reportResource.isLoading;
+
+  /** When the account's reports come next: told on every report, so the user knows when to look again. */
+  private readonly scheduleResource = resource({
+    params: () => this.report()?.summary.accountId,
+    loader: ({ params: accountId }) => this.api.schedule(accountId),
+  });
+
+  readonly schedule = computed(() => (this.scheduleResource.hasValue() ? this.scheduleResource.value() : undefined));
+
   readonly loadError = this.reportResource.error;
   readonly actions = computed(() => this.report()?.actions ?? []);
   readonly progress = computed(() => summarizeProgress(this.actions()));

@@ -238,6 +238,7 @@ internal static class ReportEventMapping
             report.AccountName,
             report.Trigger.ToString(),
             report.Title,
-            requestedAt);
+            requestedAt,
+            report.Code);
     }
 }

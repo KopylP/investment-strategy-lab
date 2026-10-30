@@ -1,13 +1,16 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 using InvestmentLab.IntegrationTests.Strategies;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Portfolio.Contracts.Holdings;
+using InvestmentLab.Rebalancing.Contracts;
 using InvestmentLab.Rebalancing.Planning.Api;
 using InvestmentLab.Rebalancing.Planning.Application;
 using InvestmentLab.Rebalancing.Planning.Application.RequestReport;
 using InvestmentLab.Rebalancing.Reports.Application.GetReport;
 using InvestmentLab.Strategies.Definitions.Application;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace InvestmentLab.IntegrationTests.Rebalancing;
 
@@ -67,6 +70,12 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
         payday.StatusCode.ShouldBe(HttpStatusCode.OK);
         var own = (await payday.Content.ReadFromJsonAsync<ReportScheduleDto>(ct))!.Reports.Single(each => each.Code == "rebalance");
         (own.Own, own.Schedule.Day, own.Schedule.Time, own.StrategySchedule.Day, own.Next![8..]).ShouldBe((true, 10, "09:00", 1, "10T09:00"));
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            // What a notification about a rebalance report says comes next.
+            var next = await scope.ServiceProvider.GetRequiredService<IReportScheduleQueries>().NextAsync(account.Id, "rebalance", ct);
+            (next?.ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture)).ShouldBe(own.Next);
+        }
         (await client.PutAsJsonAsync($"/api/rebalancing/accounts/{account.Id}/report-schedule/rebalance", new { frequency = "monthly", day = 32, time = "09:00" }, ct))
             .StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         (await client.PutAsJsonAsync($"/api/rebalancing/accounts/{account.Id}/report-schedule/weekly-digest", new { frequency = "off" }, ct))
