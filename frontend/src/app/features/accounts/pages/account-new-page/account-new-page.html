@@ -5,8 +5,9 @@
     <p-step [value]="1">Рахунок</p-step>
     <p-step [value]="2">Як розділити гроші</p-step>
     <p-step [value]="3">Внески</p-step>
-    <p-step [value]="4">Перевірка</p-step>
-    <p-step [value]="5">Готово</p-step>
+    <p-step [value]="4">Коли рапорти</p-step>
+    <p-step [value]="5">Перевірка</p-step>
+    <p-step [value]="6">Готово</p-step>
   </p-step-list>
 
   <p-step-panels>
@@ -142,8 +143,50 @@
       </ng-template>
     </p-step-panel>
 
-    <!-- 4. Review -->
+    <!-- 4. When the reports come -->
     <p-step-panel [value]="4">
+      <ng-template #content>
+        <div class="card">
+          <p-message severity="secondary" styleClass="mb-5">
+            <div>
+              <b>Рапорт</b> — список дій для брокера: скільки внести, що купити й продати. Які рапорти бувають, задає стратегія, і в неї є
+              свій час. Але коли рапорт приходить, вирішуєте ви: наприклад, якщо зарплата 10-го, поставте ребаланс на 10-те — гроші
+              вже будуть на рахунку. Змінити можна будь-коли на сторінці рахунку.
+            </div>
+          </p-message>
+          @if (!reports().length) {
+            <div class="text-muted-color">Обрані стратегії не роблять рапортів за розкладом — їх можна згенерувати вручну.</div>
+          }
+          <div class="flex flex-col gap-4">
+            @for (report of reports(); track report.code) {
+              <div class="border border-surface rounded-border p-4">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <div class="font-semibold flex items-center gap-2"><i [class]="reportIcon(report.mode)"></i>{{ report.name }}</div>
+                    <div class="text-sm text-muted-color mt-1">{{ report.description }}</div>
+                    <div class="text-sm mt-1">Стратегія: {{ scheduleLabel(report.strategyTiming) }}</div>
+                  </div>
+                  <p-selectbutton [options]="timingChoices" optionLabel="label" optionValue="value" [allowEmpty]="false" size="small"
+                                  [ngModel]="!!report.own" (ngModelChange)="useOwn(report.code, report.strategyTiming, $event)" />
+                </div>
+                @if (report.own) {
+                  <div class="mt-4">
+                    <app-report-timing-editor [id]="'new-' + report.code" [timing]="report.own" (timingChange)="setOwn(report.code, $event)" />
+                  </div>
+                }
+              </div>
+            }
+          </div>
+          <div class="flex justify-between mt-6">
+            <p-button label="Назад" icon="pi pi-arrow-left" severity="secondary" [text]="true" (onClick)="step.set(3)" />
+            <p-button label="Далі" icon="pi pi-arrow-right" iconPos="right" [disabled]="!scheduleValid()" (onClick)="step.set(5)" />
+          </div>
+        </div>
+      </ng-template>
+    </p-step-panel>
+
+    <!-- 5. Review -->
+    <p-step-panel [value]="5">
       <ng-template #content>
         <div class="card">
           <h2 class="text-lg font-semibold mt-0">{{ name() }} · {{ broker() }} · {{ currency() }}</h2>
@@ -162,19 +205,29 @@
               </div>
             }
           </div>
+          @if (reports().length) {
+            <div class="mt-4 flex flex-col gap-1 text-sm">
+              @for (report of reports(); track report.code) {
+                <div class="flex flex-wrap justify-between gap-x-3">
+                  <span class="text-muted-color"><i [class]="reportIcon(report.mode)" class="mr-1"></i>{{ report.name }}</span>
+                  <span class="font-medium">{{ scheduleLabel(report.timing) }}{{ report.own ? '' : ' (як у стратегії)' }}</span>
+                </div>
+              }
+            </div>
+          }
           <p-message severity="info" styleClass="mt-5">
-            <div>Що буде далі: за розкладом стратегій (зазвичай першої неділі місяця) з’явиться <b>рапорт</b> — список дій для брокера. Виконайте їх у застосунку брокера й натисніть «Виконано» або «Довантажити операції» з виписки.</div>
+            <div>Що буде далі: у цей час з’явиться <b>рапорт</b> — список дій для брокера. Виконайте їх у застосунку брокера й натисніть «Виконано» або «Довантажити операції» з виписки.</div>
           </p-message>
           <div class="flex justify-between mt-6">
-            <p-button label="Назад" icon="pi pi-arrow-left" severity="secondary" [text]="true" (onClick)="step.set(3)" />
+            <p-button label="Назад" icon="pi pi-arrow-left" severity="secondary" [text]="true" (onClick)="step.set(4)" />
             <p-button label="Відкрити рахунок" icon="pi pi-check" [loading]="saving()" (onClick)="save()" />
           </div>
         </div>
       </ng-template>
     </p-step-panel>
 
-    <!-- 5. Next steps -->
-    <p-step-panel [value]="5">
+    <!-- 6. Next steps -->
+    <p-step-panel [value]="6">
       <ng-template #content>
         <div class="card text-center">
           <i class="pi pi-check-circle text-5xl text-primary"></i>

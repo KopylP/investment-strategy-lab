@@ -1,18 +1,15 @@
 import { ChangeDetectionStrategy, Component, inject, input, resource, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { Button } from 'primeng/button';
-import { InputNumber } from 'primeng/inputnumber';
-import { InputText } from 'primeng/inputtext';
 import { Message } from 'primeng/message';
-import { Select } from 'primeng/select';
 import { Tag } from 'primeng/tag';
 import { ApiClient, toProblemMessage } from '../../../../core/api/api-client';
 import { DatePipe } from '../../../../shared/pipes/format-pipes';
 import {
-  frequencyOptions, reportIcon, ReportSchedule, ReportTiming, ScheduledReport, scheduleLabel, weekdayOptions,
+  editableTiming, isTimingComplete, reportIcon, ReportSchedule, ReportTiming, ScheduledReport, scheduleLabel,
 } from '../../../reports/models/report-schedule';
+import { ReportTimingEditor } from '../../../reports/ui/report-timing-editor/report-timing-editor';
 
 /**
  * Which reports the account gets and when. The strategies of its sub-portfolios declare the reports and a default time;
@@ -20,7 +17,7 @@ import {
  */
 @Component({
   selector: 'app-report-schedule',
-  imports: [FormsModule, RouterLink, Button, InputNumber, InputText, Message, Select, Tag, DatePipe],
+  imports: [RouterLink, Button, Message, Tag, DatePipe, ReportTimingEditor],
   template: `
     @if (schedule.value(); as schedule) {
       @if (!schedule.generateOnSchedule) {
@@ -57,53 +54,13 @@ import {
               </div>
               @if (editing() === report.code) {
                 <div class="mt-3 pt-3 border-t border-surface flex flex-col gap-3">
-                  <div class="grid gap-3 sm:grid-cols-3">
-                    <div class="flex flex-col gap-1">
-                      <label class="text-sm font-medium" [attr.for]="report.code + '-frequency'">Як часто</label>
-                      <p-select [inputId]="report.code + '-frequency'" [options]="frequencies" optionLabel="label" optionValue="value"
-                                [ngModel]="draft().frequency" (ngModelChange)="change({ frequency: $event })" fluid />
-                    </div>
-                    @switch (draft().frequency) {
-                      @case ('hourly') {
-                        <div class="flex flex-col gap-1">
-                          <label class="text-sm font-medium" [attr.for]="report.code + '-minute'">Хвилина</label>
-                          <p-inputnumber [inputId]="report.code + '-minute'" [ngModel]="draft().minute" (ngModelChange)="change({ minute: $event })"
-                                         [min]="0" [max]="59" [showButtons]="true" fluid />
-                        </div>
-                      }
-                      @case ('weekly') {
-                        <div class="flex flex-col gap-1">
-                          <label class="text-sm font-medium" [attr.for]="report.code + '-weekday'">День тижня</label>
-                          <p-select [inputId]="report.code + '-weekday'" [options]="weekdays" optionLabel="label" optionValue="value"
-                                    [ngModel]="draft().weekday" (ngModelChange)="change({ weekday: $event })" fluid />
-                        </div>
-                      }
-                    }
-                    @if (draft().frequency === 'monthly' || draft().frequency === 'quarterly') {
-                      <div class="flex flex-col gap-1">
-                        <label class="text-sm font-medium" [attr.for]="report.code + '-day'">
-                          {{ draft().frequency === 'quarterly' ? 'День першого місяця кварталу' : 'День місяця' }}
-                        </label>
-                        <p-inputnumber [inputId]="report.code + '-day'" [ngModel]="draft().day" (ngModelChange)="change({ day: $event })"
-                                       [min]="1" [max]="31" [showButtons]="true" fluid />
-                      </div>
-                    }
-                    @if (draft().frequency !== 'off' && draft().frequency !== 'hourly') {
-                      <div class="flex flex-col gap-1">
-                        <label class="text-sm font-medium" [attr.for]="report.code + '-time'">Час</label>
-                        <input pInputText type="time" [id]="report.code + '-time'" [ngModel]="draft().time" (ngModelChange)="change({ time: $event })" />
-                      </div>
-                    }
-                  </div>
-                  @if (draft().frequency === 'monthly' || draft().frequency === 'quarterly') {
-                    <div class="text-xs text-muted-color">У коротшому місяці — його останній день (31-го → 30 листопада).</div>
-                  }
+                  <app-report-timing-editor [id]="report.code" [(timing)]="draft" />
                   <div class="flex flex-wrap justify-end gap-2">
                     @if (report.own) {
                       <p-button label="Як у стратегії" severity="secondary" [text]="true" [disabled]="saving()" (onClick)="reset(report)" />
                     }
                     <p-button label="Скасувати" severity="secondary" [text]="true" [disabled]="saving()" (onClick)="editing.set(null)" />
-                    <p-button label="Зберегти" icon="pi pi-check" [loading]="saving()" (onClick)="save(report)" />
+                    <p-button label="Зберегти" icon="pi pi-check" [loading]="saving()" [disabled]="!complete(draft())" (onClick)="save(report)" />
                   </div>
                 </div>
               }
@@ -129,8 +86,7 @@ export class ReportScheduleCard {
 
   protected readonly label = scheduleLabel;
   protected readonly icon = reportIcon;
-  protected readonly frequencies = frequencyOptions;
-  protected readonly weekdays = weekdayOptions;
+  protected readonly complete = isTimingComplete;
 
   /** The code of the report whose time is being changed. */
   protected readonly editing = signal<string | null>(null);
@@ -143,13 +99,8 @@ export class ReportScheduleCard {
   });
 
   protected edit(report: ScheduledReport): void {
-    const { frequency, day, weekday, time, minute } = report.schedule;
-    this.draft.set({ frequency: frequency.toLowerCase(), day, weekday: weekday.toLowerCase(), time, minute });
+    this.draft.set(editableTiming(report.schedule));
     this.editing.set(report.code);
-  }
-
-  protected change(part: Partial<ReportTiming>): void {
-    this.draft.update((current) => ({ ...current, ...part }));
   }
 
   protected save(report: ScheduledReport): Promise<void> {
