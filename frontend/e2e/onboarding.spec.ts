@@ -34,6 +34,8 @@ test('a newcomer sets up an account with the guided wizard and looks at an instr
   await page.getByRole('button', { name: 'Далі' }).click();
   await expect(page.getByText('Європа — 70%')).toBeVisible();
   await expect(page.getByText('щомісяця, 10-го о 09:00')).toBeVisible();
+  // The review says where each choice can be changed later.
+  await expect(page.getByText('Якщо захочете щось змінити потім')).toBeVisible();
   await shot('05-review');
   await page.getByRole('button', { name: 'Відкрити рахунок' }).click();
   await expect(page.getByRole('heading', { name: 'Рахунок готовий' })).toBeVisible();
