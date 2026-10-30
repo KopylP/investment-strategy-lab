@@ -28,3 +28,10 @@
         top: 100px;
     }
 }
+
+/* An expanded table row's content: as wide as the row, never wider. Zero width keeps a long line or a chart out of the
+   table's column sizing, so opening a row cannot make a phone's table scroll sideways; the content wraps instead. */
+.app-row-detail {
+    width: 0;
+    min-width: 100%;
+}

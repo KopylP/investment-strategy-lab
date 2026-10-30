@@ -221,6 +221,9 @@
         > .p-datatable-tbody > tr > td,
         > .p-datatable-tfoot > tr > td {
             padding: 0.5rem 0.375rem;
+            /* A long word (a sub-portfolio, a ticker list) breaks rather than push the table a few pixels past the
+               screen; amounts keep whitespace-nowrap. */
+            overflow-wrap: anywhere;
 
             &:first-child {
                 padding-left: 0;

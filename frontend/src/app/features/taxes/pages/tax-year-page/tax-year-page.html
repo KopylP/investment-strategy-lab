@@ -124,6 +124,7 @@
           <tr>
             <td class="hidden sm:table-cell"></td>
             <td [attr.colspan]="store.showAccount() ? 9 : 8">
+              <div class="app-row-detail">
               <!-- Phone: the sale's numbers that have no column there. -->
               <div class="sm:hidden grid grid-cols-2 gap-x-4 gap-y-1 text-sm mb-3">
                 <span class="text-muted-color">Штук</span><span class="text-right">{{ r.quantity | quantity }}</span>
@@ -133,9 +134,9 @@
               </div>
               <div class="font-medium text-sm mb-2">Закриті лоти (FIFO)</div>
               @for (lot of r.lots; track $index) {
-                <div class="flex justify-between gap-4 text-sm py-1 max-w-xl">
+                <div class="flex flex-wrap justify-between gap-x-4 text-sm py-1 max-w-xl">
                   <span>куплено {{ lot.acquiredOn | date }}@if (lot.fromBroker) { <span class="text-muted-color"> · собівартість зі звіту брокера</span> }</span>
-                  <span>{{ lot.quantity | quantity }} шт. · витрати {{ lot.costPln | money: 'PLN' }}</span>
+                  <span class="text-right ml-auto">{{ lot.quantity | quantity }} шт. · витрати {{ lot.costPln | money: 'PLN' }}</span>
                 </div>
               }
               @if (r.brokerGainPln !== null && brokerDifference(r)) {
@@ -147,6 +148,7 @@
               @if (r.unmatchedQuantity > 0) {
                 <p-message severity="warn" size="small" [text]="r.unmatchedQuantity + ' шт. без купівлі в журналі — собівартість нульова'" />
               }
+              </div>
             </td>
           </tr>
         </ng-template>

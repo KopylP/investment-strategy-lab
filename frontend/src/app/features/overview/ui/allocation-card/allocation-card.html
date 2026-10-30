@@ -8,7 +8,7 @@
           <span class="font-medium"><app-money [amount]="sub.value" [currency]="dashboard().currency" [digits]="0" [hideOriginal]="true" /></span>
         </div>
         <div class="relative h-2 rounded-full mt-2" style="background: var(--p-content-border-color)">
-          <div class="h-full rounded-full" [style.width.%]="sub.actualShare * 100" [style.background]="colors()[i % colors().length]"></div>
+          <div class="h-full rounded-full max-w-full" [style.width.%]="sub.actualShare * 100" [style.background]="colors()[i % colors().length]"></div>
           <div class="absolute -top-1 -bottom-1 w-0.5 rounded-full" style="background: var(--p-text-color)" [style.left.%]="sub.targetShare * 100"></div>
         </div>
         <div class="flex justify-between gap-2 text-xs text-muted-color mt-1.5">

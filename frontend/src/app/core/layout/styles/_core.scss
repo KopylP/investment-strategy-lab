@@ -58,6 +58,14 @@ a {
         }
     }
 
+    /* In a table's last column the reach grows leftwards only: centred, it pokes past the table's scroll container
+       and lets the table scroll sideways by a few pixels. */
+    td:last-child .p-button-icon-only::after {
+        left: auto;
+        right: 0;
+        transform: translateY(-50%);
+    }
+
     /* PrimeNG clips a button to its box; an icon has no label to overflow. */
     .p-button-icon-only {
         overflow: visible;

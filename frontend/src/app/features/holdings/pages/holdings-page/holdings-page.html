@@ -103,7 +103,7 @@
       @if (sleeve.positions.length) {
         <p-table [value]="sleeve.positions" dataKey="instrumentId" tableStyleClass="sm:min-w-[52rem]" size="small">
           <ng-template #header>
-            <tr><th class="w-10"></th><th>ETF</th><th class="text-right hidden sm:table-cell">Штук</th><th class="text-right hidden sm:table-cell">Середня ціна</th><th class="text-right hidden sm:table-cell">Ціна</th><th class="text-right">Вартість</th><th class="text-right hidden sm:table-cell">Вага</th><th class="text-right">Результат</th></tr>
+            <tr><th class="w-10"></th><th>ETF</th><th class="text-right hidden sm:table-cell">Штук</th><th class="text-right hidden sm:table-cell">Середня ціна</th><th class="text-right hidden sm:table-cell">Ціна</th><th class="text-right">Вартість</th><th class="text-right hidden sm:table-cell">Вага</th><th class="text-right hidden sm:table-cell">Результат</th></tr>
           </ng-template>
           <ng-template #body let-position let-expanded="expanded">
             <tr>
@@ -111,8 +111,8 @@
               <td>
                 <div class="font-medium">{{ position.symbol }}</div>
                 <div class="hidden sm:block text-xs text-muted-color">{{ position.name }}</div>
-                <!-- Phone: quantity and weight under the ticker instead of their own columns. -->
-                <div class="sm:hidden text-xs text-muted-color whitespace-nowrap">{{ position.quantity | quantity }} шт. · {{ position.weight | percent }}</div>
+                <!-- Phone: quantity and weight under the ticker instead of their own columns; they wrap rather than widen the table. -->
+                <div class="sm:hidden text-xs text-muted-color"><span class="whitespace-nowrap">{{ position.quantity | quantity }} шт.</span> · <span class="whitespace-nowrap">{{ position.weight | percent }}</span></div>
               </td>
               <td class="text-right hidden sm:table-cell">{{ position.quantity | quantity }}</td>
               <td class="text-right hidden sm:table-cell"><app-money [amount]="position.averageCost" [currency]="store.currency()" /></td>
@@ -120,10 +120,17 @@
                 @if (position.quotedPrice === null) { — } @else { <app-money [amount]="position.quotedPrice" [currency]="position.quoteCurrency" /> }
                 @if (position.isStale) { <i class="pi pi-exclamation-triangle text-xs" [pTooltip]="'Котирування на ' + (position.priceDate | date)"></i> }
               </td>
-              <td class="text-right font-medium"><app-money [amount]="position.value" [currency]="store.currency()" [hideOriginal]="viewport.phone()" /></td>
+              <td class="text-right">
+                <div class="font-medium"><app-money [amount]="position.value" [currency]="store.currency()" [hideOriginal]="viewport.phone()" /></div>
+                <!-- Phone: the result under the value; four columns of amounts do not fit. -->
+                <div class="sm:hidden text-sm" [appSignedValue]="position.pnl">
+                  <app-money [amount]="position.pnl" [currency]="store.currency()" [hideOriginal]="true" />
+                  <div class="text-xs">{{ position.pnlPct | signedPercent }}</div>
+                </div>
+              </td>
               <td class="text-right hidden sm:table-cell">{{ position.weight | percent }}</td>
-              <td class="text-right" [appSignedValue]="position.pnl">
-                <app-money [amount]="position.pnl" [currency]="store.currency()" [hideOriginal]="viewport.phone()" />
+              <td class="text-right hidden sm:table-cell" [appSignedValue]="position.pnl">
+                <app-money [amount]="position.pnl" [currency]="store.currency()" />
                 <div class="text-xs">{{ position.pnlPct | signedPercent }}</div>
               </td>
             </tr>
@@ -132,6 +139,7 @@
             <tr>
               <td class="hidden sm:table-cell"></td>
               <td colspan="8">
+                <div class="app-row-detail">
                 <div class="sm:hidden flex flex-wrap gap-x-4 gap-y-1 text-sm mb-3">
                   <span class="inline-flex gap-1"><span class="text-muted-color">Середня ціна</span><app-money [amount]="position.averageCost" [currency]="store.currency()" [inline]="true" /></span>
                   <span class="inline-flex gap-1"><span class="text-muted-color">Ціна</span>@if (position.quotedPrice === null) { — } @else { <app-money [amount]="position.quotedPrice" [currency]="position.quoteCurrency" [inline]="true" /> }</span>
@@ -140,11 +148,12 @@
                 <div class="mb-4 max-w-4xl"><app-position-chart [instrumentId]="position.instrumentId" [currency]="position.quoteCurrency" /></div>
                 <div class="font-medium text-sm mb-2">Лоти (FIFO)</div>
                 @for (lot of position.lots; track $index) {
-                  <div class="flex justify-between gap-4 text-sm py-1 max-w-xl">
+                  <div class="flex flex-wrap justify-between gap-x-4 text-sm py-1 max-w-xl">
                     <span>{{ lot.openedOn | date }}</span>
-                    <span>{{ lot.quantity | quantity }} шт. × <app-money [amount]="lot.unitCost" [currency]="store.currency()" [digits]="4" [inline]="true" /></span>
+                    <span class="text-right ml-auto">{{ lot.quantity | quantity }} шт. × <app-money [amount]="lot.unitCost" [currency]="store.currency()" [digits]="4" [inline]="true" /></span>
                   </div>
                 }
+                </div>
               </td>
             </tr>
           </ng-template>
