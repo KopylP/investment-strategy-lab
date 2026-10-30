@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Rebalancing.Planning.Domain;
@@ -35,16 +36,19 @@ public sealed class RebalancingDbContext(DbContextOptions<RebalancingDbContext> 
 internal static class JsonColumn
 {
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions TextEnumOptions = new(JsonSerializerDefaults.Web) { Converters = { new JsonStringEnumConverter() } };
 
-    public static PropertyBuilder<T> HasJsonConversion<T>(this PropertyBuilder<T> property)
+    /// <param name="enumsAsText">Enums by name ("Monthly"), so a reordered enum keeps what is stored; numbers still read.</param>
+    public static PropertyBuilder<T> HasJsonConversion<T>(this PropertyBuilder<T> property, bool enumsAsText = false)
     {
+        var options = enumsAsText ? TextEnumOptions : Options;
         var converter = new ValueConverter<T, string>(
-            value => JsonSerializer.Serialize(value, Options),
-            json => JsonSerializer.Deserialize<T>(json, Options)!);
+            value => JsonSerializer.Serialize(value, options),
+            json => JsonSerializer.Deserialize<T>(json, options)!);
         var comparer = new ValueComparer<T>(
-            (left, right) => JsonSerializer.Serialize(left, Options) == JsonSerializer.Serialize(right, Options),
-            value => JsonSerializer.Serialize(value, Options).GetHashCode(),
-            value => JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(value, Options), Options)!);
+            (left, right) => JsonSerializer.Serialize(left, options) == JsonSerializer.Serialize(right, options),
+            value => JsonSerializer.Serialize(value, options).GetHashCode(),
+            value => JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(value, options), options)!);
         return property.HasConversion(converter, comparer).HasColumnType("jsonb");
     }
 }

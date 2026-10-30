@@ -21,13 +21,13 @@ public interface IPlanSettingsRepository
 /// <summary>One report an account gets: what the strategies of some of its sub-portfolios declare under one code.</summary>
 /// <param name="Mode">"rebalance" or "riskReview" (<see cref="StrategyReportDto"/>).</param>
 /// <param name="SubPortfolios">Those whose strategy makes it, each with its strategy's default cadence.</param>
-/// <param name="Own">The user's own cadence for the account (<see cref="PlanSettings.ScheduleOf"/>); null — each strategy's default.</param>
-public sealed record AccountReport(string Code, string Name, string Description, string Mode, IReadOnlyList<SubPortfolioReport> SubPortfolios, ReportCadence? Own = null)
+/// <param name="Own">The user's own schedule for the account (<see cref="PlanSettings.ScheduleOf"/>); null — each strategy's default.</param>
+public sealed record AccountReport(string Code, string Name, string Description, string Mode, IReadOnlyList<SubPortfolioReport> SubPortfolios, OwnReportSchedule? Own = null)
 {
     public ReportKind Kind => Mode == StrategyReportDto.RiskReview ? ReportKind.RiskReview : ReportKind.Monthly;
 
     /// <summary>When the report comes for this sub-portfolio: the user's time if set, else its strategy's.</summary>
-    public ReportCadence CadenceOf(SubPortfolioReport sub) => Own ?? sub.Default;
+    public ReportCadence CadenceOf(SubPortfolioReport sub) => Own?.Cadence ?? sub.Default;
 }
 
 /// <param name="Default">When its strategy's type says the report comes.</param>

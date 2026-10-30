@@ -70,9 +70,10 @@ public sealed class ReportCadenceTests
         var settings = PlanSettings.DefaultFor(Guid.NewGuid(), UserId.Of(Guid.NewGuid()));
         var payday = ReportCadence.TryOf("monthly", 10, null, "09:00", null).Value;
 
-        settings.Schedule("rebalance", Cadence("weekly"), DateTimeOffset.UtcNow);
-        settings.Schedule("rebalance", payday, DateTimeOffset.UtcNow);
-        settings.ScheduleOf("rebalance").ShouldBe(payday);
+        var setAt = new DateTimeOffset(2026, 10, 30, 19, 43, 0, TimeSpan.Zero);
+        settings.Schedule("rebalance", Cadence("weekly"), setAt.AddDays(-1));
+        settings.Schedule("rebalance", payday, setAt);
+        settings.ScheduleOf("rebalance").ShouldBe(new OwnReportSchedule("rebalance", payday, setAt));
         settings.ScheduleOf("risk-review").ShouldBeNull();
         settings.ReportSchedules.Count.ShouldBe(1);
 
