@@ -78,6 +78,24 @@ export function scheduleLabel(timing: ReportTiming): string {
   }
 }
 
+/** The timing as the API takes it (lower-case frequency and weekday); the schedule returns them capitalized. */
+export function editableTiming({ frequency, day, weekday, time, minute }: ReportTiming): ReportTiming {
+  return { frequency: frequency.toLowerCase(), day, weekday: weekday.toLowerCase(), time, minute };
+}
+
+/** Whether the fields the frequency reads are filled in (the API refuses the rest). */
+export function isTimingComplete(timing: ReportTiming): boolean {
+  switch (timing.frequency) {
+    case 'hourly':
+      return Number.isInteger(timing.minute) && timing.minute >= 0 && timing.minute <= 59;
+    case 'off':
+      return true;
+    default:
+      return /^([01]\d|2[0-3]):[0-5]\d$/.test(timing.time ?? '')
+        && (!['monthly', 'quarterly'].includes(timing.frequency) || (Number.isInteger(timing.day) && timing.day >= 1 && timing.day <= 31));
+  }
+}
+
 /** One entry per report the account's strategies declare (strategies may declare different times). */
 export function distinctReports(reports: ScheduledReport[]): ScheduledReport[] {
   return reports.filter((report, index) => reports.findIndex((other) => other.code === report.code) === index);

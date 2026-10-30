@@ -25,6 +25,7 @@ test('a new user goes from registration to a partly executed monthly report', as
   await page.getByRole('button', { name: 'Далі' }).click();
   await page.locator('input#contribution').fill('227');
   await page.getByRole('button', { name: 'Далі' }).click();
+  await page.getByRole('button', { name: 'Далі' }).click(); // the reports come at the strategies' time
   await page.getByRole('button', { name: 'Відкрити рахунок' }).click();
   await page.getByRole('button', { name: /Подивитись рахунок/ }).click();
   await page.waitForURL(/\/accounts\/[0-9a-f-]{36}$/);

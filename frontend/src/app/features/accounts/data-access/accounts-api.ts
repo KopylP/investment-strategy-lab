@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { ApiClient } from '../../../core/api/api-client';
 import { AccountSetup } from '../../../shared/models/api';
+import { ReportTiming } from '../../reports/models/report-schedule';
 import { Strategy } from '../../strategies/models/strategy';
 
 export interface SubPortfolioInput {
@@ -68,6 +69,11 @@ export class AccountsApi {
 
   planSettings(id: string): Promise<PlanSettings> {
     return this.api.get<PlanSettings>(`/api/rebalancing/accounts/${id}/settings`);
+  }
+
+  /** The user's own time for one of the strategies' reports on this account. */
+  changeReportSchedule(id: string, code: string, timing: ReportTiming): Promise<unknown> {
+    return this.api.put(`/api/rebalancing/accounts/${id}/report-schedule/${code}`, timing);
   }
 
   changePlanSettings(id: string, settings: PlanSettings): Promise<PlanSettings> {

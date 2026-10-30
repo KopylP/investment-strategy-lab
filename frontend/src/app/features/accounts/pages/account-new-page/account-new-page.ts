@@ -15,7 +15,9 @@ import { InstrumentCatalog } from '../../../../core/context/instrument-catalog';
 import { formatMoney } from '../../../../shared/pipes/format';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { StrategiesApi } from '../../../strategies/data-access/strategies-api';
-import { Strategy } from '../../../strategies/models/strategy';
+import { editableTiming, isTimingComplete, reportIcon, ReportTiming, scheduleLabel } from '../../../reports/models/report-schedule';
+import { ReportTimingEditor } from '../../../reports/ui/report-timing-editor/report-timing-editor';
+import { ReportDefinition, Strategy } from '../../../strategies/models/strategy';
 import { describeStrategy } from '../../../strategies/models/strategy-summary';
 import { StrategyPicker } from '../../../strategies/ui/strategy-picker/strategy-picker';
 import { AccountsApi, SubPortfolioInput } from '../../data-access/accounts-api';
@@ -32,13 +34,14 @@ type Preset = 'simple' | 'balanced' | 'custom';
 
 /**
  * Opening an account as a guided path for a beginner: what the account is, how the money is split and why, which
- * strategy runs each part, how much goes in every month and what happens next. Every step explains its terms.
+ * strategy runs each part, how much goes in every month, when the reports come (the strategy's time or the user's own,
+ * e.g. on payday) and what happens next. Every step explains its terms.
  */
 @Component({
   selector: 'app-account-new-page',
   imports: [
     FormsModule, Button, InputNumber, InputText, Message, SelectButton, Slider, Stepper, StepList, Step, StepPanels, StepPanel,
-    PageHeader, PlanSettingsForm, StrategyPicker,
+    PageHeader, PlanSettingsForm, ReportTimingEditor, StrategyPicker,
   ],
   templateUrl: './account-new-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -64,6 +67,8 @@ export class AccountNewPage {
     },
   });
 
+  private readonly catalogResource = resource({ loader: () => this.strategiesApi.catalog() });
+
   protected readonly step = signal(1);
   protected readonly name = signal('Брокерський рахунок');
   protected readonly broker = signal('Revolut');
@@ -80,6 +85,8 @@ export class AccountNewPage {
     contributionPolicy: 'FillUnderweight',
     driftBandPercent: 5,
   });
+  /** The user's own time per report code; a report not listed comes when its strategy says. */
+  protected readonly ownTimes = signal<Record<string, ReportTiming>>({});
   protected readonly showAdvanced = signal(false);
   protected readonly saving = signal(false);
 
@@ -100,6 +107,31 @@ export class AccountNewPage {
   protected readonly sleevesValid = computed(
     () => this.sleeves().length > 0 && this.total() === 100 && this.sleeves().every((sleeve) => sleeve.name.trim() && sleeve.targetSharePercent > 0 && sleeve.strategyId),
   );
+
+  /** The reports the chosen strategies make, one per code (in the order they declare them), with the strategy's time. */
+  protected readonly reports = computed(() => {
+    const strategies = new Map(this.strategies().map((strategy) => [strategy.id, strategy]));
+    const types = new Map((this.catalogResource.value() ?? []).map((type) => [type.code, type]));
+    const reports = new Map<string, ReportDefinition & { strategyTiming: ReportTiming }>();
+    for (const sleeve of this.sleeves()) {
+      const strategy = sleeve.strategyId ? strategies.get(sleeve.strategyId) : undefined;
+      for (const report of (strategy && types.get(strategy.typeCode)?.reports) || []) {
+        if (!reports.has(report.code))
+          reports.set(report.code, { ...report, strategyTiming: editableTiming(report.schedule ?? { frequency: 'off', day: 1, weekday: 'sunday', time: '20:00', minute: 0 }) });
+      }
+    }
+    return [...reports.values()].map((report) => {
+      const own = this.ownTimes()[report.code] ?? null;
+      return { ...report, own, timing: own ?? report.strategyTiming };
+    });
+  });
+  protected readonly scheduleValid = computed(() => this.reports().every((report) => !report.own || isTimingComplete(report.own)));
+  protected readonly scheduleLabel = scheduleLabel;
+  protected readonly reportIcon = reportIcon;
+  protected readonly timingChoices = [
+    { label: 'Як у стратегії', value: false },
+    { label: 'Свій час', value: true },
+  ];
 
   /** "1 листопада — рапорт: внести 140 € у EU momentum, 60 € у US momentum": the plan in words before anything is created. */
   protected readonly summary = computed(() => {
@@ -155,6 +187,18 @@ export class AccountNewPage {
     this.update(sleeves.at(-1)!.key, { targetSharePercent: Math.max(1, Math.round((100 - others) * 100) / 100) });
   }
 
+  /** Own time starts from the strategy's, so the user changes only what differs (the day of the month for payday). */
+  protected useOwn(code: string, strategyTiming: ReportTiming, own: boolean): void {
+    this.ownTimes.update((times) => {
+      const { [code]: _, ...rest } = times;
+      return own ? { ...rest, [code]: times[code] ?? strategyTiming } : rest;
+    });
+  }
+
+  protected setOwn(code: string, timing: ReportTiming): void {
+    this.ownTimes.update((times) => ({ ...times, [code]: timing }));
+  }
+
   protected blurb(strategy: Strategy) {
     return describeStrategy(strategy, (id) => this.instruments.symbol(id), (id) => this.instruments.byId().get(id)?.tradingCurrency);
   }
@@ -187,10 +231,11 @@ export class AccountNewPage {
         allowFractionalShares: plan.allowFractionalShares,
         generateOnSchedule: plan.generateOnSchedule,
       });
+      await this.saveOwnTimes(account.id);
       this.accounts.reload();
       this.accounts.choose(account.id);
       this.createdId.set(account.id);
-      this.step.set(5);
+      this.step.set(6);
     } catch (error) {
       this.messages.add({ severity: 'error', summary: 'Рахунок не створено', detail: toProblemMessage(error), life: 8000 });
     } finally {
@@ -199,6 +244,21 @@ export class AccountNewPage {
   }
 
   protected readonly createdId = signal<string | null>(null);
+
+  /** The account exists already: a time the API refuses is reported, and can be set again on the account's page. */
+  private async saveOwnTimes(accountId: string): Promise<void> {
+    for (const report of this.reports()) {
+      if (!report.own) continue;
+      try {
+        await this.api.changeReportSchedule(accountId, report.code, report.own);
+      } catch (error) {
+        this.messages.add({
+          severity: 'warn', summary: `Час рапорту «${report.name}» не збережено`, life: 10000,
+          detail: `${toProblemMessage(error)} Рапорт приходитиме за часом стратегії; змінити можна на сторінці рахунку.`,
+        });
+      }
+    }
+  }
 
   protected async go(path: string[]): Promise<void> {
     await this.router.navigate(path);

@@ -1,6 +1,6 @@
 import { expect, Page, test } from '@playwright/test';
 
-/** A newcomer: registration → guided account setup (balanced preset) → instrument chart → overview. */
+/** A newcomer: registration → guided account setup (balanced preset, the rebalance on payday) → instrument chart → overview. */
 test('a newcomer sets up an account with the guided wizard and looks at an instrument', async ({ page }) => {
   const email = `e2e-onboarding-${Date.now()}@example.com`;
   const shot = (name: string) => page.screenshot({ path: `e2e/screenshots/onboarding-${name}.png`, fullPage: true });
@@ -24,7 +24,16 @@ test('a newcomer sets up an account with the guided wizard and looks at an instr
   await page.locator('input#contribution').fill('300');
   await shot('04-contribution');
   await page.getByRole('button', { name: 'Далі' }).click();
+
+  // When the reports come is the user's choice: the rebalance on payday, the 10th at 09:00.
+  await expect(page.getByText('Стратегія: щомісяця, 1-го о 20:00')).toBeVisible();
+  await page.getByRole('button', { name: 'Свій час' }).first().click();
+  await page.locator('input#new-rebalance-day').fill('10');
+  await page.locator('input#new-rebalance-time').fill('09:00');
+  await shot('05-schedule');
+  await page.getByRole('button', { name: 'Далі' }).click();
   await expect(page.getByText('Європа — 70%')).toBeVisible();
+  await expect(page.getByText('щомісяця, 10-го о 09:00')).toBeVisible();
   await shot('05-review');
   await page.getByRole('button', { name: 'Відкрити рахунок' }).click();
   await expect(page.getByRole('heading', { name: 'Рахунок готовий' })).toBeVisible();
@@ -33,6 +42,8 @@ test('a newcomer sets up an account with the guided wizard and looks at an instr
   await page.getByRole('button', { name: /Подивитись рахунок/ }).click();
   await expect(page.getByRole('heading', { name: 'Розклад рапортів' })).toBeVisible();
   await expect(page.getByText('Ребаланс').first()).toBeVisible();
+  await expect(page.getByText('щомісяця, 10-го о 09:00')).toBeVisible();
+  await expect(page.getByText(/Ваш час · стратегія: щомісяця, 1-го о 20:00/)).toBeVisible();
   await shot('07-account');
 
   await page.goto('/instruments');
