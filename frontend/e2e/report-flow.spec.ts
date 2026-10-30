@@ -39,9 +39,10 @@ test('a new user goes from registration to a partly executed monthly report', as
 
   await page.goto('/reports');
   await shot('06-reports-empty');
-  await page.getByRole('button', { name: 'Згенерувати рапорт' }).first().click();
+  // The buttons are the reports the account's strategies declare: etf-momentum's rebalance is "Ребаланс".
+  await page.getByRole('button', { name: 'Ребаланс' }).first().click();
   await page.getByRole('dialog').getByRole('button', { name: 'Згенерувати' }).click();
-  await expect(page.getByRole('heading', { name: /Рапорт за/ })).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByRole('heading', { name: /Ребаланс ·/ })).toBeVisible({ timeout: 60_000 });
   await shot('07-report-new');
 
   const rows = page.locator('p-table tbody tr');

@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { ApiClient } from '../../../core/api/api-client';
 import { FillInput } from '../models/report-vm';
 import { LoadOperationsPreviewDto, PlanSettingsDto, ReportDetailsDto, ReportSummaryDto } from '../models/report-dto';
+import { ReportSchedule } from '../models/report-schedule';
 
 @Injectable({ providedIn: 'root' })
 export class ReportsApi {
@@ -15,12 +16,14 @@ export class ReportsApi {
     return this.api.get<ReportDetailsDto>(`/api/rebalancing/reports/${reportId}`);
   }
 
-  generateMonthly(accountId: string, contribution: number | null): Promise<{ reportId: string }> {
-    return this.api.post(`/api/rebalancing/accounts/${accountId}/reports`, { contribution });
+  /** Which reports the account's strategies declare, and when the next ones come. */
+  schedule(accountId: string): Promise<ReportSchedule> {
+    return this.api.get<ReportSchedule>(`/api/rebalancing/accounts/${accountId}/report-schedule`);
   }
 
-  generateRiskReview(accountId: string): Promise<{ reportId: string }> {
-    return this.api.post(`/api/rebalancing/accounts/${accountId}/risk-reviews`, {});
+  /** One of the declared reports by its code; the contribution counts for rebalance reports only. */
+  generate(accountId: string, code: string, contribution: number | null = null): Promise<{ reportId: string }> {
+    return this.api.post(`/api/rebalancing/accounts/${accountId}/reports`, { code, contribution });
   }
 
   settings(accountId: string): Promise<PlanSettingsDto> {

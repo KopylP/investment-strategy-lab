@@ -147,10 +147,15 @@ public interface IStrategyDirectory
     Task<IReadOnlyList<StrategySummaryDto>> GetStrategies(CancellationToken cancellationToken);
 }
 
-public sealed record StrategySummaryDto(Guid Id, string Name, string TypeCode, int LatestVersion, IReadOnlyList<Guid> Universe, Guid? CashInstrumentId, StrategyReportingDto Reporting);
+public sealed record StrategySummaryDto(Guid Id, string Name, string TypeCode, int LatestVersion, IReadOnlyList<Guid> Universe, Guid? CashInstrumentId, IReadOnlyList<StrategyReportDto> Reports);
 
-/// <summary>Which reports the strategy needs: rebalance Weekly/Monthly/Quarterly (its frequency), risk review Off/Weekly (its "reporting" parameters).</summary>
-public sealed record StrategyReportingDto(string Rebalance, string RiskReview)
+/// <summary>A report the strategy makes: declared by its type, with how often for this strategy (its parameters may change it).</summary>
+/// <param name="Code">The type's code of the report, e.g. "rebalance".</param>
+/// <param name="Mode">"rebalance" (contribution, buys and sells) or "riskReview" (sells only on an exit signal).</param>
+/// <param name="Frequency">"off", "weekly", "monthly" or "quarterly".</param>
+/// <param name="Time">Local time (HH:mm) on the report's Sunday.</param>
+public sealed record StrategyReportDto(string Code, string Name, string Description, string Mode, string Frequency, string Time)
 {
-    public static StrategyReportingDto Default => new("Monthly", "Weekly");
+    public const string Rebalance = "rebalance";
+    public const string RiskReview = "riskReview";
 }

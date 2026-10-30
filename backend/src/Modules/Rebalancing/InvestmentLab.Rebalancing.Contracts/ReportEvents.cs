@@ -3,6 +3,7 @@ namespace InvestmentLab.Rebalancing.Contracts;
 /// <summary>A report was generated; its planned actions feed the "everything as planned" shadow portfolio.</summary>
 /// <param name="Kind">Monthly, Recalculation or RiskReview.</param>
 /// <param name="Trigger">Scheduled or OnDemand; null in events stored before it was added.</param>
+/// <param name="Title">The report's name as its strategy declares it; null in events stored before it was added.</param>
 public sealed record ReportGeneratedV1(
     Guid ReportId,
     Guid AccountId,
@@ -14,7 +15,8 @@ public sealed record ReportGeneratedV1(
     DateTimeOffset GeneratedAt,
     IReadOnlyList<PlannedActionDto> Actions,
     string? AccountName = null,
-    string? Trigger = null);
+    string? Trigger = null,
+    string? Title = null);
 
 /// <param name="Kind">Contribute, Sell, Unpark, Transfer, Buy or Park. For Contribute the quantity is the amount and the price is 1.</param>
 public sealed record PlannedActionDto(

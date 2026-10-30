@@ -40,5 +40,4 @@ public sealed record DefaultStrategy(
     string? CashInstrument,
     string Benchmark,
     string? VolatilityIndex,
-    string RebalanceFrequency,
     JsonElement Parameters);

@@ -16,7 +16,17 @@ public sealed record ReportDraft(
     IReadOnlyList<ReportSection> Sections,
     IReadOnlyList<ActionDraft> Actions,
     IReadOnlyList<string> Warnings,
-    PlanReview? Review);
+    PlanReview? Review,
+    string? Code = null,
+    string? Title = null);
+
+/// <summary>The reports there were before strategies declared their own: what reports made then are called.</summary>
+public static class ReportDefaults
+{
+    public static string CodeOf(ReportKind kind) => kind == ReportKind.RiskReview ? "risk-review" : "rebalance";
+
+    public static string TitleOf(ReportKind kind) => kind == ReportKind.RiskReview ? "Перевірка ризику" : "Ребаланс";
+}
 
 
 /// <summary>A fill that Portfolio has to record, or (when undone) reverse.</summary>
@@ -37,6 +47,13 @@ public sealed class RebalancingReport : AggregateRoot<ReportId>
     public Currency Currency { get; private set; }
     public YearMonth Period { get; private set; }
     public ReportKind Kind { get; private set; }
+
+    /// <summary>Which of the strategies' reports this is (their declaration's code), e.g. "rebalance".</summary>
+    public string Code { get; private set; }
+
+    /// <summary>The report's name as the strategy declared it when it was made.</summary>
+    public string Title { get; private set; }
+
     public ReportTrigger Trigger { get; private set; }
     public ReportStatus Status { get; private set; }
     public DateOnly MarketAsOf { get; private set; }
@@ -58,6 +75,8 @@ public sealed class RebalancingReport : AggregateRoot<ReportId>
         Currency = draft.Currency;
         Period = draft.Period;
         Kind = draft.Kind;
+        Code = draft.Code ?? ReportDefaults.CodeOf(draft.Kind);
+        Title = draft.Title ?? ReportDefaults.TitleOf(draft.Kind);
         Trigger = draft.Trigger;
         Status = ReportStatus.New;
         MarketAsOf = draft.MarketAsOf;
@@ -70,7 +89,8 @@ public sealed class RebalancingReport : AggregateRoot<ReportId>
     }
 
     // EF Core.
-    private RebalancingReport(ReportId id) : base(id) => (AccountName, Currency, Contribution, Sections, Warnings) = (null!, null!, null!, null!, null!);
+    private RebalancingReport(ReportId id) : base(id) =>
+        (AccountName, Code, Title, Currency, Contribution, Sections, Warnings) = (null!, null!, null!, null!, null!, null!, null!);
 
     public static RebalancingReport Generate(ReportDraft draft, DateTimeOffset generatedAt)
     {

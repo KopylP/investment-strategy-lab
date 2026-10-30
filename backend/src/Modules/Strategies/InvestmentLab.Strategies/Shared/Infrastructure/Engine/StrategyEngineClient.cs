@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using InvestmentLab.Strategies.Catalog.Domain;
 
 namespace InvestmentLab.Strategies.Shared.Infrastructure.Engine;
 
@@ -62,7 +63,8 @@ public sealed record EngineStrategyType(
     bool SupportsState,
     IReadOnlyList<string> RequiredSeriesRoles,
     JsonElement ParametersSchema,
-    JsonElement DefaultParameters);
+    JsonElement DefaultParameters,
+    IReadOnlyList<ReportDefinition>? Reports = null);
 
 public sealed record EngineContext(
     DateOnly AsOf,

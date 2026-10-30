@@ -260,11 +260,11 @@ flowchart LR
 
 | Елемент | Вид | Інваріанти / поведінка |
 |---|---|---|
-| `Strategy` | AR | `StrategyId`, `OwnerId`, `Name`, `StrategyTypeCode`, `Universe` (список `InstrumentId`), `RebalanceFrequency`, список `StrategyVersion`. `Reconfigure(parameters, universe)` створює **нову версію**; старі версії незмінні. Параметри валідуються JSON Schema типу. Універсум не може бути порожнім. |
+| `Strategy` | AR | `StrategyId`, `OwnerId`, `Name`, `StrategyTypeCode`, `Universe` (список `InstrumentId`), список `StrategyVersion` (як часто приходять рапорти — теж параметр, розділ `reporting`). `Reconfigure(parameters, universe)` створює **нову версію**; старі версії незмінні. Параметри валідуються JSON Schema типу. Універсум не може бути порожнім. |
 | `StrategyVersion` | E | `VersionNumber`, `Parameters` (VO `StrategyParameters`, JSON), `UniverseSnapshot`, `CreatedAt`. |
 | `StrategyState` | AR | Стан між запусками для стратегій зі станом; ключ `(StrategyId, SubPortfolioId)`. |
 
-**Value objects:** `StrategyTypeCode`, `StrategyParameters`, `RebalanceFrequency` (Monthly, Weekly), `StrategyDecision`, `TargetWeight` (`InstrumentId` + `Percentage`), `InvestFraction`, `RiskSignal` (`InstrumentId`, `RiskSignalKind`: Warn/Exit, `Reason`, `ExitPrice?`), `Rationale` (структуровані метрики + текст), `InstrumentScore` (метрики для таблиці «чому так»).
+**Value objects:** `StrategyTypeCode`, `StrategyParameters`, `StrategyDecision`, `TargetWeight` (`InstrumentId` + `Percentage`), `InvestFraction`, `RiskSignal` (`InstrumentId`, `RiskSignalKind`: Warn/Exit, `Reason`, `ExitPrice?`), `Rationale` (структуровані метрики + текст), `InstrumentScore` (метрики для таблиці «чому так»).
 
 **Каталог типів:** `StrategyTypeDescriptor` (код, назва, опис, JSON Schema параметрів, рушій, підтримка стану). Каталог наповнюється з коду та з `/schema` Python-сайдкара.
 
@@ -907,7 +907,7 @@ InvestmentLab.MarketData/
 
 InvestmentLab.Strategies/
 ├── Definitions/                                    # налаштовані стратегії та їх версії
-│   ├── Domain/         Strategy (AR), StrategyId, StrategyVersion (E), StrategyParameters, StrategyTypeCode, RebalanceFrequency, Universe, Events/, StrategyErrors
+│   ├── Domain/         Strategy (AR), StrategyId, StrategyVersion (E), StrategyParameters, StrategyTypeCode, Universe, Events/, StrategyErrors
 │   ├── Application/    CreateStrategy/, ReconfigureStrategy/, ArchiveStrategy/, GetStrategy/, ListStrategies/
 │   ├── Infrastructure/ StrategyConfiguration, StrategyRepository
 │   └── Api/
@@ -1589,7 +1589,8 @@ strategy-engine/
 
 - **Planning (чистий домен):** `SubPortfolioRebalancer` — порт `plan.py` (вихід, invest fraction, ваги цілей, top-up, trim у плюсі понад `TrimBand`, `MinTrade`, цілі штуки, park/unpark, нотатки й таблиця «до → після»); **усі 29 golden-фікстур збігаються до цента** (суми, кількості, причини, нотатки, алокація). `ContributionAllocator` (`FillUnderweight`/`FixedSplit`, залишок округлення — найбільшій частці, підказка трансферу понад `DriftBand`), `GuardrailEnforcer` (обрізання цілі до `MaxPositionWeight`, без плеча; попередження про оборот понад `MaxMonthlyTurnover`), `OrderNetting` (протилежні ордери одного інструмента → внутрішній переказ + нетто-угода), `ReportComposer`, `RebalancingPolicy`, `PlanSettings` (внесок за замовчуванням, політика, генерація за розкладом).
 - **Reports:** AR `RebalancingReport` + `ReportAction` (`Contribute`, `Sell`, `Unpark`, `Transfer`, `Buy`, `Park`), `Fill` (номер ніколи не повторюється — `rebalancing:{reportId}:{actionId}:{n}` = `SourceReference` у Portfolio), статуси й правила §6.6: часткові виконання, автоматичне закриття, пропуск лише `Pending`, сторно відкриває закритий рапорт, відмова Portfolio відкочує відмітку з причиною, `Close` пропускає невідмічене, `SupersedeBy`. Розділи (рішення стратегії, «чому», ордери до неттінгу, алокація, ризик) — знімок у jsonb.
-- **Генерація:** `POST /api/rebalancing/accounts/{id}/reports` (D14) і задача першої неділі місяця о 20:00 Europe/Warsaw (не чіпає рахунок з відкритим рапортом); `POST …/risk-reviews` і щонеділі о 19:00 — ризик-рев'ю (`exit` → продаж усієї позиції, `warn` → нотатка). Застарілі/відсутні котирування — попередження; внесок, уже відмічений у періоді, не планується вдруге; новий рапорт замінює відкритий. `GET|PUT …/settings`, `GET …/open-actions`.
+- **Які рапорти бувають, задає стратегія:** тип стратегії в каталозі рушія (`GET /v1/strategies` → `reports`) оголошує свої рапорти — код, назву, опис, режим (`rebalance`: внесок, купівлі й продажі; `riskReview`: продаж лише за сигналом виходу, `warn` → нотатка), частоту (`off`/`weekly`/`monthly`/`quarterly`, неділя ввечері; щомісяця — перша неділя) і час; `frequencyParameter` — шлях параметра, яким конкретна стратегія змінює частоту (для etf-momentum `reporting.rebalance`, `reporting.riskReview`). Рапорт охоплює лише під-портфелі, чия стратегія його має; внесок — їхня частка за цільовими частками.
+- **Генерація:** `GET …/report-schedule` перелічує рапорти рахунку (кнопки й розклад), `POST /api/rebalancing/accounts/{id}/reports` з `code` (D14; без коду — перший рапорт ребалансу) і задача, що кожні 15 хвилин робить рапорти, чий день і час настали (раз на день; рапорт ребалансу не чіпає рахунок з відкритим рапортом того ж коду за місяць). Застарілі/відсутні котирування — попередження; внесок, уже відмічений у періоді, не планується вдруге; новий рапорт замінює відкритий. `GET|PUT …/settings`, `GET …/open-actions`.
 - **Відмітки:** `POST /api/rebalancing/reports/{id}/actions/{actionId}/fills | partial-fills | skip | undo`, `POST …/close`; команди Portfolio `RecordTradeV1` / `RecordContributionV1` / нова `RecordInternalTransferV1` / `ReverseTransactionV1` через outbox у тій самій транзакції; `TransactionRecordedV1` прив'язує `TransactionId`, `TransactionRejectedV1` відкочує. Виконання розподіляється між під-портфелями пропорційно плану.
 - **Contracts:** IE `ReportGeneratedV1` (планові дії — для тіньового портфеля), `ReportClosedV1`, `ReportSupersededV1`; `IReportQueries`. `StrategyDecisionDto` отримав `CashInstrumentId`.
 - **Тести:** 30 golden, 12 доменних (розподіл внеску, guardrails, неттінг, правила рапорту), integration-сценарій §7.2 зі справжнім Python-рушієм: рапорт → внесок → часткова купівля → `Holdings` → сторно → повторна генерація замінює рапорт без повторного внеску; ізоляція власника. Усього 235 тестів.

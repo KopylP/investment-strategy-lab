@@ -244,6 +244,38 @@ class RiskAssessment(ApiModel):
     actions: list[str]
 
 
+class ReportMode(str, Enum):
+    """What a report does; the service knows how to make each."""
+
+    # The contribution, buys and sells: what /decide says the sub-portfolio should hold.
+    REBALANCE = "rebalance"
+    # Sells only on an exit signal of /risk; everything else is a warning.
+    RISK_REVIEW = "riskReview"
+
+
+class ReportFrequency(str, Enum):
+    """On Sunday evening, after the markets closed on Friday: every week, the first Sunday of the month or of the quarter."""
+
+    OFF = "off"
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
+    QUARTERLY = "quarterly"
+
+
+class ReportDefinition(ApiModel):
+    """A report a strategy type makes: the service lists, schedules and generates it from this alone."""
+
+    code: str = Field(pattern=r"^[a-z][a-z0-9-]*$")
+    name: str
+    description: str
+    mode: ReportMode
+    frequency: ReportFrequency
+    time: str = Field(pattern=r"^([01][0-9]|2[0-3]):[0-5][0-9]$", description="Local time (the service's time zone) on the report's Sunday.")
+    frequency_parameter: str | None = Field(
+        None, description="Dotted camelCase path of a parameter whose value (a ReportFrequency) overrides the frequency for a strategy."
+    )
+
+
 class StrategyTypeDescriptor(ApiModel):
     code: str
     name: str
@@ -254,6 +286,7 @@ class StrategyTypeDescriptor(ApiModel):
     required_series_roles: list[SeriesRole]
     parameters_schema: dict[str, Any]
     default_parameters: dict[str, Any]
+    reports: list[ReportDefinition]
 
 
 class PricesRequest(ApiModel):

@@ -1,6 +1,5 @@
 using InvestmentLab.BuildingBlocks.Scheduling;
-using InvestmentLab.Rebalancing.Planning.Application.GenerateMonthlyReport;
-using InvestmentLab.Rebalancing.Planning.Application.GenerateRiskReview;
+using InvestmentLab.Rebalancing.Planning.Application.GenerateReport;
 using InvestmentLab.Rebalancing.Reports.Domain;
 using Microsoft.Extensions.Logging;
 
@@ -10,28 +9,28 @@ public static class ReportSchedules
 {
     public const string TimeZone = "Europe/Warsaw";
 
-    /// <summary>Sunday evening, after all markets closed on Friday: the plan is executed on Monday (as the Python flow).</summary>
-    public static readonly DailySchedule Monthly = new(new TimeOnly(20, 0), TimeZoneInfo.FindSystemTimeZoneById(TimeZone), WeekdaysOnly: false);
+    /// <summary>The job looks this often whether a report's time has come: a report declared for 20:00 comes by 20:15.</summary>
+    public static readonly IntervalSchedule Check = new(TimeSpan.FromMinutes(15));
 
-    public static readonly DailySchedule Weekly = new(new TimeOnly(19, 0), TimeZoneInfo.FindSystemTimeZoneById(TimeZone), WeekdaysOnly: false);
+    public static DateTimeOffset Local(DateTimeOffset instant) => TimeZoneInfo.ConvertTime(instant, TimeZoneInfo.FindSystemTimeZoneById(TimeZone));
 
-    public static DateOnly Today(TimeProvider clock) =>
-        DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(clock.GetUtcNow(), TimeZoneInfo.FindSystemTimeZoneById(TimeZone)).DateTime);
-
+    public static DateOnly Today(TimeProvider clock) => DateOnly.FromDateTime(Local(clock.GetUtcNow()).DateTime);
 }
 
 /// <summary>
-/// Runs daily; generates the rebalancing report for every account whose strategies want one today (weekly, the first
-/// Sunday of the month or of the quarter — their "reporting" parameters), except accounts that already have an open
-/// report for the month (D14: a user's report is never overwritten automatically).
+/// Makes every report the accounts' strategies declare once its day and time have come: for the sub-portfolios whose
+/// strategy has it due today, once that day. A rebalance report is not made while one of the same code is still open
+/// for the month (D14: a user's report is never overwritten automatically).
 /// </summary>
-public sealed class MonthlyReportJob(
-    PlanningInputs inputs, IPlanSettingsRepository settings, IReportRepository reports, GenerateMonthlyReportHandler generate,
-    TimeProvider clock, ILogger<MonthlyReportJob> logger) : IScheduledJob
+public sealed class StrategyReportsJob(
+    PlanningInputs inputs, IPlanSettingsRepository settings, IReportRepository reports, GenerateReportHandler generate,
+    TimeProvider clock, ILogger<StrategyReportsJob> logger) : IScheduledJob
 {
     public async Task RunAsync(CancellationToken cancellationToken)
     {
-        var today = ReportSchedules.Today(clock);
+        var now = ReportSchedules.Local(clock.GetUtcNow());
+        var today = DateOnly.FromDateTime(now.DateTime);
+        var time = TimeOnly.FromDateTime(now.DateTime);
         if (today.DayOfWeek != DayOfWeek.Sunday)
             return;
 
@@ -39,40 +38,24 @@ public sealed class MonthlyReportJob(
         {
             if (await settings.FindAsync(account.Id, cancellationToken) is { GenerateOnSchedule: false })
                 continue;
-            if (!(await inputs.CadencesAsync(account, cancellationToken)).Any(each => each.Cadence.IsRebalanceDay(today)))
-                continue;
-            var period = YearMonth.Containing(today);
-            if ((await reports.ForPeriodAsync(account.Id, period, cancellationToken)).Any(report => report.IsOpen && report.Kind != ReportKind.RiskReview))
-                continue;
 
-            var result = await generate.Handle(new GenerateMonthlyReportCommand(account.Id, AsOf: today), ReportTrigger.Scheduled, cancellationToken);
-            if (result.IsFailure)
-                logger.LogWarning("Monthly report for account {AccountId} was not generated: {Error}", account.Id, result.Error.Message);
-        }
-    }
-}
+            var made = await reports.ForPeriodAsync(account.Id, YearMonth.Containing(today), cancellationToken);
+            foreach (var report in await inputs.ReportsAsync(account, cancellationToken))
+            {
+                var due = report.SubPortfolios.Where(sub => sub.Cadence.IsDue(today) && sub.Cadence.Time <= time).Select(sub => sub.SubPortfolioId).ToHashSet();
+                if (due.Count == 0)
+                    continue;
+                var sameCode = made.Where(each => each.Code == report.Code).ToList();
+                if (sameCode.Any(each => each.Trigger == ReportTrigger.Scheduled && DateOnly.FromDateTime(ReportSchedules.Local(each.GeneratedAt).DateTime) == today))
+                    continue;
+                if (report.Kind == ReportKind.Monthly && sameCode.Any(each => each.IsOpen))
+                    continue;
 
-/// <summary>Every Sunday: the risk review of every account with a strategy that asks for it.</summary>
-public sealed class WeeklyRiskReviewJob(
-    PlanningInputs inputs, IPlanSettingsRepository settings, GenerateRiskReviewHandler generate, TimeProvider clock, ILogger<WeeklyRiskReviewJob> logger)
-    : IScheduledJob
-{
-    public async Task RunAsync(CancellationToken cancellationToken)
-    {
-        var today = ReportSchedules.Today(clock);
-        if (today.DayOfWeek != DayOfWeek.Sunday)
-            return;
-
-        foreach (var account in await inputs.AccountsAsync(cancellationToken))
-        {
-            if (await settings.FindAsync(account.Id, cancellationToken) is { GenerateOnSchedule: false })
-                continue;
-            if (!(await inputs.CadencesAsync(account, cancellationToken)).Any(each => each.Cadence.IsRiskReviewDay(today)))
-                continue;
-
-            var result = await generate.Handle(new GenerateRiskReviewCommand(account.Id, today), ReportTrigger.Scheduled, cancellationToken);
-            if (result.IsFailure)
-                logger.LogWarning("Risk review for account {AccountId} was not generated: {Error}", account.Id, result.Error.Message);
+                var result = await generate.Handle(
+                    new GenerateReportCommand(account.Id, report.Code, AsOf: today, SubPortfolioIds: due), ReportTrigger.Scheduled, cancellationToken);
+                if (result.IsFailure)
+                    logger.LogWarning("Report {Code} for account {AccountId} was not generated: {Error}", report.Code, account.Id, result.Error.Message);
+            }
         }
     }
 }

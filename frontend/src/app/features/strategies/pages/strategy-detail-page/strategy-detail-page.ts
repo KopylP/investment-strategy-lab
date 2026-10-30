@@ -11,7 +11,9 @@ import { symbolOf } from '../../../../shared/models/api';
 import { DateTimePipe } from '../../../../shared/pipes/format-pipes';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { JsonObject, SchemaForm } from '../../../../shared/ui/schema-form/schema-form';
+import { frequencyLabel } from '../../../reports/models/report-schedule';
 import { StrategyDetailStore } from '../../data-access/strategies-store';
+import { frequencyOf } from '../../models/strategy';
 
 @Component({
   selector: 'app-strategy-detail-page',
@@ -31,13 +33,12 @@ export class StrategyDetailPage {
   protected readonly universe = signal<string[]>([]);
   protected readonly cashInstrumentId = signal<string | null>(null);
   protected readonly benchmarkInstrumentId = signal<string | null>(null);
-  protected readonly rebalanceFrequency = signal('Monthly');
-
-  protected readonly frequencies = [
-    { label: 'Щотижня (неділя)', value: 'Weekly' },
-    { label: 'Щомісяця (перша неділя)', value: 'Monthly' },
-    { label: 'Щокварталу (перша неділя кварталу)', value: 'Quarterly' },
-  ];
+  /** The reports the strategy's type declares, with how often this version makes them. */
+  protected readonly reports = computed(() => {
+    const parameters = this.store.strategy()?.version.parameters ?? {};
+    return (this.store.type()?.reports ?? []).map((report) => ({ ...report, frequency: frequencyOf(report, parameters) }));
+  });
+  protected readonly frequencyLabel = frequencyLabel;
 
   protected readonly etfOptions = computed(() =>
     this.store.instruments.etfs().map((instrument) => ({ label: `${symbolOf(instrument)} · ${instrument.name}`, value: instrument.id, group: instrument.group ?? '' })),
@@ -55,7 +56,6 @@ export class StrategyDetailPage {
     this.universe.set([...version.universe]);
     this.cashInstrumentId.set(version.cashInstrumentId);
     this.benchmarkInstrumentId.set(version.benchmarkInstrumentId);
-    this.rebalanceFrequency.set(version.rebalanceFrequency);
     this.editing.set(true);
   }
 
@@ -67,14 +67,9 @@ export class StrategyDetailPage {
       benchmarkInstrumentId: this.benchmarkInstrumentId() ?? version.benchmarkInstrumentId,
       volatilityIndexInstrumentId: version.volatilityIndexInstrumentId,
       cashInstrumentId: this.cashInstrumentId(),
-      rebalanceFrequency: this.rebalanceFrequency(),
       parameters: this.parameters(),
     });
     if (saved) this.editing.set(false);
-  }
-
-  protected frequencyLabel(frequency: string): string {
-    return this.frequencies.find((option) => option.value === frequency)?.label.toLowerCase() ?? frequency;
   }
 
   protected confirmArchive(): void {

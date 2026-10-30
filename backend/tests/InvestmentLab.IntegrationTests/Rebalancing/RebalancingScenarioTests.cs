@@ -4,6 +4,7 @@ using InvestmentLab.IntegrationTests.Strategies;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Portfolio.Contracts.Holdings;
 using InvestmentLab.Rebalancing.Planning.Api;
+using InvestmentLab.Rebalancing.Planning.Application;
 using InvestmentLab.Rebalancing.Reports.Application.GetReport;
 using InvestmentLab.Strategies.Definitions.Application;
 
@@ -53,6 +54,16 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
         var report = await ReportAsync(client, generated.ReportId, ct);
         report.Summary.Status.ShouldBe("New");
         report.Summary.Trigger.ShouldBe("OnDemand");
+        (report.Summary.Code, report.Summary.Title).ShouldBe(("rebalance", "Ребаланс"));
+
+        // The reports the strategies declare: the schedule lists them, and each one is made by its code.
+        var schedule = (await client.GetFromJsonAsync<ReportScheduleDto>($"/api/rebalancing/accounts/{account.Id}/report-schedule", ct))!;
+        schedule.Reports.Select(each => (each.Code, each.Mode, each.Frequency)).Distinct()
+            .ShouldBe([("rebalance", "rebalance", "Monthly"), ("risk-review", "riskReview", "Weekly")]);
+        var review = await PostAsync<GeneratedReportResponse>(client, $"/api/rebalancing/accounts/{account.Id}/reports", new { code = "risk-review", asOf }, ct);
+        (await ReportAsync(client, review.ReportId, ct)).Summary.ShouldSatisfyAllConditions(
+            summary => summary.Kind.ShouldBe("RiskReview"), summary => summary.Title.ShouldBe("Перевірка ризику"));
+        (await client.PostAsJsonAsync($"/api/rebalancing/accounts/{account.Id}/reports", new { code = "weekly-digest" }, ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         report.Sections.Count.ShouldBe(2);
         report.Sections.ShouldAllBe(section => section.Error == null);
         report.Warnings.ShouldContain(warning => warning.Contains("перераховано в EUR"));

@@ -32,7 +32,7 @@ public sealed class CatalogSynchronizer(StrategiesDbContext db, StrategyEngineCl
         var now = clock.GetUtcNow();
         var published = (await engine.GetStrategyTypesAsync(cancellationToken))
             .Select(type => StrategyTypeDescriptor.Of(type.Code, type.Name, type.Description, type.Engine, type.Version, type.SupportsState,
-                type.RequiredSeriesRoles, type.ParametersSchema.GetRawText(), type.DefaultParameters.GetRawText(), now))
+                type.RequiredSeriesRoles, type.ParametersSchema.GetRawText(), type.DefaultParameters.GetRawText(), type.Reports ?? [], now))
             .ToList();
 
         var stored = await db.StrategyTypes.ToDictionaryAsync(type => type.Code, cancellationToken);

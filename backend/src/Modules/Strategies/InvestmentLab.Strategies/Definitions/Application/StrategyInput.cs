@@ -7,14 +7,12 @@ using InvestmentLab.Strategies.Definitions.Domain;
 
 namespace InvestmentLab.Strategies.Definitions.Application;
 
-/// <param name="Parameters">Only what differs from the type's defaults; null keeps all defaults.</param>
-/// <param name="RebalanceFrequency">Monthly (default), Weekly or Quarterly.</param>
+/// <param name="Parameters">Only what differs from the type's defaults; null keeps all defaults (how often reports come is a parameter too).</param>
 public sealed record StrategySetupInput(
     IReadOnlyList<Guid> Universe,
     Guid BenchmarkInstrumentId,
     Guid? VolatilityIndexInstrumentId = null,
     Guid? CashInstrumentId = null,
-    string? RebalanceFrequency = null,
     JsonElement? Parameters = null);
 
 /// <summary>Turns user input into a valid <see cref="StrategySetup"/>: known instruments, parameters merged over defaults and checked against the type's JSON Schema.</summary>
@@ -24,10 +22,6 @@ public sealed class StrategySetupFactory(IStrategyTypes types, IInstrumentCatalo
     {
         if (await types.FindAsync(typeCode, cancellationToken) is not { } type)
             return StrategyErrors.UnknownType(typeCode);
-
-        var frequency = RebalanceFrequency.Monthly;
-        if (input.RebalanceFrequency is { } text && (!Enum.TryParse(text, ignoreCase: true, out frequency) || !Enum.IsDefined(frequency)))
-            return Error.Validation("strategy.frequency_unknown", $"'{text}' is not Monthly or Weekly.");
 
         var known = (await instruments.GetInstruments(cancellationToken)).Select(instrument => instrument.Id).ToHashSet();
         Guid?[] referenced = [.. (input.Universe ?? []).Select(id => (Guid?)id), input.BenchmarkInstrumentId, input.VolatilityIndexInstrumentId, input.CashInstrumentId];
@@ -39,7 +33,7 @@ public sealed class StrategySetupFactory(IStrategyTypes types, IInstrumentCatalo
         return parameters.IsFailure
             ? parameters.Error
             : new StrategySetup(parameters.Value, input.Universe ?? [], input.CashInstrumentId,
-                new MarketSeriesRefs(input.BenchmarkInstrumentId, input.VolatilityIndexInstrumentId), frequency);
+                new MarketSeriesRefs(input.BenchmarkInstrumentId, input.VolatilityIndexInstrumentId));
     }
 
     /// <summary>Defaults of the type with the given values laid over them, valid against the type's schema.</summary>
@@ -84,7 +78,6 @@ public sealed record StrategyVersionDto(
     Guid? CashInstrumentId,
     Guid BenchmarkInstrumentId,
     Guid? VolatilityIndexInstrumentId,
-    string RebalanceFrequency,
     DateTimeOffset CreatedAt);
 
 /// <param name="Version">The requested version (the latest by default).</param>
@@ -118,7 +111,6 @@ internal static class StrategyMapping
                     shown.CashInstrumentId,
                     shown.BenchmarkInstrumentId,
                     shown.VolatilityIndexInstrumentId,
-                    shown.Frequency.ToString(),
                     shown.CreatedAt));
         }
     }

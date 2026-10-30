@@ -18,7 +18,15 @@ public interface IPlanSettingsRepository
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }
 
-public sealed record SubPortfolioCadence(Guid SubPortfolioId, string SubPortfolioName, string StrategyName, ReportCadence Cadence);
+/// <summary>One report an account gets: what the strategies of some of its sub-portfolios declare under one code.</summary>
+/// <param name="Mode">"rebalance" or "riskReview" (<see cref="StrategyReportDto"/>).</param>
+/// <param name="SubPortfolios">Those whose strategy makes it, each on its own strategy's cadence.</param>
+public sealed record AccountReport(string Code, string Name, string Description, string Mode, IReadOnlyList<SubPortfolioReport> SubPortfolios)
+{
+    public ReportKind Kind => Mode == StrategyReportDto.RiskReview ? ReportKind.RiskReview : ReportKind.Monthly;
+}
+
+public sealed record SubPortfolioReport(Guid SubPortfolioId, string SubPortfolioName, string StrategyName, ReportCadence Cadence);
 
 /// <summary>What planning reads from other modules for one account: setup, holdings, instrument labels and prices.</summary>
 public sealed class PlanningInputs(
@@ -107,13 +115,24 @@ public sealed class PlanningInputs(
         return await InPln(from) is { } fromPln && await InPln(to) is { } toPln && toPln > 0m ? fromPln / toPln : null;
     }
 
-    /// <summary>The reports each planned sub-portfolio's strategy asks for (its "reporting" parameters).</summary>
-    public async Task<IReadOnlyList<SubPortfolioCadence>> CadencesAsync(AccountSetupDto account, CancellationToken cancellationToken)
+    /// <summary>
+    /// The reports the account gets: whatever the strategies of its planned sub-portfolios declare, one per code (in the
+    /// order the strategies declare them), with every sub-portfolio whose strategy makes it.
+    /// </summary>
+    public async Task<IReadOnlyList<AccountReport>> ReportsAsync(AccountSetupDto account, CancellationToken cancellationToken)
     {
         var directory = (await strategies.GetStrategies(cancellationToken)).ToDictionary(strategy => strategy.Id);
-        return [.. Planned(account).Select(sub => directory.TryGetValue(sub.StrategyId!.Value, out var strategy)
-            ? new SubPortfolioCadence(sub.Id, sub.Name, strategy.Name, ReportCadence.Of(strategy.Reporting.Rebalance, strategy.Reporting.RiskReview))
-            : new SubPortfolioCadence(sub.Id, sub.Name, "", ReportCadence.Classic))];
+        var declared = Planned(account)
+            .SelectMany(sub => directory.TryGetValue(sub.StrategyId!.Value, out var strategy)
+                ? strategy.Reports.Select(report => (Sub: sub, Strategy: strategy, Report: report))
+                : [])
+            .ToList();
+        return [.. declared.GroupBy(each => each.Report.Code).Select(group =>
+        {
+            var first = group.First().Report;
+            return new AccountReport(first.Code, first.Name, first.Description, first.Mode, [.. group.Select(each => new SubPortfolioReport(
+                each.Sub.Id, each.Sub.Name, each.Strategy.Name, ReportCadence.Of(each.Report.Frequency, each.Report.Time)))]);
+        })];
     }
 
     public static IEnumerable<SubPortfolioSetupDto> Planned(AccountSetupDto account) =>

@@ -11,6 +11,10 @@ export interface ReportSummaryDto {
   accountName: string;
   period: string;
   kind: ReportKind;
+  /** Which of the strategies' reports this is, e.g. "rebalance". */
+  code: string;
+  /** Its name as the strategy declared it. */
+  title: string;
   trigger: 'Scheduled' | 'OnDemand';
   status: ReportStatus;
   marketAsOf: string;

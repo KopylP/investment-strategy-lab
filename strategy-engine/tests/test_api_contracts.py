@@ -118,6 +118,19 @@ def test_catalog_lists_etf_momentum_with_parameter_schema(client: TestClient) ->
     assert descriptor["defaultParameters"]["weakMarketInvestPct"] == 0.5
 
 
+def test_catalog_declares_the_reports_and_the_parameters_that_set_how_often(client: TestClient) -> None:
+    [descriptor] = [item for item in client.get("/v1/strategies").json() if item["code"] == "etf-momentum"]
+
+    reports = {report["code"]: report for report in descriptor["reports"]}
+    assert set(reports) == {"rebalance", "risk-review"}
+    assert reports["rebalance"]["mode"] == "rebalance"
+    assert reports["risk-review"]["mode"] == "riskReview"
+    # Every frequency parameter exists among the defaults, so a strategy's own value can override the declared one.
+    for report in reports.values():
+        section, name = report["frequencyParameter"].split(".")
+        assert descriptor["defaultParameters"][section][name] == report["frequency"]
+
+
 def test_decide_matches_scanner_on_same_data(client: TestClient) -> None:
     frame = _frame()
 

@@ -14,14 +14,6 @@ public readonly record struct StrategyId
     public override string ToString() => Value.ToString();
 }
 
-/// <summary>How often the strategy rebalances: the scheduler makes a report on that Sunday (first of the month / quarter).</summary>
-public enum RebalanceFrequency
-{
-    Monthly,
-    Weekly,
-    Quarterly,
-}
-
 public enum StrategyStatus
 {
     Active,
@@ -38,8 +30,7 @@ public sealed record StrategySetup(
     string Parameters,
     IReadOnlyList<Guid> Universe,
     Guid? CashInstrumentId,
-    MarketSeriesRefs Market,
-    RebalanceFrequency Frequency);
+    MarketSeriesRefs Market);
 
 /// <summary>An immutable snapshot of how the strategy was configured; reports point to one.</summary>
 public sealed class StrategyVersion
@@ -51,7 +42,6 @@ public sealed class StrategyVersion
     public Guid? CashInstrumentId { get; private set; }
     public Guid BenchmarkInstrumentId { get; private set; }
     public Guid? VolatilityIndexInstrumentId { get; private set; }
-    public RebalanceFrequency Frequency { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
 
     private StrategyVersion(int number, StrategySetup setup, DateTimeOffset createdAt)
@@ -63,7 +53,6 @@ public sealed class StrategyVersion
         CashInstrumentId = setup.CashInstrumentId;
         BenchmarkInstrumentId = setup.Market.BenchmarkInstrumentId;
         VolatilityIndexInstrumentId = setup.Market.VolatilityIndexInstrumentId;
-        Frequency = setup.Frequency;
         CreatedAt = createdAt;
     }
 

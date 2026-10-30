@@ -7,13 +7,13 @@ using Microsoft.Extensions.Logging;
 namespace InvestmentLab.BuildingBlocks.Scheduling;
 
 /// <param name="RunAtStartup">Also run once when the host starts, so a fresh install does not wait for the first occurrence.</param>
-public sealed record ScheduledJobRegistration(Type JobType, DailySchedule Schedule, bool RunAtStartup = false);
+public sealed record ScheduledJobRegistration(Type JobType, IJobSchedule Schedule, bool RunAtStartup = false);
 
 public static class SchedulingRegistration
 {
     extension(IServiceCollection services)
     {
-        public IServiceCollection AddScheduledJob<TJob>(DailySchedule schedule, bool runAtStartup = false)
+        public IServiceCollection AddScheduledJob<TJob>(IJobSchedule schedule, bool runAtStartup = false)
             where TJob : class, IScheduledJob
         {
             services.TryAddScoped<TJob>();

@@ -1143,6 +1143,79 @@
         "title": "RationaleColumn",
         "description": "One column of the \"why\" table; the report draws whatever columns the strategy lists, in this order.\n\nThe id names the value in ``InstrumentScore.values``; it must not be ``key`` (the backend renames that one)."
       },
+      "ReportDefinition": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/ReportMode"
+          },
+          "frequency": {
+            "$ref": "#/components/schemas/ReportFrequency"
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+            "title": "Time",
+            "description": "Local time (the service's time zone) on the report's Sunday."
+          },
+          "frequencyParameter": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Frequencyparameter",
+            "description": "Dotted camelCase path of a parameter whose value (a ReportFrequency) overrides the frequency for a strategy."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "description",
+          "mode",
+          "frequency",
+          "time"
+        ],
+        "title": "ReportDefinition",
+        "description": "A report a strategy type makes: the service lists, schedules and generates it from this alone."
+      },
+      "ReportFrequency": {
+        "type": "string",
+        "enum": [
+          "off",
+          "weekly",
+          "monthly",
+          "quarterly"
+        ],
+        "title": "ReportFrequency",
+        "description": "On Sunday evening, after the markets closed on Friday: every week, the first Sunday of the month or of the quarter."
+      },
+      "ReportMode": {
+        "type": "string",
+        "enum": [
+          "rebalance",
+          "riskReview"
+        ],
+        "title": "ReportMode",
+        "description": "What a report does; the service knows how to make each."
+      },
       "RiskAssessment": {
         "properties": {
           "strategyCode": {
@@ -1369,6 +1442,13 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Defaultparameters"
+          },
+          "reports": {
+            "items": {
+              "$ref": "#/components/schemas/ReportDefinition"
+            },
+            "type": "array",
+            "title": "Reports"
           }
         },
         "additionalProperties": false,
@@ -1382,7 +1462,8 @@
           "supportsState",
           "requiredSeriesRoles",
           "parametersSchema",
-          "defaultParameters"
+          "defaultParameters",
+          "reports"
         ],
         "title": "StrategyTypeDescriptor"
       },
