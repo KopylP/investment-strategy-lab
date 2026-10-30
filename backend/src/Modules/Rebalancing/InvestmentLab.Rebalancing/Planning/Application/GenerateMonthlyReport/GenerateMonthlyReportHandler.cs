@@ -126,7 +126,7 @@ public sealed class GenerateMonthlyReportHandler(
             open.SupersedeBy(report.Id, now);
             reports.Publish(new ReportSupersededV1(open.Id.Value, open.AccountId, report.Id.Value, now), now);
         }
-        reports.Publish(report.ToGeneratedEvent(), now);
+        reports.Publish(report.ToGeneratedEvent(request.RequestedAt), now);
         request.Complete(report.Id, now);
         await reports.SaveChangesAsync(cancellationToken);
         return report.Id;
@@ -216,7 +216,8 @@ internal static class ReportEventMapping
 {
     extension(RebalancingReport report)
     {
-        public ReportGeneratedV1 ToGeneratedEvent() => new(
+        /// <param name="requestedAt">When the report was asked for: its strategies thought until it was generated.</param>
+        public ReportGeneratedV1 ToGeneratedEvent(DateTimeOffset requestedAt) => new(
             report.Id.Value,
             report.AccountId,
             report.OwnerId.Value,
@@ -236,6 +237,7 @@ internal static class ReportEventMapping
                 action.FromSubPortfolioId))],
             report.AccountName,
             report.Trigger.ToString(),
-            report.Title);
+            report.Title,
+            requestedAt);
     }
 }

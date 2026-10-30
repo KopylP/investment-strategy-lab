@@ -40,6 +40,7 @@ public sealed class NotificationsModule : IModule
         services.AddIntegrationEventHandler<ReportGeneratedV1, ReportNotifications>();
         services.AddIntegrationEventHandler<ReportClosedV1, ReportNotifications>();
         services.AddIntegrationEventHandler<ReportSupersededV1, ReportNotifications>();
+        services.AddIntegrationEventHandler<ReportRequestFailedV1, ReportNotifications>();
 
         AddHomeAssistant(builder);
     }

@@ -119,7 +119,7 @@ public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepo
             open.SupersedeBy(report.Id, now);
             reports.Publish(new ReportSupersededV1(open.Id.Value, open.AccountId, report.Id.Value, now), now);
         }
-        reports.Publish(report.ToGeneratedEvent(), now);
+        reports.Publish(report.ToGeneratedEvent(request.RequestedAt), now);
         request.Complete(report.Id, now);
         await reports.SaveChangesAsync(cancellationToken);
         return report.Id;
