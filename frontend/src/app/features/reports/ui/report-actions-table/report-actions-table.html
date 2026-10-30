@@ -142,7 +142,7 @@
       <div>
         <div class="font-medium mb-2">Розподіл по під-портфелях</div>
         @for (part of action.allocations; track $index) {
-          <div class="flex justify-between gap-4 text-sm py-1">
+          <div class="flex flex-wrap justify-between gap-x-4 text-sm py-1">
             <span>{{ part.subPortfolio }}</span>
             <span>{{ part.quantity | quantity }}{{ action.isMoney ? '' : ' шт.' }}</span>
           </div>
@@ -153,7 +153,7 @@
       <div>
         <div class="font-medium mb-2">Виконання</div>
         @for (fill of action.fills; track fill.number) {
-          <div class="flex justify-between gap-4 text-sm py-1">
+          <div class="flex flex-wrap justify-between gap-x-4 text-sm py-1">
             <span>{{ fill.executedOn | date }}{{ fill.note ? ' · ' + fill.note : '' }}</span>
             <span>
               @if (action.isMoney) {
