@@ -5,7 +5,6 @@
         <!-- Phone, read only: label and value in a row instead of a column of disabled fields. -->
         <dl class="m-0 flex flex-col">
           @for (field of group.fields; track field.path.join('.')) {
-            @if (visible(field)) {
             <div class="flex items-baseline justify-between gap-3 py-1.5 border-b border-surface last:border-b-0 text-sm">
               <dt class="text-muted-color flex items-center gap-1 min-w-0">
                 {{ field.label }}
@@ -15,13 +14,11 @@
               </dt>
               <dd class="m-0 font-medium text-right">{{ shown(field) }}</dd>
             </div>
-            }
           }
         </dl>
       } @else {
       <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         @for (field of group.fields; track field.path.join('.')) {
-          @if (visible(field)) {
           <div class="flex flex-col gap-2">
             <label class="font-medium text-sm flex items-center gap-1" [attr.for]="field.path.join('-')">
               {{ field.label }}
@@ -48,7 +45,6 @@
               }
             }
           </div>
-          }
         }
       </div>
       }

@@ -19,9 +19,9 @@ public static class ReportSchedules
 }
 
 /// <summary>
-/// Makes every report the accounts' strategies declare once its time has come: for the sub-portfolios whose strategy's
-/// latest report time (within <see cref="ReportSchedules.CatchUp"/>) is later than the last report of that code made on
-/// schedule. A rebalance report is not made while one of the same code is still open for the month (D14: a user's
+/// Makes every report the accounts' strategies declare once its time has come (the user's own for the account, else
+/// the strategy's): for the sub-portfolios whose latest report time (within <see cref="ReportSchedules.CatchUp"/>) is
+/// later than the last report of that code made on schedule. A rebalance report is not made while one of the same code is still open for the month (D14: a user's
 /// report is never overwritten automatically).
 /// </summary>
 public sealed class StrategyReportsJob(
@@ -35,14 +35,15 @@ public sealed class StrategyReportsJob(
 
         foreach (var account in await inputs.AccountsAsync(cancellationToken))
         {
-            if (await settings.FindAsync(account.Id, cancellationToken) is { GenerateOnSchedule: false })
+            var plan = await settings.FindAsync(account.Id, cancellationToken);
+            if (plan is { GenerateOnSchedule: false })
                 continue;
 
             IReadOnlyList<RebalancingReport>? made = null;
-            foreach (var report in await inputs.ReportsAsync(account, cancellationToken))
+            foreach (var report in await inputs.ReportsAsync(account, plan, cancellationToken))
             {
                 var times = report.SubPortfolios
-                    .Select(sub => (sub.SubPortfolioId, Time: sub.Cadence.Last(now)))
+                    .Select(sub => (sub.SubPortfolioId, Time: report.CadenceOf(sub).Last(now)))
                     .Where(each => each.Time is { } time && now - time < ReportSchedules.CatchUp)
                     .ToList();
                 if (times.Count == 0)

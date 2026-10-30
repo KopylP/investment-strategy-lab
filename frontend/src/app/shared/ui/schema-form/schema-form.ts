@@ -25,8 +25,6 @@ interface SchemaNode {
   enum?: (string | number)[];
   /** Human labels of enum values, published by the engine next to the enum. */
   'x-enumLabels'?: Record<string, string>;
-  /** Show the field only while each named sibling field holds one of the values (a schedule's day only when monthly). */
-  'x-showWhen'?: Record<string, (string | number)[]>;
   minimum?: number;
   maximum?: number;
   exclusiveMinimum?: number;
@@ -43,7 +41,6 @@ interface FieldVm {
   min?: number;
   max?: number;
   options?: { label: string; value: string | number }[];
-  showWhen?: Record<string, (string | number)[]>;
 }
 
 interface GroupVm {
@@ -73,12 +70,6 @@ export class SchemaForm {
     return node;
   }
 
-  /** False while a sibling the field depends on (x-showWhen) holds another value. */
-  protected visible(field: FieldVm): boolean {
-    const parent = field.path.slice(0, -1);
-    return Object.entries(field.showWhen ?? {}).every(([sibling, values]) => values.includes(this.read([...parent, sibling]) as string | number));
-  }
-
   /** A read-only value as text: "так" / "ні", an enum's label, a number in the user's locale. */
   protected shown(field: FieldVm): string {
     const value = this.read(field.path);
@@ -95,12 +86,9 @@ export class SchemaForm {
 
 function toGroups(root: SchemaNode): GroupVm[] {
   const defs = (root as { $defs?: Record<string, SchemaNode> }).$defs ?? {};
-  // A $ref's siblings (title, labels, x-showWhen) win over the referenced definition.
   const resolve = (node: SchemaNode): SchemaNode => {
     const ref = node.$ref ?? node.allOf?.find((part) => part.$ref)?.$ref;
-    if (!ref) return node;
-    const { $ref: _, allOf: __, ...own } = node;
-    return { ...defs[ref.split('/').pop()!], ...own };
+    return ref ? { ...defs[ref.split('/').pop()!], title: node.title ?? defs[ref.split('/').pop()!]?.title } : node;
   };
 
   const general: GroupVm = { title: 'Загальні', fields: [] };
@@ -109,8 +97,7 @@ function toGroups(root: SchemaNode): GroupVm[] {
     for (const [key, raw] of Object.entries(resolve(node).properties ?? {})) {
       const property = resolve(raw);
       if (property.type === 'object' || property.properties) {
-        // A title the engine gives is shown as written; a bare key is humanized.
-        const nested: GroupVm = { title: raw.title ?? humanize(key), fields: [] };
+        const nested: GroupVm = { title: humanize(raw.title ?? key), fields: [] };
         groups.push(nested);
         walk(property, [...path, key], nested);
       } else {
@@ -133,7 +120,6 @@ function toField(property: SchemaNode, path: string[], key: string): FieldVm {
     min: property.minimum ?? property.exclusiveMinimum,
     max: property.maximum ?? property.exclusiveMaximum,
     options: property.enum?.map((value) => ({ label: property['x-enumLabels']?.[String(value)] ?? String(value), value })),
-    showWhen: property['x-showWhen'],
   };
 }
 

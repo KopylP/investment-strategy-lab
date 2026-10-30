@@ -95,6 +95,11 @@ namespace InvestmentLab.Rebalancing.Shared.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("owner_id");
 
+                    b.Property<string>("ReportSchedules")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("report_schedules");
+
                     b.Property<decimal>("TrimBand")
                         .HasColumnType("numeric")
                         .HasColumnName("trim_band");

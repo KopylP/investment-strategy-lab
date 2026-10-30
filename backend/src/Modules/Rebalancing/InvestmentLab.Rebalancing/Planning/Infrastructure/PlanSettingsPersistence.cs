@@ -15,6 +15,7 @@ internal sealed class PlanSettingsConfiguration(RebalancingDbContext context) : 
         settings.Property(s => s.Id).HasColumnName("account_id").ValueGeneratedNever();
         settings.Ignore(s => s.AccountId);
         settings.Ignore(s => s.Policy);
+        settings.Property(s => s.ReportSchedules).HasJsonConversion();
         settings.Ignore(s => s.DomainEvents);
         context.HasOwnerFilter(settings, s => s.OwnerId);
     }

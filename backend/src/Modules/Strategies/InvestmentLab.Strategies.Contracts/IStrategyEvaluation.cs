@@ -149,7 +149,7 @@ public interface IStrategyDirectory
 
 public sealed record StrategySummaryDto(Guid Id, string Name, string TypeCode, int LatestVersion, IReadOnlyList<Guid> Universe, Guid? CashInstrumentId, IReadOnlyList<StrategyReportDto> Reports);
 
-/// <summary>A report the strategy makes: declared by its type, with when for this strategy (its parameters may change it).</summary>
+/// <summary>A report the strategy makes, as its type declares it, with when it comes unless the user sets their own time for the account.</summary>
 /// <param name="Code">The type's code of the report, e.g. "rebalance".</param>
 /// <param name="Mode">"rebalance" (contribution, buys and sells) or "riskReview" (sells only on an exit signal).</param>
 public sealed record StrategyReportDto(string Code, string Name, string Description, string Mode, StrategyReportScheduleDto Schedule)

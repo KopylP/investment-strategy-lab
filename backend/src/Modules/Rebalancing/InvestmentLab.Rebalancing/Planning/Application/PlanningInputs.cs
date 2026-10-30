@@ -20,13 +20,18 @@ public interface IPlanSettingsRepository
 
 /// <summary>One report an account gets: what the strategies of some of its sub-portfolios declare under one code.</summary>
 /// <param name="Mode">"rebalance" or "riskReview" (<see cref="StrategyReportDto"/>).</param>
-/// <param name="SubPortfolios">Those whose strategy makes it, each on its own strategy's cadence.</param>
-public sealed record AccountReport(string Code, string Name, string Description, string Mode, IReadOnlyList<SubPortfolioReport> SubPortfolios)
+/// <param name="SubPortfolios">Those whose strategy makes it, each with its strategy's default cadence.</param>
+/// <param name="Own">The user's own cadence for the account (<see cref="PlanSettings.ScheduleOf"/>); null — each strategy's default.</param>
+public sealed record AccountReport(string Code, string Name, string Description, string Mode, IReadOnlyList<SubPortfolioReport> SubPortfolios, ReportCadence? Own = null)
 {
     public ReportKind Kind => Mode == StrategyReportDto.RiskReview ? ReportKind.RiskReview : ReportKind.Monthly;
+
+    /// <summary>When the report comes for this sub-portfolio: the user's time if set, else its strategy's.</summary>
+    public ReportCadence CadenceOf(SubPortfolioReport sub) => Own ?? sub.Default;
 }
 
-public sealed record SubPortfolioReport(Guid SubPortfolioId, string SubPortfolioName, string StrategyName, ReportCadence Cadence);
+/// <param name="Default">When its strategy's type says the report comes.</param>
+public sealed record SubPortfolioReport(Guid SubPortfolioId, string SubPortfolioName, string StrategyName, ReportCadence Default);
 
 /// <summary>What planning reads from other modules for one account: setup, holdings, instrument labels and prices.</summary>
 public sealed class PlanningInputs(
@@ -117,9 +122,10 @@ public sealed class PlanningInputs(
 
     /// <summary>
     /// The reports the account gets: whatever the strategies of its planned sub-portfolios declare, one per code (in the
-    /// order the strategies declare them), with every sub-portfolio whose strategy makes it.
+    /// order the strategies declare them), with every sub-portfolio whose strategy makes it and the user's own time
+    /// from <paramref name="settings"/>.
     /// </summary>
-    public async Task<IReadOnlyList<AccountReport>> ReportsAsync(AccountSetupDto account, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<AccountReport>> ReportsAsync(AccountSetupDto account, PlanSettings? settings, CancellationToken cancellationToken)
     {
         var directory = (await strategies.GetStrategies(cancellationToken)).ToDictionary(strategy => strategy.Id);
         var declared = Planned(account)
@@ -131,7 +137,7 @@ public sealed class PlanningInputs(
         {
             var first = group.First().Report;
             return new AccountReport(first.Code, first.Name, first.Description, first.Mode, [.. group.Select(each => new SubPortfolioReport(
-                each.Sub.Id, each.Sub.Name, each.Strategy.Name, CadenceOf(each.Report.Schedule)))]);
+                each.Sub.Id, each.Sub.Name, each.Strategy.Name, CadenceOf(each.Report.Schedule)))], settings?.ScheduleOf(first.Code));
         })];
     }
 

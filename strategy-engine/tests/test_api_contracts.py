@@ -10,7 +10,6 @@ import numpy as np
 import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
-from pydantic import ValidationError
 
 from finance_decisions.api.contracts import ColumnFormat, RationaleColumn
 from finance_decisions.api.main import create_app
@@ -18,7 +17,6 @@ from finance_decisions.api.prices import get_quote_downloader
 from finance_decisions.api.symbols import get_symbol_info
 from finance_decisions.models import Position
 from finance_decisions.strategies.etf_momentum.config import RiskSettings, ScannerSettings
-from finance_decisions.strategies.etf_momentum.parameters import EtfMomentumParameters
 from finance_decisions.strategies.etf_momentum.risk import analyze_portfolio_risk
 from finance_decisions.strategies.etf_momentum.scanner import scan_etfs
 
@@ -120,18 +118,17 @@ def test_catalog_lists_etf_momentum_with_parameter_schema(client: TestClient) ->
     assert descriptor["defaultParameters"]["weakMarketInvestPct"] == 0.5
 
 
-def test_catalog_declares_the_reports_and_the_parameters_that_set_when(client: TestClient) -> None:
+def test_catalog_declares_the_reports_and_when_they_come_by_default(client: TestClient) -> None:
     [descriptor] = [item for item in client.get("/v1/strategies").json() if item["code"] == "etf-momentum"]
 
     reports = {report["code"]: report for report in descriptor["reports"]}
     assert set(reports) == {"rebalance", "risk-review"}
     assert reports["rebalance"]["mode"] == "rebalance"
     assert reports["risk-review"]["mode"] == "riskReview"
-    # Every schedule parameter exists among the defaults, so a strategy's own value can override the declared one.
-    for report in reports.values():
-        section, name = report["scheduleParameter"].split(".")
-        assert descriptor["defaultParameters"][section][name] == report["schedule"]
     assert reports["rebalance"]["schedule"] == {"frequency": "monthly", "day": 1, "weekday": "sunday", "time": "20:00", "minute": 0}
+    assert (reports["risk-review"]["schedule"]["frequency"], reports["risk-review"]["schedule"]["time"]) == ("weekly", "19:00")
+    # When a report comes is the user's choice, not a strategy parameter.
+    assert "reporting" not in descriptor["defaultParameters"]
 
 
 def test_decide_matches_scanner_on_same_data(client: TestClient) -> None:
@@ -369,16 +366,3 @@ def test_risk_warns_without_selling_when_limits_are_not_hit(client: TestClient) 
     assert signal["key"] == "AAA"
     assert signal["kind"] == "warn"
 
-
-def test_a_strategy_sets_when_its_reports_come() -> None:
-    reporting = EtfMomentumParameters.model_validate(
-        {"reporting": {"rebalance": {"frequency": "monthly", "day": 15, "time": "08:30"}, "riskReview": {"frequency": "hourly", "minute": 45}}}
-    ).reporting
-
-    assert reporting.rebalance.to_schedule().model_dump(by_alias=True, mode="json") == {
-        "frequency": "monthly", "day": 15, "weekday": "sunday", "time": "08:30", "minute": 0
-    }
-    assert reporting.risk_review.minute == 45
-    for wrong in ({"frequency": "off"}, {"frequency": "monthly", "day": 32}, {"frequency": "daily", "time": "24:00"}, {"frequency": "weekly", "weekday": "sun"}):
-        with pytest.raises(ValidationError):
-            EtfMomentumParameters.model_validate({"reporting": {"rebalance": wrong}})

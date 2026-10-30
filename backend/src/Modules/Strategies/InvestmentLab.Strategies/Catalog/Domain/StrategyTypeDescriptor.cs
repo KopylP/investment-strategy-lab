@@ -1,38 +1,10 @@
-using System.Globalization;
-using System.Text.Json;
-
 namespace InvestmentLab.Strategies.Catalog.Domain;
 
 /// <summary>A report a strategy type makes, as its engine declares it: the service lists, schedules and generates it from this.</summary>
 /// <param name="Code">Unique within the type, e.g. "rebalance".</param>
 /// <param name="Mode">"rebalance" (contribution, buys and sells) or "riskReview" (sells only on an exit signal).</param>
-/// <param name="Schedule">The type's default; null in a catalog synced before schedules existed — off until the next sync.</param>
-/// <param name="ScheduleParameter">Dotted camelCase path of the parameter that sets the schedule for one strategy; null — always the default.</param>
-public sealed record ReportDefinition(string Code, string Name, string Description, string Mode, ReportSchedule? Schedule, string? ScheduleParameter)
-{
-    /// <summary>When for a strategy with these parameters (JSON): its value of the schedule parameter, field by field, else the default.</summary>
-    public ReportSchedule ScheduleFor(string parameters)
-    {
-        var fallback = Schedule ?? ReportSchedule.Off;
-        if (ScheduleParameter is not { } path)
-            return fallback;
-        try
-        {
-            using var document = JsonDocument.Parse(parameters);
-            var value = document.RootElement;
-            foreach (var name in path.Split('.'))
-            {
-                if (value.ValueKind != JsonValueKind.Object || !value.TryGetProperty(name, out value))
-                    return fallback;
-            }
-            return value.ValueKind == JsonValueKind.Object ? fallback.OverriddenBy(value) : fallback;
-        }
-        catch (JsonException)
-        {
-            return fallback;
-        }
-    }
-}
+/// <param name="Schedule">When it comes unless the user sets their own time for the account; null in a catalog synced before schedules existed — off until the next sync.</param>
+public sealed record ReportDefinition(string Code, string Name, string Description, string Mode, ReportSchedule? Schedule);
 
 /// <summary>When a report comes, in the service's time zone; each frequency reads only its own fields.</summary>
 /// <param name="Frequency">"off", "hourly", "daily", "weekly", "monthly" or "quarterly".</param>
@@ -42,27 +14,7 @@ public sealed record ReportDefinition(string Code, string Name, string Descripti
 /// <param name="Minute">Hourly: the minute of every hour (0–59).</param>
 public sealed record ReportSchedule(string Frequency, int Day, string Weekday, string Time, int Minute)
 {
-    private static readonly HashSet<string> Frequencies = ["off", "hourly", "daily", "weekly", "monthly", "quarterly"];
-    private static readonly HashSet<string> Weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
-
     public static readonly ReportSchedule Off = new("off", 1, "sunday", "20:00", 0);
-
-    /// <summary>This schedule with every valid field a strategy's parameter sets; an invalid one keeps this value.</summary>
-    public ReportSchedule OverriddenBy(JsonElement value)
-    {
-        string? Text(string name) => value.TryGetProperty(name, out var field) && field.ValueKind == JsonValueKind.String ? field.GetString() : null;
-        int? Number(string name, int min, int max) =>
-            value.TryGetProperty(name, out var field) && field.ValueKind == JsonValueKind.Number && field.TryGetInt32(out var number) && number >= min && number <= max
-                ? number
-                : null;
-
-        return new ReportSchedule(
-            Text("frequency") is { } frequency && Frequencies.Contains(frequency) ? frequency : Frequency,
-            Number("day", 1, 31) ?? Day,
-            Text("weekday") is { } weekday && Weekdays.Contains(weekday) ? weekday : Weekday,
-            Text("time") is { } time && TimeOnly.TryParseExact(time, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out _) ? time : Time,
-            Number("minute", 0, 59) ?? Minute);
-    }
 }
 
 /// <summary>An algorithm an engine can run: its parameters (JSON Schema + defaults) and the series it needs.</summary>

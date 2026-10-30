@@ -5,12 +5,9 @@ Defaults come from the dataclasses in config.py, so the two never drift apart.
 
 from __future__ import annotations
 
-from typing import Any, Literal
-
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pydantic.alias_generators import to_camel
 
-from finance_decisions.api.contracts import TIME_PATTERN, ReportSchedule, Weekday
 from .config import PlanSettings, RiskSettings, ScannerSettings
 
 
@@ -59,71 +56,7 @@ class RiskParameters(_Parameters):
         return RiskSettings(**self.model_dump())
 
 
-_FREQUENCY_LABELS = {
-    "off": "Вимкнено",
-    "hourly": "Щогодини",
-    "daily": "Щодня",
-    "weekly": "Щотижня",
-    "monthly": "Щомісяця",
-    "quarterly": "Щокварталу",
-}
-_WEEKDAY_LABELS = {
-    "monday": "Понеділок",
-    "tuesday": "Вівторок",
-    "wednesday": "Середа",
-    "thursday": "Четвер",
-    "friday": "Пʼятниця",
-    "saturday": "Субота",
-    "sunday": "Неділя",
-}
-
-
-def _shown_for(*frequencies: str) -> dict[str, Any]:
-    """The form shows a field only while the schedule's frequency is one of these."""
-    return {"x-showWhen": {"frequency": list(frequencies)}}
-
-
-class _ScheduleParameters(_Parameters):
-    """When one report comes (contracts.ReportSchedule); each frequency reads only its own fields."""
-
-    frequency: str
-    day: int = Field(1, ge=1, le=31, title="День місяця", description="У коротшому місяці — його останній день; щокварталу — день першого місяця кварталу.",
-                     json_schema_extra=_shown_for("monthly", "quarterly"))
-    weekday: Weekday = Field(Weekday.SUNDAY, title="День тижня",
-                             json_schema_extra={"x-enumLabels": _WEEKDAY_LABELS, **_shown_for("weekly")})
-    time: str = Field("20:00", pattern=TIME_PATTERN, title="Час", description="ГГ:ХХ, час сервісу.",
-                      json_schema_extra=_shown_for("daily", "weekly", "monthly", "quarterly"))
-    minute: int = Field(0, ge=0, le=59, title="Хвилина", description="Кожної години о цій хвилині.", json_schema_extra=_shown_for("hourly"))
-
-    def to_schedule(self) -> ReportSchedule:
-        return ReportSchedule.model_validate(self.model_dump())
-
-
-class RebalanceSchedule(_ScheduleParameters):
-    frequency: Literal["hourly", "daily", "weekly", "monthly", "quarterly"] = Field(
-        "monthly", title="Як часто", json_schema_extra={"x-enumLabels": {key: _FREQUENCY_LABELS[key] for key in ("hourly", "daily", "weekly", "monthly", "quarterly")}}
-    )
-
-
-class RiskReviewSchedule(_ScheduleParameters):
-    frequency: Literal["off", "hourly", "daily", "weekly"] = Field(
-        "weekly", title="Як часто", json_schema_extra={"x-enumLabels": {key: _FREQUENCY_LABELS[key] for key in ("off", "hourly", "daily", "weekly")}}
-    )
-    time: str = Field("19:00", pattern=TIME_PATTERN, title="Час", description="ГГ:ХХ, час сервісу.",
-                      json_schema_extra=_shown_for("daily", "weekly"))
-
-
-class ReportingParameters(_Parameters):
-    """When the strategy's reports (decision.REPORTS) come."""
-
-    rebalance: RebalanceSchedule = Field(default_factory=RebalanceSchedule, title="Рапорт «Ребаланс»",
-                                         description="Внесок, купівлі й продажі за рішенням стратегії.")
-    risk_review: RiskReviewSchedule = Field(default_factory=RiskReviewSchedule, title="Рапорт «Перевірка ризику»",
-                                            description="Між ребалансами: стоп-лоси, просідання, VIX — продаж лише за сигналом виходу.")
-
-
 class EtfMomentumParameters(_Parameters):
-    reporting: ReportingParameters = Field(default_factory=ReportingParameters, title="Рапорти")
     scanner: ScannerParameters = Field(default_factory=ScannerParameters)
     risk: RiskParameters = Field(default_factory=RiskParameters)
     weak_market_invest_pct: float = Field(PlanSettings.weak_market_invest_pct, ge=0, le=1, description="Частка внеску, яка інвестується, коли ринок слабкий.")

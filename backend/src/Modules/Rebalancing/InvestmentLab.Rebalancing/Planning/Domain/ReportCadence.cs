@@ -13,7 +13,8 @@ public enum ReportFrequency
 }
 
 /// <summary>
-/// When a strategy's report comes, in the service's local time (its type declares it, its parameters may change it):
+/// When a report comes, in the service's local time (its strategy's type declares a default, the user may set their own
+/// for the account):
 /// every hour at <see cref="Minute"/>; every day, on <see cref="Weekday"/> each week, or on <see cref="Day"/> of each
 /// month or of the quarter's first month (a shorter month: its last day) at <see cref="Time"/>.
 /// </summary>
@@ -36,6 +37,26 @@ public sealed record ReportCadence(ReportFrequency Frequency, int Day, DayOfWeek
                 ? at
                 : Off.Time,
             parsed == ReportFrequency.Hourly && minute is >= 0 and <= 59 ? minute : Off.Minute);
+    }
+
+    /// <summary>
+    /// The user's own schedule, strictly: the frequency and the fields it reads must be valid (a monthly one needs a day
+    /// and a time, an hourly one a minute); fields it does not read are ignored.
+    /// </summary>
+    public static Result<ReportCadence> TryOf(string frequency, int? day, string? weekday, string? time, int? minute)
+    {
+        if (!Enum.TryParse<ReportFrequency>(frequency, ignoreCase: true, out var parsed) || !Enum.IsDefined(parsed) || int.TryParse(frequency, out _))
+            return Error.Validation("report_schedule.frequency", $"Unknown frequency '{frequency}': off, hourly, daily, weekly, monthly or quarterly.");
+        if (parsed is ReportFrequency.Monthly or ReportFrequency.Quarterly && day is not (>= 1 and <= 31))
+            return Error.Validation("report_schedule.day", "The day of the month must be 1–31.");
+        if (parsed == ReportFrequency.Weekly && (weekday is null || int.TryParse(weekday, out _) || !Enum.TryParse<DayOfWeek>(weekday, ignoreCase: true, out _)))
+            return Error.Validation("report_schedule.weekday", "The weekday must be monday … sunday.");
+        if (parsed is not (ReportFrequency.Off or ReportFrequency.Hourly)
+            && !TimeOnly.TryParseExact(time, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
+            return Error.Validation("report_schedule.time", "The time must be HH:mm.");
+        if (parsed == ReportFrequency.Hourly && minute is not (>= 0 and <= 59))
+            return Error.Validation("report_schedule.minute", "The minute must be 0–59.");
+        return Of(frequency, day ?? Off.Day, weekday ?? "", time ?? "", minute ?? Off.Minute);
     }
 
     /// <summary>The latest report time at or before <paramref name="now"/> (local); null when the report is off.</summary>
