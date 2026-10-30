@@ -221,9 +221,6 @@
         > .p-datatable-tbody > tr > td,
         > .p-datatable-tfoot > tr > td {
             padding: 0.5rem 0.375rem;
-            /* A long word (a sub-portfolio, a ticker list) breaks rather than push the table a few pixels past the
-               screen; amounts keep whitespace-nowrap. */
-            overflow-wrap: anywhere;
 
             &:first-child {
                 padding-left: 0;
@@ -233,6 +230,15 @@
                 padding-right: 0;
             }
         }
+    }
+
+    /* A dropdown opened on <body> never runs past the screen: a long option (an instrument's full name) wraps instead. */
+    .p-select-overlay {
+        max-width: calc(100vw - 1.5rem);
+    }
+
+    .p-select-option {
+        white-space: normal;
     }
 
     .p-step:not(.p-step-active) .p-step-title {

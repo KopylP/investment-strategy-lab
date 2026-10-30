@@ -35,3 +35,22 @@
     width: 0;
     min-width: 100%;
 }
+
+/* Key-figure tiles: two to a row, four from Tailwind's lg up. A tile whose amount is wider than half a row (a phone,
+   eight digits and a currency) takes the whole row instead of running into its neighbour. */
+.app-tiles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+
+    > * {
+        flex: 1 0 calc(50% - 0.5rem);
+        min-width: min-content;
+    }
+
+    @media (width >= 64rem) {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        column-gap: 0;
+    }
+}

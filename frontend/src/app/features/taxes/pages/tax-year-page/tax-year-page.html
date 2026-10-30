@@ -69,7 +69,7 @@
   </div>
 
   <div class="card py-4">
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-y-4">
+    <div class="app-tiles">
       <div class="px-1 sm:px-4 lg:border-r border-surface">
         <div class="text-muted-color text-xs uppercase tracking-wide">Дохід (зиск)</div>
         <div class="text-xl font-semibold mt-1" [appSignedValue]="s.gain">{{ s.gain | money: 'PLN' }}</div>
@@ -98,13 +98,14 @@
     @if (details.realizations.length) {
       <p-table [value]="details.realizations" dataKey="saleTransactionId" tableStyleClass="sm:min-w-[56rem]" size="small">
         <ng-template #header>
-          <tr><th class="w-10"></th><th>Дата</th><th>ETF</th>@if (store.showAccount()) { <th class="hidden sm:table-cell">Рахунок</th> }<th class="text-right hidden sm:table-cell">Штук</th><th class="text-right hidden sm:table-cell">Виручка</th><th class="text-right hidden sm:table-cell">Витрати</th><th class="text-right">Зиск</th><th class="hidden sm:table-cell">Курс NBP</th></tr>
+          <tr><th class="w-10"></th><th class="hidden sm:table-cell">Дата</th><th>ETF</th>@if (store.showAccount()) { <th class="hidden sm:table-cell">Рахунок</th> }<th class="text-right hidden sm:table-cell">Штук</th><th class="text-right hidden sm:table-cell">Виручка</th><th class="text-right hidden sm:table-cell">Витрати</th><th class="text-right">Зиск</th><th class="hidden sm:table-cell">Курс NBP</th></tr>
         </ng-template>
         <ng-template #body let-r let-expanded="expanded">
           <tr>
             <td><p-button [pRowToggler]="r" [text]="true" [rounded]="true" severity="secondary" [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" ariaLabel="Лоти" /></td>
-            <td>{{ r.soldOn | date }}</td>
-            <td class="font-medium">{{ store.symbol(r.instrumentId) }}@if (store.showAccount()) { <div class="sm:hidden text-xs text-muted-color font-normal">{{ store.accountName(r.accountId) }}</div> }</td>
+            <td class="hidden sm:table-cell whitespace-nowrap">{{ r.soldOn | date }}</td>
+            <!-- Phone: the date under the ticker; a date column leaves too little for the gain. -->
+            <td class="font-medium">{{ store.symbol(r.instrumentId) }}<div class="sm:hidden text-xs text-muted-color font-normal whitespace-nowrap">{{ r.soldOn | date }}</div>@if (store.showAccount()) { <div class="sm:hidden text-xs text-muted-color font-normal">{{ store.accountName(r.accountId) }}</div> }</td>
             @if (store.showAccount()) { <td class="text-sm hidden sm:table-cell">{{ store.accountName(r.accountId) }}</td> }
             <td class="text-right hidden sm:table-cell">{{ r.quantity | quantity }}</td>
             <td class="text-right hidden sm:table-cell">{{ r.proceedsPln | money: 'PLN' }}</td>
@@ -190,9 +191,9 @@
     <div class="card">
       <h2 class="text-lg font-semibold mb-4">Відкриті лоти<span class="hidden sm:inline"> (собівартість для майбутніх продажів)</span></h2>
       <p-table [value]="details.openLots" size="small" tableStyleClass="sm:min-w-[40rem]">
-        <ng-template #header><tr><th>Куплено</th><th>ETF</th>@if (store.showAccount()) { <th class="hidden sm:table-cell">Рахунок</th> }<th class="text-right">Штук</th><th class="text-right">Витрати, PLN</th><th class="hidden sm:table-cell">Курс</th></tr></ng-template>
+        <ng-template #header><tr><th class="hidden sm:table-cell">Куплено</th><th>ETF</th>@if (store.showAccount()) { <th class="hidden sm:table-cell">Рахунок</th> }<th class="text-right hidden sm:table-cell">Штук</th><th class="text-right">Витрати, PLN</th><th class="hidden sm:table-cell">Курс</th></tr></ng-template>
         <ng-template #body let-lot>
-          <tr><td>{{ lot.acquiredOn | date }}</td><td class="font-medium">{{ store.symbol(lot.instrumentId) }}</td>@if (store.showAccount()) { <td class="text-sm hidden sm:table-cell">{{ store.accountName(lot.accountId) }}</td> }<td class="text-right">{{ lot.quantity | quantity }}</td><td class="text-right whitespace-nowrap">{{ lot.costPln | money: 'PLN' }}</td><td class="hidden sm:table-cell">{{ lot.fxRate }}</td></tr>
+          <tr><td class="hidden sm:table-cell whitespace-nowrap">{{ lot.acquiredOn | date }}</td><td class="font-medium">{{ store.symbol(lot.instrumentId) }}<div class="sm:hidden text-xs text-muted-color font-normal">куплено {{ lot.acquiredOn | date }}</div><div class="sm:hidden text-xs text-muted-color font-normal whitespace-nowrap">{{ lot.quantity | quantity }} шт.</div></td>@if (store.showAccount()) { <td class="text-sm hidden sm:table-cell">{{ store.accountName(lot.accountId) }}</td> }<td class="text-right hidden sm:table-cell">{{ lot.quantity | quantity }}</td><td class="text-right whitespace-nowrap">{{ lot.costPln | money: 'PLN' }}</td><td class="hidden sm:table-cell">{{ lot.fxRate }}</td></tr>
         </ng-template>
       </p-table>
     </div>
@@ -205,11 +206,11 @@
   <!-- The broker's P&L report: what the journal cannot know (tax withheld abroad, cost of shares from a spin-off). -->
   <div class="card">
     <div class="flex flex-wrap items-start justify-between gap-3 mb-2">
-      <div class="flex flex-wrap items-center gap-3">
+      <div class="flex flex-wrap items-center gap-3 min-w-0 w-full sm:w-auto">
         <h2 class="text-lg font-semibold m-0">Звіт брокера (P&amp;L)</h2>
         @if (store.allAccounts().length > 1) {
           <p-select [options]="store.allAccounts()" optionLabel="name" optionValue="id" [ngModel]="store.account()?.id" (ngModelChange)="store.chooseAccount($event)"
-            size="small" ariaLabel="Рахунок звіту брокера" class="min-w-48" />
+            size="small" ariaLabel="Рахунок звіту брокера" class="w-full sm:w-auto sm:min-w-48 max-w-full" />
         }
       </div>
       <label appFileDrop class="p-button p-button-sm p-button-outlined cursor-pointer" [class.p-disabled]="store.saving()">

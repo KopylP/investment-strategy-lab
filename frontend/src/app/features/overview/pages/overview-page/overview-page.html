@@ -93,7 +93,7 @@
 
       <!-- Secondary metrics: one quiet strip instead of five equal tiles. -->
       <div class="card py-4">
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-y-4">
+        <div class="app-tiles">
           <div class="px-1 sm:px-4 lg:border-r border-surface">
             <div class="text-muted-color text-xs uppercase tracking-wide flex items-center gap-1">
               Дохідність TWR <i class="pi pi-info-circle text-xs" pTooltip="Як працювала стратегія, без впливу того, коли й скільки ви вносили. Для порівняння з індексами й фондами."></i>
@@ -181,9 +181,9 @@
         @if (store.isAll()) {
           <div class="card mb-0">
             <h2 class="text-lg font-semibold mb-4">Рахунки</h2>
-            <p-table [value]="d.accounts" size="small" [tableStyle]="{ 'min-width': '28rem' }" [rowHover]="true">
+            <p-table [value]="d.accounts" size="small" tableStyleClass="sm:min-w-[28rem]" [rowHover]="true">
               <ng-template #header>
-                <tr><th>Рахунок</th><th class="text-right">Вартість</th><th class="text-right">Частка</th><th class="text-right">TWR</th></tr>
+                <tr><th>Рахунок</th><th class="text-right">Вартість</th><th class="text-right hidden sm:table-cell">Частка</th><th class="text-right hidden sm:table-cell">TWR</th></tr>
               </ng-template>
               <ng-template #body let-account>
                 <tr class="cursor-pointer" (click)="store.showAccount(account.id)" pTooltip="Відкрити огляд цього рахунку" tooltipPosition="left">
@@ -191,9 +191,13 @@
                     <div class="font-medium">{{ account.name }}</div>
                     <div class="text-xs text-muted-color">{{ account.broker }} · {{ account.baseCurrency }}</div>
                   </td>
-                  <td class="text-right"><app-money [amount]="account.value" [currency]="d.currency" [digits]="0" /></td>
-                  <td class="text-right font-medium">{{ account.share | percent }}</td>
-                  <td class="text-right" [appSignedValue]="account.twr">{{ account.twr | signedPercent }}</td>
+                  <td class="text-right">
+                    <app-money [amount]="account.value" [currency]="d.currency" [digits]="0" />
+                    <!-- Phone: share and TWR under the value instead of their own columns. -->
+                    <div class="sm:hidden text-xs text-muted-color whitespace-nowrap">{{ account.share | percent }} · TWR <span [appSignedValue]="account.twr">{{ account.twr | signedPercent }}</span></div>
+                  </td>
+                  <td class="text-right font-medium hidden sm:table-cell whitespace-nowrap">{{ account.share | percent }}</td>
+                  <td class="text-right hidden sm:table-cell whitespace-nowrap" [appSignedValue]="account.twr">{{ account.twr | signedPercent }}</td>
                 </tr>
               </ng-template>
             </p-table>

@@ -24,20 +24,19 @@
     </div>
     <p-table [value]="visibleTransactions()" [paginator]="visibleTransactions().length > 25" [rows]="25" tableStyleClass="sm:min-w-[56rem]" dataKey="id">
       <ng-template #header>
-        <tr><th>Дата</th><th class="hidden sm:table-cell">Операція</th><th>Деталі</th><th class="hidden sm:table-cell">Під-портфелі</th><th class="text-right">Гроші</th><th class="hidden sm:table-cell">Джерело</th><th class="w-12"></th></tr>
+        <tr><th class="hidden sm:table-cell">Дата</th><th class="hidden sm:table-cell">Операція</th><th>Деталі</th><th class="hidden sm:table-cell">Під-портфелі</th><th class="text-right">Гроші</th><th class="hidden sm:table-cell">Джерело</th><th class="w-12"></th></tr>
       </ng-template>
       <ng-template #body let-transaction>
         <tr [class.opacity-60]="transaction.isReversed">
-          <td class="whitespace-nowrap">
-            {{ transaction.occurredOn | date }}
-            <!-- Phone: the kind under the date, the sub-portfolios under the details. -->
-            <div class="sm:hidden mt-1"><p-tag [value]="transaction.kindLabel" [severity]="transaction.severity" /></div>
-          </td>
+          <td class="whitespace-nowrap hidden sm:table-cell">{{ transaction.occurredOn | date }}</td>
           <td class="hidden sm:table-cell">
             <p-tag [value]="transaction.kindLabel" [severity]="transaction.severity" />
             @if (transaction.isReversed) { <p-tag value="сторновано" severity="secondary" styleClass="ml-1" /> }
           </td>
           <td>
+            <!-- Phone: the date and the kind above the details, the sub-portfolios under them; a date column would leave
+                 the details too narrow for big amounts. -->
+            <div class="sm:hidden flex flex-wrap items-center gap-x-2 gap-y-1 mb-1 text-sm text-muted-color">{{ transaction.occurredOn | date }} <p-tag [value]="transaction.kindLabel" [severity]="transaction.severity" /></div>
             {{ transaction.description }}
             <div class="sm:hidden text-xs text-muted-color">{{ transaction.allocation }}@if (transaction.isReversed) { · сторновано }</div>
           </td>
