@@ -118,16 +118,16 @@ public sealed class HoldingsProjectorTests
     public void Entries_settled_in_dollars_move_the_dollar_balance_and_leave_euro_cash_alone()
     {
         // The Revolut shape: USD top-up → buy from it → sell into it → withdraw part. Amounts in EUR are that day's rate.
-        var usd = (decimal amount) => Money.Of(amount, Currency.USD);
+        static Money Usd(decimal amount) => Money.Of(amount, Currency.USD);
         var account = _p.Account;
         _p.Add(Transaction.CashMovement(account, CashMovementKind.Contribution, PortfolioFixture.Eur(69.57m), [new CashAllocation(_p.A, PortfolioFixture.Eur(69.57m))],
-            null, PortfolioFixture.Day(1), TransactionSource.Manual, DateTimeOffset.UnixEpoch.AddDays(1), settlement: usd(80m)));
+            null, PortfolioFixture.Day(1), TransactionSource.Manual, DateTimeOffset.UnixEpoch.AddDays(1), settlement: Usd(80m)));
         _p.Add(Transaction.Trade(account, TradeSide.Buy, PortfolioFixture.Etf, Quantity.Of(0.15m), Price.Of(463.8m, Currency.EUR), PortfolioFixture.Eur(0m),
-            [new Allocation(_p.A, Quantity.Of(0.15m))], PortfolioFixture.Day(1), TransactionSource.Manual, DateTimeOffset.UnixEpoch.AddDays(2), settlement: usd(80m)));
+            [new Allocation(_p.A, Quantity.Of(0.15m))], PortfolioFixture.Day(1), TransactionSource.Manual, DateTimeOffset.UnixEpoch.AddDays(2), settlement: Usd(80m)));
         _p.Add(Transaction.Trade(account, TradeSide.Sell, PortfolioFixture.Etf, Quantity.Of(0.15m), Price.Of(458m, Currency.EUR), PortfolioFixture.Eur(0m),
-            [new Allocation(_p.A, Quantity.Of(0.15m))], PortfolioFixture.Day(20), TransactionSource.Manual, DateTimeOffset.UnixEpoch.AddDays(3), settlement: usd(80.04m)));
+            [new Allocation(_p.A, Quantity.Of(0.15m))], PortfolioFixture.Day(20), TransactionSource.Manual, DateTimeOffset.UnixEpoch.AddDays(3), settlement: Usd(80.04m)));
         _p.Add(Transaction.CashMovement(account, CashMovementKind.Withdrawal, PortfolioFixture.Eur(68.1m), [new CashAllocation(_p.A, PortfolioFixture.Eur(68.1m))],
-            null, PortfolioFixture.Day(25), TransactionSource.Manual, DateTimeOffset.UnixEpoch.AddDays(4), settlement: usd(79.74m)));
+            null, PortfolioFixture.Day(25), TransactionSource.Manual, DateTimeOffset.UnixEpoch.AddDays(4), settlement: Usd(79.74m)));
 
         var a = Project().For(_p.A)!;
         a.Cash.Amount.ShouldBe(0m);                                   // not the 1.47 € a single-currency replay would leave

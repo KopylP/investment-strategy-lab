@@ -199,7 +199,7 @@ public sealed class StatementImportService(
                 var asIncome = false;
                 var recorded = await recorder.RecordAsync(account.Id.Value, context =>
                 {
-                    var created = Create(context, row, statement, reference);
+                    var created = Create(context, row, reference);
                     asIncome = row.Row.Kind == StatementRowKind.Sell && created is { IsSuccess: true, Value.Kind: TransactionKind.Dividend };
                     return created;
                 }, cancellationToken);
@@ -336,7 +336,7 @@ public sealed class StatementImportService(
         return priced;
     }
 
-    private Result<Transaction> Create(RecordingContext context, PricedRow row, StatementImport statement, string reference)
+    private static Result<Transaction> Create(RecordingContext context, PricedRow row, string reference)
     {
         var account = context.Account;
         var currency = account.BaseCurrency;
@@ -413,7 +413,7 @@ public sealed class StatementImportService(
         return [.. tickers.Select(ticker =>
         {
             var found = listed.GetValueOrDefault(ticker.Ticker);
-            var match = ticker.Match ?? (found is null ? null : symbols.FirstOrDefault(s => s.Symbol == found.YahooSymbol.ToUpperInvariant()).Instrument);
+            var match = ticker.Match ?? (found is null ? null : symbols.FirstOrDefault(s => s.Symbol.Equals(found.YahooSymbol, StringComparison.OrdinalIgnoreCase)).Instrument);
             var sub = only ?? (match is null
                 ? null
                 : account.ActiveSubPortfolios.FirstOrDefault(s => s.Strategy is { } strategy && universes.TryGetValue(strategy.StrategyId, out var universe) && universe.Contains(match.Id))?.Id.Value);

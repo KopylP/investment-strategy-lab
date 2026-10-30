@@ -88,7 +88,9 @@ public sealed class StrategiesScenarioTests : IClassFixture<StrategiesApiFactory
 
         var invalid = await client.PutAsJsonAsync($"/api/strategies/{eu.Id}", new
         {
-            universe = setup.Universe, benchmarkInstrumentId = setup.BenchmarkInstrumentId, parameters = new { scanner = new { topN = 0 } },
+            universe = setup.Universe,
+            benchmarkInstrumentId = setup.BenchmarkInstrumentId,
+            parameters = new { scanner = new { topN = 0 } },
         }, ct);
         invalid.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         (await invalid.Content.ReadAsStringAsync(ct)).ShouldContain("strategy.parameters_invalid");

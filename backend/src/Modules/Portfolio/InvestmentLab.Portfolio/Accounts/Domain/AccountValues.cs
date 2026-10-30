@@ -40,7 +40,7 @@ public sealed record Guardrails(Percentage? MaxPositionWeight, Percentage? MaxMo
 {
     public static Guardrails None => new(null, null);
 
-    public bool AllowLeverage => false;
+    public static bool AllowLeverage => false;
 }
 
 /// <summary>The strategy a sub-portfolio follows: the latest version, or one pinned version.</summary>

@@ -26,7 +26,7 @@ public sealed class SolutionArchitectureTests
 
         var violations = Architecture.Value.Types
             .Where(type => ownNames.Contains(type.Assembly.Name.Split(',')[0]))
-            .SelectMany(type => type.Dependencies.Select(dependency => (Type: type, Target: dependency.Target)))
+            .SelectMany(type => type.Dependencies.Select(dependency => (Type: type, dependency.Target)))
             // ArchUnitNET merges same-named method type parameters (Publish<TEvent>) across types into a false dependency.
             .Where(pair => pair.Target is not ArchUnitNET.Domain.GenericParameter)
             .Select(pair => (pair.Type, pair.Target, Reason: DependencyRules.Check(pair.Type.Namespace.FullName, pair.Target.Namespace.FullName)))
@@ -64,8 +64,7 @@ public sealed class SolutionArchitectureTests
     }
 
     private static List<string> OwnReferences(Assembly assembly) =>
-        assembly.GetReferencedAssemblies()
+        [.. assembly.GetReferencedAssemblies()
             .Select(reference => reference.Name!)
-            .Where(name => name.StartsWith("InvestmentLab.", StringComparison.Ordinal))
-            .ToList();
+            .Where(name => name.StartsWith("InvestmentLab.", StringComparison.Ordinal))];
 }

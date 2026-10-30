@@ -188,7 +188,7 @@ public sealed class Pit38Form : ITaxDeclarationForm
             : new DeclarationAccountLine(account.Name, account.Broker, Treatment(account), 0m, 0m, 0m, 0m, account.AccountId, row1.Contains(account), account.Pit8COf(year),
                 CoveredBy(account))).ToList();
 
-        return new TaxDeclaration(Code, Title, year, Deadline(year), sections, attachments, lines, notes, p51, facts.Where(fact => fact.Amount != 0m).ToList());
+        return new TaxDeclaration(Code, Title, year, Deadline(year), sections, attachments, lines, notes, p51, [.. facts.Where(fact => fact.Amount != 0m)]);
     }
 
     /// <summary>30 April of the next year, moved to the next working day past a weekend, 1 May or 3 May (art. 12 § 5 Ordynacji).</summary>
@@ -216,7 +216,7 @@ public sealed class Pit38Form : ITaxDeclarationForm
         var entered = earlierLosses.Select(loss => loss.Year).ToHashSet();
         var pools = earlierLosses.Select(loss => new LossPool(loss)).ToList();
         var first = gains.Keys.Min();
-        decimal used = 0m;
+        var used = 0m;
         for (var number = first; number <= year; number++)
         {
             var gain = gains.GetValueOrDefault(number);
@@ -233,11 +233,36 @@ public static class Countries
 {
     private static readonly Dictionary<string, string> Names = new()
     {
-        ["US"] = "Stany Zjednoczone Ameryki", ["IE"] = "Irlandia", ["LU"] = "Luksemburg", ["DE"] = "Niemcy", ["NL"] = "Holandia", ["GB"] = "Wielka Brytania",
-        ["FR"] = "Francja", ["CH"] = "Szwajcaria", ["JP"] = "Japonia", ["CA"] = "Kanada", ["ES"] = "Hiszpania", ["IT"] = "Włochy", ["BE"] = "Belgia",
-        ["AT"] = "Austria", ["DK"] = "Dania", ["SE"] = "Szwecja", ["FI"] = "Finlandia", ["NO"] = "Norwegia", ["PT"] = "Portugalia", ["KY"] = "Kajmany",
-        ["BM"] = "Bermudy", ["JE"] = "Jersey", ["CN"] = "Chiny", ["HK"] = "Hongkong", ["TW"] = "Tajwan", ["KR"] = "Korea Południowa", ["AU"] = "Australia",
-        ["IL"] = "Izrael", ["LT"] = "Litwa", ["CZ"] = "Czechy",
+        ["US"] = "Stany Zjednoczone Ameryki",
+        ["IE"] = "Irlandia",
+        ["LU"] = "Luksemburg",
+        ["DE"] = "Niemcy",
+        ["NL"] = "Holandia",
+        ["GB"] = "Wielka Brytania",
+        ["FR"] = "Francja",
+        ["CH"] = "Szwajcaria",
+        ["JP"] = "Japonia",
+        ["CA"] = "Kanada",
+        ["ES"] = "Hiszpania",
+        ["IT"] = "Włochy",
+        ["BE"] = "Belgia",
+        ["AT"] = "Austria",
+        ["DK"] = "Dania",
+        ["SE"] = "Szwecja",
+        ["FI"] = "Finlandia",
+        ["NO"] = "Norwegia",
+        ["PT"] = "Portugalia",
+        ["KY"] = "Kajmany",
+        ["BM"] = "Bermudy",
+        ["JE"] = "Jersey",
+        ["CN"] = "Chiny",
+        ["HK"] = "Hongkong",
+        ["TW"] = "Tajwan",
+        ["KR"] = "Korea Południowa",
+        ["AU"] = "Australia",
+        ["IL"] = "Izrael",
+        ["LT"] = "Litwa",
+        ["CZ"] = "Czechy",
     };
 
     public static string Name(string code) => Names.GetValueOrDefault(code, code);

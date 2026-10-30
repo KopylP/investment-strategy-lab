@@ -18,6 +18,17 @@ csharp_style_var_when_type_is_apparent = true:suggestion
 csharp_style_var_elsewhere = true:suggestion
 csharp_prefer_primary_constructors = true:suggestion
 dotnet_style_qualification_for_field = false:suggestion
+# Constants and static fields are PascalCase (BatchSize, Json); instance fields are _camelCase.
+dotnet_naming_rule.constant_fields_pascal.symbols = constant_fields
+dotnet_naming_rule.constant_fields_pascal.style = pascal_case
+dotnet_naming_rule.constant_fields_pascal.severity = suggestion
+dotnet_naming_symbols.constant_fields.applicable_kinds = field
+dotnet_naming_symbols.constant_fields.required_modifiers = const
+dotnet_naming_rule.static_fields_pascal.symbols = static_fields
+dotnet_naming_rule.static_fields_pascal.style = pascal_case
+dotnet_naming_rule.static_fields_pascal.severity = suggestion
+dotnet_naming_symbols.static_fields.applicable_kinds = field
+dotnet_naming_symbols.static_fields.required_modifiers = static
 dotnet_naming_rule.private_fields_underscore.symbols = private_fields
 dotnet_naming_rule.private_fields_underscore.style = underscore_camel
 dotnet_naming_rule.private_fields_underscore.severity = suggestion
@@ -25,3 +36,20 @@ dotnet_naming_symbols.private_fields.applicable_kinds = field
 dotnet_naming_symbols.private_fields.applicable_accessibilities = private
 dotnet_naming_style.underscore_camel.required_prefix = _
 dotnet_naming_style.underscore_camel.capitalization = camel_case
+dotnet_naming_style.pascal_case.capitalization = pascal_case
+
+# Not wanted here: logging arguments are cheap (names, counts) on rare paths; interfaces stay interfaces.
+dotnet_diagnostic.CA1873.severity = none
+dotnet_diagnostic.CA1859.severity = none
+
+# SharedKernel is one flat namespace on purpose (Money, Result, UserId… everywhere with one using); ServiceDefaults is
+# Aspire's template, which extends Microsoft.Extensions.Hosting.
+[{src/BuildingBlocks/InvestmentLab.SharedKernel,tests/BuildingBlocks/InvestmentLab.SharedKernel.Tests}/**.cs]
+dotnet_diagnostic.IDE0130.severity = none
+
+[src/Hosts/InvestmentLab.ServiceDefaults/**.cs]
+dotnet_diagnostic.IDE0130.severity = none
+
+# EF Core writes migrations (block namespaces, a BOM): generated, so dotnet format and the style rules leave them as they come.
+[**/Migrations/*.cs]
+generated_code = true

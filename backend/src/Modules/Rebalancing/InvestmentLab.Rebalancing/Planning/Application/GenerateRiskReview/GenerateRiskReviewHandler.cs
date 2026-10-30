@@ -126,5 +126,5 @@ public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepo
     }
 
     private static List<Portfolio.Contracts.Accounts.SubPortfolioSetupDto> PlannedOf(Portfolio.Contracts.Accounts.AccountSetupDto account, GenerateRiskReviewCommand command) =>
-        PlanningInputs.Planned(account).Where(sub => command.Scope?.SubPortfolioIds.Contains(sub.Id) ?? true).ToList();
+        [.. PlanningInputs.Planned(account).Where(sub => command.Scope?.SubPortfolioIds.Contains(sub.Id) ?? true)];
 }

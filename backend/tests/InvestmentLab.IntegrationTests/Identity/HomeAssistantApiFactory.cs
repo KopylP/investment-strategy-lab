@@ -34,6 +34,7 @@ public class HomeAssistantApiFactory : WebApplicationFactory<api::Program>, IAsy
     {
         await base.DisposeAsync();
         await _postgres.DisposeAsync();
+        GC.SuppressFinalize(this);
     }
 
     private sealed class PeerFromHeader : IStartupFilter

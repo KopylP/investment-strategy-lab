@@ -1,11 +1,9 @@
 namespace InvestmentLab.SharedKernel;
 
-public abstract class AggregateRoot<TId> : Entity<TId>
+public abstract class AggregateRoot<TId>(TId id) : Entity<TId>(id)
     where TId : notnull
 {
     private readonly List<IDomainEvent> _domainEvents = [];
-
-    protected AggregateRoot(TId id) : base(id) { }
 
     public IReadOnlyList<IDomainEvent> DomainEvents => _domainEvents;
 

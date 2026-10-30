@@ -1,11 +1,9 @@
 namespace InvestmentLab.SharedKernel;
 
-public abstract class Entity<TId> : IEquatable<Entity<TId>>
+public abstract class Entity<TId>(TId id) : IEquatable<Entity<TId>>
     where TId : notnull
 {
-    protected Entity(TId id) => Id = id;
-
-    public TId Id { get; }
+    public TId Id { get; } = id;
 
     public bool Equals(Entity<TId>? other) =>
         other is not null && other.GetType() == GetType() && EqualityComparer<TId>.Default.Equals(Id, other.Id);

@@ -53,7 +53,7 @@ public sealed class ReportRequest : AggregateRoot<ReportRequestId>
 
     public const int MaxErrorLength = 2000;
 
-    private List<StrategyRun> _runs = [];
+    private readonly List<StrategyRun> _runs = [];
 
     public Guid AccountId { get; private set; }
     public UserId OwnerId { get; private set; }

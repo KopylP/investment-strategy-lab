@@ -55,7 +55,7 @@ public sealed class ImportPositionsHandler(TransactionRecorder recorder, IInstru
         foreach (var (position, date) in buys)
         {
             var source = new TransactionSource(TransactionSourceKind.Import, $"{reference}:{position.Ticker}");
-            entries.Add((source.Reference!, context =>
+            Result<Transaction> Buy(RecordingContext context)
             {
                 var currency = Currency.TryOf(position.Currency);
                 if (currency.IsFailure)
@@ -67,7 +67,8 @@ public sealed class ImportPositionsHandler(TransactionRecorder recorder, IInstru
 
                 return Transaction.Trade(context.Account, TradeSide.Buy, instruments.Value[position.Ticker], quantity.Value, price.Value,
                     Money.Zero(currency.Value), [new Allocation(subPortfolioId, quantity.Value)], date, source, context.Now);
-            }));
+            }
+            entries.Add((source.Reference!, Buy));
         }
 
         var (recorded, skipped, warnings) = (0, 0, new List<string>());

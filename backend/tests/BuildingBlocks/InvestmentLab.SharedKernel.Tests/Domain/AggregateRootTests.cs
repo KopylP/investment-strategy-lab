@@ -4,10 +4,8 @@ public sealed class AggregateRootTests
 {
     private sealed record SomethingHappened(Guid Id) : IDomainEvent;
 
-    private sealed class Sample : AggregateRoot<Guid>
+    private sealed class Sample(Guid id) : AggregateRoot<Guid>(id)
     {
-        public Sample(Guid id) : base(id) { }
-
         public void DoSomething() => Raise(new SomethingHappened(Id));
     }
 

@@ -40,5 +40,3 @@ app.MapModules();
 app.MapFrontend();
 
 app.Run();
-
-public partial class Program;
