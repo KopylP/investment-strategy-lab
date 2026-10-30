@@ -1,3 +1,4 @@
+using System.Globalization;
 using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.Notifications.Delivery.Domain;
 using InvestmentLab.Rebalancing.Contracts;
@@ -7,23 +8,27 @@ namespace InvestmentLab.Notifications.Delivery.Application.Integration;
 /// <summary>
 /// A report generated on schedule is announced; once it is closed or superseded the announcement is taken back.
 /// One the user asked for is announced only when its strategies thought long enough for them to have left the page.
-/// A report that could not be made is announced the same way, with why.
+/// A report that could not be made is announced the same way, with why. Either says when the next one of the kind comes.
 /// </summary>
-internal sealed class ReportNotifications(Notifier notifier)
+internal sealed class ReportNotifications(Notifier notifier, IReportScheduleQueries schedule)
     : IIntegrationEventHandler<ReportGeneratedV1>, IIntegrationEventHandler<ReportClosedV1>, IIntegrationEventHandler<ReportSupersededV1>,
       IIntegrationEventHandler<ReportRequestFailedV1>
 {
     public async Task Handle(ReportGeneratedV1 generated, CancellationToken cancellationToken)
     {
-        if (ReportNotification.For(generated) is { } notification)
+        if (ReportNotification.For(generated, await NextAsync(generated.AccountId, generated.Code, cancellationToken)) is { } notification)
             await notifier.SendAsync(notification, cancellationToken);
     }
 
     public async Task Handle(ReportRequestFailedV1 failed, CancellationToken cancellationToken)
     {
-        if (ReportNotification.For(failed) is { } notification)
+        if (ReportNotification.For(failed, await NextAsync(failed.AccountId, failed.Code, cancellationToken)) is { } notification)
             await notifier.SendAsync(notification, cancellationToken);
     }
+
+    /// <summary>Null for an event stored before it carried its report's code: then the next one is not told.</summary>
+    private async Task<NextReport?> NextAsync(Guid accountId, string? code, CancellationToken cancellationToken) =>
+        code is null ? null : new NextReport(await schedule.NextAsync(accountId, code, cancellationToken));
 
     public Task Handle(ReportClosedV1 closed, CancellationToken cancellationToken) =>
         notifier.DismissAsync(ReportNotification.TagOf(closed.ReportId), cancellationToken);
@@ -55,7 +60,8 @@ internal static class ReportNotification
     /// Null when it is not worth a notification: asked for by the user and made while they were likely still looking,
     /// or a risk review with nothing to do.
     /// </summary>
-    public static Notification? For(ReportGeneratedV1 report)
+    /// <param name="next">When the next report of its code comes; null — not known, not told.</param>
+    public static Notification? For(ReportGeneratedV1 report, NextReport? next = null)
     {
         if (!UserIsAway(report.Trigger, report.RequestedAt, report.GeneratedAt))
             return null;
@@ -71,6 +77,7 @@ internal static class ReportNotification
         var message = actions == 0
             ? $"{account}цього разу нічого купувати чи продавати не треба."
             : $"{account}{actions} {ActionsWord(actions)} до виконання.";
+        message += NextText(next);
 
         return new Notification(report.OwnerId, Topic, TagOf(report.ReportId), title, message, new Dictionary<string, object?>
         {
@@ -80,11 +87,13 @@ internal static class ReportNotification
             ["kind"] = report.Kind,
             ["period"] = report.Period,
             ["actions"] = actions,
+            ["next"] = NextValue(next),
         });
     }
 
     /// <summary>Null when the user asked for it a moment ago: the app shows them why.</summary>
-    public static Notification? For(ReportRequestFailedV1 failed)
+    /// <param name="next">When the next report of its code comes; null — not known, not told.</param>
+    public static Notification? For(ReportRequestFailedV1 failed, NextReport? next = null)
     {
         if (!UserIsAway(failed.Trigger, failed.RequestedAt, failed.FailedAt))
             return null;
@@ -93,7 +102,7 @@ internal static class ReportNotification
         return new Notification(
             failed.OwnerId, FailedTopic, FailedTagOf(failed.AccountId, failed.Code),
             $"{failed.Title} за {PeriodText(failed.Period)} не вдалося підготувати",
-            string.IsNullOrWhiteSpace(reason) ? "Стратегії не відповіли." : $"Причина: {reason}",
+            (string.IsNullOrWhiteSpace(reason) ? "Стратегії не відповіли." : $"Причина: {reason}") + NextText(next),
             new Dictionary<string, object?>
             {
                 ["request_id"] = failed.RequestId,
@@ -101,12 +110,24 @@ internal static class ReportNotification
                 ["code"] = failed.Code,
                 ["kind"] = failed.Kind,
                 ["period"] = failed.Period,
+                ["next"] = NextValue(next),
             });
     }
 
     /// <summary>A scheduled report always finds the user away; one they asked for, when it took at least <see cref="LongWait"/>.</summary>
     private static bool UserIsAway(string? trigger, DateTimeOffset? requestedAt, DateTimeOffset doneAt) =>
         trigger == "Scheduled" || (trigger == "OnDemand" && requestedAt is { } asked && doneAt - asked >= LongWait);
+
+    /// <summary>" Наступний — 30.11.2026 о 20:00.", " Наступний — лише вручну." or nothing when not known.</summary>
+    private static string NextText(NextReport? next) => next switch
+    {
+        null => "",
+        { At: { } at } => $" Наступний — {at.ToString("dd.MM.yyyy 'о' HH:mm", CultureInfo.InvariantCulture)}.",
+        _ => " Наступний — лише вручну.",
+    };
+
+    /// <summary>yyyy-MM-ddTHH:mm in the service's time zone, for automations; null when only on demand or not known.</summary>
+    private static string? NextValue(NextReport? next) => next?.At?.ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture);
 
     private static string PeriodText(string period)
     {
@@ -122,3 +143,6 @@ internal static class ReportNotification
         _ => "дій",
     };
 }
+
+/// <summary>When the next report of the same code comes, local to the service; <see cref="At"/> null — only on demand.</summary>
+internal readonly record struct NextReport(DateTime? At);

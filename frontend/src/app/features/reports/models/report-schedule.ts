@@ -104,3 +104,23 @@ export function distinctReports(reports: ScheduledReport[]): ScheduledReport[] {
 export function reportIcon(mode: ReportMode): string {
   return mode === 'riskReview' ? 'pi pi-shield' : 'pi pi-bolt';
 }
+
+/** "30.10.2026, 20:00" from the schedule's local yyyy-MM-ddTHH:mm (shown as is: it is already in the service's time zone). */
+export function nextLabel(next: string): string {
+  const [date, time] = next.split('T');
+  const [year, month, day] = date.split('-');
+  return `${day}.${month}.${year}, ${time.slice(0, 5)}`;
+}
+
+/**
+ * When each report comes next, soonest first: one entry per code (strategies declaring different times — the earliest),
+ * reports made only on demand last.
+ */
+export function upcomingReports(reports: ScheduledReport[]): ScheduledReport[] {
+  const soonest = new Map<string, ScheduledReport>();
+  for (const report of reports) {
+    const known = soonest.get(report.code);
+    if (!known || (report.next && (!known.next || report.next < known.next))) soonest.set(report.code, report);
+  }
+  return [...soonest.values()].sort((a, b) => (a.next ?? '￿').localeCompare(b.next ?? '￿'));
+}

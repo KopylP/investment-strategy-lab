@@ -67,6 +67,10 @@
       [text]="'Під-портфелі відійшли від цільових часток: варто перенести ' + (transfer.amount | money: report.summary.currency) + ' з «' + transfer.from + '» до «' + transfer.to + '».'" />
   }
 
+  @if (store.schedule(); as schedule) {
+    <app-next-reports class="block mt-3 sm:mt-4" [schedule]="schedule" [accountId]="report.summary.accountId" [code]="report.summary.code" />
+  }
+
   @if (report.sections.length) {
     <div class="card mt-3 sm:mt-4">
       <h2 class="text-xl font-semibold mb-4">Обґрунтування по під-портфелях</h2>
