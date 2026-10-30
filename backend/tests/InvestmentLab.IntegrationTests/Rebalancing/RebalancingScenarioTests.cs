@@ -58,8 +58,20 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
 
         // The reports the strategies declare: the schedule lists them, and each one is made by its code.
         var schedule = (await client.GetFromJsonAsync<ReportScheduleDto>($"/api/rebalancing/accounts/{account.Id}/report-schedule", ct))!;
-        schedule.Reports.Select(each => (each.Code, each.Mode, each.Frequency, each.Day, each.Weekday, each.Time)).Distinct()
-            .ShouldBe([("rebalance", "rebalance", "Monthly", 1, "Sunday", "20:00"), ("risk-review", "riskReview", "Weekly", 1, "Sunday", "19:00")]);
+        schedule.Reports.Select(each => (each.Code, each.Mode, each.Schedule.Frequency, each.Schedule.Day, each.Schedule.Weekday, each.Schedule.Time, each.Own)).Distinct()
+            .ShouldBe([("rebalance", "rebalance", "Monthly", 1, "Sunday", "20:00", false), ("risk-review", "riskReview", "Weekly", 1, "Sunday", "19:00", false)]);
+
+        // The user decides when: the rebalance on the 10th (payday) at 09:00 for this account, then back to the strategy's time.
+        var payday = await client.PutAsJsonAsync($"/api/rebalancing/accounts/{account.Id}/report-schedule/rebalance", new { frequency = "monthly", day = 10, time = "09:00" }, ct);
+        payday.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var own = (await payday.Content.ReadFromJsonAsync<ReportScheduleDto>(ct))!.Reports.Single(each => each.Code == "rebalance");
+        (own.Own, own.Schedule.Day, own.Schedule.Time, own.StrategySchedule.Day, own.Next![8..]).ShouldBe((true, 10, "09:00", 1, "10T09:00"));
+        (await client.PutAsJsonAsync($"/api/rebalancing/accounts/{account.Id}/report-schedule/rebalance", new { frequency = "monthly", day = 32, time = "09:00" }, ct))
+            .StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await client.PutAsJsonAsync($"/api/rebalancing/accounts/{account.Id}/report-schedule/weekly-digest", new { frequency = "off" }, ct))
+            .StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        var reset = await client.DeleteAsync($"/api/rebalancing/accounts/{account.Id}/report-schedule/rebalance", ct);
+        (await reset.Content.ReadFromJsonAsync<ReportScheduleDto>(ct))!.Reports.Single(each => each.Code == "rebalance").Own.ShouldBeFalse();
         var review = await PostAsync<GeneratedReportResponse>(client, $"/api/rebalancing/accounts/{account.Id}/reports", new { code = "risk-review", asOf }, ct);
         (await ReportAsync(client, review.ReportId, ct)).Summary.ShouldSatisfyAllConditions(
             summary => summary.Kind.ShouldBe("RiskReview"), summary => summary.Title.ShouldBe("Перевірка ризику"));

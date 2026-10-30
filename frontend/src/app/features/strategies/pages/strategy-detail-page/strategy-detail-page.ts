@@ -13,7 +13,6 @@ import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { JsonObject, SchemaForm } from '../../../../shared/ui/schema-form/schema-form';
 import { scheduleLabel } from '../../../reports/models/report-schedule';
 import { StrategyDetailStore } from '../../data-access/strategies-store';
-import { scheduleOf } from '../../models/strategy';
 
 @Component({
   selector: 'app-strategy-detail-page',
@@ -33,11 +32,10 @@ export class StrategyDetailPage {
   protected readonly universe = signal<string[]>([]);
   protected readonly cashInstrumentId = signal<string | null>(null);
   protected readonly benchmarkInstrumentId = signal<string | null>(null);
-  /** The reports the strategy's type declares, with when this version makes them. */
-  protected readonly reports = computed(() => {
-    const parameters = this.store.strategy()?.version.parameters ?? {};
-    return (this.store.type()?.reports ?? []).map((report) => ({ ...report, when: scheduleLabel(scheduleOf(report, parameters)) }));
-  });
+  /** The reports the strategy's type declares, with when they come unless the user sets their own time for the account. */
+  protected readonly reports = computed(() =>
+    (this.store.type()?.reports ?? []).map((report) => ({ ...report, when: report.schedule ? scheduleLabel(report.schedule) : 'лише вручну' })),
+  );
   
   protected readonly etfOptions = computed(() =>
     this.store.instruments.etfs().map((instrument) => ({ label: `${symbolOf(instrument)} · ${instrument.name}`, value: instrument.id, group: instrument.group ?? '' })),

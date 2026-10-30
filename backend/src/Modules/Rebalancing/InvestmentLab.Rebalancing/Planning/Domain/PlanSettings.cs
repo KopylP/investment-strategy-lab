@@ -1,8 +1,9 @@
 namespace InvestmentLab.Rebalancing.Planning.Domain;
 
 /// <summary>
-/// How an account's monthly plan is made: the usual contribution and the rebalancing policy. One per account;
-/// without it the defaults apply (no contribution, min trade 25, trim band 10%, fractional shares).
+/// How an account's monthly plan is made: the usual contribution, the rebalancing policy and when the reports come.
+/// One per account; without it the defaults apply (no contribution, min trade 25, trim band 10%, fractional shares,
+/// every report when its strategy says).
 /// </summary>
 public sealed class PlanSettings : AggregateRoot<Guid>
 {
@@ -12,8 +13,11 @@ public sealed class PlanSettings : AggregateRoot<Guid>
     public Percentage TrimBand { get; private set; }
     public bool AllowFractionalShares { get; private set; }
 
-    /// <summary>The scheduled job generates the monthly report and the weekly risk review for this account.</summary>
+    /// <summary>The scheduled job generates the strategies' reports for this account.</summary>
     public bool GenerateOnSchedule { get; private set; }
+
+    /// <summary>The user's own times for the strategies' reports (by report code); a report not listed comes when its strategy says.</summary>
+    public List<OwnReportSchedule> ReportSchedules { get; private set; } = [];
 
     public DateTimeOffset UpdatedAt { get; private set; }
 
@@ -48,4 +52,24 @@ public sealed class PlanSettings : AggregateRoot<Guid>
         UpdatedAt = now;
         return Result.Success();
     }
+
+    /// <summary>The user's own schedule of the report with this code; null — when its strategy says.</summary>
+    public ReportCadence? ScheduleOf(string code) => ReportSchedules.FirstOrDefault(own => own.Code == code)?.Cadence;
+
+    /// <summary>The report with this code comes at the user's time from now on, whatever its strategy says.</summary>
+    public void Schedule(string code, ReportCadence cadence, DateTimeOffset now)
+    {
+        ReportSchedules = [.. ReportSchedules.Where(own => own.Code != code), new OwnReportSchedule(code, cadence)];
+        UpdatedAt = now;
+    }
+
+    /// <summary>The report with this code comes when its strategy says again.</summary>
+    public void UseStrategySchedule(string code, DateTimeOffset now)
+    {
+        ReportSchedules = [.. ReportSchedules.Where(own => own.Code != code)];
+        UpdatedAt = now;
+    }
 }
+
+/// <param name="Code">The strategies' report code, e.g. "rebalance".</param>
+public sealed record OwnReportSchedule(string Code, ReportCadence Cadence);

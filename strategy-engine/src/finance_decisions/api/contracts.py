@@ -293,10 +293,7 @@ class ReportDefinition(ApiModel):
     name: str
     description: str
     mode: ReportMode
-    schedule: ReportSchedule = Field(description="The type's default.")
-    schedule_parameter: str | None = Field(
-        None, description="Dotted camelCase path of a parameter whose value (a ReportSchedule) overrides the schedule for a strategy."
-    )
+    schedule: ReportSchedule = Field(description="When it comes unless the user sets their own time for the account.")
 
 
 class StrategyTypeDescriptor(ApiModel):

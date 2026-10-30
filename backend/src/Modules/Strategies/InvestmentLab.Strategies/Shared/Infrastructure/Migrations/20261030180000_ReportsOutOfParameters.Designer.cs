@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace InvestmentLab.Strategies.Shared.Infrastructure.Migrations
 {
     [DbContext(typeof(StrategiesDbContext))]
-    [Migration("20261030180000_ReportSchedules")]
-    partial class ReportSchedules
+    [Migration("20261030180000_ReportsOutOfParameters")]
+    partial class ReportsOutOfParameters
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

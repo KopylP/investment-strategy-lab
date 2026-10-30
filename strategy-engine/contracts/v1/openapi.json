@@ -1163,19 +1163,7 @@
           },
           "schedule": {
             "$ref": "#/components/schemas/ReportSchedule",
-            "description": "The type's default."
-          },
-          "scheduleParameter": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Scheduleparameter",
-            "description": "Dotted camelCase path of a parameter whose value (a ReportSchedule) overrides the schedule for a strategy."
+            "description": "When it comes unless the user sets their own time for the account."
           }
         },
         "additionalProperties": false,

@@ -18,7 +18,7 @@ public sealed class GenerateReportHandler(PlanningInputs inputs, GenerateMonthly
         if (await inputs.AccountAsync(command.AccountId, cancellationToken) is not { } account)
             return Error.NotFound("account.not_found", $"Account {command.AccountId} does not exist.");
 
-        var reports = await inputs.ReportsAsync(account, cancellationToken);
+        var reports = await inputs.ReportsAsync(account, settings: null, cancellationToken);
         var report = command.Code is { } code
             ? reports.FirstOrDefault(each => each.Code == code)
             : reports.FirstOrDefault(each => each.Kind == ReportKind.Monthly);

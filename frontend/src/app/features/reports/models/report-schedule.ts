@@ -1,7 +1,6 @@
 /** The reports an account gets: what the strategies of its sub-portfolios declare (GET …/report-schedule). */
 
 export type ReportMode = 'rebalance' | 'riskReview';
-export type ReportFrequency = 'Off' | 'Hourly' | 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly';
 
 /** When a report comes, in the service's time zone; each frequency reads only its own fields (any case). */
 export interface ReportTiming {
@@ -16,12 +15,17 @@ export interface ReportTiming {
   minute: number;
 }
 
-export interface ScheduledReport extends ReportTiming {
+export interface ScheduledReport {
   code: string;
   name: string;
   description: string;
   mode: ReportMode;
-  frequency: ReportFrequency;
+  /** When it comes: the user's own time if `own`, else the strategy's. */
+  schedule: ReportTiming;
+  /** When its strategy says it comes. */
+  strategySchedule: ReportTiming;
+  /** The user set the time for the account (PUT …/report-schedule/{code}; DELETE — back to the strategy's). */
+  own: boolean;
   /** Local yyyy-MM-ddTHH:mm of the next one; null when off: made only on demand. */
   next: string | null;
   /** "Sub-portfolio: strategy" pairs it covers. */
@@ -34,6 +38,15 @@ export interface ReportSchedule {
   reports: ScheduledReport[];
 }
 
+export const frequencyOptions = [
+  { label: 'Щогодини', value: 'hourly' },
+  { label: 'Щодня', value: 'daily' },
+  { label: 'Щотижня', value: 'weekly' },
+  { label: 'Щомісяця', value: 'monthly' },
+  { label: 'Щокварталу', value: 'quarterly' },
+  { label: 'Лише вручну', value: 'off' },
+];
+
 const weekdayLabels: Record<string, string> = {
   monday: 'понеділок',
   tuesday: 'вівторок',
@@ -43,6 +56,8 @@ const weekdayLabels: Record<string, string> = {
   saturday: 'субота',
   sunday: 'неділя',
 };
+
+export const weekdayOptions = Object.entries(weekdayLabels).map(([value, label]) => ({ label: label[0].toUpperCase() + label.slice(1), value }));
 
 /** "щомісяця, 15-го о 20:00", "щотижня, пʼятниця о 18:00", "щогодини о :05", "лише вручну". */
 export function scheduleLabel(timing: ReportTiming): string {
@@ -63,7 +78,7 @@ export function scheduleLabel(timing: ReportTiming): string {
   }
 }
 
-/** One entry per report the account's strategies declare (strategies of one type may set different frequencies). */
+/** One entry per report the account's strategies declare (strategies may declare different times). */
 export function distinctReports(reports: ScheduledReport[]): ScheduledReport[] {
   return reports.filter((report, index) => reports.findIndex((other) => other.code === report.code) === index);
 }

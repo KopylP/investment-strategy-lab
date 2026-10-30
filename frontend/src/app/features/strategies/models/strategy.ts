@@ -34,24 +34,14 @@ export interface StrategyType {
   reports: ReportDefinition[];
 }
 
-/** A report the type makes; a strategy's parameters may set when (scheduleParameter). */
+/** A report the type makes, and when it comes unless the user sets their own time for the account. */
 export interface ReportDefinition {
   code: string;
   name: string;
   description: string;
   mode: 'rebalance' | 'riskReview';
-  /** The type's default; null in a catalog synced before schedules existed. */
+  /** Null in a catalog synced before schedules existed. */
   schedule: ReportTiming | null;
-  /** Dotted camelCase path in the parameters, e.g. "reporting.rebalance". */
-  scheduleParameter: string | null;
-}
-
-/** When for a strategy with these parameters: its value at the report's schedule parameter over the default. */
-export function scheduleOf(report: ReportDefinition, parameters: JsonObject): ReportTiming {
-  const fallback = report.schedule ?? { frequency: 'off', day: 1, weekday: 'sunday', time: '20:00', minute: 0 };
-  let node: unknown = parameters;
-  for (const key of report.scheduleParameter?.split('.') ?? []) node = node && typeof node === 'object' ? (node as Record<string, unknown>)[key] : undefined;
-  return report.scheduleParameter && node && typeof node === 'object' ? { ...fallback, ...(node as Partial<ReportTiming>) } : fallback;
 }
 
 export interface StrategySetupInput {
