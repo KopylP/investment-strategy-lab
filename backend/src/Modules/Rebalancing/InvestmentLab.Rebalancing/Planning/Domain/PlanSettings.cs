@@ -54,12 +54,12 @@ public sealed class PlanSettings : AggregateRoot<Guid>
     }
 
     /// <summary>The user's own schedule of the report with this code; null — when its strategy says.</summary>
-    public ReportCadence? ScheduleOf(string code) => ReportSchedules.FirstOrDefault(own => own.Code == code)?.Cadence;
+    public OwnReportSchedule? ScheduleOf(string code) => ReportSchedules.FirstOrDefault(own => own.Code == code);
 
     /// <summary>The report with this code comes at the user's time from now on, whatever its strategy says.</summary>
     public void Schedule(string code, ReportCadence cadence, DateTimeOffset now)
     {
-        ReportSchedules = [.. ReportSchedules.Where(own => own.Code != code), new OwnReportSchedule(code, cadence)];
+        ReportSchedules = [.. ReportSchedules.Where(own => own.Code != code), new OwnReportSchedule(code, cadence, now)];
         UpdatedAt = now;
     }
 
@@ -72,4 +72,5 @@ public sealed class PlanSettings : AggregateRoot<Guid>
 }
 
 /// <param name="Code">The strategies' report code, e.g. "rebalance".</param>
-public sealed record OwnReportSchedule(string Code, ReportCadence Cadence);
+/// <param name="Since">When the user set it: report times before it do not count (no report the moment a time is set).</param>
+public sealed record OwnReportSchedule(string Code, ReportCadence Cadence, DateTimeOffset Since);

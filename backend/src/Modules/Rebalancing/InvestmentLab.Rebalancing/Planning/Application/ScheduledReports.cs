@@ -21,8 +21,9 @@ public static class ReportSchedules
 /// <summary>
 /// Makes every report the accounts' strategies declare once its time has come (the user's own for the account, else
 /// the strategy's): for the sub-portfolios whose latest report time (within <see cref="ReportSchedules.CatchUp"/>) is
-/// later than the last report of that code made on schedule. A rebalance report is not made while one of the same code is still open for the month (D14: a user's
-/// report is never overwritten automatically).
+/// later than the last report of that code made on schedule and than the moment the user set their own time. A
+/// rebalance report is not made while one of the same code is still open for the month (D14: a user's report is never
+/// overwritten automatically).
 /// </summary>
 public sealed class StrategyReportsJob(
     PlanningInputs inputs, IPlanSettingsRepository settings, IReportRepository reports, GenerateReportHandler generate,
@@ -49,9 +50,13 @@ public sealed class StrategyReportsJob(
                 if (times.Count == 0)
                     continue;
 
+                // A time before the user set their own does not count; neither does one a report was already made for.
+                var since = report.Own is { } own ? ReportSchedules.Local(own.Since).DateTime : DateTime.MinValue;
                 var last = await reports.LastScheduledAsync(account.Id, report.Code, cancellationToken) is { } at
                     ? ReportSchedules.Local(at).DateTime
                     : DateTime.MinValue;
+                if (since > last)
+                    last = since;
                 var due = times.Where(each => each.Time > last).Select(each => each.SubPortfolioId).ToHashSet();
                 if (due.Count == 0)
                     continue;
