@@ -19,7 +19,7 @@ public sealed record SubPortfolioOutcome(
     string? Error = null);
 
 public sealed record ReportHeader(
-    Guid AccountId, UserId OwnerId, string AccountName, Currency Currency, YearMonth Period, ReportKind Kind, ReportTrigger Trigger, DateOnly MarketAsOf);
+    Guid AccountId, UserId OwnerId, string AccountName, Currency Currency, YearMonth Period, ReportKind Kind, ReportTrigger Trigger, DateOnly MarketAsOf, string Code, string Title);
 
 /// <summary>Turns the plans of all sub-portfolios into a report draft: contribution first, then netted broker actions.</summary>
 public static class ReportComposer
@@ -78,7 +78,9 @@ public static class ReportComposer
             [.. outcomes.Select(Section)],
             actions,
             warnings,
-            null);
+            null,
+            header.Code,
+            header.Title);
     }
 
     private static ReportSection Section(SubPortfolioOutcome outcome) => new(

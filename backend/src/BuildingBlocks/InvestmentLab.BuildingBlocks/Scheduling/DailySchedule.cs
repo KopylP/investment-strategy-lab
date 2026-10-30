@@ -1,7 +1,7 @@
 namespace InvestmentLab.BuildingBlocks.Scheduling;
 
 /// <summary>Once a day at a wall-clock time of a time zone, optionally only Monday to Friday.</summary>
-public sealed record DailySchedule(TimeOnly At, TimeZoneInfo TimeZone, bool WeekdaysOnly)
+public sealed record DailySchedule(TimeOnly At, TimeZoneInfo TimeZone, bool WeekdaysOnly) : IJobSchedule
 {
     public static DailySchedule Weekdays(TimeOnly at, string timeZoneId) =>
         new(at, TimeZoneInfo.FindSystemTimeZoneById(timeZoneId), WeekdaysOnly: true);

@@ -2,18 +2,20 @@ import { formatMoney, formatPeriod, formatQuantity } from '../../../shared/pipes
 import { ActionKind, ReportActionDto, ReportDetailsDto, ReportSectionDto, ReportSummaryDto, SectionColumnDto, SectionOrderDto, SectionScoreDto } from '../models/report-dto';
 import { ReportActionVm, ReportProgressVm, ReportSummaryVm, ReportVm, ScoreTableVm, SectionVm } from '../models/report-vm';
 
+/** What the report does (its mode), under its name in the list. */
 const kindLabels: Record<ReportSummaryDto['kind'], string> = {
-  Monthly: 'Щомісячний',
-  Recalculation: 'Перерахунок',
-  RiskReview: 'Ризик-рев’ю',
+  Monthly: 'внесок, купівлі й продажі',
+  Recalculation: 'перерахунок',
+  RiskReview: 'продаж лише за сигналом виходу',
 };
 
 export function toSummaryVm(summary: ReportSummaryDto): ReportSummaryVm {
   const periodLabel = formatPeriod(summary.period);
   return {
     id: summary.id,
+    code: summary.code,
     accountId: summary.accountId,
-    title: summary.kind === 'RiskReview' ? `Ризик-рев’ю · ${periodLabel}` : `Рапорт за ${periodLabel}`,
+    title: `${summary.title} · ${periodLabel}`,
     periodLabel,
     kind: summary.kind,
     kindLabel: kindLabels[summary.kind],

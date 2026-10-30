@@ -34,7 +34,6 @@ public sealed class CreateDefaultStrategiesHandler(
                 bySymbol[strategy.Benchmark],
                 strategy.VolatilityIndex is { } vix ? bySymbol[vix] : null,
                 strategy.CashInstrument is { } cash ? bySymbol[cash] : null,
-                strategy.RebalanceFrequency,
                 strategy.Parameters)), cancellationToken);
             if (result.IsFailure)
                 return result.Error;

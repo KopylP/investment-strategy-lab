@@ -18,10 +18,10 @@ public sealed class StrategyTests
          "$defs":{"Scanner":{"type":"object","additionalProperties":false,
            "properties":{"topN":{"type":"integer","minimum":1,"maximum":20},"maPeriod":{"type":"integer","minimum":20}}}}}
         """,
-        """{"scanner":{"topN":4,"maPeriod":200},"weakMarketInvestPct":0.5}""", Now);
+        """{"scanner":{"topN":4,"maPeriod":200},"weakMarketInvestPct":0.5}""", [], Now);
 
     private static StrategySetup Setup(params Guid[] universe) =>
-        new("{}", universe, null, new MarketSeriesRefs(Spy, null), RebalanceFrequency.Monthly);
+        new("{}", universe, null, new MarketSeriesRefs(Spy, null));
 
     private static JsonElement Json(string json) => JsonDocument.Parse(json).RootElement;
 

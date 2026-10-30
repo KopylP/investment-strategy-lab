@@ -37,7 +37,10 @@
           <div class="flex justify-between"><span class="text-muted-color">Бенчмарк</span><span>{{ store.instruments.symbol(strategy.version.benchmarkInstrumentId) }}</span></div>
           <div class="flex justify-between"><span class="text-muted-color">Індекс волатильності</span><span>{{ store.instruments.symbol(strategy.version.volatilityIndexInstrumentId) }}</span></div>
           <div class="flex justify-between"><span class="text-muted-color">Паркування</span><span>{{ store.instruments.symbol(strategy.version.cashInstrumentId) }}</span></div>
-          <div class="flex justify-between"><span class="text-muted-color">Частота</span><span>{{ frequencyLabel(strategy.version.rebalanceFrequency) }}</span></div>
+          @for (report of reports(); track report.code) {
+            <div class="flex justify-between gap-3"><span class="text-muted-color">{{ report.name }}</span>
+              <span class="text-right">{{ frequencyLabel(report.frequency) }}@if (report.frequency !== 'off') {, {{ report.time }}}</span></div>
+          }
           <div class="flex justify-between"><span class="text-muted-color">Версія створена</span><span>{{ strategy.version.createdAt | dateTime }}</span></div>
         </div>
       </div>
@@ -61,10 +64,6 @@
           <label class="font-medium" for="cash">ETF для паркування</label>
           <p-select inputId="cash" [options]="etfOptions()" optionLabel="label" optionValue="value" [ngModel]="cashInstrumentId()" (ngModelChange)="cashInstrumentId.set($event)"
                     [showClear]="true" [filter]="true" appendTo="body" fluid />
-        </div>
-        <div class="flex flex-col gap-2">
-          <label class="font-medium" for="frequency">Ребаланс (рапорт із купівлями й продажами)</label>
-          <p-select inputId="frequency" [options]="frequencies" optionLabel="label" optionValue="value" [ngModel]="rebalanceFrequency()" (ngModelChange)="rebalanceFrequency.set($event)" appendTo="body" fluid />
         </div>
         <div class="flex flex-col gap-2">
           <label class="font-medium" for="benchmark">Бенчмарк (фільтр тренду)</label>

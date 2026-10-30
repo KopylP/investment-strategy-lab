@@ -129,6 +129,12 @@ namespace InvestmentLab.Rebalancing.Shared.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("closed_at");
 
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("code");
+
                     b.Property<string>("Contribution")
                         .IsRequired()
                         .HasColumnType("jsonb")
@@ -186,6 +192,12 @@ namespace InvestmentLab.Rebalancing.Shared.Infrastructure.Migrations
                     b.Property<string>("TaxEstimate")
                         .HasColumnType("jsonb")
                         .HasColumnName("tax_estimate");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("title");
 
                     b.Property<string>("Trigger")
                         .IsRequired()

@@ -39,7 +39,6 @@ internal sealed class StrategyVersionConfiguration : IEntityTypeConfiguration<St
         version.HasKey(v => v.Id);
         version.Property(v => v.Id).ValueGeneratedNever();
         version.Property(v => v.Parameters).HasColumnType("jsonb");
-        version.Property(v => v.Frequency).HasConversion<string>().HasMaxLength(20);
         version.HasIndex("StrategyId", nameof(StrategyVersion.Number)).IsUnique();
     }
 }

@@ -1,6 +1,8 @@
 import { ActionKind, ActionStatus, FillDto, PlanReviewDto, ReportKind, ReportStatus, SectionColumnDto, SectionRiskDto, TaxEstimateDto } from './report-dto';
 
 export interface ReportSummaryVm {
+  /** Which of the strategies' reports this is: "generate again" makes the same one. */
+  code: string;
   id: string;
   accountId: string;
   title: string;

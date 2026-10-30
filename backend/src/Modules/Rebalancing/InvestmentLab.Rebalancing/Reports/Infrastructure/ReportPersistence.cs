@@ -16,6 +16,8 @@ internal sealed class RebalancingReportConfiguration(RebalancingDbContext contex
         report.Property(r => r.SupersededBy).HasConversion(id => id!.Value.Value, value => ReportId.Of(value));
         report.Property(r => r.AccountName).HasMaxLength(200);
         report.Property(r => r.Kind).HasConversion<string>().HasMaxLength(20);
+        report.Property(r => r.Code).HasMaxLength(50);
+        report.Property(r => r.Title).HasMaxLength(100);
         report.Property(r => r.Trigger).HasConversion<string>().HasMaxLength(20);
         report.Property(r => r.Status).HasConversion<string>().HasMaxLength(20);
         report.Property(r => r.Contribution).HasJsonConversion();

@@ -19,6 +19,9 @@ from finance_decisions.api.contracts import (
     PositionRisk,
     Rationale,
     RationaleColumn,
+    ReportDefinition,
+    ReportFrequency,
+    ReportMode,
     RiskAssessment,
     RiskSignal,
     RiskSignalKind,
@@ -34,6 +37,28 @@ from .risk import analyze_portfolio_risk
 from .scanner import MARKET_TICKERS, STATUS_FAILED, scan_etfs
 
 STRATEGY_CODE = "etf-momentum"
+
+# The reports the service makes for a sub-portfolio with this strategy; "reporting" in the parameters sets how often.
+REPORTS = (
+    ReportDefinition(
+        code="rebalance",
+        name="Ребаланс",
+        description="Внесок, купівлі й продажі за рішенням стратегії.",
+        mode=ReportMode.REBALANCE,
+        frequency=ReportFrequency.MONTHLY,
+        time="20:00",
+        frequency_parameter="reporting.rebalance",
+    ),
+    ReportDefinition(
+        code="risk-review",
+        name="Перевірка ризику",
+        description="Стоп-лоси й сигнали виходу між ребалансами; продаж лише за сигналом.",
+        mode=ReportMode.RISK_REVIEW,
+        frequency=ReportFrequency.WEEKLY,
+        time="19:00",
+        frequency_parameter="reporting.riskReview",
+    ),
+)
 
 # The scanner and risk monitor read the market regime from these fixed columns.
 _ROLE_COLUMNS = {SeriesRole.BENCHMARK: "SPY", SeriesRole.VOLATILITY_INDEX: "^VIX"}

@@ -7,12 +7,12 @@ export interface StrategyBlurb {
   region: string;
 }
 
-const frequencyText: Record<string, string> = { Weekly: 'щотижня', Monthly: 'щомісяця', Quarterly: 'щокварталу' };
+const frequencyText: Record<string, string> = { weekly: 'щотижня', monthly: 'щомісяця', quarterly: 'щокварталу' };
 
 const scheduleText: Record<string, string> = {
-  Weekly: 'щонеділі',
-  Monthly: 'першої неділі місяця',
-  Quarterly: 'першої неділі кварталу',
+  weekly: 'щонеділі',
+  monthly: 'першої неділі місяця',
+  quarterly: 'першої неділі кварталу',
 };
 
 function read(parameters: unknown, ...path: string[]): unknown {
@@ -33,14 +33,15 @@ export function describeStrategy(strategy: Strategy, symbol: (id: string | null)
   const topN = read(version.parameters, 'scanner', 'topN');
   const weak = read(version.parameters, 'weakMarketInvestPct');
   const riskReview = read(version.parameters, 'reporting', 'riskReview') ?? 'weekly';
-  const frequency = frequencyText[version.rebalanceFrequency] ?? version.rebalanceFrequency;
+  const rebalance = String(read(version.parameters, 'reporting', 'rebalance') ?? 'monthly');
+  const frequency = frequencyText[rebalance] ?? rebalance;
 
   const headline = typeof topN === 'number'
     ? `${frequency[0].toUpperCase()}${frequency.slice(1)} обирає ${topN} найсильніших із ${count} ${region} ETF і тримає їх порівну`
     : `${frequency[0].toUpperCase()}${frequency.slice(1)} перебудовує портфель із ${count} ${region} ETF`;
 
   const points = [
-    `Рапорт з купівлями й продажами — ${scheduleText[version.rebalanceFrequency] ?? frequency}`,
+    `Рапорт з купівлями й продажами — ${scheduleText[rebalance] ?? frequency}`,
     riskReview === 'off' ? 'Без щотижневої перевірки ризику' : 'Щонеділі перевіряє ризик: продає лише за сигналом виходу',
   ];
   if (typeof weak === 'number')

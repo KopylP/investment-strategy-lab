@@ -108,6 +108,11 @@ namespace InvestmentLab.Strategies.Shared.Infrastructure.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("parameters_schema");
 
+                    b.Property<string>("Reports")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("reports");
+
                     b.PrimitiveCollection<List<string>>("RequiredSeriesRoles")
                         .IsRequired()
                         .HasColumnType("text[]")
@@ -186,12 +191,6 @@ namespace InvestmentLab.Strategies.Shared.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
-
-                    b.Property<string>("Frequency")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("frequency");
 
                     b.Property<int>("Number")
                         .HasColumnType("integer")

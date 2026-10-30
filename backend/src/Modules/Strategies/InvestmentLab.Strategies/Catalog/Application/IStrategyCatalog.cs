@@ -21,12 +21,13 @@ public sealed record StrategyTypeDto(
     bool SupportsState,
     IReadOnlyList<string> RequiredSeriesRoles,
     JsonElement ParametersSchema,
-    JsonElement DefaultParameters);
+    JsonElement DefaultParameters,
+    IReadOnlyList<ReportDefinition> Reports);
 
 public sealed class GetStrategyCatalogHandler(IStrategyCatalog catalog)
 {
     public async Task<IReadOnlyList<StrategyTypeDto>> Handle(CancellationToken cancellationToken) =>
         [.. (await catalog.ListAsync(cancellationToken)).Select(type => new StrategyTypeDto(
             type.Code, type.Name, type.Description, type.Engine, type.EngineVersion, type.SupportsState, type.RequiredSeriesRoles,
-            JsonDocument.Parse(type.ParametersSchema).RootElement, JsonDocument.Parse(type.DefaultParameters).RootElement))];
+            JsonDocument.Parse(type.ParametersSchema).RootElement, JsonDocument.Parse(type.DefaultParameters).RootElement, type.Reports))];
 }

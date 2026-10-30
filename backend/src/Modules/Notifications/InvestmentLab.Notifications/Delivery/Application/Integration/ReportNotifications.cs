@@ -43,7 +43,9 @@ internal static class ReportNotification
         if (riskReview && actions == 0)
             return null;
 
-        var title = riskReview ? "Перевірка ризику: є що зробити" : $"Рапорт за {PeriodText(report.Period)} готовий";
+        var title = riskReview
+            ? $"{report.Title ?? "Перевірка ризику"}: є що зробити"
+            : report.Title is { } name ? $"{name} за {PeriodText(report.Period)} готовий" : $"Рапорт за {PeriodText(report.Period)} готовий";
         var account = string.IsNullOrWhiteSpace(report.AccountName) ? "" : $"«{report.AccountName}»: ";
         var message = actions == 0
             ? $"{account}цього разу нічого купувати чи продавати не треба."

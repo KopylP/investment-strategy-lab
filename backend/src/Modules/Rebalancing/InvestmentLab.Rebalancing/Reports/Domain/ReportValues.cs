@@ -28,12 +28,13 @@ public readonly record struct ReportActionId
     public override string ToString() => Value.ToString();
 }
 
+/// <summary>What a report does (a strategy's report declares its mode): Monthly is the rebalance — contribution, buys and sells.</summary>
 public enum ReportKind
 {
     Monthly,
     Recalculation,
 
-    /// <summary>Weekly: sells only for exit signals, warnings for the rest.</summary>
+    /// <summary>Sells only for exit signals, warnings for the rest.</summary>
     RiskReview,
 }
 

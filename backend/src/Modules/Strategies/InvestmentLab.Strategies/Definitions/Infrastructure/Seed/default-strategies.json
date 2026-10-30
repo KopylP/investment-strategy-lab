@@ -25,7 +25,6 @@
     "cashInstrument": "XEON.DE",
     "benchmark": "SPY",
     "volatilityIndex": "^VIX",
-    "rebalanceFrequency": "Monthly",
     "parameters": {
       "scanner": {
         "topN": 4,
@@ -83,7 +82,6 @@
     "cashInstrument": "BIL",
     "benchmark": "SPY",
     "volatilityIndex": "^VIX",
-    "rebalanceFrequency": "Monthly",
     "parameters": {
       "scanner": {
         "topN": 4,

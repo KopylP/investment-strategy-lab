@@ -92,9 +92,7 @@ export class ReportDetailStore {
     this.busyReport.set('regenerate');
     try {
       const accountId = report.summary.accountId;
-      const { reportId } = report.summary.kind === 'RiskReview'
-        ? await this.api.generateRiskReview(accountId)
-        : await this.api.generateMonthly(accountId, null);
+      const { reportId } = await this.api.generate(accountId, report.summary.code);
       this.messages.add({ severity: 'success', summary: 'Новий рапорт готовий', detail: 'Попередній замінено' });
       this.badge.refresh();
       return reportId;

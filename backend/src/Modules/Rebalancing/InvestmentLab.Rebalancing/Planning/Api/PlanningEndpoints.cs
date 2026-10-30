@@ -1,8 +1,7 @@
 using InvestmentLab.BuildingBlocks.Http;
 using InvestmentLab.Rebalancing.Contracts;
 using InvestmentLab.Rebalancing.Planning.Application;
-using InvestmentLab.Rebalancing.Planning.Application.GenerateMonthlyReport;
-using InvestmentLab.Rebalancing.Planning.Application.GenerateRiskReview;
+using InvestmentLab.Rebalancing.Planning.Application.GenerateReport;
 using InvestmentLab.Rebalancing.Reports.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -10,7 +9,8 @@ using Microsoft.AspNetCore.Routing;
 
 namespace InvestmentLab.Rebalancing.Planning.Api;
 
-public sealed record GenerateReportRequest(decimal? Contribution = null, DateOnly? AsOf = null);
+/// <param name="Code">Which of the strategies' reports (the schedule lists them); null — the first rebalance report.</param>
+public sealed record GenerateReportRequest(string? Code = null, decimal? Contribution = null, DateOnly? AsOf = null);
 
 public sealed record GeneratedReportResponse(Guid ReportId);
 
@@ -20,16 +20,11 @@ internal static class PlanningEndpoints
     {
         var account = group.MapGroup("/accounts/{accountId:guid}").WithTags("Planning");
 
-        // D14: "Згенерувати рапорт" — the same use case as the scheduled job.
-        account.MapPost("/reports", async (Guid accountId, GenerateReportRequest? body, GenerateMonthlyReportHandler handler, CancellationToken ct) =>
-                (await handler.Handle(new GenerateMonthlyReportCommand(accountId, body?.Contribution, body?.AsOf), ReportTrigger.OnDemand, ct))
+        // D14: a report on demand — the same use case as the scheduled job; which reports there are, the strategies say.
+        account.MapPost("/reports", async (Guid accountId, GenerateReportRequest? body, GenerateReportHandler handler, CancellationToken ct) =>
+                (await handler.Handle(new GenerateReportCommand(accountId, body?.Code, body?.Contribution, body?.AsOf), ReportTrigger.OnDemand, ct))
                 .Map(id => new GeneratedReportResponse(id.Value)).ToHttpResult())
             .WithName("GenerateReport");
-
-        account.MapPost("/risk-reviews", async (Guid accountId, GenerateReportRequest? body, GenerateRiskReviewHandler handler, CancellationToken ct) =>
-                (await handler.Handle(new GenerateRiskReviewCommand(accountId, body?.AsOf), ReportTrigger.OnDemand, ct))
-                .Map(id => new GeneratedReportResponse(id.Value)).ToHttpResult())
-            .WithName("GenerateRiskReview");
 
         account.MapGet("/settings", async (Guid accountId, PlanSettingsHandler handler, CancellationToken ct) =>
                 (await handler.Get(accountId, ct)).ToHttpResult())
