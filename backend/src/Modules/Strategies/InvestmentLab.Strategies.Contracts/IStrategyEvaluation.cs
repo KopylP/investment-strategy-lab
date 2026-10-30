@@ -149,13 +149,19 @@ public interface IStrategyDirectory
 
 public sealed record StrategySummaryDto(Guid Id, string Name, string TypeCode, int LatestVersion, IReadOnlyList<Guid> Universe, Guid? CashInstrumentId, IReadOnlyList<StrategyReportDto> Reports);
 
-/// <summary>A report the strategy makes: declared by its type, with how often for this strategy (its parameters may change it).</summary>
+/// <summary>A report the strategy makes: declared by its type, with when for this strategy (its parameters may change it).</summary>
 /// <param name="Code">The type's code of the report, e.g. "rebalance".</param>
 /// <param name="Mode">"rebalance" (contribution, buys and sells) or "riskReview" (sells only on an exit signal).</param>
-/// <param name="Frequency">"off", "weekly", "monthly" or "quarterly".</param>
-/// <param name="Time">Local time (HH:mm) on the report's Sunday.</param>
-public sealed record StrategyReportDto(string Code, string Name, string Description, string Mode, string Frequency, string Time)
+public sealed record StrategyReportDto(string Code, string Name, string Description, string Mode, StrategyReportScheduleDto Schedule)
 {
     public const string Rebalance = "rebalance";
     public const string RiskReview = "riskReview";
 }
+
+/// <summary>When a report comes, in the service's time zone; each frequency reads only its own fields.</summary>
+/// <param name="Frequency">"off", "hourly", "daily", "weekly", "monthly" or "quarterly".</param>
+/// <param name="Day">Monthly: day of the month; quarterly: of the quarter's first month. A shorter month: its last day.</param>
+/// <param name="Weekday">Weekly: "monday" … "sunday".</param>
+/// <param name="Time">Daily, weekly, monthly, quarterly: local time, HH:mm.</param>
+/// <param name="Minute">Hourly: the minute of every hour.</param>
+public sealed record StrategyReportScheduleDto(string Frequency, int Day, string Weekday, string Time, int Minute);

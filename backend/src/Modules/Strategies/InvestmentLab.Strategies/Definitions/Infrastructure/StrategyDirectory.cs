@@ -1,3 +1,4 @@
+using InvestmentLab.Strategies.Catalog.Domain;
 using InvestmentLab.Strategies.Contracts;
 using InvestmentLab.Strategies.Definitions.Application;
 using InvestmentLab.Strategies.Shared.Infrastructure.Engine;
@@ -12,6 +13,9 @@ internal sealed class StrategyDirectory(IStrategyRepository strategies, CatalogS
         return [.. (await strategies.ListAsync(cancellationToken)).Select(strategy => new StrategySummaryDto(
             strategy.Id.Value, strategy.Name, strategy.TypeCode, strategy.Latest.Number, strategy.Latest.Universe, strategy.Latest.CashInstrumentId,
             [.. (types.GetValueOrDefault(strategy.TypeCode)?.Reports ?? []).Select(report => new StrategyReportDto(
-                report.Code, report.Name, report.Description, report.Mode, report.FrequencyFor(strategy.Latest.Parameters), report.Time))]))];
+                report.Code, report.Name, report.Description, report.Mode, ToDto(report.ScheduleFor(strategy.Latest.Parameters))))]))];
     }
+
+    private static StrategyReportScheduleDto ToDto(ReportSchedule schedule) =>
+        new(schedule.Frequency, schedule.Day, schedule.Weekday, schedule.Time, schedule.Minute);
 }

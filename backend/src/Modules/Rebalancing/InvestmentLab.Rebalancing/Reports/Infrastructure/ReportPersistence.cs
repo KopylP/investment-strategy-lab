@@ -72,6 +72,11 @@ internal sealed class ReportRepository(RebalancingDbContext db) : IReportReposit
     public async Task<IReadOnlyList<RebalancingReport>> ForPeriodAsync(Guid accountId, YearMonth period, CancellationToken cancellationToken) =>
         await db.Reports.Where(report => report.AccountId == accountId && report.Period == period).ToListAsync(cancellationToken);
 
+    public async Task<DateTimeOffset?> LastScheduledAsync(Guid accountId, string code, CancellationToken cancellationToken) =>
+        await db.Reports
+            .Where(report => report.AccountId == accountId && report.Code == code && report.Trigger == ReportTrigger.Scheduled)
+            .MaxAsync(report => (DateTimeOffset?)report.GeneratedAt, cancellationToken);
+
     public async Task<IReadOnlyList<RebalancingReport>> OpenAsync(Guid accountId, CancellationToken cancellationToken) =>
         await db.Reports
             .Where(report => report.AccountId == accountId && (report.Status == ReportStatus.New || report.Status == ReportStatus.InProgress))

@@ -9,18 +9,20 @@ public static class ReportSchedules
 {
     public const string TimeZone = "Europe/Warsaw";
 
-    /// <summary>The job looks this often whether a report's time has come: a report declared for 20:00 comes by 20:15.</summary>
-    public static readonly IntervalSchedule Check = new(TimeSpan.FromMinutes(15));
+    /// <summary>The job looks this often whether a report's time has come: an hourly report set to :05 comes at :05.</summary>
+    public static readonly IntervalSchedule Check = new(TimeSpan.FromMinutes(1));
+
+    /// <summary>A report time missed for longer (the service was down) is skipped: the next one comes as scheduled.</summary>
+    public static readonly TimeSpan CatchUp = TimeSpan.FromDays(1);
 
     public static DateTimeOffset Local(DateTimeOffset instant) => TimeZoneInfo.ConvertTime(instant, TimeZoneInfo.FindSystemTimeZoneById(TimeZone));
-
-    public static DateOnly Today(TimeProvider clock) => DateOnly.FromDateTime(Local(clock.GetUtcNow()).DateTime);
 }
 
 /// <summary>
-/// Makes every report the accounts' strategies declare once its day and time have come: for the sub-portfolios whose
-/// strategy has it due today, once that day. A rebalance report is not made while one of the same code is still open
-/// for the month (D14: a user's report is never overwritten automatically).
+/// Makes every report the accounts' strategies declare once its time has come: for the sub-portfolios whose strategy's
+/// latest report time (within <see cref="ReportSchedules.CatchUp"/>) is later than the last report of that code made on
+/// schedule. A rebalance report is not made while one of the same code is still open for the month (D14: a user's
+/// report is never overwritten automatically).
 /// </summary>
 public sealed class StrategyReportsJob(
     PlanningInputs inputs, IPlanSettingsRepository settings, IReportRepository reports, GenerateReportHandler generate,
@@ -28,27 +30,32 @@ public sealed class StrategyReportsJob(
 {
     public async Task RunAsync(CancellationToken cancellationToken)
     {
-        var now = ReportSchedules.Local(clock.GetUtcNow());
-        var today = DateOnly.FromDateTime(now.DateTime);
-        var time = TimeOnly.FromDateTime(now.DateTime);
-        if (today.DayOfWeek != DayOfWeek.Sunday)
-            return;
+        var now = ReportSchedules.Local(clock.GetUtcNow()).DateTime;
+        var today = DateOnly.FromDateTime(now);
 
         foreach (var account in await inputs.AccountsAsync(cancellationToken))
         {
             if (await settings.FindAsync(account.Id, cancellationToken) is { GenerateOnSchedule: false })
                 continue;
 
-            var made = await reports.ForPeriodAsync(account.Id, YearMonth.Containing(today), cancellationToken);
+            IReadOnlyList<RebalancingReport>? made = null;
             foreach (var report in await inputs.ReportsAsync(account, cancellationToken))
             {
-                var due = report.SubPortfolios.Where(sub => sub.Cadence.IsDue(today) && sub.Cadence.Time <= time).Select(sub => sub.SubPortfolioId).ToHashSet();
+                var times = report.SubPortfolios
+                    .Select(sub => (sub.SubPortfolioId, Time: sub.Cadence.Last(now)))
+                    .Where(each => each.Time is { } time && now - time < ReportSchedules.CatchUp)
+                    .ToList();
+                if (times.Count == 0)
+                    continue;
+
+                var last = await reports.LastScheduledAsync(account.Id, report.Code, cancellationToken) is { } at
+                    ? ReportSchedules.Local(at).DateTime
+                    : DateTime.MinValue;
+                var due = times.Where(each => each.Time > last).Select(each => each.SubPortfolioId).ToHashSet();
                 if (due.Count == 0)
                     continue;
-                var sameCode = made.Where(each => each.Code == report.Code).ToList();
-                if (sameCode.Any(each => each.Trigger == ReportTrigger.Scheduled && DateOnly.FromDateTime(ReportSchedules.Local(each.GeneratedAt).DateTime) == today))
-                    continue;
-                if (report.Kind == ReportKind.Monthly && sameCode.Any(each => each.IsOpen))
+                made ??= await reports.ForPeriodAsync(account.Id, YearMonth.Containing(today), cancellationToken);
+                if (report.Kind == ReportKind.Monthly && made.Any(each => each.Code == report.Code && each.IsOpen))
                     continue;
 
                 var result = await generate.Handle(

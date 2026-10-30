@@ -1161,16 +1161,11 @@
           "mode": {
             "$ref": "#/components/schemas/ReportMode"
           },
-          "frequency": {
-            "$ref": "#/components/schemas/ReportFrequency"
+          "schedule": {
+            "$ref": "#/components/schemas/ReportSchedule",
+            "description": "The type's default."
           },
-          "time": {
-            "type": "string",
-            "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
-            "title": "Time",
-            "description": "Local time (the service's time zone) on the report's Sunday."
-          },
-          "frequencyParameter": {
+          "scheduleParameter": {
             "anyOf": [
               {
                 "type": "string"
@@ -1179,8 +1174,8 @@
                 "type": "null"
               }
             ],
-            "title": "Frequencyparameter",
-            "description": "Dotted camelCase path of a parameter whose value (a ReportFrequency) overrides the frequency for a strategy."
+            "title": "Scheduleparameter",
+            "description": "Dotted camelCase path of a parameter whose value (a ReportSchedule) overrides the schedule for a strategy."
           }
         },
         "additionalProperties": false,
@@ -1190,8 +1185,7 @@
           "name",
           "description",
           "mode",
-          "frequency",
-          "time"
+          "schedule"
         ],
         "title": "ReportDefinition",
         "description": "A report a strategy type makes: the service lists, schedules and generates it from this alone."
@@ -1200,12 +1194,13 @@
         "type": "string",
         "enum": [
           "off",
+          "hourly",
+          "daily",
           "weekly",
           "monthly",
           "quarterly"
         ],
-        "title": "ReportFrequency",
-        "description": "On Sunday evening, after the markets closed on Friday: every week, the first Sunday of the month or of the quarter."
+        "title": "ReportFrequency"
       },
       "ReportMode": {
         "type": "string",
@@ -1215,6 +1210,48 @@
         ],
         "title": "ReportMode",
         "description": "What a report does; the service knows how to make each."
+      },
+      "ReportSchedule": {
+        "properties": {
+          "frequency": {
+            "$ref": "#/components/schemas/ReportFrequency"
+          },
+          "day": {
+            "type": "integer",
+            "maximum": 31.0,
+            "minimum": 1.0,
+            "title": "Day",
+            "description": "Monthly: day of the month; quarterly: of the quarter's first month. A shorter month: its last day.",
+            "default": 1
+          },
+          "weekday": {
+            "$ref": "#/components/schemas/Weekday",
+            "description": "Weekly.",
+            "default": "sunday"
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+            "title": "Time",
+            "description": "Daily, weekly, monthly, quarterly: local time (HH:mm).",
+            "default": "20:00"
+          },
+          "minute": {
+            "type": "integer",
+            "maximum": 59.0,
+            "minimum": 0.0,
+            "title": "Minute",
+            "description": "Hourly: the minute of every hour.",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "frequency"
+        ],
+        "title": "ReportSchedule",
+        "description": "When a report comes, in the service's time zone; each frequency reads only its own fields."
       },
       "RiskAssessment": {
         "properties": {
@@ -1699,6 +1736,19 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "Weekday": {
+        "type": "string",
+        "enum": [
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+          "sunday"
+        ],
+        "title": "Weekday"
       }
     }
   }

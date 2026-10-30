@@ -58,8 +58,8 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
 
         // The reports the strategies declare: the schedule lists them, and each one is made by its code.
         var schedule = (await client.GetFromJsonAsync<ReportScheduleDto>($"/api/rebalancing/accounts/{account.Id}/report-schedule", ct))!;
-        schedule.Reports.Select(each => (each.Code, each.Mode, each.Frequency)).Distinct()
-            .ShouldBe([("rebalance", "rebalance", "Monthly"), ("risk-review", "riskReview", "Weekly")]);
+        schedule.Reports.Select(each => (each.Code, each.Mode, each.Frequency, each.Day, each.Weekday, each.Time)).Distinct()
+            .ShouldBe([("rebalance", "rebalance", "Monthly", 1, "Sunday", "20:00"), ("risk-review", "riskReview", "Weekly", 1, "Sunday", "19:00")]);
         var review = await PostAsync<GeneratedReportResponse>(client, $"/api/rebalancing/accounts/{account.Id}/reports", new { code = "risk-review", asOf }, ct);
         (await ReportAsync(client, review.ReportId, ct)).Summary.ShouldSatisfyAllConditions(
             summary => summary.Kind.ShouldBe("RiskReview"), summary => summary.Title.ShouldBe("Перевірка ризику"));

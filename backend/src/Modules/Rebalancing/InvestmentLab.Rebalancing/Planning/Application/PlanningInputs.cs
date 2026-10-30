@@ -131,9 +131,12 @@ public sealed class PlanningInputs(
         {
             var first = group.First().Report;
             return new AccountReport(first.Code, first.Name, first.Description, first.Mode, [.. group.Select(each => new SubPortfolioReport(
-                each.Sub.Id, each.Sub.Name, each.Strategy.Name, ReportCadence.Of(each.Report.Frequency, each.Report.Time)))]);
+                each.Sub.Id, each.Sub.Name, each.Strategy.Name, CadenceOf(each.Report.Schedule)))]);
         })];
     }
+
+    private static ReportCadence CadenceOf(StrategyReportScheduleDto schedule) =>
+        ReportCadence.Of(schedule.Frequency, schedule.Day, schedule.Weekday, schedule.Time, schedule.Minute);
 
     public static IEnumerable<SubPortfolioSetupDto> Planned(AccountSetupDto account) =>
         account.SubPortfolios.Where(sub => sub.Status == "Active" && sub.StrategyId is not null);
