@@ -10,6 +10,8 @@ export interface PositionVm {
   instrumentId: string;
   symbol: string;
   name: string;
+  /** Yahoo's description (English), null when there is none. */
+  description: string | null;
   quantity: number;
   averageCost: number;
   costBasis: number;
@@ -113,6 +115,7 @@ export class HoldingsStore {
           instrumentId: position.instrumentId,
           symbol: this.instruments.symbol(position.instrumentId),
           name: this.instruments.name(position.instrumentId),
+          description: this.instruments.byId().get(position.instrumentId)?.description ?? null,
           quantity: position.quantity,
           averageCost: position.averageCost * factor,
           costBasis: position.costBasis * factor,

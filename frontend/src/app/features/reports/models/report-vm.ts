@@ -33,6 +33,7 @@ export interface ReportActionVm {
   kind: ActionKind;
   title: string;
   instrumentName: string;
+  instrumentId: string | null;
   symbol: string;
   reason: string;
   isMoney: boolean;

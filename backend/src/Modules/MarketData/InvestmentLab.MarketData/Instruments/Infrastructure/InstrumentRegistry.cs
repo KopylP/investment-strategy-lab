@@ -1,12 +1,17 @@
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.MarketData.Instruments.Application;
+using InvestmentLab.MarketData.Instruments.Application.DescribeInstruments;
 using InvestmentLab.MarketData.Instruments.Application.RegisterInstrument;
 using InvestmentLab.MarketData.Instruments.Domain;
 
 namespace InvestmentLab.MarketData.Instruments.Infrastructure;
 
-/// <summary>Registers an instrument under its Yahoo symbol; an instrument that already owns the symbol is returned as it is.</summary>
-internal sealed class InstrumentRegistry(IInstrumentRepository instruments, RegisterInstrumentHandler register, ISymbolLookup lookup) : IInstrumentRegistry
+/// <summary>
+/// Registers an instrument under its Yahoo symbol and asks Yahoo what it is; an instrument that already owns the symbol is
+/// returned as it is.
+/// </summary>
+internal sealed class InstrumentRegistry(
+    IInstrumentRepository instruments, RegisterInstrumentHandler register, ISymbolLookup lookup, DescribeInstrumentsHandler describe) : IInstrumentRegistry
 {
     public async Task<IReadOnlyList<ListedSymbolDto?>> ResolveAsync(IReadOnlyList<BrokerTickerDto> tickers, CancellationToken cancellationToken)
     {
@@ -43,7 +48,10 @@ internal sealed class InstrumentRegistry(IInstrumentRepository instruments, Regi
         var result = await register.Handle(new RegisterInstrumentCommand(
             kind, null, string.IsNullOrWhiteSpace(instrument.Name) ? instrument.YahooSymbol : instrument.Name.Trim(), exchange, instrument.TradingCurrency, null, null,
             [symbol.Value.ToString()]), cancellationToken);
-        return result.IsSuccess ? new RegisteredInstrumentDto(result.Value, null) : new RegisteredInstrumentDto(null, result.Error.Message);
+        if (result.IsFailure)
+            return new RegisteredInstrumentDto(null, result.Error.Message);
+        await describe.Handle([InstrumentId.Of(result.Value)], cancellationToken);
+        return new RegisteredInstrumentDto(result.Value, null);
     }
 
     /// <summary>Yahoo symbols of the exchanges a broker most likely trades the ticker on in that currency, most likely first.</summary>

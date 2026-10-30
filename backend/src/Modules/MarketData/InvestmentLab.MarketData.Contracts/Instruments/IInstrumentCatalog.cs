@@ -8,6 +8,7 @@ public interface IInstrumentCatalog
 
 /// <param name="Kind">Etf, Index or FxPair.</param>
 /// <param name="ProviderSymbols">Provider-qualified symbols, e.g. <c>yfinance:SXR8.DE</c>.</param>
+/// <param name="Description">What the company or fund is, as Yahoo writes it (English); null when Yahoo has none.</param>
 public sealed record InstrumentDto(
     Guid Id,
     string Kind,
@@ -17,7 +18,8 @@ public sealed record InstrumentDto(
     string TradingCurrency,
     string? Group,
     bool? IsAccumulating,
-    IReadOnlyList<string> ProviderSymbols);
+    IReadOnlyList<string> ProviderSymbols,
+    string? Description = null);
 
 /// <summary>Adds an instrument the catalog does not know yet (e.g. a stock bought outside the strategies).</summary>
 public interface IInstrumentRegistry

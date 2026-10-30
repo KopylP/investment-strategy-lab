@@ -95,6 +95,7 @@ function toActionVm(
     kind: action.kind,
     title: titleOf(action.kind, ticker, subName(action.fromSubPortfolioId), subName(action.toSubPortfolioId)),
     instrumentName: action.instrumentId ? (report.instruments[action.instrumentId]?.name ?? '') : '',
+    instrumentId: action.instrumentId,
     symbol: ticker,
     reason: action.reason,
     isMoney,

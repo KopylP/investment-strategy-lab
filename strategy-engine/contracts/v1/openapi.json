@@ -1544,6 +1544,17 @@
           "quoteType": {
             "type": "string",
             "title": "Quotetype"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
           }
         },
         "additionalProperties": false,

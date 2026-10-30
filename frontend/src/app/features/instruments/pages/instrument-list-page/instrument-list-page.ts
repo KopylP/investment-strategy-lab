@@ -16,13 +16,14 @@ import { PriceChart } from '../../../../shared/charts/price-chart';
 import { AccountTrades } from '../../../../shared/data/account-trades';
 import { LayoutService } from '../../../../core/layout/layout-service';
 import { Viewport } from '../../../../shared/ui/viewport';
+import { InstrumentAbout } from '../../../../shared/ui/instrument-about';
 
 const kindLabels: Record<string, string> = { Etf: 'ETF', Stock: 'Акція', Index: 'Індекс', FxPair: 'Валюта' };
 
 @Component({
   selector: 'app-instrument-list-page',
   imports: [
-    FormsModule, Button, IconField, InputIcon, InputText, SelectButton, Skeleton, Tag, PageHeader, SignedValue, Sparkline, PriceChart,
+    FormsModule, Button, IconField, InputIcon, InputText, SelectButton, Skeleton, Tag, PageHeader, SignedValue, Sparkline, PriceChart, InstrumentAbout,
     MoneyPipe, DatePipe, PercentPipe, SignedPercentPipe,
   ],
   providers: [InstrumentsStore],

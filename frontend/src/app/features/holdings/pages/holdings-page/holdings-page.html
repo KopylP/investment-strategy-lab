@@ -150,6 +150,10 @@
                   <span class="inline-flex gap-1"><span class="text-muted-color">Середня ціна</span><app-money [amount]="position.averageCost" [currency]="store.currency()" [inline]="true" /></span>
                   <span class="inline-flex gap-1"><span class="text-muted-color">Ціна</span>@if (position.quotedPrice === null) { — } @else { <app-money [amount]="position.quotedPrice" [currency]="position.quoteCurrency" [inline]="true" /> }</span>
                 </div>
+                @if (position.description) {
+                  <div class="font-medium text-sm mb-1">{{ position.name }}</div>
+                  <app-instrument-about [text]="position.description" class="block mb-4 max-w-4xl" />
+                }
                 <div class="font-medium text-sm mb-2">Ціна й ваші угоди <span class="text-muted-color font-normal">(▲ купівля, ▼ продаж)</span></div>
                 <div class="mb-4 max-w-4xl"><app-position-chart [instrumentId]="position.instrumentId" [currency]="position.quoteCurrency" /></div>
                 <div class="font-medium text-sm mb-2">Лоти (FIFO)</div>

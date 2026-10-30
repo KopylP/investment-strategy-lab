@@ -11,7 +11,7 @@ from .contracts import SymbolInfo, SymbolLookupRequest, SymbolLookupResponse, Sy
 
 router = APIRouter(prefix="/v1", tags=["symbols"])
 
-SymbolInfoSource = Callable[[str], dict[str, str] | None]
+SymbolInfoSource = Callable[[str], dict[str, str | None] | None]
 
 
 def get_symbol_info() -> SymbolInfoSource:
@@ -26,6 +26,6 @@ def lookup(request: SymbolLookupRequest, source: Annotated[SymbolInfoSource, Dep
 def _first(query: SymbolQuery, source: SymbolInfoSource) -> SymbolInfo | None:
     for candidate in dict.fromkeys(symbol.strip().upper() for symbol in query.candidates):
         info = source(candidate)
-        if info is not None and (query.currency is None or info["currency"].upper() == query.currency.upper()):
+        if info is not None and (query.currency is None or str(info["currency"]).upper() == query.currency.upper()):
             return SymbolInfo(symbol=candidate, **info)
     return None

@@ -65,6 +65,7 @@
             @if (row.held) { <p-tag value="у портфелі" severity="success" /> }
           </div>
           <div class="text-muted-color mt-1">{{ row.name }}</div>
+          <app-instrument-about [text]="row.description" class="block mt-3" />
         </div>
         <p-button icon="pi pi-times" [text]="true" [rounded]="true" severity="secondary" ariaLabel="Закрити" class="hidden lg:block" (onClick)="store.select(row.id)" />
       </div>

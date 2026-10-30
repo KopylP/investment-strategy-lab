@@ -26,6 +26,9 @@ internal sealed class InstrumentRepository(MarketDataDbContext db) : IInstrument
     public async Task<IReadOnlyList<Instrument>> ListAsync(CancellationToken cancellationToken) =>
         await db.Instruments.AsNoTracking().OrderBy(instrument => instrument.Name).ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<Instrument>> ListForUpdateAsync(CancellationToken cancellationToken) =>
+        await db.Instruments.ToListAsync(cancellationToken);
+
     public void Add(Instrument instrument) => db.Instruments.Add(instrument);
 
     public Task SaveChangesAsync(CancellationToken cancellationToken) => db.SaveChangesAsync(cancellationToken);

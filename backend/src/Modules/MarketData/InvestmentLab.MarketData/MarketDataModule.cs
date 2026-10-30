@@ -12,6 +12,7 @@ using InvestmentLab.MarketData.FxRates.Infrastructure.Nbp;
 using InvestmentLab.MarketData.Instruments.Api;
 using InvestmentLab.MarketData.Instruments.Application;
 using InvestmentLab.MarketData.Instruments.Application.AssignProviderSymbol;
+using InvestmentLab.MarketData.Instruments.Application.DescribeInstruments;
 using InvestmentLab.MarketData.Instruments.Application.GetInstruments;
 using InvestmentLab.MarketData.Instruments.Application.RegisterInstrument;
 using InvestmentLab.MarketData.Instruments.Infrastructure;
@@ -47,6 +48,8 @@ public sealed class MarketDataModule : IModule
         services.AddScoped<RegisterInstrumentHandler>();
         services.AddScoped<AssignProviderSymbolHandler>();
         services.AddScoped<GetInstrumentsHandler>();
+        services.AddScoped<DescribeInstrumentsHandler>();
+        services.AddScheduledJob<InstrumentDescriptionsJob>(InstrumentDescriptionsJob.Schedule, runAtStartup: true);
         services.AddScoped<IInstrumentCatalog, InstrumentCatalog>();
         services.AddScoped<IInstrumentRegistry, InstrumentRegistry>();
         services.AddScoped<IModuleDataSeeder, InstrumentSeeder>();

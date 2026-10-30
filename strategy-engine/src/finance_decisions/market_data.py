@@ -72,8 +72,8 @@ def _column(raw: pd.DataFrame, field: str, symbol: str, symbol_count: int) -> pd
     return None
 
 
-def symbol_info(symbol: str) -> dict[str, str] | None:
-    """Name, currency and quote type (EQUITY, ETF, ...) of a Yahoo symbol, or None when Yahoo does not know it."""
+def symbol_info(symbol: str) -> dict[str, str | None] | None:
+    """Name, currency, quote type (EQUITY, ETF, ...) and Yahoo's description of a Yahoo symbol, or None when Yahoo does not know it."""
     try:
         info = yf.Ticker(symbol).info or {}
     except Exception:
@@ -84,4 +84,6 @@ def symbol_info(symbol: str) -> dict[str, str] | None:
         "name": info.get("longName") or info.get("shortName") or symbol,
         "currency": str(info["currency"]),
         "quote_type": str(info["quoteType"]),
+        # As Yahoo writes it (English); funds listed in Europe often have none.
+        "description": (str(info.get("longBusinessSummary") or "").strip() or None),
     }

@@ -13,6 +13,9 @@ public interface IInstrumentRepository
 
     Task<IReadOnlyList<Instrument>> ListAsync(CancellationToken cancellationToken);
 
+    /// <summary>All instruments, tracked: changes to them are saved by <see cref="SaveChangesAsync"/>.</summary>
+    Task<IReadOnlyList<Instrument>> ListForUpdateAsync(CancellationToken cancellationToken);
+
     void Add(Instrument instrument);
 
     Task SaveChangesAsync(CancellationToken cancellationToken);

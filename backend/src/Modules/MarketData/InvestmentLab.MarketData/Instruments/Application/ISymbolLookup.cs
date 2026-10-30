@@ -11,4 +11,5 @@ public interface ISymbolLookup
 public sealed record SymbolQuery(IReadOnlyList<string> Candidates, string? Currency);
 
 /// <param name="QuoteType">Yahoo's EQUITY, ETF, ...</param>
-public sealed record SymbolMatch(string Symbol, string Name, string Currency, string QuoteType);
+/// <param name="Description">What the company or fund is, as Yahoo writes it (English); null when Yahoo has none.</param>
+public sealed record SymbolMatch(string Symbol, string Name, string Currency, string QuoteType, string? Description = null);

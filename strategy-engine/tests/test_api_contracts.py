@@ -306,13 +306,13 @@ def test_prices_returns_close_and_adjusted_close(client: TestClient) -> None:
 
 def test_symbol_lookup_takes_the_first_candidate_in_the_currency(client: TestClient) -> None:
     known = {
-        "ASME.DE": {"name": "ASML Holding N.V.", "currency": "EUR", "quote_type": "EQUITY"},
+        "ASME.DE": {"name": "ASML Holding N.V.", "currency": "EUR", "quote_type": "EQUITY", "description": "ASML Holding N.V. develops lithography systems."},
         "ASML": {"name": "ASML Holding N.V.", "currency": "USD", "quote_type": "EQUITY"},
         "AAPL": {"name": "Apple Inc.", "currency": "USD", "quote_type": "EQUITY"},
     }
     asked: list[str] = []
 
-    def fake_info(symbol: str) -> dict[str, str] | None:
+    def fake_info(symbol: str) -> dict[str, str | None] | None:
         asked.append(symbol)
         return known.get(symbol)
 
@@ -326,8 +326,8 @@ def test_symbol_lookup_takes_the_first_candidate_in_the_currency(client: TestCli
 
     assert response.status_code == 200, response.text
     assert response.json()["results"] == [
-        {"symbol": "ASME.DE", "name": "ASML Holding N.V.", "currency": "EUR", "quoteType": "EQUITY"},
-        {"symbol": "AAPL", "name": "Apple Inc.", "currency": "USD", "quoteType": "EQUITY"},
+        {"symbol": "ASME.DE", "name": "ASML Holding N.V.", "currency": "EUR", "quoteType": "EQUITY", "description": "ASML Holding N.V. develops lithography systems."},
+        {"symbol": "AAPL", "name": "Apple Inc.", "currency": "USD", "quoteType": "EQUITY", "description": None},
         None,
     ]
     assert "ASME.AS" not in asked
