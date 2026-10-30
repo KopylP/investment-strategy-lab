@@ -48,7 +48,8 @@
             @if (transaction.canReverse) {
               <p-button icon="pi pi-replay" [text]="true" severity="secondary" pTooltip="Сторнувати" ariaLabel="Сторнувати" [disabled]="store.busy()" (onClick)="confirmReverse(transaction)" />
             } @else if (transaction.sourceLabel === 'з рапорту' && !transaction.isReversed && transaction.kind !== 'Reversal') {
-              <i class="pi pi-info-circle text-muted-color" pTooltip="Скасовується відміткою в рапорті"></i>
+              <!-- As wide as the reverse button above it, so the icons stand in one column. -->
+              <i class="pi pi-info-circle text-muted-color text-center w-(--p-button-icon-only-width)" pTooltip="Скасовується відміткою в рапорті"></i>
             }
           </td>
         </tr>
