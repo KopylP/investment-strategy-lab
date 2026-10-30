@@ -19,6 +19,48 @@ internal sealed class PythonStrategyEngine(StrategyEngineClient client) : IStrat
     public Task<Result<RiskAssessmentDto>> AssessRiskAsync(string typeCode, StrategyEvaluationContext context, CancellationToken cancellationToken) =>
         PostAsync<RiskAssessmentDto>(typeCode, "risk", context, cancellationToken);
 
+    public async Task<Result<string>> SubmitAsync(string typeCode, StrategyTask task, StrategyEvaluationContext context, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var (jobId, statusCode, error) = await client.SubmitJobAsync(typeCode, ActionOf(task), ToEngineContext(context), cancellationToken);
+            if (jobId is null)
+                return statusCode is 404 or 422 ? EvaluationErrors.EngineRejected(error ?? "") : EvaluationErrors.EngineUnavailable($"{statusCode}: {error}");
+
+            return jobId;
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or TimeoutException)
+        {
+            return EvaluationErrors.EngineUnavailable(exception.Message);
+        }
+    }
+
+    public async Task<EngineJobPoll<T>> PollAsync<T>(string jobId, CancellationToken cancellationToken) where T : class
+    {
+        EngineJob? job;
+        try
+        {
+            job = await client.GetJobAsync(jobId, cancellationToken);
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or TimeoutException)
+        {
+            // The engine may be restarting: the job is either still there or will be reported lost.
+            return new EngineJobPoll<T>(StrategyJobState.Running);
+        }
+
+        return job switch
+        {
+            null => new EngineJobPoll<T>(StrategyJobState.Lost),
+            { Status: "running" } => new EngineJobPoll<T>(StrategyJobState.Running),
+            { Status: "succeeded", Result: { } result } => new EngineJobPoll<T>(StrategyJobState.Finished, result.Deserialize<T>(StrategyEngineClient.Json)!),
+            _ => new EngineJobPoll<T>(StrategyJobState.Finished, job.ErrorStatusCode is 422
+                ? EvaluationErrors.EngineRejected(job.ErrorDetail ?? "")
+                : EvaluationErrors.StrategyFailed(job.ErrorDetail ?? job.Status)),
+        };
+    }
+
+    private static string ActionOf(StrategyTask task) => task == StrategyTask.AssessRisk ? "risk" : "decide";
+
     internal static EngineContext ToEngineContext(StrategyEvaluationContext context) => new(
         context.AsOf,
         JsonDocument.Parse(context.Parameters).RootElement,
@@ -85,6 +127,18 @@ internal sealed class StrategyEvaluation(EvaluateStrategyHandler evaluate) : ISt
 
     public async Task<StrategyEvaluationResult<RiskAssessmentDto>> AssessRiskAsync(EvaluateStrategyRequest request, CancellationToken cancellationToken) =>
         ToContract(await evaluate.AssessRisk(request, cancellationToken));
+
+    public async Task<StrategyEvaluationResult<StrategyJobTicket>> SubmitAsync(StrategyTask task, EvaluateStrategyRequest request, CancellationToken cancellationToken) =>
+        ToContract(await evaluate.Submit(task, request, cancellationToken));
+
+    public async Task<StrategyJobPoll<StrategyDecisionDto>> PollDecisionAsync(StrategyJobTicket ticket, CancellationToken cancellationToken) =>
+        ToContract(await evaluate.PollDecision(ticket, cancellationToken));
+
+    public async Task<StrategyJobPoll<RiskAssessmentDto>> PollRiskAsync(StrategyJobTicket ticket, CancellationToken cancellationToken) =>
+        ToContract(await evaluate.PollRisk(ticket, cancellationToken));
+
+    private static StrategyJobPoll<T> ToContract<T>(EngineJobPoll<T> poll) where T : class =>
+        new(poll.State, poll.Result is { } result ? ToContract(result) : null);
 
     private static StrategyEvaluationResult<T> ToContract<T>(Result<T> result) where T : class =>
         result.IsSuccess ? new(result.Value) : new(null, result.Error.Code, result.Error.Message);

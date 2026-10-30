@@ -114,6 +114,106 @@ namespace InvestmentLab.Rebalancing.Shared.Infrastructure.Migrations
                     b.ToTable("plan_settings", "rebalancing");
                 });
 
+            modelBuilder.Entity("InvestmentLab.Rebalancing.Planning.Domain.ReportRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<DateOnly>("AsOf")
+                        .HasColumnType("date")
+                        .HasColumnName("as_of");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
+
+                    b.Property<decimal?>("Contribution")
+                        .HasPrecision(20, 8)
+                        .HasColumnType("numeric(20,8)")
+                        .HasColumnName("contribution");
+
+                    b.Property<DateTimeOffset>("Deadline")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deadline");
+
+                    b.Property<string>("Error")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("error");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("kind");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_id");
+
+                    b.Property<Guid?>("ReportId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("report_id");
+
+                    b.Property<DateTimeOffset>("RequestedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("requested_at");
+
+                    b.Property<bool>("RunsPlanned")
+                        .HasColumnType("boolean")
+                        .HasColumnName("runs_planned");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("SubPortfolioIds")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("sub_portfolio_ids");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("title");
+
+                    b.Property<string>("Trigger")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("trigger");
+
+                    b.Property<string>("_runs")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("runs");
+
+                    b.HasKey("Id")
+                        .HasName("pk_report_requests");
+
+                    b.HasIndex("AccountId", "Code")
+                        .HasDatabaseName("ix_report_requests_account_id_code");
+
+                    b.HasIndex("Status", "RequestedAt")
+                        .HasDatabaseName("ix_report_requests_status_requested_at");
+
+                    b.ToTable("report_requests", "rebalancing");
+                });
+
             modelBuilder.Entity("InvestmentLab.Rebalancing.Reports.Domain.RebalancingReport", b =>
                 {
                     b.Property<Guid>("Id")

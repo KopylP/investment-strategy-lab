@@ -8,7 +8,47 @@ public interface IStrategyEvaluation
     Task<StrategyEvaluationResult<StrategyDecisionDto>> EvaluateAsync(EvaluateStrategyRequest request, CancellationToken cancellationToken);
 
     Task<StrategyEvaluationResult<RiskAssessmentDto>> AssessRiskAsync(EvaluateStrategyRequest request, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Starts the same evaluation in the background, for strategies that think for minutes or hours; poll the ticket
+    /// for the answer. Fails at once when the strategy or its context is refused, or the engine is unavailable
+    /// (<see cref="StrategyErrorCodes.EngineUnavailable"/>: worth trying again).
+    /// </summary>
+    Task<StrategyEvaluationResult<StrategyJobTicket>> SubmitAsync(StrategyTask task, EvaluateStrategyRequest request, CancellationToken cancellationToken);
+
+    Task<StrategyJobPoll<StrategyDecisionDto>> PollDecisionAsync(StrategyJobTicket ticket, CancellationToken cancellationToken);
+
+    Task<StrategyJobPoll<RiskAssessmentDto>> PollRiskAsync(StrategyJobTicket ticket, CancellationToken cancellationToken);
 }
+
+public static class StrategyErrorCodes
+{
+    public const string EngineUnavailable = "strategy.engine_unavailable";
+}
+
+public enum StrategyTask
+{
+    Decide,
+    AssessRisk,
+}
+
+/// <summary>A background evaluation: what to poll, and the strategy version its answer is for.</summary>
+public sealed record StrategyJobTicket(string JobId, StrategyTask Task, Guid StrategyId, int StrategyVersion, Guid? CashInstrumentId);
+
+public enum StrategyJobState
+{
+    /// <summary>Still thinking, or the engine did not answer this time: poll again later.</summary>
+    Running,
+
+    /// <summary>Done: <see cref="StrategyJobPoll{T}.Result"/> holds the answer or why there is none.</summary>
+    Finished,
+
+    /// <summary>The engine no longer knows the job (it restarted): submit it again.</summary>
+    Lost,
+}
+
+public sealed record StrategyJobPoll<T>(StrategyJobState State, StrategyEvaluationResult<T>? Result = null)
+    where T : class;
 
 /// <param name="Version">Null: the latest version of the strategy.</param>
 /// <param name="CashInstrumentId">Overrides the strategy's parking ETF (the sub-portfolio's own setting).</param>

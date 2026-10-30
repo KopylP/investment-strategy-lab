@@ -18,67 +18,41 @@ public sealed record GenerateMonthlyReportCommand(Guid AccountId, decimal? Contr
 /// split → strategy per sub-portfolio → guardrails → rebalancer → netting → report. It covers the sub-portfolios of its
 /// scope and their share of the monthly contribution. An open report of the same code and period is superseded by the
 /// new one; marks already made stay in the journal, so the new plan starts from what is really held.
+/// The strategies think in the background (<see cref="ReportRequest"/>): <see cref="StrategyRequestsAsync"/> says what
+/// to ask them, <see cref="Handle"/> makes the report from their answers, from what is held when they have answered.
 /// </summary>
 public sealed class GenerateMonthlyReportHandler(
     PlanningInputs inputs,
-    IStrategyEvaluation strategies,
     IPlanSettingsRepository settings,
     IReportRepository reports,
     IPlanReviewer reviewer,
     SaleTaxes taxes,
     TimeProvider clock)
 {
-    public async Task<Result<ReportId>> Handle(GenerateMonthlyReportCommand command, ReportTrigger trigger, CancellationToken cancellationToken)
+    /// <summary>What each sub-portfolio's strategy is asked: its holdings and its share of the contribution.</summary>
+    public async Task<Result<IReadOnlyDictionary<Guid, EvaluateStrategyRequest>>> StrategyRequestsAsync(
+        GenerateMonthlyReportCommand command, CancellationToken cancellationToken)
     {
-        var now = clock.GetUtcNow();
-        var asOf = command.AsOf ?? DateOnly.FromDateTime(now.UtcDateTime);
-        var period = YearMonth.Containing(asOf);
+        var prepared = await PrepareAsync(command, cancellationToken);
+        if (prepared.IsFailure)
+            return prepared.Error;
 
-        if (await inputs.AccountAsync(command.AccountId, cancellationToken) is not { } account)
-            return Error.NotFound("account.not_found", $"Account {command.AccountId} does not exist.");
-        var all = PlanningInputs.Planned(account).ToList();
-        var planned = command.Scope is { } scope ? all.Where(sub => scope.SubPortfolioIds.Contains(sub.Id)).ToList() : all;
-        if (planned.Count == 0)
-            return ReportErrors.NoActiveSubPortfolios(account.Id);
-        if (command.Contribution is < 0m)
-            return ReportErrors.ContributionNegative();
-        var code = command.Scope?.Code ?? ReportDefaults.CodeOf(ReportKind.Monthly);
-        var title = command.Scope?.Title ?? ReportDefaults.TitleOf(ReportKind.Monthly);
+        var plan = prepared.Value;
+        return plan.Planned.ToDictionary(sub => sub.Id, plan.RequestOf);
+    }
 
-        // The scope's part of the monthly contribution (by target shares), less what reports of this code already paid in.
-        var planSettings = await settings.FindAsync(account.Id, cancellationToken) ?? PlanSettings.DefaultFor(account.Id, UserId.Of(account.OwnerId));
-        var periodReports = await reports.ForPeriodAsync(account.Id, period, cancellationToken);
-        var contributed = periodReports.Where(report => report.Code == code).Sum(report => report.ContributedAmount);
-        var allShares = all.Sum(sub => sub.TargetShare);
-        var part = allShares > 0m ? planned.Sum(sub => sub.TargetShare) / allShares : 1m;
-        var contribution = command.Contribution ?? Math.Max(0m, decimal.Round(planSettings.MonthlyContribution * part, 2) - contributed);
+    /// <param name="decisions">The strategies' answers by sub-portfolio; one missing is a strategy that did not answer.</param>
+    /// <param name="request">Completed with the report, in the same save.</param>
+    public async Task<Result<ReportId>> Handle(
+        GenerateMonthlyReportCommand command, IReadOnlyDictionary<Guid, StrategyEvaluationResult<StrategyDecisionDto>> decisions,
+        ReportRequest request, CancellationToken cancellationToken)
+    {
+        var prepared = await PrepareAsync(command, cancellationToken);
+        if (prepared.IsFailure)
+            return prepared.Error;
 
-        var currency = Currency.Of(account.BaseCurrency);
-        var holdings = await inputs.HoldingsAsync(account, cancellationToken);
-        var labels = await inputs.LabelsAsync(cancellationToken);
+        var (account, planned, code, title, period, asOf, now, planSettings, periodReports, currency, holdings, labels, snapshots, prices, warnings, allocation) = prepared.Value;
         string Label(Guid id) => labels.TryGetValue(id, out var label) ? label : id.ToString();
-        var snapshots = holdings.SubPortfolios.ToDictionary(sub => sub.SubPortfolioId);
-
-        var heldIds = holdings.SubPortfolios.SelectMany(sub => sub.Positions.Select(position => position.InstrumentId));
-        var cashIds = planned.Select(sub => sub.CashInstrumentId).OfType<Guid>();
-        var warnings = new List<string>();
-        var prices = new Dictionary<Guid, MarketData.Contracts.Quotes.LatestPriceDto>(
-            await inputs.PricesAsync(heldIds.Concat(cashIds), asOf, account.BaseCurrency, warnings, cancellationToken));
-
-        // 1. Contribution split by how far each sub-portfolio is from its target share.
-        var standings = planned.Select(sub => new SubPortfolioStanding(sub.Id, Percentage.Of(sub.TargetShare), ValueOf(snapshots.GetValueOrDefault(sub.Id), prices))).ToList();
-        var split = Enum.TryParse<ContributionSplit>(account.ContributionPolicy, out var policy) ? policy : ContributionSplit.FillUnderweight;
-        var allocation = ContributionAllocator.Allocate(contribution, standings, split, Percentage.Of(account.DriftBand));
-
-        // 2. Each strategy decides for its sub-portfolio.
-        var decisions = new Dictionary<Guid, StrategyEvaluationResult<StrategyDecisionDto>>();
-        foreach (var sub in planned)
-        {
-            var request = new EvaluateStrategyRequest(
-                sub.StrategyId!.Value, sub.PinnedStrategyVersion, PlanningInputs.StateOf(account, snapshots.GetValueOrDefault(sub.Id)),
-                allocation.For(sub.Id), asOf, sub.CashInstrumentId);
-            decisions[sub.Id] = await strategies.EvaluateAsync(request, cancellationToken);
-        }
 
         var targetIds = decisions.Values.Where(result => result.IsSuccess)
             .SelectMany(result => result.Value!.Targets.Select(target => target.InstrumentId)
@@ -93,7 +67,7 @@ public sealed class GenerateMonthlyReportHandler(
         {
             var snapshot = snapshots.GetValueOrDefault(sub.Id);
             var share = allocation.For(sub.Id);
-            var result = decisions[sub.Id];
+            var result = decisions.GetValueOrDefault(sub.Id) ?? new(null, "strategy.no_answer", "стратегія не відповіла");
             if (!result.IsSuccess)
             {
                 warnings.Add($"Стратегія під-портфеля «{sub.Name}» не відповіла: {result.ErrorMessage}. Його позиції цього разу не змінюються.");
@@ -140,7 +114,7 @@ public sealed class GenerateMonthlyReportHandler(
 
         var marketAsOf = prices.Count > 0 ? prices.Values.Max(price => price.Date) : asOf;
         var draft = ReportComposer.Compose(
-            new ReportHeader(account.Id, UserId.Of(account.OwnerId), account.Name, currency, period, ReportKind.Monthly, trigger, marketAsOf, code, title),
+            new ReportHeader(account.Id, UserId.Of(account.OwnerId), account.Name, currency, period, ReportKind.Monthly, request.Trigger, marketAsOf, code, title),
             allocation, outcomes, warnings);
         draft = draft with { Review = await reviewer.ReviewAsync(draft, cancellationToken) };
 
@@ -153,8 +127,79 @@ public sealed class GenerateMonthlyReportHandler(
             reports.Publish(new ReportSupersededV1(open.Id.Value, open.AccountId, report.Id.Value, now), now);
         }
         reports.Publish(report.ToGeneratedEvent(), now);
+        request.Complete(report.Id, now);
         await reports.SaveChangesAsync(cancellationToken);
         return report.Id;
+    }
+
+    /// <summary>Steps before the strategies: the account, its holdings and prices, and the contribution split (1).</summary>
+    private async Task<Result<PreparedPlan>> PrepareAsync(GenerateMonthlyReportCommand command, CancellationToken cancellationToken)
+    {
+        var now = clock.GetUtcNow();
+        var asOf = command.AsOf ?? DateOnly.FromDateTime(now.UtcDateTime);
+        var period = YearMonth.Containing(asOf);
+
+        if (await inputs.AccountAsync(command.AccountId, cancellationToken) is not { } account)
+            return Error.NotFound("account.not_found", $"Account {command.AccountId} does not exist.");
+        var all = PlanningInputs.Planned(account).ToList();
+        var planned = command.Scope is { } scope ? all.Where(sub => scope.SubPortfolioIds.Contains(sub.Id)).ToList() : all;
+        if (planned.Count == 0)
+            return ReportErrors.NoActiveSubPortfolios(account.Id);
+        if (command.Contribution is < 0m)
+            return ReportErrors.ContributionNegative();
+        var code = command.Scope?.Code ?? ReportDefaults.CodeOf(ReportKind.Monthly);
+        var title = command.Scope?.Title ?? ReportDefaults.TitleOf(ReportKind.Monthly);
+
+        // The scope's part of the monthly contribution (by target shares), less what reports of this code already paid in.
+        var planSettings = await settings.FindAsync(account.Id, cancellationToken) ?? PlanSettings.DefaultFor(account.Id, UserId.Of(account.OwnerId));
+        var periodReports = await reports.ForPeriodAsync(account.Id, period, cancellationToken);
+        var contributed = periodReports.Where(report => report.Code == code).Sum(report => report.ContributedAmount);
+        var allShares = all.Sum(sub => sub.TargetShare);
+        var part = allShares > 0m ? planned.Sum(sub => sub.TargetShare) / allShares : 1m;
+        var contribution = command.Contribution ?? Math.Max(0m, decimal.Round(planSettings.MonthlyContribution * part, 2) - contributed);
+
+        var currency = Currency.Of(account.BaseCurrency);
+        var holdings = await inputs.HoldingsAsync(account, cancellationToken);
+        var labels = await inputs.LabelsAsync(cancellationToken);
+        var snapshots = holdings.SubPortfolios.ToDictionary(sub => sub.SubPortfolioId);
+
+        var heldIds = holdings.SubPortfolios.SelectMany(sub => sub.Positions.Select(position => position.InstrumentId));
+        var cashIds = planned.Select(sub => sub.CashInstrumentId).OfType<Guid>();
+        var warnings = new List<string>();
+        var prices = new Dictionary<Guid, MarketData.Contracts.Quotes.LatestPriceDto>(
+            await inputs.PricesAsync(heldIds.Concat(cashIds), asOf, account.BaseCurrency, warnings, cancellationToken));
+
+        // 1. Contribution split by how far each sub-portfolio is from its target share.
+        var standings = planned.Select(sub => new SubPortfolioStanding(sub.Id, Percentage.Of(sub.TargetShare), ValueOf(snapshots.GetValueOrDefault(sub.Id), prices))).ToList();
+        var split = Enum.TryParse<ContributionSplit>(account.ContributionPolicy, out var policy) ? policy : ContributionSplit.FillUnderweight;
+        var allocation = ContributionAllocator.Allocate(contribution, standings, split, Percentage.Of(account.DriftBand));
+
+        return new PreparedPlan(
+            account, planned, code, title, period, asOf, now, planSettings, periodReports, currency, holdings, labels, snapshots, prices, warnings, allocation);
+    }
+
+    private sealed record PreparedPlan(
+        AccountSetupDto Account,
+        IReadOnlyList<SubPortfolioSetupDto> Planned,
+        string Code,
+        string Title,
+        YearMonth Period,
+        DateOnly AsOf,
+        DateTimeOffset Now,
+        PlanSettings PlanSettings,
+        IReadOnlyList<RebalancingReport> PeriodReports,
+        Currency Currency,
+        Portfolio.Contracts.Holdings.AccountHoldingsDto Holdings,
+        IReadOnlyDictionary<Guid, string> Labels,
+        Dictionary<Guid, Portfolio.Contracts.Holdings.SubPortfolioHoldingsDto> Snapshots,
+        Dictionary<Guid, MarketData.Contracts.Quotes.LatestPriceDto> Prices,
+        List<string> Warnings,
+        ContributionAllocation Allocation)
+    {
+        /// <summary>2. What the sub-portfolio's strategy decides on.</summary>
+        public EvaluateStrategyRequest RequestOf(SubPortfolioSetupDto sub) => new(
+            sub.StrategyId!.Value, sub.PinnedStrategyVersion, PlanningInputs.StateOf(Account, Snapshots.GetValueOrDefault(sub.Id)),
+            Allocation.For(sub.Id), AsOf, sub.CashInstrumentId);
     }
 
     private static decimal ValueOf(Portfolio.Contracts.Holdings.SubPortfolioHoldingsDto? snapshot, IReadOnlyDictionary<Guid, MarketData.Contracts.Quotes.LatestPriceDto> prices) =>
