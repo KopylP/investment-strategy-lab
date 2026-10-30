@@ -49,7 +49,8 @@ export function toReportVm(report: ReportDetailsDto): ReportVm {
     isOpenForMarking,
     actions,
     sections: report.sections.map((section) => toSectionVm(section, symbol, readable)),
-    warnings: report.warnings,
+    // Each sub-portfolio's section can add the same note (a USD price converted for the account): show it once.
+    warnings: [...new Set(report.warnings)],
     quotesLookStale: report.warnings.some((warning) => warning.includes('котирув')),
     contribution: {
       total: report.contributionPlan.total,

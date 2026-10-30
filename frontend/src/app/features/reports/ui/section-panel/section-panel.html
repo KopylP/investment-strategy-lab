@@ -39,12 +39,13 @@
       <h3 class="text-lg font-semibold mt-4 mb-3">Ордери під-портфеля (до неттінгу)</h3>
       <p-table [value]="s.orders" tableStyleClass="sm:min-w-[40rem]" size="small">
         <ng-template #header>
-          <tr><th>Дія</th><th>ETF</th><th class="text-right hidden sm:table-cell">Штук</th><th class="text-right">Сума</th><th class="hidden sm:table-cell">Чому</th></tr>
+          <tr><th class="hidden sm:table-cell">Дія</th><th>ETF</th><th class="text-right hidden sm:table-cell">Штук</th><th class="text-right">Сума</th><th class="hidden sm:table-cell">Чому</th></tr>
         </ng-template>
         <ng-template #body let-order>
           <tr>
-            <td><p-tag [value]="order.kindLabel" [severity]="order.severity" /></td>
-            <td class="font-medium">{{ order.symbol }}</td>
+            <td class="hidden sm:table-cell"><p-tag [value]="order.kindLabel" [severity]="order.severity" /></td>
+            <!-- Phone: the action above the ticker; its own column leaves too little for a big amount. -->
+            <td class="font-medium"><div class="sm:hidden mb-1"><p-tag [value]="order.kindLabel" [severity]="order.severity" /></div>{{ order.symbol }}</td>
             <td class="text-right hidden sm:table-cell">{{ order.quantity | quantity }}</td>
             <td class="text-right whitespace-nowrap">{{ order.amount | money: currency() }}</td>
             <td class="text-sm text-muted-color hidden sm:table-cell">{{ order.reason }}</td>

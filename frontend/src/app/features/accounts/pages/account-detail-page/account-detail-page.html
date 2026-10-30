@@ -27,7 +27,8 @@
       </ng-template>
       <ng-template #body let-sub>
         <tr>
-          <td>
+          <!-- A long name breaks inside a word rather than let a phone's table scroll sideways. -->
+          <td class="[overflow-wrap:anywhere] sm:[overflow-wrap:normal]">
             <div class="font-medium">{{ sub.name }}</div>
             <!-- Phone: parking and limits under the name instead of their own columns. -->
             <div class="sm:hidden text-xs text-muted-color">
@@ -43,7 +44,7 @@
               {{ sub.targetShare | percent: 0 }}
             }
           </td>
-          <td class="max-w-md">
+          <td class="max-w-md [overflow-wrap:anywhere] sm:[overflow-wrap:normal]">
             <button type="button" class="w-full text-left p-2 -m-2 rounded-border border-0 bg-transparent cursor-pointer text-color hover:bg-emphasis"
               [disabled]="store.busy() === 'strategy-' + sub.id" (click)="pickFor.set(sub)">
               <div class="font-medium flex items-center gap-2">

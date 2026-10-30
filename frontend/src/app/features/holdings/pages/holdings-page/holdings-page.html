@@ -52,7 +52,7 @@
   </div>
 
   <div class="card py-4">
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-y-4">
+    <div class="app-tiles">
       <div class="px-1 sm:px-4 lg:border-r border-surface">
         <div class="text-muted-color text-xs uppercase tracking-wide">Інвестовано</div>
         <div class="text-xl font-semibold mt-1"><app-money [amount]="totals.invested" [currency]="store.currency()" /></div>
@@ -92,7 +92,9 @@
         <div class="min-w-0">
           @if (sleeve.accountName) { <div class="text-xs uppercase tracking-wide text-muted-color">{{ sleeve.accountName }}</div> }
           <h2 class="text-lg font-semibold m-0">{{ sleeve.name }}</h2>
-          <div class="text-sm text-muted-color">частка {{ sleeve.accountName ? 'в рахунку ' : '' }}{{ sleeve.actualShare | percent }} при цілі {{ sleeve.targetShare | percent: 0 }} · кеш <app-money [amount]="sleeve.cash" [currency]="store.currency()" [inline]="true" />
+          <div class="text-sm text-muted-color">частка {{ sleeve.accountName ? 'в рахунку ' : '' }}{{ sleeve.actualShare | percent }} при цілі {{ sleeve.targetShare | percent: 0 }}</div>
+          <!-- Cash on its own line: a big amount with its original in brackets would leave "· кеш" hanging. -->
+          <div class="text-sm text-muted-color">кеш <app-money [amount]="sleeve.cash" [currency]="store.currency()" [inline]="true" />
             @if (sleeve.cashParts.length > 1) { <span class="text-xs ml-1">(@for (part of sleeve.cashParts; track part.currency; let last = $last) {{{ part.amount | money: part.currency }}@if (!last) { · }})</span> }</div>
         </div>
         <div class="text-right shrink-0">

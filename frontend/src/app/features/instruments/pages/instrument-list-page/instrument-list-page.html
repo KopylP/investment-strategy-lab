@@ -38,7 +38,7 @@
                 <div class="text-xs text-muted-color truncate">{{ row.name }}</div>
               </div>
               <app-sparkline [values]="row.spark" class="hidden sm:block" />
-              <div class="text-right w-24 shrink-0">
+              <div class="text-right min-w-24 shrink-0">
                 <div class="font-medium whitespace-nowrap">{{ row.price ? (row.price.close | money: row.currency) : '—' }}</div>
                 <div class="text-xs" [appSignedValue]="row.change1m">{{ row.change1m === null ? '' : (row.change1m | signedPercent) + ' міс.' }}</div>
               </div>
