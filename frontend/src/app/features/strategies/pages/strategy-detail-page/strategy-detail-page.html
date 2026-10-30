@@ -39,7 +39,7 @@
           <div class="flex justify-between"><span class="text-muted-color">Паркування</span><span>{{ store.instruments.symbol(strategy.version.cashInstrumentId) }}</span></div>
           @for (report of reports(); track report.code) {
             <div class="flex justify-between gap-3"><span class="text-muted-color">{{ report.name }}</span>
-              <span class="text-right">{{ frequencyLabel(report.frequency) }}@if (report.frequency !== 'off') {, {{ report.time }}}</span></div>
+              <span class="text-right">{{ report.when }}</span></div>
           }
           <div class="flex justify-between"><span class="text-muted-color">Версія створена</span><span>{{ strategy.version.createdAt | dateTime }}</span></div>
         </div>

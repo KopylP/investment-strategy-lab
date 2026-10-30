@@ -11,9 +11,9 @@ import { symbolOf } from '../../../../shared/models/api';
 import { DateTimePipe } from '../../../../shared/pipes/format-pipes';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { JsonObject, SchemaForm } from '../../../../shared/ui/schema-form/schema-form';
-import { frequencyLabel } from '../../../reports/models/report-schedule';
+import { scheduleLabel } from '../../../reports/models/report-schedule';
 import { StrategyDetailStore } from '../../data-access/strategies-store';
-import { frequencyOf } from '../../models/strategy';
+import { scheduleOf } from '../../models/strategy';
 
 @Component({
   selector: 'app-strategy-detail-page',
@@ -33,13 +33,12 @@ export class StrategyDetailPage {
   protected readonly universe = signal<string[]>([]);
   protected readonly cashInstrumentId = signal<string | null>(null);
   protected readonly benchmarkInstrumentId = signal<string | null>(null);
-  /** The reports the strategy's type declares, with how often this version makes them. */
+  /** The reports the strategy's type declares, with when this version makes them. */
   protected readonly reports = computed(() => {
     const parameters = this.store.strategy()?.version.parameters ?? {};
-    return (this.store.type()?.reports ?? []).map((report) => ({ ...report, frequency: frequencyOf(report, parameters) }));
+    return (this.store.type()?.reports ?? []).map((report) => ({ ...report, when: scheduleLabel(scheduleOf(report, parameters)) }));
   });
-  protected readonly frequencyLabel = frequencyLabel;
-
+  
   protected readonly etfOptions = computed(() =>
     this.store.instruments.etfs().map((instrument) => ({ label: `${symbolOf(instrument)} · ${instrument.name}`, value: instrument.id, group: instrument.group ?? '' })),
   );

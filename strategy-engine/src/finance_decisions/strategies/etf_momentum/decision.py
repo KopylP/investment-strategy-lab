@@ -20,7 +20,6 @@ from finance_decisions.api.contracts import (
     Rationale,
     RationaleColumn,
     ReportDefinition,
-    ReportFrequency,
     ReportMode,
     RiskAssessment,
     RiskSignal,
@@ -32,31 +31,29 @@ from finance_decisions.api.contracts import (
 from finance_decisions.helpers import holdings_by_value, is_na, latest_value
 from finance_decisions.models import Position
 from finance_decisions.strategies.errors import ContextError
-from .parameters import EtfMomentumParameters
+from .parameters import EtfMomentumParameters, RebalanceSchedule, RiskReviewSchedule
 from .risk import analyze_portfolio_risk
 from .scanner import MARKET_TICKERS, STATUS_FAILED, scan_etfs
 
 STRATEGY_CODE = "etf-momentum"
 
-# The reports the service makes for a sub-portfolio with this strategy; "reporting" in the parameters sets how often.
+# The reports the service makes for a sub-portfolio with this strategy; "reporting" in the parameters sets when.
 REPORTS = (
     ReportDefinition(
         code="rebalance",
         name="Ребаланс",
         description="Внесок, купівлі й продажі за рішенням стратегії.",
         mode=ReportMode.REBALANCE,
-        frequency=ReportFrequency.MONTHLY,
-        time="20:00",
-        frequency_parameter="reporting.rebalance",
+        schedule=RebalanceSchedule().to_schedule(),
+        schedule_parameter="reporting.rebalance",
     ),
     ReportDefinition(
         code="risk-review",
         name="Перевірка ризику",
         description="Стоп-лоси й сигнали виходу між ребалансами; продаж лише за сигналом.",
         mode=ReportMode.RISK_REVIEW,
-        frequency=ReportFrequency.WEEKLY,
-        time="19:00",
-        frequency_parameter="reporting.riskReview",
+        schedule=RiskReviewSchedule().to_schedule(),
+        schedule_parameter="reporting.riskReview",
     ),
 )
 

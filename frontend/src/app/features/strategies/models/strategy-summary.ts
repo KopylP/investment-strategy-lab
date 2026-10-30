@@ -1,3 +1,4 @@
+import { ReportTiming, scheduleLabel } from '../../reports/models/report-schedule';
 import { Strategy } from './strategy';
 
 export interface StrategyBlurb {
@@ -7,13 +8,7 @@ export interface StrategyBlurb {
   region: string;
 }
 
-const frequencyText: Record<string, string> = { weekly: 'щотижня', monthly: 'щомісяця', quarterly: 'щокварталу' };
-
-const scheduleText: Record<string, string> = {
-  weekly: 'щонеділі',
-  monthly: 'першої неділі місяця',
-  quarterly: 'першої неділі кварталу',
-};
+const frequencyText: Record<string, string> = { hourly: 'щогодини', daily: 'щодня', weekly: 'щотижня', monthly: 'щомісяця', quarterly: 'щокварталу' };
 
 function read(parameters: unknown, ...path: string[]): unknown {
   let node = parameters;
@@ -32,17 +27,18 @@ export function describeStrategy(strategy: Strategy, symbol: (id: string | null)
   const region = currencies.size === 1 ? (currencies.has('EUR') ? 'європейських' : currencies.has('USD') ? 'американських' : '') : '';
   const topN = read(version.parameters, 'scanner', 'topN');
   const weak = read(version.parameters, 'weakMarketInvestPct');
-  const riskReview = read(version.parameters, 'reporting', 'riskReview') ?? 'weekly';
-  const rebalance = String(read(version.parameters, 'reporting', 'rebalance') ?? 'monthly');
-  const frequency = frequencyText[rebalance] ?? rebalance;
+  const timing = (name: string, fallback: ReportTiming): ReportTiming => ({ ...fallback, ...(read(version.parameters, 'reporting', name) as Partial<ReportTiming> | undefined) });
+  const rebalance = timing('rebalance', { frequency: 'monthly', day: 1, weekday: 'sunday', time: '20:00', minute: 0 });
+  const riskReview = timing('riskReview', { frequency: 'weekly', day: 1, weekday: 'sunday', time: '19:00', minute: 0 });
+  const frequency = frequencyText[rebalance.frequency] ?? rebalance.frequency;
 
   const headline = typeof topN === 'number'
     ? `${frequency[0].toUpperCase()}${frequency.slice(1)} обирає ${topN} найсильніших із ${count} ${region} ETF і тримає їх порівну`
     : `${frequency[0].toUpperCase()}${frequency.slice(1)} перебудовує портфель із ${count} ${region} ETF`;
 
   const points = [
-    `Рапорт з купівлями й продажами — ${scheduleText[rebalance] ?? frequency}`,
-    riskReview === 'off' ? 'Без щотижневої перевірки ризику' : 'Щонеділі перевіряє ризик: продає лише за сигналом виходу',
+    `Рапорт з купівлями й продажами — ${scheduleLabel(rebalance)}`,
+    riskReview.frequency === 'off' ? 'Без перевірки ризику між ребалансами' : `Перевіряє ризик ${scheduleLabel(riskReview)}: продає лише за сигналом виходу`,
   ];
   if (typeof weak === 'number')
     points.push(`Слабкий ринок: інвестує ${Math.round(weak * 100)}% внеску${version.cashInstrumentId ? `, решта — в ${symbol(version.cashInstrumentId)}` : ''}`);

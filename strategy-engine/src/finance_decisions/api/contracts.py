@@ -14,6 +14,10 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pydantic.alias_generators import to_camel
 
 
+# Local wall-clock time, HH:mm.
+TIME_PATTERN = r"^([01][0-9]|2[0-3]):[0-5][0-9]$"
+
+
 class ApiModel(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True, extra="forbid")
 
@@ -254,12 +258,32 @@ class ReportMode(str, Enum):
 
 
 class ReportFrequency(str, Enum):
-    """On Sunday evening, after the markets closed on Friday: every week, the first Sunday of the month or of the quarter."""
-
     OFF = "off"
+    HOURLY = "hourly"
+    DAILY = "daily"
     WEEKLY = "weekly"
     MONTHLY = "monthly"
     QUARTERLY = "quarterly"
+
+
+class Weekday(str, Enum):
+    MONDAY = "monday"
+    TUESDAY = "tuesday"
+    WEDNESDAY = "wednesday"
+    THURSDAY = "thursday"
+    FRIDAY = "friday"
+    SATURDAY = "saturday"
+    SUNDAY = "sunday"
+
+
+class ReportSchedule(ApiModel):
+    """When a report comes, in the service's time zone; each frequency reads only its own fields."""
+
+    frequency: ReportFrequency
+    day: int = Field(1, ge=1, le=31, description="Monthly: day of the month; quarterly: of the quarter's first month. A shorter month: its last day.")
+    weekday: Weekday = Field(Weekday.SUNDAY, description="Weekly.")
+    time: str = Field("20:00", pattern=TIME_PATTERN, description="Daily, weekly, monthly, quarterly: local time (HH:mm).")
+    minute: int = Field(0, ge=0, le=59, description="Hourly: the minute of every hour.")
 
 
 class ReportDefinition(ApiModel):
@@ -269,10 +293,9 @@ class ReportDefinition(ApiModel):
     name: str
     description: str
     mode: ReportMode
-    frequency: ReportFrequency
-    time: str = Field(pattern=r"^([01][0-9]|2[0-3]):[0-5][0-9]$", description="Local time (the service's time zone) on the report's Sunday.")
-    frequency_parameter: str | None = Field(
-        None, description="Dotted camelCase path of a parameter whose value (a ReportFrequency) overrides the frequency for a strategy."
+    schedule: ReportSchedule = Field(description="The type's default.")
+    schedule_parameter: str | None = Field(
+        None, description="Dotted camelCase path of a parameter whose value (a ReportSchedule) overrides the schedule for a strategy."
     )
 
 

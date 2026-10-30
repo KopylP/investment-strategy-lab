@@ -5,37 +5,83 @@ namespace InvestmentLab.Rebalancing.Planning.Domain;
 public enum ReportFrequency
 {
     Off,
+    Hourly,
+    Daily,
     Weekly,
     Monthly,
     Quarterly,
 }
 
 /// <summary>
-/// When a strategy's report comes (its type declares it, its parameters may change how often): on Sunday evening, after
-/// the markets closed on Friday, so the plan is carried out on Monday — every week, the first Sunday of the month or of the quarter.
+/// When a strategy's report comes, in the service's local time (its type declares it, its parameters may change it):
+/// every hour at <see cref="Minute"/>; every day, on <see cref="Weekday"/> each week, or on <see cref="Day"/> of each
+/// month or of the quarter's first month (a shorter month: its last day) at <see cref="Time"/>.
 /// </summary>
-public sealed record ReportCadence(ReportFrequency Frequency, TimeOnly Time)
+public sealed record ReportCadence(ReportFrequency Frequency, int Day, DayOfWeek Weekday, TimeOnly Time, int Minute)
 {
-    public static ReportCadence Of(string frequency, string time) => new(
-        Enum.TryParse<ReportFrequency>(frequency, ignoreCase: true, out var parsed) && Enum.IsDefined(parsed) ? parsed : ReportFrequency.Off,
-        TimeOnly.TryParseExact(time, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var at) ? at : new TimeOnly(20, 0));
+    public static readonly ReportCadence Off = new(ReportFrequency.Off, 1, DayOfWeek.Sunday, new TimeOnly(20, 0), 0);
 
-    public bool IsDue(DateOnly day) => day.DayOfWeek == DayOfWeek.Sunday && Frequency switch
+    /// <summary>
+    /// An unknown frequency is off; a field out of range, or one the frequency does not read, keeps its default (so two
+    /// strategies with the same schedule have equal cadences).
+    /// </summary>
+    public static ReportCadence Of(string frequency, int day, string weekday, string time, int minute)
     {
-        ReportFrequency.Weekly => true,
-        ReportFrequency.Monthly => day.Day <= 7,
-        ReportFrequency.Quarterly => day.Day <= 7 && day.Month % 3 == 1,
-        _ => false,
-    };
+        var parsed = Enum.TryParse<ReportFrequency>(frequency, ignoreCase: true, out var known) && Enum.IsDefined(known) ? known : ReportFrequency.Off;
+        return new ReportCadence(
+            parsed,
+            parsed is ReportFrequency.Monthly or ReportFrequency.Quarterly && day is >= 1 and <= 31 ? day : Off.Day,
+            parsed == ReportFrequency.Weekly && Enum.TryParse<DayOfWeek>(weekday, ignoreCase: true, out var on) && Enum.IsDefined(on) ? on : Off.Weekday,
+            parsed is not (ReportFrequency.Off or ReportFrequency.Hourly) && TimeOnly.TryParseExact(time, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var at)
+                ? at
+                : Off.Time,
+            parsed == ReportFrequency.Hourly && minute is >= 0 and <= 59 ? minute : Off.Minute);
+    }
 
-    /// <summary>The first report day on or after <paramref name="from"/>; null when the report is off.</summary>
-    public DateOnly? Next(DateOnly from)
+    /// <summary>The latest report time at or before <paramref name="now"/> (local); null when the report is off.</summary>
+    public DateTime? Last(DateTime now)
     {
         if (Frequency == ReportFrequency.Off)
             return null;
-        var day = from;
-        while (!IsDue(day))
-            day = day.AddDays(1);
-        return day;
+        var period = PeriodOf(now);
+        var at = At(period);
+        return at <= now ? at : At(Step(period, -1));
     }
+
+    /// <summary>The first report time after <paramref name="now"/> (local); null when the report is off.</summary>
+    public DateTime? Next(DateTime now)
+    {
+        if (Frequency == ReportFrequency.Off)
+            return null;
+        var period = PeriodOf(now);
+        var at = At(period);
+        return at > now ? at : At(Step(period, 1));
+    }
+
+    /// <summary>The start of the hour, day, week (Monday), month or quarter holding <paramref name="instant"/>.</summary>
+    private DateTime PeriodOf(DateTime instant) => Frequency switch
+    {
+        ReportFrequency.Hourly => instant.Date.AddHours(instant.Hour),
+        ReportFrequency.Daily => instant.Date,
+        ReportFrequency.Weekly => instant.Date.AddDays(-(((int)instant.DayOfWeek + 6) % 7)),
+        ReportFrequency.Monthly => new DateTime(instant.Year, instant.Month, 1),
+        _ => new DateTime(instant.Year, (instant.Month - 1) / 3 * 3 + 1, 1),
+    };
+
+    private DateTime Step(DateTime period, int count) => Frequency switch
+    {
+        ReportFrequency.Hourly => period.AddHours(count),
+        ReportFrequency.Daily => period.AddDays(count),
+        ReportFrequency.Weekly => period.AddDays(7 * count),
+        ReportFrequency.Monthly => period.AddMonths(count),
+        _ => period.AddMonths(3 * count),
+    };
+
+    private DateTime At(DateTime period) => Frequency switch
+    {
+        ReportFrequency.Hourly => period.AddMinutes(Minute),
+        ReportFrequency.Daily => period + Time.ToTimeSpan(),
+        ReportFrequency.Weekly => period.AddDays(((int)Weekday + 6) % 7) + Time.ToTimeSpan(),
+        _ => period.AddDays(Math.Min(Day, DateTime.DaysInMonth(period.Year, period.Month)) - 1) + Time.ToTimeSpan(),
+    };
 }

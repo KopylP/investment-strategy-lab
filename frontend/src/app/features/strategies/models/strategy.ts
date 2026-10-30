@@ -1,4 +1,5 @@
 import { JsonObject } from '../../../shared/ui/schema-form/schema-form';
+import { ReportTiming } from '../../reports/models/report-schedule';
 
 export interface StrategyVersion {
   number: number;
@@ -33,24 +34,24 @@ export interface StrategyType {
   reports: ReportDefinition[];
 }
 
-/** A report the type makes; a strategy's parameters may set how often (frequencyParameter). */
+/** A report the type makes; a strategy's parameters may set when (scheduleParameter). */
 export interface ReportDefinition {
   code: string;
   name: string;
   description: string;
   mode: 'rebalance' | 'riskReview';
-  /** off, weekly, monthly or quarterly: the type's default. */
-  frequency: string;
-  time: string;
+  /** The type's default; null in a catalog synced before schedules existed. */
+  schedule: ReportTiming | null;
   /** Dotted camelCase path in the parameters, e.g. "reporting.rebalance". */
-  frequencyParameter: string | null;
+  scheduleParameter: string | null;
 }
 
-/** How often for a strategy with these parameters: its value at the report's frequency parameter, else the default. */
-export function frequencyOf(report: ReportDefinition, parameters: JsonObject): string {
+/** When for a strategy with these parameters: its value at the report's schedule parameter over the default. */
+export function scheduleOf(report: ReportDefinition, parameters: JsonObject): ReportTiming {
+  const fallback = report.schedule ?? { frequency: 'off', day: 1, weekday: 'sunday', time: '20:00', minute: 0 };
   let node: unknown = parameters;
-  for (const key of report.frequencyParameter?.split('.') ?? []) node = node && typeof node === 'object' ? (node as Record<string, unknown>)[key] : undefined;
-  return report.frequencyParameter && typeof node === 'string' ? node : report.frequency;
+  for (const key of report.scheduleParameter?.split('.') ?? []) node = node && typeof node === 'object' ? (node as Record<string, unknown>)[key] : undefined;
+  return report.scheduleParameter && node && typeof node === 'object' ? { ...fallback, ...(node as Partial<ReportTiming>) } : fallback;
 }
 
 export interface StrategySetupInput {

@@ -1,3 +1,4 @@
+using System.Globalization;
 using InvestmentLab.Rebalancing.Planning.Domain;
 
 namespace InvestmentLab.Rebalancing.Planning.Application;
@@ -11,12 +12,16 @@ public sealed record ChangePlanSettingsCommand(
 
 /// <summary>One of the reports the account's strategies declare, at one frequency (strategies of the same type may set different ones).</summary>
 /// <param name="Mode">"rebalance" or "riskReview".</param>
-/// <param name="Frequency">Off, Weekly, Monthly or Quarterly.</param>
-/// <param name="Time">HH:mm on the report's Sunday.</param>
-/// <param name="Next">Null when off: made only on demand.</param>
+/// <param name="Frequency">Off, Hourly, Daily, Weekly, Monthly or Quarterly.</param>
+/// <param name="Day">Monthly: day of the month; quarterly: of the quarter's first month (a shorter month: its last day).</param>
+/// <param name="Weekday">Weekly: Monday … Sunday.</param>
+/// <param name="Time">Daily, weekly, monthly, quarterly: HH:mm.</param>
+/// <param name="Minute">Hourly: the minute of every hour.</param>
+/// <param name="Next">Local date and time of the next one (yyyy-MM-ddTHH:mm in <see cref="ReportScheduleDto.TimeZone"/>); null when off: made only on demand.</param>
 /// <param name="Strategies">"Sub-portfolio: strategy" pairs it covers.</param>
 public sealed record ScheduledReportDto(
-    string Code, string Name, string Description, string Mode, string Frequency, string Time, DateOnly? Next, IReadOnlyList<string> Strategies);
+    string Code, string Name, string Description, string Mode, string Frequency, int Day, string Weekday, string Time, int Minute, string? Next,
+    IReadOnlyList<string> Strategies);
 
 public sealed record ReportScheduleDto(bool GenerateOnSchedule, string TimeZone, IReadOnlyList<ScheduledReportDto> Reports);
 
@@ -38,11 +43,12 @@ public sealed class PlanSettingsHandler(PlanningInputs inputs, IPlanSettingsRepo
         if (await inputs.AccountAsync(accountId, cancellationToken) is not { } account)
             return Error.NotFound("account.not_found", $"Account {accountId} does not exist.");
 
-        var today = ReportSchedules.Today(clock);
+        var now = ReportSchedules.Local(clock.GetUtcNow()).DateTime;
         var reports = (await inputs.ReportsAsync(account, cancellationToken))
             .SelectMany(report => report.SubPortfolios.GroupBy(sub => sub.Cadence).Select(group => new ScheduledReportDto(
-                report.Code, report.Name, report.Description, report.Mode, group.Key.Frequency.ToString(), group.Key.Time.ToString("HH:mm"),
-                group.Key.Next(today), [.. group.Select(sub => $"{sub.SubPortfolioName}: {sub.StrategyName}")])));
+                report.Code, report.Name, report.Description, report.Mode, group.Key.Frequency.ToString(), group.Key.Day, group.Key.Weekday.ToString(),
+                group.Key.Time.ToString("HH:mm"), group.Key.Minute, group.Key.Next(now)?.ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture),
+                [.. group.Select(sub => $"{sub.SubPortfolioName}: {sub.StrategyName}")])));
 
         var current = await settings.FindAsync(accountId, cancellationToken);
         return new ReportScheduleDto(current?.GenerateOnSchedule ?? true, ReportSchedules.TimeZone, [.. reports]);
