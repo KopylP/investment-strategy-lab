@@ -1,6 +1,6 @@
 import { formatMoney, formatPeriod, formatQuantity } from '../../../shared/pipes/format';
-import { ActionKind, ReportActionDto, ReportDetailsDto, ReportSectionDto, ReportSummaryDto, SectionColumnDto, SectionOrderDto, SectionScoreDto } from '../models/report-dto';
-import { ReportActionVm, ReportProgressVm, ReportSummaryVm, ReportVm, ScoreTableVm, SectionVm } from '../models/report-vm';
+import { ActionKind, ReportActionDto, ReportDetailsDto, ReportRequestDto, ReportSectionDto, ReportSummaryDto, SectionColumnDto, SectionOrderDto, SectionScoreDto } from '../models/report-dto';
+import { ReportActionVm, ReportProgressVm, ReportRequestVm, ReportSummaryVm, ReportVm, ScoreTableVm, SectionVm } from '../models/report-vm';
 
 /** What the report does (its mode), under its name in the list. */
 const kindLabels: Record<ReportSummaryDto['kind'], string> = {
@@ -8,6 +8,21 @@ const kindLabels: Record<ReportSummaryDto['kind'], string> = {
   Recalculation: 'перерахунок',
   RiskReview: 'продаж лише за сигналом виходу',
 };
+
+/** Named like the report it becomes: "Ребаланс · жовтень 2026". */
+export function toRequestVm(request: ReportRequestDto): ReportRequestVm {
+  return {
+    id: request.id,
+    code: request.code,
+    title: `${request.title} · ${formatPeriod(request.asOf.slice(0, 7))}`,
+    kindLabel: kindLabels[request.kind],
+    triggerLabel: request.trigger === 'Scheduled' ? 'за розкладом' : 'на вимогу',
+    status: request.status === 'Failed' ? 'Failed' : 'Pending',
+    requestedAt: request.requestedAt,
+    progressLabel: request.strategies > 0 ? `${request.strategiesAnswered} з ${request.strategies}` : null,
+    error: request.error,
+  };
+}
 
 export function toSummaryVm(summary: ReportSummaryDto): ReportSummaryVm {
   const periodLabel = formatPeriod(summary.period);

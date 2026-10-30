@@ -15,25 +15,6 @@
     </app-empty-state>
   </div>
 } @else {
-  <!-- Reports being made: the strategies may think for minutes or hours (an AI agent); the report appears when they answer. -->
-  @for (request of store.preparing(); track request.id) {
-    <p-message severity="secondary" styleClass="mb-4">
-      <div class="flex items-center gap-3">
-        <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
-        <span>
-          <span class="font-medium">«{{ request.title }}» готується</span> — стратегії рахують план{{
-            request.strategies > 1 ? ' (' + request.strategiesAnswered + ' з ' + request.strategies + ' відповіли)' : '' }}.
-          Запитано {{ request.requestedAt | dateTime }}; рапорт з’явиться тут, щойно буде готовий.
-        </span>
-      </div>
-    </p-message>
-  }
-  @for (request of store.failed(); track request.id) {
-    <p-message severity="error" styleClass="mb-4">
-      <span><span class="font-medium">«{{ request.title }}» не вдалося підготувати</span> ({{ request.requestedAt | dateTime }}): {{ request.error }}</span>
-    </p-message>
-  }
-
   @if (store.openReport(); as open) {
     <p-message severity="info" styleClass="mb-4">
       <span>Відкритий рапорт: <a [routerLink]="['/reports', open.id]" class="font-medium underline">{{ open.title }}</a> — {{ open.actionsOpen }} дій чекають на відмітку.</span>
@@ -41,12 +22,10 @@
   }
 
   <div class="card">
-    @if (store.isLoading() && !store.reports().length) {
+    @if (store.isLoading() && !store.rows().length) {
       <p-skeleton height="10rem" />
-    } @else if (!store.reports().length) {
-      @if (store.preparing().length) {
-        <app-empty-state icon="pi pi-hourglass" title="Перший рапорт готується" text="Стратегії оцінюють ринок; щойно план буде готовий, він з’явиться тут." />
-      } @else if (store.definitions()[0]; as first) {
+    } @else if (!store.rows().length) {
+      @if (store.definitions()[0]; as first) {
         <app-empty-state icon="pi pi-list-check" title="Рапортів ще немає"
           text="Згенеруйте перший рапорт: стратегії оцінять ринок, а план покаже, що купити, продати чи запаркувати.">
           <p-button [label]="first.name" [icon]="icon(first.mode)" (onClick)="start(first)" />
@@ -58,34 +37,68 @@
         </app-empty-state>
       }
     } @else {
-      <p-table [value]="store.reports()" [paginator]="store.reports().length > 12" [rows]="12" tableStyleClass="sm:min-w-[48rem]"
+      <p-table [value]="store.rows()" [paginator]="store.rows().length > 12" [rows]="12" tableStyleClass="sm:min-w-[48rem]"
                dataKey="id">
         <ng-template #header>
           <tr><th>Рапорт</th><th class="hidden sm:table-cell">Статус</th><th class="text-right">Дій</th><th class="text-right hidden sm:table-cell">Внесок</th><th class="hidden sm:table-cell">Згенеровано</th></tr>
         </ng-template>
-        <ng-template #body let-report>
-          <tr>
-            <td>
-              <a [routerLink]="['/reports', report.id]" class="font-medium">{{ report.title }}</a>
-              <div class="hidden sm:block text-sm text-muted-color">{{ report.kindLabel }} · {{ report.triggerLabel }}</div>
-              <!-- Phone: status and date under the title instead of their own columns. -->
-              <div class="sm:hidden flex items-center gap-2 mt-1 text-xs text-muted-color">
-                <app-report-status-tag [status]="report.status" />{{ report.generatedAt | date }}
-              </div>
-            </td>
-            <td class="hidden sm:table-cell"><app-report-status-tag [status]="report.status" /></td>
-            <td class="text-right">
-              @if (report.actionsOpen && (report.status === 'New' || report.status === 'InProgress')) {
-                <p-tag [value]="report.actionsOpen + ' з ' + report.actionsTotal" severity="warn" />
-              } @else {
-                {{ report.actionsTotal }}
-              }
-            </td>
-            <td class="text-right hidden sm:table-cell">{{ report.contribution | money: report.currency }}</td>
-            <td class="text-muted-color hidden sm:table-cell">{{ report.generatedAt | dateTime }}</td>
-          </tr>
+        <ng-template #body let-row>
+          @if (row.request; as request) {
+            <!-- Strategies may think for minutes or hours (an AI agent): the row becomes the report when they have answered. -->
+            <tr class="text-muted-color">
+              <td>
+                <span class="font-medium text-color">{{ request.title }}</span>
+                <div class="hidden sm:block text-sm">{{ request.kindLabel }} · {{ request.triggerLabel }}</div>
+                @if (request.error) {
+                  <div class="text-sm text-red-600 dark:text-red-400 mt-1 line-clamp-2" [title]="request.error">{{ request.error }}</div>
+                }
+                <div class="sm:hidden flex items-center gap-2 mt-1 text-xs">
+                  <ng-container *ngTemplateOutlet="requestTag; context: { $implicit: request }" />{{ request.requestedAt | date }}
+                </div>
+              </td>
+              <td class="hidden sm:table-cell"><ng-container *ngTemplateOutlet="requestTag; context: { $implicit: request }" /></td>
+              <td class="text-right whitespace-nowrap">
+                @if (request.status === 'Pending' && request.progressLabel) {
+                  <span title="Скільки стратегій уже відповіли">{{ request.progressLabel }}</span>
+                } @else {
+                  —
+                }
+              </td>
+              <td class="text-right hidden sm:table-cell">—</td>
+              <td class="hidden sm:table-cell">запитано {{ request.requestedAt | dateTime }}</td>
+            </tr>
+          } @else {
+            <tr>
+              <td>
+                <a [routerLink]="['/reports', row.report.id]" class="font-medium">{{ row.report.title }}</a>
+                <div class="hidden sm:block text-sm text-muted-color">{{ row.report.kindLabel }} · {{ row.report.triggerLabel }}</div>
+                <!-- Phone: status and date under the title instead of their own columns. -->
+                <div class="sm:hidden flex items-center gap-2 mt-1 text-xs text-muted-color">
+                  <app-report-status-tag [status]="row.report.status" />{{ row.report.generatedAt | date }}
+                </div>
+              </td>
+              <td class="hidden sm:table-cell"><app-report-status-tag [status]="row.report.status" /></td>
+              <td class="text-right">
+                @if (row.report.actionsOpen && (row.report.status === 'New' || row.report.status === 'InProgress')) {
+                  <p-tag [value]="row.report.actionsOpen + ' з ' + row.report.actionsTotal" severity="warn" />
+                } @else {
+                  {{ row.report.actionsTotal }}
+                }
+              </td>
+              <td class="text-right hidden sm:table-cell">{{ row.report.contribution | money: row.report.currency }}</td>
+              <td class="text-muted-color hidden sm:table-cell">{{ row.report.generatedAt | dateTime }}</td>
+            </tr>
+          }
         </ng-template>
       </p-table>
+
+      <ng-template #requestTag let-request>
+        @if (request.status === 'Pending') {
+          <p-tag value="Готується" icon="pi pi-spin pi-spinner" severity="secondary" styleClass="whitespace-nowrap" />
+        } @else {
+          <p-tag value="Не вдалося" icon="pi pi-exclamation-triangle" severity="danger" styleClass="whitespace-nowrap" />
+        }
+      </ng-template>
     }
   </div>
 }

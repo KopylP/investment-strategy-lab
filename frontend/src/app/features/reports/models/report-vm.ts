@@ -22,6 +22,23 @@ export interface ReportSummaryVm {
   accountName: string;
 }
 
+/** A report being made (or one that could not be made): a row of the list until the report itself is there. */
+export interface ReportRequestVm {
+  id: string;
+  code: string;
+  title: string;
+  kindLabel: string;
+  triggerLabel: string;
+  status: 'Pending' | 'Failed';
+  requestedAt: string;
+  /** "1 з 2 стратегій": how many have answered; null while it is not known yet. */
+  progressLabel: string | null;
+  error: string | null;
+}
+
+/** A row of the reports list: a report, or one still being made. */
+export type ReportListRow = { id: string; report: ReportSummaryVm; request?: never } | { id: string; request: ReportRequestVm; report?: never };
+
 export interface AllocationPartVm {
   subPortfolio: string;
   quantity: number;

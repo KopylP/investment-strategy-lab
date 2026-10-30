@@ -36,6 +36,8 @@ export interface ReportRequestDto {
   kind: ReportKind;
   trigger: 'Scheduled' | 'OnDemand';
   status: 'Pending' | 'Completed' | 'Failed';
+  /** The market date the report is for (yyyy-MM-dd): its period. */
+  asOf: string;
   requestedAt: string;
   /** Strategies still silent by then count as not answered. */
   deadline: string;

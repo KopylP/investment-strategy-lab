@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -17,7 +18,7 @@ import { ReportStatusTag } from '../../ui/report-status-tag/report-status-tag';
 
 @Component({
   selector: 'app-report-list-page',
-  imports: [FormsModule, RouterLink, Button, Dialog, InputNumber, Message, Skeleton, TableModule, Tag, PageHeader, EmptyState, ReportStatusTag, MoneyPipe, DatePipe, DateTimePipe],
+  imports: [FormsModule, NgTemplateOutlet, RouterLink, Button, Dialog, InputNumber, Message, Skeleton, TableModule, Tag, PageHeader, EmptyState, ReportStatusTag, MoneyPipe, DatePipe, DateTimePipe],
   providers: [ReportListStore],
   templateUrl: './report-list-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
