@@ -170,14 +170,16 @@ export class HoldingsStore {
   readonly composition = computed(() => {
     const total = this.totals().value;
     if (!total) return [];
-    const byInstrument = new Map<string, number>();
+    const byInstrument = new Map<string, { name: string; value: number }>();
     for (const position of this.sleeves().flatMap((sleeve) => sleeve.positions))
-      byInstrument.set(position.symbol, (byInstrument.get(position.symbol) ?? 0) + position.value);
+      byInstrument.set(position.symbol, { name: position.name, value: (byInstrument.get(position.symbol)?.value ?? 0) + position.value });
     const palette = this.theme.palette();
     const colors = [...palette.series, palette.gain, palette.tax];
-    const slices = [...byInstrument].sort((left, right) => right[1] - left[1]).map(([label, value], index) => ({ label, weight: value / total, color: colors[index % colors.length] }));
+    const slices = [...byInstrument]
+      .sort((left, right) => right[1].value - left[1].value)
+      .map(([label, { name, value }], index) => ({ label, name, weight: value / total, color: colors[index % colors.length] }));
     const cash = this.totals().cash;
-    return cash > 0 ? [...slices, { label: 'Кеш', weight: cash / total, color: palette.neutral }] : slices;
+    return cash > 0 ? [...slices, { label: 'Кеш', name: '', weight: cash / total, color: palette.neutral }] : slices;
   });
 
   readonly staleQuotes = computed(() => this.sleeves().some((sleeve) => sleeve.positions.some((position) => position.isStale)));
