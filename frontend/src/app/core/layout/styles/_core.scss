@@ -60,7 +60,8 @@ a {
 
     /* In a table's last column the reach grows leftwards only: centred, it pokes past the table's scroll container
        and lets the table scroll sideways by a few pixels. */
-    td:last-child .p-button-icon-only::after {
+    td:last-child .p-button-icon-only::after,
+    td:last-child i.app-tap-tooltip::after {
         left: auto;
         right: 0;
         transform: translateY(-50%);
