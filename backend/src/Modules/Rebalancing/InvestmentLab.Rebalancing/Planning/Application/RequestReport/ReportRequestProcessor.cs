@@ -11,7 +11,9 @@ public sealed class ReportRequestProcessor(
     IReportRequestRepository requests,
     IStrategyEvaluation strategies,
     GenerateMonthlyReportHandler rebalance,
+    MonthlyPlanPreparation rebalancePreparation,
     GenerateRiskReviewHandler riskReview,
+    RiskReviewStrategyRequests riskReviewRequests,
     TimeProvider clock)
 {
     public const int MaxSubmissions = 5;
@@ -122,8 +124,8 @@ public sealed class ReportRequestProcessor(
 
     private Task<Result<IReadOnlyDictionary<Guid, EvaluateStrategyRequest>>> StrategyRequestsAsync(ReportRequest request, CancellationToken cancellationToken) =>
         request.Kind == ReportKind.RiskReview
-            ? riskReview.StrategyRequestsAsync(RiskReviewOf(request), cancellationToken)
-            : rebalance.StrategyRequestsAsync(RebalanceOf(request), cancellationToken);
+            ? riskReviewRequests.BuildAsync(RiskReviewOf(request), cancellationToken)
+            : rebalancePreparation.StrategyRequestsAsync(RebalanceOf(request), cancellationToken);
 
     private async Task<Result<ReportId>> GenerateAsync(ReportRequest request, CancellationToken cancellationToken)
     {

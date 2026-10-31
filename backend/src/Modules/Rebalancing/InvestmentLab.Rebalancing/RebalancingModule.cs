@@ -80,7 +80,9 @@ public sealed class RebalancingModule : IModule
         services.AddScoped<ChangeReportScheduleHandler>();
         services.AddScoped<UseStrategyScheduleHandler>();
         services.AddScoped<IReportScheduleQueries, ReportScheduleQueries>();
+        services.AddScoped<MonthlyPlanPreparation>();
         services.AddScoped<GenerateMonthlyReportHandler>();
+        services.AddScoped<RiskReviewStrategyRequests>();
         services.AddScoped<GenerateRiskReviewHandler>();
         services.AddScoped<IReportRequestRepository, ReportRequestRepository>();
         services.AddScoped<RequestReportHandler>();
