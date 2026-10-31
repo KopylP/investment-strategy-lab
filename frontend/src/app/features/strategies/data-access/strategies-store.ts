@@ -106,17 +106,21 @@ export class StrategyDetailStore {
 
       return true;
     } catch (error) {
-      this.messages.add({
-        severity: 'error',
-        summary: 'Параметри не збережено',
-        detail: toProblemMessage(error),
-        life: 10000,
-      });
+      this.reportNotSaved(error);
 
       return false;
     } finally {
       this.saving.set(false);
     }
+  }
+
+  private reportNotSaved(error: unknown): void {
+    this.messages.add({
+      severity: 'error',
+      summary: 'Параметри не збережено',
+      detail: toProblemMessage(error),
+      life: 10000,
+    });
   }
 
   async archive(): Promise<void> {

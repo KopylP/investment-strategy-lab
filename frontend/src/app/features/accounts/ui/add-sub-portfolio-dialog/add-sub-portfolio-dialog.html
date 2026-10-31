@@ -1,0 +1,68 @@
+<p-dialog
+  header="Новий під-портфель"
+  [modal]="true"
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  [style]="{ width: '34rem' }"
+  [breakpoints]="{ '640px': '95vw' }"
+>
+  <div class="flex flex-col gap-4">
+    <div class="flex flex-col gap-2">
+      <label for="sub-name" class="font-medium">Назва</label>
+      <input
+        pInputText
+        id="sub-name"
+        [ngModel]="draft().name"
+        (ngModelChange)="patchDraft({ name: $event })"
+      />
+    </div>
+    <div class="flex flex-col gap-2">
+      <label for="sub-share" class="font-medium">Цільова частка, %</label>
+      <p-inputnumber
+        inputId="sub-share"
+        [ngModel]="draft().share"
+        (ngModelChange)="patchDraft({ share: $event ?? 0 })"
+        suffix=" %"
+        [min]="1"
+        [max]="99"
+        fluid
+      />
+      <small class="text-muted-color">Частки інших під-портфелів пропорційно зменшаться.</small>
+    </div>
+    <div class="flex flex-col gap-2">
+      <label for="sub-strategy" class="font-medium">Стратегія</label>
+      <app-strategy-picker
+        [strategies]="store.strategies()"
+        [value]="draft().strategyId"
+        [compact]="true"
+        (valueChange)="patchDraft({ strategyId: $event })"
+      />
+    </div>
+    <div class="flex flex-col gap-2">
+      <label for="sub-cash" class="font-medium">ETF для паркування</label>
+      <p-select
+        inputId="sub-cash"
+        [options]="cashOptions()"
+        optionLabel="label"
+        optionValue="value"
+        [ngModel]="draft().cashInstrumentId"
+        (ngModelChange)="patchDraft({ cashInstrumentId: $event })"
+        [showClear]="true"
+        [filter]="true"
+        placeholder="Як у стратегії"
+        appendTo="body"
+        fluid
+      />
+    </div>
+  </div>
+  <ng-template #footer>
+    <p-button label="Скасувати" [text]="true" severity="secondary" (onClick)="visible.set(false)" />
+    <p-button
+      label="Додати"
+      icon="pi pi-plus"
+      [disabled]="!draft().name.trim()"
+      [loading]="store.busy() === 'add'"
+      (onClick)="add()"
+    />
+  </ng-template>
+</p-dialog>

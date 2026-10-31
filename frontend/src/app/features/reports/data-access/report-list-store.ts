@@ -145,15 +145,19 @@ export class ReportListStore {
       });
       this.requestsResource.reload();
     } catch (error) {
-      this.messages.add({
-        severity: 'error',
-        summary: `Не вдалося згенерувати «${report.name}»`,
-        detail: toProblemMessage(error),
-        life: 8000,
-      });
+      this.reportNotGenerated(report, error);
     } finally {
       this.generating.set(null);
     }
+  }
+
+  private reportNotGenerated(report: ScheduledReport, error: unknown): void {
+    this.messages.add({
+      severity: 'error',
+      summary: `Не вдалося згенерувати «${report.name}»`,
+      detail: toProblemMessage(error),
+      life: 8000,
+    });
   }
 
   private followUp(requests: ReportRequestDto[]): void {
@@ -175,11 +179,13 @@ export class ReportListStore {
       this.announce(request, awaited);
     }
 
-    if (finished) {
-      this.reportsResource.reload();
-      this.scheduleResource.reload();
-      this.badge.refresh();
-    }
+    if (finished) this.reloadAfterFinishedRequests();
+  }
+
+  private reloadAfterFinishedRequests(): void {
+    this.reportsResource.reload();
+    this.scheduleResource.reload();
+    this.badge.refresh();
   }
 
   private announce(request: ReportRequestDto, awaited: boolean): void {

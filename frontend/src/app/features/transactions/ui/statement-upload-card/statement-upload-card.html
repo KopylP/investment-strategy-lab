@@ -1,0 +1,47 @@
+<div class="card">
+  <div class="flex flex-wrap items-center gap-3 mb-4">
+    <span class="font-medium">Імпортувати в рахунок</span>
+    @if (store.accountOptions().length > 1) {
+      <p-select
+        [options]="store.accountOptions()"
+        optionLabel="name"
+        optionValue="id"
+        [ngModel]="store.account()?.id"
+        (ngModelChange)="store.chooseAccount($event)"
+        size="small"
+        ariaLabel="Рахунок для імпорту"
+        class="min-w-56"
+      />
+    } @else {
+      <span>{{ store.account()?.name }}</span>
+    }
+    @if (store.account(); as account) {
+      <span class="text-sm text-muted-color"
+        >{{ account.broker }} · {{ account.baseCurrency }}</span
+      >
+    }
+  </div>
+  <label
+    appFileDrop
+    class="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-surface rounded-xl p-6
+      sm:p-10 cursor-pointer hover:bg-emphasis transition-colors"
+  >
+    <i
+      class="pi text-4xl text-primary"
+      [class.pi-upload]="store.busy() !== 'upload'"
+      [class.pi-spin]="store.busy() === 'upload'"
+      [class.pi-spinner]="store.busy() === 'upload'"
+    ></i>
+    <span class="text-lg font-medium">Вибрати або перетягнути сюди CSV-виписку Revolut</span>
+    <span class="text-sm text-muted-color text-center max-w-lg"
+      >У застосунку Revolut: брокерський рахунок → документи → виписка операцій, формат CSV. Нічого
+      не записується, поки ви не підтвердите.</span
+    >
+    <input type="file" accept=".csv,text/csv" class="hidden" (change)="readFile($event)" />
+  </label>
+  <p class="text-sm text-muted-color mt-3 mb-0">
+    <i class="pi pi-info-circle text-xs mr-1"></i>Податок, утриманий з дивідендів за кордоном, і
+    собівартість акцій після спін-офу є лише у звіті P&amp;L (PDF) — завантажте його на сторінці
+    <a routerLink="/taxes" class="text-primary">«Податки»</a>.
+  </p>
+</div>

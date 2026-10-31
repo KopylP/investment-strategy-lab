@@ -129,17 +129,21 @@ export class ReportDetailStore {
 
       return requestId;
     } catch (error) {
-      this.messages.add({
-        severity: 'error',
-        summary: 'Не вдалося згенерувати',
-        detail: toProblemMessage(error),
-        life: 8000,
-      });
+      this.reportNotGenerated(error);
 
       return undefined;
     } finally {
       this.busyReport.set(null);
     }
+  }
+
+  private reportNotGenerated(error: unknown): void {
+    this.messages.add({
+      severity: 'error',
+      summary: 'Не вдалося згенерувати',
+      detail: toProblemMessage(error),
+      life: 8000,
+    });
   }
 
   async refreshQuotes(): Promise<void> {

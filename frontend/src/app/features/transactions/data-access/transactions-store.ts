@@ -186,31 +186,37 @@ export class TransactionsStore {
     this.busy.set(true);
 
     try {
-      const result = await this.api.post<{ warnings?: string[] }>(
-        `/api/portfolio/accounts/${accountId}/${path}`,
-        body,
-      );
+      const url = `/api/portfolio/accounts/${accountId}/${path}`;
+      const result = await this.api.post<{ warnings?: string[] }>(url, body);
 
-      this.messages.add({
-        severity: 'success',
-        summary: success,
-        detail: result?.warnings?.join(' ') || undefined,
-      });
+      this.reportRecorded(success, result?.warnings);
       this.journalResource.reload();
 
       return true;
     } catch (error) {
-      this.messages.add({
-        severity: 'error',
-        summary: 'Не записано',
-        detail: toProblemMessage(error),
-        life: 8000,
-      });
+      this.reportNotRecorded(error);
 
       return false;
     } finally {
       this.busy.set(false);
     }
+  }
+
+  private reportRecorded(summary: string, warnings?: string[]): void {
+    this.messages.add({
+      severity: 'success',
+      summary,
+      detail: warnings?.join(' ') || undefined,
+    });
+  }
+
+  private reportNotRecorded(error: unknown): void {
+    this.messages.add({
+      severity: 'error',
+      summary: 'Не записано',
+      detail: toProblemMessage(error),
+      life: 8000,
+    });
   }
 
   private detailsOf(

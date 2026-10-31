@@ -113,9 +113,6 @@ export function toReportVm(report: ReportDetailsDto): ReportVm {
     toActionVm(action, summary.currency, symbol, readable, subName, isOpenForMarking, report),
   );
 
-  const buyActions = actions.filter((action) => action.kind === 'Buy' || action.kind === 'Park');
-  const sellActions = actions.filter((action) => action.isSell);
-
   return {
     summary,
     isOpenForMarking,
@@ -126,8 +123,15 @@ export function toReportVm(report: ReportDetailsDto): ReportVm {
     contribution: toContributionVm(report, subName),
     review: report.review,
     taxEstimate: report.taxEstimate,
-    totals: { buys: plannedAmount(buyActions), sells: plannedAmount(sellActions) },
+    totals: plannedTotals(actions),
   };
+}
+
+function plannedTotals(actions: ReportActionVm[]) {
+  const buys = actions.filter((action) => action.kind === 'Buy' || action.kind === 'Park');
+  const sells = actions.filter((action) => action.isSell);
+
+  return { buys: plannedAmount(buys), sells: plannedAmount(sells) };
 }
 
 function toActionVm(

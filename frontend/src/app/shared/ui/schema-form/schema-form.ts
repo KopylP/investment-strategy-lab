@@ -98,53 +98,63 @@ export class SchemaForm {
 }
 
 function toGroups(root: SchemaNode): GroupVm[] {
-  const defs = (root as { $defs?: Record<string, SchemaNode> }).$defs ?? {};
-  const resolve = (node: SchemaNode): SchemaNode => {
-    const ref = node.$ref ?? node.allOf?.find((part) => part.$ref)?.$ref;
-
-    return ref
-      ? { ...defs[ref.split('/').pop()!], title: node.title ?? defs[ref.split('/').pop()!]?.title }
-      : node;
-  };
-
+  const definitions = (root as { $defs?: Record<string, SchemaNode> }).$defs ?? {};
   const general: GroupVm = { title: 'Загальні', fields: [] };
   const groups: GroupVm[] = [general];
-  const walk = (node: SchemaNode, path: string[], group: GroupVm) => {
-    for (const [key, raw] of Object.entries(resolve(node).properties ?? {})) {
-      const property = resolve(raw);
-      if (property.type === 'object' || property.properties) {
-        const nested: GroupVm = { title: humanize(raw.title ?? key), fields: [] };
 
-        groups.push(nested);
-        walk(property, [...path, key], nested);
-      } else {
-        group.fields.push(toField(property, [...path, key], key));
-      }
-    }
-  };
-
-  walk(root, [], general);
+  collectFields(root, [], general, groups, definitions);
 
   return groups.filter((group) => group.fields.length);
 }
 
-function toField(property: SchemaNode, path: string[], key: string): FieldVm {
-  const kind: FieldVm['kind'] = property.enum
-    ? 'enum'
-    : property.type === 'integer'
-      ? 'integer'
-      : property.type === 'number'
-        ? 'number'
-        : property.type === 'boolean'
-          ? 'boolean'
-          : 'text';
+function collectFields(
+  node: SchemaNode,
+  path: string[],
+  group: GroupVm,
+  groups: GroupVm[],
+  definitions: Record<string, SchemaNode>,
+): void {
+  const properties = resolveReference(node, definitions).properties ?? {};
 
+  for (const [key, raw] of Object.entries(properties)) {
+    const property = resolveReference(raw, definitions);
+
+    if (property.type === 'object' || property.properties) {
+      const nested: GroupVm = { title: humanize(raw.title ?? key), fields: [] };
+
+      groups.push(nested);
+      collectFields(property, [...path, key], nested, groups, definitions);
+    } else {
+      group.fields.push(toField(property, [...path, key], key));
+    }
+  }
+}
+
+function resolveReference(node: SchemaNode, definitions: Record<string, SchemaNode>): SchemaNode {
+  const reference = node.$ref ?? node.allOf?.find((part) => part.$ref)?.$ref;
+  if (!reference) return node;
+
+  const definition = definitions[reference.split('/').pop()!];
+
+  return { ...definition, title: node.title ?? definition?.title };
+}
+
+function fieldKind(property: SchemaNode): FieldVm['kind'] {
+  if (property.enum) return 'enum';
+  if (property.type === 'integer') return 'integer';
+  if (property.type === 'number') return 'number';
+  if (property.type === 'boolean') return 'boolean';
+
+  return 'text';
+}
+
+function toField(property: SchemaNode, path: string[], key: string): FieldVm {
   return {
     path,
     key,
     label: humanize(property.title ?? key),
     description: property.description,
-    kind,
+    kind: fieldKind(property),
     min: property.minimum ?? property.exclusiveMinimum,
     max: property.maximum ?? property.exclusiveMaximum,
     options: property.enum?.map((value) => ({

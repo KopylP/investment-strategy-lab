@@ -12,54 +12,45 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
-import { DatePicker } from 'primeng/datepicker';
 import { Dialog } from 'primeng/dialog';
 import { InputNumber } from 'primeng/inputnumber';
-import { InputText } from 'primeng/inputtext';
 import { Message } from 'primeng/message';
-import { Select } from 'primeng/select';
 import { Skeleton } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
 import { Tag } from 'primeng/tag';
 import { InstrumentCatalog } from '../../../../core/context/instrument-catalog';
-import { SubPortfolioSetup, symbolOf, toIsoDate } from '../../../../shared/models/api';
+import { SubPortfolioSetup } from '../../../../shared/models/api';
 import { PercentPipe } from '../../../../shared/pipes/format-pipes';
-import { FileDrop } from '../../../../shared/ui/file-drop';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { AccountDetailStore } from '../../data-access/account-detail-store';
 import { PlanSettingsForm, PlanSettingsVm } from '../../ui/plan-settings-form/plan-settings-form';
-
-interface SubPortfolioDraft {
-  name: string;
-  share: number;
-  strategyId: string | null;
-  cashInstrumentId: string | null;
-}
 
 import { ReportScheduleCard } from '../../ui/report-schedule/report-schedule';
 import { describeStrategy } from '../../../strategies/models/strategy-summary';
 import { StrategyPicker } from '../../../strategies/ui/strategy-picker/strategy-picker';
 import { Viewport } from '../../../../shared/ui/viewport';
+import { AddSubPortfolioDialog } from '../../ui/add-sub-portfolio-dialog/add-sub-portfolio-dialog';
+
+import { ImportPositionsDialog } from '../../ui/import-positions-dialog/import-positions-dialog';
+
 @Component({
   selector: 'app-account-detail-page',
   imports: [
+    ImportPositionsDialog,
+    AddSubPortfolioDialog,
     ReportScheduleCard,
     StrategyPicker,
     FormsModule,
     RouterLink,
     Button,
-    DatePicker,
     Dialog,
     InputNumber,
-    InputText,
     Message,
-    Select,
     Skeleton,
     TableModule,
     Tag,
     PageHeader,
     PlanSettingsForm,
-    FileDrop,
     PercentPipe,
   ],
   providers: [AccountDetailStore],
@@ -67,6 +58,8 @@ import { Viewport } from '../../../../shared/ui/viewport';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AccountDetailPage {
+  protected readonly addVisible = signal(false);
+  protected readonly importVisible = signal(false);
   protected readonly store = inject(AccountDetailStore);
   protected readonly instruments = inject(InstrumentCatalog);
   private readonly confirm = inject(ConfirmationService);
@@ -87,27 +80,6 @@ export class AccountDetailPage {
   );
 
   protected readonly pickFor = signal<SubPortfolioSetup | null>(null);
-  protected readonly cashOptions = computed(() =>
-    this.instruments
-      .etfs()
-      .map((etf) => ({ label: `${symbolOf(etf)} · ${etf.name}`, value: etf.id })),
-  );
-
-  protected readonly addVisible = signal(false);
-  protected readonly draft = signal<SubPortfolioDraft>({
-    name: '',
-    share: 10,
-    strategyId: null,
-    cashInstrumentId: null,
-  });
-
-  protected readonly importVisible = signal(false);
-  protected readonly importSleeve = signal<string | null>(null);
-  protected readonly importDate = signal<Date>(new Date());
-  protected readonly importJson = signal<unknown>(null);
-  protected readonly importFileName = signal('');
-  protected readonly importError = signal<string | null>(null);
-
   constructor() {
     effect(() => this.store.open(this.accountId()));
   }
@@ -160,64 +132,8 @@ export class AccountDetailPage {
     });
   }
 
-  protected openAdd(): void {
-    this.draft.set({ name: '', share: 10, strategyId: null, cashInstrumentId: null });
-    this.addVisible.set(true);
-  }
-
-  protected patchDraft(change: Partial<SubPortfolioDraft>): void {
-    this.draft.update((draft) => ({ ...draft, ...change }));
-  }
-
-  protected async add(): Promise<void> {
-    const draft = this.draft();
-    const added = await this.store.addSubPortfolio({
-      name: draft.name.trim(),
-      targetSharePercent: draft.share,
-      strategyId: draft.strategyId,
-      cashInstrumentId: draft.cashInstrumentId,
-      maxPositionWeightPercent: null,
-    });
-    if (added) this.addVisible.set(false);
-  }
-
   protected async savePlan(): Promise<void> {
     const plan = this.plan();
     if (plan) await this.store.savePlan(plan);
-  }
-
-  protected openImport(): void {
-    this.importSleeve.set(this.store.active()[0]?.id ?? null);
-    this.importJson.set(null);
-    this.importFileName.set('');
-    this.importError.set(null);
-    this.importVisible.set(true);
-  }
-
-  protected async readFile(event: Event): Promise<void> {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (!file) return;
-
-    this.importFileName.set(file.name);
-
-    try {
-      const json = JSON.parse(await file.text()) as { positions?: unknown[] };
-      if (!Array.isArray(json.positions)) throw new Error('У файлі немає масиву positions');
-
-      this.importJson.set(json);
-      this.importError.set(null);
-    } catch (error) {
-      this.importJson.set(null);
-      this.importError.set(error instanceof Error ? error.message : 'Не JSON');
-    }
-  }
-
-  protected async runImport(): Promise<void> {
-    const sleeve = this.importSleeve();
-    const json = this.importJson();
-    if (!sleeve || !json) return;
-
-    if (await this.store.importPositions(sleeve, json, toIsoDate(this.importDate())))
-      this.importVisible.set(false);
   }
 }

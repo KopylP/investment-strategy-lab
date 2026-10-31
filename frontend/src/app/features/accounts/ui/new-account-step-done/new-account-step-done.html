@@ -1,0 +1,37 @@
+<div class="card text-center">
+  <i class="pi pi-check-circle text-5xl text-primary"></i>
+  <h2 class="text-xl font-semibold">Рахунок готовий</h2>
+  <p class="text-muted-color">Звідки почати?</p>
+  <div class="grid gap-3 md:grid-cols-3 text-left mt-4">
+    <button
+      type="button"
+      class="rounded-border border border-surface p-4 bg-transparent cursor-pointer text-color hover:border-primary text-left"
+      (click)="draft.go(['/transactions/import'])"
+    >
+      <div class="font-semibold"><i class="pi pi-upload mr-2"></i>У мене вже є інвестиції</div>
+      <div class="text-sm text-muted-color mt-1">
+        Завантажте виписку Revolut (CSV) — історія операцій, позиції й кеш з’являться автоматично.
+      </div>
+    </button>
+    <button
+      type="button"
+      class="rounded-border border border-surface p-4 bg-transparent cursor-pointer text-color hover:border-primary text-left"
+      (click)="draft.go(['/draft.reports'])"
+    >
+      <div class="font-semibold"><i class="pi pi-bolt mr-2"></i>Починаю з нуля</div>
+      <div class="text-sm text-muted-color mt-1">
+        Згенеруйте перший рапорт: скільки внести і які ETF купити.
+      </div>
+    </button>
+    <button
+      type="button"
+      class="rounded-border border border-surface p-4 bg-transparent cursor-pointer text-color hover:border-primary text-left"
+      (click)="draft.go(['/accounts', draft.createdId() ?? ''])"
+    >
+      <div class="font-semibold"><i class="pi pi-wallet mr-2"></i>Подивитись рахунок</div>
+      <div class="text-sm text-muted-color mt-1">
+        Частки, стратегії, розклад рапортів — усе можна змінити пізніше.
+      </div>
+    </button>
+  </div>
+</div>

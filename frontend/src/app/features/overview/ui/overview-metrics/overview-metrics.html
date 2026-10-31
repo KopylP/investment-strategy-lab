@@ -1,0 +1,96 @@
+<div class="card py-4">
+  <div class="app-tiles">
+    <div class="px-1 sm:px-4 lg:border-r border-surface">
+      <div class="text-muted-color text-xs uppercase tracking-wide flex items-center gap-1">
+        Дохідність TWR
+        <i
+          class="pi pi-info-circle text-xs"
+          pTooltip="Як працювала стратегія, без впливу того, коли й скільки ви вносили. Для порівняння з індексами й фондами."
+        ></i>
+      </div>
+      <div class="text-xl font-semibold mt-1" [appSignedValue]="dashboard().twr">
+        {{ dashboard().twr | signedPercent }}
+      </div>
+      <div class="text-xs text-muted-color">
+        {{
+          dashboard().twrAnnualized === null
+            ? 'за період'
+            : (dashboard().twrAnnualized | signedPercent) + ' річних'
+        }}
+      </div>
+    </div>
+    <div class="px-1 sm:px-4 lg:border-r border-surface">
+      <div class="text-muted-color text-xs uppercase tracking-wide flex items-center gap-1">
+        Ваша дохідність XIRR
+        <i
+          class="pi pi-info-circle text-xs"
+          pTooltip="Річна дохідність саме ваших грошей — з урахуванням дат і сум внесків та виводів."
+        ></i>
+      </div>
+      <div class="text-xl font-semibold mt-1" [appSignedValue]="dashboard().xirr">
+        {{ dashboard().xirr === null ? '—' : (dashboard().xirr | signedPercent) }}
+      </div>
+      <div class="text-xs text-muted-color">річних</div>
+    </div>
+    <div class="px-1 sm:px-4 lg:border-r border-surface">
+      <div class="text-muted-color text-xs uppercase tracking-wide flex items-center gap-1">
+        Просідання
+        <i
+          class="pi pi-info-circle text-xs"
+          pTooltip="Наскільки вартість зараз нижча за найвищий пік (без впливу внесків)."
+        ></i>
+      </div>
+      <div class="text-xl font-semibold mt-1" [appSignedValue]="dashboard().currentDrawdown">
+        {{ dashboard().currentDrawdown | signedPercent }}
+      </div>
+      <div class="text-xs text-muted-color">
+        найбільше {{ dashboard().maxDrawdown | signedPercent }}
+      </div>
+    </div>
+    <div class="px-1 sm:px-4">
+      <div class="text-muted-color text-xs uppercase tracking-wide flex items-center gap-1">
+        Податок {{ store.taxYear }}
+        <i
+          class="pi pi-info-circle text-xs"
+          [pTooltip]="
+            'Белка за цей рік на сьогодні: реалізовані зиски й збитки та дивіденди всіх оподатковуваних ' +
+            'рахунків разом (один PIT-38). Нереалізований результат сюди не входить.'
+          "
+        ></i>
+      </div>
+      @if (store.tax(); as tax) {
+        @if (!tax.taxedAccounts) {
+          <div class="text-xl font-semibold mt-1">—</div>
+          <div class="text-xs text-muted-color">рахунки не оподатковуються (IKE/IKZE)</div>
+        } @else {
+          <div class="text-xl font-semibold mt-1 flex items-center gap-1">
+            {{ tax.taxDue | money: 'PLN' : 0 }}
+            @if (store.taxAlert()?.exceeded) {
+              <i
+                class="pi pi-exclamation-triangle text-sm"
+                [style.color]="'var(--p-finance-loss)'"
+                pTooltip="Понад поріг"
+              ></i>
+            }
+          </div>
+          <div class="text-xs text-muted-color">
+            @if (tax.points.length) {
+              зиск <span [appSignedValue]="tax.gain">{{ tax.gain | money: 'PLN' : 0 }}</span>
+              @if (tax.dividends) {
+                · дивіденди {{ tax.dividends | money: 'PLN' : 0 }}
+              }
+            } @else {
+              продажів і дивідендів ще не було
+            }
+            @if (tax.taxedAccounts > 1) {
+              · {{ tax.taxedAccounts }} рахунки
+            }
+          </div>
+        }
+      } @else {
+        <div class="text-xl font-semibold mt-1">—</div>
+      }
+      <a routerLink="/taxes" class="text-xs text-primary">деталі →</a>
+    </div>
+  </div>
+</div>

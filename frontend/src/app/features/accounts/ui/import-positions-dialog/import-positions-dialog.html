@@ -1,0 +1,69 @@
+<p-dialog
+  header="Імпорт positions.json"
+  [modal]="true"
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  [style]="{ width: '34rem' }"
+  [breakpoints]="{ '640px': '95vw' }"
+>
+  <div class="flex flex-col gap-4">
+    <p class="m-0 text-muted-color">
+      Файл Python-флоу: позиції стануть операціями журналу (внесок на всю вартість і купівлі за
+      ціною входу). Повторний імпорт нічого не дублює.
+    </p>
+    <div class="flex flex-col gap-2">
+      <label for="import-sleeve" class="font-medium">Під-портфель</label>
+      <p-select
+        inputId="import-sleeve"
+        [options]="store.active()"
+        optionLabel="name"
+        optionValue="id"
+        [ngModel]="importSleeve()"
+        (ngModelChange)="importSleeve.set($event)"
+        appendTo="body"
+        fluid
+      />
+    </div>
+    <div class="flex flex-col gap-2">
+      <label for="import-date" class="font-medium">Дата позицій</label>
+      <p-datepicker
+        inputId="import-date"
+        [ngModel]="importDate()"
+        (ngModelChange)="importDate.set($event)"
+        dateFormat="dd.mm.yy"
+        [showIcon]="true"
+        appendTo="body"
+        fluid
+      />
+    </div>
+    <div class="flex flex-col gap-2">
+      <span class="font-medium">Файл</span>
+      <label
+        appFileDrop
+        class="p-button p-button-outlined p-button-secondary justify-center cursor-pointer"
+      >
+        <i class="pi pi-file mr-2"></i
+        >{{ importFileName() || 'Вибрати або перетягнути positions.json' }}
+        <input
+          type="file"
+          accept=".json,application/json"
+          class="hidden"
+          (change)="readFile($event)"
+        />
+      </label>
+      @if (importError()) {
+        <p-message severity="error" size="small" [text]="importError()!" />
+      }
+    </div>
+  </div>
+  <ng-template #footer>
+    <p-button label="Скасувати" [text]="true" severity="secondary" (onClick)="visible.set(false)" />
+    <p-button
+      label="Імпортувати"
+      icon="pi pi-upload"
+      [disabled]="!importJson() || !importSleeve()"
+      [loading]="store.busy() === 'import'"
+      (onClick)="runImport()"
+    />
+  </ng-template>
+</p-dialog>

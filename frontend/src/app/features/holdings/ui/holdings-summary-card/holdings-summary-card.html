@@ -1,0 +1,83 @@
+<div class="card">
+  <div class="grid gap-4 sm:gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-start">
+    <div>
+      <div class="text-muted-color text-sm flex items-center gap-1">
+        Вартість · {{ store.asOf() ? 'на вибрану дату' : 'за останніми котируваннями' }}
+        <i
+          class="pi pi-info-circle text-xs"
+          [pTooltip]="
+            'Ціни — закриття біржі за останній торговий день, валюти — курс NBP. Застосунок брокера ' +
+            '(Revolut) показує поточну ціну й свій ринковий курс, тож сума може відрізнятися на кілька ' +
+            'десятих відсотка.'
+          "
+          tooltipPosition="bottom"
+        ></i>
+      </div>
+      <div class="text-4xl sm:text-5xl font-bold tracking-tight mt-1 leading-tight">
+        <app-money [amount]="totals().value" [currency]="store.currency()" />
+      </div>
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3">
+        <span
+          class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-semibold"
+          [style.background]="
+            totals().pnl >= 0
+              ? 'color-mix(in srgb, var(--p-finance-gain) 14%, transparent)'
+              : 'color-mix(in srgb, var(--p-finance-loss) 14%, transparent)'
+          "
+          [appSignedValue]="totals().pnl"
+        >
+          <i
+            class="pi text-xs"
+            [class.pi-arrow-up-right]="totals().pnl >= 0"
+            [class.pi-arrow-down-right]="totals().pnl < 0"
+          ></i>
+          {{ totals().pnl >= 0 ? '+' : ''
+          }}<app-money
+            [amount]="totals().pnl"
+            [currency]="store.currency()"
+            [hideOriginal]="true"
+          />
+          @if (totals().pnlPct !== null) {
+            · {{ totals().pnlPct | signedPercent }}
+          }
+        </span>
+        <span class="text-sm text-muted-color">нереалізований результат відкритих позицій</span>
+      </div>
+    </div>
+
+    <div>
+      <div class="text-muted-color text-sm mb-2">Склад</div>
+      <div class="flex gap-0.5 -my-2" role="img" aria-label="Частки інструментів">
+        @for (slice of store.composition(); track slice.label; let first = $first, last = $last) {
+          <div
+            class="py-2 min-w-0"
+            [style.width.%]="slice.weight * 100"
+            tooltipPosition="top"
+            [pTooltip]="
+              slice.label +
+              ' · ' +
+              (slice.weight | percent) +
+              (slice.name && slice.name !== slice.label ? ' — ' + slice.name : '')
+            "
+          >
+            <div
+              class="h-3"
+              [class.rounded-l-full]="first"
+              [class.rounded-r-full]="last"
+              [style.background]="slice.color"
+            ></div>
+          </div>
+        }
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 mt-3">
+        @for (slice of store.composition(); track slice.label) {
+          <div class="flex items-center gap-2 text-sm min-w-0">
+            <i class="pi pi-circle-fill text-[0.6rem]" [style.color]="slice.color"></i>
+            <span class="font-medium truncate">{{ slice.label }}</span>
+            <span class="text-muted-color ml-auto">{{ slice.weight | percent }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

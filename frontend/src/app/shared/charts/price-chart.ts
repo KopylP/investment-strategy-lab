@@ -194,7 +194,8 @@ export class PriceChart {
                 .filter((trade) => trade.side === side)
                 .map(
                   (trade) =>
-                    `${side === 'Buy' ? 'Купівля' : 'Продаж'} ${formatQuantity(trade.quantity)} шт. × ${formatMoney(trade.price, trade.currency)} (${formatDate(trade.date)})`,
+                    `${side === 'Buy' ? 'Купівля' : 'Продаж'} ${formatQuantity(trade.quantity)} шт. × ` +
+                    `${formatMoney(trade.price, trade.currency)} (${formatDate(trade.date)})`,
                 );
             },
           },
