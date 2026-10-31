@@ -1,33 +1,91 @@
-<p-dialog header="Записати рух коштів" [modal]="true" [visible]="visible()" (visibleChange)="visible.set($event)" [style]="{ width: '32rem' }" [breakpoints]="{ '640px': '95vw' }">
+<p-dialog
+  header="Записати рух коштів"
+  [modal]="true"
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  [style]="{ width: '32rem' }"
+  [breakpoints]="{ '640px': '95vw' }"
+>
   <div class="flex flex-col gap-4">
     <div class="flex flex-col gap-2">
       <label for="cash-kind" class="font-medium">Що сталося</label>
-      <p-select inputId="cash-kind" [options]="kinds" optionLabel="label" optionValue="value" [ngModel]="kind()" (ngModelChange)="kind.set($event)" appendTo="body" fluid />
+      <p-select
+        inputId="cash-kind"
+        [options]="kinds"
+        optionLabel="label"
+        optionValue="value"
+        [ngModel]="kind()"
+        (ngModelChange)="kind.set($event)"
+        appendTo="body"
+        fluid
+      />
     </div>
     @if (kind() === 'Dividend') {
       <div class="flex flex-col gap-2">
         <label for="cash-instrument" class="font-medium">ETF</label>
-        <p-select inputId="cash-instrument" [options]="instruments()" optionLabel="label" optionValue="value" [ngModel]="instrumentId()" (ngModelChange)="instrumentId.set($event)" [filter]="true" appendTo="body" fluid />
+        <p-select
+          inputId="cash-instrument"
+          [options]="instruments()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="instrumentId()"
+          (ngModelChange)="instrumentId.set($event)"
+          [filter]="true"
+          appendTo="body"
+          fluid
+        />
       </div>
     }
     <div class="grid gap-4 sm:grid-cols-2">
       <div class="flex flex-col gap-2">
         <label for="cash-amount" class="font-medium">Сума</label>
-        <p-inputnumber inputId="cash-amount" [ngModel]="amount()" (ngModelChange)="amount.set($event)" mode="currency" [currency]="currency()" locale="uk-UA" fluid />
+        <p-inputnumber
+          inputId="cash-amount"
+          [ngModel]="amount()"
+          (ngModelChange)="amount.set($event)"
+          mode="currency"
+          [currency]="currency()"
+          locale="uk-UA"
+          fluid
+        />
       </div>
       <div class="flex flex-col gap-2">
         <label for="cash-date" class="font-medium">Дата</label>
-        <p-datepicker inputId="cash-date" [ngModel]="occurredOn()" (ngModelChange)="occurredOn.set($event)" dateFormat="dd.mm.yy" [showIcon]="true" appendTo="body" fluid />
+        <p-datepicker
+          inputId="cash-date"
+          [ngModel]="occurredOn()"
+          (ngModelChange)="occurredOn.set($event)"
+          dateFormat="dd.mm.yy"
+          [showIcon]="true"
+          appendTo="body"
+          fluid
+        />
       </div>
     </div>
     <div class="flex flex-col gap-2">
       <label for="cash-sub" class="font-medium">Під-портфель</label>
-      <p-select inputId="cash-sub" [options]="subPortfolios()" optionLabel="label" optionValue="value" [ngModel]="subPortfolioId()" (ngModelChange)="subPortfolioId.set($event)"
-                [showClear]="true" placeholder="Розподілити автоматично" appendTo="body" fluid />
+      <p-select
+        inputId="cash-sub"
+        [options]="subPortfolios()"
+        optionLabel="label"
+        optionValue="value"
+        [ngModel]="subPortfolioId()"
+        (ngModelChange)="subPortfolioId.set($event)"
+        [showClear]="true"
+        placeholder="Розподілити автоматично"
+        appendTo="body"
+        fluid
+      />
     </div>
   </div>
   <ng-template #footer>
     <p-button label="Скасувати" [text]="true" severity="secondary" (onClick)="visible.set(false)" />
-    <p-button label="Записати" icon="pi pi-check" [disabled]="!valid()" [loading]="busy()" (onClick)="submit()" />
+    <p-button
+      label="Записати"
+      icon="pi pi-check"
+      [disabled]="!valid()"
+      [loading]="busy()"
+      (onClick)="submit()"
+    />
   </ng-template>
 </p-dialog>

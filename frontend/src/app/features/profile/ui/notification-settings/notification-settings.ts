@@ -1,5 +1,13 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal, resource, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  linkedSignal,
+  resource,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { Button } from 'primeng/button';
@@ -33,20 +41,32 @@ export class NotificationSettingsCard {
   private readonly api = inject(ApiClient);
   private readonly messages = inject(MessageService);
 
-  private readonly settingsResource = resource({ loader: () => this.api.get<NotificationSettings>('/api/notifications/settings') });
-  protected readonly settings = linkedSignal<NotificationSettings | undefined>(() => this.settingsResource.value());
-  protected readonly error = computed(() => (this.settingsResource.error() ? toProblemMessage(this.settingsResource.error()) : null));
+  private readonly settingsResource = resource({
+    loader: () => this.api.get<NotificationSettings>('/api/notifications/settings'),
+  });
+  protected readonly settings = linkedSignal<NotificationSettings | undefined>(() =>
+    this.settingsResource.value(),
+  );
+  protected readonly error = computed(() =>
+    this.settingsResource.error() ? toProblemMessage(this.settingsResource.error()) : null,
+  );
   protected readonly saving = signal(false);
   protected readonly testing = signal(false);
 
-  protected readonly own = computed(() => this.settings()?.destinations.filter((each) => each.suggested || each.selected) ?? []);
-  protected readonly others = computed(() => this.settings()?.destinations.filter((each) => !each.suggested && !each.selected) ?? []);
+  protected readonly own = computed(
+    () => this.settings()?.destinations.filter((each) => each.suggested || each.selected) ?? [],
+  );
+  protected readonly others = computed(
+    () => this.settings()?.destinations.filter((each) => !each.suggested && !each.selected) ?? [],
+  );
   protected readonly showOthers = signal(false);
 
   protected async toggle(destination: NotificationDestination, selected: boolean): Promise<void> {
     const current = this.settings();
     if (!current) return;
-    const chosen = current.destinations.filter((each) => (each.id === destination.id ? selected : each.selected)).map((each) => each.id);
+    const chosen = current.destinations
+      .filter((each) => (each.id === destination.id ? selected : each.selected))
+      .map((each) => each.id);
     await this.save(chosen);
   }
 
@@ -58,9 +78,17 @@ export class NotificationSettingsCard {
     this.testing.set(true);
     try {
       await this.api.post('/api/notifications/test');
-      this.messages.add({ severity: 'success', summary: 'Тестове сповіщення надіслано', detail: 'Перевірте телефон і сповіщення в Home Assistant.' });
+      this.messages.add({
+        severity: 'success',
+        summary: 'Тестове сповіщення надіслано',
+        detail: 'Перевірте телефон і сповіщення в Home Assistant.',
+      });
     } catch (error) {
-      this.messages.add({ severity: 'error', summary: 'Не надіслано', detail: toProblemMessage(error) });
+      this.messages.add({
+        severity: 'error',
+        summary: 'Не надіслано',
+        detail: toProblemMessage(error),
+      });
     } finally {
       this.testing.set(false);
     }
@@ -69,9 +97,15 @@ export class NotificationSettingsCard {
   private async save(destinations: string[] | null): Promise<void> {
     this.saving.set(true);
     try {
-      this.settingsResource.set(await this.api.put<NotificationSettings>('/api/notifications/settings', { destinations }));
+      this.settingsResource.set(
+        await this.api.put<NotificationSettings>('/api/notifications/settings', { destinations }),
+      );
     } catch (error) {
-      this.messages.add({ severity: 'error', summary: 'Не збережено', detail: toProblemMessage(error) });
+      this.messages.add({
+        severity: 'error',
+        summary: 'Не збережено',
+        detail: toProblemMessage(error),
+      });
       this.settingsResource.reload();
     } finally {
       this.saving.set(false);

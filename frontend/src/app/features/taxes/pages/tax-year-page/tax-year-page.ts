@@ -10,20 +10,48 @@ import { Skeleton } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
 import { Tag } from 'primeng/tag';
 import { Tooltip } from 'primeng/tooltip';
-import { DatePipe, DateTimePipe, MoneyPipe, QuantityPipe } from '../../../../shared/pipes/format-pipes';
+import {
+  DatePipe,
+  DateTimePipe,
+  MoneyPipe,
+  QuantityPipe,
+} from '../../../../shared/pipes/format-pipes';
 import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
 import { FileDrop } from '../../../../shared/ui/file-drop';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { SignedValue } from '../../../../shared/ui/signed-value';
 import { DeclarationDialog } from '../../ui/declaration-dialog/declaration-dialog';
-import { BrokerStatement, LossCarryforward, Realization, TaxesStore } from '../../data-access/taxes-store';
+import {
+  BrokerStatement,
+  LossCarryforward,
+  Realization,
+  TaxesStore,
+} from '../../data-access/taxes-store';
 import { TapTooltip } from '../../../../shared/ui/tap-tooltip';
 
 @Component({
   selector: 'app-tax-year-page',
   imports: [
-    FormsModule, Button, InputNumber, Message, Select, SelectButton, Skeleton, TableModule, Tag, Tooltip, TapTooltip, PageHeader, EmptyState, SignedValue, DeclarationDialog, FileDrop,
-    MoneyPipe, QuantityPipe, DatePipe, DateTimePipe,
+    FormsModule,
+    Button,
+    InputNumber,
+    Message,
+    Select,
+    SelectButton,
+    Skeleton,
+    TableModule,
+    Tag,
+    Tooltip,
+    TapTooltip,
+    PageHeader,
+    EmptyState,
+    SignedValue,
+    DeclarationDialog,
+    FileDrop,
+    MoneyPipe,
+    QuantityPipe,
+    DatePipe,
+    DateTimePipe,
   ],
   providers: [TaxesStore],
   templateUrl: './tax-year-page.html',
@@ -33,7 +61,9 @@ export class TaxYearPage {
   protected readonly store = inject(TaxesStore);
   private readonly confirm = inject(ConfirmationService);
 
-  protected readonly yearOptions = computed(() => this.store.years().map((year) => ({ label: String(year.year), value: year.year })));
+  protected readonly yearOptions = computed(() =>
+    this.store.years().map((year) => ({ label: String(year.year), value: year.year })),
+  );
   protected readonly lossYear = signal<number | null>(new Date().getFullYear() - 1);
   protected readonly lossAmount = signal<number | null>(null);
   protected readonly lossUsed = signal<number | null>(0);
@@ -59,7 +89,8 @@ export class TaxYearPage {
   protected confirmRemoveBroker(statement: BrokerStatement): void {
     this.confirm.confirm({
       header: 'Видалити звіт брокера?',
-      message: 'Податок з дивідендів знову рахуватиметься без зарахування утриманого за кордоном, а собівартість зі звіту більше не братиметься.',
+      message:
+        'Податок з дивідендів знову рахуватиметься без зарахування утриманого за кордоном, а собівартість зі звіту більше не братиметься.',
       acceptLabel: 'Видалити',
       rejectLabel: 'Скасувати',
       acceptButtonProps: { severity: 'danger' },
@@ -71,7 +102,8 @@ export class TaxYearPage {
   protected confirmRemovePit8C(accountId: string): void {
     this.confirm.confirm({
       header: 'Прибрати суми PIT-8C?',
-      message: 'Виручка й витрати брокера в декларації знову рахуватимуться з ваших операцій, а не з його PIT-8C.',
+      message:
+        'Виручка й витрати брокера в декларації знову рахуватимуться з ваших операцій, а не з його PIT-8C.',
       acceptLabel: 'Прибрати',
       rejectLabel: 'Скасувати',
       acceptButtonProps: { severity: 'danger' },

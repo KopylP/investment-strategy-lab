@@ -1,4 +1,3 @@
-
 export type ReportStatus = 'New' | 'InProgress' | 'Closed' | 'Superseded';
 export type ReportKind = 'Monthly' | 'Recalculation' | 'RiskReview';
 export type ActionKind = 'Contribute' | 'Sell' | 'Unpark' | 'Transfer' | 'Buy' | 'Park';
@@ -209,7 +208,10 @@ export interface ReportDetailsDto {
   warnings: string[];
   review: PlanReviewDto | null;
   taxEstimate: TaxEstimateDto | null;
-  instruments: Record<string, { symbol: string; name: string; isin: string | null; currency: string }>;
+  instruments: Record<
+    string,
+    { symbol: string; name: string; isin: string | null; currency: string }
+  >;
   subPortfolios: Record<string, string>;
 }
 

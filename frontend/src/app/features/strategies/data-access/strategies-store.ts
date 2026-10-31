@@ -35,7 +35,12 @@ export class StrategiesStore {
       });
       this.listResource.reload();
     } catch (error) {
-      this.messages.add({ severity: 'error', summary: 'Не вдалося створити стратегії', detail: toProblemMessage(error), life: 8000 });
+      this.messages.add({
+        severity: 'error',
+        summary: 'Не вдалося створити стратегії',
+        detail: toProblemMessage(error),
+        life: 8000,
+      });
     } finally {
       this.creatingDefaults.set(false);
     }
@@ -57,11 +62,17 @@ export class StrategyDetailStore {
   });
   private readonly catalogResource = resource({ loader: () => this.api.catalog() });
 
-  readonly strategy = computed(() => (this.strategyResource.hasValue() ? this.strategyResource.value() : undefined));
+  readonly strategy = computed(() =>
+    this.strategyResource.hasValue() ? this.strategyResource.value() : undefined,
+  );
   readonly isLoading = this.strategyResource.isLoading;
   readonly loadError = this.strategyResource.error;
-  readonly type = computed(() => this.catalogResource.value()?.find((type) => type.code === this.strategy()?.typeCode));
-  readonly versions = computed(() => Array.from({ length: this.strategy()?.latestVersion ?? 0 }, (_, index) => index + 1).reverse());
+  readonly type = computed(() =>
+    this.catalogResource.value()?.find((type) => type.code === this.strategy()?.typeCode),
+  );
+  readonly versions = computed(() =>
+    Array.from({ length: this.strategy()?.latestVersion ?? 0 }, (_, index) => index + 1).reverse(),
+  );
   readonly saving = signal(false);
 
   open(id: string): void {
@@ -79,12 +90,22 @@ export class StrategyDetailStore {
     this.saving.set(true);
     try {
       const saved = await this.api.reconfigure(id, setup);
-      this.messages.add({ severity: 'success', summary: `Збережено як версію ${saved.latestVersion}`, detail: 'Під-портфелі, що йдуть за останньою версією, використовують її з наступного рапорту' });
+      this.messages.add({
+        severity: 'success',
+        summary: `Збережено як версію ${saved.latestVersion}`,
+        detail:
+          'Під-портфелі, що йдуть за останньою версією, використовують її з наступного рапорту',
+      });
       this.versionNumber.set(undefined);
       this.strategyResource.reload();
       return true;
     } catch (error) {
-      this.messages.add({ severity: 'error', summary: 'Параметри не збережено', detail: toProblemMessage(error), life: 10000 });
+      this.messages.add({
+        severity: 'error',
+        summary: 'Параметри не збережено',
+        detail: toProblemMessage(error),
+        life: 10000,
+      });
       return false;
     } finally {
       this.saving.set(false);
@@ -99,7 +120,11 @@ export class StrategyDetailStore {
       this.messages.add({ severity: 'success', summary: 'Стратегію архівовано' });
       this.strategyResource.reload();
     } catch (error) {
-      this.messages.add({ severity: 'error', summary: 'Не вдалося архівувати', detail: toProblemMessage(error) });
+      this.messages.add({
+        severity: 'error',
+        summary: 'Не вдалося архівувати',
+        detail: toProblemMessage(error),
+      });
     }
   }
 }

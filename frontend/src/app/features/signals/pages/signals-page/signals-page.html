@@ -1,4 +1,7 @@
-<app-page-header title="Сигнали" subtitle="Стежать за ринком і вашим портфелем та кажуть, коли умова спрацювала">
+<app-page-header
+  title="Сигнали"
+  subtitle="Стежать за ринком і вашим портфелем та кажуть, коли умова спрацювала"
+>
   <p-button label="Новий сигнал" icon="pi pi-plus" (onClick)="create()" />
 </app-page-header>
 
@@ -17,22 +20,29 @@
       @if (store.active().length) {
         <ul class="list-none m-0 p-0 flex flex-col gap-3">
           @for (occurrence of store.active(); track occurrence.id) {
-            <li class="flex flex-wrap items-center justify-between gap-2 border-l-4 border-red-500 pl-3">
+            <li
+              class="flex flex-wrap items-center justify-between gap-2 border-l-4 border-red-500 pl-3"
+            >
               <div class="min-w-0">
                 <div class="font-medium">{{ occurrence.signalName }}</div>
                 <div class="text-sm text-muted-color">
-                  {{ occurrence.subjectLabel }} · спрацював {{ occurrence.triggerDate | date }} на {{ triggerValue(occurrence) }}
+                  {{ occurrence.subjectLabel }} · спрацював {{ occurrence.triggerDate | date }} на
+                  {{ triggerValue(occurrence) }}
                 </div>
               </div>
               <div class="text-right">
                 <div class="font-semibold text-red-500">{{ latestValue(occurrence) }}</div>
-                <div class="text-xs text-muted-color">станом на {{ occurrence.latestDate | date }}</div>
+                <div class="text-xs text-muted-color">
+                  станом на {{ occurrence.latestDate | date }}
+                </div>
               </div>
             </li>
           }
         </ul>
       } @else {
-        <p class="m-0 text-muted-color"><i class="pi pi-check-circle mr-2"></i>Жоден сигнал зараз не спрацював.</p>
+        <p class="m-0 text-muted-color">
+          <i class="pi pi-check-circle mr-2"></i>Жоден сигнал зараз не спрацював.
+        </p>
       }
     </section>
 
@@ -43,9 +53,12 @@
         <ul class="list-none m-0 p-0 flex flex-col gap-2">
           @for (occurrence of store.recent(); track occurrence.id) {
             <li class="flex flex-wrap items-center justify-between gap-2 text-sm">
-              <span class="min-w-0">{{ occurrence.signalName }} · {{ occurrence.subjectLabel }}</span>
+              <span class="min-w-0"
+                >{{ occurrence.signalName }} · {{ occurrence.subjectLabel }}</span
+              >
               <span class="text-muted-color">
-                {{ occurrence.triggerDate | date }}, {{ triggerValue(occurrence) }} — {{ clearReasonLabel(occurrence.clearReason) }}
+                {{ occurrence.triggerDate | date }}, {{ triggerValue(occurrence) }} —
+                {{ clearReasonLabel(occurrence.clearReason) }}
               </span>
             </li>
           }
@@ -60,18 +73,32 @@
         <ul class="list-none m-0 p-0">
           @for (item of store.signals(); track item.id) {
             <li class="border-t border-surface">
-              <button type="button" class="w-full flex flex-wrap items-center gap-3 p-4 border-0 bg-transparent text-left text-color cursor-pointer hover:bg-emphasis" (click)="edit(item)">
+              <button
+                type="button"
+                class="w-full flex flex-wrap items-center gap-3 p-4 border-0 bg-transparent text-left text-color cursor-pointer hover:bg-emphasis"
+                (click)="edit(item)"
+              >
                 <span class="flex-1 min-w-48">
                   <span class="block font-medium">{{ item.name }}</span>
-                  <span class="block text-sm text-muted-color">{{ store.targetLabel(item) }} · {{ conditionLabel(item.condition) }}</span>
-                  <span class="block text-xs text-muted-color">{{ scheduleLabel(item.schedule) }}</span>
+                  <span class="block text-sm text-muted-color"
+                    >{{ store.targetLabel(item) }} · {{ conditionLabel(item.condition) }}</span
+                  >
+                  <span class="block text-xs text-muted-color">{{
+                    scheduleLabel(item.schedule)
+                  }}</span>
                 </span>
 
                 <span class="flex items-center gap-3">
-                  <i [class]="store.notifies(item.id) ? 'pi pi-bell' : 'pi pi-bell-slash text-muted-color'"
-                     [attr.aria-label]="store.notifies(item.id) ? 'Сповіщає' : 'Не сповіщає'"></i>
+                  <i
+                    [class]="
+                      store.notifies(item.id) ? 'pi pi-bell' : 'pi pi-bell-slash text-muted-color'
+                    "
+                    [attr.aria-label]="store.notifies(item.id) ? 'Сповіщає' : 'Не сповіщає'"
+                  ></i>
                   @if (store.rulesOf(item.id).length; as rules) {
-                    <span class="flex items-center gap-1" aria-label="Запускає рапорти"><i class="pi pi-file"></i>{{ rules }}</span>
+                    <span class="flex items-center gap-1" aria-label="Запускає рапорти"
+                      ><i class="pi pi-file"></i>{{ rules }}</span
+                    >
                   }
                   @if (!item.enabled) {
                     <p-tag value="Вимкнено" severity="secondary" />
@@ -86,7 +113,9 @@
           }
         </ul>
       } @else {
-        <p class="m-0 p-4 pt-0 text-muted-color">Вбудовані сигнали з'являться, щойно буде рахунок. Можна також створити свій.</p>
+        <p class="m-0 p-4 pt-0 text-muted-color">
+          Вбудовані сигнали з'являться, щойно буде рахунок. Можна також створити свій.
+        </p>
       }
     </section>
   </div>

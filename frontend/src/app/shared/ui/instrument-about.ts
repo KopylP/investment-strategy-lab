@@ -10,7 +10,12 @@ const shortSentences = 2;
       <div class="text-sm text-muted-color leading-relaxed" lang="en">
         {{ expanded() ? parts.full : parts.short }}
         @if (parts.more) {
-          <button type="button" class="p-0 border-0 bg-transparent text-primary cursor-pointer whitespace-nowrap" lang="uk" (click)="expandedText.set(expanded() ? null : text() ?? null)">
+          <button
+            type="button"
+            class="p-0 border-0 bg-transparent text-primary cursor-pointer whitespace-nowrap"
+            lang="uk"
+            (click)="expandedText.set(expanded() ? null : (text() ?? null))"
+          >
             {{ expanded() ? 'Згорнути' : 'Детальніше' }}
           </button>
         }
@@ -23,7 +28,9 @@ export class InstrumentAbout {
   readonly text = input<string | null | undefined>(null);
 
   protected readonly expandedText = signal<string | null>(null);
-  protected readonly expanded = computed(() => !!this.text() && this.expandedText() === this.text());
+  protected readonly expanded = computed(
+    () => !!this.text() && this.expandedText() === this.text(),
+  );
 
   protected readonly parts = computed(() => {
     const full = this.text()?.trim();
@@ -41,6 +48,8 @@ export class InstrumentAbout {
 
 function splitSentences(text: string): string[] {
   if (typeof Intl.Segmenter === 'function')
-    return [...new Intl.Segmenter('en', { granularity: 'sentence' }).segment(text)].map((part) => part.segment);
+    return [...new Intl.Segmenter('en', { granularity: 'sentence' }).segment(text)].map(
+      (part) => part.segment,
+    );
   return text.match(/[^.!?]+(?:[.!?]+\s*|$)/g) ?? [text];
 }

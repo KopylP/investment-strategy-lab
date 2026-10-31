@@ -1,4 +1,3 @@
-
 export interface SubPortfolioSetup {
   id: string;
   name: string;

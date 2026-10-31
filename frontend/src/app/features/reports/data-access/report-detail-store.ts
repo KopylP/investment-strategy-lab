@@ -24,7 +24,9 @@ export class ReportDetailStore {
     loader: async ({ params: id }) => toReportVm(await this.api.get(id)),
   });
 
-  readonly report = computed(() => (this.reportResource.hasValue() ? this.reportResource.value() : undefined));
+  readonly report = computed(() =>
+    this.reportResource.hasValue() ? this.reportResource.value() : undefined,
+  );
   readonly isLoading = this.reportResource.isLoading;
 
   readonly loadError = this.reportResource.error;
@@ -47,23 +49,43 @@ export class ReportDetailStore {
   }
 
   markExecuted(action: ReportActionVm, fill: FillInput): Promise<void> {
-    return this.runCommand(action, () => this.api.markExecuted(this.requireId(), action.id, fill), 'Відмічено як виконане');
+    return this.runCommand(
+      action,
+      () => this.api.markExecuted(this.requireId(), action.id, fill),
+      'Відмічено як виконане',
+    );
   }
 
   recordPartialFill(action: ReportActionVm, fill: FillInput): Promise<void> {
-    return this.runCommand(action, () => this.api.recordPartialFill(this.requireId(), action.id, fill), 'Часткове виконання збережено');
+    return this.runCommand(
+      action,
+      () => this.api.recordPartialFill(this.requireId(), action.id, fill),
+      'Часткове виконання збережено',
+    );
   }
 
   skip(action: ReportActionVm, reason: string): Promise<void> {
-    return this.runCommand(action, () => this.api.skip(this.requireId(), action.id, reason), 'Дію пропущено');
+    return this.runCommand(
+      action,
+      () => this.api.skip(this.requireId(), action.id, reason),
+      'Дію пропущено',
+    );
   }
 
   undo(action: ReportActionVm): Promise<void> {
-    return this.runCommand(action, () => this.api.undo(this.requireId(), action.id), 'Відмітку скасовано, операцію в журналі сторновано');
+    return this.runCommand(
+      action,
+      () => this.api.undo(this.requireId(), action.id),
+      'Відмітку скасовано, операцію в журналі сторновано',
+    );
   }
 
   marked(count: number): void {
-    this.messages.add({ severity: 'success', summary: 'Операції підтягнуто', detail: `Відмічено дій: ${count}` });
+    this.messages.add({
+      severity: 'success',
+      summary: 'Операції підтягнуто',
+      detail: `Відмічено дій: ${count}`,
+    });
     this.afterChange();
   }
 
@@ -71,10 +93,18 @@ export class ReportDetailStore {
     this.busyReport.set('close');
     try {
       await this.api.close(this.requireId());
-      this.messages.add({ severity: 'success', summary: 'Рапорт закрито', detail: 'Невідмічені дії позначено як пропущені' });
+      this.messages.add({
+        severity: 'success',
+        summary: 'Рапорт закрито',
+        detail: 'Невідмічені дії позначено як пропущені',
+      });
       this.afterChange();
     } catch (error) {
-      this.messages.add({ severity: 'error', summary: 'Не вдалося закрити', detail: toProblemMessage(error) });
+      this.messages.add({
+        severity: 'error',
+        summary: 'Не вдалося закрити',
+        detail: toProblemMessage(error),
+      });
     } finally {
       this.busyReport.set(null);
     }
@@ -87,10 +117,19 @@ export class ReportDetailStore {
     try {
       const accountId = report.summary.accountId;
       const { requestId } = await this.api.generate(accountId, report.summary.code);
-      this.messages.add({ severity: 'info', summary: 'Новий рапорт готується', detail: 'Коли він буде готовий, цей рапорт буде замінено' });
+      this.messages.add({
+        severity: 'info',
+        summary: 'Новий рапорт готується',
+        detail: 'Коли він буде готовий, цей рапорт буде замінено',
+      });
       return requestId;
     } catch (error) {
-      this.messages.add({ severity: 'error', summary: 'Не вдалося згенерувати', detail: toProblemMessage(error), life: 8000 });
+      this.messages.add({
+        severity: 'error',
+        summary: 'Не вдалося згенерувати',
+        detail: toProblemMessage(error),
+        life: 8000,
+      });
       return undefined;
     } finally {
       this.busyReport.set(null);
@@ -101,22 +140,39 @@ export class ReportDetailStore {
     this.busyReport.set('quotes');
     try {
       await this.api.ingestQuotes();
-      this.messages.add({ severity: 'success', summary: 'Котирування оновлено', detail: 'Згенеруйте рапорт заново, щоб план врахував нові ціни' });
+      this.messages.add({
+        severity: 'success',
+        summary: 'Котирування оновлено',
+        detail: 'Згенеруйте рапорт заново, щоб план врахував нові ціни',
+      });
     } catch (error) {
-      this.messages.add({ severity: 'error', summary: 'Не вдалося оновити котирування', detail: toProblemMessage(error) });
+      this.messages.add({
+        severity: 'error',
+        summary: 'Не вдалося оновити котирування',
+        detail: toProblemMessage(error),
+      });
     } finally {
       this.busyReport.set(null);
     }
   }
 
-  private async runCommand(action: ReportActionVm, command: () => Promise<unknown>, success: string): Promise<void> {
+  private async runCommand(
+    action: ReportActionVm,
+    command: () => Promise<unknown>,
+    success: string,
+  ): Promise<void> {
     this.busyActionId.set(action.id);
     try {
       await command();
       this.messages.add({ severity: 'success', summary: success, detail: action.title });
       this.afterChange();
     } catch (error) {
-      this.messages.add({ severity: 'error', summary: 'Не вдалося зберегти', detail: toProblemMessage(error), life: 8000 });
+      this.messages.add({
+        severity: 'error',
+        summary: 'Не вдалося зберегти',
+        detail: toProblemMessage(error),
+        life: 8000,
+      });
     } finally {
       this.busyActionId.set(undefined);
     }
@@ -126,7 +182,9 @@ export class ReportDetailStore {
     this.reportResource.reload();
     this.badge.refresh();
     this.refreshTimers.forEach(clearTimeout);
-    this.refreshTimers = [1500, 4000].map((delay) => setTimeout(() => this.reportResource.reload(), delay));
+    this.refreshTimers = [1500, 4000].map((delay) =>
+      setTimeout(() => this.reportResource.reload(), delay),
+    );
   }
 
   private requireId(): string {

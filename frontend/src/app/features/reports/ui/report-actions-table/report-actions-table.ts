@@ -1,5 +1,13 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 import { MenuItem } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { SplitButton } from 'primeng/splitbutton';
@@ -17,7 +25,20 @@ import { InstrumentAbout } from '../../../../shared/ui/instrument-about';
 import { InstrumentCatalog } from '../../../../core/context/instrument-catalog';
 @Component({
   selector: 'app-report-actions-table',
-  imports: [Money, NgTemplateOutlet, TableModule, Button, SplitButton, Tooltip, TapTooltip, InstrumentAbout, Message, ActionStatusTag, QuantityPipe, DatePipe],
+  imports: [
+    Money,
+    NgTemplateOutlet,
+    TableModule,
+    Button,
+    SplitButton,
+    Tooltip,
+    TapTooltip,
+    InstrumentAbout,
+    Message,
+    ActionStatusTag,
+    QuantityPipe,
+    DatePipe,
+  ],
   templateUrl: './report-actions-table.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -39,15 +60,27 @@ export class ReportActionsTable {
         this.actions().map((action) => [
           action.id,
           [
-            { label: 'Частково виконано', icon: 'pi pi-percentage', disabled: !action.canPartiallyFill, command: () => this.partialFill.emit(action) },
-            { label: 'Пропустити', icon: 'pi pi-forward', disabled: !action.canSkip, command: () => this.skip.emit(action) },
+            {
+              label: 'Частково виконано',
+              icon: 'pi pi-percentage',
+              disabled: !action.canPartiallyFill,
+              command: () => this.partialFill.emit(action),
+            },
+            {
+              label: 'Пропустити',
+              icon: 'pi pi-forward',
+              disabled: !action.canSkip,
+              command: () => this.skip.emit(action),
+            },
           ],
         ]),
       ),
   );
 
   protected about(action: ReportActionVm): string | null {
-    return (action.instrumentId && this.instruments.byId().get(action.instrumentId)?.description) || null;
+    return (
+      (action.instrumentId && this.instruments.byId().get(action.instrumentId)?.description) || null
+    );
   }
 
   protected hasDetails(action: ReportActionVm): boolean {

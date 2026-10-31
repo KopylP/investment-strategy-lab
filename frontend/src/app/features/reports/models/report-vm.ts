@@ -1,4 +1,14 @@
-import { ActionKind, ActionStatus, FillDto, PlanReviewDto, ReportKind, ReportStatus, SectionColumnDto, SectionRiskDto, TaxEstimateDto } from './report-dto';
+import {
+  ActionKind,
+  ActionStatus,
+  FillDto,
+  PlanReviewDto,
+  ReportKind,
+  ReportStatus,
+  SectionColumnDto,
+  SectionRiskDto,
+  TaxEstimateDto,
+} from './report-dto';
 
 export interface ReportSummaryVm {
   code: string;
@@ -33,7 +43,9 @@ export interface ReportRequestVm {
   error: string | null;
 }
 
-export type ReportListRow = { id: string; report: ReportSummaryVm; request?: never } | { id: string; request: ReportRequestVm; report?: never };
+export type ReportListRow =
+  | { id: string; report: ReportSummaryVm; request?: never }
+  | { id: string; request: ReportRequestVm; report?: never };
 
 export interface AllocationPartVm {
   subPortfolio: string;

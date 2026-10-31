@@ -2,7 +2,9 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 @Component({
   selector: 'app-footer',
-  template: `<div class="layout-footer text-surface-600 dark:text-muted-color text-sm">Investment Lab · розрахунки — оцінка, рішення ухвалюєте ви</div>`,
+  template: `<div class="layout-footer text-surface-600 dark:text-muted-color text-sm">
+    Investment Lab · розрахунки — оцінка, рішення ухвалюєте ви
+  </div>`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppFooter {}

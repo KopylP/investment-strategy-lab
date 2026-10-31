@@ -26,7 +26,9 @@ export class SignalsStore {
   });
 
   readonly isLoading = this.overviewResource.isLoading;
-  readonly loadError = computed(() => (this.overviewResource.error() ? toProblemMessage(this.overviewResource.error()) : null));
+  readonly loadError = computed(() =>
+    this.overviewResource.error() ? toProblemMessage(this.overviewResource.error()) : null,
+  );
   readonly saving = signal(false);
 
   readonly signals = computed(() => this.overviewResource.value()?.signals ?? []);
@@ -37,7 +39,9 @@ export class SignalsStore {
 
   private readonly muted = computed(() => new Set(this.mutedResource.value() ?? []));
   private readonly rules = computed(() => this.rulesResource.value() ?? []);
-  private readonly reportsByAccount = computed(() => this.reportsResource.value() ?? new Map<string, ScheduledReport[]>());
+  private readonly reportsByAccount = computed(
+    () => this.reportsResource.value() ?? new Map<string, ScheduledReport[]>(),
+  );
 
   notifies(signalId: string): boolean {
     return !this.muted().has(signalId);
@@ -65,7 +69,10 @@ export class SignalsStore {
       case 'Instrument':
         return this.catalog.symbol(signal.instrumentId);
       case 'SubPortfolio':
-        return account?.subPortfolios.find((sub) => sub.id === signal.subPortfolioId)?.name ?? 'Під-портфель';
+        return (
+          account?.subPortfolios.find((sub) => sub.id === signal.subPortfolioId)?.name ??
+          'Під-портфель'
+        );
       case 'EachPosition':
         return `Кожна позиція · ${account?.name ?? 'рахунок'}`;
       default:
@@ -74,13 +81,22 @@ export class SignalsStore {
   }
 
   create(form: SignalForm): Promise<boolean> {
-    return this.run('Сигнал створено', 'Сигнал не створено', () => this.api.create(createBodyOf(form)));
+    return this.run('Сигнал створено', 'Сигнал не створено', () =>
+      this.api.create(createBodyOf(form)),
+    );
   }
 
   change(signalId: string, form: SignalForm): Promise<boolean> {
-    const body = { name: form.name, condition: conditionOf(form), schedule: form.schedule, enabled: form.enabled };
+    const body = {
+      name: form.name,
+      condition: conditionOf(form),
+      schedule: form.schedule,
+      enabled: form.enabled,
+    };
 
-    return this.run('Сигнал збережено', 'Сигнал не збережено', () => this.api.change(signalId, body));
+    return this.run('Сигнал збережено', 'Сигнал не збережено', () =>
+      this.api.change(signalId, body),
+    );
   }
 
   delete(signalId: string): Promise<boolean> {
@@ -88,22 +104,34 @@ export class SignalsStore {
   }
 
   check(signalId: string): Promise<boolean> {
-    return this.run('Сигнал перевірено', 'Не вдалося перевірити сигнал', () => this.api.check(signalId));
+    return this.run('Сигнал перевірено', 'Не вдалося перевірити сигнал', () =>
+      this.api.check(signalId),
+    );
   }
 
   addReportRule(signalId: string, accountId: string, reportCode: string): Promise<boolean> {
-    return this.run('Рапорт під’єднано', 'Рапорт не під’єднано', () => this.api.addReportRule(signalId, accountId, reportCode));
+    return this.run('Рапорт під’єднано', 'Рапорт не під’єднано', () =>
+      this.api.addReportRule(signalId, accountId, reportCode),
+    );
   }
 
   removeReportRule(ruleId: string): Promise<boolean> {
-    return this.run('Рапорт від’єднано', 'Рапорт не від’єднано', () => this.api.removeReportRule(ruleId));
+    return this.run('Рапорт від’єднано', 'Рапорт не від’єднано', () =>
+      this.api.removeReportRule(ruleId),
+    );
   }
 
   setNotify(signalId: string, notify: boolean): Promise<boolean> {
-    return this.run(notify ? 'Сповіщення ввімкнено' : 'Сповіщення вимкнено', 'Не збережено', () => this.api.setNotify(signalId, notify));
+    return this.run(notify ? 'Сповіщення ввімкнено' : 'Сповіщення вимкнено', 'Не збережено', () =>
+      this.api.setNotify(signalId, notify),
+    );
   }
 
-  private async run(success: string, failure: string, action: () => Promise<unknown>): Promise<boolean> {
+  private async run(
+    success: string,
+    failure: string,
+    action: () => Promise<unknown>,
+  ): Promise<boolean> {
     this.saving.set(true);
     try {
       await action();
@@ -111,7 +139,12 @@ export class SignalsStore {
       this.reload();
       return true;
     } catch (error) {
-      this.messages.add({ severity: 'error', summary: failure, detail: toProblemMessage(error), life: 8000 });
+      this.messages.add({
+        severity: 'error',
+        summary: failure,
+        detail: toProblemMessage(error),
+        life: 8000,
+      });
       return false;
     } finally {
       this.saving.set(false);

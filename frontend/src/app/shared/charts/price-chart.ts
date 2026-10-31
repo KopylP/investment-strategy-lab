@@ -1,6 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { LiveChart } from './live-chart';
-import { formatAxisNumber, formatDate, formatMoney, formatQuantity, shortenDate } from '../pipes/format';
+import {
+  formatAxisNumber,
+  formatDate,
+  formatMoney,
+  formatQuantity,
+  shortenDate,
+} from '../pipes/format';
 import { Viewport } from '../ui/viewport';
 import { ChartTheme, withAlpha } from './chart-theme';
 
@@ -20,7 +26,12 @@ export interface TradeMarker {
 @Component({
   selector: 'app-price-chart',
   imports: [LiveChart],
-  template: `<app-live-chart [data]="data()" [options]="options()" [plugins]="[tradeLines()]" [height]="viewport.phone() ? phoneHeight() : height()" />`,
+  template: `<app-live-chart
+    [data]="data()"
+    [options]="options()"
+    [plugins]="[tradeLines()]"
+    [height]="viewport.phone() ? phoneHeight() : height()"
+  />`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PriceChart {
@@ -55,7 +66,9 @@ export class PriceChart {
     const palette = this.theme.palette();
     const byIndex = this.tradesByIndex();
     const markers = (side: TradeMarker['side']) =>
-      points.map((point, index) => (byIndex.get(index)?.some((trade) => trade.side === side) ? point.close : null));
+      points.map((point, index) =>
+        byIndex.get(index)?.some((trade) => trade.side === side) ? point.close : null,
+      );
     return {
       labels: points.map((point) => formatDate(point.date)),
       datasets: [
@@ -73,8 +86,31 @@ export class PriceChart {
         },
         ...(byIndex.size
           ? [
-              { label: 'Купівля', data: markers('Buy'), showLine: false, pointStyle: 'triangle', pointRadius: 9, pointHoverRadius: 11, backgroundColor: palette.primary, borderColor: '#ffffff', borderWidth: 2, order: 0 },
-              { label: 'Продаж', data: markers('Sell'), showLine: false, pointStyle: 'triangle', rotation: 180, pointRadius: 9, pointHoverRadius: 11, backgroundColor: palette.tax, borderColor: '#ffffff', borderWidth: 2, order: 0 },
+              {
+                label: 'Купівля',
+                data: markers('Buy'),
+                showLine: false,
+                pointStyle: 'triangle',
+                pointRadius: 9,
+                pointHoverRadius: 11,
+                backgroundColor: palette.primary,
+                borderColor: '#ffffff',
+                borderWidth: 2,
+                order: 0,
+              },
+              {
+                label: 'Продаж',
+                data: markers('Sell'),
+                showLine: false,
+                pointStyle: 'triangle',
+                rotation: 180,
+                pointRadius: 9,
+                pointHoverRadius: 11,
+                backgroundColor: palette.tax,
+                borderColor: '#ffffff',
+                borderWidth: 2,
+                order: 0,
+              },
             ]
           : []),
       ],
@@ -86,14 +122,21 @@ export class PriceChart {
     const palette = this.theme.palette();
     return {
       id: 'tradeLines',
-      beforeDatasetsDraw: (chart: { ctx: CanvasRenderingContext2D; chartArea: { top: number; bottom: number }; scales: { x: { getPixelForValue: (index: number) => number } } }) => {
+      beforeDatasetsDraw: (chart: {
+        ctx: CanvasRenderingContext2D;
+        chartArea: { top: number; bottom: number };
+        scales: { x: { getPixelForValue: (index: number) => number } };
+      }) => {
         const { ctx, chartArea, scales } = chart;
         ctx.save();
         ctx.setLineDash([4, 4]);
         ctx.lineWidth = 1;
         for (const [index, trades] of byIndex) {
           const x = scales.x.getPixelForValue(index);
-          ctx.strokeStyle = withAlpha(trades.some((trade) => trade.side === 'Buy') ? palette.primary : palette.tax, 0.55);
+          ctx.strokeStyle = withAlpha(
+            trades.some((trade) => trade.side === 'Buy') ? palette.primary : palette.tax,
+            0.55,
+          );
           ctx.beginPath();
           ctx.moveTo(x, chartArea.top);
           ctx.lineTo(x, chartArea.bottom);
@@ -115,16 +158,31 @@ export class PriceChart {
       maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { display: byIndex.size > 0, labels: { color: palette.text, usePointStyle: true, ...(phone ? { boxWidth: 6, boxHeight: 6, padding: 10, font: { size: 11 } } : {}), filter: (item: { text: string }) => item.text !== 'Ціна закриття' } },
+        legend: {
+          display: byIndex.size > 0,
+          labels: {
+            color: palette.text,
+            usePointStyle: true,
+            ...(phone ? { boxWidth: 6, boxHeight: 6, padding: 10, font: { size: 11 } } : {}),
+            filter: (item: { text: string }) => item.text !== 'Ціна закриття',
+          },
+        },
         tooltip: {
           filter: (item: { raw: unknown }) => item.raw !== null,
           callbacks: {
-            label: (context: { datasetIndex: number; dataIndex: number; parsed: { y: number } }) => {
+            label: (context: {
+              datasetIndex: number;
+              dataIndex: number;
+              parsed: { y: number };
+            }) => {
               if (context.datasetIndex === 0) return formatMoney(context.parsed.y, currency);
               const side = context.datasetIndex === 1 ? 'Buy' : 'Sell';
               return (byIndex.get(context.dataIndex) ?? [])
                 .filter((trade) => trade.side === side)
-                .map((trade) => `${side === 'Buy' ? 'Купівля' : 'Продаж'} ${formatQuantity(trade.quantity)} шт. × ${formatMoney(trade.price, trade.currency)} (${formatDate(trade.date)})`);
+                .map(
+                  (trade) =>
+                    `${side === 'Buy' ? 'Купівля' : 'Продаж'} ${formatQuantity(trade.quantity)} шт. × ${formatMoney(trade.price, trade.currency)} (${formatDate(trade.date)})`,
+                );
             },
           },
         },
@@ -133,15 +191,39 @@ export class PriceChart {
         x: phone
           ? {
               ticks: {
-                color: palette.muted, maxTicksLimit: 3, maxRotation: 0, font: { size: 11 },
-                callback(this: { getLabelForValue: (value: number) => string }, value: number) { return shortenDate(this.getLabelForValue(value)); },
+                color: palette.muted,
+                maxTicksLimit: 3,
+                maxRotation: 0,
+                font: { size: 11 },
+                callback(this: { getLabelForValue: (value: number) => string }, value: number) {
+                  return shortenDate(this.getLabelForValue(value));
+                },
               },
               grid: { display: false },
             }
-          : { ticks: { color: palette.muted, maxTicksLimit: 6, maxRotation: 0 }, grid: { display: false } },
+          : {
+              ticks: { color: palette.muted, maxTicksLimit: 6, maxRotation: 0 },
+              grid: { display: false },
+            },
         y: phone
-          ? { position: 'right', ticks: { color: palette.muted, maxTicksLimit: 5, font: { size: 11 }, callback: (value: number) => formatAxisNumber(value, digits) }, grid: { color: palette.grid } }
-          : { position: 'right', ticks: { color: palette.muted, callback: (value: number) => formatMoney(value, currency, digits) }, grid: { color: palette.grid } },
+          ? {
+              position: 'right',
+              ticks: {
+                color: palette.muted,
+                maxTicksLimit: 5,
+                font: { size: 11 },
+                callback: (value: number) => formatAxisNumber(value, digits),
+              },
+              grid: { color: palette.grid },
+            }
+          : {
+              position: 'right',
+              ticks: {
+                color: palette.muted,
+                callback: (value: number) => formatMoney(value, currency, digits),
+              },
+              grid: { color: palette.grid },
+            },
       },
     };
   });

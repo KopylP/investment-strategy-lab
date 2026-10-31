@@ -3,14 +3,44 @@
 } @else if (store.loadError()) {
   <div class="card"><p-message severity="error" text="Стратегію не знайдено" /></div>
 } @else if (store.strategy(); as strategy) {
-  <app-page-header backLink="/strategies" backLabel="Стратегії" [title]="strategy.name" [subtitle]="(store.type()?.name ?? strategy.typeCode) + ' · рушій ' + (store.type()?.engine ?? '') + ' ' + (store.type()?.engineVersion ?? '')">
-    <p-select [options]="store.versions()" [ngModel]="strategy.version.number" (ngModelChange)="store.showVersion($event)" [disabled]="editing()" size="small">
+  <app-page-header
+    backLink="/strategies"
+    backLabel="Стратегії"
+    [title]="strategy.name"
+    [subtitle]="
+      (store.type()?.name ?? strategy.typeCode) +
+      ' · рушій ' +
+      (store.type()?.engine ?? '') +
+      ' ' +
+      (store.type()?.engineVersion ?? '')
+    "
+  >
+    <p-select
+      [options]="store.versions()"
+      [ngModel]="strategy.version.number"
+      (ngModelChange)="store.showVersion($event)"
+      [disabled]="editing()"
+      size="small"
+    >
       <ng-template #selectedItem let-number>Версія {{ number }}</ng-template>
-      <ng-template #item let-number>Версія {{ number }}{{ number === strategy.latestVersion ? ' (остання)' : '' }}</ng-template>
+      <ng-template #item let-number
+        >Версія {{ number }}{{ number === strategy.latestVersion ? ' (остання)' : '' }}</ng-template
+      >
     </p-select>
     @if (strategy.status === 'Active' && !editing()) {
-      <p-button label="Змінити" icon="pi pi-pencil" [disabled]="!isLatest()" (onClick)="startEditing()" />
-      <p-button icon="pi pi-box" severity="secondary" [text]="true" ariaLabel="Архівувати" (onClick)="confirmArchive()" />
+      <p-button
+        label="Змінити"
+        icon="pi pi-pencil"
+        [disabled]="!isLatest()"
+        (onClick)="startEditing()"
+      />
+      <p-button
+        icon="pi pi-box"
+        severity="secondary"
+        [text]="true"
+        ariaLabel="Архівувати"
+        (onClick)="confirmArchive()"
+      />
     }
     @if (strategy.status === 'Archived') {
       <p-tag value="архів" severity="secondary" />
@@ -24,7 +54,9 @@
   @if (!editing()) {
     <div class="grid gap-4 lg:grid-cols-3">
       <div class="card mb-0 lg:col-span-2">
-        <h2 class="text-lg font-semibold mb-3">Універсум · {{ strategy.version.universe.length }} ETF</h2>
+        <h2 class="text-lg font-semibold mb-3">
+          Універсум · {{ strategy.version.universe.length }} ETF
+        </h2>
         <div class="flex flex-wrap gap-2">
           @for (id of strategy.version.universe; track id) {
             <p-tag [value]="store.instruments.symbol(id)" severity="secondary" />
@@ -34,21 +66,41 @@
       <div class="card mb-0">
         <h2 class="text-lg font-semibold mb-3">Ринок і кеш</h2>
         <div class="flex flex-col gap-2 text-sm">
-          <div class="flex justify-between"><span class="text-muted-color">Бенчмарк</span><span>{{ store.instruments.symbol(strategy.version.benchmarkInstrumentId) }}</span></div>
-          <div class="flex justify-between"><span class="text-muted-color">Індекс волатильності</span><span>{{ store.instruments.symbol(strategy.version.volatilityIndexInstrumentId) }}</span></div>
-          <div class="flex justify-between"><span class="text-muted-color">Паркування</span><span>{{ store.instruments.symbol(strategy.version.cashInstrumentId) }}</span></div>
+          <div class="flex justify-between">
+            <span class="text-muted-color">Бенчмарк</span
+            ><span>{{ store.instruments.symbol(strategy.version.benchmarkInstrumentId) }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-muted-color">Індекс волатильності</span
+            ><span>{{
+              store.instruments.symbol(strategy.version.volatilityIndexInstrumentId)
+            }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-muted-color">Паркування</span
+            ><span>{{ store.instruments.symbol(strategy.version.cashInstrumentId) }}</span>
+          </div>
           @for (report of reports(); track report.code) {
-            <div class="flex justify-between gap-3"><span class="text-muted-color">{{ report.name }}</span>
-              <span class="text-right">{{ report.when }}</span></div>
+            <div class="flex justify-between gap-3">
+              <span class="text-muted-color">{{ report.name }}</span>
+              <span class="text-right">{{ report.when }}</span>
+            </div>
           }
-          <div class="flex justify-between"><span class="text-muted-color">Версія створена</span><span>{{ strategy.version.createdAt | dateTime }}</span></div>
+          <div class="flex justify-between">
+            <span class="text-muted-color">Версія створена</span
+            ><span>{{ strategy.version.createdAt | dateTime }}</span>
+          </div>
         </div>
       </div>
     </div>
     @if (store.type(); as type) {
       <div class="card mt-4">
         <h2 class="text-lg font-semibold mb-3">Параметри</h2>
-        <app-schema-form [schema]="$any(type.parametersSchema)" [value]="strategy.version.parameters" [disabled]="true" />
+        <app-schema-form
+          [schema]="$any(type.parametersSchema)"
+          [value]="strategy.version.parameters"
+          [disabled]="true"
+        />
       </div>
     }
   } @else {
@@ -57,18 +109,48 @@
       <div class="grid gap-4 md:grid-cols-3">
         <div class="flex flex-col gap-2 md:col-span-3">
           <label class="font-medium" for="universe">ETF, з яких стратегія вибирає</label>
-          <p-multiselect inputId="universe" [options]="etfOptions()" optionLabel="label" optionValue="value" [ngModel]="universe()" (ngModelChange)="universe.set($event)"
-                         display="chip" [filter]="true" filterPlaceholder="Пошук" appendTo="body" fluid />
+          <p-multiselect
+            inputId="universe"
+            [options]="etfOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="universe()"
+            (ngModelChange)="universe.set($event)"
+            display="chip"
+            [filter]="true"
+            filterPlaceholder="Пошук"
+            appendTo="body"
+            fluid
+          />
         </div>
         <div class="flex flex-col gap-2">
           <label class="font-medium" for="cash">ETF для паркування</label>
-          <p-select inputId="cash" [options]="etfOptions()" optionLabel="label" optionValue="value" [ngModel]="cashInstrumentId()" (ngModelChange)="cashInstrumentId.set($event)"
-                    [showClear]="true" [filter]="true" appendTo="body" fluid />
+          <p-select
+            inputId="cash"
+            [options]="etfOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="cashInstrumentId()"
+            (ngModelChange)="cashInstrumentId.set($event)"
+            [showClear]="true"
+            [filter]="true"
+            appendTo="body"
+            fluid
+          />
         </div>
         <div class="flex flex-col gap-2">
           <label class="font-medium" for="benchmark">Бенчмарк (фільтр тренду)</label>
-          <p-select inputId="benchmark" [options]="etfOptions()" optionLabel="label" optionValue="value" [ngModel]="benchmarkInstrumentId()" (ngModelChange)="benchmarkInstrumentId.set($event)"
-                    [filter]="true" appendTo="body" fluid />
+          <p-select
+            inputId="benchmark"
+            [options]="etfOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="benchmarkInstrumentId()"
+            (ngModelChange)="benchmarkInstrumentId.set($event)"
+            [filter]="true"
+            appendTo="body"
+            fluid
+          />
         </div>
       </div>
     </div>
@@ -79,8 +161,19 @@
       </div>
     }
     <div class="flex justify-end gap-2 mt-4">
-      <p-button label="Скасувати" [text]="true" severity="secondary" (onClick)="editing.set(false)" />
-      <p-button label="Зберегти як нову версію" icon="pi pi-save" [loading]="store.saving()" [disabled]="!universe().length" (onClick)="save()" />
+      <p-button
+        label="Скасувати"
+        [text]="true"
+        severity="secondary"
+        (onClick)="editing.set(false)"
+      />
+      <p-button
+        label="Зберегти як нову версію"
+        icon="pi pi-save"
+        [loading]="store.saving()"
+        [disabled]="!universe().length"
+        (onClick)="save()"
+      />
     </div>
   }
 }

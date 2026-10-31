@@ -32,7 +32,11 @@ export class NavigationHistory {
   }
 
   private record(event: NavigationEnd, restoredId: number | undefined): void {
-    const page: VisitedPage = { id: restoredId ?? event.id, url: event.urlAfterRedirects, title: this.titleOf(this.router.routerState.snapshot.root) };
+    const page: VisitedPage = {
+      id: restoredId ?? event.id,
+      url: event.urlAfterRedirects,
+      title: this.titleOf(this.router.routerState.snapshot.root),
+    };
     if (page.url.startsWith('/auth')) return this.restart([]);
 
     const pages = this.pages();

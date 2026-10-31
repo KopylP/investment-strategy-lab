@@ -1,6 +1,11 @@
 import { inject, Injectable } from '@angular/core';
 import { ApiClient } from '../../../core/api/api-client';
-import { ChangeSignalBody, CreateSignalBody, SignalReportRuleDto, SignalsOverviewDto } from '../models/signal-dto';
+import {
+  ChangeSignalBody,
+  CreateSignalBody,
+  SignalReportRuleDto,
+  SignalsOverviewDto,
+} from '../models/signal-dto';
 
 @Injectable({ providedIn: 'root' })
 export class SignalsApi {
@@ -30,8 +35,16 @@ export class SignalsApi {
     return this.api.get<SignalReportRuleDto[]>('/api/rebalancing/signal-report-rules');
   }
 
-  addReportRule(signalId: string, accountId: string, reportCode: string): Promise<SignalReportRuleDto> {
-    return this.api.post('/api/rebalancing/signal-report-rules', { signalId, accountId, reportCode });
+  addReportRule(
+    signalId: string,
+    accountId: string,
+    reportCode: string,
+  ): Promise<SignalReportRuleDto> {
+    return this.api.post('/api/rebalancing/signal-report-rules', {
+      signalId,
+      accountId,
+      reportCode,
+    });
   }
 
   removeReportRule(ruleId: string): Promise<void> {

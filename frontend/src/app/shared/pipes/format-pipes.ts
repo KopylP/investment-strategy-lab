@@ -1,5 +1,13 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { formatDate, formatDateTime, formatMoney, formatPercent, formatPeriod, formatQuantity, formatSignedPercent } from './format';
+import {
+  formatDate,
+  formatDateTime,
+  formatMoney,
+  formatPercent,
+  formatPeriod,
+  formatQuantity,
+  formatSignedPercent,
+} from './format';
 
 @Pipe({ name: 'money' })
 export class MoneyPipe implements PipeTransform {

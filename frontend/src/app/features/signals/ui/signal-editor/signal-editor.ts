@@ -1,4 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, model, signal, untracked } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  model,
+  signal,
+  untracked,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
@@ -12,7 +22,12 @@ import { symbolOf } from '../../../../shared/models/api';
 import { ReportTiming } from '../../../reports/models/report-schedule';
 import { ReportTimingEditor } from '../../../reports/ui/report-timing-editor/report-timing-editor';
 import { SignalsStore } from '../../data-access/signals-store';
-import { SignalDto, SignalMetric, SignalReportRuleDto, SignalTargetKind } from '../../models/signal-dto';
+import {
+  SignalDto,
+  SignalMetric,
+  SignalReportRuleDto,
+  SignalTargetKind,
+} from '../../models/signal-dto';
 import { emptyForm, formOf, isFormComplete, metricsOf, SignalForm } from '../../models/signal-form';
 import { metricLabels, targetLabels } from '../../models/signal-labels';
 
@@ -25,7 +40,17 @@ const signalFrequencyOptions = [
 
 @Component({
   selector: 'app-signal-editor',
-  imports: [FormsModule, Button, Dialog, InputNumber, InputText, Message, Select, ToggleSwitch, ReportTimingEditor],
+  imports: [
+    FormsModule,
+    Button,
+    Dialog,
+    InputNumber,
+    InputText,
+    Message,
+    Select,
+    ToggleSwitch,
+    ReportTimingEditor,
+  ],
   templateUrl: './signal-editor.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -45,23 +70,39 @@ export class SignalEditor {
     { label: 'Вище порога', value: 'Above' },
     { label: 'Нижче порога', value: 'Below' },
   ];
-  protected readonly targets = Object.entries(targetLabels).map(([value, label]) => ({ label, value: value as SignalTargetKind }));
+  protected readonly targets = Object.entries(targetLabels).map(([value, label]) => ({
+    label,
+    value: value as SignalTargetKind,
+  }));
 
   protected readonly isEditing = computed(() => this.editedSignal() !== null);
   protected readonly isComplete = computed(() => isFormComplete(this.form()));
   protected readonly isLevel = computed(() => this.form().metric === 'Level');
   protected readonly unit = computed(() => (this.isLevel() ? '' : '%'));
 
-  protected readonly metrics = computed(() => metricsOf(this.form().target).map((value) => ({ label: metricLabels[value], value })));
-  protected readonly accounts = computed(() => this.store.accounts().map((account) => ({ label: account.name, value: account.id })));
-  protected readonly subPortfolios = computed(() => this.subPortfolioOptions(this.form().accountId));
+  protected readonly metrics = computed(() =>
+    metricsOf(this.form().target).map((value) => ({ label: metricLabels[value], value })),
+  );
+  protected readonly accounts = computed(() =>
+    this.store.accounts().map((account) => ({ label: account.name, value: account.id })),
+  );
+  protected readonly subPortfolios = computed(() =>
+    this.subPortfolioOptions(this.form().accountId),
+  );
   protected readonly instruments = computed(() =>
-    this.store.instruments().map((instrument) => ({ label: `${symbolOf(instrument)} · ${instrument.name}`, value: instrument.id })),
+    this.store
+      .instruments()
+      .map((instrument) => ({
+        label: `${symbolOf(instrument)} · ${instrument.name}`,
+        value: instrument.id,
+      })),
   );
 
   protected readonly rules = computed(() => this.rulesOfCurrentSignal());
   protected readonly ruleReports = computed(() =>
-    this.store.reportsOf(this.ruleAccountId()).map((report) => ({ label: report.name, value: report.code })),
+    this.store
+      .reportsOf(this.ruleAccountId())
+      .map((report) => ({ label: report.name, value: report.code })),
   );
 
   constructor() {
@@ -86,7 +127,9 @@ export class SignalEditor {
 
   protected async save(): Promise<void> {
     const current = this.editedSignal();
-    const saved = current ? await this.store.change(current.id, this.form()) : await this.store.create(this.form());
+    const saved = current
+      ? await this.store.change(current.id, this.form())
+      : await this.store.create(this.form());
 
     if (saved) this.visible.set(false);
   }

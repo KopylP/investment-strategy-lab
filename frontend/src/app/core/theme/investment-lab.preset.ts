@@ -18,10 +18,20 @@ export const InvestmentLabPreset = definePreset(Aura, {
     },
     colorScheme: {
       light: {
-        finance: { gain: '{green.700}', loss: '{red.600}', neutral: '{surface.500}', tax: '{amber.700}' },
+        finance: {
+          gain: '{green.700}',
+          loss: '{red.600}',
+          neutral: '{surface.500}',
+          tax: '{amber.700}',
+        },
       },
       dark: {
-        finance: { gain: '{green.400}', loss: '{red.400}', neutral: '{surface.500}', tax: '{amber.400}' },
+        finance: {
+          gain: '{green.400}',
+          loss: '{red.400}',
+          neutral: '{surface.500}',
+          tax: '{amber.400}',
+        },
       },
     },
   },

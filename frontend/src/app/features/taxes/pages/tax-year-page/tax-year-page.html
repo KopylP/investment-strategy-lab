@@ -1,17 +1,38 @@
-<app-page-header title="Податки" subtitle="Белка, один PIT-38 на всі рахунки: FIFO в межах рахунку, курс NBP останнього робочого дня перед угодою, 19%, річне сальдо всіх брокерів">
+<app-page-header
+  title="Податки"
+  subtitle="Белка, один PIT-38 на всі рахунки: FIFO в межах рахунку, курс NBP останнього робочого дня перед угодою, 19%, річне сальдо всіх брокерів"
+>
   @if (yearOptions().length > 1) {
-    <p-selectbutton [options]="yearOptions()" optionLabel="label" optionValue="value" [ngModel]="store.year()" (ngModelChange)="$event && store.selectedYear.set($event)" [allowEmpty]="false" />
+    <p-selectbutton
+      [options]="yearOptions()"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="store.year()"
+      (ngModelChange)="$event && store.selectedYear.set($event)"
+      [allowEmpty]="false"
+    />
   }
 </app-page-header>
 
-<app-declaration-dialog [visible]="!!store.declarationCode()" [loading]="store.declarationLoading()" [declaration]="store.declaration()?.declaration ?? null"
-                        [warnings]="store.declaration()?.warnings ?? []" [pdfLoading]="store.pdfLoading()" (pdf)="store.downloadDeclarationPdf($event)"
-                        [problem]="store.declarationError() ? store.declarationProblem() : null" [saving]="store.saving()"
-                        (pit8c)="store.setPit8C($event.accountId, $event.amounts)" (pit8cRemoved)="confirmRemovePit8C($event)"
-                        (closed)="store.declarationCode.set(null)" />
+<app-declaration-dialog
+  [visible]="!!store.declarationCode()"
+  [loading]="store.declarationLoading()"
+  [declaration]="store.declaration()?.declaration ?? null"
+  [warnings]="store.declaration()?.warnings ?? []"
+  [pdfLoading]="store.pdfLoading()"
+  (pdf)="store.downloadDeclarationPdf($event)"
+  [problem]="store.declarationError() ? store.declarationProblem() : null"
+  [saving]="store.saving()"
+  (pit8c)="store.setPit8C($event.accountId, $event.amounts)"
+  (pit8cRemoved)="confirmRemovePit8C($event)"
+  (closed)="store.declarationCode.set(null)"
+/>
 
-<p-message severity="secondary" styleClass="mb-4"
-  text="Це оцінка. Авторитетні — PIT-8C брокерів і ваш податковий консультант. Прибутки й збитки всіх рахунків сальдуються в одному PIT-38, як у декларації." />
+<p-message
+  severity="secondary"
+  styleClass="mb-4"
+  text="Це оцінка. Авторитетні — PIT-8C брокерів і ваш податковий консультант. Прибутки й збитки всіх рахунків сальдуються в одному PIT-38, як у декларації."
+/>
 
 @if (store.taxAccounts().length > 1) {
   <div class="flex flex-wrap items-center gap-2 mb-4 text-sm">
@@ -36,7 +57,11 @@
   <div class="card"><p-message severity="error" text="Не вдалося порахувати податки" /></div>
 } @else if (!store.years().length) {
   <div class="card">
-    <app-empty-state icon="pi pi-percentage" title="Оподатковуваних подій ще немає" text="Податок з’являється з першим продажем або дивідендом. Купівлі вже формують лоти FIFO." />
+    <app-empty-state
+      icon="pi pi-percentage"
+      title="Оподатковуваних подій ще немає"
+      text="Податок з’являється з першим продажем або дивідендом. Купівлі вже формують лоти FIFO."
+    />
   </div>
 } @else if (store.details(); as details) {
   @let s = details.summary;
@@ -47,10 +72,16 @@
     <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
       <div>
         <div class="text-muted-color text-sm">Податок до сплати · {{ details.year }}</div>
-        <div class="text-4xl sm:text-5xl font-bold tracking-tight mt-1 leading-tight">{{ s.taxDue | money: 'PLN' : 0 }}</div>
+        <div class="text-4xl sm:text-5xl font-bold tracking-tight mt-1 leading-tight">
+          {{ s.taxDue | money: 'PLN' : 0 }}
+        </div>
         <div class="text-sm text-muted-color mt-2">
           @if (details.policyCode === 'PL-BELKA') {
-            з продажів {{ s.capitalTax | money: 'PLN' : 0 }} · з дивідендів {{ s.dividendTax | money: 'PLN' : 0 }} · 19%@if (store.showAccount()) { · {{ store.taxedAccounts().length }} рахунки разом }
+            з продажів {{ s.capitalTax | money: 'PLN' : 0 }} · з дивідендів
+            {{ s.dividendTax | money: 'PLN' : 0 }} · 19%
+            @if (store.showAccount()) {
+              · {{ store.taxedAccounts().length }} рахунки разом
+            }
           } @else {
             {{ details.policyCode }} · не оподатковується
           }
@@ -59,8 +90,15 @@
       @if (store.forms().length) {
         <div class="flex flex-wrap gap-2">
           @for (form of store.forms(); track form.code) {
-            <p-button [label]="form.code + ' за ' + details.year" icon="pi pi-file-edit" [pTooltip]="form.title + ': усі ваші рахунки разом, поле за полем, і PDF на бланку'"
-                      tooltipPosition="bottom" (onClick)="store.declarationCode.set(form.code)" styleClass="w-full sm:w-auto" class="w-full sm:w-auto" />
+            <p-button
+              [label]="form.code + ' за ' + details.year"
+              icon="pi pi-file-edit"
+              [pTooltip]="form.title + ': усі ваші рахунки разом, поле за полем, і PDF на бланку'"
+              tooltipPosition="bottom"
+              (onClick)="store.declarationCode.set(form.code)"
+              styleClass="w-full sm:w-auto"
+              class="w-full sm:w-auto"
+            />
           }
         </div>
       }
@@ -71,22 +109,36 @@
     <div class="app-tiles">
       <div class="px-1 sm:px-4 lg:border-r border-surface">
         <div class="text-muted-color text-xs uppercase tracking-wide">Дохід (зиск)</div>
-        <div class="text-xl font-semibold mt-1" [appSignedValue]="s.gain">{{ s.gain | money: 'PLN' }}</div>
-        <div class="text-xs text-muted-color">виручка {{ s.revenue | money: 'PLN' : 0 }} − витрати {{ s.costs | money: 'PLN' : 0 }}</div>
+        <div class="text-xl font-semibold mt-1" [appSignedValue]="s.gain">
+          {{ s.gain | money: 'PLN' }}
+        </div>
+        <div class="text-xs text-muted-color">
+          виручка {{ s.revenue | money: 'PLN' : 0 }} − витрати {{ s.costs | money: 'PLN' : 0 }}
+        </div>
       </div>
       <div class="px-1 sm:px-4 lg:border-r border-surface">
         <div class="text-muted-color text-xs uppercase tracking-wide">Податкова база</div>
         <div class="text-xl font-semibold mt-1">{{ s.taxBase | money: 'PLN' : 0 }}</div>
-        <div class="text-xs text-muted-color">{{ s.carryforwardUsed ? 'мінус збитки минулих років ' + (s.carryforwardUsed | money: 'PLN' : 0) : 'без збитків минулих років' }}</div>
+        <div class="text-xs text-muted-color">
+          {{
+            s.carryforwardUsed
+              ? 'мінус збитки минулих років ' + (s.carryforwardUsed | money: 'PLN' : 0)
+              : 'без збитків минулих років'
+          }}
+        </div>
       </div>
       <div class="px-1 sm:px-4 lg:border-r border-surface">
         <div class="text-muted-color text-xs uppercase tracking-wide">Дивіденди брутто</div>
         <div class="text-xl font-semibold mt-1">{{ s.dividendIncome | money: 'PLN' }}</div>
-        <div class="text-xs text-muted-color">утримано за кордоном {{ s.dividendTaxCredit | money: 'PLN' }}</div>
+        <div class="text-xs text-muted-color">
+          утримано за кордоном {{ s.dividendTaxCredit | money: 'PLN' }}
+        </div>
       </div>
       <div class="px-1 sm:px-4">
         <div class="text-muted-color text-xs uppercase tracking-wide">Збиток до перенесення</div>
-        <div class="text-xl font-semibold mt-1">{{ s.lossToCarry ? (s.lossToCarry | money: 'PLN') : '—' }}</div>
+        <div class="text-xl font-semibold mt-1">
+          {{ s.lossToCarry ? (s.lossToCarry | money: 'PLN') : '—' }}
+        </div>
         <div class="text-xs text-muted-color">5 років, до 50% на рік</div>
       </div>
     </div>
@@ -95,16 +147,54 @@
   <div class="card">
     <h2 class="text-lg font-semibold mb-4">Реалізації (продажі)</h2>
     @if (details.realizations.length) {
-      <p-table [value]="details.realizations" dataKey="saleTransactionId" tableStyleClass="sm:min-w-[56rem]" size="small">
+      <p-table
+        [value]="details.realizations"
+        dataKey="saleTransactionId"
+        tableStyleClass="sm:min-w-[56rem]"
+        size="small"
+      >
         <ng-template #header>
-          <tr><th class="w-10"></th><th class="hidden sm:table-cell">Дата</th><th>ETF</th>@if (store.showAccount()) { <th class="hidden sm:table-cell">Рахунок</th> }<th class="text-right hidden sm:table-cell">Штук</th><th class="text-right hidden sm:table-cell">Виручка</th><th class="text-right hidden sm:table-cell">Витрати</th><th class="text-right">Зиск</th><th class="hidden sm:table-cell">Курс NBP</th></tr>
+          <tr>
+            <th class="w-10"></th>
+            <th class="hidden sm:table-cell">Дата</th>
+            <th>ETF</th>
+            @if (store.showAccount()) {
+              <th class="hidden sm:table-cell">Рахунок</th>
+            }
+            <th class="text-right hidden sm:table-cell">Штук</th>
+            <th class="text-right hidden sm:table-cell">Виручка</th>
+            <th class="text-right hidden sm:table-cell">Витрати</th>
+            <th class="text-right">Зиск</th>
+            <th class="hidden sm:table-cell">Курс NBP</th>
+          </tr>
         </ng-template>
         <ng-template #body let-r let-expanded="expanded">
           <tr>
-            <td><p-button [pRowToggler]="r" [text]="true" [rounded]="true" severity="secondary" [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" ariaLabel="Лоти" /></td>
+            <td>
+              <p-button
+                [pRowToggler]="r"
+                [text]="true"
+                [rounded]="true"
+                severity="secondary"
+                [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                ariaLabel="Лоти"
+              />
+            </td>
             <td class="hidden sm:table-cell whitespace-nowrap">{{ r.soldOn | date }}</td>
-            <td class="font-medium">{{ store.symbol(r.instrumentId) }}<div class="sm:hidden text-xs text-muted-color font-normal whitespace-nowrap">{{ r.soldOn | date }}</div>@if (store.showAccount()) { <div class="sm:hidden text-xs text-muted-color font-normal">{{ store.accountName(r.accountId) }}</div> }</td>
-            @if (store.showAccount()) { <td class="text-sm hidden sm:table-cell">{{ store.accountName(r.accountId) }}</td> }
+            <td class="font-medium">
+              {{ store.symbol(r.instrumentId) }}
+              <div class="sm:hidden text-xs text-muted-color font-normal whitespace-nowrap">
+                {{ r.soldOn | date }}
+              </div>
+              @if (store.showAccount()) {
+                <div class="sm:hidden text-xs text-muted-color font-normal">
+                  {{ store.accountName(r.accountId) }}
+                </div>
+              }
+            </td>
+            @if (store.showAccount()) {
+              <td class="text-sm hidden sm:table-cell">{{ store.accountName(r.accountId) }}</td>
+            }
             <td class="text-right hidden sm:table-cell">{{ r.quantity | quantity }}</td>
             <td class="text-right hidden sm:table-cell">{{ r.proceedsPln | money: 'PLN' }}</td>
             <td class="text-right hidden sm:table-cell">{{ r.costPln | money: 'PLN' }}</td>
@@ -112,11 +202,22 @@
               {{ r.gainPln | money: 'PLN' }}
               @if (r.brokerGainPln !== null) {
                 @let off = brokerDifference(r);
-                <i class="pi text-xs ml-1" [class.pi-check-circle]="!off" [class.pi-exclamation-circle]="off" [style.color]="off ? 'var(--p-finance-tax)' : 'var(--p-text-muted-color)'"
-                   [pTooltip]="off ? 'Revolut рахує ' + (r.brokerGainPln | money: 'PLN') : 'Збігається зі звітом Revolut'"></i>
+                <i
+                  class="pi text-xs ml-1"
+                  [class.pi-check-circle]="!off"
+                  [class.pi-exclamation-circle]="off"
+                  [style.color]="off ? 'var(--p-finance-tax)' : 'var(--p-text-muted-color)'"
+                  [pTooltip]="
+                    off
+                      ? 'Revolut рахує ' + (r.brokerGainPln | money: 'PLN')
+                      : 'Збігається зі звітом Revolut'
+                  "
+                ></i>
               }
             </td>
-            <td class="text-sm hidden sm:table-cell">{{ r.fxRate }} <span class="text-muted-color">· {{ r.fxRateDate | date }}</span></td>
+            <td class="text-sm hidden sm:table-cell">
+              {{ r.fxRate }} <span class="text-muted-color">· {{ r.fxRateDate | date }}</span>
+            </td>
           </tr>
         </ng-template>
         <ng-template #expandedrow let-r>
@@ -124,28 +225,47 @@
             <td class="hidden sm:table-cell"></td>
             <td [attr.colspan]="store.showAccount() ? 9 : 8">
               <div class="app-row-detail">
-              <div class="sm:hidden grid grid-cols-2 gap-x-4 gap-y-1 text-sm mb-3">
-                <span class="text-muted-color">Штук</span><span class="text-right">{{ r.quantity | quantity }}</span>
-                <span class="text-muted-color">Виручка</span><span class="text-right">{{ r.proceedsPln | money: 'PLN' }}</span>
-                <span class="text-muted-color">Витрати</span><span class="text-right">{{ r.costPln | money: 'PLN' }}</span>
-                <span class="text-muted-color">Курс NBP</span><span class="text-right">{{ r.fxRate }} · {{ r.fxRateDate | date }}</span>
-              </div>
-              <div class="font-medium text-sm mb-2">Закриті лоти (FIFO)</div>
-              @for (lot of r.lots; track $index) {
-                <div class="flex flex-wrap justify-between gap-x-4 text-sm py-1 max-w-xl">
-                  <span>куплено {{ lot.acquiredOn | date }}@if (lot.fromBroker) { <span class="text-muted-color"> · собівартість зі звіту брокера</span> }</span>
-                  <span class="text-right ml-auto">{{ lot.quantity | quantity }} шт. · витрати {{ lot.costPln | money: 'PLN' }}</span>
+                <div class="sm:hidden grid grid-cols-2 gap-x-4 gap-y-1 text-sm mb-3">
+                  <span class="text-muted-color">Штук</span
+                  ><span class="text-right">{{ r.quantity | quantity }}</span>
+                  <span class="text-muted-color">Виручка</span
+                  ><span class="text-right">{{ r.proceedsPln | money: 'PLN' }}</span>
+                  <span class="text-muted-color">Витрати</span
+                  ><span class="text-right">{{ r.costPln | money: 'PLN' }}</span>
+                  <span class="text-muted-color">Курс NBP</span
+                  ><span class="text-right">{{ r.fxRate }} · {{ r.fxRateDate | date }}</span>
                 </div>
-              }
-              @if (r.brokerGainPln !== null && brokerDifference(r)) {
-                <div class="text-sm mt-2 max-w-xl" style="color: var(--p-finance-tax)">
-                  Revolut рахує зиск {{ r.brokerGainPln | money: 'PLN' }} (різниця {{ r.gainPln - r.brokerGainPln | money: 'PLN' }}): у нього свій курс і округлення,
-                  у нас — курс NBP дня перед угодою.
-                </div>
-              }
-              @if (r.unmatchedQuantity > 0) {
-                <p-message severity="warn" size="small" [text]="r.unmatchedQuantity + ' шт. без купівлі в журналі — собівартість нульова'" />
-              }
+                <div class="font-medium text-sm mb-2">Закриті лоти (FIFO)</div>
+                @for (lot of r.lots; track $index) {
+                  <div class="flex flex-wrap justify-between gap-x-4 text-sm py-1 max-w-xl">
+                    <span
+                      >куплено {{ lot.acquiredOn | date }}
+                      @if (lot.fromBroker) {
+                        <span class="text-muted-color"> · собівартість зі звіту брокера</span>
+                      }
+                    </span>
+                    <span class="text-right ml-auto"
+                      >{{ lot.quantity | quantity }} шт. · витрати
+                      {{ lot.costPln | money: 'PLN' }}</span
+                    >
+                  </div>
+                }
+                @if (r.brokerGainPln !== null && brokerDifference(r)) {
+                  <div class="text-sm mt-2 max-w-xl" style="color: var(--p-finance-tax)">
+                    Revolut рахує зиск {{ r.brokerGainPln | money: 'PLN' }} (різниця
+                    {{ r.gainPln - r.brokerGainPln | money: 'PLN' }}): у нього свій курс і
+                    округлення, у нас — курс NBP дня перед угодою.
+                  </div>
+                }
+                @if (r.unmatchedQuantity > 0) {
+                  <p-message
+                    severity="warn"
+                    size="small"
+                    [text]="
+                      r.unmatchedQuantity + ' шт. без купівлі в журналі — собівартість нульова'
+                    "
+                  />
+                }
               </div>
             </td>
           </tr>
@@ -160,22 +280,36 @@
     <div class="card">
       <h2 class="text-lg font-semibold mb-4">Дивіденди</h2>
       @if (!store.broker()?.matchedDividends) {
-        <p class="text-sm text-muted-color mt-0 mb-3">Податок, утриманий за кордоном, невідомий, тож податок рахується з отриманої суми без зарахування. Завантажте звіт P&amp;L брокера нижче.</p>
+        <p class="text-sm text-muted-color mt-0 mb-3">
+          Податок, утриманий за кордоном, невідомий, тож податок рахується з отриманої суми без
+          зарахування. Завантажте звіт P&amp;L брокера нижче.
+        </p>
       }
       <p-table [value]="details.dividends" size="small">
         <ng-template #header>
           <tr>
-            <th>Дата</th><th>ETF</th>@if (store.showAccount()) { <th class="hidden sm:table-cell">Рахунок</th> }<th class="text-right hidden sm:table-cell">Отримано</th><th class="text-right">Брутто, PLN</th>
-            <th class="text-right">Утримано<span class="hidden sm:inline"> за кордоном</span></th><th class="hidden sm:table-cell">Курс</th>
+            <th>Дата</th>
+            <th>ETF</th>
+            @if (store.showAccount()) {
+              <th class="hidden sm:table-cell">Рахунок</th>
+            }
+            <th class="text-right hidden sm:table-cell">Отримано</th>
+            <th class="text-right">Брутто, PLN</th>
+            <th class="text-right">Утримано<span class="hidden sm:inline"> за кордоном</span></th>
+            <th class="hidden sm:table-cell">Курс</th>
           </tr>
         </ng-template>
         <ng-template #body let-d>
           <tr>
             <td>{{ d.receivedOn | date }}</td>
             <td>{{ store.symbol(d.instrumentId) }}</td>
-            @if (store.showAccount()) { <td class="text-sm hidden sm:table-cell">{{ store.accountName(d.accountId) }}</td> }
-            <td class="text-right hidden sm:table-cell">{{ d.amount | money: d.currency ?? store.account()?.baseCurrency ?? 'EUR' }}</td>
-            <td class="text-right">{{ (d.grossPln || d.amountPln) | money: 'PLN' }}</td>
+            @if (store.showAccount()) {
+              <td class="text-sm hidden sm:table-cell">{{ store.accountName(d.accountId) }}</td>
+            }
+            <td class="text-right hidden sm:table-cell">
+              {{ d.amount | money: d.currency ?? store.account()?.baseCurrency ?? 'EUR' }}
+            </td>
+            <td class="text-right">{{ d.grossPln || d.amountPln | money: 'PLN' }}</td>
             <td class="text-right">{{ d.withheldPln ? (d.withheldPln | money: 'PLN') : '—' }}</td>
             <td class="hidden sm:table-cell">{{ d.fxRate }}</td>
           </tr>
@@ -186,17 +320,49 @@
 
   @if (details.openLots.length) {
     <div class="card">
-      <h2 class="text-lg font-semibold mb-4">Відкриті лоти<span class="hidden sm:inline"> (собівартість для майбутніх продажів)</span></h2>
+      <h2 class="text-lg font-semibold mb-4">
+        Відкриті лоти<span class="hidden sm:inline"> (собівартість для майбутніх продажів)</span>
+      </h2>
       <p-table [value]="details.openLots" size="small" tableStyleClass="sm:min-w-[40rem]">
-        <ng-template #header><tr><th class="hidden sm:table-cell">Куплено</th><th>ETF</th>@if (store.showAccount()) { <th class="hidden sm:table-cell">Рахунок</th> }<th class="text-right hidden sm:table-cell">Штук</th><th class="text-right">Витрати, PLN</th><th class="hidden sm:table-cell">Курс</th></tr></ng-template>
+        <ng-template #header
+          ><tr>
+            <th class="hidden sm:table-cell">Куплено</th>
+            <th>ETF</th>
+            @if (store.showAccount()) {
+              <th class="hidden sm:table-cell">Рахунок</th>
+            }
+            <th class="text-right hidden sm:table-cell">Штук</th>
+            <th class="text-right">Витрати, PLN</th>
+            <th class="hidden sm:table-cell">Курс</th>
+          </tr></ng-template
+        >
         <ng-template #body let-lot>
-          <tr><td class="hidden sm:table-cell whitespace-nowrap">{{ lot.acquiredOn | date }}</td><td class="font-medium">{{ store.symbol(lot.instrumentId) }}<div class="sm:hidden text-xs text-muted-color font-normal">куплено {{ lot.acquiredOn | date }}</div><div class="sm:hidden text-xs text-muted-color font-normal whitespace-nowrap">{{ lot.quantity | quantity }} шт.</div></td>@if (store.showAccount()) { <td class="text-sm hidden sm:table-cell">{{ store.accountName(lot.accountId) }}</td> }<td class="text-right hidden sm:table-cell">{{ lot.quantity | quantity }}</td><td class="text-right whitespace-nowrap">{{ lot.costPln | money: 'PLN' }}</td><td class="hidden sm:table-cell">{{ lot.fxRate }}</td></tr>
+          <tr>
+            <td class="hidden sm:table-cell whitespace-nowrap">{{ lot.acquiredOn | date }}</td>
+            <td class="font-medium">
+              {{ store.symbol(lot.instrumentId) }}
+              <div class="sm:hidden text-xs text-muted-color font-normal">
+                куплено {{ lot.acquiredOn | date }}
+              </div>
+              <div class="sm:hidden text-xs text-muted-color font-normal whitespace-nowrap">
+                {{ lot.quantity | quantity }} шт.
+              </div>
+            </td>
+            @if (store.showAccount()) {
+              <td class="text-sm hidden sm:table-cell">{{ store.accountName(lot.accountId) }}</td>
+            }
+            <td class="text-right hidden sm:table-cell">{{ lot.quantity | quantity }}</td>
+            <td class="text-right whitespace-nowrap">{{ lot.costPln | money: 'PLN' }}</td>
+            <td class="hidden sm:table-cell">{{ lot.fxRate }}</td>
+          </tr>
         </ng-template>
       </p-table>
     </div>
   }
 
-  <div class="text-sm text-muted-color mb-4">{{ details.fxRule }} · пораховано {{ details.computedAt | dateTime }}</div>
+  <div class="text-sm text-muted-color mb-4">
+    {{ details.fxRule }} · пораховано {{ details.computedAt | dateTime }}
+  </div>
 }
 
 @if (store.account()) {
@@ -205,27 +371,59 @@
       <div class="flex flex-wrap items-center gap-3 min-w-0 w-full sm:w-auto">
         <h2 class="text-lg font-semibold m-0">Звіт брокера (P&amp;L)</h2>
         @if (store.allAccounts().length > 1) {
-          <p-select [options]="store.allAccounts()" optionLabel="name" optionValue="id" [ngModel]="store.account()?.id" (ngModelChange)="store.chooseAccount($event)"
-            size="small" ariaLabel="Рахунок звіту брокера" class="w-full sm:w-auto sm:min-w-48 max-w-full" />
+          <p-select
+            [options]="store.allAccounts()"
+            optionLabel="name"
+            optionValue="id"
+            [ngModel]="store.account()?.id"
+            (ngModelChange)="store.chooseAccount($event)"
+            size="small"
+            ariaLabel="Рахунок звіту брокера"
+            class="w-full sm:w-auto sm:min-w-48 max-w-full"
+          />
         }
       </div>
-      <label appFileDrop class="p-button p-button-sm p-button-outlined cursor-pointer" [class.p-disabled]="store.saving()">
-        <i class="pi mr-2" [class.pi-upload]="!store.saving()" [class.pi-spinner]="store.saving()" [class.pi-spin]="store.saving()"></i>Завантажити або перетягнути PDF
-        <input type="file" accept=".pdf,application/pdf" class="hidden" (change)="uploadBroker($event)" />
+      <label
+        appFileDrop
+        class="p-button p-button-sm p-button-outlined cursor-pointer"
+        [class.p-disabled]="store.saving()"
+      >
+        <i
+          class="pi mr-2"
+          [class.pi-upload]="!store.saving()"
+          [class.pi-spinner]="store.saving()"
+          [class.pi-spin]="store.saving()"
+        ></i
+        >Завантажити або перетягнути PDF
+        <input
+          type="file"
+          accept=".pdf,application/pdf"
+          class="hidden"
+          (change)="uploadBroker($event)"
+        />
       </label>
     </div>
     <p class="text-sm sm:text-base text-muted-color mt-0 mb-4">
-      Revolut → брокерський рахунок → Документи → звіт про прибутки й збитки (PDF). Звідти беруться податок, утриманий з дивідендів
-      за кордоном (він зменшує польський), собівартість акцій без купівлі в журналі (наприклад, після спін-офу) і зиск Revolut для звірки.
-      Операції й надалі імпортуються з CSV.
+      Revolut → брокерський рахунок → Документи → звіт про прибутки й збитки (PDF). Звідти беруться
+      податок, утриманий з дивідендів за кордоном (він зменшує польський), собівартість акцій без
+      купівлі в журналі (наприклад, після спін-офу) і зиск Revolut для звірки. Операції й надалі
+      імпортуються з CSV.
     </p>
     @if (store.broker(); as broker) {
       @if (broker.statements.length) {
         <div class="flex flex-wrap gap-2 mb-3">
-          <p-tag [value]="'продажі: ' + broker.matchedSales + ' з ' + broker.sales" [severity]="broker.matchedSales === broker.sales ? 'success' : 'warn'" />
-          <p-tag [value]="'дивіденди: ' + broker.matchedDividends + ' з ' + broker.dividends" [severity]="broker.matchedDividends === broker.dividends ? 'success' : 'warn'" />
+          <p-tag
+            [value]="'продажі: ' + broker.matchedSales + ' з ' + broker.sales"
+            [severity]="broker.matchedSales === broker.sales ? 'success' : 'warn'"
+          />
+          <p-tag
+            [value]="'дивіденди: ' + broker.matchedDividends + ' з ' + broker.dividends"
+            [severity]="broker.matchedDividends === broker.dividends ? 'success' : 'warn'"
+          />
           @if (broker.matchedSales < broker.sales || broker.matchedDividends < broker.dividends) {
-            <span class="text-xs text-muted-color self-center">решта не знайшла операції в журналі — імпортуйте CSV за той самий період</span>
+            <span class="text-xs text-muted-color self-center"
+              >решта не знайшла операції в журналі — імпортуйте CSV за той самий період</span
+            >
           }
         </div>
         @for (statement of broker.statements; track statement.id) {
@@ -233,13 +431,21 @@
             <div class="min-w-0">
               <div class="font-medium truncate">{{ statement.fileName }}</div>
               <div class="text-xs text-muted-color">
-                {{ statement.from | date }} – {{ statement.to | date }} · продажів {{ statement.sales }} · дивідендів {{ statement.dividends }} · завантажено {{ statement.uploadedAt | dateTime }}
+                {{ statement.from | date }} – {{ statement.to | date }} · продажів
+                {{ statement.sales }} · дивідендів {{ statement.dividends }} · завантажено
+                {{ statement.uploadedAt | dateTime }}
               </div>
               @for (warning of statement.warnings; track $index) {
                 <div class="text-xs mt-1" style="color: var(--p-finance-tax)">{{ warning }}</div>
               }
             </div>
-            <p-button icon="pi pi-trash" [text]="true" severity="danger" ariaLabel="Видалити звіт" (onClick)="confirmRemoveBroker(statement)" />
+            <p-button
+              icon="pi pi-trash"
+              [text]="true"
+              severity="danger"
+              ariaLabel="Видалити звіт"
+              (onClick)="confirmRemoveBroker(statement)"
+            />
           </div>
         }
       }
@@ -248,17 +454,37 @@
 
   <div class="card">
     <h2 class="text-lg font-semibold mb-2">Збитки минулих років</h2>
-    <p class="text-sm text-muted-color mt-0 mb-2">Ваші, а не рахунку: один запис на рік для всіх брокерів.</p>
-    <p class="text-sm sm:text-base text-muted-color mt-0 mb-4">Збиток з поданого PIT-38: зменшує зиск наступних 5 років, щонайбільше на 50% збитку за рік. Один збиток на рік — для декларації він ваш, не рахунку, і стоїть замість порахованого з журналу. «Уже використано» — відраховане в деклараціях за роки, яких немає в журналі.</p>
+    <p class="text-sm text-muted-color mt-0 mb-2">
+      Ваші, а не рахунку: один запис на рік для всіх брокерів.
+    </p>
+    <p class="text-sm sm:text-base text-muted-color mt-0 mb-4">
+      Збиток з поданого PIT-38: зменшує зиск наступних 5 років, щонайбільше на 50% збитку за рік.
+      Один збиток на рік — для декларації він ваш, не рахунку, і стоїть замість порахованого з
+      журналу. «Уже використано» — відраховане в деклараціях за роки, яких немає в журналі.
+    </p>
     @if (store.losses().length) {
       <p-table [value]="store.losses()" size="small" styleClass="mb-4">
-        <ng-template #header><tr><th>Рік</th><th class="text-right">Збиток</th><th class="text-right">Використано<span class="hidden sm:inline"> раніше</span></th><th class="w-12"></th></tr></ng-template>
+        <ng-template #header
+          ><tr>
+            <th>Рік</th>
+            <th class="text-right">Збиток</th>
+            <th class="text-right">Використано<span class="hidden sm:inline"> раніше</span></th>
+            <th class="w-12"></th></tr
+        ></ng-template>
         <ng-template #body let-loss>
           <tr>
             <td>{{ loss.year }}</td>
             <td class="text-right">{{ loss.amount | money: 'PLN' }}</td>
             <td class="text-right">{{ loss.alreadyUsed | money: 'PLN' }}</td>
-            <td><p-button icon="pi pi-trash" [text]="true" severity="danger" ariaLabel="Видалити" (onClick)="confirmRemove(loss)" /></td>
+            <td>
+              <p-button
+                icon="pi pi-trash"
+                [text]="true"
+                severity="danger"
+                ariaLabel="Видалити"
+                (onClick)="confirmRemove(loss)"
+              />
+            </td>
           </tr>
         </ng-template>
       </p-table>
@@ -266,17 +492,51 @@
     <div class="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end">
       <div class="flex flex-col gap-2">
         <label for="loss-year" class="font-medium text-sm">Рік</label>
-        <p-inputnumber inputId="loss-year" [ngModel]="lossYear()" (ngModelChange)="lossYear.set($event)" [useGrouping]="false" [min]="2000" [max]="2100" fluid />
+        <p-inputnumber
+          inputId="loss-year"
+          [ngModel]="lossYear()"
+          (ngModelChange)="lossYear.set($event)"
+          [useGrouping]="false"
+          [min]="2000"
+          [max]="2100"
+          fluid
+        />
       </div>
       <div class="flex flex-col gap-2">
         <label for="loss-amount" class="font-medium text-sm">Збиток</label>
-        <p-inputnumber inputId="loss-amount" [ngModel]="lossAmount()" (ngModelChange)="lossAmount.set($event)" mode="currency" currency="PLN" locale="uk-UA" [min]="0" fluid />
+        <p-inputnumber
+          inputId="loss-amount"
+          [ngModel]="lossAmount()"
+          (ngModelChange)="lossAmount.set($event)"
+          mode="currency"
+          currency="PLN"
+          locale="uk-UA"
+          [min]="0"
+          fluid
+        />
       </div>
       <div class="flex flex-col gap-2">
         <label for="loss-used" class="font-medium text-sm">Уже використано</label>
-        <p-inputnumber inputId="loss-used" [ngModel]="lossUsed()" (ngModelChange)="lossUsed.set($event)" mode="currency" currency="PLN" locale="uk-UA" [min]="0" fluid />
+        <p-inputnumber
+          inputId="loss-used"
+          [ngModel]="lossUsed()"
+          (ngModelChange)="lossUsed.set($event)"
+          mode="currency"
+          currency="PLN"
+          locale="uk-UA"
+          [min]="0"
+          fluid
+        />
       </div>
-      <p-button label="Додати" icon="pi pi-plus" [disabled]="!lossYear() || !lossAmount()" [loading]="store.saving()" (onClick)="addLoss()" class="self-end" styleClass="w-full sm:w-auto" />
+      <p-button
+        label="Додати"
+        icon="pi pi-plus"
+        [disabled]="!lossYear() || !lossAmount()"
+        [loading]="store.saving()"
+        (onClick)="addLoss()"
+        class="self-end"
+        styleClass="w-full sm:w-auto"
+      />
     </div>
   </div>
 }

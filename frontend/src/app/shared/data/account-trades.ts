@@ -17,7 +17,8 @@ export class AccountTrades {
 
   private readonly journal = resource({
     params: () => this.accounts.currentId() ?? undefined,
-    loader: ({ params: accountId }) => this.api.get<JournalEntry[]>(`/api/portfolio/accounts/${accountId}/transactions`),
+    loader: ({ params: accountId }) =>
+      this.api.get<JournalEntry[]>(`/api/portfolio/accounts/${accountId}/transactions`),
   });
 
   private readonly byInstrument = computed(() => {

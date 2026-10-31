@@ -4,7 +4,13 @@ import { ToggleSwitch } from 'primeng/toggleswitch';
 import { DisplayCurrency } from '../../../../core/context/display-currency';
 import { ChartTheme, withAlpha } from '../../../../shared/charts/chart-theme';
 import { LiveChart } from '../../../../shared/charts/live-chart';
-import { formatAxisNumber, formatDate, formatMoney, formatPeriod, shortenDate } from '../../../../shared/pipes/format';
+import {
+  formatAxisNumber,
+  formatDate,
+  formatMoney,
+  formatPeriod,
+  shortenDate,
+} from '../../../../shared/pipes/format';
 import { Viewport } from '../../../../shared/ui/viewport';
 import { DashboardDto } from '../../data-access/dashboard-api';
 
@@ -14,18 +20,25 @@ const showHeldKey = 'overview.valueChart.showHeld';
 @Component({
   selector: 'app-value-chart',
   imports: [FormsModule, LiveChart, ToggleSwitch],
-  template: `
-    <div class="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 mb-2 text-sm text-muted-color">
+  template: ` <div
+      class="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 mb-2 text-sm text-muted-color"
+    >
       @if (hasPlan() && !showHeld()) {
         <label class="flex items-center gap-2">
-          <p-toggleswitch [ngModel]="showPlan()" (ngModelChange)="setShowPlan($event)" /> якби все за планом
+          <p-toggleswitch [ngModel]="showPlan()" (ngModelChange)="setShowPlan($event)" /> якби все
+          за планом
         </label>
       }
       <label class="flex items-center gap-2">
-        <p-toggleswitch [ngModel]="showHeld()" (ngModelChange)="setShowHeld($event)" /> прибуток на активах
+        <p-toggleswitch [ngModel]="showHeld()" (ngModelChange)="setShowHeld($event)" /> прибуток на
+        активах
       </label>
     </div>
-    <app-live-chart [data]="data()" [options]="options()" [height]="viewport.phone() ? '15rem' : '22rem'" />`,
+    <app-live-chart
+      [data]="data()"
+      [options]="options()"
+      [height]="viewport.phone() ? '15rem' : '22rem'"
+    />`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ValueChart {
@@ -42,7 +55,9 @@ export class ValueChart {
 
   readonly dashboard = input.required<DashboardDto>();
 
-  protected readonly hasPlan = computed(() => this.dashboard().series.some((point) => point.planValue !== null));
+  protected readonly hasPlan = computed(() =>
+    this.dashboard().series.some((point) => point.planValue !== null),
+  );
   protected readonly showPlan = signal(readChoice(showPlanKey, true));
   protected readonly showHeld = signal(readChoice(showHeldKey, false));
 
@@ -130,18 +145,34 @@ export class ValueChart {
       plugins: {
         legend: {
           labels: phone
-            ? { color: palette.text, usePointStyle: true, boxWidth: 6, boxHeight: 6, padding: 10, font: { size: 11 } }
+            ? {
+                color: palette.text,
+                usePointStyle: true,
+                boxWidth: 6,
+                boxHeight: 6,
+                padding: 10,
+                font: { size: 11 },
+              }
             : { color: palette.text, usePointStyle: true },
         },
         tooltip: {
           callbacks: {
-            label: (context: { dataset: { label: string }; parsed: { y: number } }) => `${context.dataset.label}: ${formatMoney(context.parsed.y, currency, 0)}`,
+            label: (context: { dataset: { label: string }; parsed: { y: number } }) =>
+              `${context.dataset.label}: ${formatMoney(context.parsed.y, currency, 0)}`,
             afterBody: (items: { label: string; parsed: { y: number } }[]) => {
               const report = reportDays.get(items[0]?.label);
               const gain = held && items.length >= 2 ? items[0].parsed.y - items[1].parsed.y : null;
               return [
-                ...(gain === null ? [] : [`Прибуток на активах: ${gain >= 0 ? '+' : ''}${formatMoney(gain, currency, 0)}`]),
-                ...(report ? [`Рапорт: ${report.kind === 'RiskReview' ? 'ризик-рев’ю' : formatPeriod(report.period)}`] : []),
+                ...(gain === null
+                  ? []
+                  : [
+                      `Прибуток на активах: ${gain >= 0 ? '+' : ''}${formatMoney(gain, currency, 0)}`,
+                    ]),
+                ...(report
+                  ? [
+                      `Рапорт: ${report.kind === 'RiskReview' ? 'ризик-рев’ю' : formatPeriod(report.period)}`,
+                    ]
+                  : []),
               ];
             },
           },
@@ -151,16 +182,38 @@ export class ValueChart {
         ? {
             x: {
               ticks: {
-                color: palette.muted, maxTicksLimit: 4, maxRotation: 0, font: { size: 11 },
-                callback(this: { getLabelForValue: (value: number) => string }, value: number) { return shortenDate(this.getLabelForValue(value)); },
+                color: palette.muted,
+                maxTicksLimit: 4,
+                maxRotation: 0,
+                font: { size: 11 },
+                callback(this: { getLabelForValue: (value: number) => string }, value: number) {
+                  return shortenDate(this.getLabelForValue(value));
+                },
               },
               grid: { display: false },
             },
-            y: { ticks: { color: palette.muted, maxTicksLimit: 5, font: { size: 11 }, callback: (value: number) => formatAxisNumber(value) }, grid: { color: palette.grid } },
+            y: {
+              ticks: {
+                color: palette.muted,
+                maxTicksLimit: 5,
+                font: { size: 11 },
+                callback: (value: number) => formatAxisNumber(value),
+              },
+              grid: { color: palette.grid },
+            },
           }
         : {
-            x: { ticks: { color: palette.muted, maxTicksLimit: series.length > 60 ? 8 : 12 }, grid: { display: false } },
-            y: { ticks: { color: palette.muted, callback: (value: number) => formatMoney(value, currency, 0) }, grid: { color: palette.grid } },
+            x: {
+              ticks: { color: palette.muted, maxTicksLimit: series.length > 60 ? 8 : 12 },
+              grid: { display: false },
+            },
+            y: {
+              ticks: {
+                color: palette.muted,
+                callback: (value: number) => formatMoney(value, currency, 0),
+              },
+              grid: { color: palette.grid },
+            },
           },
     };
   });
@@ -178,6 +231,5 @@ function readChoice(key: string, fallback: boolean): boolean {
 function remember(key: string, choice: boolean): void {
   try {
     localStorage.setItem(key, String(choice));
-  } catch {
-  }
+  } catch {}
 }

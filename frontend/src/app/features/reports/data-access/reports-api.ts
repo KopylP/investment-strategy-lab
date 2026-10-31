@@ -1,7 +1,13 @@
 import { inject, Injectable } from '@angular/core';
 import { ApiClient } from '../../../core/api/api-client';
 import { FillInput } from '../models/report-vm';
-import { LoadOperationsPreviewDto, PlanSettingsDto, ReportDetailsDto, ReportRequestDto, ReportSummaryDto } from '../models/report-dto';
+import {
+  LoadOperationsPreviewDto,
+  PlanSettingsDto,
+  ReportDetailsDto,
+  ReportRequestDto,
+  ReportSummaryDto,
+} from '../models/report-dto';
 import { ReportSchedule } from '../models/report-schedule';
 
 @Injectable({ providedIn: 'root' })
@@ -20,7 +26,11 @@ export class ReportsApi {
     return this.api.get<ReportSchedule>(`/api/rebalancing/accounts/${accountId}/report-schedule`);
   }
 
-  generate(accountId: string, code: string, contribution: number | null = null): Promise<{ requestId: string }> {
+  generate(
+    accountId: string,
+    code: string,
+    contribution: number | null = null,
+  ): Promise<{ requestId: string }> {
     return this.api.post(`/api/rebalancing/accounts/${accountId}/reports`, { code, contribution });
   }
 
@@ -37,11 +47,16 @@ export class ReportsApi {
   }
 
   recordPartialFill(reportId: string, actionId: string, fill: FillInput): Promise<void> {
-    return this.api.post(`/api/rebalancing/reports/${reportId}/actions/${actionId}/partial-fills`, fill);
+    return this.api.post(
+      `/api/rebalancing/reports/${reportId}/actions/${actionId}/partial-fills`,
+      fill,
+    );
   }
 
   skip(reportId: string, actionId: string, reason: string): Promise<void> {
-    return this.api.post(`/api/rebalancing/reports/${reportId}/actions/${actionId}/skip`, { reason });
+    return this.api.post(`/api/rebalancing/reports/${reportId}/actions/${actionId}/skip`, {
+      reason,
+    });
   }
 
   undo(reportId: string, actionId: string): Promise<void> {
@@ -49,7 +64,9 @@ export class ReportsApi {
   }
 
   previewJournalMatches(reportId: string): Promise<LoadOperationsPreviewDto> {
-    return this.api.get<LoadOperationsPreviewDto>(`/api/rebalancing/reports/${reportId}/journal-matches`);
+    return this.api.get<LoadOperationsPreviewDto>(
+      `/api/rebalancing/reports/${reportId}/journal-matches`,
+    );
   }
 
   applyJournalMatches(reportId: string): Promise<number> {

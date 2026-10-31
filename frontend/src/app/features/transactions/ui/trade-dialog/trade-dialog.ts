@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, input, model, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  model,
+  output,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Button } from 'primeng/button';
 import { DatePicker } from 'primeng/datepicker';
@@ -29,7 +37,10 @@ export class TradeDialog {
   readonly busy = input(false);
   readonly save = output<TradeInput>();
 
-  protected readonly sides = [{ label: 'Купівля', value: 'Buy' }, { label: 'Продаж', value: 'Sell' }];
+  protected readonly sides = [
+    { label: 'Купівля', value: 'Buy' },
+    { label: 'Продаж', value: 'Sell' },
+  ];
   protected readonly instrumentId = signal<string | null>(null);
   protected readonly side = signal<'Buy' | 'Sell'>('Buy');
   protected readonly quantity = signal<number | null>(null);
@@ -38,7 +49,13 @@ export class TradeDialog {
   protected readonly executedOn = signal<Date>(new Date());
   protected readonly subPortfolioId = signal<string | null>(null);
   protected readonly total = computed(() => (this.quantity() ?? 0) * (this.price() ?? 0));
-  protected readonly valid = computed(() => !!this.instrumentId() && (this.quantity() ?? 0) > 0 && (this.price() ?? 0) > 0 && this.fee() >= 0);
+  protected readonly valid = computed(
+    () =>
+      !!this.instrumentId() &&
+      (this.quantity() ?? 0) > 0 &&
+      (this.price() ?? 0) > 0 &&
+      this.fee() >= 0,
+  );
 
   protected submit(): void {
     if (!this.valid()) return;

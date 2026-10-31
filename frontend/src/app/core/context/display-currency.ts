@@ -24,7 +24,9 @@ export class DisplayCurrency {
     loader: () => this.api.get<LatestFxRates>('/api/market-data/fx-rates/latest'),
   });
 
-  readonly code = computed(() => this.chosen() ?? this.profileResource.value()?.displayCurrency ?? null);
+  readonly code = computed(
+    () => this.chosen() ?? this.profileResource.value()?.displayCurrency ?? null,
+  );
   readonly ratesDate = computed(() => this.ratesResource.value()?.effectiveDate ?? null);
   readonly options = ['EUR', 'USD', 'PLN'];
 

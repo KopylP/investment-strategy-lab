@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, input, model, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  model,
+  output,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Button } from 'primeng/button';
 import { DatePicker } from 'primeng/datepicker';
@@ -35,7 +43,9 @@ export class CashDialog {
   protected readonly occurredOn = signal<Date>(new Date());
   protected readonly subPortfolioId = signal<string | null>(null);
   protected readonly instrumentId = signal<string | null>(null);
-  protected readonly valid = computed(() => (this.amount() ?? 0) > 0 && (this.kind() !== 'Dividend' || !!this.instrumentId()));
+  protected readonly valid = computed(
+    () => (this.amount() ?? 0) > 0 && (this.kind() !== 'Dividend' || !!this.instrumentId()),
+  );
 
   protected submit(): void {
     if (!this.valid()) return;

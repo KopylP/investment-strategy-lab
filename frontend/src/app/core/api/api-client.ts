@@ -46,8 +46,10 @@ const messages: Record<string, string> = {
   'user.DuplicateUserName': 'Такий email уже зареєстровано.',
   'user.DuplicateEmail': 'Такий email уже зареєстровано.',
   'user.PasswordTooShort': 'Пароль має містити щонайменше 10 символів.',
-  'report.no_strategy_answered': 'Жодна стратегія не змогла оцінити рахунок. Найчастіше бракує котирувань — оновіть їх на сторінці «Інструменти й котирування».',
-  'report.no_sub_portfolios': 'На рахунку немає під-портфеля зі стратегією. Призначте стратегію на сторінці рахунку.',
+  'report.no_strategy_answered':
+    'Жодна стратегія не змогла оцінити рахунок. Найчастіше бракує котирувань — оновіть їх на сторінці «Інструменти й котирування».',
+  'report.no_sub_portfolios':
+    'На рахунку немає під-портфеля зі стратегією. Призначте стратегію на сторінці рахунку.',
   'report.not_open': 'Рапорт уже закрито або замінено — відмічати в ньому не можна.',
   'report.action_resolved': 'Дію вже відмічено. Спершу скасуйте відмітку.',
   'report.action_not_pending': 'Пропустити можна лише дію, яку ще не почали виконувати.',
@@ -64,7 +66,11 @@ export function toProblemMessage(error: unknown): string {
   if (error instanceof HttpErrorResponse) {
     const code = (error.error as { code?: string } | null)?.code;
     if (code && messages[code]) return messages[code];
-    const problem = error.error as { detail?: string; title?: string; errors?: Record<string, string[]> } | null;
+    const problem = error.error as {
+      detail?: string;
+      title?: string;
+      errors?: Record<string, string[]>;
+    } | null;
     if (problem?.errors) return Object.values(problem.errors).flat().join(' ');
     if (problem?.detail) return problem.detail;
     if (error.status === 0) return 'Сервер недоступний. Перевірте, чи запущено API.';
@@ -74,5 +80,7 @@ export function toProblemMessage(error: unknown): string {
 }
 
 export function problemCode(error: unknown): string | undefined {
-  return error instanceof HttpErrorResponse ? (error.error as { code?: string } | null)?.code : undefined;
+  return error instanceof HttpErrorResponse
+    ? (error.error as { code?: string } | null)?.code
+    : undefined;
 }

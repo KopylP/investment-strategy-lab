@@ -30,9 +30,17 @@ export class IngressSession {
 
   private async open(): Promise<boolean> {
     try {
-      const hass = (this.document.defaultView?.parent?.document.querySelector('home-assistant') as { hass?: Hass } | null)?.hass;
+      const hass = (
+        this.document.defaultView?.parent?.document.querySelector('home-assistant') as {
+          hass?: Hass;
+        } | null
+      )?.hass;
       if (!hass?.callWS) return false;
-      const { session } = await hass.callWS<{ session: string }>({ type: 'supervisor/api', endpoint: '/ingress/session', method: 'post' });
+      const { session } = await hass.callWS<{ session: string }>({
+        type: 'supervisor/api',
+        endpoint: '/ingress/session',
+        method: 'post',
+      });
       const secure = this.document.location.protocol === 'https:' ? ';Secure' : '';
       this.document.cookie = `ingress_session=${session};path=/api/hassio_ingress/;SameSite=Strict${secure}`;
       return true;
@@ -46,10 +54,12 @@ export function reloadWithNewIngressSession(error: NavigationError): void {
   const message = error.error instanceof Error ? error.error.message : String(error.error);
   if (!/dynamically imported module|Importing a module script failed/i.test(message)) return;
   const document = inject(DOCUMENT);
-  void inject(IngressSession).renew().then((renewed) => {
-    if (!renewed || recentlyReloaded(document.defaultView!)) return;
-    document.location.assign(new URL(error.url.replace(/^\//, ''), document.baseURI).href);
-  });
+  void inject(IngressSession)
+    .renew()
+    .then((renewed) => {
+      if (!renewed || recentlyReloaded(document.defaultView!)) return;
+      document.location.assign(new URL(error.url.replace(/^\//, ''), document.baseURI).href);
+    });
 }
 
 function recentlyReloaded(window: Window): boolean {

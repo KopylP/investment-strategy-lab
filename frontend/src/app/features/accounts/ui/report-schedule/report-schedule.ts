@@ -7,7 +7,13 @@ import { Tag } from 'primeng/tag';
 import { ApiClient, toProblemMessage } from '../../../../core/api/api-client';
 import { DatePipe } from '../../../../shared/pipes/format-pipes';
 import {
-  editableTiming, isTimingComplete, reportIcon, ReportSchedule, ReportTiming, ScheduledReport, scheduleLabel,
+  editableTiming,
+  isTimingComplete,
+  reportIcon,
+  ReportSchedule,
+  ReportTiming,
+  ScheduledReport,
+  scheduleLabel,
 } from '../../../reports/models/report-schedule';
 import { ReportTimingEditor } from '../../../reports/ui/report-timing-editor/report-timing-editor';
 
@@ -17,7 +23,11 @@ import { ReportTimingEditor } from '../../../reports/ui/report-timing-editor/rep
   template: `
     @if (schedule.value(); as schedule) {
       @if (!schedule.generateOnSchedule) {
-        <p-message severity="warn" styleClass="mb-3" text="Автоматична генерація вимкнена в плані — рапорти лише вручну." />
+        <p-message
+          severity="warn"
+          styleClass="mb-3"
+          text="Автоматична генерація вимкнена в плані — рапорти лише вручну."
+        />
       }
       @if (schedule.reports.length) {
         <ul class="list-none m-0 p-0 flex flex-col gap-3">
@@ -28,22 +38,38 @@ import { ReportTimingEditor } from '../../../reports/ui/report-timing-editor/rep
                   <div class="font-medium flex flex-wrap items-center gap-2">
                     <i [class]="icon(report.mode)"></i>
                     {{ report.name }}
-                    <p-tag [value]="label(report.schedule)" [severity]="report.own ? 'info' : 'secondary'" />
+                    <p-tag
+                      [value]="label(report.schedule)"
+                      [severity]="report.own ? 'info' : 'secondary'"
+                    />
                   </div>
                   <div class="text-sm text-muted-color mt-1">{{ report.description }}</div>
                   <div class="text-xs text-muted-color mt-1">
-                    {{ report.own ? 'Ваш час · стратегія: ' + label(report.strategySchedule) : 'Час стратегії' }} · {{ report.strategies.join(' · ') }}
+                    {{
+                      report.own
+                        ? 'Ваш час · стратегія: ' + label(report.strategySchedule)
+                        : 'Час стратегії'
+                    }}
+                    · {{ report.strategies.join(' · ') }}
                   </div>
                 </div>
                 <div class="text-sm flex flex-wrap items-center gap-2 sm:flex-col sm:items-end">
                   @if (report.next) {
                     <div class="flex gap-1 sm:block sm:text-right">
                       <div class="text-muted-color">наступний</div>
-                      <div class="font-semibold">{{ report.next.slice(0, 10) | date }}, {{ report.next.slice(11) }}</div>
+                      <div class="font-semibold">
+                        {{ report.next.slice(0, 10) | date }}, {{ report.next.slice(11) }}
+                      </div>
                     </div>
                   }
                   @if (editing() !== report.code) {
-                    <p-button label="Змінити час" icon="pi pi-clock" size="small" [text]="true" (onClick)="edit(report)" />
+                    <p-button
+                      label="Змінити час"
+                      icon="pi pi-clock"
+                      size="small"
+                      [text]="true"
+                      (onClick)="edit(report)"
+                    />
                   }
                 </div>
               </div>
@@ -52,10 +78,28 @@ import { ReportTimingEditor } from '../../../reports/ui/report-timing-editor/rep
                   <app-report-timing-editor [id]="report.code" [(timing)]="draft" />
                   <div class="flex flex-wrap justify-end gap-2">
                     @if (report.own) {
-                      <p-button label="Як у стратегії" severity="secondary" [text]="true" [disabled]="saving()" (onClick)="reset(report)" />
+                      <p-button
+                        label="Як у стратегії"
+                        severity="secondary"
+                        [text]="true"
+                        [disabled]="saving()"
+                        (onClick)="reset(report)"
+                      />
                     }
-                    <p-button label="Скасувати" severity="secondary" [text]="true" [disabled]="saving()" (onClick)="editing.set(null)" />
-                    <p-button label="Зберегти" icon="pi pi-check" [loading]="saving()" [disabled]="!complete(draft())" (onClick)="save(report)" />
+                    <p-button
+                      label="Скасувати"
+                      severity="secondary"
+                      [text]="true"
+                      [disabled]="saving()"
+                      (onClick)="editing.set(null)"
+                    />
+                    <p-button
+                      label="Зберегти"
+                      icon="pi pi-check"
+                      [loading]="saving()"
+                      [disabled]="!complete(draft())"
+                      (onClick)="save(report)"
+                    />
                   </div>
                 </div>
               }
@@ -63,10 +107,13 @@ import { ReportTimingEditor } from '../../../reports/ui/report-timing-editor/rep
           }
         </ul>
       } @else {
-        <div class="text-muted-color">Призначте стратегію під-портфелю — рапорти задає стратегія.</div>
+        <div class="text-muted-color">
+          Призначте стратегію під-портфелю — рапорти задає стратегія.
+        </div>
       }
       <div class="text-xs text-muted-color mt-3">
-        Які рапорти бувають, задає стратегія; коли — вирішуєте ви для цього рахунку, інакше діє час стратегії. Час — {{ schedule.timeZone }}.
+        Які рапорти бувають, задає стратегія; коли — вирішуєте ви для цього рахунку, інакше діє час
+        стратегії. Час — {{ schedule.timeZone }}.
         <a routerLink="/strategies" class="text-primary">Стратегії →</a>
       </div>
     }
@@ -84,7 +131,13 @@ export class ReportScheduleCard {
   protected readonly complete = isTimingComplete;
 
   protected readonly editing = signal<string | null>(null);
-  protected readonly draft = signal<ReportTiming>({ frequency: 'monthly', day: 1, weekday: 'sunday', time: '20:00', minute: 0 });
+  protected readonly draft = signal<ReportTiming>({
+    frequency: 'monthly',
+    day: 1,
+    weekday: 'sunday',
+    time: '20:00',
+    minute: 0,
+  });
   protected readonly saving = signal(false);
 
   protected readonly schedule = resource({
@@ -98,11 +151,18 @@ export class ReportScheduleCard {
   }
 
   protected save(report: ScheduledReport): Promise<void> {
-    return this.apply(() => this.api.put<ReportSchedule>(`${this.url(this.accountId())}/${report.code}`, this.draft()), `${report.name}: ${scheduleLabel(this.draft())}`);
+    return this.apply(
+      () =>
+        this.api.put<ReportSchedule>(`${this.url(this.accountId())}/${report.code}`, this.draft()),
+      `${report.name}: ${scheduleLabel(this.draft())}`,
+    );
   }
 
   protected reset(report: ScheduledReport): Promise<void> {
-    return this.apply(() => this.api.delete<ReportSchedule>(`${this.url(this.accountId())}/${report.code}`), `${report.name}: час стратегії`);
+    return this.apply(
+      () => this.api.delete<ReportSchedule>(`${this.url(this.accountId())}/${report.code}`),
+      `${report.name}: час стратегії`,
+    );
   }
 
   private async apply(request: () => Promise<ReportSchedule>, summary: string): Promise<void> {
@@ -112,7 +172,11 @@ export class ReportScheduleCard {
       this.editing.set(null);
       this.messages.add({ severity: 'success', summary });
     } catch (error) {
-      this.messages.add({ severity: 'error', summary: 'Розклад не змінено', detail: toProblemMessage(error) });
+      this.messages.add({
+        severity: 'error',
+        summary: 'Розклад не змінено',
+        detail: toProblemMessage(error),
+      });
     } finally {
       this.saving.set(false);
     }

@@ -49,7 +49,16 @@ interface GroupVm {
 
 @Component({
   selector: 'app-schema-form',
-  imports: [FormsModule, Fieldset, InputNumber, InputText, Select, ToggleSwitch, Tooltip, TapTooltip],
+  imports: [
+    FormsModule,
+    Fieldset,
+    InputNumber,
+    InputText,
+    Select,
+    ToggleSwitch,
+    Tooltip,
+    TapTooltip,
+  ],
   templateUrl: './schema-form.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -64,7 +73,8 @@ export class SchemaForm {
 
   protected read(path: string[]): JsonValue {
     let node: JsonValue = this.value();
-    for (const key of path) node = node && typeof node === 'object' && !Array.isArray(node) ? (node[key] ?? null) : null;
+    for (const key of path)
+      node = node && typeof node === 'object' && !Array.isArray(node) ? (node[key] ?? null) : null;
     return node;
   }
 
@@ -72,7 +82,8 @@ export class SchemaForm {
     const value = this.read(field.path);
     if (value === null) return '—';
     if (field.kind === 'boolean') return value ? 'так' : 'ні';
-    if (field.kind === 'enum') return field.options?.find((option) => option.value === value)?.label ?? String(value);
+    if (field.kind === 'enum')
+      return field.options?.find((option) => option.value === value)?.label ?? String(value);
     return typeof value === 'number' ? formatQuantity(value) : String(value);
   }
 
@@ -85,7 +96,9 @@ function toGroups(root: SchemaNode): GroupVm[] {
   const defs = (root as { $defs?: Record<string, SchemaNode> }).$defs ?? {};
   const resolve = (node: SchemaNode): SchemaNode => {
     const ref = node.$ref ?? node.allOf?.find((part) => part.$ref)?.$ref;
-    return ref ? { ...defs[ref.split('/').pop()!], title: node.title ?? defs[ref.split('/').pop()!]?.title } : node;
+    return ref
+      ? { ...defs[ref.split('/').pop()!], title: node.title ?? defs[ref.split('/').pop()!]?.title }
+      : node;
   };
 
   const general: GroupVm = { title: 'Загальні', fields: [] };
@@ -107,7 +120,15 @@ function toGroups(root: SchemaNode): GroupVm[] {
 }
 
 function toField(property: SchemaNode, path: string[], key: string): FieldVm {
-  const kind: FieldVm['kind'] = property.enum ? 'enum' : property.type === 'integer' ? 'integer' : property.type === 'number' ? 'number' : property.type === 'boolean' ? 'boolean' : 'text';
+  const kind: FieldVm['kind'] = property.enum
+    ? 'enum'
+    : property.type === 'integer'
+      ? 'integer'
+      : property.type === 'number'
+        ? 'number'
+        : property.type === 'boolean'
+          ? 'boolean'
+          : 'text';
   return {
     path,
     key,
@@ -116,12 +137,18 @@ function toField(property: SchemaNode, path: string[], key: string): FieldVm {
     kind,
     min: property.minimum ?? property.exclusiveMinimum,
     max: property.maximum ?? property.exclusiveMaximum,
-    options: property.enum?.map((value) => ({ label: property['x-enumLabels']?.[String(value)] ?? String(value), value })),
+    options: property.enum?.map((value) => ({
+      label: property['x-enumLabels']?.[String(value)] ?? String(value),
+      value,
+    })),
   };
 }
 
 function humanize(text: string): string {
-  const spaced = text.replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/_/g, ' ').trim();
+  const spaced = text
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/_/g, ' ')
+    .trim();
   return spaced.charAt(0).toUpperCase() + spaced.slice(1).toLowerCase();
 }
 
@@ -130,6 +157,8 @@ function setAt(target: JsonObject, path: string[], value: JsonValue): JsonObject
   const child = target[head];
   return {
     ...target,
-    [head]: rest.length ? setAt(child && typeof child === 'object' && !Array.isArray(child) ? child : {}, rest, value) : value,
+    [head]: rest.length
+      ? setAt(child && typeof child === 'object' && !Array.isArray(child) ? child : {}, rest, value)
+      : value,
   };
 }

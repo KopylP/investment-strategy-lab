@@ -19,7 +19,13 @@ import { SignalsStore } from '../../data-access/signals-store';
         <ul class="flex flex-col gap-3 list-none p-0 m-0">
           @for (item of store.signals(); track item.id) {
             <li class="flex items-center gap-3 min-h-11">
-              <p-checkbox [inputId]="'notify-' + item.id" [binary]="true" [ngModel]="store.notifies(item.id)" (ngModelChange)="store.setNotify(item.id, $event)" [disabled]="store.saving()" />
+              <p-checkbox
+                [inputId]="'notify-' + item.id"
+                [binary]="true"
+                [ngModel]="store.notifies(item.id)"
+                (ngModelChange)="store.setNotify(item.id, $event)"
+                [disabled]="store.saving()"
+              />
               <label [for]="'notify-' + item.id" class="flex-1">{{ item.name }}</label>
             </li>
           } @empty {

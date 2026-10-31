@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Button } from 'primeng/button';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
@@ -28,7 +35,17 @@ interface StatementUpload {
 
 @Component({
   selector: 'app-load-operations-dialog',
-  imports: [RouterLink, Button, Message, Skeleton, Tag, FileDrop, DatePipe, MoneyPipe, QuantityPipe],
+  imports: [
+    RouterLink,
+    Button,
+    Message,
+    Skeleton,
+    Tag,
+    FileDrop,
+    DatePipe,
+    MoneyPipe,
+    QuantityPipe,
+  ],
   templateUrl: './load-operations-dialog.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -46,7 +63,10 @@ export class LoadOperationsDialog implements OnInit {
 
   protected readonly matches = computed(() => {
     const byId = new Map(this.data.actions.map((action) => [action.id, action]));
-    return (this.preview()?.matches ?? []).map((match) => ({ ...match, action: byId.get(match.actionId) }));
+    return (this.preview()?.matches ?? []).map((match) => ({
+      ...match,
+      action: byId.get(match.actionId),
+    }));
   });
 
   ngOnInit(): void {
@@ -58,7 +78,10 @@ export class LoadOperationsDialog implements OnInit {
   }
 
   protected operationLabel(operation: MatchedOperationDto): string {
-    return { Buy: 'Купівля', Sell: 'Продаж', Contribution: 'Поповнення' }[operation.kind] ?? operation.kind;
+    return (
+      { Buy: 'Купівля', Sell: 'Продаж', Contribution: 'Поповнення' }[operation.kind] ??
+      operation.kind
+    );
   }
 
   protected async onFile(event: Event): Promise<void> {
@@ -67,7 +90,12 @@ export class LoadOperationsDialog implements OnInit {
     input.value = '';
     if (!file) return;
     await this.run('upload', async () => {
-      this.upload.set(await this.api.post<StatementUpload>(`/api/portfolio/accounts/${this.data.accountId}/statement-imports`, { fileName: file.name, content: await file.text() }));
+      this.upload.set(
+        await this.api.post<StatementUpload>(
+          `/api/portfolio/accounts/${this.data.accountId}/statement-imports`,
+          { fileName: file.name, content: await file.text() },
+        ),
+      );
     });
   }
 
@@ -75,7 +103,11 @@ export class LoadOperationsDialog implements OnInit {
     const upload = this.upload();
     if (!upload) return;
     await this.run('import', async () => {
-      this.upload.set(await this.api.post<StatementUpload>(`/api/portfolio/accounts/${this.data.accountId}/statement-imports/${upload.id}/confirm`));
+      this.upload.set(
+        await this.api.post<StatementUpload>(
+          `/api/portfolio/accounts/${this.data.accountId}/statement-imports/${upload.id}/confirm`,
+        ),
+      );
       await this.loadPreview();
     });
   }
@@ -92,10 +124,15 @@ export class LoadOperationsDialog implements OnInit {
   }
 
   private async loadPreview(): Promise<void> {
-    await this.run('preview', async () => this.preview.set(await this.reports.previewJournalMatches(this.data.reportId)));
+    await this.run('preview', async () =>
+      this.preview.set(await this.reports.previewJournalMatches(this.data.reportId)),
+    );
   }
 
-  private async run(kind: 'preview' | 'upload' | 'import' | 'apply', work: () => Promise<void>): Promise<void> {
+  private async run(
+    kind: 'preview' | 'upload' | 'import' | 'apply',
+    work: () => Promise<void>,
+  ): Promise<void> {
     this.busy.set(kind);
     this.error.set(null);
     try {

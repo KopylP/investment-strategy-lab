@@ -7,24 +7,53 @@ import { InputText } from 'primeng/inputtext';
 import { SelectButton } from 'primeng/selectbutton';
 import { Skeleton } from 'primeng/skeleton';
 import { Tag } from 'primeng/tag';
-import { DatePipe, MoneyPipe, PercentPipe, SignedPercentPipe } from '../../../../shared/pipes/format-pipes';
+import {
+  DatePipe,
+  MoneyPipe,
+  PercentPipe,
+  SignedPercentPipe,
+} from '../../../../shared/pipes/format-pipes';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { SignedValue } from '../../../../shared/ui/signed-value';
 import { Sparkline } from '../../../../shared/ui/sparkline';
-import { ChartPeriod, InstrumentFilter, InstrumentsStore } from '../../data-access/instruments-store';
+import {
+  ChartPeriod,
+  InstrumentFilter,
+  InstrumentsStore,
+} from '../../data-access/instruments-store';
 import { PriceChart } from '../../../../shared/charts/price-chart';
 import { AccountTrades } from '../../../../shared/data/account-trades';
 import { LayoutService } from '../../../../core/layout/layout-service';
 import { Viewport } from '../../../../shared/ui/viewport';
 import { InstrumentAbout } from '../../../../shared/ui/instrument-about';
 
-const kindLabels: Record<string, string> = { Etf: 'ETF', Stock: 'Акція', Index: 'Індекс', FxPair: 'Валюта' };
+const kindLabels: Record<string, string> = {
+  Etf: 'ETF',
+  Stock: 'Акція',
+  Index: 'Індекс',
+  FxPair: 'Валюта',
+};
 
 @Component({
   selector: 'app-instrument-list-page',
   imports: [
-    FormsModule, Button, IconField, InputIcon, InputText, SelectButton, Skeleton, Tag, PageHeader, SignedValue, Sparkline, PriceChart, InstrumentAbout,
-    MoneyPipe, DatePipe, PercentPipe, SignedPercentPipe,
+    FormsModule,
+    Button,
+    IconField,
+    InputIcon,
+    InputText,
+    SelectButton,
+    Skeleton,
+    Tag,
+    PageHeader,
+    SignedValue,
+    Sparkline,
+    PriceChart,
+    InstrumentAbout,
+    MoneyPipe,
+    DatePipe,
+    PercentPipe,
+    SignedPercentPipe,
   ],
   providers: [InstrumentsStore],
   templateUrl: './instrument-list-page.html',
@@ -36,12 +65,20 @@ export class InstrumentListPage {
   protected readonly viewport = inject(Viewport);
   private readonly layout = inject(LayoutService);
 
-  protected readonly periods: { label: string; value: ChartPeriod }[] = ['1M', '3M', '6M', '1Y', '3Y'].map((value) => ({
+  protected readonly periods: { label: string; value: ChartPeriod }[] = [
+    '1M',
+    '3M',
+    '6M',
+    '1Y',
+    '3Y',
+  ].map((value) => ({
     label: value.replace('M', 'М').replace('Y', 'Р'),
     value: value as ChartPeriod,
   }));
 
-  protected filters(counts: Record<InstrumentFilter, number>): { label: string; value: InstrumentFilter }[] {
+  protected filters(
+    counts: Record<InstrumentFilter, number>,
+  ): { label: string; value: InstrumentFilter }[] {
     const all: { label: string; value: InstrumentFilter }[] = [
       { label: `Усі ${counts.all}`, value: 'all' },
       { label: `Мої ${counts.mine}`, value: 'mine' },
