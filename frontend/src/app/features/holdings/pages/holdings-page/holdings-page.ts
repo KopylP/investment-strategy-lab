@@ -5,49 +5,33 @@ import { Button } from 'primeng/button';
 import { DatePicker } from 'primeng/datepicker';
 import { Message } from 'primeng/message';
 import { Skeleton } from 'primeng/skeleton';
-import { TableModule } from 'primeng/table';
 
-import { Tooltip } from 'primeng/tooltip';
-import {
-  DatePipe,
-  MoneyPipe,
-  PercentPipe,
-  QuantityPipe,
-  SignedPercentPipe,
-} from '../../../../shared/pipes/format-pipes';
+import {} from '../../../../shared/pipes/format-pipes';
 import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
-import { Money } from '../../../../shared/ui/money/money';
-import { PositionChart } from '../../ui/position-chart';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
-import { SignedValue } from '../../../../shared/ui/signed-value';
 import { Viewport } from '../../../../shared/ui/viewport';
 import { HoldingsStore } from '../../data-access/holdings-store';
-import { TapTooltip } from '../../../../shared/ui/tap-tooltip';
-import { InstrumentAbout } from '../../../../shared/ui/instrument-about';
+
+import { HoldingsSummaryCard } from '../../ui/holdings-summary-card/holdings-summary-card';
+
+import { HoldingsTiles } from '../../ui/holdings-tiles/holdings-tiles';
+
+import { HoldingsSleeveCard } from '../../ui/holdings-sleeve-card/holdings-sleeve-card';
 
 @Component({
   selector: 'app-holdings-page',
   imports: [
+    HoldingsSleeveCard,
+    HoldingsTiles,
+    HoldingsSummaryCard,
     FormsModule,
     RouterLink,
     Button,
     DatePicker,
     Message,
     Skeleton,
-    TableModule,
-    Tooltip,
-    TapTooltip,
-    InstrumentAbout,
     PageHeader,
     EmptyState,
-    SignedValue,
-    Money,
-    PositionChart,
-    MoneyPipe,
-    PercentPipe,
-    QuantityPipe,
-    SignedPercentPipe,
-    DatePipe,
   ],
   providers: [HoldingsStore],
   templateUrl: './holdings-page.html',

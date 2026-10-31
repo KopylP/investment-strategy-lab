@@ -37,27 +37,32 @@ export class LiveChart {
       const plugins = this.plugins();
 
       untracked(() => {
-        if (!this.chart) {
-          this.chart = new Chart(this.canvas().nativeElement, {
-            type: this.type(),
-            data,
-            options,
-            plugins,
-          } as ChartConfiguration);
-
-          return;
-        }
-
-        this.chart.data = data as ChartConfiguration['data'];
-        this.chart.options = options as ChartConfiguration['options'] & object;
-        this.chart.config.plugins!.splice(
-          0,
-          Infinity,
-          ...(plugins as ChartConfiguration['plugins'] & object),
-        );
-        this.chart.update('none');
+        if (this.chart) this.updateChart(data, options, plugins);
+        else this.createChart(data, options, plugins);
       });
     });
     inject(DestroyRef).onDestroy(() => this.chart?.destroy());
+  }
+
+  private createChart(data: unknown, options: unknown, plugins: unknown): void {
+    this.chart = new Chart(this.canvas().nativeElement, {
+      type: this.type(),
+      data,
+      options,
+      plugins,
+    } as ChartConfiguration);
+  }
+
+  private updateChart(data: unknown, options: unknown, plugins: unknown): void {
+    const chart = this.chart!;
+
+    chart.data = data as ChartConfiguration['data'];
+    chart.options = options as ChartConfiguration['options'] & object;
+    chart.config.plugins!.splice(
+      0,
+      Infinity,
+      ...(plugins as ChartConfiguration['plugins'] & object),
+    );
+    chart.update('none');
   }
 }

@@ -1,0 +1,41 @@
+@if (details().openLots.length) {
+  <div class="card">
+    <h2 class="text-lg font-semibold mb-4">
+      Відкриті лоти<span class="hidden sm:inline"> (собівартість для майбутніх продажів)</span>
+    </h2>
+    <p-table [value]="details().openLots" size="small" tableStyleClass="sm:min-w-[40rem]">
+      <ng-template #header
+        ><tr>
+          <th class="hidden sm:table-cell">Куплено</th>
+          <th>ETF</th>
+          @if (store.showAccount()) {
+            <th class="hidden sm:table-cell">Рахунок</th>
+          }
+          <th class="text-right hidden sm:table-cell">Штук</th>
+          <th class="text-right">Витрати, PLN</th>
+          <th class="hidden sm:table-cell">Курс</th>
+        </tr></ng-template
+      >
+      <ng-template #body let-lot>
+        <tr>
+          <td class="hidden sm:table-cell whitespace-nowrap">{{ lot.acquiredOn | date }}</td>
+          <td class="font-medium">
+            {{ store.symbol(lot.instrumentId) }}
+            <div class="sm:hidden text-xs text-muted-color font-normal">
+              куплено {{ lot.acquiredOn | date }}
+            </div>
+            <div class="sm:hidden text-xs text-muted-color font-normal whitespace-nowrap">
+              {{ lot.quantity | quantity }} шт.
+            </div>
+          </td>
+          @if (store.showAccount()) {
+            <td class="text-sm hidden sm:table-cell">{{ store.accountName(lot.accountId) }}</td>
+          }
+          <td class="text-right hidden sm:table-cell">{{ lot.quantity | quantity }}</td>
+          <td class="text-right whitespace-nowrap">{{ lot.costPln | money: 'PLN' }}</td>
+          <td class="hidden sm:table-cell">{{ lot.fxRate }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+}

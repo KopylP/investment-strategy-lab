@@ -53,24 +53,26 @@ export class FileDrop {
     const file = event.dataTransfer?.files[0];
     if (!input || !file) return;
 
-    if (!matches(file, input.accept)) {
-      this.messages.add({
-        severity: 'warn',
-        summary: 'Не той файл',
-        detail: `Потрібен файл ${input.accept
-          .split(',')
-          .filter((type) => type.startsWith('.'))
-          .join(' або ')}`,
-      });
+    if (matches(file, input.accept)) this.handOver(file, input);
+    else this.reportWrongFile(input.accept);
+  }
 
-      return;
-    }
-
+  private handOver(file: File, input: HTMLInputElement): void {
     const files = new DataTransfer();
 
     files.items.add(file);
     input.files = files.files;
     input.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  private reportWrongFile(accept: string): void {
+    const extensions = accept.split(',').filter((type) => type.startsWith('.'));
+
+    this.messages.add({
+      severity: 'warn',
+      summary: 'Не той файл',
+      detail: `Потрібен файл ${extensions.join(' або ')}`,
+    });
   }
 
   private accepts(event: DragEvent): boolean {

@@ -1,0 +1,118 @@
+<div class="card">
+  <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-4">
+    <div>
+      <div class="text-muted-color text-sm">
+        Вартість {{ store.isAll() ? 'усіх рахунків' : 'портфеля' }} · {{ dashboard().asOf | date }}
+      </div>
+      <div class="text-4xl sm:text-5xl font-bold tracking-tight mt-1 leading-tight">
+        <app-money [amount]="dashboard().value" [currency]="dashboard().currency" [digits]="0" />
+      </div>
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3">
+        <span
+          class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-semibold"
+          [style.background]="
+            dashboard().gain >= 0
+              ? 'color-mix(in srgb, var(--p-finance-gain) 14%, transparent)'
+              : 'color-mix(in srgb, var(--p-finance-loss) 14%, transparent)'
+          "
+          [appSignedValue]="dashboard().gain"
+        >
+          <i
+            class="pi text-xs"
+            [class.pi-arrow-up-right]="dashboard().gain >= 0"
+            [class.pi-arrow-down-right]="dashboard().gain < 0"
+          ></i>
+          {{ dashboard().gain >= 0 ? '+' : ''
+          }}<app-money
+            [amount]="dashboard().gain"
+            [currency]="dashboard().currency"
+            [digits]="0"
+            [hideOriginal]="true"
+          />
+          @if (store.gainPct() !== null) {
+            · {{ store.gainPct() | signedPercent }}
+          }
+        </span>
+        <span class="text-sm text-muted-color"
+          >прибуток понад внесене · внесено
+          <app-money
+            [amount]="dashboard().netContributions"
+            [currency]="dashboard().currency"
+            [digits]="0"
+            [hideOriginal]="true"
+        /></span>
+      </div>
+      @if (store.heldGain(); as held) {
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
+          <span
+            class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-semibold"
+            [style.background]="
+              held.amount >= 0
+                ? 'color-mix(in srgb, var(--p-finance-gain) 14%, transparent)'
+                : 'color-mix(in srgb, var(--p-finance-loss) 14%, transparent)'
+            "
+            [appSignedValue]="held.amount"
+          >
+            <i
+              class="pi text-xs"
+              [class.pi-arrow-up-right]="held.amount >= 0"
+              [class.pi-arrow-down-right]="held.amount < 0"
+            ></i>
+            {{ held.amount >= 0 ? '+' : ''
+            }}<app-money
+              [amount]="held.amount"
+              [currency]="dashboard().currency"
+              [digits]="0"
+              [hideOriginal]="true"
+            />
+            · {{ held.pct | signedPercent }}
+          </span>
+          <span class="text-sm text-muted-color"
+            >прибуток на активах · заплачено за них
+            <app-money
+              [amount]="held.costBasis"
+              [currency]="dashboard().currency"
+              [digits]="0"
+              [hideOriginal]="true"
+            />
+            <i
+              class="pi pi-info-circle text-xs ml-1"
+              [pTooltip]="
+                'Скільки зараз коштують активи, які ви тримаєте, понад те, що за них заплачено з ' +
+                'комісіями. Вільний кеш і вже продане сюди не входять — це той самий результат, що на ' +
+                'сторінці «Позиції».'
+              "
+            ></i>
+          </span>
+        </div>
+      }
+    </div>
+    <p-selectbutton
+      [options]="periods()"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="store.period()"
+      (ngModelChange)="$event && store.period.set($event)"
+      [allowEmpty]="false"
+      size="small"
+    />
+  </div>
+
+  @defer (on idle) {
+    <app-value-chart [dashboard]="dashboard()" />
+  } @placeholder {
+    <p-skeleton height="22rem" />
+  }
+  @if (store.planGap(); as gap) {
+    <div class="text-sm mt-2">
+      План vs факт:
+      <span [appSignedValue]="gap"
+        >{{ gap >= 0 ? '+' : ''
+        }}<app-money [amount]="gap" [currency]="dashboard().currency" [digits]="0" [inline]="true"
+      /></span>
+      <span class="hidden sm:inline text-muted-color">
+        — різниця з «якби все за планом». Точки на лінії — дні рапортів.</span
+      >
+    </div>
+  }
+</div>

@@ -61,7 +61,8 @@
             <button
               type="button"
               (click)="toggle(row.id)"
-              class="w-full text-left flex items-center gap-3 px-3 sm:px-4 py-3 border-0 border-b border-surface bg-transparent cursor-pointer text-color hover:bg-emphasis transition-colors"
+              class="w-full text-left flex items-center gap-3 px-3 sm:px-4 py-3 border-0 border-b border-surface
+                bg-transparent cursor-pointer text-color hover:bg-emphasis transition-colors"
               [class.bg-emphasis]="store.selectedId() === row.id"
             >
               <div

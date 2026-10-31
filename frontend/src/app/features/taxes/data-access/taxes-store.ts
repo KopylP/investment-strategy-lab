@@ -300,12 +300,7 @@ export class TaxesStore {
     try {
       await command();
       this.messages.add({ severity: 'success', summary: success });
-      this.lossesResource.reload();
-      this.brokerResource.reload();
-      this.yearsResource.reload();
-      this.detailsResource.reload();
-      this.formsResource.reload();
-      this.declarationResource.reload();
+      this.reloadEverything();
 
       return true;
     } catch (error) {
@@ -319,6 +314,15 @@ export class TaxesStore {
     } finally {
       this.saving.set(false);
     }
+  }
+
+  private reloadEverything(): void {
+    this.lossesResource.reload();
+    this.brokerResource.reload();
+    this.yearsResource.reload();
+    this.detailsResource.reload();
+    this.formsResource.reload();
+    this.declarationResource.reload();
   }
 
   private requireAccount(): string {

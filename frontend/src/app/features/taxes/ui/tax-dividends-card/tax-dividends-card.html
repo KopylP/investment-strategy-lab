@@ -1,0 +1,41 @@
+@if (details().dividends.length) {
+  <div class="card">
+    <h2 class="text-lg font-semibold mb-4">Дивіденди</h2>
+    @if (!store.broker()?.matchedDividends) {
+      <p class="text-sm text-muted-color mt-0 mb-3">
+        Податок, утриманий за кордоном, невідомий, тож податок рахується з отриманої суми без
+        зарахування. Завантажте звіт P&amp;L брокера нижче.
+      </p>
+    }
+    <p-table [value]="details().dividends" size="small">
+      <ng-template #header>
+        <tr>
+          <th>Дата</th>
+          <th>ETF</th>
+          @if (store.showAccount()) {
+            <th class="hidden sm:table-cell">Рахунок</th>
+          }
+          <th class="text-right hidden sm:table-cell">Отримано</th>
+          <th class="text-right">Брутто, PLN</th>
+          <th class="text-right">Утримано<span class="hidden sm:inline"> за кордоном</span></th>
+          <th class="hidden sm:table-cell">Курс</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-d>
+        <tr>
+          <td>{{ d.receivedOn | date }}</td>
+          <td>{{ store.symbol(d.instrumentId) }}</td>
+          @if (store.showAccount()) {
+            <td class="text-sm hidden sm:table-cell">{{ store.accountName(d.accountId) }}</td>
+          }
+          <td class="text-right hidden sm:table-cell">
+            {{ d.amount | money: d.currency ?? store.account()?.baseCurrency ?? 'EUR' }}
+          </td>
+          <td class="text-right">{{ d.grossPln || d.amountPln | money: 'PLN' }}</td>
+          <td class="text-right">{{ d.withheldPln ? (d.withheldPln | money: 'PLN') : '—' }}</td>
+          <td class="hidden sm:table-cell">{{ d.fxRate }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+}

@@ -1,0 +1,17 @@
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { TableModule } from 'primeng/table';
+import { MoneyPipe, DatePipe } from '../../../../shared/pipes/format-pipes';
+import { TaxYearDetails } from '../../data-access/taxes-store';
+import { TaxesStore } from '../../data-access/taxes-store';
+
+@Component({
+  selector: 'app-tax-dividends-card',
+  imports: [TableModule, MoneyPipe, DatePipe],
+  templateUrl: './tax-dividends-card.html',
+  host: { class: 'contents' },
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TaxDividendsCard {
+  readonly details = input.required<TaxYearDetails>();
+  protected readonly store = inject(TaxesStore);
+}

@@ -126,35 +126,42 @@ export class AccountDetailStore {
     this.busy.set('plan');
 
     try {
-      await this.api.changePlanSettings(id, {
-        monthlyContribution: settings.monthlyContribution,
-        minTrade: settings.minTrade,
-        trimBand: settings.trimBandPercent / 100,
-        allowFractionalShares: settings.allowFractionalShares,
-        generateOnSchedule: settings.generateOnSchedule,
-      });
-      const account = await this.api.changeContributionPolicy(
-        id,
-        settings.contributionPolicy,
-        settings.driftBandPercent,
-      );
-
-      this.accountResource.set(account);
+      this.accountResource.set(await this.persistPlan(id, settings));
       this.settingsResource.reload();
       this.messages.add({ severity: 'success', summary: 'План збережено' });
 
       return true;
     } catch (error) {
-      this.messages.add({
-        severity: 'error',
-        summary: 'План не збережено',
-        detail: toProblemMessage(error),
-      });
+      this.reportPlanNotSaved(error);
 
       return false;
     } finally {
       this.busy.set(null);
     }
+  }
+
+  private async persistPlan(id: string, settings: PlanSettingsVm) {
+    await this.api.changePlanSettings(id, {
+      monthlyContribution: settings.monthlyContribution,
+      minTrade: settings.minTrade,
+      trimBand: settings.trimBandPercent / 100,
+      allowFractionalShares: settings.allowFractionalShares,
+      generateOnSchedule: settings.generateOnSchedule,
+    });
+
+    return this.api.changeContributionPolicy(
+      id,
+      settings.contributionPolicy,
+      settings.driftBandPercent,
+    );
+  }
+
+  private reportPlanNotSaved(error: unknown): void {
+    this.messages.add({
+      severity: 'error',
+      summary: 'План не збережено',
+      detail: toProblemMessage(error),
+    });
   }
 
   async importPositions(subPortfolioId: string, json: unknown, asOf: string): Promise<boolean> {

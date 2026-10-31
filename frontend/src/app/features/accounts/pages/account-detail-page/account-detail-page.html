@@ -16,7 +16,7 @@
       icon="pi pi-upload"
       severity="secondary"
       [outlined]="true"
-      (onClick)="openImport()"
+      (onClick)="importVisible.set(true)"
     />
     <p-button label="Рапорти" icon="pi pi-list-check" routerLink="/reports" />
   </app-page-header>
@@ -38,7 +38,7 @@
             icon="pi pi-plus"
             severity="secondary"
             size="small"
-            (onClick)="openAdd()"
+            (onClick)="addVisible.set(true)"
           />
         } @else {
           <p-button
@@ -224,152 +224,7 @@
     }
   </p-dialog>
 
-  <p-dialog
-    header="Новий під-портфель"
-    [modal]="true"
-    [visible]="addVisible()"
-    (visibleChange)="addVisible.set($event)"
-    [style]="{ width: '34rem' }"
-    [breakpoints]="{ '640px': '95vw' }"
-  >
-    <div class="flex flex-col gap-4">
-      <div class="flex flex-col gap-2">
-        <label for="sub-name" class="font-medium">Назва</label>
-        <input
-          pInputText
-          id="sub-name"
-          [ngModel]="draft().name"
-          (ngModelChange)="patchDraft({ name: $event })"
-        />
-      </div>
-      <div class="flex flex-col gap-2">
-        <label for="sub-share" class="font-medium">Цільова частка, %</label>
-        <p-inputnumber
-          inputId="sub-share"
-          [ngModel]="draft().share"
-          (ngModelChange)="patchDraft({ share: $event ?? 0 })"
-          suffix=" %"
-          [min]="1"
-          [max]="99"
-          fluid
-        />
-        <small class="text-muted-color">Частки інших під-портфелів пропорційно зменшаться.</small>
-      </div>
-      <div class="flex flex-col gap-2">
-        <label for="sub-strategy" class="font-medium">Стратегія</label>
-        <app-strategy-picker
-          [strategies]="store.strategies()"
-          [value]="draft().strategyId"
-          [compact]="true"
-          (valueChange)="patchDraft({ strategyId: $event })"
-        />
-      </div>
-      <div class="flex flex-col gap-2">
-        <label for="sub-cash" class="font-medium">ETF для паркування</label>
-        <p-select
-          inputId="sub-cash"
-          [options]="cashOptions()"
-          optionLabel="label"
-          optionValue="value"
-          [ngModel]="draft().cashInstrumentId"
-          (ngModelChange)="patchDraft({ cashInstrumentId: $event })"
-          [showClear]="true"
-          [filter]="true"
-          placeholder="Як у стратегії"
-          appendTo="body"
-          fluid
-        />
-      </div>
-    </div>
-    <ng-template #footer>
-      <p-button
-        label="Скасувати"
-        [text]="true"
-        severity="secondary"
-        (onClick)="addVisible.set(false)"
-      />
-      <p-button
-        label="Додати"
-        icon="pi pi-plus"
-        [disabled]="!draft().name.trim()"
-        [loading]="store.busy() === 'add'"
-        (onClick)="add()"
-      />
-    </ng-template>
-  </p-dialog>
+  <app-add-sub-portfolio-dialog [(visible)]="addVisible" />
 
-  <p-dialog
-    header="Імпорт positions.json"
-    [modal]="true"
-    [visible]="importVisible()"
-    (visibleChange)="importVisible.set($event)"
-    [style]="{ width: '34rem' }"
-    [breakpoints]="{ '640px': '95vw' }"
-  >
-    <div class="flex flex-col gap-4">
-      <p class="m-0 text-muted-color">
-        Файл Python-флоу: позиції стануть операціями журналу (внесок на всю вартість і купівлі за
-        ціною входу). Повторний імпорт нічого не дублює.
-      </p>
-      <div class="flex flex-col gap-2">
-        <label for="import-sleeve" class="font-medium">Під-портфель</label>
-        <p-select
-          inputId="import-sleeve"
-          [options]="store.active()"
-          optionLabel="name"
-          optionValue="id"
-          [ngModel]="importSleeve()"
-          (ngModelChange)="importSleeve.set($event)"
-          appendTo="body"
-          fluid
-        />
-      </div>
-      <div class="flex flex-col gap-2">
-        <label for="import-date" class="font-medium">Дата позицій</label>
-        <p-datepicker
-          inputId="import-date"
-          [ngModel]="importDate()"
-          (ngModelChange)="importDate.set($event)"
-          dateFormat="dd.mm.yy"
-          [showIcon]="true"
-          appendTo="body"
-          fluid
-        />
-      </div>
-      <div class="flex flex-col gap-2">
-        <span class="font-medium">Файл</span>
-        <label
-          appFileDrop
-          class="p-button p-button-outlined p-button-secondary justify-center cursor-pointer"
-        >
-          <i class="pi pi-file mr-2"></i
-          >{{ importFileName() || 'Вибрати або перетягнути positions.json' }}
-          <input
-            type="file"
-            accept=".json,application/json"
-            class="hidden"
-            (change)="readFile($event)"
-          />
-        </label>
-        @if (importError()) {
-          <p-message severity="error" size="small" [text]="importError()!" />
-        }
-      </div>
-    </div>
-    <ng-template #footer>
-      <p-button
-        label="Скасувати"
-        [text]="true"
-        severity="secondary"
-        (onClick)="importVisible.set(false)"
-      />
-      <p-button
-        label="Імпортувати"
-        icon="pi pi-upload"
-        [disabled]="!importJson() || !importSleeve()"
-        [loading]="store.busy() === 'import'"
-        (onClick)="runImport()"
-      />
-    </ng-template>
-  </p-dialog>
+  <app-import-positions-dialog [(visible)]="importVisible" />
 }

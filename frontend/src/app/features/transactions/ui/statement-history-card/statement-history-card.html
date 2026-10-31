@@ -1,0 +1,61 @@
+@if (store.history().length) {
+  <div class="card">
+    <h2 class="text-lg font-semibold mb-4">Попередні імпорти</h2>
+    <p-table [value]="store.history()" size="small">
+      <ng-template #header
+        ><tr>
+          <th>Файл</th>
+          <th class="hidden sm:table-cell">Завантажено</th>
+          <th class="hidden sm:table-cell">Режим</th>
+          <th>Стан</th>
+          <th class="text-right hidden sm:table-cell">Записано</th>
+          <th></th></tr
+      ></ng-template>
+      <ng-template #body let-item>
+        <tr>
+          <td class="break-all">
+            <button
+              type="button"
+              class="p-0 border-0 bg-transparent text-left break-all text-primary cursor-pointer"
+              (click)="store.open(item.id)"
+            >
+              {{ item.fileName }}
+            </button>
+            <div class="sm:hidden text-xs text-muted-color">
+              {{ item.uploadedAt | dateTime }} · записано {{ item.recorded }}
+            </div>
+          </td>
+          <td class="hidden sm:table-cell">{{ item.uploadedAt | dateTime }}</td>
+          <td class="hidden sm:table-cell">{{ item.mode }}</td>
+          <td>
+            <p-tag
+              [value]="
+                item.status === 'Confirmed'
+                  ? 'імпортовано'
+                  : item.status === 'Undone'
+                    ? 'скасовано'
+                    : 'чернетка'
+              "
+              [severity]="item.status === 'Confirmed' ? 'success' : 'secondary'"
+            />
+          </td>
+          <td class="text-right hidden sm:table-cell">{{ item.recorded }}</td>
+          <td class="text-right">
+            @if (item.status === 'Confirmed') {
+              <p-button
+                [label]="viewport.phone() ? undefined : 'Скасувати'"
+                icon="pi pi-undo"
+                size="small"
+                [text]="true"
+                severity="danger"
+                ariaLabel="Скасувати імпорт"
+                [loading]="store.busy() === 'undo'"
+                (onClick)="undo.emit(item.id)"
+              />
+            }
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+}

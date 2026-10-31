@@ -1,0 +1,69 @@
+<div class="card">
+  <h2 class="text-lg font-semibold mt-0">
+    {{ draft.name() }} · {{ draft.broker() }} · {{ draft.currency() }}
+  </h2>
+  <div class="flex flex-col gap-3">
+    @for (row of draft.summary(); track row.name) {
+      <div class="border border-surface rounded-border p-4 flex flex-wrap justify-between gap-3">
+        <div>
+          <div class="font-semibold">{{ row.name }} — {{ row.share }}%</div>
+          <div class="text-sm">{{ row.strategy }}</div>
+          <div class="text-sm text-muted-color">{{ row.blurb }}</div>
+        </div>
+        <div class="text-right">
+          <div class="text-muted-color text-sm">щомісяця</div>
+          <div class="font-semibold">≈ {{ row.contribution }}</div>
+        </div>
+      </div>
+    }
+  </div>
+  @if (draft.reports().length) {
+    <div class="mt-4 flex flex-col gap-1 text-sm">
+      @for (report of draft.reports(); track report.code) {
+        <div class="flex flex-wrap justify-between gap-x-3">
+          <span class="text-muted-color"
+            ><i [class]="draft.reportIcon(report.mode)" class="mr-1"></i>{{ report.name }}</span
+          >
+          <span class="font-medium"
+            >{{ draft.scheduleLabel(report.timing)
+            }}{{ report.own ? '' : ' (як у стратегії)' }}</span
+          >
+        </div>
+      }
+    </div>
+  }
+  <p-message severity="info" styleClass="mt-5">
+    <div>
+      Що буде далі: у цей час з’явиться <b>рапорт</b> — список дій для брокера. Виконайте їх у
+      застосунку брокера й натисніть «Виконано» або «Довантажити операції» з виписки.
+    </div>
+  </p-message>
+  <div class="mt-5 border border-surface rounded-border p-4">
+    <div class="font-semibold mb-2">
+      <i class="pi pi-pencil mr-2"></i>Якщо захочете щось змінити потім
+    </div>
+    <ul class="m-0 pl-5 flex flex-col gap-1 text-sm">
+      <li>
+        <b>Частки, стратегії, додати чи вивести частину</b> — сторінка рахунку, блок «Під-портфелі»
+        (Налаштування → Рахунки).
+      </li>
+      <li><b>Внесок і додаткові налаштування</b> — там само, блок «План».</li>
+      <li><b>Коли приходять рапорти</b> — там само, блок «Розклад рапортів».</li>
+    </ul>
+  </div>
+  <div class="flex justify-between mt-6">
+    <p-button
+      label="Назад"
+      icon="pi pi-arrow-left"
+      severity="secondary"
+      [text]="true"
+      (onClick)="draft.step.set(4)"
+    />
+    <p-button
+      label="Відкрити рахунок"
+      icon="pi pi-check"
+      [loading]="draft.saving()"
+      (onClick)="draft.save()"
+    />
+  </div>
+</div>

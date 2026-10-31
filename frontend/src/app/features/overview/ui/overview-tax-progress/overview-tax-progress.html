@@ -1,0 +1,39 @@
+@if (store.tax(); as tax) {
+  @if (tax.taxedAccounts) {
+    <div class="card">
+      <div class="mb-3">
+        <h2 class="text-lg font-semibold m-0">Податок</h2>
+        <div class="text-sm text-muted-color mt-1">
+          зараз {{ tax.taxDue | money: 'PLN' : 0 }} · за 30 днів
+          <span [appSignedValue]="-store.taxLast30Days()"
+            >{{ store.taxLast30Days() >= 0 ? '+' : ''
+            }}{{ store.taxLast30Days() | money: 'PLN' : 0 }}</span
+          >
+          @if (store.taxAlert(); as alert) {
+            · {{ alert.ratio | percent }} вартості рахунків
+          }
+        </div>
+      </div>
+      @for (message of tax.incomplete; track $index) {
+        <p-message
+          severity="warn"
+          size="small"
+          styleClass="mb-2"
+          [text]="message + ' — сума може бути заниженою'"
+        />
+      }
+      @defer (on idle) {
+        <app-tax-progress-chart [progress]="tax" [threshold]="store.taxAlert()?.limit ?? null" />
+      } @placeholder {
+        <p-skeleton height="15rem" />
+      }
+      <div class="text-xs text-muted-color mt-2">
+        PIT-38 за всіма рахунками на кожен день: зиски й збитки сальдуються, дивіденди — з
+        урахуванням податку за кордоном.
+        @if (tax.alertShare !== null) {
+          Червоним — понад поріг: {{ tax.alertShare | percent }} поточної вартості всіх рахунків.
+        }
+      </div>
+    </div>
+  }
+}

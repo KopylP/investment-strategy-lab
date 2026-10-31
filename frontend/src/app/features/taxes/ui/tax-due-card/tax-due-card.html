@@ -1,0 +1,37 @@
+@let s = details().summary;
+<div class="card">
+  <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+    <div>
+      <div class="text-muted-color text-sm">Податок до сплати · {{ details().year }}</div>
+      <div class="text-4xl sm:text-5xl font-bold tracking-tight mt-1 leading-tight">
+        {{ s.taxDue | money: 'PLN' : 0 }}
+      </div>
+      <div class="text-sm text-muted-color mt-2">
+        @if (details().policyCode === 'PL-BELKA') {
+          з продажів {{ s.capitalTax | money: 'PLN' : 0 }} · з дивідендів
+          {{ s.dividendTax | money: 'PLN' : 0 }} · 19%
+          @if (store.showAccount()) {
+            · {{ store.taxedAccounts().length }} рахунки разом
+          }
+        } @else {
+          {{ details().policyCode }} · не оподатковується
+        }
+      </div>
+    </div>
+    @if (store.forms().length) {
+      <div class="flex flex-wrap gap-2">
+        @for (form of store.forms(); track form.code) {
+          <p-button
+            [label]="form.code + ' за ' + details().year"
+            icon="pi pi-file-edit"
+            [pTooltip]="form.title + ': усі ваші рахунки разом, поле за полем, і PDF на бланку'"
+            tooltipPosition="bottom"
+            (onClick)="store.declarationCode.set(form.code)"
+            styleClass="w-full sm:w-auto"
+            class="w-full sm:w-auto"
+          />
+        }
+      </div>
+    }
+  </div>
+</div>
