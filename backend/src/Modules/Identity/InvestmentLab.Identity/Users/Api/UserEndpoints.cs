@@ -1,8 +1,8 @@
 using InvestmentLab.BuildingBlocks.Http;
-using InvestmentLab.BuildingBlocks.Security;
-using InvestmentLab.Identity.Users.Application;
+using InvestmentLab.Identity.Users.Application.GetCurrentUser;
 using InvestmentLab.Identity.Users.Application.Login;
 using InvestmentLab.Identity.Users.Application.Register;
+using InvestmentLab.Identity.Users.Application.Shared;
 using InvestmentLab.Identity.Users.Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -46,15 +46,12 @@ internal static class UserEndpoints
         return TypedResults.NoContent();
     }
 
-    private static async Task<IResult> GetCurrentUser(
-        HttpContext context, ICurrentUser user, IUserAccounts accounts, CancellationToken cancellationToken)
+    private static async Task<IResult> GetCurrentUser(HttpContext context, GetCurrentUserHandler handler, CancellationToken cancellationToken)
     {
-        if (await accounts.FindAsync(user.RequiredId, cancellationToken) is not { } me)
-            return UserErrors.NotFound(user.RequiredId).ToProblem();
-
         var viaHomeAssistant = context.User.HasClaim(claim => claim.Type == HomeAssistantAuthenticationHandler.UserClaim);
-        var current = me with { ViaHomeAssistant = viaHomeAssistant };
 
-        return Result<CurrentUserDto>.Success(current).ToHttpResult();
+        var current = await handler.Handle(viaHomeAssistant, cancellationToken);
+
+        return current.ToHttpResult();
     }
 }

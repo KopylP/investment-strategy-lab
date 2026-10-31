@@ -1,6 +1,7 @@
 using InvestmentLab.Identity.Profiles.Domain;
 using InvestmentLab.Identity.Shared.Infrastructure;
-using InvestmentLab.Identity.Users.Application;
+using InvestmentLab.Identity.Users.Application.Shared;
+using InvestmentLab.Identity.Users.Domain;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 

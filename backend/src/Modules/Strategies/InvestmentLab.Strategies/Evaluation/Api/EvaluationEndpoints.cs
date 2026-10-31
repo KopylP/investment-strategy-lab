@@ -1,7 +1,7 @@
 using InvestmentLab.BuildingBlocks.Http;
 using InvestmentLab.Strategies.Evaluation.Application.AssessSubPortfolioRisk;
 using InvestmentLab.Strategies.Evaluation.Application.DecideSubPortfolio;
-using InvestmentLab.Strategies.Evaluation.Application.EvaluateSubPortfolio;
+using InvestmentLab.Strategies.Evaluation.Application.Shared;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;

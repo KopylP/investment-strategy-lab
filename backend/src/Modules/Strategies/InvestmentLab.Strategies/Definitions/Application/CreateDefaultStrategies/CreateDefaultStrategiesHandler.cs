@@ -1,5 +1,6 @@
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.Strategies.Definitions.Application.CreateStrategy;
+using InvestmentLab.Strategies.Definitions.Application.Shared;
 using InvestmentLab.Strategies.Definitions.Domain;
 
 namespace InvestmentLab.Strategies.Definitions.Application.CreateDefaultStrategies;

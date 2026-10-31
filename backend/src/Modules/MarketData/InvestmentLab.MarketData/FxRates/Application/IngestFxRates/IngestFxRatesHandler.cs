@@ -1,3 +1,4 @@
+using InvestmentLab.MarketData.FxRates.Application.Shared;
 using InvestmentLab.MarketData.FxRates.Domain;
 
 namespace InvestmentLab.MarketData.FxRates.Application.IngestFxRates;

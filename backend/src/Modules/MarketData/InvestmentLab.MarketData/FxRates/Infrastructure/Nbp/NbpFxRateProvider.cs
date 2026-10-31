@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
-using InvestmentLab.MarketData.FxRates.Application;
+using InvestmentLab.MarketData.FxRates.Application.Shared;
 using InvestmentLab.MarketData.FxRates.Domain;
 
 namespace InvestmentLab.MarketData.FxRates.Infrastructure.Nbp;

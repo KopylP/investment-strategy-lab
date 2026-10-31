@@ -1,3 +1,4 @@
+using InvestmentLab.Strategies.Definitions.Application.Shared;
 using InvestmentLab.Strategies.Definitions.Domain;
 
 namespace InvestmentLab.Strategies.Definitions.Application.GetStrategy;

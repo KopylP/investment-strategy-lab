@@ -1,4 +1,6 @@
 using InvestmentLab.BuildingBlocks.Scheduling;
+using InvestmentLab.Performance.Valuation.Application.Shared;
+using InvestmentLab.Performance.Valuation.Domain;
 
 namespace InvestmentLab.Performance.Valuation.Application.Integration;
 

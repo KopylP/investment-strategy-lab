@@ -1,4 +1,6 @@
+using InvestmentLab.Identity.Profiles.Application.Shared;
 using InvestmentLab.Identity.Profiles.Domain;
+using InvestmentLab.Identity.Users.Domain;
 
 namespace InvestmentLab.Identity.Profiles.Application.UpdateProfile;
 

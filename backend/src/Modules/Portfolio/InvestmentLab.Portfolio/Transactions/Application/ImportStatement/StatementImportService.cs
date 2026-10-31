@@ -5,6 +5,7 @@ using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.Portfolio.Accounts.Domain;
 using InvestmentLab.Portfolio.Transactions.Application.ReverseRecordedTransaction;
 using InvestmentLab.Portfolio.Transactions.Application.ReverseTransaction;
+using InvestmentLab.Portfolio.Transactions.Application.Shared;
 using InvestmentLab.Portfolio.Transactions.Domain;
 using InvestmentLab.Strategies.Contracts;
 

@@ -1,6 +1,6 @@
 using InvestmentLab.Strategies.Contracts;
 using InvestmentLab.Strategies.Evaluation.Application.AssessStrategyRisk;
-using InvestmentLab.Strategies.Evaluation.Application.EvaluateSubPortfolio;
+using InvestmentLab.Strategies.Evaluation.Application.Shared;
 
 namespace InvestmentLab.Strategies.Evaluation.Application.AssessSubPortfolioRisk;
 

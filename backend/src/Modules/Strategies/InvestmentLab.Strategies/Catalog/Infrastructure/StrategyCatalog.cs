@@ -1,4 +1,4 @@
-using InvestmentLab.Strategies.Catalog.Application;
+using InvestmentLab.Strategies.Catalog.Application.Shared;
 using InvestmentLab.Strategies.Catalog.Domain;
 using InvestmentLab.Strategies.Shared.Infrastructure.Engine;
 using Microsoft.EntityFrameworkCore;

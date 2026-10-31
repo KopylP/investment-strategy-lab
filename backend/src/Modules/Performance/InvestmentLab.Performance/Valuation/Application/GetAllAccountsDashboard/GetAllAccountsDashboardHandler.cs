@@ -1,3 +1,4 @@
+using InvestmentLab.Performance.Valuation.Application.Shared;
 using InvestmentLab.Performance.Valuation.Domain;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 

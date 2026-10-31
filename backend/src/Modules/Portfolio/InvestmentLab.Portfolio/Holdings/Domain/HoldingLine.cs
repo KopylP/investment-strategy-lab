@@ -1,3 +1,5 @@
+using InvestmentLab.Portfolio.Transactions.Application.Shared;
+
 namespace InvestmentLab.Portfolio.Holdings.Domain;
 
 public sealed record HoldingLine(Guid InstrumentId, IReadOnlyList<VirtualLot> Lots)

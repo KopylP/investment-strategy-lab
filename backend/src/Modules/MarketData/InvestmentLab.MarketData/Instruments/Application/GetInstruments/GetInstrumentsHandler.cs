@@ -1,4 +1,6 @@
 using InvestmentLab.MarketData.Contracts.Instruments;
+using InvestmentLab.MarketData.Instruments.Application.Shared;
+using InvestmentLab.MarketData.Instruments.Domain;
 
 namespace InvestmentLab.MarketData.Instruments.Application.GetInstruments;
 

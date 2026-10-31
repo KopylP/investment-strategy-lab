@@ -1,5 +1,6 @@
 using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.Rebalancing.Planning.Application.RequestReport;
+using InvestmentLab.Rebalancing.Planning.Application.Shared;
 using InvestmentLab.Rebalancing.Planning.Domain;
 using InvestmentLab.Rebalancing.Reports.Domain;
 using InvestmentLab.Signals.Contracts;

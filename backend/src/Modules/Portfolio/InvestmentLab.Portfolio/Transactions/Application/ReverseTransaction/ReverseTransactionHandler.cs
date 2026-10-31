@@ -1,8 +1,7 @@
+using InvestmentLab.Portfolio.Transactions.Application.Shared;
 using InvestmentLab.Portfolio.Transactions.Domain;
 
 namespace InvestmentLab.Portfolio.Transactions.Application.ReverseTransaction;
-
-public sealed record ReverseTransactionCommand(string Reason, DateOnly? ReversedOn = null);
 
 public sealed class ReverseTransactionHandler(TransactionRecorder recorder)
 {

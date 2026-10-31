@@ -1,4 +1,5 @@
 using InvestmentLab.Portfolio.Accounts.Domain;
+using InvestmentLab.Portfolio.Transactions.Application.Shared;
 using InvestmentLab.Portfolio.Transactions.Domain;
 
 namespace InvestmentLab.Portfolio.Transactions.Application.RecordInternalTransfer;

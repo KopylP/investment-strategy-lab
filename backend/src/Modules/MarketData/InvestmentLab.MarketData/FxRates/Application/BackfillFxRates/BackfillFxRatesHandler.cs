@@ -1,5 +1,6 @@
 using InvestmentLab.MarketData.Contracts.FxRates;
 using InvestmentLab.MarketData.FxRates.Application.IngestFxRates;
+using InvestmentLab.MarketData.FxRates.Application.Shared;
 using InvestmentLab.MarketData.FxRates.Domain;
 using Microsoft.Extensions.Logging;
 

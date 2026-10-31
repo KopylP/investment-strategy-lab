@@ -1,5 +1,8 @@
 using InvestmentLab.BuildingBlocks.Http;
-using InvestmentLab.Taxation.Assessments.Application;
+using InvestmentLab.Taxation.Assessments.Application.ListBrokerStatements;
+using InvestmentLab.Taxation.Assessments.Application.RemoveBrokerStatement;
+using InvestmentLab.Taxation.Assessments.Application.Shared;
+using InvestmentLab.Taxation.Assessments.Application.UploadBrokerStatement;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -20,25 +23,25 @@ internal static class BrokerStatementEndpoints
     }
 
     private static async Task<IResult> ListBrokerStatements(
-        Guid accountId, BrokerStatementService service, CancellationToken cancellationToken)
+        Guid accountId, ListBrokerStatementsHandler handler, CancellationToken cancellationToken)
     {
-        var statements = await service.List(accountId, cancellationToken);
+        var statements = await handler.Handle(accountId, cancellationToken);
 
         return statements.ToHttpResult();
     }
 
     private static async Task<IResult> UploadBrokerStatement(
-        Guid accountId, UploadBrokerStatementCommand body, BrokerStatementService service, CancellationToken cancellationToken)
+        Guid accountId, UploadBrokerStatementCommand body, UploadBrokerStatementHandler handler, CancellationToken cancellationToken)
     {
-        var uploaded = await service.Upload(accountId, body, cancellationToken);
+        var uploaded = await handler.Handle(accountId, body, cancellationToken);
 
         return uploaded.ToHttpResult();
     }
 
     private static async Task<IResult> RemoveBrokerStatement(
-        Guid accountId, Guid statementId, BrokerStatementService service, CancellationToken cancellationToken)
+        Guid accountId, Guid statementId, RemoveBrokerStatementHandler handler, CancellationToken cancellationToken)
     {
-        var removed = await service.Remove(accountId, statementId, cancellationToken);
+        var removed = await handler.Handle(accountId, statementId, cancellationToken);
 
         return removed.ToHttpResult();
     }

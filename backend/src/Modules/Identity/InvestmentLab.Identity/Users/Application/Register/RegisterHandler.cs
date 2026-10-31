@@ -1,4 +1,5 @@
 using InvestmentLab.Identity.Profiles.Domain;
+using InvestmentLab.Identity.Users.Application.Shared;
 
 namespace InvestmentLab.Identity.Users.Application.Register;
 

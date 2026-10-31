@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using InvestmentLab.IntegrationTests.MarketData;
 using InvestmentLab.IntegrationTests.Portfolio;
-using InvestmentLab.Performance.Valuation.Application;
+using InvestmentLab.Performance.Valuation.Application.Shared;
 
 namespace InvestmentLab.IntegrationTests.Performance;
 

@@ -1,6 +1,6 @@
 using System.Net.Http.Json;
 using InvestmentLab.MarketData.Instruments.Domain;
-using InvestmentLab.MarketData.Quotes.Application;
+using InvestmentLab.MarketData.Quotes.Application.Shared;
 
 namespace InvestmentLab.MarketData.Quotes.Infrastructure.YFinance;
 

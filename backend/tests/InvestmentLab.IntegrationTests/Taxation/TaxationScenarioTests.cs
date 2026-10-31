@@ -3,8 +3,8 @@ using System.Net.Http.Json;
 using InvestmentLab.IntegrationTests.MarketData;
 using InvestmentLab.IntegrationTests.Portfolio;
 using InvestmentLab.Portfolio.Contracts.Accounts;
-using InvestmentLab.Taxation.Assessments.Application;
-using InvestmentLab.Taxation.Declarations.Application;
+using InvestmentLab.Taxation.Assessments.Application.Shared;
+using InvestmentLab.Taxation.Declarations.Application.Shared;
 using InvestmentLab.Taxation.Declarations.Domain;
 
 namespace InvestmentLab.IntegrationTests.Taxation;

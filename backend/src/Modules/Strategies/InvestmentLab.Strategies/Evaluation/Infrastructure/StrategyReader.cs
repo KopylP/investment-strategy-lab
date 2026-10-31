@@ -1,5 +1,5 @@
 using InvestmentLab.Strategies.Definitions.Domain;
-using InvestmentLab.Strategies.Evaluation.Application;
+using InvestmentLab.Strategies.Evaluation.Application.Shared;
 using InvestmentLab.Strategies.Shared.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 

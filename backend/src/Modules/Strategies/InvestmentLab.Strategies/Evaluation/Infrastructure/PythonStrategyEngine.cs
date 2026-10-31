@@ -1,6 +1,6 @@
 using System.Text.Json;
 using InvestmentLab.Strategies.Contracts;
-using InvestmentLab.Strategies.Evaluation.Application;
+using InvestmentLab.Strategies.Evaluation.Application.Shared;
 using InvestmentLab.Strategies.Shared.Infrastructure.Engine;
 using Microsoft.EntityFrameworkCore;
 

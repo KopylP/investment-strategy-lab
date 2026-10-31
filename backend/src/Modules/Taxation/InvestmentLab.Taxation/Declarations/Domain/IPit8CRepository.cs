@@ -1,0 +1,16 @@
+using InvestmentLab.Taxation.Declarations.Domain;
+
+namespace InvestmentLab.Taxation.Declarations.Domain;
+
+public interface IPit8CRepository
+{
+    Task<IReadOnlyList<Pit8CStatement>> ForYearAsync(int year, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<Pit8CStatement>> AllAsync(CancellationToken cancellationToken);
+
+    void Add(Pit8CStatement statement);
+
+    void Remove(Pit8CStatement statement);
+
+    Task SaveChangesAsync(CancellationToken cancellationToken);
+}

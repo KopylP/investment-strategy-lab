@@ -1,12 +1,12 @@
 using InvestmentLab.BuildingBlocks.Http;
 using InvestmentLab.BuildingBlocks.Security;
-using InvestmentLab.Strategies.Definitions.Application;
 using InvestmentLab.Strategies.Definitions.Application.ArchiveStrategy;
 using InvestmentLab.Strategies.Definitions.Application.CreateDefaultStrategies;
 using InvestmentLab.Strategies.Definitions.Application.CreateStrategy;
 using InvestmentLab.Strategies.Definitions.Application.GetStrategy;
 using InvestmentLab.Strategies.Definitions.Application.ListStrategies;
 using InvestmentLab.Strategies.Definitions.Application.ReconfigureStrategy;
+using InvestmentLab.Strategies.Definitions.Application.Shared;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;

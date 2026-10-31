@@ -1,3 +1,5 @@
+using InvestmentLab.MarketData.FxRates.Application.Shared;
+
 namespace InvestmentLab.MarketData.FxRates.Application.GetLatestFxRates;
 
 public sealed record LatestFxRatesDto(DateOnly? EffectiveDate, IReadOnlyDictionary<string, decimal> ToPln);

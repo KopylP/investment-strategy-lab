@@ -1,5 +1,11 @@
 using InvestmentLab.BuildingBlocks.Http;
-using InvestmentLab.Taxation.Assessments.Application;
+using InvestmentLab.Taxation.Assessments.Application.GetTaxProgress;
+using InvestmentLab.Taxation.Assessments.Application.GetTaxYear;
+using InvestmentLab.Taxation.Assessments.Application.GetTaxYears;
+using InvestmentLab.Taxation.Assessments.Application.ListLossCarryforwards;
+using InvestmentLab.Taxation.Assessments.Application.RecordLossCarryforward;
+using InvestmentLab.Taxation.Assessments.Application.RemoveLossCarryforward;
+using InvestmentLab.Taxation.Assessments.Application.Shared;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -23,46 +29,46 @@ internal static class TaxEndpoints
         return group;
     }
 
-    private static async Task<Ok<TaxOverviewDto>> GetTaxYears(TaxQueries queries, CancellationToken cancellationToken)
+    private static async Task<Ok<TaxOverviewDto>> GetTaxYears(GetTaxYearsHandler handler, CancellationToken cancellationToken)
     {
-        var overview = await queries.Overview(cancellationToken);
+        var overview = await handler.Handle(cancellationToken);
 
         return TypedResults.Ok(overview);
     }
 
-    private static async Task<IResult> GetTaxYear(int year, TaxQueries queries, CancellationToken cancellationToken)
+    private static async Task<IResult> GetTaxYear(int year, GetTaxYearHandler handler, CancellationToken cancellationToken)
     {
-        var taxYear = await queries.Year(year, cancellationToken);
+        var taxYear = await handler.Handle(year, cancellationToken);
 
         return taxYear.ToHttpResult();
     }
 
-    private static async Task<Ok<TaxProgressDto>> GetTaxProgress(int year, TaxQueries queries, CancellationToken cancellationToken)
+    private static async Task<Ok<TaxProgressDto>> GetTaxProgress(int year, GetTaxProgressHandler handler, CancellationToken cancellationToken)
     {
-        var progress = await queries.Progress(year, cancellationToken);
+        var progress = await handler.Handle(year, cancellationToken);
 
         return TypedResults.Ok(progress);
     }
 
     private static async Task<Ok<IReadOnlyList<LossCarryforwardDto>>> GetLossCarryforwards(
-        TaxQueries queries, CancellationToken cancellationToken)
+        ListLossCarryforwardsHandler handler, CancellationToken cancellationToken)
     {
-        var losses = await queries.Losses(cancellationToken);
+        var losses = await handler.Handle(cancellationToken);
 
         return TypedResults.Ok(losses);
     }
 
     private static async Task<IResult> RecordLossCarryforward(
-        RecordLossCommand body, TaxQueries queries, CancellationToken cancellationToken)
+        RecordLossCommand body, RecordLossCarryforwardHandler handler, CancellationToken cancellationToken)
     {
-        var recorded = await queries.RecordLoss(body, cancellationToken);
+        var recorded = await handler.Handle(body, cancellationToken);
 
         return recorded.ToHttpResult();
     }
 
-    private static async Task<IResult> RemoveLossCarryforward(Guid lossId, TaxQueries queries, CancellationToken cancellationToken)
+    private static async Task<IResult> RemoveLossCarryforward(Guid lossId, RemoveLossCarryforwardHandler handler, CancellationToken cancellationToken)
     {
-        var removed = await queries.RemoveLoss(lossId, cancellationToken);
+        var removed = await handler.Handle(lossId, cancellationToken);
 
         return removed.ToHttpResult();
     }

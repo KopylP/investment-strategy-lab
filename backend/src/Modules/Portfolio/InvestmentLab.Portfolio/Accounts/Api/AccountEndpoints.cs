@@ -1,6 +1,5 @@
 using InvestmentLab.BuildingBlocks.Http;
 using InvestmentLab.BuildingBlocks.Security;
-using InvestmentLab.Portfolio.Accounts.Application;
 using InvestmentLab.Portfolio.Accounts.Application.AddSubPortfolio;
 using InvestmentLab.Portfolio.Accounts.Application.AssignStrategy;
 using InvestmentLab.Portfolio.Accounts.Application.ChangeContributionPolicy;
@@ -9,6 +8,7 @@ using InvestmentLab.Portfolio.Accounts.Application.GetAccount;
 using InvestmentLab.Portfolio.Accounts.Application.ListAccounts;
 using InvestmentLab.Portfolio.Accounts.Application.OpenAccount;
 using InvestmentLab.Portfolio.Accounts.Application.RetireSubPortfolio;
+using InvestmentLab.Portfolio.Accounts.Application.Shared;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
