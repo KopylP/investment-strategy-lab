@@ -27,11 +27,11 @@ public sealed record AccountReport(string Code, string Name, string Description,
     public ReportKind Kind => Mode == StrategyReportDto.RiskReview ? ReportKind.RiskReview : ReportKind.Monthly;
 
     /// <summary>When the report comes for this sub-portfolio: the user's time if set, else its strategy's.</summary>
-    public ReportCadence CadenceOf(SubPortfolioReport sub) => Own?.Cadence ?? sub.Default;
+    public Cadence CadenceOf(SubPortfolioReport sub) => Own?.Cadence ?? sub.Default;
 }
 
 /// <param name="Default">When its strategy's type says the report comes.</param>
-public sealed record SubPortfolioReport(Guid SubPortfolioId, string SubPortfolioName, string StrategyName, ReportCadence Default);
+public sealed record SubPortfolioReport(Guid SubPortfolioId, string SubPortfolioName, string StrategyName, Cadence Default);
 
 /// <summary>What planning reads from other modules for one account: setup, holdings, instrument labels and prices.</summary>
 public sealed class PlanningInputs(
@@ -141,8 +141,8 @@ public sealed class PlanningInputs(
         })];
     }
 
-    private static ReportCadence CadenceOf(StrategyReportScheduleDto schedule) =>
-        ReportCadence.Of(schedule.Frequency, schedule.Day, schedule.Weekday, schedule.Time, schedule.Minute);
+    private static Cadence CadenceOf(StrategyReportScheduleDto schedule) =>
+        Cadence.Of(schedule.Frequency, schedule.Day, schedule.Weekday, schedule.Time, schedule.Minute);
 
     public static IEnumerable<SubPortfolioSetupDto> Planned(AccountSetupDto account) =>
         account.SubPortfolios.Where(sub => sub.Status == "Active" && sub.StrategyId is not null);

@@ -2,14 +2,14 @@ using InvestmentLab.Rebalancing.Planning.Domain;
 
 namespace InvestmentLab.Rebalancing.Tests.Planning;
 
-public sealed class ReportCadenceTests
+public sealed class CadenceTests
 {
-    private static ReportCadence Cadence(string frequency, int day = 1, string weekday = "sunday", string time = "20:00", int minute = 0) =>
-        ReportCadence.Of(frequency, day, weekday, time, minute);
+    private static Cadence Cadence(string frequency, int day = 1, string weekday = "sunday", string time = "20:00", int minute = 0) =>
+        Cadence.Of(frequency, day, weekday, time, minute);
 
     private static DateTime At(string local) => DateTime.Parse(local, System.Globalization.CultureInfo.InvariantCulture);
 
-    public static TheoryData<ReportCadence, string, string, string> Times => new()
+    public static TheoryData<Cadence, string, string, string> Times => new()
     {
         // cadence, now, last at or before now, next after now
         { Cadence("hourly", minute: 15), "2026-11-04T10:20", "2026-11-04T10:15", "2026-11-04T11:15" },
@@ -25,8 +25,8 @@ public sealed class ReportCadenceTests
     };
 
     [Theory]
-    [MemberData(nameof(Times), DisableDiscoveryEnumeration = true)]  // ReportCadence is not serializable
-    public void Report_times_follow_the_schedule_the_strategy_sets(ReportCadence cadence, string now, string last, string next)
+    [MemberData(nameof(Times), DisableDiscoveryEnumeration = true)]  // Cadence is not serializable
+    public void Report_times_follow_the_schedule_the_strategy_sets(Cadence cadence, string now, string last, string next)
     {
         cadence.Last(At(now)).ShouldBe(At(last));
         cadence.Next(At(now)).ShouldBe(At(next));
@@ -39,36 +39,36 @@ public sealed class ReportCadenceTests
     [Fact]
     public void An_unknown_frequency_is_off_and_fields_the_frequency_does_not_read_are_ignored()
     {
-        Cadence("yearly").ShouldBe(ReportCadence.Off);
+        Cadence("yearly").ShouldBe(Cadence.Off);
         Cadence("weekly", day: 15, weekday: "monday", time: "19:30", minute: 10)
-            .ShouldBe(new ReportCadence(ReportFrequency.Weekly, 1, DayOfWeek.Monday, new TimeOnly(19, 30), 0));
-        Cadence("monthly", day: 40, time: "25:00").ShouldBe(new ReportCadence(ReportFrequency.Monthly, 1, DayOfWeek.Sunday, new TimeOnly(20, 0), 0));
+            .ShouldBe(new Cadence(CadenceFrequency.Weekly, 1, DayOfWeek.Monday, new TimeOnly(19, 30), 0));
+        Cadence("monthly", day: 40, time: "25:00").ShouldBe(new Cadence(CadenceFrequency.Monthly, 1, DayOfWeek.Sunday, new TimeOnly(20, 0), 0));
     }
 
     [Theory]
-    [InlineData("monthly", null, null, "09:00", null, "report_schedule.day")]
-    [InlineData("monthly", 32, null, "09:00", null, "report_schedule.day")]
-    [InlineData("weekly", null, "sun", "09:00", null, "report_schedule.weekday")]
-    [InlineData("daily", null, null, "9:00", null, "report_schedule.time")]
-    [InlineData("hourly", null, null, null, 60, "report_schedule.minute")]
-    [InlineData("yearly", null, null, null, null, "report_schedule.frequency")]
-    [InlineData("3", null, null, null, null, "report_schedule.frequency")]
+    [InlineData("monthly", null, null, "09:00", null, "cadence.day")]
+    [InlineData("monthly", 32, null, "09:00", null, "cadence.day")]
+    [InlineData("weekly", null, "sun", "09:00", null, "cadence.weekday")]
+    [InlineData("daily", null, null, "9:00", null, "cadence.time")]
+    [InlineData("hourly", null, null, null, 60, "cadence.minute")]
+    [InlineData("yearly", null, null, null, null, "cadence.frequency")]
+    [InlineData("3", null, null, null, null, "cadence.frequency")]
     public void The_users_own_schedule_needs_the_fields_its_frequency_reads(string frequency, int? day, string? weekday, string? time, int? minute, string error) =>
-        ReportCadence.TryOf(frequency, day, weekday, time, minute).Error.Code.ShouldBe(error);
+        Cadence.TryOf(frequency, day, weekday, time, minute).Error.Code.ShouldBe(error);
 
     [Fact]
     public void The_users_own_schedule_keeps_only_what_its_frequency_reads()
     {
-        ReportCadence.TryOf("monthly", 10, "friday", "09:00", 30).Value
-            .ShouldBe(new ReportCadence(ReportFrequency.Monthly, 10, DayOfWeek.Sunday, new TimeOnly(9, 0), 0));
-        ReportCadence.TryOf("off", null, null, null, null).Value.ShouldBe(ReportCadence.Off);
+        Cadence.TryOf("monthly", 10, "friday", "09:00", 30).Value
+            .ShouldBe(new Cadence(CadenceFrequency.Monthly, 10, DayOfWeek.Sunday, new TimeOnly(9, 0), 0));
+        Cadence.TryOf("off", null, null, null, null).Value.ShouldBe(Cadence.Off);
     }
 
     [Fact]
     public void An_accounts_own_schedule_replaces_the_strategys_until_reset()
     {
         var settings = PlanSettings.DefaultFor(Guid.NewGuid(), UserId.Of(Guid.NewGuid()));
-        var payday = ReportCadence.TryOf("monthly", 10, null, "09:00", null).Value;
+        var payday = Cadence.TryOf("monthly", 10, null, "09:00", null).Value;
 
         var setAt = new DateTimeOffset(2026, 10, 30, 19, 43, 0, TimeSpan.Zero);
         settings.Schedule("rebalance", Cadence("weekly"), setAt.AddDays(-1));
