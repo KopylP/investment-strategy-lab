@@ -6,67 +6,105 @@ namespace InvestmentLab.Taxation.BrokerStatements.Domain;
 public static partial class PnlStatementReader
 {
     private const decimal Cent = 0.011m;
+    private const char NoMark = '\0';
 
     private static readonly (string Sign, string Currency)[] Signs =
         [("US$", "USD"), ("CA$", "CAD"), ("A$", "AUD"), ("HK$", "HKD"), ("$", "USD"), ("€", "EUR"), ("£", "GBP"), ("zł", "PLN"), ("CHF", "CHF")];
 
     public static ParsedBrokerStatement Read(string broker, IReadOnlyList<IReadOnlyList<string>> lines)
     {
-        var lots = new List<BrokerSaleLot>();
-        var dividends = new List<BrokerDividend>();
-        var warnings = new List<string>();
+        var parsed = new ParsedRows();
 
         foreach (var record in Records(lines))
+            ReadRecord(Tokens(record), parsed);
+
+        return new ParsedBrokerStatement(broker, parsed.Lots, parsed.Dividends, parsed.Warnings);
+    }
+
+    private static void ReadRecord(List<Token> tokens, ParsedRows parsed)
+    {
+        var dates = tokens.TakeWhile(token => token.Date is not null).Select(token => token.Date!.Value).ToList();
+        var isin = tokens.FirstOrDefault(token => token.Isin is not null)?.Isin;
+        var symbol = tokens.Skip(dates.Count).FirstOrDefault(token => token.Kind == TokenKind.Word && token.Isin is null)?.Text ?? "";
+        var money = tokens.Where(token => token.Kind == TokenKind.Money).ToList();
+        var label = $"{dates[0]:dd.MM.yyyy} {symbol}".Trim();
+
+        if (isin is null)
         {
-            var tokens = Tokens(record);
-            var dates = tokens.TakeWhile(token => token.Date is not null).Select(token => token.Date!.Value).ToList();
-            var isin = tokens.FirstOrDefault(token => token.Isin is not null)?.Isin;
-            var symbol = tokens.Skip(dates.Count).FirstOrDefault(token => token.Kind == TokenKind.Word && token.Isin is null)?.Text ?? "";
-            var money = tokens.Where(token => token.Kind == TokenKind.Money).ToList();
-            var pln = tokens.Where(token => token.Kind == TokenKind.Pln).Select(token => token.Value).ToList();
-            var label = $"{dates[0]:dd.MM.yyyy} {symbol}".Trim();
-
-            if (isin is null)
-            {
-                warnings.Add($"{label}: рядок без ISIN (не цінний папір) — пропущено.");
-                continue;
-            }
-
-            if (money.Select(token => token.Currency).Distinct().Count() > 1)
-            {
-                warnings.Add($"{label}: суми в різних валютах — пропущено.");
-                continue;
-            }
-
-            var currency = money.FirstOrDefault()?.Currency ?? "PLN";
-            if (currency == "PLN" && pln.Count == 0)
-                pln = [.. money.Select(token => token.Value)];
-
-            if (dates.Count >= 2)
-            {
-                var afterIsin = tokens.SkipWhile(token => token.Isin is null).Skip(1);
-                var quantity = afterIsin.FirstOrDefault(token => token.Kind == TokenKind.Number)?.Value;
-                if (quantity is not > 0m || money.Count < 4 || pln.Count < 4 || Math.Abs(money[1].Value - money[0].Value - money[2].Value) > 2 * Cent)
-                {
-                    warnings.Add($"{label}: продаж не вдалося прочитати — пропущено.");
-                    continue;
-                }
-
-                lots.Add(new BrokerSaleLot(dates[0], dates[1], symbol, isin, currency, quantity.Value, money[0].Value, money[1].Value, money[3].Value, pln[0], pln[1], pln[3]));
-            }
-            else
-            {
-                if (money.Count < 3 || pln.Count < 2 || Math.Abs(money[0].Value - money[1].Value - money[2].Value) > Cent)
-                {
-                    warnings.Add($"{label}: дивіденд не вдалося прочитати — пропущено.");
-                    continue;
-                }
-
-                dividends.Add(new BrokerDividend(dates[0], symbol, isin, currency, money[0].Value, money[1].Value, money[2].Value, pln[0], pln[1]));
-            }
+            parsed.Warnings.Add($"{label}: рядок без ISIN (не цінний папір) — пропущено.");
+            return;
         }
 
-        return new ParsedBrokerStatement(broker, lots, dividends, warnings);
+        if (money.Select(token => token.Currency).Distinct().Count() > 1)
+        {
+            parsed.Warnings.Add($"{label}: суми в різних валютах — пропущено.");
+            return;
+        }
+
+        var currency = money.FirstOrDefault()?.Currency ?? "PLN";
+        var pln = PlnAmounts(tokens, money, currency);
+        var row = new RecordRow(dates, symbol, isin, currency, label, money, pln);
+
+        if (dates.Count >= 2)
+            ReadSale(row, tokens, parsed);
+        else
+            ReadDividend(row, parsed);
+    }
+
+    private static List<decimal> PlnAmounts(List<Token> tokens, List<Token> money, string currency)
+    {
+        var pln = tokens.Where(token => token.Kind == TokenKind.Pln).Select(token => token.Value).ToList();
+
+        return currency == "PLN" && pln.Count == 0 ? [.. money.Select(token => token.Value)] : pln;
+    }
+
+    private static void ReadSale(RecordRow row, List<Token> tokens, ParsedRows parsed)
+    {
+        var afterIsin = tokens.SkipWhile(token => token.Isin is null).Skip(1);
+        var quantity = afterIsin.FirstOrDefault(token => token.Kind == TokenKind.Number)?.Value;
+        var (money, pln) = (row.Money, row.Pln);
+
+        if (quantity is not > 0m || money.Count < 4 || pln.Count < 4 || Math.Abs(money[1].Value - money[0].Value - money[2].Value) > 2 * Cent)
+        {
+            parsed.Warnings.Add($"{row.Label}: продаж не вдалося прочитати — пропущено.");
+            return;
+        }
+
+        parsed.Lots.Add(new BrokerSaleLot(
+            row.Dates[0],
+            row.Dates[1],
+            row.Symbol,
+            row.Isin,
+            row.Currency,
+            quantity.Value,
+            money[0].Value,
+            money[1].Value,
+            money[3].Value,
+            pln[0],
+            pln[1],
+            pln[3]));
+    }
+
+    private static void ReadDividend(RecordRow row, ParsedRows parsed)
+    {
+        var (money, pln) = (row.Money, row.Pln);
+
+        if (money.Count < 3 || pln.Count < 2 || Math.Abs(money[0].Value - money[1].Value - money[2].Value) > Cent)
+        {
+            parsed.Warnings.Add($"{row.Label}: дивіденд не вдалося прочитати — пропущено.");
+            return;
+        }
+
+        parsed.Dividends.Add(new BrokerDividend(
+            row.Dates[0],
+            row.Symbol,
+            row.Isin,
+            row.Currency,
+            money[0].Value,
+            money[1].Value,
+            money[2].Value,
+            pln[0],
+            pln[1]));
     }
 
     private static IEnumerable<List<IReadOnlyList<string>>> Records(IReadOnlyList<IReadOnlyList<string>> lines)
@@ -88,19 +126,28 @@ public static partial class PnlStatementReader
                 continue;
 
             var tokens = Tokens([line]);
-            var hasAmount = tokens.Any(token => token.Kind is TokenKind.Money or TokenKind.Pln);
-            if (line.Count == 0 || tokens.Count > 0 && tokens[0].Kind == TokenKind.Word && hasAmount)
+
+            if (line.Count == 0 || StartsNonSecurityRow(tokens))
             {
                 yield return current;
                 current = null;
             }
-            else if (tokens.Any(token => token.Kind is TokenKind.Number or TokenKind.Money or TokenKind.Pln))
+            else if (tokens.Any(IsAmountOrNumber))
                 current.Add(line);
         }
 
         if (current is not null)
             yield return current;
     }
+
+    private static bool StartsNonSecurityRow(List<Token> tokens)
+    {
+        var hasAmount = tokens.Any(token => token.Kind is TokenKind.Money or TokenKind.Pln);
+
+        return tokens.Count > 0 && tokens[0].Kind == TokenKind.Word && hasAmount;
+    }
+
+    private static bool IsAmountOrNumber(Token token) => token.Kind is TokenKind.Number or TokenKind.Money or TokenKind.Pln;
 
     private static List<Token> Tokens(IReadOnlyList<IReadOnlyList<string>> lines)
     {
@@ -112,34 +159,46 @@ public static partial class PnlStatementReader
 
             for (var i = 0; i < words.Count; i++)
             {
-                var word = words[i];
                 var next = i + 1 < words.Count ? words[i + 1] : null;
+                var (token, usesNextWord) = TokenOf(words[i], next);
 
-                if (ParseDate(word) is { } date)
-                    tokens.Add(new Token(TokenKind.Word, word, Date: date));
-                else if (IsIsin(word))
-                    tokens.Add(new Token(TokenKind.Word, word, Isin: word));
-                else if (Money(word) is { } money)
-                    tokens.Add(money.Currency == "PLN" ? new Token(TokenKind.Pln, word, money.Value) : new Token(TokenKind.Money, word, money.Value, money.Currency));
-                else if (Number(word) is { } number && next is not null && IsPlnCode(next))
-                {
-                    tokens.Add(new Token(TokenKind.Pln, word, number));
+                tokens.Add(token);
+
+                if (usesNextWord)
                     i++;
-                }
-                else if (Number(word) is { } amount && next is not null && CurrencyCode().IsMatch(next))
-                {
-                    tokens.Add(new Token(TokenKind.Money, word, amount, next));
-                    i++;
-                }
-                else if (Number(word) is { } plain)
-                    tokens.Add(new Token(TokenKind.Number, word, plain));
-                else
-                    tokens.Add(new Token(TokenKind.Word, word));
             }
         }
 
         return tokens;
     }
+
+    private static (Token Token, bool UsesNextWord) TokenOf(string word, string? next)
+    {
+        if (ParseDate(word) is { } date)
+            return (new Token(TokenKind.Word, word, Date: date), false);
+
+        if (IsIsin(word))
+            return (new Token(TokenKind.Word, word, Isin: word), false);
+
+        if (Money(word) is { } money)
+            return (MoneyToken(word, money), false);
+
+        if (Number(word) is not { } number)
+            return (new Token(TokenKind.Word, word), false);
+
+        if (next is not null && IsPlnCode(next))
+            return (new Token(TokenKind.Pln, word, number), true);
+
+        if (next is not null && CurrencyCode().IsMatch(next))
+            return (new Token(TokenKind.Money, word, number, next), true);
+
+        return (new Token(TokenKind.Number, word, number), false);
+    }
+
+    private static Token MoneyToken(string word, (string Currency, decimal Value) money) =>
+        money.Currency == "PLN"
+            ? new Token(TokenKind.Pln, word, money.Value)
+            : new Token(TokenKind.Money, word, money.Value, money.Currency);
 
     private static DateOnly? ParseDate(string text) =>
         DateOnly.TryParseExact(text, ["yyyy-MM-dd", "dd.MM.yyyy"], CultureInfo.InvariantCulture, DateTimeStyles.None, out var date) ? date : null;
@@ -168,23 +227,35 @@ public static partial class PnlStatementReader
 
     private static decimal? Number(string text)
     {
-        var body = text.Replace(" ", "").Replace(" ", "").Replace('−', '-');
+        var body = text.Replace(" ", "").Replace('−', '-');
         if (body.Length == 0 || !NumberShape().IsMatch(body))
             return null;
 
-        var comma = body.LastIndexOf(',');
-        var dot = body.LastIndexOf('.');
-        var decimalMark = (comma >= 0, dot >= 0) switch
-        {
-            (true, true) => comma > dot ? ',' : '.',
-            (true, false) => CommaThousands().IsMatch(body) ? '\0' : ',',
-            (false, true) => DotThousands().IsMatch(body) ? '\0' : '.',
-            _ => '\0',
-        };
-        var groupMark = decimalMark == ',' ? '.' : decimalMark == '.' ? ',' : comma >= 0 ? ',' : '.';
+        var groupMark = GroupMarkOf(body);
         var normalized = body.Replace(groupMark.ToString(), "").Replace(',', '.');
 
         return decimal.TryParse(normalized, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var value) ? value : null;
+    }
+
+    private static char GroupMarkOf(string body)
+    {
+        var comma = body.LastIndexOf(',');
+        var dot = body.LastIndexOf('.');
+
+        var decimalMark = (comma >= 0, dot >= 0) switch
+        {
+            (true, true) => comma > dot ? ',' : '.',
+            (true, false) => CommaThousands().IsMatch(body) ? NoMark : ',',
+            (false, true) => DotThousands().IsMatch(body) ? NoMark : '.',
+            _ => NoMark,
+        };
+
+        return decimalMark switch
+        {
+            ',' => '.',
+            '.' => ',',
+            _ => comma >= 0 ? ',' : '.',
+        };
     }
 
     private static bool IsIsin(string text)
@@ -192,7 +263,16 @@ public static partial class PnlStatementReader
         if (!IsinShape().IsMatch(text))
             return false;
 
-        var digits = string.Concat(text[..^1].Select(ch => char.IsDigit(ch) ? ch.ToString() : (ch - 'A' + 10).ToString(CultureInfo.InvariantCulture)));
+        var checkDigit = text[^1] - '0';
+        var digits = string.Concat(text[..^1].Select(IsinDigits));
+
+        return (10 - LuhnSum(digits) % 10) % 10 == checkDigit;
+    }
+
+    private static string IsinDigits(char ch) => char.IsDigit(ch) ? ch.ToString() : (ch - 'A' + 10).ToString(CultureInfo.InvariantCulture);
+
+    private static int LuhnSum(string digits)
+    {
         var sum = 0;
 
         for (var i = 0; i < digits.Length; i++)
@@ -205,7 +285,7 @@ public static partial class PnlStatementReader
             sum += digit;
         }
 
-        return (10 - sum % 10) % 10 == text[^1] - '0';
+        return sum;
     }
 
     [GeneratedRegex(@"^[A-Z]{2}[A-Z0-9]{9}[0-9]$")]
@@ -232,4 +312,14 @@ public static partial class PnlStatementReader
     }
 
     private sealed record Token(TokenKind Kind, string Text, decimal Value = 0m, string? Currency = null, DateOnly? Date = null, string? Isin = null);
+
+    private sealed record RecordRow(
+        List<DateOnly> Dates, string Symbol, string Isin, string Currency, string Label, List<Token> Money, List<decimal> Pln);
+
+    private sealed class ParsedRows
+    {
+        public List<BrokerSaleLot> Lots { get; } = [];
+        public List<BrokerDividend> Dividends { get; } = [];
+        public List<string> Warnings { get; } = [];
+    }
 }
