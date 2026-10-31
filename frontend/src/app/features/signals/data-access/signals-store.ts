@@ -133,10 +133,12 @@ export class SignalsStore {
     action: () => Promise<unknown>,
   ): Promise<boolean> {
     this.saving.set(true);
+
     try {
       await action();
       this.messages.add({ severity: 'success', summary: success });
       this.reload();
+
       return true;
     } catch (error) {
       this.messages.add({
@@ -145,6 +147,7 @@ export class SignalsStore {
         detail: toProblemMessage(error),
         life: 8000,
       });
+
       return false;
     } finally {
       this.saving.set(false);

@@ -27,12 +27,15 @@ export class AuthStore {
 
   async ensureLoaded(): Promise<CurrentUser | null> {
     if (this.userState() !== undefined) return this.userState() ?? null;
+
     try {
       this.userState.set(await this.api.get<CurrentUser>('/api/identity/me'));
     } catch (error) {
       if (!(error instanceof HttpErrorResponse) || error.status !== 401) throw error;
+
       this.userState.set(null);
     }
+
     return this.userState() ?? null;
   }
 

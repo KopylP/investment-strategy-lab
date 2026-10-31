@@ -20,7 +20,9 @@ export class InstrumentCatalog {
 
   symbol(id: string | null | undefined): string {
     if (!id) return '—';
+
     const instrument = this.byId().get(id);
+
     return instrument ? symbolOf(instrument) : id.slice(0, 8);
   }
 

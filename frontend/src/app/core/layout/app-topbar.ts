@@ -19,7 +19,9 @@ const allAccounts = 'all';
 
 function scopeOf(route: ActivatedRouteSnapshot): AccountScope {
   let deepest = route;
+
   while (deepest.firstChild) deepest = deepest.firstChild;
+
   return (deepest.data['accountScope'] as AccountScope | undefined) ?? 'account';
 }
 
@@ -87,6 +89,7 @@ export class AppTopbar {
           },
         ]
       : [];
+
     return [
       ...accountItems,
       {

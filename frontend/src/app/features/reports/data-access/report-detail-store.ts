@@ -91,6 +91,7 @@ export class ReportDetailStore {
 
   async close(): Promise<void> {
     this.busyReport.set('close');
+
     try {
       await this.api.close(this.requireId());
       this.messages.add({
@@ -113,15 +114,19 @@ export class ReportDetailStore {
   async regenerate(): Promise<string | undefined> {
     const report = this.report();
     if (!report) return undefined;
+
     this.busyReport.set('regenerate');
+
     try {
       const accountId = report.summary.accountId;
       const { requestId } = await this.api.generate(accountId, report.summary.code);
+
       this.messages.add({
         severity: 'info',
         summary: 'Новий рапорт готується',
         detail: 'Коли він буде готовий, цей рапорт буде замінено',
       });
+
       return requestId;
     } catch (error) {
       this.messages.add({
@@ -130,6 +135,7 @@ export class ReportDetailStore {
         detail: toProblemMessage(error),
         life: 8000,
       });
+
       return undefined;
     } finally {
       this.busyReport.set(null);
@@ -138,6 +144,7 @@ export class ReportDetailStore {
 
   async refreshQuotes(): Promise<void> {
     this.busyReport.set('quotes');
+
     try {
       await this.api.ingestQuotes();
       this.messages.add({
@@ -162,6 +169,7 @@ export class ReportDetailStore {
     success: string,
   ): Promise<void> {
     this.busyActionId.set(action.id);
+
     try {
       await command();
       this.messages.add({ severity: 'success', summary: success, detail: action.title });
@@ -190,6 +198,7 @@ export class ReportDetailStore {
   private requireId(): string {
     const id = this.reportId();
     if (!id) throw new Error('Report is not opened');
+
     return id;
   }
 }

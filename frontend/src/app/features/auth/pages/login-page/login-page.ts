@@ -31,12 +31,16 @@ export class LoginPage {
   protected async submit(): Promise<void> {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+
       return;
     }
+
     this.busy.set(true);
     this.error.set(null);
+
     try {
       const { email, password } = this.form.getRawValue();
+
       await this.auth.login(email, password);
       await this.router.navigateByUrl(this.returnUrl() || '/');
     } catch (error) {

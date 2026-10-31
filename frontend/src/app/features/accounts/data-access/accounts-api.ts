@@ -135,11 +135,16 @@ export function normalizeToHundred(weights: Record<string, number>): Record<stri
   const total = Object.values(weights).reduce((sum, weight) => sum + weight, 0);
   const keys = Object.keys(weights);
   if (!keys.length || total <= 0) return weights;
+
   const result: Record<string, number> = {};
+
   for (const key of keys) result[key] = Math.round((weights[key] / total) * 10000) / 100;
+
   const rest =
     Math.round((100 - Object.values(result).reduce((sum, value) => sum + value, 0)) * 100) / 100;
   const largest = keys.reduce((best, key) => (result[key] > result[best] ? key : best), keys[0]);
+
   result[largest] = Math.round((result[largest] + rest) * 100) / 100;
+
   return result;
 }

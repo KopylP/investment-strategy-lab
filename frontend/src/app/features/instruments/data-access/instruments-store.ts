@@ -47,7 +47,9 @@ const periodDays: Record<ChartPeriod, number> = {
 
 function daysAgo(days: number): string {
   const date = new Date();
+
   date.setDate(date.getDate() - days);
+
   return toIsoDate(date);
 }
 
@@ -135,6 +137,7 @@ export class InstrumentsStore {
       ]),
     );
     const held = this.heldIds();
+
     return this.catalog
       .instruments()
       .filter((instrument) => instrument.kind !== 'FxPair')
@@ -142,6 +145,7 @@ export class InstrumentsStore {
         const points = months.get(instrument.id) ?? [];
         const first = points.at(0)?.adjustedClose;
         const last = points.at(-1)?.adjustedClose;
+
         return {
           id: instrument.id,
           symbol: symbolOf(instrument),
@@ -171,9 +175,11 @@ export class InstrumentsStore {
   readonly visibleRows = computed(() => {
     const text = this.search().trim().toLowerCase();
     const filter = this.filter();
+
     return this.rows().filter((row) => {
       if (text && !`${row.symbol} ${row.name} ${row.isin ?? ''}`.toLowerCase().includes(text))
         return false;
+
       switch (filter) {
         case 'mine':
           return row.held;
@@ -211,21 +217,25 @@ export class InstrumentsStore {
   readonly detailStats = computed(() => {
     const points = this.detailPoints();
     if (points.length < 2) return null;
+
     const closes = points.map((point) => point.close);
     const first = points[0].adjustedClose;
     const last = points.at(-1)!.adjustedClose;
     let peak = -Infinity;
     let maxDrawdown = 0;
+
     for (const point of points) {
       peak = Math.max(peak, point.adjustedClose);
       maxDrawdown = Math.min(maxDrawdown, point.adjustedClose / peak - 1);
     }
+
     const daily = points
       .slice(1)
       .map((point, index) => point.adjustedClose / points[index].adjustedClose - 1);
     const mean = daily.reduce((sum, value) => sum + value, 0) / daily.length;
     const variance =
       daily.reduce((sum, value) => sum + (value - mean) ** 2, 0) / Math.max(1, daily.length - 1);
+
     return {
       change: last / first - 1,
       high: Math.max(...closes),
@@ -245,6 +255,7 @@ export class InstrumentsStore {
   );
   readonly counts = computed(() => {
     const rows = this.rows();
+
     return {
       all: rows.length,
       mine: rows.filter((row) => row.held).length,
@@ -266,12 +277,14 @@ export class InstrumentsStore {
         quotesUpdated: number;
         missingSymbols: string[];
       }>('/api/market-data/quotes/ingest');
+
       this.pricesResource.reload();
       this.monthResource.reload();
       this.detailResource.reload();
       const missing = report.missingSymbols.length
         ? `; без даних: ${report.missingSymbols.join(', ')}`
         : '';
+
       return `Нових котирувань: ${report.quotesAdded}, оновлено: ${report.quotesUpdated}${missing}`;
     });
   }
@@ -279,12 +292,14 @@ export class InstrumentsStore {
   async ingestFxRates(): Promise<void> {
     await this.run('fx', async () => {
       await this.api.post('/api/market-data/fx-rates/ingest');
+
       return 'Курси NBP оновлено';
     });
   }
 
   private async run(kind: 'quotes' | 'fx', command: () => Promise<string>): Promise<void> {
     this.busy.set(kind);
+
     try {
       this.messages.add({ severity: 'success', summary: await command() });
     } catch (error) {

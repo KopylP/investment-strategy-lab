@@ -77,6 +77,7 @@ export interface LatestPrice {
 
 export function symbolOf(instrument: Pick<Instrument, 'providerSymbols' | 'name'>): string {
   const yahoo = instrument.providerSymbols.find((symbol) => symbol.startsWith('yfinance:'));
+
   return yahoo ? yahoo.slice('yfinance:'.length) : instrument.name;
 }
 
@@ -86,10 +87,12 @@ export function today(): string {
 
 export function toIsoDate(date: Date): string {
   const pad = (value: number) => String(value).padStart(2, '0');
+
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
 export function fromIsoDate(value: string): Date {
   const [year, month, day] = value.split('-').map(Number);
+
   return new Date(year, month - 1, day);
 }

@@ -134,6 +134,7 @@ export class AccountDetailPage {
       ? this.store.strategies().find((each) => each.id === strategyId)
       : undefined;
     if (!strategy) return 'Рапорти цей під-портфель не чіпають — оберіть стратегію';
+
     return describeStrategy(
       strategy,
       (id) => this.instruments.symbol(id),
@@ -196,10 +197,13 @@ export class AccountDetailPage {
   protected async readFile(event: Event): Promise<void> {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
+
     this.importFileName.set(file.name);
+
     try {
       const json = JSON.parse(await file.text()) as { positions?: unknown[] };
       if (!Array.isArray(json.positions)) throw new Error('У файлі немає масиву positions');
+
       this.importJson.set(json);
       this.importError.set(null);
     } catch (error) {
@@ -212,6 +216,7 @@ export class AccountDetailPage {
     const sleeve = this.importSleeve();
     const json = this.importJson();
     if (!sleeve || !json) return;
+
     if (await this.store.importPositions(sleeve, json, toIsoDate(this.importDate())))
       this.importVisible.set(false);
   }

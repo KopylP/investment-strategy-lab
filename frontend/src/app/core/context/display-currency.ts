@@ -38,16 +38,20 @@ export class DisplayCurrency {
 
   rate(from: string, to: string): number | null {
     if (from === to) return 1;
+
     const toPln = this.ratesResource.value()?.toPln;
     const fromPln = toPln?.[from];
     const targetPln = toPln?.[to];
+
     return fromPln && targetPln ? fromPln / targetPln : null;
   }
 
   convert(amount: number | null | undefined, from: string): number | null {
     const target = this.code();
     if (amount === null || amount === undefined || !target) return null;
+
     const rate = this.rate(from, target);
+
     return rate === null ? null : amount * rate;
   }
 
@@ -55,6 +59,7 @@ export class DisplayCurrency {
     this.chosen.set(code);
     const profile = this.profileResource.value() ?? (await this.auth.getProfile());
     const saved = await this.auth.updateProfile({ ...profile, displayCurrency: code });
+
     this.profileResource.set(saved);
   }
 

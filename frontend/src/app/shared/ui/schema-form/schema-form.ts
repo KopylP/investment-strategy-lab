@@ -73,17 +73,22 @@ export class SchemaForm {
 
   protected read(path: string[]): JsonValue {
     let node: JsonValue = this.value();
+
     for (const key of path)
       node = node && typeof node === 'object' && !Array.isArray(node) ? (node[key] ?? null) : null;
+
     return node;
   }
 
   protected shown(field: FieldVm): string {
     const value = this.read(field.path);
     if (value === null) return '—';
+
     if (field.kind === 'boolean') return value ? 'так' : 'ні';
+
     if (field.kind === 'enum')
       return field.options?.find((option) => option.value === value)?.label ?? String(value);
+
     return typeof value === 'number' ? formatQuantity(value) : String(value);
   }
 
@@ -96,6 +101,7 @@ function toGroups(root: SchemaNode): GroupVm[] {
   const defs = (root as { $defs?: Record<string, SchemaNode> }).$defs ?? {};
   const resolve = (node: SchemaNode): SchemaNode => {
     const ref = node.$ref ?? node.allOf?.find((part) => part.$ref)?.$ref;
+
     return ref
       ? { ...defs[ref.split('/').pop()!], title: node.title ?? defs[ref.split('/').pop()!]?.title }
       : node;
@@ -108,6 +114,7 @@ function toGroups(root: SchemaNode): GroupVm[] {
       const property = resolve(raw);
       if (property.type === 'object' || property.properties) {
         const nested: GroupVm = { title: humanize(raw.title ?? key), fields: [] };
+
         groups.push(nested);
         walk(property, [...path, key], nested);
       } else {
@@ -115,7 +122,9 @@ function toGroups(root: SchemaNode): GroupVm[] {
       }
     }
   };
+
   walk(root, [], general);
+
   return groups.filter((group) => group.fields.length);
 }
 
@@ -129,6 +138,7 @@ function toField(property: SchemaNode, path: string[], key: string): FieldVm {
         : property.type === 'boolean'
           ? 'boolean'
           : 'text';
+
   return {
     path,
     key,
@@ -149,12 +159,14 @@ function humanize(text: string): string {
     .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
     .replace(/_/g, ' ')
     .trim();
+
   return spaced.charAt(0).toUpperCase() + spaced.slice(1).toLowerCase();
 }
 
 function setAt(target: JsonObject, path: string[], value: JsonValue): JsonObject {
   const [head, ...rest] = path;
   const child = target[head];
+
   return {
     ...target,
     [head]: rest.length

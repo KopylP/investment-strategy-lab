@@ -47,17 +47,21 @@ export class PriceChart {
   private readonly color = computed(() => {
     const points = this.points();
     const palette = this.theme.palette();
+
     return (points.at(-1)?.close ?? 0) >= (points.at(0)?.close ?? 0) ? palette.gain : palette.loss;
   });
 
   private readonly tradesByIndex = computed(() => {
     const points = this.points();
     const byIndex = new Map<number, TradeMarker[]>();
+
     for (const trade of this.trades()) {
       const index = points.findIndex((point) => point.date >= trade.date);
       if (index < 0) continue;
+
       byIndex.set(index, [...(byIndex.get(index) ?? []), trade]);
     }
+
     return byIndex;
   });
 
@@ -69,6 +73,7 @@ export class PriceChart {
       points.map((point, index) =>
         byIndex.get(index)?.some((trade) => trade.side === side) ? point.close : null,
       );
+
     return {
       labels: points.map((point) => formatDate(point.date)),
       datasets: [
@@ -120,6 +125,7 @@ export class PriceChart {
   protected readonly tradeLines = computed(() => {
     const byIndex = this.tradesByIndex();
     const palette = this.theme.palette();
+
     return {
       id: 'tradeLines',
       beforeDatasetsDraw: (chart: {
@@ -128,11 +134,14 @@ export class PriceChart {
         scales: { x: { getPixelForValue: (index: number) => number } };
       }) => {
         const { ctx, chartArea, scales } = chart;
+
         ctx.save();
         ctx.setLineDash([4, 4]);
         ctx.lineWidth = 1;
+
         for (const [index, trades] of byIndex) {
           const x = scales.x.getPixelForValue(index);
+
           ctx.strokeStyle = withAlpha(
             trades.some((trade) => trade.side === 'Buy') ? palette.primary : palette.tax,
             0.55,
@@ -142,6 +151,7 @@ export class PriceChart {
           ctx.lineTo(x, chartArea.bottom);
           ctx.stroke();
         }
+
         ctx.restore();
       },
     };
@@ -154,6 +164,7 @@ export class PriceChart {
     const closes = this.points().map((point) => point.close);
     const digits = Math.max(...closes) - Math.min(...closes) < 50 ? 2 : 0;
     const phone = this.viewport.phone();
+
     return {
       maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
@@ -176,7 +187,9 @@ export class PriceChart {
               parsed: { y: number };
             }) => {
               if (context.datasetIndex === 0) return formatMoney(context.parsed.y, currency);
+
               const side = context.datasetIndex === 1 ? 'Buy' : 'Sell';
+
               return (byIndex.get(context.dataIndex) ?? [])
                 .filter((trade) => trade.side === side)
                 .map(

@@ -64,9 +64,11 @@ export class NotificationSettingsCard {
   protected async toggle(destination: NotificationDestination, selected: boolean): Promise<void> {
     const current = this.settings();
     if (!current) return;
+
     const chosen = current.destinations
       .filter((each) => (each.id === destination.id ? selected : each.selected))
       .map((each) => each.id);
+
     await this.save(chosen);
   }
 
@@ -76,6 +78,7 @@ export class NotificationSettingsCard {
 
   protected async sendTest(): Promise<void> {
     this.testing.set(true);
+
     try {
       await this.api.post('/api/notifications/test');
       this.messages.add({
@@ -96,6 +99,7 @@ export class NotificationSettingsCard {
 
   private async save(destinations: string[] | null): Promise<void> {
     this.saving.set(true);
+
     try {
       this.settingsResource.set(
         await this.api.put<NotificationSettings>('/api/notifications/settings', { destinations }),

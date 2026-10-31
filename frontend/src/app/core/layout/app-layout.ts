@@ -29,6 +29,7 @@ export class AppLayout {
   protected readonly containerClass = computed(() => {
     const config = this.layout.layoutConfig();
     const state = this.layout.layoutState();
+
     return {
       'layout-overlay': config.menuMode === 'overlay',
       'layout-static': config.menuMode === 'static',

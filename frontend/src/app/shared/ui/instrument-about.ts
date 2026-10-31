@@ -35,13 +35,18 @@ export class InstrumentAbout {
   protected readonly parts = computed(() => {
     const full = this.text()?.trim();
     if (!full) return null;
+
     const sentences = splitSentences(full);
     let short = sentences[0];
+
     for (const sentence of sentences.slice(1, shortSentences)) {
       if ((short + sentence).length > shortLength) break;
+
       short += sentence;
     }
+
     short = short.trim();
+
     return { full, short, more: short.length < full.length };
   });
 }
@@ -51,5 +56,6 @@ function splitSentences(text: string): string[] {
     return [...new Intl.Segmenter('en', { granularity: 'sentence' }).segment(text)].map(
       (part) => part.segment,
     );
+
   return text.match(/[^.!?]+(?:[.!?]+\s*|$)/g) ?? [text];
 }

@@ -93,6 +93,7 @@ export class ReportActionsTable {
     this.expanded.update((ids) => {
       const next = new Set(ids);
       if (!next.delete(actionId)) next.add(actionId);
+
       return next;
     });
   }

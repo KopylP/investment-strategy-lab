@@ -65,10 +65,13 @@ export class FillDialog {
 
   protected submit(): void {
     this.submitted.set(true);
+
     if (this.form.invalid || this.tooMuch()) {
       this.form.markAllAsTouched();
+
       return;
     }
+
     const value = this.form.getRawValue();
     const fill: FillInput = {
       quantity: value.quantity,
@@ -77,6 +80,7 @@ export class FillDialog {
       executedOn: toIsoDate(value.executedOn),
       note: value.note.trim() || null,
     };
+
     this.ref.close(fill);
   }
 

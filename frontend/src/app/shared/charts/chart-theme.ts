@@ -30,6 +30,7 @@ export class ChartTheme {
     const token = (name: string, fallback: string) =>
       style.getPropertyValue(name).trim() || fallback;
     const primary = token('--p-primary-500', '#6366f1');
+
     return {
       text: token('--p-text-color', '#334155'),
       muted: token('--p-text-muted-color', '#64748b'),
@@ -55,5 +56,6 @@ export function withAlpha(color: string, alpha: number): string {
   const hex = Math.round(Math.min(1, Math.max(0, alpha)) * 255)
     .toString(16)
     .padStart(2, '0');
+
   return /^#[0-9a-f]{6}$/i.test(color) ? `${color}${hex}` : color;
 }

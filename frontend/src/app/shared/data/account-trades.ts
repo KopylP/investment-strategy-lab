@@ -24,8 +24,10 @@ export class AccountTrades {
   private readonly byInstrument = computed(() => {
     const currency = this.accounts.current()?.baseCurrency ?? 'EUR';
     const map = new Map<string, TradeMarker[]>();
+
     for (const entry of this.journal.hasValue() ? this.journal.value() : []) {
       if (!entry.trade || entry.isReversed || entry.kind === 'Reversal') continue;
+
       const marker: TradeMarker = {
         date: entry.occurredOn,
         side: entry.trade.side === 'Sell' ? 'Sell' : 'Buy',
@@ -33,8 +35,10 @@ export class AccountTrades {
         price: entry.trade.price,
         currency,
       };
+
       map.set(entry.trade.instrumentId, [...(map.get(entry.trade.instrumentId) ?? []), marker]);
     }
+
     return map;
   });
 

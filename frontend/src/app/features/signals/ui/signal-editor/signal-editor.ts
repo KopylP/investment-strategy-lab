@@ -90,12 +90,10 @@ export class SignalEditor {
     this.subPortfolioOptions(this.form().accountId),
   );
   protected readonly instruments = computed(() =>
-    this.store
-      .instruments()
-      .map((instrument) => ({
-        label: `${symbolOf(instrument)} · ${instrument.name}`,
-        value: instrument.id,
-      })),
+    this.store.instruments().map((instrument) => ({
+      label: `${symbolOf(instrument)} · ${instrument.name}`,
+      value: instrument.id,
+    })),
   );
 
   protected readonly rules = computed(() => this.rulesOfCurrentSignal());

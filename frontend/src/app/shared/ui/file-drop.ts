@@ -23,6 +23,7 @@ export class FileDrop {
 
   protected enter(event: DragEvent): void {
     if (!this.accepts(event)) return;
+
     event.preventDefault();
     this.depth++;
     this.over.set(true);
@@ -30,23 +31,28 @@ export class FileDrop {
 
   protected hover(event: DragEvent): void {
     if (!this.accepts(event)) return;
+
     event.preventDefault();
+
     if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
   }
 
   protected leave(): void {
     this.depth = Math.max(0, this.depth - 1);
+
     if (this.depth === 0) this.over.set(false);
   }
 
   protected drop(event: DragEvent): void {
     if (!this.accepts(event)) return;
+
     event.preventDefault();
     this.depth = 0;
     this.over.set(false);
     const input = this.input();
     const file = event.dataTransfer?.files[0];
     if (!input || !file) return;
+
     if (!matches(file, input.accept)) {
       this.messages.add({
         severity: 'warn',
@@ -56,9 +62,12 @@ export class FileDrop {
           .filter((type) => type.startsWith('.'))
           .join(' або ')}`,
       });
+
       return;
     }
+
     const files = new DataTransfer();
+
     files.items.add(file);
     input.files = files.files;
     input.dispatchEvent(new Event('change', { bubbles: true }));
@@ -66,6 +75,7 @@ export class FileDrop {
 
   private accepts(event: DragEvent): boolean {
     const input = this.input();
+
     return !!input && !input.disabled && !!event.dataTransfer?.types.includes('Files');
   }
 
@@ -80,7 +90,9 @@ function matches(file: File, accept: string): boolean {
     .map((type) => type.trim().toLowerCase())
     .filter(Boolean);
   if (!allowed.length) return true;
+
   const name = file.name.toLowerCase();
+
   return allowed.some((type) =>
     type.startsWith('.') ? name.endsWith(type) : file.type.toLowerCase() === type,
   );

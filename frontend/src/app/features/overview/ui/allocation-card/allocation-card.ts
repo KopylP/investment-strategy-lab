@@ -24,6 +24,7 @@ export class AllocationCard {
   protected readonly data = computed(() => {
     const palette = this.theme.palette();
     const subs = this.dashboard().subPortfolios;
+
     return {
       labels: subs.map((sub) => sub.name),
       datasets: [

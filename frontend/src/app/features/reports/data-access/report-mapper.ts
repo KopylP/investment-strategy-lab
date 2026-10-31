@@ -49,6 +49,7 @@ export function toRequestVm(request: ReportRequestDto): ReportRequestVm {
 
 export function toSummaryVm(summary: ReportSummaryDto): ReportSummaryVm {
   const periodLabel = formatPeriod(summary.period);
+
   return {
     id: summary.id,
     code: summary.code,
@@ -73,6 +74,32 @@ export function toSummaryVm(summary: ReportSummaryDto): ReportSummaryVm {
 
 const guid = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
 
+function plannedAmount(actions: { plannedAmount: number }[]): number {
+  return actions.reduce((sum, action) => sum + action.plannedAmount, 0);
+}
+
+function toContributionVm(
+  report: ReportDetailsDto,
+  subName: (id: string | null) => string,
+): ReportVm['contribution'] {
+  const plan = report.contributionPlan;
+  const splitLabel =
+    plan.split === 'FixedSplit' ? 'за цільовими частками' : 'тому, хто найбільше відстає';
+  const parts = plan.parts.map((part) => ({
+    name: subName(part.subPortfolioId),
+    amount: part.amount,
+  }));
+  const transfer = plan.transfer
+    ? {
+        from: subName(plan.transfer.fromSubPortfolioId),
+        to: subName(plan.transfer.toSubPortfolioId),
+        amount: plan.transfer.amount,
+      }
+    : null;
+
+  return { total: plan.total, splitLabel, parts, transfer };
+}
+
 export function toReportVm(report: ReportDetailsDto): ReportVm {
   const summary = toSummaryVm(report.summary);
   const symbol = (id: string | null) =>
@@ -85,6 +112,10 @@ export function toReportVm(report: ReportDetailsDto): ReportVm {
   const actions = report.actions.map((action) =>
     toActionVm(action, summary.currency, symbol, readable, subName, isOpenForMarking, report),
   );
+
+  const buyActions = actions.filter((action) => action.kind === 'Buy' || action.kind === 'Park');
+  const sellActions = actions.filter((action) => action.isSell);
+
   return {
     summary,
     isOpenForMarking,
@@ -92,34 +123,10 @@ export function toReportVm(report: ReportDetailsDto): ReportVm {
     sections: report.sections.map((section) => toSectionVm(section, symbol, readable)),
     warnings: [...new Set(report.warnings)],
     quotesLookStale: report.warnings.some((warning) => warning.includes('котирув')),
-    contribution: {
-      total: report.contributionPlan.total,
-      splitLabel:
-        report.contributionPlan.split === 'FixedSplit'
-          ? 'за цільовими частками'
-          : 'тому, хто найбільше відстає',
-      parts: report.contributionPlan.parts.map((part) => ({
-        name: subName(part.subPortfolioId),
-        amount: part.amount,
-      })),
-      transfer: report.contributionPlan.transfer
-        ? {
-            from: subName(report.contributionPlan.transfer.fromSubPortfolioId),
-            to: subName(report.contributionPlan.transfer.toSubPortfolioId),
-            amount: report.contributionPlan.transfer.amount,
-          }
-        : null,
-    },
+    contribution: toContributionVm(report, subName),
     review: report.review,
     taxEstimate: report.taxEstimate,
-    totals: {
-      buys: actions
-        .filter((action) => action.kind === 'Buy' || action.kind === 'Park')
-        .reduce((sum, action) => sum + action.plannedAmount, 0),
-      sells: actions
-        .filter((action) => action.isSell)
-        .reduce((sum, action) => sum + action.plannedAmount, 0),
-    },
+    totals: { buys: plannedAmount(buyActions), sells: plannedAmount(sellActions) },
   };
 }
 
@@ -291,8 +298,10 @@ function toScoreTable(
 ): ScoreTableVm | null {
   const decision = section.decision;
   if (!decision?.scores.length) return null;
+
   const described = decision.columns != null;
   const columns = decision.columns ?? legacyColumns;
+
   return {
     title: decision.scoreTitle ?? (described ? 'Чому саме ці інструменти' : 'Чому саме ці ETF'),
     instrumentLabel: decision.instrumentLabel ?? (described ? 'Інструмент' : 'ETF'),
@@ -300,6 +309,7 @@ function toScoreTable(
     rows: decision.scores
       .map((score) => {
         const values = described ? (score.values ?? {}) : legacyValues(score);
+
         return {
           symbol: symbol(score.instrumentId),
           name: score.name,
@@ -324,6 +334,7 @@ function toSectionVm(
   const targets = new Map(
     section.decision?.targets.map((target) => [target.instrumentId, target.weight]) ?? [],
   );
+
   return {
     id: section.subPortfolioId,
     name: section.name,
@@ -395,6 +406,7 @@ export function summarizeProgress(actions: readonly ReportActionVm[]): ReportPro
   const skipped = actions.filter((action) => action.status === 'Skipped').length;
   const partial = actions.filter((action) => action.status === 'PartiallyExecuted').length;
   const resolved = executed + skipped;
+
   return {
     total: actions.length,
     resolved,

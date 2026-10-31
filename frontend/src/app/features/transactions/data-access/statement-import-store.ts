@@ -104,6 +104,7 @@ export class StatementImportStore {
   );
   readonly canConfirm = computed(() => {
     const current = this.current();
+
     return (
       !!current &&
       current.status === 'Preview' &&
@@ -127,8 +128,10 @@ export class StatementImportStore {
   async upload(file: File): Promise<void> {
     const accountId = this.accounts.currentId();
     if (!accountId) return;
+
     await this.run('upload', async () => {
       const content = await file.text();
+
       this.importAccountId.set(accountId);
       this.current.set(
         await this.api.post<StatementImport>(
@@ -142,6 +145,7 @@ export class StatementImportStore {
   async open(importId: string): Promise<void> {
     const accountId = this.accounts.currentId();
     if (!accountId) return;
+
     this.importAccountId.set(accountId);
     await this.run('plan', async () =>
       this.current.set(
@@ -161,11 +165,13 @@ export class StatementImportStore {
     const current = this.current();
     const accountId = this.accounts.currentId();
     if (!current || !accountId) return;
+
     const mappings = current.mappings.map((mapping) =>
       change.mapping && mapping.ticker === change.mapping.ticker
         ? { ...mapping, ...change.mapping }
         : mapping,
     );
+
     await this.run('plan', async () =>
       this.current.set(
         await this.api.put<StatementImport>(
@@ -193,6 +199,7 @@ export class StatementImportStore {
     const current = this.current();
     const accountId = this.accounts.currentId();
     if (!current || !accountId) return;
+
     await this.run('plan', async () =>
       this.current.set(
         await this.api.put<StatementImport>(
@@ -217,13 +224,16 @@ export class StatementImportStore {
     const current = this.current();
     const accountId = this.accounts.currentId();
     if (!current || !accountId) return;
+
     await this.run('confirm', async () => {
       const result = await this.api.post<StatementImport>(
         `/api/portfolio/accounts/${accountId}/statement-imports/${current.id}/confirm`,
       );
+
       this.current.set(result);
       const recorded = result.rows.filter((row) => row.result === 'записано').length;
       const failed = result.rows.filter((row) => row.result?.startsWith('не ')).length;
+
       this.messages.add({
         severity: failed ? 'warn' : 'success',
         summary: 'Імпорт завершено',
@@ -237,11 +247,13 @@ export class StatementImportStore {
   async undo(importId: string): Promise<void> {
     const accountId = this.accounts.currentId();
     if (!accountId) return;
+
     await this.run('undo', async () => {
       const result = await this.api.post<StatementImport>(
         `/api/portfolio/accounts/${accountId}/statement-imports/${importId}/undo`,
       );
       if (this.current()?.id === importId) this.current.set(result);
+
       this.messages.add({
         severity: 'success',
         summary: 'Імпорт скасовано',
@@ -260,6 +272,7 @@ export class StatementImportStore {
     work: () => Promise<void>,
   ): Promise<void> {
     this.busy.set(kind);
+
     try {
       await work();
     } catch (error) {

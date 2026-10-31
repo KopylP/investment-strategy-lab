@@ -63,6 +63,7 @@ export class LoadOperationsDialog implements OnInit {
 
   protected readonly matches = computed(() => {
     const byId = new Map(this.data.actions.map((action) => [action.id, action]));
+
     return (this.preview()?.matches ?? []).map((match) => ({
       ...match,
       action: byId.get(match.actionId),
@@ -87,8 +88,11 @@ export class LoadOperationsDialog implements OnInit {
   protected async onFile(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
+
     input.value = '';
+
     if (!file) return;
+
     await this.run('upload', async () => {
       this.upload.set(
         await this.api.post<StatementUpload>(
@@ -102,6 +106,7 @@ export class LoadOperationsDialog implements OnInit {
   protected async importStatement(): Promise<void> {
     const upload = this.upload();
     if (!upload) return;
+
     await this.run('import', async () => {
       this.upload.set(
         await this.api.post<StatementUpload>(
@@ -115,6 +120,7 @@ export class LoadOperationsDialog implements OnInit {
   protected async apply(): Promise<void> {
     await this.run('apply', async () => {
       const marked = await this.reports.applyJournalMatches(this.data.reportId);
+
       this.ref.close(marked);
     });
   }
@@ -135,6 +141,7 @@ export class LoadOperationsDialog implements OnInit {
   ): Promise<void> {
     this.busy.set(kind);
     this.error.set(null);
+
     try {
       await work();
     } catch (error) {

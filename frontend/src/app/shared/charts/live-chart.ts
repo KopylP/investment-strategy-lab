@@ -35,6 +35,7 @@ export class LiveChart {
       const data = this.data();
       const options = this.options();
       const plugins = this.plugins();
+
       untracked(() => {
         if (!this.chart) {
           this.chart = new Chart(this.canvas().nativeElement, {
@@ -43,8 +44,10 @@ export class LiveChart {
             options,
             plugins,
           } as ChartConfiguration);
+
           return;
         }
+
         this.chart.data = data as ChartConfiguration['data'];
         this.chart.options = options as ChartConfiguration['options'] & object;
         this.chart.config.plugins!.splice(

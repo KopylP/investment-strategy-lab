@@ -32,6 +32,7 @@ export class Money {
 
   protected readonly main = computed(() => {
     const converted = this.converted();
+
     return converted === null
       ? formatMoney(this.amount(), this.currency(), this.digits())
       : formatMoney(converted, this.display.code()!, this.digits());

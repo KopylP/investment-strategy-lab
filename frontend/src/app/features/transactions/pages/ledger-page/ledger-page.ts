@@ -90,6 +90,7 @@ export class LedgerPage {
   protected readonly visibleTransactions = computed(() => {
     const filter = this.kindFilter();
     const text = this.search().trim().toLowerCase();
+
     return this.store.transactions().filter((transaction) => {
       const kindOk =
         !filter ||
@@ -99,6 +100,7 @@ export class LedgerPage {
             transaction.kind,
           )) ||
         transaction.kind === filter;
+
       return (
         kindOk &&
         (!text ||

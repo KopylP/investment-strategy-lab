@@ -31,12 +31,16 @@ export class ApiClient {
 
 function toParams(query?: Query): HttpParams | undefined {
   if (!query) return undefined;
+
   let params = new HttpParams();
+
   for (const [key, value] of Object.entries(query)) {
     if (value === null || value === undefined) continue;
+
     if (Array.isArray(value)) value.forEach((item) => (params = params.append(key, item)));
     else params = params.set(key, String(value));
   }
+
   return params;
 }
 
@@ -66,16 +70,21 @@ export function toProblemMessage(error: unknown): string {
   if (error instanceof HttpErrorResponse) {
     const code = (error.error as { code?: string } | null)?.code;
     if (code && messages[code]) return messages[code];
+
     const problem = error.error as {
       detail?: string;
       title?: string;
       errors?: Record<string, string[]>;
     } | null;
     if (problem?.errors) return Object.values(problem.errors).flat().join(' ');
+
     if (problem?.detail) return problem.detail;
+
     if (error.status === 0) return 'Сервер недоступний. Перевірте, чи запущено API.';
+
     return problem?.title ?? `Помилка ${error.status}`;
   }
+
   return error instanceof Error ? error.message : 'Невідома помилка';
 }
 

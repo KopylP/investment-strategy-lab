@@ -44,9 +44,12 @@ export class PositionChart {
       .map((trade) => trade.date)
       .sort()[0];
     const yearAgo = new Date();
+
     yearAgo.setFullYear(yearAgo.getFullYear() - 1);
     const start = first ? new Date(`${first}T00:00:00`) : yearAgo;
+
     start.setDate(start.getDate() - 30);
+
     return toIsoDate(start < yearAgo ? start : yearAgo);
   });
 

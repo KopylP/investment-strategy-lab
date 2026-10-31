@@ -24,6 +24,7 @@ export class DrawdownChart {
   protected readonly data = computed(() => {
     const palette = this.theme.palette();
     const { series } = this.dashboard();
+
     return {
       labels: series.map((point) => formatDate(point.date)),
       datasets: [
@@ -44,6 +45,7 @@ export class DrawdownChart {
   protected readonly options = computed(() => {
     const palette = this.theme.palette();
     const phone = this.viewport.phone();
+
     return {
       maintainAspectRatio: false,
       animation: false,

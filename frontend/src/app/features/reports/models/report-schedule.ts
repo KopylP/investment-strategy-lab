@@ -106,15 +106,18 @@ export function reportIcon(mode: ReportMode): string {
 export function nextLabel(next: string): string {
   const [date, time] = next.split('T');
   const [year, month, day] = date.split('-');
+
   return `${day}.${month}.${year}, ${time.slice(0, 5)}`;
 }
 
 export function upcomingReports(reports: ScheduledReport[]): ScheduledReport[] {
   const soonest = new Map<string, ScheduledReport>();
+
   for (const report of reports) {
     const known = soonest.get(report.code);
     if (!known || (report.next && (!known.next || report.next < known.next)))
       soonest.set(report.code, report);
   }
+
   return [...soonest.values()].sort((a, b) => (a.next ?? '￿').localeCompare(b.next ?? '￿'));
 }

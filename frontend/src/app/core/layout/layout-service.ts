@@ -62,6 +62,7 @@ export class LayoutService {
 
       if (!this.initialized || !config) {
         this.initialized = true;
+
         return;
       }
 
@@ -70,6 +71,7 @@ export class LayoutService {
 
     systemDarkQuery()?.addEventListener('change', (event) => {
       if (storedDarkTheme() === event.matches) clearDarkTheme();
+
       if (storedDarkTheme() === null && this.layoutConfig().darkTheme !== event.matches) {
         this.layoutConfig.update((config) => ({ ...config, darkTheme: event.matches }));
       }
@@ -94,7 +96,9 @@ export class LayoutService {
 
   toggleDarkMode(config?: LayoutConfig): void {
     const _config = config || this.layoutConfig();
+
     writeDarkTheme(_config.darkTheme);
+
     if (_config.darkTheme) {
       document.documentElement.classList.add('app-dark');
     } else {
@@ -149,6 +153,7 @@ function systemDarkQuery(): MediaQueryList | undefined {
 function storedDarkTheme(): boolean | null {
   try {
     const stored = localStorage.getItem(darkThemeKey);
+
     return stored === null ? null : stored === 'true';
   } catch {
     return null;
@@ -157,15 +162,19 @@ function storedDarkTheme(): boolean | null {
 
 function readDarkTheme(): boolean {
   const dark = storedDarkTheme() ?? systemDarkQuery()?.matches === true;
+
   document.documentElement.classList.toggle('app-dark', dark);
+
   return dark;
 }
 
 function writeDarkTheme(dark: boolean): void {
   if (dark === (systemDarkQuery()?.matches === true)) {
     clearDarkTheme();
+
     return;
   }
+
   try {
     localStorage.setItem(darkThemeKey, String(dark));
   } catch {}

@@ -87,11 +87,13 @@ export class InstrumentListPage {
       { label: `Акції ${counts.stocks}`, value: 'stocks' },
       { label: `Інше ${counts.other}`, value: 'other' },
     ];
+
     return all.filter((filter) => filter.value === 'all' || counts[filter.value] > 0);
   }
 
   protected toggle(id: string): void {
     this.store.select(id);
+
     if (this.layout.isMobile()) window.scrollTo({ top: 0 });
   }
 

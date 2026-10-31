@@ -25,6 +25,7 @@ export class StrategyListPage {
 
   protected readonly usage = computed(() => {
     const usage = new Map<string, string[]>();
+
     for (const account of this.accounts.accounts())
       for (const sub of account.subPortfolios)
         if (sub.status === 'Active' && sub.strategyId)
@@ -32,6 +33,7 @@ export class StrategyListPage {
             ...(usage.get(sub.strategyId) ?? []),
             `${account.name} › ${sub.name}`,
           ]);
+
     return usage;
   });
 

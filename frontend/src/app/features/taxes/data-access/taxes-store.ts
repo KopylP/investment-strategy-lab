@@ -119,6 +119,8 @@ export interface LossCarryforward {
   alreadyUsed: number;
 }
 
+const PDF_LINK_LIFETIME_MS = 10_000;
+
 @Injectable()
 export class TaxesStore {
   private readonly api = inject(ApiClient);
@@ -195,27 +197,17 @@ export class TaxesStore {
     const code = this.declarationCode();
     const year = this.year();
     if (!code || !year) return;
+
     this.pdfLoading.set(kind);
+
     try {
       const pdf = await this.api.blob(
         `/api/taxation/declarations/${year}/${encodeURIComponent(code)}/pdf?kind=${kind}`,
       );
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(pdf);
-      link.download = `${code}-${year}-${kind === 'form' ? 'formularz' : 'sciaga'}.pdf`;
-      link.click();
-      setTimeout(() => URL.revokeObjectURL(link.href), 10_000);
+      savePdf(pdf, `${code}-${year}-${kind === 'form' ? 'formularz' : 'sciaga'}.pdf`);
     } catch (error) {
-      const body =
-        error instanceof HttpErrorResponse && error.error instanceof Blob
-          ? await error.error.text().catch(() => '')
-          : '';
-      const problem = body
-        ? new HttpErrorResponse({
-            error: safeJson(body),
-            status: (error as HttpErrorResponse).status,
-          })
-        : error;
+      const problem = await readableProblem(error);
+
       this.messages.add({
         severity: 'error',
         summary: 'PDF не створено',
@@ -278,8 +270,10 @@ export class TaxesStore {
   async uploadBrokerStatement(file: File): Promise<boolean> {
     const bytes = new Uint8Array(await file.arrayBuffer());
     let binary = '';
+
     for (let i = 0; i < bytes.length; i += 0x8000)
       binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+
     return this.change(
       () =>
         this.api.post(`/api/taxation/accounts/${this.requireAccount()}/broker-statements`, {
@@ -302,6 +296,7 @@ export class TaxesStore {
 
   private async change(command: () => Promise<unknown>, success: string): Promise<boolean> {
     this.saving.set(true);
+
     try {
       await command();
       this.messages.add({ severity: 'success', summary: success });
@@ -311,6 +306,7 @@ export class TaxesStore {
       this.detailsResource.reload();
       this.formsResource.reload();
       this.declarationResource.reload();
+
       return true;
     } catch (error) {
       this.messages.add({
@@ -318,6 +314,7 @@ export class TaxesStore {
         summary: 'Не збережено',
         detail: toProblemMessage(error),
       });
+
       return false;
     } finally {
       this.saving.set(false);
@@ -327,6 +324,7 @@ export class TaxesStore {
   private requireAccount(): string {
     const id = this.accounts.currentId();
     if (!id) throw new Error('No account');
+
     return id;
   }
 }
@@ -337,4 +335,25 @@ function safeJson(text: string): unknown {
   } catch {
     return { detail: text };
   }
+}
+
+function savePdf(pdf: Blob, fileName: string): void {
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(pdf);
+  link.download = fileName;
+  link.click();
+
+  setTimeout(() => URL.revokeObjectURL(link.href), PDF_LINK_LIFETIME_MS);
+}
+
+async function readableProblem(error: unknown): Promise<unknown> {
+  const isBlobError = error instanceof HttpErrorResponse && error.error instanceof Blob;
+  const body = isBlobError ? await error.error.text().catch(() => '') : '';
+
+  if (!body) return error;
+
+  return new HttpErrorResponse({
+    error: safeJson(body),
+    status: (error as HttpErrorResponse).status,
+  });
 }
