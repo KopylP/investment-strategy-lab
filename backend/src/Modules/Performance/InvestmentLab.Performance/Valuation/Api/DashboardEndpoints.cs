@@ -1,6 +1,7 @@
 using InvestmentLab.BuildingBlocks.Http;
 using InvestmentLab.Performance.Valuation.Application.GetAllAccountsDashboard;
 using InvestmentLab.Performance.Valuation.Application.GetDashboard;
+using InvestmentLab.Performance.Valuation.Application.RefreshSnapshots;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -11,29 +12,31 @@ internal static class DashboardEndpoints
 {
     public static RouteGroupBuilder MapDashboard(this RouteGroupBuilder group)
     {
-        group.MapGet("/accounts/{accountId:guid}/dashboard", GetDashboard)
+        group.MapGet("/accounts/{accountId:guid}/dashboard", RefreshAndGetDashboard)
             .WithTags("Performance")
             .WithName("GetDashboard");
 
-        group.MapGet("/dashboard", GetAllAccountsDashboard)
+        group.MapGet("/dashboard", RefreshAndGetAllAccountsDashboard)
             .WithTags("Performance")
             .WithName("GetAllAccountsDashboard");
 
         return group;
     }
 
-    private static async Task<IResult> GetDashboard(
-        Guid accountId, string? period, GetDashboardHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> RefreshAndGetDashboard(
+        Guid accountId, string? period, RefreshSnapshotsHandler refresh, GetDashboardHandler query, CancellationToken cancellationToken)
     {
-        var dashboard = await handler.Handle(accountId, period, cancellationToken);
+        await refresh.Handle(new RefreshSnapshotsCommand(accountId), cancellationToken);
+        var dashboard = await query.Handle(accountId, period, cancellationToken);
 
         return dashboard.ToHttpResult();
     }
 
-    private static async Task<IResult> GetAllAccountsDashboard(
-        string? currency, string? period, GetAllAccountsDashboardHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> RefreshAndGetAllAccountsDashboard(
+        string? currency, string? period, RefreshSnapshotsHandler refresh, GetAllAccountsDashboardHandler query, CancellationToken cancellationToken)
     {
-        var dashboard = await handler.Handle(currency, period, cancellationToken);
+        await refresh.Handle(new RefreshSnapshotsCommand(AccountId: null), cancellationToken);
+        var dashboard = await query.Handle(currency, period, cancellationToken);
 
         return dashboard.ToHttpResult();
     }

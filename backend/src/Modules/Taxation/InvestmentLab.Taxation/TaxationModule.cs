@@ -11,6 +11,7 @@ using InvestmentLab.Taxation.Assessments.Application.Integration;
 using InvestmentLab.Taxation.Assessments.Application.ListBrokerStatements;
 using InvestmentLab.Taxation.Assessments.Application.ListLossCarryforwards;
 using InvestmentLab.Taxation.Assessments.Application.RecordLossCarryforward;
+using InvestmentLab.Taxation.Assessments.Application.RefreshTaxAssessments;
 using InvestmentLab.Taxation.Assessments.Application.RemoveBrokerStatement;
 using InvestmentLab.Taxation.Assessments.Application.RemoveLossCarryforward;
 using InvestmentLab.Taxation.Assessments.Application.Shared;
@@ -56,6 +57,7 @@ public sealed class TaxationModule : IModule
         services.AddScoped<IAssessmentRepository, AssessmentRepository>();
         services.AddScoped<TaxInputs>();
         services.AddScoped<TaxRecalculator>();
+        services.AddScoped<RefreshTaxAssessmentsHandler>();
         services.AddScoped<GetTaxYearsHandler>();
         services.AddScoped<GetTaxYearHandler>();
         services.AddScoped<GetTaxProgressHandler>();

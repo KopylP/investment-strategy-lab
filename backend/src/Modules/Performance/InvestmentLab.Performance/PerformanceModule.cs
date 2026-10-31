@@ -8,6 +8,7 @@ using InvestmentLab.Performance.Shared.Infrastructure;
 using InvestmentLab.Performance.Valuation.Api;
 using InvestmentLab.Performance.Valuation.Application.GetAllAccountsDashboard;
 using InvestmentLab.Performance.Valuation.Application.GetDashboard;
+using InvestmentLab.Performance.Valuation.Application.RefreshSnapshots;
 using InvestmentLab.Performance.Valuation.Application.Integration;
 using InvestmentLab.Performance.Valuation.Application.Shared;
 using InvestmentLab.Performance.Valuation.Domain;
@@ -35,6 +36,7 @@ public sealed class PerformanceModule : IModule
         services.AddScoped<IPerformanceRepository, PerformanceRepository>();
         services.AddScoped<PriceBook>();
         services.AddScoped<SnapshotBuilder>();
+        services.AddScoped<RefreshSnapshotsHandler>();
         services.AddScoped<AccountHistoryLoader>();
         services.AddScoped<GetDashboardHandler>();
         services.AddScoped<GetAllAccountsDashboardHandler>();

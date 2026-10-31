@@ -84,6 +84,8 @@ public sealed class RetireSubPortfolioHandler(IAccountRepository accounts, TimeP
   call, saving, returning, with a blank line between them. The handler has no business rules and publishes nothing: the
   aggregate raises a domain event, and a mapper turns it into an integration event in the same save.
 - **A query** only reads: load, map to a DTO, return. It changes nothing and raises nothing. Name it `Get…` or `List…`.
+  Data that is derived and kept on demand (tax assessments, valuation snapshots) is made fresh by its own `Refresh…`
+  handler, and the endpoint named `RefreshAndGet…` calls that handler and then the query.
 - **Failures** are returned as `Result` with an error from `<Feature>Errors` in `Domain/`, not thrown. Parsing input into
   value objects is a private method or lives on the input DTO.
 - **An endpoint** is a named private method that calls one handler and returns `ToHttpResult()`; the route table at the
