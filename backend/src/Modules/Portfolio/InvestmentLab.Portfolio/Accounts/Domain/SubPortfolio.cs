@@ -13,7 +13,14 @@ public sealed class SubPortfolio : Entity<SubPortfolioId>
 
     public int Position { get; private set; }
 
-    private SubPortfolio(SubPortfolioId id, int position, string name, TargetShare targetShare, StrategyRef? strategy, Guid? cashInstrumentId, Guardrails guardrails)
+    private SubPortfolio(
+        SubPortfolioId id,
+        int position,
+        string name,
+        TargetShare targetShare,
+        StrategyRef? strategy,
+        Guid? cashInstrumentId,
+        Guardrails guardrails)
         : base(id)
     {
         Position = position;

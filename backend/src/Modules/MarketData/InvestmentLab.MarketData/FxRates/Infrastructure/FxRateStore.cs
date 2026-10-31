@@ -54,7 +54,12 @@ internal sealed class FxRateStore(MarketDataDbContext db) : IFxRateStore, IFxRat
             : null;
     }
 
-    public async Task<IReadOnlyList<FxRateDto>> GetFxRateHistory(string baseCurrency, string quoteCurrency, DateOnly from, DateOnly to, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<FxRateDto>> GetFxRateHistory(
+        string baseCurrency,
+        string quoteCurrency,
+        DateOnly from,
+        DateOnly to,
+        CancellationToken cancellationToken)
     {
         if (Currency.TryOf(baseCurrency) is not { IsSuccess: true } @base || Currency.TryOf(quoteCurrency) is not { IsSuccess: true } quote)
             return [];

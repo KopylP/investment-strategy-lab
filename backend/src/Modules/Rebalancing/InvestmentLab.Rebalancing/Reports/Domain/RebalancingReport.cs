@@ -83,10 +83,24 @@ public sealed class RebalancingReport : AggregateRoot<ReportId>
 
     public ReportAction? FindAction(ReportActionId actionId) => _actions.FirstOrDefault(action => action.Id == actionId);
 
-    public Result<MarkedFill> MarkExecuted(ReportActionId actionId, decimal quantity, decimal price, decimal fee, DateOnly executedOn, string? note, DateTimeOffset now) =>
+    public Result<MarkedFill> MarkExecuted(
+        ReportActionId actionId,
+        decimal quantity,
+        decimal price,
+        decimal fee,
+        DateOnly executedOn,
+        string? note,
+        DateTimeOffset now) =>
         RecordFill(actionId, quantity, price, fee, executedOn, note, final: true, now);
 
-    public Result<MarkedFill> RecordPartialFill(ReportActionId actionId, decimal quantity, decimal price, decimal fee, DateOnly executedOn, string? note, DateTimeOffset now) =>
+    public Result<MarkedFill> RecordPartialFill(
+        ReportActionId actionId,
+        decimal quantity,
+        decimal price,
+        decimal fee,
+        DateOnly executedOn,
+        string? note,
+        DateTimeOffset now) =>
         RecordFill(actionId, quantity, price, fee, executedOn, note, final: false, now);
 
     public Result LinkJournalOperations(IReadOnlyList<ActionMatch> matches, DateTimeOffset now)

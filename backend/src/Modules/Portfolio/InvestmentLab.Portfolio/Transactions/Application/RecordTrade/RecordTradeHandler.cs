@@ -15,7 +15,11 @@ public sealed record RecordTradeCommand(
 
 public sealed class RecordTradeHandler(TransactionRecorder recorder)
 {
-    public Task<Result<RecordedTransaction>> Handle(Guid accountId, RecordTradeCommand command, TransactionSource source, CancellationToken cancellationToken) =>
+    public Task<Result<RecordedTransaction>> Handle(
+        Guid accountId,
+        RecordTradeCommand command,
+        TransactionSource source,
+        CancellationToken cancellationToken) =>
         recorder.RecordAsync(accountId, context => Create(context, command, source), cancellationToken);
 
     private static Result<Transaction> Create(RecordingContext context, RecordTradeCommand command, TransactionSource source)

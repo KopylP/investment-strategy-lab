@@ -71,7 +71,10 @@ public sealed class InvestmentAccount : AggregateRoot<AccountId>
         return account;
     }
 
-    public Result<SubPortfolioId> AddSubPortfolio(SubPortfolioDraft draft, IReadOnlyDictionary<SubPortfolioId, TargetShare> sharesOfOthers, DateTimeOffset now)
+    public Result<SubPortfolioId> AddSubPortfolio(
+        SubPortfolioDraft draft,
+        IReadOnlyDictionary<SubPortfolioId, TargetShare> sharesOfOthers,
+        DateTimeOffset now)
     {
         if (CheckNameIsFree(draft.Name) is { } taken)
             return taken;
@@ -131,7 +134,10 @@ public sealed class InvestmentAccount : AggregateRoot<AccountId>
         return Result.Success();
     }
 
-    public Result RetireSubPortfolio(SubPortfolioId subPortfolioId, IReadOnlyDictionary<SubPortfolioId, TargetShare> sharesOfRemaining, DateTimeOffset now)
+    public Result RetireSubPortfolio(
+        SubPortfolioId subPortfolioId,
+        IReadOnlyDictionary<SubPortfolioId, TargetShare> sharesOfRemaining,
+        DateTimeOffset now)
     {
         if (FindActive(subPortfolioId) is not { } sub)
             return AccountErrors.SubPortfolioNotFound(subPortfolioId.Value);

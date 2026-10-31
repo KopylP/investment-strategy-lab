@@ -6,7 +6,11 @@ public sealed record ChangeReportScheduleCommand(string Frequency, int? Day = nu
 
 public sealed class ChangeReportScheduleHandler(OwnReportScheduleChange ownSchedule)
 {
-    public async Task<Result<ReportScheduleDto>> Handle(Guid accountId, string code, ChangeReportScheduleCommand command, CancellationToken cancellationToken)
+    public async Task<Result<ReportScheduleDto>> Handle(
+        Guid accountId,
+        string code,
+        ChangeReportScheduleCommand command,
+        CancellationToken cancellationToken)
     {
         var cadence = Cadence.TryOf(command.Frequency, command.Day, command.Weekday, command.Time, command.Minute);
         if (cadence.IsFailure)

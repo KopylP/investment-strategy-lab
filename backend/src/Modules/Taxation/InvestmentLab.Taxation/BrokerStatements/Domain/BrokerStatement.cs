@@ -27,7 +27,12 @@ public sealed class BrokerStatement
 
     private BrokerStatement() => (Broker, FileName, Lots, Dividends, Warnings) = (null!, null!, null!, null!, null!);
 
-    public static Result<BrokerStatement> Upload(Guid accountId, UserId ownerId, string fileName, ParsedBrokerStatement statement, DateTimeOffset uploadedAt)
+    public static Result<BrokerStatement> Upload(
+        Guid accountId,
+        UserId ownerId,
+        string fileName,
+        ParsedBrokerStatement statement,
+        DateTimeOffset uploadedAt)
     {
         if (statement.Lots.Count == 0 && statement.Dividends.Count == 0)
             return BrokerStatementErrors.Empty;

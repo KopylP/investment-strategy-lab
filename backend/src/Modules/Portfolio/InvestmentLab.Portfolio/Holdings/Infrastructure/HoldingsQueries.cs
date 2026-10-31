@@ -9,6 +9,10 @@ internal sealed class HoldingsQueries(GetHoldingsHandler getHoldings) : IHolding
     public async Task<AccountHoldingsDto?> GetHoldings(Guid accountId, DateOnly? asOf, CancellationToken cancellationToken) =>
         await getHoldings.Handle(accountId, asOf, cancellationToken) is { IsSuccess: true } found ? found.Value : null;
 
-    public async Task<SubPortfolioHoldingsDto?> GetSubPortfolioSnapshot(Guid accountId, Guid subPortfolioId, DateOnly? asOf, CancellationToken cancellationToken) =>
+    public async Task<SubPortfolioHoldingsDto?> GetSubPortfolioSnapshot(
+        Guid accountId,
+        Guid subPortfolioId,
+        DateOnly? asOf,
+        CancellationToken cancellationToken) =>
         (await GetHoldings(accountId, asOf, cancellationToken))?.SubPortfolios.FirstOrDefault(sub => sub.SubPortfolioId == subPortfolioId);
 }

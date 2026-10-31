@@ -20,7 +20,11 @@ public static class StatementMatcher
         };
     }
 
-    public static IReadOnlyList<RowOutcome> Match(IReadOnlyList<PricedRow> rows, IReadOnlyList<Transaction> journal, ImportMode mode, DateOnly? fromDate)
+    public static IReadOnlyList<RowOutcome> Match(
+        IReadOnlyList<PricedRow> rows,
+        IReadOnlyList<Transaction> journal,
+        ImportMode mode,
+        DateOnly? fromDate)
     {
         var live = LiveAfterUpFrontReversals(journal, mode);
         var imported = LatestImportedByIdentity(live);

@@ -62,7 +62,10 @@ public sealed class ReportRequestProcessor(
         request.Fail(error, clock.GetUtcNow());
     }
 
-    private async Task SubmitAsync(ReportRequest request, IReadOnlyDictionary<Guid, EvaluateStrategyRequest> asked, CancellationToken cancellationToken)
+    private async Task SubmitAsync(
+        ReportRequest request,
+        IReadOnlyDictionary<Guid, EvaluateStrategyRequest> asked,
+        CancellationToken cancellationToken)
     {
         var task = TaskOf(request);
 
@@ -124,7 +127,9 @@ public sealed class ReportRequestProcessor(
             null => (poll.State, null, null, null),
         };
 
-    private Task<Result<IReadOnlyDictionary<Guid, EvaluateStrategyRequest>>> StrategyRequestsAsync(ReportRequest request, CancellationToken cancellationToken) =>
+    private Task<Result<IReadOnlyDictionary<Guid, EvaluateStrategyRequest>>> StrategyRequestsAsync(
+        ReportRequest request,
+        CancellationToken cancellationToken) =>
         request.Kind == ReportKind.RiskReview
             ? riskReviewRequests.BuildAsync(RiskReviewOf(request), cancellationToken)
             : rebalancePreparation.StrategyRequestsAsync(RebalanceOf(request), cancellationToken);

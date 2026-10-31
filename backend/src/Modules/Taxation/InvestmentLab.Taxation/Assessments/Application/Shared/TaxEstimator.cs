@@ -6,7 +6,11 @@ namespace InvestmentLab.Taxation.Assessments.Application.Shared;
 
 public sealed class TaxEstimator(TaxInputs inputs, IAssessmentRepository assessments) : ITaxEstimator
 {
-    public async Task<TaxEstimateDto> EstimateSalesAsync(Guid accountId, IReadOnlyList<ProposedSaleDto> sales, DateOnly asOf, CancellationToken cancellationToken)
+    public async Task<TaxEstimateDto> EstimateSalesAsync(
+        Guid accountId,
+        IReadOnlyList<ProposedSaleDto> sales,
+        DateOnly asOf,
+        CancellationToken cancellationToken)
     {
         var taxpayer = await inputs.OwnerOfAsync(accountId, cancellationToken) is { } ownerId
             ? await assessments.SerializedAsync(ownerId, () => inputs.TaxpayerAsync(ownerId, cancellationToken), cancellationToken)

@@ -28,7 +28,10 @@ public static class ContributionAllocator
             : subPortfolios.ToDictionary(sub => sub.SubPortfolioId, sub => amount * sub.TargetShare.Value);
     }
 
-    private static List<ContributionShare> RoundToCents(decimal amount, IReadOnlyList<SubPortfolioStanding> subPortfolios, Dictionary<Guid, decimal> raw)
+    private static List<ContributionShare> RoundToCents(
+        decimal amount,
+        IReadOnlyList<SubPortfolioStanding> subPortfolios,
+        Dictionary<Guid, decimal> raw)
     {
         var shares = subPortfolios.Select(sub => new ContributionShare(sub.SubPortfolioId, decimal.Round(raw[sub.SubPortfolioId], 2))).ToList();
         var rest = amount - shares.Sum(share => share.Amount);

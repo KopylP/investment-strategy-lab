@@ -14,12 +14,28 @@ public sealed class PlannedReport
     public List<PlannedAction> Actions { get; private set; }
     public bool IsSuperseded { get; private set; }
 
-    private PlannedReport(Guid reportId, Guid accountId, UserId ownerId, string kind, string period, DateOnly marketAsOf, DateTimeOffset generatedAt, IReadOnlyList<PlannedAction> actions) =>
+    private PlannedReport(
+        Guid reportId,
+        Guid accountId,
+        UserId ownerId,
+        string kind,
+        string period,
+        DateOnly marketAsOf,
+        DateTimeOffset generatedAt,
+        IReadOnlyList<PlannedAction> actions) =>
         (ReportId, AccountId, OwnerId, Kind, Period, MarketAsOf, GeneratedAt, Actions) = (reportId, accountId, ownerId, kind, period, marketAsOf, generatedAt, [.. actions]);
 
     private PlannedReport() => (Kind, Period, Actions) = (null!, null!, null!);
 
-    public static PlannedReport Of(Guid reportId, Guid accountId, UserId ownerId, string kind, string period, DateOnly marketAsOf, DateTimeOffset generatedAt, IReadOnlyList<PlannedAction> actions) =>
+    public static PlannedReport Of(
+        Guid reportId,
+        Guid accountId,
+        UserId ownerId,
+        string kind,
+        string period,
+        DateOnly marketAsOf,
+        DateTimeOffset generatedAt,
+        IReadOnlyList<PlannedAction> actions) =>
         new(reportId, accountId, ownerId, kind, period, marketAsOf, generatedAt, actions);
 
     public void Supersede() => IsSuperseded = true;

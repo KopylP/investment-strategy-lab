@@ -9,7 +9,11 @@ public sealed record RetireSubPortfolioCommand(IReadOnlyDictionary<Guid, decimal
 
 public sealed class RetireSubPortfolioHandler(IAccountRepository accounts, TimeProvider clock)
 {
-    public async Task<Result<AccountSetupDto>> Handle(Guid accountId, Guid subPortfolioId, RetireSubPortfolioCommand command, CancellationToken cancellationToken)
+    public async Task<Result<AccountSetupDto>> Handle(
+        Guid accountId,
+        Guid subPortfolioId,
+        RetireSubPortfolioCommand command,
+        CancellationToken cancellationToken)
     {
         if (accountId == Guid.Empty || await accounts.FindAsync(AccountId.Of(accountId), cancellationToken) is not { } account)
             return AccountErrors.NotFound(accountId);

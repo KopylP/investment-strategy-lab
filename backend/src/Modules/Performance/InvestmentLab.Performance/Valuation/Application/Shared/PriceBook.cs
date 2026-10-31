@@ -9,7 +9,12 @@ namespace InvestmentLab.Performance.Valuation.Application.Shared;
 
 public sealed class PriceBook(IQuoteHistory quotes, IInstrumentCatalog instruments, IFxRates fxRates)
 {
-    public async Task<PriceOn> LoadAsync(IReadOnlyCollection<Guid> instrumentIds, string currency, DateOnly from, DateOnly to, CancellationToken cancellationToken)
+    public async Task<PriceOn> LoadAsync(
+        IReadOnlyCollection<Guid> instrumentIds,
+        string currency,
+        DateOnly from,
+        DateOnly to,
+        CancellationToken cancellationToken)
     {
         var catalog = (await instruments.GetInstruments(cancellationToken)).ToDictionary(instrument => instrument.Id);
         var series = (await quotes.GetQuoteHistory(instrumentIds, from.AddDays(-10), to, cancellationToken))
@@ -48,7 +53,12 @@ public sealed class PriceBook(IQuoteHistory quotes, IInstrumentCatalog instrumen
                 : null;
     }
 
-    public async Task<FxOn> LoadFxAsync(IReadOnlyCollection<string> currencies, string currency, DateOnly from, DateOnly to, CancellationToken cancellationToken)
+    public async Task<FxOn> LoadFxAsync(
+        IReadOnlyCollection<string> currencies,
+        string currency,
+        DateOnly from,
+        DateOnly to,
+        CancellationToken cancellationToken)
     {
         async Task<List<(DateOnly Date, decimal Rate)>?> PlnSeries(string code) => code == "PLN"
             ? null

@@ -9,7 +9,11 @@ public sealed record AssignStrategyCommand(Guid? StrategyId, int? PinnedVersion)
 
 public sealed class AssignStrategyHandler(IAccountRepository accounts)
 {
-    public async Task<Result<AccountSetupDto>> Handle(Guid accountId, Guid subPortfolioId, AssignStrategyCommand command, CancellationToken cancellationToken)
+    public async Task<Result<AccountSetupDto>> Handle(
+        Guid accountId,
+        Guid subPortfolioId,
+        AssignStrategyCommand command,
+        CancellationToken cancellationToken)
     {
         if (accountId == Guid.Empty || await accounts.FindAsync(AccountId.Of(accountId), cancellationToken) is not { } account)
             return AccountErrors.NotFound(accountId);
