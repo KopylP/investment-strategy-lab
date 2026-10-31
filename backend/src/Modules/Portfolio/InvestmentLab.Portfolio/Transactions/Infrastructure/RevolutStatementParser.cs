@@ -7,69 +7,92 @@ namespace InvestmentLab.Portfolio.Transactions.Infrastructure;
 
 internal sealed class RevolutStatementParser : IStatementParser
 {
+    private const char ByteOrderMark = '\uFEFF';
+    private const string NonBreakingSpace = "\u00A0";
+    private const int IdentityLength = 20;
+
     private static readonly string[] Required = ["Date", "Ticker", "Type", "Quantity", "Price per share", "Total Amount", "Currency"];
 
     public string Broker => "Revolut";
 
     public Result<ParsedStatement> Parse(string content)
     {
-        var lines = content.Replace("\r\n", "\n").Split('\n').Where(line => !string.IsNullOrWhiteSpace(line)).ToList();
+        var lines = NonEmptyLines(content);
         if (lines.Count == 0)
             return StatementImportErrors.UnknownFormat("the file is empty");
 
-        var header = Fields(lines[0].TrimStart('﻿'));
+        var header = Fields(lines[0].TrimStart(ByteOrderMark));
         var missing = Required.Where(column => !header.Contains(column, StringComparer.OrdinalIgnoreCase)).ToList();
         if (missing.Count > 0)
             return StatementImportErrors.UnknownFormat($"columns missing: {string.Join(", ", missing)}");
 
-        int Column(string name) => header.FindIndex(column => string.Equals(column, name, StringComparison.OrdinalIgnoreCase));
-
         var rows = new List<StatementRow>();
         var warnings = new List<string>();
-        var seen = new Dictionary<string, int>();
+        var occurrences = new Dictionary<string, int>();
 
         for (var index = 1; index < lines.Count; index++)
         {
-            var fields = Fields(lines[index]);
-            string Field(string name) => Column(name) is var at and >= 0 && at < fields.Count ? fields[at].Trim() : "";
+            var line = new CsvLine(header, Fields(lines[index]));
+            var lineNumber = index + 1;
 
-            if (!DateTimeOffset.TryParse(Field("Date"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var occurredAt))
+            if (!TryReadDate(line, out var occurredAt))
             {
-                warnings.Add($"Рядок {index + 1}: не вдалося прочитати дату «{Field("Date")}» — пропущено.");
+                warnings.Add($"Рядок {lineNumber}: не вдалося прочитати дату «{line["Date"]}» — пропущено.");
                 continue;
             }
 
-            var type = Field("Type");
-            var ticker = Field("Ticker") is { Length: > 0 } t ? t.ToUpperInvariant() : null;
-            var (amountCurrency, amount) = Money(Field("Total Amount"));
-            var (_, price) = Money(Field("Price per share"));
-            var quantity = Number(Field("Quantity"));
-            var currency = Field("Currency") is { Length: 3 } c ? c.ToUpperInvariant() : amountCurrency ?? "";
-
-            var kind = type.ToUpperInvariant() switch
-            {
-                var buy when buy.StartsWith("BUY", StringComparison.Ordinal) => StatementRowKind.Buy,
-                var sell when sell.StartsWith("SELL", StringComparison.Ordinal) => StatementRowKind.Sell,
-                "CASH TOP-UP" => StatementRowKind.Contribution,
-                "CASH WITHDRAWAL" => StatementRowKind.Withdrawal,
-                "DIVIDEND" => StatementRowKind.Dividend,
-                _ => StatementRowKind.Unsupported,
-            };
-
-            if (kind is StatementRowKind.Buy or StatementRowKind.Sell && (quantity is not > 0m || ticker is null))
-                kind = StatementRowKind.Unsupported;
-
-            if (kind is StatementRowKind.Buy or StatementRowKind.Sell && price is not > 0m)
-                price = Math.Abs(amount ?? 0m) / quantity!.Value;
-
-            var key = $"{Field("Date")}|{type}|{ticker}";
-            var occurrence = seen[key] = seen.GetValueOrDefault(key) + 1;
-            var identity = StatementMatcher.ReferencePrefix + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{key}|{occurrence}")))[..20].ToLowerInvariant();
-
-            rows.Add(new StatementRow(index + 1, occurredAt, kind, type, ticker, quantity, price, Math.Abs(amount ?? 0m), currency, identity));
+            rows.Add(ReadRow(line, lineNumber, occurredAt, occurrences));
         }
 
         return new ParsedStatement(Broker, rows, warnings);
+    }
+
+    private static List<string> NonEmptyLines(string content) =>
+        [.. content.Replace("\r\n", "\n").Split('\n').Where(line => !string.IsNullOrWhiteSpace(line))];
+
+    private static bool TryReadDate(CsvLine line, out DateTimeOffset occurredAt) =>
+        DateTimeOffset.TryParse(line["Date"], CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out occurredAt);
+
+    private static StatementRow ReadRow(CsvLine line, int lineNumber, DateTimeOffset occurredAt, Dictionary<string, int> occurrences)
+    {
+        var type = line["Type"];
+        var ticker = line["Ticker"] is { Length: > 0 } symbol ? symbol.ToUpperInvariant() : null;
+        var (amountCurrency, amount) = Money(line["Total Amount"]);
+        var (_, price) = Money(line["Price per share"]);
+        var quantity = Number(line["Quantity"]);
+        var currency = line["Currency"] is { Length: 3 } code ? code.ToUpperInvariant() : amountCurrency ?? "";
+        var totalAmount = Math.Abs(amount ?? 0m);
+
+        var kind = KindOf(type);
+        if (IsTrade(kind) && (quantity is not > 0m || ticker is null))
+            kind = StatementRowKind.Unsupported;
+
+        if (IsTrade(kind) && price is not > 0m)
+            price = totalAmount / quantity!.Value;
+
+        var identity = IdentityOf($"{line["Date"]}|{type}|{ticker}", occurrences);
+
+        return new StatementRow(lineNumber, occurredAt, kind, type, ticker, quantity, price, totalAmount, currency, identity);
+    }
+
+    private static StatementRowKind KindOf(string type) => type.ToUpperInvariant() switch
+    {
+        var buy when buy.StartsWith("BUY", StringComparison.Ordinal) => StatementRowKind.Buy,
+        var sell when sell.StartsWith("SELL", StringComparison.Ordinal) => StatementRowKind.Sell,
+        "CASH TOP-UP" => StatementRowKind.Contribution,
+        "CASH WITHDRAWAL" => StatementRowKind.Withdrawal,
+        "DIVIDEND" => StatementRowKind.Dividend,
+        _ => StatementRowKind.Unsupported,
+    };
+
+    private static bool IsTrade(StatementRowKind kind) => kind is StatementRowKind.Buy or StatementRowKind.Sell;
+
+    private static string IdentityOf(string key, Dictionary<string, int> occurrences)
+    {
+        var occurrence = occurrences[key] = occurrences.GetValueOrDefault(key) + 1;
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes($"{key}|{occurrence}"));
+
+        return StatementMatcher.ReferencePrefix + Convert.ToHexString(hash)[..IdentityLength].ToLowerInvariant();
     }
 
     private static (string? Currency, decimal? Amount) Money(string text)
@@ -118,5 +141,18 @@ internal sealed class RevolutStatementParser : IStatementParser
         fields.Add(current.ToString());
 
         return fields;
+    }
+
+    private sealed record CsvLine(List<string> Header, List<string> Fields)
+    {
+        public string this[string column]
+        {
+            get
+            {
+                var at = Header.FindIndex(name => string.Equals(name, column, StringComparison.OrdinalIgnoreCase));
+
+                return at >= 0 && at < Fields.Count ? Fields[at].Trim() : "";
+            }
+        }
     }
 }

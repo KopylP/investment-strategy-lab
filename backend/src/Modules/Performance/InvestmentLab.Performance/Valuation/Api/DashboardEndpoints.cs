@@ -1,5 +1,6 @@
 using InvestmentLab.BuildingBlocks.Http;
-using InvestmentLab.Performance.Valuation.Application;
+using InvestmentLab.Performance.Valuation.Application.GetAllAccountsDashboard;
+using InvestmentLab.Performance.Valuation.Application.GetDashboard;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -22,17 +23,17 @@ internal static class DashboardEndpoints
     }
 
     private static async Task<IResult> GetDashboard(
-        Guid accountId, string? period, DashboardQueries queries, CancellationToken cancellationToken)
+        Guid accountId, string? period, GetDashboardHandler handler, CancellationToken cancellationToken)
     {
-        var dashboard = await queries.Get(accountId, period, cancellationToken);
+        var dashboard = await handler.Handle(accountId, period, cancellationToken);
 
         return dashboard.ToHttpResult();
     }
 
     private static async Task<IResult> GetAllAccountsDashboard(
-        string? currency, string? period, DashboardQueries queries, CancellationToken cancellationToken)
+        string? currency, string? period, GetAllAccountsDashboardHandler handler, CancellationToken cancellationToken)
     {
-        var dashboard = await queries.GetAll(currency, period, cancellationToken);
+        var dashboard = await handler.Handle(currency, period, cancellationToken);
 
         return dashboard.ToHttpResult();
     }
