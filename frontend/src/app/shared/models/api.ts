@@ -1,4 +1,3 @@
-/** Shapes the API returns that several features read (accounts, instruments, holdings). */
 
 export interface SubPortfolioSetup {
   id: string;
@@ -34,7 +33,6 @@ export interface Instrument {
   group: string | null;
   isAccumulating: boolean | null;
   providerSymbols: string[];
-  /** What the company or fund is, as Yahoo writes it (English); null when Yahoo has none. */
   description: string | null;
 }
 
@@ -57,10 +55,8 @@ export interface Position {
 export interface SubPortfolioHoldings {
   subPortfolioId: string;
   name: string;
-  /** In the account currency. */
   cash: number;
   positions: Position[];
-  /** Balances the broker keeps in other currencies (USD after selling a US stock), each in its own currency. */
   foreignCash?: { currency: string; amount: number }[];
 }
 
@@ -80,13 +76,11 @@ export interface LatestPrice {
   isStale: boolean;
 }
 
-/** The ticker people know (Yahoo symbol without the provider prefix), else the name. */
 export function symbolOf(instrument: Pick<Instrument, 'providerSymbols' | 'name'>): string {
   const yahoo = instrument.providerSymbols.find((symbol) => symbol.startsWith('yfinance:'));
   return yahoo ? yahoo.slice('yfinance:'.length) : instrument.name;
 }
 
-/** Today in the browser's time zone as yyyy-MM-dd. */
 export function today(): string {
   return toIsoDate(new Date());
 }

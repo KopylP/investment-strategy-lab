@@ -32,11 +32,6 @@ interface SleeveDraft {
 
 type Preset = 'simple' | 'balanced' | 'custom';
 
-/**
- * Opening an account as a guided path for a beginner: what the account is, how the money is split and why, which
- * strategy runs each part, how much goes in every month, when the reports come (the strategy's time or the user's own,
- * e.g. on payday) and what happens next. Every step explains its terms.
- */
 @Component({
   selector: 'app-account-new-page',
   imports: [
@@ -57,7 +52,6 @@ export class AccountNewPage {
 
   private readonly strategiesResource = resource({
     loader: async () => {
-      // A beginner never has to "create strategies first": the standard ones are made here when missing.
       let strategies = await this.strategiesApi.list();
       if (!strategies.some((strategy) => strategy.status === 'Active')) {
         await this.strategiesApi.createDefaults();
@@ -85,7 +79,6 @@ export class AccountNewPage {
     contributionPolicy: 'FillUnderweight',
     driftBandPercent: 5,
   });
-  /** The user's own time per report code; a report not listed comes when its strategy says. */
   protected readonly ownTimes = signal<Record<string, ReportTiming>>({});
   protected readonly showAdvanced = signal(false);
   protected readonly saving = signal(false);
@@ -108,7 +101,6 @@ export class AccountNewPage {
     () => this.sleeves().length > 0 && this.total() === 100 && this.sleeves().every((sleeve) => sleeve.name.trim() && sleeve.targetSharePercent > 0 && sleeve.strategyId),
   );
 
-  /** The reports the chosen strategies make, one per code (in the order they declare them), with the strategy's time. */
   protected readonly reports = computed(() => {
     const strategies = new Map(this.strategies().map((strategy) => [strategy.id, strategy]));
     const types = new Map((this.catalogResource.value() ?? []).map((type) => [type.code, type]));
@@ -133,7 +125,6 @@ export class AccountNewPage {
     { label: 'Свій час', value: true },
   ];
 
-  /** "1 листопада — рапорт: внести 140 € у EU momentum, 60 € у US momentum": the plan in words before anything is created. */
   protected readonly summary = computed(() => {
     const byId = new Map(this.strategies().map((strategy) => [strategy.id, strategy]));
     return this.sleeves().map((sleeve) => {
@@ -149,7 +140,6 @@ export class AccountNewPage {
   });
 
   constructor() {
-    // The first preset needs the strategies: applied once they arrive.
     effect(() => {
       if (this.strategies().length) untracked(() => !this.sleeves().length && this.choosePreset(this.preset()));
     });
@@ -179,7 +169,6 @@ export class AccountNewPage {
     this.sleeves.update((sleeves) => sleeves.filter((sleeve) => sleeve.key !== key));
   }
 
-  /** Makes the shares add up to 100 by giving the rest to the last sub-portfolio. */
   protected balance(): void {
     const sleeves = this.sleeves();
     if (!sleeves.length) return;
@@ -187,7 +176,6 @@ export class AccountNewPage {
     this.update(sleeves.at(-1)!.key, { targetSharePercent: Math.max(1, Math.round((100 - others) * 100) / 100) });
   }
 
-  /** Own time starts from the strategy's, so the user changes only what differs (the day of the month for payday). */
   protected useOwn(code: string, strategyTiming: ReportTiming, own: boolean): void {
     this.ownTimes.update((times) => {
       const { [code]: _, ...rest } = times;
@@ -245,7 +233,6 @@ export class AccountNewPage {
 
   protected readonly createdId = signal<string | null>(null);
 
-  /** The account exists already: a time the API refuses is reported, and can be set again on the account's page. */
   private async saveOwnTimes(accountId: string): Promise<void> {
     for (const report of this.reports()) {
       if (!report.own) continue;
@@ -261,7 +248,6 @@ export class AccountNewPage {
   }
 
   protected async go(path: string[]): Promise<void> {
-    // The finished wizard is left behind: «back» from the new account does not reopen it.
     await this.router.navigate(path, { replaceUrl: true });
   }
 

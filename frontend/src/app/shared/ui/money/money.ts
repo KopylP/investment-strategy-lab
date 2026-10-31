@@ -2,10 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { DisplayCurrency } from '../../../core/context/display-currency';
 import { formatMoney } from '../../pipes/format';
 
-/**
- * An amount shown in the user's display currency, with the original (operation/account) currency underneath when
- * they differ. `inline` puts the original next to it in brackets, for table cells and sentences.
- */
 @Component({
   selector: 'app-money',
   template: `
@@ -14,7 +10,6 @@ import { formatMoney } from '../../pipes/format';
       @if (inline()) {
         <span class="text-muted-color text-[0.8em] whitespace-nowrap"> ({{ original }})</span>
       } @else {
-        <!-- Scales with the amount above (a hero figure gets a readable line), never below 0.75rem. -->
         <span class="block text-muted-color text-[max(0.75rem,0.36em)] font-medium tracking-normal leading-snug mt-0.5 whitespace-nowrap">{{ original }}</span>
       }
     }
@@ -28,7 +23,6 @@ export class Money {
   readonly currency = input.required<string>();
   readonly digits = input(2);
   readonly inline = input(false);
-  /** Hide the original amount (e.g. on a tile where it would only add noise). */
   readonly hideOriginal = input(false);
 
   private readonly converted = computed(() => this.display.convert(this.amount(), this.currency()));

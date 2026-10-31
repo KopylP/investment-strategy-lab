@@ -10,7 +10,6 @@ interface JournalEntry {
   trade: { instrumentId: string; side: string; quantity: number; price: number } | null;
 }
 
-/** Buys and sells of the current account (not reversed), for drawing on price charts. */
 @Injectable({ providedIn: 'root' })
 export class AccountTrades {
   private readonly api = inject(ApiClient);

@@ -16,7 +16,6 @@ export interface FillDialogData {
   mode: 'full' | 'partial';
 }
 
-/** What was really done: defaults are the plan, the user corrects quantity, price, fee and date. */
 @Component({
   selector: 'app-fill-dialog',
   imports: [ReactiveFormsModule, Button, DatePicker, InputNumber, Textarea, Message, MoneyPipe, QuantityPipe],

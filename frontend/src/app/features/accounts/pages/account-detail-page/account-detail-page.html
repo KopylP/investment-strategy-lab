@@ -27,10 +27,8 @@
       </ng-template>
       <ng-template #body let-sub>
         <tr>
-          <!-- A long name breaks inside a word rather than let a phone's table scroll sideways. -->
           <td class="[overflow-wrap:anywhere] sm:[overflow-wrap:normal]">
             <div class="font-medium">{{ sub.name }}</div>
-            <!-- Phone: parking and limits under the name instead of their own columns. -->
             <div class="sm:hidden text-xs text-muted-color">
               кеш: {{ sub.cashInstrumentId ? instruments.symbol(sub.cashInstrumentId) : 'як у стратегії' }}
               @if (sub.maxPositionWeight) { · позиція ≤ {{ sub.maxPositionWeight | percent: 0 }} }

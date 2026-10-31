@@ -2,7 +2,6 @@ import { computed, inject, Injectable, resource } from '@angular/core';
 import { ApiClient } from '../api/api-client';
 import { AccountContext } from '../context/account-context';
 
-/** How many report actions of the current account wait for a mark — the badge in the menu. */
 @Injectable({ providedIn: 'root' })
 export class OpenActionsBadge {
   private readonly api = inject(ApiClient);

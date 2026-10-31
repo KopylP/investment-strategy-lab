@@ -13,10 +13,8 @@ export interface ChartPalette {
   series: string[];
 }
 
-/** Chart colours read from the theme tokens (§11.4), recomputed when the dark mode switches. */
 @Injectable({ providedIn: 'root' })
 export class ChartTheme {
-  // Bumped when <html> changes class (the dark mode switch lands after a view transition), so colours are read anew.
   private readonly themeVersion = signal(0);
 
   constructor() {
@@ -44,7 +42,6 @@ export class ChartTheme {
   });
 }
 
-/** Hex token colour with transparency for fills ("#6366f1" → "#6366f159"); other formats are returned as they are. */
 export function withAlpha(color: string, alpha: number): string {
   const hex = Math.round(Math.min(1, Math.max(0, alpha)) * 255).toString(16).padStart(2, '0');
   return /^#[0-9a-f]{6}$/i.test(color) ? `${color}${hex}` : color;

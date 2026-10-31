@@ -19,7 +19,6 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideAnimationsAsync(),
     provideRouter(routes, withComponentInputBinding(), withInMemoryScrolling({ scrollPositionRestoration: 'enabled' }), withNavigationErrorHandler(reloadWithNewIngressSession)),
-    // Created before the first navigation, so the way back is known from the first page on.
     provideEnvironmentInitializer(() => inject(NavigationHistory)),
     provideHttpClient(withFetch(), withInterceptors([basePathInterceptor, unauthorizedInterceptor])),
     providePrimeNG({
@@ -28,8 +27,6 @@ export const appConfig: ApplicationConfig = {
         options: { darkModeSelector: '.app-dark', cssLayer: { name: 'primeng', order: 'theme, base, primeng' } },
       },
       translation: ukTranslation,
-      // Dropdowns, date pickers and menus open on <body>, placed within the screen; inside their field ('self') a list
-      // wider than the room to the right of it stretched the page sideways on a phone.
       overlayAppendTo: 'body',
     }),
     { provide: LOCALE_ID, useValue: 'uk' },

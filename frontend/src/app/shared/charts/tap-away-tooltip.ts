@@ -2,10 +2,6 @@ import type { Chart, Plugin } from 'chart.js';
 
 const listeners = new WeakMap<Chart, (event: PointerEvent) => void>();
 
-/**
- * Closes a chart's tooltip when the pointer goes down anywhere but the chart. A touch never sends the "mouseout" that
- * hides it on a desktop, so on a phone the tooltip would stay over the lines until the chart is tapped again.
- */
 export const tapAwayTooltip: Plugin = {
   id: 'tapAwayTooltip',
   afterInit(chart) {

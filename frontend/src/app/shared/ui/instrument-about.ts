@@ -1,13 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 
-/** The short part of a description: its first sentences up to this length, but at least one. */
 const shortLength = 240;
 const shortSentences = 2;
 
-/**
- * What an instrument is, as Yahoo describes it (English): a couple of sentences, and the rest behind «Детальніше».
- * Nothing at all when there is no description.
- */
 @Component({
   selector: 'app-instrument-about',
   template: `
@@ -27,7 +22,6 @@ const shortSentences = 2;
 export class InstrumentAbout {
   readonly text = input<string | null | undefined>(null);
 
-  // Kept per text: the same component showing another instrument starts short again.
   protected readonly expandedText = signal<string | null>(null);
   protected readonly expanded = computed(() => !!this.text() && this.expandedText() === this.text());
 
@@ -45,7 +39,6 @@ export class InstrumentAbout {
   });
 }
 
-/** English sentences with their trailing spaces; "Inc. designs" stays one sentence (no capital after the dot). */
 function splitSentences(text: string): string[] {
   if (typeof Intl.Segmenter === 'function')
     return [...new Intl.Segmenter('en', { granularity: 'sentence' }).segment(text)].map((part) => part.segment);

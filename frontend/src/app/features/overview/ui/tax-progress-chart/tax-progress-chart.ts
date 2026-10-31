@@ -6,10 +6,6 @@ import { toIsoDate } from '../../../../shared/models/api';
 import { Viewport } from '../../../../shared/ui/viewport';
 import { TaxProgress } from '../../data-access/overview-store';
 
-/**
- * The year's PIT-38 tax day by day since 1 January (a step on every day with a sale or a dividend); above the threshold,
- * when there is one, the line and its fill turn red. The threshold only colours: the axis keeps following the tax.
- */
 @Component({
   selector: 'app-tax-progress-chart',
   imports: [LiveChart],
@@ -21,10 +17,8 @@ export class TaxProgressChart {
   protected readonly viewport = inject(Viewport);
 
   readonly progress = input.required<TaxProgress>();
-  /** The threshold in PLN (share × all accounts' value); null — none. */
   readonly threshold = input<number | null>(null);
 
-  /** Every day from 1 January to today (or 31 December of a past year), carrying the last known tax. */
   private readonly days = computed(() => {
     const { year, points } = this.progress();
     const today = new Date();
@@ -97,7 +91,6 @@ interface ChartContext {
   chart: { ctx: CanvasRenderingContext2D; chartArea?: { top: number; bottom: number }; scales: { y?: { getPixelForValue: (value: number) => number } } };
 }
 
-/** A colour that switches at the threshold's height on the chart (a vertical gradient with a hard stop); null — always below. */
 function aboveThreshold(threshold: number | null, below: string, above: string): string | ((context: ChartContext) => string | CanvasGradient) {
   if (threshold === null) return below;
   return ({ chart }) => {

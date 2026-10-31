@@ -58,7 +58,6 @@
         @if (!store.openReports().length) { <p-button label="До рапортів" icon="pi pi-bolt" size="small" routerLink="/reports" styleClass="mt-3" /> }
       </div>
     } @else {
-      <!-- Hero: what the portfolio is worth and how it did — the two things people open a finance app for. -->
       <div class="card">
         <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-4">
           <div>
@@ -105,7 +104,6 @@
         }
       </div>
 
-      <!-- Secondary metrics: one quiet strip instead of five equal tiles. -->
       <div class="card py-4">
         <div class="app-tiles">
           <div class="px-1 sm:px-4 lg:border-r border-surface">
@@ -207,7 +205,6 @@
                   </td>
                   <td class="text-right">
                     <app-money [amount]="account.value" [currency]="d.currency" [digits]="0" />
-                    <!-- Phone: share and TWR under the value instead of their own columns. -->
                     <div class="sm:hidden text-xs text-muted-color whitespace-nowrap">{{ account.share | percent }} · TWR <span [appSignedValue]="account.twr">{{ account.twr | signedPercent }}</span></div>
                   </td>
                   <td class="text-right font-medium hidden sm:table-cell whitespace-nowrap">{{ account.share | percent }}</td>

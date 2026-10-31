@@ -44,7 +44,6 @@
         <ng-template #body let-order>
           <tr>
             <td class="hidden sm:table-cell"><p-tag [value]="order.kindLabel" [severity]="order.severity" /></td>
-            <!-- Phone: the action above the ticker; its own column leaves too little for a big amount. -->
             <td class="font-medium"><div class="sm:hidden mb-1"><p-tag [value]="order.kindLabel" [severity]="order.severity" /></div>{{ order.symbol }}</td>
             <td class="text-right hidden sm:table-cell">{{ order.quantity | quantity }}</td>
             <td class="text-right whitespace-nowrap">{{ order.amount | money: currency() }}</td>
@@ -76,7 +75,6 @@
           </tr>
         </ng-template>
         <ng-template #footer>
-          <!-- The totals are amounts; a phone shows only the weights, so the row has nothing to sum. -->
           <tr class="hidden sm:table-row">
             <td>Разом</td>
             <td class="text-right hidden sm:table-cell">{{ s.totalBefore | money: currency() }}</td>
@@ -93,7 +91,6 @@
   @if (s.scores; as table) {
     <div>
       <h3 class="text-lg font-semibold mt-4 mb-3">{{ table.title }}</h3>
-      <!-- The strategy names the columns; a phone shows only those it marks compact. -->
       <p-table [value]="table.rows" [tableStyleClass]="table.columns.length > 3 ? 'sm:min-w-[56rem]' : 'sm:min-w-[40rem]'" size="small" [scrollable]="true">
         <ng-template #header>
           <tr>
@@ -175,7 +172,6 @@
               }
             </td>
           </tr>
-          <!-- Phone: the signals take the whole width under their position; a column of their own squeezes the numbers. -->
           @if (signalled) {
             <tr class="sm:hidden">
               <td colspan="3" class="pt-0!">

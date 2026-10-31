@@ -1,5 +1,4 @@
 @if (viewport.phone()) {
-  <!-- Phone: one bar per sub-portfolio (fill = actual share, tick = target) instead of the rings and a five-column table. -->
   <div class="flex flex-col gap-4">
     @for (sub of dashboard().subPortfolios; track sub.name; let i = $index) {
       <div>

@@ -6,7 +6,6 @@ import { ToggleSwitch } from 'primeng/toggleswitch';
 import { Tooltip } from 'primeng/tooltip';
 import { TapTooltip } from '../../../../shared/ui/tap-tooltip';
 
-/** Plan settings in the words of the user: percent instead of fractions. */
 export interface PlanSettingsVm {
   monthlyContribution: number;
   minTrade: number;

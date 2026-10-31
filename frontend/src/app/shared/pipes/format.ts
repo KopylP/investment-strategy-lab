@@ -5,10 +5,6 @@ export function formatMoney(amount: number | null | undefined, currency: string,
   return new Intl.NumberFormat(locale, { style: 'currency', currency, minimumFractionDigits: digits, maximumFractionDigits: digits }).format(amount);
 }
 
-/**
- * A quantity exactly as stored: the API keeps up to 8 decimals (fractional shares), so all 8 are shown — fewer would
- * round, and a rounded-up quantity is more than the plan or the holding has.
- */
 export function formatQuantity(quantity: number | null | undefined): string {
   if (quantity === null || quantity === undefined) return '—';
   return new Intl.NumberFormat(locale, { maximumFractionDigits: 8 }).format(quantity);
@@ -41,15 +37,10 @@ export function formatPeriod(period: string): string {
   return `${name} ${year}`;
 }
 
-/** "26.04.2026" → "26.04.26": a chart axis label on a phone. */
 export function shortenDate(label: string): string {
   return /^\d{2}\.\d{2}\.\d{4}$/.test(label) ? `${label.slice(0, 6)}${label.slice(8)}` : label;
 }
 
-/**
- * An axis number without the currency ("1 150", "125 тис.") — the currency is in the figure above the chart. Short
- * scale only from 100 000: below it neighbouring ticks would round to the same label.
- */
 export function formatAxisNumber(value: number, digits = 0): string {
   return Math.abs(value) >= 100_000
     ? new Intl.NumberFormat(locale, { notation: 'compact', maximumFractionDigits: 1 }).format(value)

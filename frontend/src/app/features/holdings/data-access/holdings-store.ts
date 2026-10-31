@@ -10,14 +10,11 @@ export interface PositionVm {
   instrumentId: string;
   symbol: string;
   name: string;
-  /** Yahoo's description (English), null when there is none. */
   description: string | null;
   quantity: number;
   averageCost: number;
   costBasis: number;
-  /** Latest close in the account currency (converted from the trading currency). */
   price: number | null;
-  /** The close as quoted, in the instrument's trading currency. */
   quotedPrice: number | null;
   quoteCurrency: string;
   priceDate: string | null;
@@ -32,13 +29,10 @@ export interface PositionVm {
 export interface SleeveVm {
   id: string;
   name: string;
-  /** In the all-accounts mode: whose sub-portfolio it is (shares are then within that account). */
   accountName: string | null;
   targetShare: number;
   actualShare: number;
-  /** All cash in the account currency (other currencies at the latest NBP rate). */
   cash: number;
-  /** The cash as the broker keeps it: account currency first, then every other balance in its own currency. */
   cashParts: { currency: string; amount: number }[];
   value: number;
   costBasis: number;
@@ -46,10 +40,6 @@ export interface SleeveVm {
   positions: PositionVm[];
 }
 
-/**
- * What the account holds (or all accounts together), valued at the latest quotes: per sub-portfolio, with virtual lots.
- * All accounts are shown in the display currency at the latest NBP rate.
- */
 @Injectable()
 export class HoldingsStore {
   private readonly api = inject(ApiClient);
@@ -87,13 +77,11 @@ export class HoldingsStore {
     if (!data) return [];
     return data.all.flatMap((holdings) => {
       const account = this.accounts.accounts().find((candidate) => candidate.id === holdings.accountId);
-      // One account stays in its own currency; all of them are summed in the display currency.
       const factor = holdings.currency === currency ? 1 : (this.fx.rate(holdings.currency, currency) ?? 1);
       return this.sleevesOf(holdings, currency, data.prices, account?.subPortfolios ?? [], factor, this.isAll() ? (account?.name ?? '') : null);
     });
   });
 
-  /** `currency` is the one shown; `factor` converts the account's own amounts into it. */
   private sleevesOf(
     holdings: AccountHoldings,
     currency: string,
@@ -107,7 +95,6 @@ export class HoldingsStore {
     const sleeves = data.holdings.subPortfolios.map((sub) => {
       const positions = sub.positions.map((position) => {
         const quote = data.prices.get(position.instrumentId);
-        // Quotes are in the trading currency (AVGO in USD); positions are kept in the account currency.
         const rate = quote ? this.fx.rate(quote.currency, currency) : null;
         const price = quote && rate !== null ? quote.close * rate : null;
         const value = price !== null ? position.quantity * price : position.costBasis * factor;
@@ -169,7 +156,6 @@ export class HoldingsStore {
 
   readonly positionCount = computed(() => new Set(this.sleeves().flatMap((sleeve) => sleeve.positions.map((position) => position.instrumentId))).size);
 
-  /** Shares of the whole account by instrument (summed over sub-portfolios) and cash, biggest first. */
   readonly composition = computed(() => {
     const total = this.totals().value;
     if (!total) return [];

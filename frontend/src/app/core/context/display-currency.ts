@@ -7,10 +7,6 @@ interface LatestFxRates {
   toPln: Record<string, number>;
 }
 
-/**
- * The currency the user wants to see money in (chosen in the top bar, kept in the profile). Amounts are converted through PLN at the latest NBP
- * mid rates — good for reading, not for taxes. Without a rate the amount stays in its own currency.
- */
 @Injectable({ providedIn: 'root' })
 export class DisplayCurrency {
   private readonly api = inject(ApiClient);
@@ -33,13 +29,11 @@ export class DisplayCurrency {
   readonly options = ['EUR', 'USD', 'PLN'];
 
   constructor() {
-    // A fresh sign-in starts from the profile again.
     effect(() => {
       if (!this.auth.isSignedIn()) this.chosen.set(null);
     });
   }
 
-  /** How many units of `to` one unit of `from` costs; null when a rate is missing. */
   rate(from: string, to: string): number | null {
     if (from === to) return 1;
     const toPln = this.ratesResource.value()?.toPln;
@@ -48,7 +42,6 @@ export class DisplayCurrency {
     return fromPln && targetPln ? fromPln / targetPln : null;
   }
 
-  /** The amount in the display currency, or null when there is no display currency or no rate. */
   convert(amount: number | null | undefined, from: string): number | null {
     const target = this.code();
     if (amount === null || amount === undefined || !target) return null;
@@ -56,7 +49,6 @@ export class DisplayCurrency {
     return rate === null ? null : amount * rate;
   }
 
-  /** Switches at once and keeps it in the profile. */
   async choose(code: string): Promise<void> {
     this.chosen.set(code);
     const profile = this.profileResource.value() ?? (await this.auth.getProfile());

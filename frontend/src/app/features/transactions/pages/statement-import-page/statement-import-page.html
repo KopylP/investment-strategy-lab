@@ -86,7 +86,6 @@
                     }
                   </div>
                 }
-                <!-- Phone: the sub-portfolio under the instrument instead of a third column. -->
                 <p-select [options]="current.subPortfolios" optionLabel="name" optionValue="id" [ngModel]="mapping.subPortfolioId"
                           (ngModelChange)="chooseSub(mapping, $event)" placeholder="Під-портфель" appendTo="body" class="sm:hidden" styleClass="w-full" />
               </div>

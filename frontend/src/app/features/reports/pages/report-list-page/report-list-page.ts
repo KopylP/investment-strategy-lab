@@ -28,11 +28,9 @@ export class ReportListPage {
   protected readonly store = inject(ReportListStore);
 
   protected readonly icon = reportIcon;
-  /** The rebalance report whose contribution is being asked for. */
   protected readonly asking = signal<ScheduledReport | null>(null);
   protected readonly contribution = signal<number | null>(null);
 
-  /** A rebalance report asks for the month's contribution first; any other is made at once. */
   protected start(report: ScheduledReport): void {
     if (report.mode !== 'rebalance') {
       void this.store.generate(report);
@@ -47,7 +45,6 @@ export class ReportListPage {
     if (!report) return;
     const settingsAmount = this.store.monthlyContribution();
     const amount = this.contribution();
-    // The settings amount is sent as "default" so a contribution already paid this month is not planned twice (D14).
     await this.store.generate(report, amount === settingsAmount ? null : amount);
     this.asking.set(null);
   }

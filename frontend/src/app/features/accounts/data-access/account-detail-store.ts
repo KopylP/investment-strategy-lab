@@ -6,7 +6,6 @@ import { AccountSetup } from '../../../shared/models/api';
 import { PlanSettingsVm } from '../ui/plan-settings-form/plan-settings-form';
 import { AccountsApi, normalizeToHundred, SubPortfolioInput } from './accounts-api';
 
-/** One account: sub-portfolios, their shares and strategies, plan settings, one-off import. */
 @Injectable()
 export class AccountDetailStore {
   private readonly api = inject(AccountsApi);
@@ -59,7 +58,6 @@ export class AccountDetailStore {
     return this.run(`strategy-${subPortfolioId}`, () => this.api.assignStrategy(this.requireId(), subPortfolioId, strategyId, null), 'Стратегію призначено');
   }
 
-  /** The new sub-portfolio takes its share; the others shrink in proportion. */
   addSubPortfolio(input: SubPortfolioInput): Promise<boolean> {
     const remaining = 100 - input.targetSharePercent;
     const others: Record<string, number> = Object.fromEntries(this.active().map((sub) => [sub.id, Math.round(sub.targetShare * remaining * 100) / 100]));
@@ -72,7 +70,6 @@ export class AccountDetailStore {
     return this.run('add', () => this.api.addSubPortfolio(this.requireId(), input, others), 'Під-портфель додано');
   }
 
-  /** The remaining sub-portfolios grow in proportion to keep 100%. */
   retire(subPortfolioId: string): Promise<boolean> {
     const remaining = Object.fromEntries(this.active().filter((sub) => sub.id !== subPortfolioId).map((sub) => [sub.id, sub.targetShare * 100]));
     return this.run(`retire-${subPortfolioId}`, () => this.api.retire(this.requireId(), subPortfolioId, normalizeToHundred(remaining)), 'Під-портфель виведено');

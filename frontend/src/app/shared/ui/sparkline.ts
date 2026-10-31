@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
-/** A tiny trend line (no axes): gain colour when the series ends higher than it started, loss colour otherwise. */
 @Component({
   selector: 'app-sparkline',
   template: `

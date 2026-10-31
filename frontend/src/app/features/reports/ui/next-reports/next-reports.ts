@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { RouterLink } from '@angular/router';
 import { nextLabel, reportIcon, ReportSchedule, scheduleLabel, upcomingReports } from '../../models/report-schedule';
 
-/** When to expect the account's next reports, soonest first: a note above the list of reports, the schedule on hover. */
 @Component({
   selector: 'app-next-reports',
   imports: [RouterLink],

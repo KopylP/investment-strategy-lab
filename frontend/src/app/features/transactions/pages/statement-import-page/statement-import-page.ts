@@ -58,7 +58,6 @@ export class StatementImportPage {
 
   protected readonly onlyChanges = signal(false);
 
-  /** `?importId=` opens an upload started elsewhere (the report's "load operations"). */
   readonly importId = input<string>();
 
   constructor() {
@@ -98,7 +97,6 @@ export class StatementImportPage {
     }));
   });
 
-  /** Why "Імпортувати" is disabled, in words; null when it is not. */
   protected readonly blockers = computed(() => {
     const current = this.store.current();
     if (!current || this.store.canConfirm()) return null;

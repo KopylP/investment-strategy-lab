@@ -45,7 +45,6 @@ export class TaxYearPage {
     if (await this.store.addLoss(year, amount, this.lossUsed() ?? 0)) this.lossAmount.set(null);
   }
 
-  /** Differences under a złoty are the broker's own rounding and rates, not a disagreement. */
   protected brokerDifference(sale: Realization): boolean {
     return sale.brokerGainPln !== null && Math.abs(sale.gainPln - sale.brokerGainPln) >= 1;
   }

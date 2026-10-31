@@ -1,15 +1,9 @@
 import { Directive, ElementRef, inject, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
 
-/**
- * Drag and drop for a file field: put it on the element (usually a `<label>`) that holds an `<input type="file">`.
- * A dropped file goes into that input and fires its `change`, so the page handles it exactly like a chosen one;
- * the input's `accept` and `disabled` are honoured.
- */
 @Directive({
   selector: '[appFileDrop]',
   host: {
-    // While a file is over it: a dashed primary outline and a light tint, in both themes.
     '[style.outline]': "over() ? '2px dashed var(--p-primary-color)' : null",
     '[style.outline-offset]': "over() ? '2px' : null",
     '[style.background]': "over() ? 'color-mix(in srgb, var(--p-primary-color) 10%, transparent)' : null",
@@ -24,7 +18,6 @@ export class FileDrop {
   private readonly messages = inject(MessageService);
 
   protected readonly over = signal(false);
-  // dragenter/dragleave also fire for every child the pointer crosses.
   private depth = 0;
 
   protected enter(event: DragEvent): void {
@@ -73,7 +66,6 @@ export class FileDrop {
   }
 }
 
-/** The same check the file picker makes: an extension (`.csv`) or a media type (`text/csv`) from `accept`. */
 function matches(file: File, accept: string): boolean {
   const allowed = accept.split(',').map((type) => type.trim().toLowerCase()).filter(Boolean);
   if (!allowed.length) return true;

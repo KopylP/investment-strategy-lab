@@ -16,20 +16,14 @@ export class ReportsApi {
     return this.api.get<ReportDetailsDto>(`/api/rebalancing/reports/${reportId}`);
   }
 
-  /** Which reports the account's strategies declare, and when the next ones come. */
   schedule(accountId: string): Promise<ReportSchedule> {
     return this.api.get<ReportSchedule>(`/api/rebalancing/accounts/${accountId}/report-schedule`);
   }
 
-  /**
-   * Asks for one of the declared reports by its code; the contribution counts for rebalance reports only. The report
-   * is made in the background once the strategies have answered: follow the request.
-   */
   generate(accountId: string, code: string, contribution: number | null = null): Promise<{ requestId: string }> {
     return this.api.post(`/api/rebalancing/accounts/${accountId}/reports`, { code, contribution });
   }
 
-  /** Reports being made for the account, and those finished in the last day. */
   requests(accountId: string): Promise<ReportRequestDto[]> {
     return this.api.get<ReportRequestDto[]>('/api/rebalancing/report-requests', { accountId });
   }

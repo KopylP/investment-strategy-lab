@@ -1,7 +1,6 @@
 import { ActionKind, ActionStatus, FillDto, PlanReviewDto, ReportKind, ReportStatus, SectionColumnDto, SectionRiskDto, TaxEstimateDto } from './report-dto';
 
 export interface ReportSummaryVm {
-  /** Which of the strategies' reports this is: "generate again" makes the same one. */
   code: string;
   id: string;
   accountId: string;
@@ -22,7 +21,6 @@ export interface ReportSummaryVm {
   accountName: string;
 }
 
-/** A report being made (or one that could not be made): a row of the list until the report itself is there. */
 export interface ReportRequestVm {
   id: string;
   code: string;
@@ -31,12 +29,10 @@ export interface ReportRequestVm {
   triggerLabel: string;
   status: 'Pending' | 'Failed';
   requestedAt: string;
-  /** "1 з 2 стратегій": how many have answered; null while it is not known yet. */
   progressLabel: string | null;
   error: string | null;
 }
 
-/** A row of the reports list: a report, or one still being made. */
 export type ReportListRow = { id: string; report: ReportSummaryVm; request?: never } | { id: string; request: ReportRequestVm; report?: never };
 
 export interface AllocationPartVm {
@@ -63,7 +59,6 @@ export interface ReportActionVm {
   remainingQuantity: number;
   fillSummary: string | undefined;
   fills: FillDto[];
-  /** A fill not yet confirmed by the journal. */
   awaitingJournal: boolean;
   skipReason: string | null;
   rejection: string | null;
@@ -72,13 +67,11 @@ export interface ReportActionVm {
   canSkip: boolean;
   canUndo: boolean;
   allocations: AllocationPartVm[];
-  /** "≈ податок 12 zł (зиск 63 zł)" for sells. */
   taxLabel: string | null;
   hasBreakdown: boolean;
   isSell: boolean;
 }
 
-/** The "why" table: whatever columns the strategy described, in its order. */
 export interface ScoreTableVm {
   title: string;
   instrumentLabel: string;
@@ -91,7 +84,6 @@ export interface ScoreVm {
   name: string;
   group: string;
   rank: number | null;
-  /** One per column of the table. */
   values: (number | boolean | string | null)[];
   status: string;
   reason: string;
@@ -185,7 +177,6 @@ export interface ReportProgressVm {
   percent: number;
 }
 
-/** What the user entered when marking an action. */
 export interface FillInput {
   quantity: number;
   price: number;

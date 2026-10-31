@@ -26,10 +26,6 @@ interface StatementUpload {
   counts: { toRecord: number; needsMapping: number; alreadyImported: number };
 }
 
-/**
- * "Load operations": an optional fresh Revolut statement goes to the journal first, then journal entries made since
- * the report are matched to its actions and, on confirmation, mark them (without a second journal entry).
- */
 @Component({
   selector: 'app-load-operations-dialog',
   imports: [RouterLink, Button, Message, Skeleton, Tag, FileDrop, DatePipe, MoneyPipe, QuantityPipe],

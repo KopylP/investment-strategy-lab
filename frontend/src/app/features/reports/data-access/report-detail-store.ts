@@ -7,10 +7,6 @@ import { FillInput, ReportActionVm } from '../models/report-vm';
 import { ReportsApi } from './reports-api';
 import { summarizeProgress, toReportVm } from './report-mapper';
 
-/**
- * One report as a working document. Marks go to the API at once; the journal answers asynchronously (outbox), so
- * after a command the report is refreshed a few times until every fill is confirmed or taken back.
- */
 @Injectable()
 export class ReportDetailStore {
   private readonly api = inject(ReportsApi);
@@ -40,7 +36,6 @@ export class ReportDetailStore {
 
   constructor() {
     inject(DestroyRef).onDestroy(() => this.refreshTimers.forEach(clearTimeout));
-    // Opened from a link (a notification, another account's list): the top bar follows the report's account.
     effect(() => {
       const accountId = this.report()?.summary.accountId;
       if (accountId && accountId !== this.accounts.currentId()) this.accounts.focus(accountId);
@@ -67,7 +62,6 @@ export class ReportDetailStore {
     return this.runCommand(action, () => this.api.undo(this.requireId(), action.id), 'Відмітку скасовано, операцію в журналі сторновано');
   }
 
-  /** After actions were marked from the journal elsewhere (the "load operations" dialog). */
   marked(count: number): void {
     this.messages.add({ severity: 'success', summary: 'Операції підтягнуто', detail: `Відмічено дій: ${count}` });
     this.afterChange();
@@ -86,10 +80,6 @@ export class ReportDetailStore {
     }
   }
 
-  /**
-   * "Generate again": a new plan from what is really held now; this report is superseded once the new one is made
-   * (the strategies think in the background). Returns the request to follow.
-   */
   async regenerate(): Promise<string | undefined> {
     const report = this.report();
     if (!report) return undefined;

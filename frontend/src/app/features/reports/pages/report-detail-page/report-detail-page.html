@@ -6,7 +6,6 @@
   <app-page-header backLink="/reports" backLabel="Рапорти" [title]="report.summary.title" [subtitle]="report.summary.accountName + ' · котирування на ' + (report.summary.marketAsOf | date) + ' · згенеровано ' + (report.summary.generatedAt | dateTime) + ' ' + report.summary.triggerLabel">
     <app-report-status-tag [status]="report.summary.status" />
     @if (viewport.phone()) {
-      <!-- Phone: the page is for marking actions; regenerate, load and close wait in a menu. -->
       @if (pageActions().length) {
         <p-button icon="pi pi-ellipsis-v" [text]="true" [rounded]="true" severity="secondary" ariaLabel="Дії з рапортом" (onClick)="pageMenu.toggle($event)" />
         <p-menu #pageMenu [model]="pageActions()" [popup]="true" appendTo="body" />

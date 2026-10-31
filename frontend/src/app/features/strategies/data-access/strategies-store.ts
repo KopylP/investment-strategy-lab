@@ -5,7 +5,6 @@ import { InstrumentCatalog } from '../../../core/context/instrument-catalog';
 import { StrategySetupInput } from '../models/strategy';
 import { StrategiesApi } from './strategies-api';
 
-/** The user's strategies, the catalog of types, onboarding with the default EU/US strategies. */
 @Injectable()
 export class StrategiesStore {
   private readonly api = inject(StrategiesApi);
@@ -43,7 +42,6 @@ export class StrategiesStore {
   }
 }
 
-/** One strategy: its versions and a new version from edited parameters. */
 @Injectable()
 export class StrategyDetailStore {
   private readonly api = inject(StrategiesApi);

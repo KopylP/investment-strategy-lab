@@ -40,7 +40,6 @@ export class AppTopbar {
 
   protected readonly email = computed(() => this.auth.user()?.email ?? '');
 
-  /** What the open screen is about: one account, or optionally all accounts. */
   protected readonly scope = toSignal(
     this.router.events.pipe(
       filter((event) => event instanceof NavigationEnd),
@@ -55,7 +54,6 @@ export class AppTopbar {
 
   protected readonly selectedAccount = computed(() => (this.scope() === 'all' && this.accounts.isAll() ? allAccounts : this.accounts.currentId()));
 
-  /** On a phone the account switch and the theme move here, so the bar keeps room for the display currency. */
   protected readonly userMenu = computed<MenuItem[]>(() => {
     const phone = this.viewport.phone();
     const accounts = this.accounts.accounts();
@@ -80,14 +78,12 @@ export class AppTopbar {
       ...accountItems,
       { label: 'Профіль', icon: 'pi pi-user', command: () => void this.router.navigate(['/profile']) },
       ...themeItems,
-      // In the Home Assistant panel Home Assistant signs the user in again at once.
       ...(this.auth.user()?.viaHomeAssistant ? [] : [{ separator: true }, { label: 'Вийти', icon: 'pi pi-sign-out', command: () => void this.signOut() }]),
     ];
   });
 
   private readonly menu = viewChild.required(Menu);
 
-  /** The bar stays put while the page scrolls, so its popup menu would drift away from the button: it closes instead. */
   protected closeMenu(): void {
     if (this.menu().visible) this.menu().hide();
   }

@@ -15,7 +15,6 @@ interface ReportSummary {
   generatedAt: string;
 }
 
-/** The year's PIT-38 tax as it stood after each taxable day (Taxation's progress). */
 export interface TaxProgress {
   year: number;
   taxDue: number;
@@ -23,14 +22,12 @@ export interface TaxProgress {
   dividends: number;
   taxedAccounts: number;
   points: { date: string; gain: number; dividends: number; taxDue: number }[];
-  /** Warn above this share (0..1) of all accounts' value (the API's configuration); null — off. */
   alertShare: number | null;
   incomplete: string[];
 }
 
 export type DashboardPeriod = '1M' | '3M' | '6M' | '1Y' | 'YTD' | 'ALL';
 
-/** The home screen: setup progress, what needs attention now, and how the money did (Performance) — one account or all. */
 @Injectable()
 export class OverviewStore {
   private readonly api = inject(ApiClient);
@@ -55,14 +52,12 @@ export class OverviewStore {
     loader: ({ params }) => this.api.get<ReportSummary[]>('/api/rebalancing/reports', 'accountId' in params ? { accountId: params.accountId } : undefined),
   });
 
-  /** Tax is the person's (one PIT-38 over all accounts), whichever account is shown. */
   readonly taxYear = new Date().getFullYear();
   private readonly taxResource = resource({
     params: () => (this.accounts.current() ? this.taxYear : undefined),
     loader: ({ params: year }) => this.api.get<TaxProgress>(`/api/taxation/progress/${year}`),
   });
 
-  /** The threshold compares the tax with everything the person holds: all accounts, in PLN like the tax. */
   private readonly totalResource = resource({
     params: () => (this.tax()?.alertShare != null ? true : undefined),
     loader: () => this.api.get<DashboardDto>('/api/performance/dashboard', { currency: 'PLN', period: '1M' }),
@@ -74,14 +69,12 @@ export class OverviewStore {
   readonly allAccounts = this.accounts.accounts;
   readonly hasStrategies = computed(() => (this.strategiesResource.value()?.length ?? 0) > 0);
   readonly strategiesLoaded = computed(() => this.strategiesResource.hasValue());
-  /** Accounts on screen whose active sub-portfolios have no strategy: their reports would not know what to buy. */
   readonly withoutStrategy = computed(() =>
     (this.isAll() ? this.allAccounts() : this.account() ? [this.account()!] : []).filter(
       (account) => !account.subPortfolios.some((sub) => sub.status === 'Active' && sub.strategyId),
     ),
   );
 
-  /** While another period of the same account loads, the last dashboard stays: the chart swaps data instead of blinking. */
   readonly dashboard = linkedSignal<{ value: DashboardDto | undefined; loading: boolean; accountId: string | null }, DashboardDto | undefined>({
     source: () => ({
       value: this.dashboardResource.hasValue() ? this.dashboardResource.value() : undefined,
@@ -92,12 +85,10 @@ export class OverviewStore {
   });
   readonly isLoading = this.dashboardResource.isLoading;
   readonly loadError = this.dashboardResource.error;
-  /** Gain over the money paid in, as a fraction of it (what a broker app shows next to the total). */
   readonly gainPct = computed(() => {
     const d = this.dashboard();
     return d && d.netContributions > 0 ? d.gain / d.netContributions : null;
   });
-  /** Gain on the units held now over what was paid for them: without cash and without what was already sold. */
   readonly heldGain = computed(() => {
     const d = this.dashboard();
     if (!d || !d.costBasis) return null;
@@ -115,10 +106,8 @@ export class OverviewStore {
   });
 
   readonly tax = computed(() => (this.taxResource.hasValue() ? this.taxResource.value() : undefined));
-  /** Why the tax could not be computed (shown instead of the chart, never hidden). */
   readonly taxError = computed(() => (this.taxResource.error() ? toProblemMessage(this.taxResource.error()) : null));
   readonly allAccountsValuePln = computed(() => (this.totalResource.hasValue() ? (this.totalResource.value()?.value ?? null) : null));
-  /** The threshold in PLN and where the tax stands against it. */
   readonly taxAlert = computed(() => {
     const tax = this.tax();
     const value = this.allAccountsValuePln();
@@ -126,7 +115,6 @@ export class OverviewStore {
     const limit = value * tax.alertShare;
     return { share: tax.alertShare, limit, ratio: tax.taxDue / value, exceeded: tax.taxDue > limit };
   });
-  /** How much the tax grew over the last 30 days. */
   readonly taxLast30Days = computed(() => {
     const tax = this.tax();
     if (!tax) return 0;

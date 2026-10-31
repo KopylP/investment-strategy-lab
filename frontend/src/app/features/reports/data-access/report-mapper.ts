@@ -2,14 +2,12 @@ import { formatMoney, formatPeriod, formatQuantity } from '../../../shared/pipes
 import { ActionKind, ReportActionDto, ReportDetailsDto, ReportRequestDto, ReportSectionDto, ReportSummaryDto, SectionColumnDto, SectionOrderDto, SectionScoreDto } from '../models/report-dto';
 import { ReportActionVm, ReportProgressVm, ReportRequestVm, ReportSummaryVm, ReportVm, ScoreTableVm, SectionVm } from '../models/report-vm';
 
-/** What the report does (its mode), under its name in the list. */
 const kindLabels: Record<ReportSummaryDto['kind'], string> = {
   Monthly: 'внесок, купівлі й продажі',
   Recalculation: 'перерахунок',
   RiskReview: 'продаж лише за сигналом виходу',
 };
 
-/** Named like the report it becomes: "Ребаланс · жовтень 2026". */
 const triggerLabels: Record<ReportSummaryDto['trigger'], string> = {
   Scheduled: 'за розкладом',
   OnDemand: 'на вимогу',
@@ -59,7 +57,6 @@ const guid = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
 export function toReportVm(report: ReportDetailsDto): ReportVm {
   const summary = toSummaryVm(report.summary);
   const symbol = (id: string | null) => (id ? (report.instruments[id]?.symbol ?? id.slice(0, 8)) : '');
-  // The engine words its reasons with instrument ids; people read tickers.
   const readable = (text: string) => text.replace(guid, (id) => report.instruments[id.toLowerCase()]?.symbol ?? id);
   const subName = (id: string | null) => (id ? (report.subPortfolios[id] ?? 'під-портфель') : '');
   const isOpenForMarking = summary.status === 'New' || summary.status === 'InProgress';
@@ -70,7 +67,6 @@ export function toReportVm(report: ReportDetailsDto): ReportVm {
     isOpenForMarking,
     actions,
     sections: report.sections.map((section) => toSectionVm(section, symbol, readable)),
-    // Each sub-portfolio's section can add the same note (a USD price converted for the account): show it once.
     warnings: [...new Set(report.warnings)],
     quotesLookStale: report.warnings.some((warning) => warning.includes('котирув')),
     contribution: {
@@ -176,10 +172,6 @@ const orderLabels: Record<SectionOrderDto['kind'], { label: string; severity: Se
   Park: { label: 'Запаркувати', severity: 'secondary' },
 };
 
-/**
- * The table etf-momentum drew before strategies described their own: older reports carry these metrics as fields,
- * read under the same ids the strategy now sends.
- */
 const legacyColumns: SectionColumnDto[] = [
   { id: 'momentum', label: 'Моментум', format: 'signedPercent', hint: null, compact: true, trueHint: null, falseHint: null },
   { id: 'return1m', label: '1 міс', format: 'signedPercent', hint: null, compact: false, trueHint: null, falseHint: null },

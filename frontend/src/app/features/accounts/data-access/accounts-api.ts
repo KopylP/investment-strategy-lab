@@ -32,7 +32,6 @@ export interface PlanSettings {
   generateOnSchedule: boolean;
 }
 
-/** Strategies as the account screens use them (the full strategy from the Strategies API). */
 export type StrategyOption = Strategy;
 
 @Injectable({ providedIn: 'root' })
@@ -71,7 +70,6 @@ export class AccountsApi {
     return this.api.get<PlanSettings>(`/api/rebalancing/accounts/${id}/settings`);
   }
 
-  /** The user's own time for one of the strategies' reports on this account. */
   changeReportSchedule(id: string, code: string, timing: ReportTiming): Promise<unknown> {
     return this.api.put(`/api/rebalancing/accounts/${id}/report-schedule/${code}`, timing);
   }
@@ -93,7 +91,6 @@ export class AccountsApi {
   }
 }
 
-/** Shares in percent that add up to exactly 100 with two decimals; the rest of rounding goes to the largest. */
 export function normalizeToHundred(weights: Record<string, number>): Record<string, number> {
   const total = Object.values(weights).reduce((sum, weight) => sum + weight, 0);
   const keys = Object.keys(weights);

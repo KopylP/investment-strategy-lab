@@ -4,7 +4,6 @@ import { firstValueFrom } from 'rxjs';
 
 type Query = Record<string, string | number | boolean | readonly string[] | null | undefined>;
 
-/** Thin promise-based wrapper: stores await commands, resources await queries. */
 @Injectable({ providedIn: 'root' })
 export class ApiClient {
   private readonly http = inject(HttpClient);
@@ -25,7 +24,6 @@ export class ApiClient {
     return firstValueFrom(this.http.delete<T>(url));
   }
 
-  /** A file the API sends (a PDF), as a blob to hand to the browser. */
   blob(url: string): Promise<Blob> {
     return firstValueFrom(this.http.get(url, { responseType: 'blob' }));
   }
@@ -42,8 +40,6 @@ function toParams(query?: Query): HttpParams | undefined {
   return params;
 }
 
-/** RFC 9457 problem details from the API, in words for a toast. */
-/** The API speaks English; the codes users meet most often get Ukrainian words. */
 const messages: Record<string, string> = {
   'user.invalid_credentials': 'Невірний email або пароль.',
   'user.locked_out': 'Забагато невдалих спроб. Спробуйте за кілька хвилин.',
