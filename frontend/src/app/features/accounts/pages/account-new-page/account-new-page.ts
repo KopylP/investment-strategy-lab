@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, resource, signal, untracked } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  resource,
+  signal,
+  untracked,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -15,7 +24,13 @@ import { InstrumentCatalog } from '../../../../core/context/instrument-catalog';
 import { formatMoney } from '../../../../shared/pipes/format';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { StrategiesApi } from '../../../strategies/data-access/strategies-api';
-import { editableTiming, isTimingComplete, reportIcon, ReportTiming, scheduleLabel } from '../../../reports/models/report-schedule';
+import {
+  editableTiming,
+  isTimingComplete,
+  reportIcon,
+  ReportTiming,
+  scheduleLabel,
+} from '../../../reports/models/report-schedule';
 import { ReportTimingEditor } from '../../../reports/ui/report-timing-editor/report-timing-editor';
 import { ReportDefinition, Strategy } from '../../../strategies/models/strategy';
 import { describeStrategy } from '../../../strategies/models/strategy-summary';
@@ -35,8 +50,22 @@ type Preset = 'simple' | 'balanced' | 'custom';
 @Component({
   selector: 'app-account-new-page',
   imports: [
-    FormsModule, Button, InputNumber, InputText, Message, SelectButton, Slider, Stepper, StepList, Step, StepPanels, StepPanel,
-    PageHeader, PlanSettingsForm, ReportTimingEditor, StrategyPicker,
+    FormsModule,
+    Button,
+    InputNumber,
+    InputText,
+    Message,
+    SelectButton,
+    Slider,
+    Stepper,
+    StepList,
+    Step,
+    StepPanels,
+    StepPanel,
+    PageHeader,
+    PlanSettingsForm,
+    ReportTimingEditor,
+    StrategyPicker,
   ],
   templateUrl: './account-new-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -83,22 +112,54 @@ export class AccountNewPage {
   protected readonly showAdvanced = signal(false);
   protected readonly saving = signal(false);
 
-  protected readonly brokers = ['Revolut', 'XTB', 'Interactive Brokers', 'Trading 212', 'Інший'].map((value) => ({ label: value, value }));
+  protected readonly brokers = [
+    'Revolut',
+    'XTB',
+    'Interactive Brokers',
+    'Trading 212',
+    'Інший',
+  ].map((value) => ({ label: value, value }));
   protected readonly currencies = ['EUR', 'PLN', 'USD'].map((value) => ({ label: value, value }));
   protected readonly taxPolicies = [
-    { label: 'Звичайний (Белка 19%)', value: 'PL-BELKA', hint: 'Податок 19% з прибутку від продажів і дивідендів, рахується за FIFO в злотих.' },
-    { label: 'IKE', value: 'PL-IKE', hint: 'Пенсійний рахунок: без податку з прибутку, якщо не виводити до пенсії.' },
-    { label: 'IKZE', value: 'PL-IKZE', hint: 'Пенсійний рахунок з податковою знижкою на внески; податок лише при виході.' },
+    {
+      label: 'Звичайний (Белка 19%)',
+      value: 'PL-BELKA',
+      hint: 'Податок 19% з прибутку від продажів і дивідендів, рахується за FIFO в злотих.',
+    },
+    {
+      label: 'IKE',
+      value: 'PL-IKE',
+      hint: 'Пенсійний рахунок: без податку з прибутку, якщо не виводити до пенсії.',
+    },
+    {
+      label: 'IKZE',
+      value: 'PL-IKZE',
+      hint: 'Пенсійний рахунок з податковою знижкою на внески; податок лише при виході.',
+    },
   ];
 
-  protected readonly strategies = computed(() => (this.strategiesResource.value() ?? []).filter((strategy) => strategy.status === 'Active'));
+  protected readonly strategies = computed(() =>
+    (this.strategiesResource.value() ?? []).filter((strategy) => strategy.status === 'Active'),
+  );
   protected readonly strategiesLoading = this.strategiesResource.isLoading;
-  protected readonly taxHint = computed(() => this.taxPolicies.find((policy) => policy.value === this.taxPolicy())?.hint ?? '');
-  protected readonly total = computed(() => Math.round(this.sleeves().reduce((sum, sleeve) => sum + (sleeve.targetSharePercent ?? 0), 0) * 100) / 100);
+  protected readonly taxHint = computed(
+    () => this.taxPolicies.find((policy) => policy.value === this.taxPolicy())?.hint ?? '',
+  );
+  protected readonly total = computed(
+    () =>
+      Math.round(
+        this.sleeves().reduce((sum, sleeve) => sum + (sleeve.targetSharePercent ?? 0), 0) * 100,
+      ) / 100,
+  );
 
   protected readonly accountValid = computed(() => !!this.name().trim() && !!this.broker().trim());
   protected readonly sleevesValid = computed(
-    () => this.sleeves().length > 0 && this.total() === 100 && this.sleeves().every((sleeve) => sleeve.name.trim() && sleeve.targetSharePercent > 0 && sleeve.strategyId),
+    () =>
+      this.sleeves().length > 0 &&
+      this.total() === 100 &&
+      this.sleeves().every(
+        (sleeve) => sleeve.name.trim() && sleeve.targetSharePercent > 0 && sleeve.strategyId,
+      ),
   );
 
   protected readonly reports = computed(() => {
@@ -109,7 +170,18 @@ export class AccountNewPage {
       const strategy = sleeve.strategyId ? strategies.get(sleeve.strategyId) : undefined;
       for (const report of (strategy && types.get(strategy.typeCode)?.reports) || []) {
         if (!reports.has(report.code))
-          reports.set(report.code, { ...report, strategyTiming: editableTiming(report.schedule ?? { frequency: 'off', day: 1, weekday: 'sunday', time: '20:00', minute: 0 }) });
+          reports.set(report.code, {
+            ...report,
+            strategyTiming: editableTiming(
+              report.schedule ?? {
+                frequency: 'off',
+                day: 1,
+                weekday: 'sunday',
+                time: '20:00',
+                minute: 0,
+              },
+            ),
+          });
       }
     }
     return [...reports.values()].map((report) => {
@@ -117,7 +189,9 @@ export class AccountNewPage {
       return { ...report, own, timing: own ?? report.strategyTiming };
     });
   });
-  protected readonly scheduleValid = computed(() => this.reports().every((report) => !report.own || isTimingComplete(report.own)));
+  protected readonly scheduleValid = computed(() =>
+    this.reports().every((report) => !report.own || isTimingComplete(report.own)),
+  );
   protected readonly scheduleLabel = scheduleLabel;
   protected readonly reportIcon = reportIcon;
   protected readonly timingChoices = [
@@ -132,7 +206,11 @@ export class AccountNewPage {
       return {
         name: sleeve.name,
         share: sleeve.targetSharePercent,
-        contribution: formatMoney((this.plan().monthlyContribution * sleeve.targetSharePercent) / 100, this.currency(), 0),
+        contribution: formatMoney(
+          (this.plan().monthlyContribution * sleeve.targetSharePercent) / 100,
+          this.currency(),
+          0,
+        ),
         strategy: strategy?.name ?? '—',
         blurb: strategy ? this.blurb(strategy).headline : '',
       };
@@ -141,7 +219,8 @@ export class AccountNewPage {
 
   constructor() {
     effect(() => {
-      if (this.strategies().length) untracked(() => !this.sleeves().length && this.choosePreset(this.preset()));
+      if (this.strategies().length)
+        untracked(() => !this.sleeves().length && this.choosePreset(this.preset()));
     });
   }
 
@@ -149,20 +228,37 @@ export class AccountNewPage {
     this.preset.set(preset);
     const strategies = this.strategies();
     const eu = strategies.find((strategy) => strategy.name.startsWith('EU')) ?? strategies[0];
-    const us = strategies.find((strategy) => strategy.name.startsWith('US')) ?? strategies[1] ?? strategies[0];
+    const us =
+      strategies.find((strategy) => strategy.name.startsWith('US')) ??
+      strategies[1] ??
+      strategies[0];
     if (preset === 'simple') this.sleeves.set([this.sleeve('Основний', 100, eu?.id ?? null)]);
-    else if (preset === 'balanced') this.sleeves.set([this.sleeve('Європа', 70, eu?.id ?? null), this.sleeve('США', 30, us?.id ?? null)]);
-    else if (!this.sleeves().length) this.sleeves.set([this.sleeve('Основний', 100, eu?.id ?? null)]);
+    else if (preset === 'balanced')
+      this.sleeves.set([
+        this.sleeve('Європа', 70, eu?.id ?? null),
+        this.sleeve('США', 30, us?.id ?? null),
+      ]);
+    else if (!this.sleeves().length)
+      this.sleeves.set([this.sleeve('Основний', 100, eu?.id ?? null)]);
   }
 
   protected update(key: number, change: Partial<SleeveDraft>): void {
     this.preset.set('custom');
-    this.sleeves.update((sleeves) => sleeves.map((sleeve) => (sleeve.key === key ? { ...sleeve, ...change } : sleeve)));
+    this.sleeves.update((sleeves) =>
+      sleeves.map((sleeve) => (sleeve.key === key ? { ...sleeve, ...change } : sleeve)),
+    );
   }
 
   protected add(): void {
     this.preset.set('custom');
-    this.sleeves.update((sleeves) => [...sleeves, this.sleeve(`Під-портфель ${sleeves.length + 1}`, Math.max(0, 100 - this.total()), this.strategies()[0]?.id ?? null)]);
+    this.sleeves.update((sleeves) => [
+      ...sleeves,
+      this.sleeve(
+        `Під-портфель ${sleeves.length + 1}`,
+        Math.max(0, 100 - this.total()),
+        this.strategies()[0]?.id ?? null,
+      ),
+    ]);
   }
 
   protected remove(key: number): void {
@@ -173,7 +269,9 @@ export class AccountNewPage {
     const sleeves = this.sleeves();
     if (!sleeves.length) return;
     const others = sleeves.slice(0, -1).reduce((sum, sleeve) => sum + sleeve.targetSharePercent, 0);
-    this.update(sleeves.at(-1)!.key, { targetSharePercent: Math.max(1, Math.round((100 - others) * 100) / 100) });
+    this.update(sleeves.at(-1)!.key, {
+      targetSharePercent: Math.max(1, Math.round((100 - others) * 100) / 100),
+    });
   }
 
   protected useOwn(code: string, strategyTiming: ReportTiming, own: boolean): void {
@@ -188,7 +286,11 @@ export class AccountNewPage {
   }
 
   protected blurb(strategy: Strategy) {
-    return describeStrategy(strategy, (id) => this.instruments.symbol(id), (id) => this.instruments.byId().get(id)?.tradingCurrency);
+    return describeStrategy(
+      strategy,
+      (id) => this.instruments.symbol(id),
+      (id) => this.instruments.byId().get(id)?.tradingCurrency,
+    );
   }
 
   protected async save(): Promise<void> {
@@ -201,16 +303,17 @@ export class AccountNewPage {
         broker: this.broker().trim(),
         baseCurrency: this.currency(),
         taxPolicyCode: this.taxPolicy(),
-        subPortfolios: this.sleeves().map(
-          (sleeve): SubPortfolioInput => ({
-            name: sleeve.name.trim(),
-            targetSharePercent: sleeve.targetSharePercent,
-            strategyId: sleeve.strategyId,
-            cashInstrumentId: null,
-            maxPositionWeightPercent: null,
-          }),
-        ),
-        contributionPolicy: { kind: plan.contributionPolicy, driftBandPercent: plan.driftBandPercent },
+        subPortfolios: this.sleeves().map((sleeve): SubPortfolioInput => ({
+          name: sleeve.name.trim(),
+          targetSharePercent: sleeve.targetSharePercent,
+          strategyId: sleeve.strategyId,
+          cashInstrumentId: null,
+          maxPositionWeightPercent: null,
+        })),
+        contributionPolicy: {
+          kind: plan.contributionPolicy,
+          driftBandPercent: plan.driftBandPercent,
+        },
       });
       await this.api.changePlanSettings(account.id, {
         monthlyContribution: plan.monthlyContribution,
@@ -225,7 +328,12 @@ export class AccountNewPage {
       this.createdId.set(account.id);
       this.step.set(6);
     } catch (error) {
-      this.messages.add({ severity: 'error', summary: 'Рахунок не створено', detail: toProblemMessage(error), life: 8000 });
+      this.messages.add({
+        severity: 'error',
+        summary: 'Рахунок не створено',
+        detail: toProblemMessage(error),
+        life: 8000,
+      });
     } finally {
       this.saving.set(false);
     }
@@ -240,7 +348,9 @@ export class AccountNewPage {
         await this.api.changeReportSchedule(accountId, report.code, report.own);
       } catch (error) {
         this.messages.add({
-          severity: 'warn', summary: `Час рапорту «${report.name}» не збережено`, life: 10000,
+          severity: 'warn',
+          summary: `Час рапорту «${report.name}» не збережено`,
+          life: 10000,
           detail: `${toProblemMessage(error)} Рапорт приходитиме за часом стратегії; змінити можна на сторінці рахунку.`,
         });
       }

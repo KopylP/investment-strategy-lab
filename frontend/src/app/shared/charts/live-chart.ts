@@ -1,4 +1,14 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, effect, inject, input, untracked, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  effect,
+  inject,
+  input,
+  untracked,
+  viewChild,
+} from '@angular/core';
 import Chart, { type ChartConfiguration } from 'chart.js/auto';
 import { tapAwayTooltip } from './tap-away-tooltip';
 
@@ -27,12 +37,21 @@ export class LiveChart {
       const plugins = this.plugins();
       untracked(() => {
         if (!this.chart) {
-          this.chart = new Chart(this.canvas().nativeElement, { type: this.type(), data, options, plugins } as ChartConfiguration);
+          this.chart = new Chart(this.canvas().nativeElement, {
+            type: this.type(),
+            data,
+            options,
+            plugins,
+          } as ChartConfiguration);
           return;
         }
         this.chart.data = data as ChartConfiguration['data'];
         this.chart.options = options as ChartConfiguration['options'] & object;
-        this.chart.config.plugins!.splice(0, Infinity, ...(plugins as ChartConfiguration['plugins'] & object));
+        this.chart.config.plugins!.splice(
+          0,
+          Infinity,
+          ...(plugins as ChartConfiguration['plugins'] & object),
+        );
         this.chart.update('none');
       });
     });

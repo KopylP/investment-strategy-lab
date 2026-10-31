@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, resource } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  resource,
+} from '@angular/core';
 import { Skeleton } from 'primeng/skeleton';
 import { ApiClient } from '../../../core/api/api-client';
 import { PriceChart } from '../../../shared/charts/price-chart';
@@ -10,7 +17,13 @@ import { toIsoDate } from '../../../shared/models/api';
   imports: [PriceChart, Skeleton],
   template: `
     @if (history.hasValue() && history.value().points.length > 1) {
-      <app-price-chart [points]="history.value().points" [currency]="currency()" [trades]="markers()" height="15rem" phoneHeight="12rem" />
+      <app-price-chart
+        [points]="history.value().points"
+        [currency]="currency()"
+        [trades]="markers()"
+        height="15rem"
+        phoneHeight="12rem"
+      />
     } @else if (history.isLoading()) {
       <p-skeleton height="15rem" />
     }
@@ -27,7 +40,9 @@ export class PositionChart {
   protected readonly markers = computed(() => this.trades.of(this.instrumentId()));
 
   private readonly from = computed(() => {
-    const first = this.markers().map((trade) => trade.date).sort()[0];
+    const first = this.markers()
+      .map((trade) => trade.date)
+      .sort()[0];
     const yearAgo = new Date();
     yearAgo.setFullYear(yearAgo.getFullYear() - 1);
     const start = first ? new Date(`${first}T00:00:00`) : yearAgo;
@@ -38,6 +53,9 @@ export class PositionChart {
   protected readonly history = resource({
     params: () => ({ id: this.instrumentId(), from: this.from() }),
     loader: ({ params }) =>
-      this.api.get<{ points: { date: string; close: number }[] }>(`/api/market-data/quotes/${params.id}`, { from: params.from, to: toIsoDate(new Date()) }),
+      this.api.get<{ points: { date: string; close: number }[] }>(
+        `/api/market-data/quotes/${params.id}`,
+        { from: params.from, to: toIsoDate(new Date()) },
+      ),
   });
 }

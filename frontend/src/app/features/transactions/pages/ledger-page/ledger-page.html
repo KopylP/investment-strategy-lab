@@ -1,7 +1,22 @@
-<app-page-header title="Журнал операцій" subtitle="Позиції й кеш похідні з цих записів; записи не змінюються — помилку виправляє сторно">
+<app-page-header
+  title="Журнал операцій"
+  subtitle="Позиції й кеш похідні з цих записів; записи не змінюються — помилку виправляє сторно"
+>
   @if (store.account()) {
-    <p-button [label]="viewport.phone() ? 'Імпорт' : 'Імпорт з Revolut'" icon="pi pi-file-import" severity="secondary" [outlined]="true" routerLink="/transactions/import" />
-    <p-button [label]="viewport.phone() ? 'Кошти' : 'Рух коштів'" icon="pi pi-money-bill" severity="secondary" [outlined]="true" (onClick)="cashVisible.set(true)" />
+    <p-button
+      [label]="viewport.phone() ? 'Імпорт' : 'Імпорт з Revolut'"
+      icon="pi pi-file-import"
+      severity="secondary"
+      [outlined]="true"
+      routerLink="/transactions/import"
+    />
+    <p-button
+      [label]="viewport.phone() ? 'Кошти' : 'Рух коштів'"
+      icon="pi pi-money-bill"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="cashVisible.set(true)"
+    />
     <p-button label="Угода" icon="pi pi-plus" (onClick)="tradeVisible.set(true)" />
   }
 </app-page-header>
@@ -12,40 +27,114 @@
   } @else if (store.loadError()) {
     <p-message severity="error" text="Не вдалося завантажити журнал" />
   } @else if (!store.transactions().length) {
-    <app-empty-state icon="pi pi-book" title="Журнал порожній"
-      text="Операції з’являються, коли ви відмічаєте дії в рапорті, імпортуєте positions.json або записуєте угоду вручну." />
+    <app-empty-state
+      icon="pi pi-book"
+      title="Журнал порожній"
+      text="Операції з’являються, коли ви відмічаєте дії в рапорті, імпортуєте positions.json або записуєте угоду вручну."
+    />
   } @else {
     <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 mb-3 sm:mb-4">
       <p-iconfield>
         <p-inputicon styleClass="pi pi-search" />
-        <input pInputText type="text" placeholder="Пошук" [ngModel]="search()" (ngModelChange)="search.set($event)" class="w-full" />
+        <input
+          pInputText
+          type="text"
+          placeholder="Пошук"
+          [ngModel]="search()"
+          (ngModelChange)="search.set($event)"
+          class="w-full"
+        />
       </p-iconfield>
-      <p-select [options]="kindOptions" optionLabel="label" optionValue="value" [ngModel]="kindFilter()" (ngModelChange)="kindFilter.set($event)" [showClear]="true" placeholder="Усі операції" styleClass="w-full sm:w-auto" />
+      <p-select
+        [options]="kindOptions"
+        optionLabel="label"
+        optionValue="value"
+        [ngModel]="kindFilter()"
+        (ngModelChange)="kindFilter.set($event)"
+        [showClear]="true"
+        placeholder="Усі операції"
+        styleClass="w-full sm:w-auto"
+      />
     </div>
-    <p-table [value]="visibleTransactions()" [paginator]="visibleTransactions().length > 25" [rows]="25" tableStyleClass="sm:min-w-[56rem]" dataKey="id">
+    <p-table
+      [value]="visibleTransactions()"
+      [paginator]="visibleTransactions().length > 25"
+      [rows]="25"
+      tableStyleClass="sm:min-w-[56rem]"
+      dataKey="id"
+    >
       <ng-template #header>
-        <tr><th class="hidden sm:table-cell">Дата</th><th class="hidden sm:table-cell">Операція</th><th>Деталі</th><th class="hidden sm:table-cell">Під-портфелі</th><th class="text-right">Гроші</th><th class="hidden sm:table-cell">Джерело</th><th class="w-12"></th></tr>
+        <tr>
+          <th class="hidden sm:table-cell">Дата</th>
+          <th class="hidden sm:table-cell">Операція</th>
+          <th>Деталі</th>
+          <th class="hidden sm:table-cell">Під-портфелі</th>
+          <th class="text-right">Гроші</th>
+          <th class="hidden sm:table-cell">Джерело</th>
+          <th class="w-12"></th>
+        </tr>
       </ng-template>
       <ng-template #body let-transaction>
         <tr [class.opacity-60]="transaction.isReversed">
-          <td class="whitespace-nowrap hidden sm:table-cell">{{ transaction.occurredOn | date }}</td>
+          <td class="whitespace-nowrap hidden sm:table-cell">
+            {{ transaction.occurredOn | date }}
+          </td>
           <td class="hidden sm:table-cell">
             <p-tag [value]="transaction.kindLabel" [severity]="transaction.severity" />
-            @if (transaction.isReversed) { <p-tag value="сторновано" severity="secondary" styleClass="ml-1" /> }
+            @if (transaction.isReversed) {
+              <p-tag value="сторновано" severity="secondary" styleClass="ml-1" />
+            }
           </td>
           <td>
-            <div class="sm:hidden flex flex-wrap items-center gap-x-2 gap-y-1 mb-1 text-sm text-muted-color">{{ transaction.occurredOn | date }} <p-tag [value]="transaction.kindLabel" [severity]="transaction.severity" /></div>
+            <div
+              class="sm:hidden flex flex-wrap items-center gap-x-2 gap-y-1 mb-1 text-sm text-muted-color"
+            >
+              {{ transaction.occurredOn | date }}
+              <p-tag [value]="transaction.kindLabel" [severity]="transaction.severity" />
+            </div>
             {{ transaction.description }}
-            <div class="sm:hidden text-xs text-muted-color">{{ transaction.allocation }}@if (transaction.isReversed) { · сторновано }</div>
+            <div class="sm:hidden text-xs text-muted-color">
+              {{ transaction.allocation }}
+              @if (transaction.isReversed) {
+                · сторновано
+              }
+            </div>
           </td>
-          <td class="text-sm text-muted-color hidden sm:table-cell">{{ transaction.allocation }}</td>
-          <td class="text-right whitespace-nowrap" [appSignedValue]="transaction.amount">@if (transaction.amount !== null) { <app-money [amount]="transaction.amount" [currency]="currency()" [hideOriginal]="viewport.phone()" /> }</td>
-          <td class="text-sm text-muted-color hidden sm:table-cell">{{ transaction.sourceLabel }}</td>
+          <td class="text-sm text-muted-color hidden sm:table-cell">
+            {{ transaction.allocation }}
+          </td>
+          <td class="text-right whitespace-nowrap" [appSignedValue]="transaction.amount">
+            @if (transaction.amount !== null) {
+              <app-money
+                [amount]="transaction.amount"
+                [currency]="currency()"
+                [hideOriginal]="viewport.phone()"
+              />
+            }
+          </td>
+          <td class="text-sm text-muted-color hidden sm:table-cell">
+            {{ transaction.sourceLabel }}
+          </td>
           <td>
             @if (transaction.canReverse) {
-              <p-button icon="pi pi-replay" [text]="true" severity="secondary" pTooltip="Сторнувати" ariaLabel="Сторнувати" [disabled]="store.busy()" (onClick)="confirmReverse(transaction)" />
-            } @else if (transaction.sourceLabel === 'з рапорту' && !transaction.isReversed && transaction.kind !== 'Reversal') {
-              <i class="pi pi-info-circle text-muted-color text-center w-(--p-button-icon-only-width)" pTooltip="Скасовується відміткою в рапорті"></i>
+              <p-button
+                icon="pi pi-replay"
+                [text]="true"
+                severity="secondary"
+                pTooltip="Сторнувати"
+                ariaLabel="Сторнувати"
+                [disabled]="store.busy()"
+                (onClick)="confirmReverse(transaction)"
+              />
+            } @else if (
+              transaction.sourceLabel === 'з рапорту' &&
+              !transaction.isReversed &&
+              transaction.kind !== 'Reversal'
+            ) {
+              <i
+                class="pi pi-info-circle text-muted-color text-center w-(--p-button-icon-only-width)"
+                pTooltip="Скасовується відміткою в рапорті"
+              ></i>
             }
           </td>
         </tr>
@@ -54,5 +143,19 @@
   }
 </div>
 
-<app-trade-dialog [(visible)]="tradeVisible" [instruments]="instrumentOptions()" [subPortfolios]="subOptions()" [currency]="currency()" [busy]="store.busy()" (save)="recordTrade($event)" />
-<app-cash-dialog [(visible)]="cashVisible" [instruments]="instrumentOptions()" [subPortfolios]="subOptions()" [currency]="currency()" [busy]="store.busy()" (save)="recordCash($event)" />
+<app-trade-dialog
+  [(visible)]="tradeVisible"
+  [instruments]="instrumentOptions()"
+  [subPortfolios]="subOptions()"
+  [currency]="currency()"
+  [busy]="store.busy()"
+  (save)="recordTrade($event)"
+/>
+<app-cash-dialog
+  [(visible)]="cashVisible"
+  [instruments]="instrumentOptions()"
+  [subPortfolios]="subOptions()"
+  [currency]="currency()"
+  [busy]="store.busy()"
+  (save)="recordCash($event)"
+/>

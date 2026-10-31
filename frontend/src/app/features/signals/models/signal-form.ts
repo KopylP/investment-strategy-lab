@@ -1,10 +1,27 @@
-import { editableTiming, isTimingComplete, ReportTiming } from '../../reports/models/report-schedule';
-import { CreateSignalBody, SignalConditionDto, SignalDirection, SignalDto, SignalMetric, SignalTargetKind } from './signal-dto';
+import {
+  editableTiming,
+  isTimingComplete,
+  ReportTiming,
+} from '../../reports/models/report-schedule';
+import {
+  CreateSignalBody,
+  SignalConditionDto,
+  SignalDirection,
+  SignalDto,
+  SignalMetric,
+  SignalTargetKind,
+} from './signal-dto';
 
 const percentPrecision = 10_000;
 const defaultPeakWindowDays = 365;
 
-const afterNewData: ReportTiming = { frequency: 'off', day: 1, weekday: 'sunday', time: '20:00', minute: 0 };
+const afterNewData: ReportTiming = {
+  frequency: 'off',
+  day: 1,
+  weekday: 'sunday',
+  time: '20:00',
+  minute: 0,
+};
 
 const metricsOfTarget: Record<SignalTargetKind, SignalMetric[]> = {
   Instrument: ['DrawdownFromPeak', 'DayFall', 'Level'],
@@ -93,7 +110,9 @@ export function createBodyOf(form: SignalForm): CreateSignalBody {
 export function isFormComplete(form: SignalForm): boolean {
   const hasNumbers = form.threshold !== null && form.threshold > 0;
 
-  return form.name.trim().length > 0 && hasNumbers && hasTarget(form) && isTimingComplete(form.schedule);
+  return (
+    form.name.trim().length > 0 && hasNumbers && hasTarget(form) && isTimingComplete(form.schedule)
+  );
 }
 
 function hasTarget(form: SignalForm): boolean {

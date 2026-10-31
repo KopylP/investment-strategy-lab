@@ -1,22 +1,40 @@
-<app-page-header title="Рапорти" subtitle="Рапорти, які задають стратегії рахунку: робочий документ, у якому ви відмічаєте виконане">
+<app-page-header
+  title="Рапорти"
+  subtitle="Рапорти, які задають стратегії рахунку: робочий документ, у якому ви відмічаєте виконане"
+>
   @if (store.hasAccount()) {
     @for (report of store.definitions(); track report.code) {
-      <p-button [label]="report.name" [icon]="icon(report.mode)" [severity]="report.mode === 'rebalance' ? undefined : 'secondary'" [outlined]="report.mode !== 'rebalance'"
-                [loading]="store.generating() === report.code || store.isPreparing(report.code)" [disabled]="!!store.generating() || store.isPreparing(report.code)" (onClick)="start(report)" />
+      <p-button
+        [label]="report.name"
+        [icon]="icon(report.mode)"
+        [severity]="report.mode === 'rebalance' ? undefined : 'secondary'"
+        [outlined]="report.mode !== 'rebalance'"
+        [loading]="store.generating() === report.code || store.isPreparing(report.code)"
+        [disabled]="!!store.generating() || store.isPreparing(report.code)"
+        (onClick)="start(report)"
+      />
     }
   }
 </app-page-header>
 
 @if (store.accountsLoaded() && !store.hasAccount()) {
   <div class="card">
-    <app-empty-state icon="pi pi-wallet" title="Спершу відкрийте рахунок" text="Рапорт рахується для рахунку з під-портфелями, яким призначено стратегії.">
+    <app-empty-state
+      icon="pi pi-wallet"
+      title="Спершу відкрийте рахунок"
+      text="Рапорт рахується для рахунку з під-портфелями, яким призначено стратегії."
+    >
       <p-button label="Відкрити рахунок" icon="pi pi-plus" routerLink="/accounts/new" />
     </app-empty-state>
   </div>
 } @else {
   @if (store.openReport(); as open) {
     <p-message severity="info" styleClass="mb-4">
-      <span>Відкритий рапорт: <a [routerLink]="['/reports', open.id]" class="font-medium underline">{{ open.title }}</a> — {{ open.actionsOpen }} дій чекають на відмітку.</span>
+      <span
+        >Відкритий рапорт:
+        <a [routerLink]="['/reports', open.id]" class="font-medium underline">{{ open.title }}</a> —
+        {{ open.actionsOpen }} дій чекають на відмітку.</span
+      >
     </p-message>
   }
 
@@ -31,36 +49,68 @@
       <p-skeleton height="10rem" />
     } @else if (!store.rows().length) {
       @if (store.definitions()[0]; as first) {
-        <app-empty-state icon="pi pi-list-check" title="Рапортів ще немає"
-          text="Згенеруйте перший рапорт: стратегії оцінять ринок, а план покаже, що купити, продати чи запаркувати.">
+        <app-empty-state
+          icon="pi pi-list-check"
+          title="Рапортів ще немає"
+          text="Згенеруйте перший рапорт: стратегії оцінять ринок, а план покаже, що купити, продати чи запаркувати."
+        >
           <p-button [label]="first.name" [icon]="icon(first.mode)" (onClick)="start(first)" />
         </app-empty-state>
       } @else if (store.definitionsLoaded()) {
-        <app-empty-state icon="pi pi-list-check" title="Рапортів ще немає"
-          text="Рапорти задають стратегії: призначте стратегію під-портфелю рахунку, і тут з’являться її рапорти.">
-          <p-button label="До рахунку" icon="pi pi-wallet" [routerLink]="['/accounts', store.account()?.id]" />
+        <app-empty-state
+          icon="pi pi-list-check"
+          title="Рапортів ще немає"
+          text="Рапорти задають стратегії: призначте стратегію під-портфелю рахунку, і тут з’являться її рапорти."
+        >
+          <p-button
+            label="До рахунку"
+            icon="pi pi-wallet"
+            [routerLink]="['/accounts', store.account()?.id]"
+          />
         </app-empty-state>
       }
     } @else {
-      <p-table [value]="store.rows()" [paginator]="store.rows().length > 12" [rows]="12" tableStyleClass="sm:min-w-[48rem]"
-               dataKey="id">
+      <p-table
+        [value]="store.rows()"
+        [paginator]="store.rows().length > 12"
+        [rows]="12"
+        tableStyleClass="sm:min-w-[48rem]"
+        dataKey="id"
+      >
         <ng-template #header>
-          <tr><th>Рапорт</th><th class="hidden sm:table-cell">Статус</th><th class="text-right">Дій</th><th class="text-right hidden sm:table-cell">Внесок</th><th class="hidden sm:table-cell">Згенеровано</th></tr>
+          <tr>
+            <th>Рапорт</th>
+            <th class="hidden sm:table-cell">Статус</th>
+            <th class="text-right">Дій</th>
+            <th class="text-right hidden sm:table-cell">Внесок</th>
+            <th class="hidden sm:table-cell">Згенеровано</th>
+          </tr>
         </ng-template>
         <ng-template #body let-row>
           @if (row.request; as request) {
             <tr class="text-muted-color">
               <td>
                 <span class="font-medium text-color">{{ request.title }}</span>
-                <div class="hidden sm:block text-sm">{{ request.kindLabel }} · {{ request.triggerLabel }}</div>
+                <div class="hidden sm:block text-sm">
+                  {{ request.kindLabel }} · {{ request.triggerLabel }}
+                </div>
                 @if (request.error) {
-                  <div class="text-sm text-red-600 dark:text-red-400 mt-1 line-clamp-2" [title]="request.error">{{ request.error }}</div>
+                  <div
+                    class="text-sm text-red-600 dark:text-red-400 mt-1 line-clamp-2"
+                    [title]="request.error"
+                  >
+                    {{ request.error }}
+                  </div>
                 }
                 <div class="sm:hidden flex items-center gap-2 mt-1 text-xs">
-                  <ng-container *ngTemplateOutlet="requestTag; context: { $implicit: request }" />{{ request.requestedAt | date }}
+                  <ng-container *ngTemplateOutlet="requestTag; context: { $implicit: request }" />{{
+                    request.requestedAt | date
+                  }}
                 </div>
               </td>
-              <td class="hidden sm:table-cell"><ng-container *ngTemplateOutlet="requestTag; context: { $implicit: request }" /></td>
+              <td class="hidden sm:table-cell">
+                <ng-container *ngTemplateOutlet="requestTag; context: { $implicit: request }" />
+              </td>
               <td class="text-right whitespace-nowrap">
                 @if (request.status === 'Pending' && request.progressLabel) {
                   <span title="Скільки стратегій уже відповіли">{{ request.progressLabel }}</span>
@@ -74,22 +124,40 @@
           } @else {
             <tr>
               <td>
-                <a [routerLink]="['/reports', row.report.id]" class="font-medium">{{ row.report.title }}</a>
-                <div class="hidden sm:block text-sm text-muted-color">{{ row.report.kindLabel }} · {{ row.report.triggerLabel }}</div>
+                <a [routerLink]="['/reports', row.report.id]" class="font-medium">{{
+                  row.report.title
+                }}</a>
+                <div class="hidden sm:block text-sm text-muted-color">
+                  {{ row.report.kindLabel }} · {{ row.report.triggerLabel }}
+                </div>
                 <div class="sm:hidden flex items-center gap-2 mt-1 text-xs text-muted-color">
-                  <app-report-status-tag [status]="row.report.status" />{{ row.report.generatedAt | date }}
+                  <app-report-status-tag [status]="row.report.status" />{{
+                    row.report.generatedAt | date
+                  }}
                 </div>
               </td>
-              <td class="hidden sm:table-cell"><app-report-status-tag [status]="row.report.status" /></td>
+              <td class="hidden sm:table-cell">
+                <app-report-status-tag [status]="row.report.status" />
+              </td>
               <td class="text-right">
-                @if (row.report.actionsOpen && (row.report.status === 'New' || row.report.status === 'InProgress')) {
-                  <p-tag [value]="row.report.actionsOpen + ' з ' + row.report.actionsTotal" severity="warn" />
+                @if (
+                  row.report.actionsOpen &&
+                  (row.report.status === 'New' || row.report.status === 'InProgress')
+                ) {
+                  <p-tag
+                    [value]="row.report.actionsOpen + ' з ' + row.report.actionsTotal"
+                    severity="warn"
+                  />
                 } @else {
                   {{ row.report.actionsTotal }}
                 }
               </td>
-              <td class="text-right hidden sm:table-cell">{{ row.report.contribution | money: row.report.currency }}</td>
-              <td class="text-muted-color hidden sm:table-cell">{{ row.report.generatedAt | dateTime }}</td>
+              <td class="text-right hidden sm:table-cell">
+                {{ row.report.contribution | money: row.report.currency }}
+              </td>
+              <td class="text-muted-color hidden sm:table-cell">
+                {{ row.report.generatedAt | dateTime }}
+              </td>
             </tr>
           }
         </ng-template>
@@ -97,27 +165,64 @@
 
       <ng-template #requestTag let-request>
         @if (request.status === 'Pending') {
-          <p-tag value="Готується" icon="pi pi-spin pi-spinner" severity="secondary" styleClass="whitespace-nowrap" />
+          <p-tag
+            value="Готується"
+            icon="pi pi-spin pi-spinner"
+            severity="secondary"
+            styleClass="whitespace-nowrap"
+          />
         } @else {
-          <p-tag value="Не вдалося" icon="pi pi-exclamation-triangle" severity="danger" styleClass="whitespace-nowrap" />
+          <p-tag
+            value="Не вдалося"
+            icon="pi pi-exclamation-triangle"
+            severity="danger"
+            styleClass="whitespace-nowrap"
+          />
         }
       </ng-template>
     }
   </div>
 }
 
-<p-dialog [header]="asking()?.name ?? ''" [modal]="true" [visible]="!!asking()" (visibleChange)="!$event && asking.set(null)" [style]="{ width: '30rem' }" [breakpoints]="{ '640px': '95vw' }">
+<p-dialog
+  [header]="asking()?.name ?? ''"
+  [modal]="true"
+  [visible]="!!asking()"
+  (visibleChange)="!$event && asking.set(null)"
+  [style]="{ width: '30rem' }"
+  [breakpoints]="{ '640px': '95vw' }"
+>
   <div class="flex flex-col gap-4">
-    <p class="m-0 text-muted-color">{{ asking()?.description }} План рахується на останніх котируваннях у базі; стратегіям може знадобитися час, рапорт з’явиться, щойно буде готовий. Відкритий такий самий рапорт цього місяця буде замінено; уже зроблені відмітки лишаються в журналі.</p>
+    <p class="m-0 text-muted-color">
+      {{ asking()?.description }} План рахується на останніх котируваннях у базі; стратегіям може
+      знадобитися час, рапорт з’явиться, щойно буде готовий. Відкритий такий самий рапорт цього
+      місяця буде замінено; уже зроблені відмітки лишаються в журналі.
+    </p>
     <div class="flex flex-col gap-2">
       <label for="contribution" class="font-medium">Внесок цього місяця</label>
-      <p-inputnumber inputId="contribution" [ngModel]="contribution()" (ngModelChange)="contribution.set($event)" mode="currency"
-                     [currency]="store.account()?.baseCurrency ?? 'EUR'" locale="uk-UA" [min]="0" fluid />
-      <small class="text-muted-color">За замовчуванням — із налаштувань рахунку; внесок, уже відмічений цього місяця, не плануватиметься вдруге.</small>
+      <p-inputnumber
+        inputId="contribution"
+        [ngModel]="contribution()"
+        (ngModelChange)="contribution.set($event)"
+        mode="currency"
+        [currency]="store.account()?.baseCurrency ?? 'EUR'"
+        locale="uk-UA"
+        [min]="0"
+        fluid
+      />
+      <small class="text-muted-color"
+        >За замовчуванням — із налаштувань рахунку; внесок, уже відмічений цього місяця, не
+        плануватиметься вдруге.</small
+      >
     </div>
   </div>
   <ng-template #footer>
     <p-button label="Скасувати" [text]="true" severity="secondary" (onClick)="asking.set(null)" />
-    <p-button label="Згенерувати" icon="pi pi-bolt" [loading]="!!asking() && store.generating() === asking()!.code" (onClick)="generate()" />
+    <p-button
+      label="Згенерувати"
+      icon="pi pi-bolt"
+      [loading]="!!asking() && store.generating() === asking()!.code"
+      (onClick)="generate()"
+    />
   </ng-template>
 </p-dialog>

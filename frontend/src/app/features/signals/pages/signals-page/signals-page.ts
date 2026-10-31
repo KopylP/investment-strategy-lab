@@ -7,7 +7,12 @@ import { DatePipe } from '../../../../shared/pipes/format-pipes';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { SignalsStore } from '../../data-access/signals-store';
 import { SignalDto, SignalOccurrenceDto } from '../../models/signal-dto';
-import { clearReasonLabel, conditionLabel, signalScheduleLabel, valueLabel } from '../../models/signal-labels';
+import {
+  clearReasonLabel,
+  conditionLabel,
+  signalScheduleLabel,
+  valueLabel,
+} from '../../models/signal-labels';
 import { SignalEditor } from '../../ui/signal-editor/signal-editor';
 
 @Component({

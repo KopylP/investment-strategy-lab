@@ -1,7 +1,19 @@
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
-import { ApplicationConfig, inject, LOCALE_ID, provideBrowserGlobalErrorListeners, provideEnvironmentInitializer, provideZonelessChangeDetection } from '@angular/core';
+import {
+  ApplicationConfig,
+  inject,
+  LOCALE_ID,
+  provideBrowserGlobalErrorListeners,
+  provideEnvironmentInitializer,
+  provideZonelessChangeDetection,
+} from '@angular/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { provideRouter, withComponentInputBinding, withInMemoryScrolling, withNavigationErrorHandler } from '@angular/router';
+import {
+  provideRouter,
+  withComponentInputBinding,
+  withInMemoryScrolling,
+  withNavigationErrorHandler,
+} from '@angular/router';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
 import { DialogService } from 'primeng/dynamicdialog';
@@ -18,13 +30,24 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
     provideAnimationsAsync(),
-    provideRouter(routes, withComponentInputBinding(), withInMemoryScrolling({ scrollPositionRestoration: 'enabled' }), withNavigationErrorHandler(reloadWithNewIngressSession)),
+    provideRouter(
+      routes,
+      withComponentInputBinding(),
+      withInMemoryScrolling({ scrollPositionRestoration: 'enabled' }),
+      withNavigationErrorHandler(reloadWithNewIngressSession),
+    ),
     provideEnvironmentInitializer(() => inject(NavigationHistory)),
-    provideHttpClient(withFetch(), withInterceptors([basePathInterceptor, unauthorizedInterceptor])),
+    provideHttpClient(
+      withFetch(),
+      withInterceptors([basePathInterceptor, unauthorizedInterceptor]),
+    ),
     providePrimeNG({
       theme: {
         preset: InvestmentLabPreset,
-        options: { darkModeSelector: '.app-dark', cssLayer: { name: 'primeng', order: 'theme, base, primeng' } },
+        options: {
+          darkModeSelector: '.app-dark',
+          cssLayer: { name: 'primeng', order: 'theme, base, primeng' },
+        },
       },
       translation: ukTranslation,
       overlayAppendTo: 'body',

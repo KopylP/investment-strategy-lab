@@ -1,4 +1,13 @@
-<app-page-header title="Огляд" [subtitle]="store.isAll() ? 'Усі рахунки · ' + store.allAccounts().length : store.account() ? store.account()!.name + ' · ' + store.account()!.broker : 'Почнімо з налаштування'">
+<app-page-header
+  title="Огляд"
+  [subtitle]="
+    store.isAll()
+      ? 'Усі рахунки · ' + store.allAccounts().length
+      : store.account()
+        ? store.account()!.name + ' · ' + store.account()!.broker
+        : 'Почнімо з налаштування'
+  "
+>
 </app-page-header>
 
 @if (store.accountsLoaded() && !store.account()) {
@@ -8,18 +17,26 @@
       <div class="flex-1">
         <h2 class="text-xl font-semibold m-0">Почнімо: налаштуйте свій рахунок</h2>
         <p class="text-muted-color mt-2 mb-0">
-          За кілька кроків: який у вас брокер, як розділити гроші, яку стратегію обрати і скільки вкладати щомісяця.
-          Стандартні стратегії вже готові — кожен крок пояснює, що і навіщо.
+          За кілька кроків: який у вас брокер, як розділити гроші, яку стратегію обрати і скільки
+          вкладати щомісяця. Стандартні стратегії вже готові — кожен крок пояснює, що і навіщо.
         </p>
       </div>
-      <p-button label="Почати налаштування" icon="pi pi-arrow-right" iconPos="right" routerLink="/accounts/new" />
+      <p-button
+        label="Почати налаштування"
+        icon="pi pi-arrow-right"
+        iconPos="right"
+        routerLink="/accounts/new"
+      />
     </div>
   </div>
 } @else if (store.strategiesLoaded()) {
   @for (account of store.withoutStrategy(); track account.id) {
     <p-message severity="warn" styleClass="mb-4">
       <div class="flex flex-wrap items-center justify-between gap-3 w-full">
-        <span>{{ store.isAll() ? account.name + ': ж' : 'Ж' }}одному під-портфелю не призначено стратегію — рапорти не знатимуть, що купувати.</span>
+        <span
+          >{{ store.isAll() ? account.name + ': ж' : 'Ж' }}одному під-портфелю не призначено
+          стратегію — рапорти не знатимуть, що купувати.</span
+        >
         <p-button label="Обрати стратегію" size="small" [routerLink]="['/accounts', account.id]" />
       </div>
     </p-message>
@@ -30,8 +47,20 @@
   @for (report of store.openReports(); track report.id) {
     <p-message severity="info" styleClass="mb-4">
       <div class="flex flex-wrap items-center justify-between gap-3 w-full">
-        <span>@if (store.isAll()) {<span class="font-medium">{{ store.accountName(report.accountId) }}:</span> }Рапорт за {{ report.period | period }}: {{ report.actionsOpen }} з {{ report.actionsTotal }} дій чекають на відмітку.</span>
-        <p-button label="Відкрити рапорт" icon="pi pi-arrow-right" iconPos="right" size="small" [routerLink]="['/reports', report.id]" />
+        <span>
+          @if (store.isAll()) {
+            <span class="font-medium">{{ store.accountName(report.accountId) }}:</span>
+          }
+          Рапорт за {{ report.period | period }}: {{ report.actionsOpen }} з
+          {{ report.actionsTotal }} дій чекають на відмітку.</span
+        >
+        <p-button
+          label="Відкрити рапорт"
+          icon="pi pi-arrow-right"
+          iconPos="right"
+          size="small"
+          [routerLink]="['/reports', report.id]"
+        />
       </div>
     </p-message>
   }
@@ -40,7 +69,11 @@
     @if (alert.exceeded) {
       <p-message severity="warn" styleClass="mb-4">
         <div class="flex flex-wrap items-center justify-between gap-3 w-full">
-          <span>Податок {{ store.taxYear }} — {{ store.tax()!.taxDue | money: 'PLN' : 0 }}, це {{ alert.ratio | percent }} вартості всіх рахунків: понад поріг {{ alert.share | percent }} ({{ alert.limit | money: 'PLN' : 0 }}).</span>
+          <span
+            >Податок {{ store.taxYear }} — {{ store.tax()!.taxDue | money: 'PLN' : 0 }}, це
+            {{ alert.ratio | percent }} вартості всіх рахунків: понад поріг
+            {{ alert.share | percent }} ({{ alert.limit | money: 'PLN' : 0 }}).</span
+          >
           <p-button label="Податки" size="small" [text]="true" routerLink="/taxes" />
         </div>
       </p-message>
@@ -54,41 +87,115 @@
   } @else if (store.dashboard(); as d) {
     @if (!store.hasHistory()) {
       <div class="card">
-        <div class="text-muted-color">Графіки з’являться з першою операцією в журналі: імпортуйте позиції або відмітьте внесок у рапорті.</div>
-        @if (!store.openReports().length) { <p-button label="До рапортів" icon="pi pi-bolt" size="small" routerLink="/reports" styleClass="mt-3" /> }
+        <div class="text-muted-color">
+          Графіки з’являться з першою операцією в журналі: імпортуйте позиції або відмітьте внесок у
+          рапорті.
+        </div>
+        @if (!store.openReports().length) {
+          <p-button
+            label="До рапортів"
+            icon="pi pi-bolt"
+            size="small"
+            routerLink="/reports"
+            styleClass="mt-3"
+          />
+        }
       </div>
     } @else {
       <div class="card">
         <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-4">
           <div>
-            <div class="text-muted-color text-sm">Вартість {{ store.isAll() ? 'усіх рахунків' : 'портфеля' }} · {{ d.asOf | date }}</div>
-            <div class="text-4xl sm:text-5xl font-bold tracking-tight mt-1 leading-tight"><app-money [amount]="d.value" [currency]="d.currency" [digits]="0" /></div>
+            <div class="text-muted-color text-sm">
+              Вартість {{ store.isAll() ? 'усіх рахунків' : 'портфеля' }} · {{ d.asOf | date }}
+            </div>
+            <div class="text-4xl sm:text-5xl font-bold tracking-tight mt-1 leading-tight">
+              <app-money [amount]="d.value" [currency]="d.currency" [digits]="0" />
+            </div>
             <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3">
-              <span class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-semibold"
-                [style.background]="d.gain >= 0 ? 'color-mix(in srgb, var(--p-finance-gain) 14%, transparent)' : 'color-mix(in srgb, var(--p-finance-loss) 14%, transparent)'"
-                [appSignedValue]="d.gain">
-                <i class="pi text-xs" [class.pi-arrow-up-right]="d.gain >= 0" [class.pi-arrow-down-right]="d.gain < 0"></i>
-                {{ d.gain >= 0 ? '+' : '' }}<app-money [amount]="d.gain" [currency]="d.currency" [digits]="0" [hideOriginal]="true" />
-                @if (store.gainPct() !== null) { · {{ store.gainPct() | signedPercent }} }
+              <span
+                class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-semibold"
+                [style.background]="
+                  d.gain >= 0
+                    ? 'color-mix(in srgb, var(--p-finance-gain) 14%, transparent)'
+                    : 'color-mix(in srgb, var(--p-finance-loss) 14%, transparent)'
+                "
+                [appSignedValue]="d.gain"
+              >
+                <i
+                  class="pi text-xs"
+                  [class.pi-arrow-up-right]="d.gain >= 0"
+                  [class.pi-arrow-down-right]="d.gain < 0"
+                ></i>
+                {{ d.gain >= 0 ? '+' : ''
+                }}<app-money
+                  [amount]="d.gain"
+                  [currency]="d.currency"
+                  [digits]="0"
+                  [hideOriginal]="true"
+                />
+                @if (store.gainPct() !== null) {
+                  · {{ store.gainPct() | signedPercent }}
+                }
               </span>
-              <span class="text-sm text-muted-color">прибуток понад внесене · внесено <app-money [amount]="d.netContributions" [currency]="d.currency" [digits]="0" [hideOriginal]="true" /></span>
+              <span class="text-sm text-muted-color"
+                >прибуток понад внесене · внесено
+                <app-money
+                  [amount]="d.netContributions"
+                  [currency]="d.currency"
+                  [digits]="0"
+                  [hideOriginal]="true"
+              /></span>
             </div>
             @if (store.heldGain(); as held) {
               <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
-                <span class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-semibold"
-                  [style.background]="held.amount >= 0 ? 'color-mix(in srgb, var(--p-finance-gain) 14%, transparent)' : 'color-mix(in srgb, var(--p-finance-loss) 14%, transparent)'"
-                  [appSignedValue]="held.amount">
-                  <i class="pi text-xs" [class.pi-arrow-up-right]="held.amount >= 0" [class.pi-arrow-down-right]="held.amount < 0"></i>
-                  {{ held.amount >= 0 ? '+' : '' }}<app-money [amount]="held.amount" [currency]="d.currency" [digits]="0" [hideOriginal]="true" />
+                <span
+                  class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-semibold"
+                  [style.background]="
+                    held.amount >= 0
+                      ? 'color-mix(in srgb, var(--p-finance-gain) 14%, transparent)'
+                      : 'color-mix(in srgb, var(--p-finance-loss) 14%, transparent)'
+                  "
+                  [appSignedValue]="held.amount"
+                >
+                  <i
+                    class="pi text-xs"
+                    [class.pi-arrow-up-right]="held.amount >= 0"
+                    [class.pi-arrow-down-right]="held.amount < 0"
+                  ></i>
+                  {{ held.amount >= 0 ? '+' : ''
+                  }}<app-money
+                    [amount]="held.amount"
+                    [currency]="d.currency"
+                    [digits]="0"
+                    [hideOriginal]="true"
+                  />
                   · {{ held.pct | signedPercent }}
                 </span>
-                <span class="text-sm text-muted-color">прибуток на активах · заплачено за них <app-money [amount]="held.costBasis" [currency]="d.currency" [digits]="0" [hideOriginal]="true" />
-                  <i class="pi pi-info-circle text-xs ml-1" pTooltip="Скільки зараз коштують активи, які ви тримаєте, понад те, що за них заплачено з комісіями. Вільний кеш і вже продане сюди не входять — це той самий результат, що на сторінці «Позиції»."></i>
+                <span class="text-sm text-muted-color"
+                  >прибуток на активах · заплачено за них
+                  <app-money
+                    [amount]="held.costBasis"
+                    [currency]="d.currency"
+                    [digits]="0"
+                    [hideOriginal]="true"
+                  />
+                  <i
+                    class="pi pi-info-circle text-xs ml-1"
+                    pTooltip="Скільки зараз коштують активи, які ви тримаєте, понад те, що за них заплачено з комісіями. Вільний кеш і вже продане сюди не входять — це той самий результат, що на сторінці «Позиції»."
+                  ></i>
                 </span>
               </div>
             }
           </div>
-          <p-selectbutton [options]="periods()" optionLabel="label" optionValue="value" [ngModel]="store.period()" (ngModelChange)="$event && store.period.set($event)" [allowEmpty]="false" size="small" />
+          <p-selectbutton
+            [options]="periods()"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="store.period()"
+            (ngModelChange)="$event && store.period.set($event)"
+            [allowEmpty]="false"
+            size="small"
+          />
         </div>
 
         @defer (on idle) {
@@ -98,8 +205,14 @@
         }
         @if (store.planGap(); as gap) {
           <div class="text-sm mt-2">
-            План vs факт: <span [appSignedValue]="gap">{{ gap >= 0 ? '+' : '' }}<app-money [amount]="gap" [currency]="d.currency" [digits]="0" [inline]="true" /></span>
-            <span class="hidden sm:inline text-muted-color"> — різниця з «якби все за планом». Точки на лінії — дні рапортів.</span>
+            План vs факт:
+            <span [appSignedValue]="gap"
+              >{{ gap >= 0 ? '+' : ''
+              }}<app-money [amount]="gap" [currency]="d.currency" [digits]="0" [inline]="true"
+            /></span>
+            <span class="hidden sm:inline text-muted-color">
+              — різниця з «якби все за планом». Точки на лінії — дні рапортів.</span
+            >
           </div>
         }
       </div>
@@ -108,29 +221,58 @@
         <div class="app-tiles">
           <div class="px-1 sm:px-4 lg:border-r border-surface">
             <div class="text-muted-color text-xs uppercase tracking-wide flex items-center gap-1">
-              Дохідність TWR <i class="pi pi-info-circle text-xs" pTooltip="Як працювала стратегія, без впливу того, коли й скільки ви вносили. Для порівняння з індексами й фондами."></i>
+              Дохідність TWR
+              <i
+                class="pi pi-info-circle text-xs"
+                pTooltip="Як працювала стратегія, без впливу того, коли й скільки ви вносили. Для порівняння з індексами й фондами."
+              ></i>
             </div>
-            <div class="text-xl font-semibold mt-1" [appSignedValue]="d.twr">{{ d.twr | signedPercent }}</div>
-            <div class="text-xs text-muted-color">{{ d.twrAnnualized === null ? 'за період' : (d.twrAnnualized | signedPercent) + ' річних' }}</div>
+            <div class="text-xl font-semibold mt-1" [appSignedValue]="d.twr">
+              {{ d.twr | signedPercent }}
+            </div>
+            <div class="text-xs text-muted-color">
+              {{
+                d.twrAnnualized === null
+                  ? 'за період'
+                  : (d.twrAnnualized | signedPercent) + ' річних'
+              }}
+            </div>
           </div>
           <div class="px-1 sm:px-4 lg:border-r border-surface">
             <div class="text-muted-color text-xs uppercase tracking-wide flex items-center gap-1">
-              Ваша дохідність XIRR <i class="pi pi-info-circle text-xs" pTooltip="Річна дохідність саме ваших грошей — з урахуванням дат і сум внесків та виводів."></i>
+              Ваша дохідність XIRR
+              <i
+                class="pi pi-info-circle text-xs"
+                pTooltip="Річна дохідність саме ваших грошей — з урахуванням дат і сум внесків та виводів."
+              ></i>
             </div>
-            <div class="text-xl font-semibold mt-1" [appSignedValue]="d.xirr">{{ d.xirr === null ? '—' : (d.xirr | signedPercent) }}</div>
+            <div class="text-xl font-semibold mt-1" [appSignedValue]="d.xirr">
+              {{ d.xirr === null ? '—' : (d.xirr | signedPercent) }}
+            </div>
             <div class="text-xs text-muted-color">річних</div>
           </div>
           <div class="px-1 sm:px-4 lg:border-r border-surface">
             <div class="text-muted-color text-xs uppercase tracking-wide flex items-center gap-1">
-              Просідання <i class="pi pi-info-circle text-xs" pTooltip="Наскільки вартість зараз нижча за найвищий пік (без впливу внесків)."></i>
+              Просідання
+              <i
+                class="pi pi-info-circle text-xs"
+                pTooltip="Наскільки вартість зараз нижча за найвищий пік (без впливу внесків)."
+              ></i>
             </div>
-            <div class="text-xl font-semibold mt-1" [appSignedValue]="d.currentDrawdown">{{ d.currentDrawdown | signedPercent }}</div>
-            <div class="text-xs text-muted-color">найбільше {{ d.maxDrawdown | signedPercent }}</div>
+            <div class="text-xl font-semibold mt-1" [appSignedValue]="d.currentDrawdown">
+              {{ d.currentDrawdown | signedPercent }}
+            </div>
+            <div class="text-xs text-muted-color">
+              найбільше {{ d.maxDrawdown | signedPercent }}
+            </div>
           </div>
           <div class="px-1 sm:px-4">
             <div class="text-muted-color text-xs uppercase tracking-wide flex items-center gap-1">
               Податок {{ store.taxYear }}
-              <i class="pi pi-info-circle text-xs" pTooltip="Белка за цей рік на сьогодні: реалізовані зиски й збитки та дивіденди всіх оподатковуваних рахунків разом (один PIT-38). Нереалізований результат сюди не входить."></i>
+              <i
+                class="pi pi-info-circle text-xs"
+                pTooltip="Белка за цей рік на сьогодні: реалізовані зиски й збитки та дивіденди всіх оподатковуваних рахунків разом (один PIT-38). Нереалізований результат сюди не входить."
+              ></i>
             </div>
             @if (store.tax(); as tax) {
               @if (!tax.taxedAccounts) {
@@ -139,13 +281,26 @@
               } @else {
                 <div class="text-xl font-semibold mt-1 flex items-center gap-1">
                   {{ tax.taxDue | money: 'PLN' : 0 }}
-                  @if (store.taxAlert()?.exceeded) { <i class="pi pi-exclamation-triangle text-sm" [style.color]="'var(--p-finance-loss)'" pTooltip="Понад поріг"></i> }
+                  @if (store.taxAlert()?.exceeded) {
+                    <i
+                      class="pi pi-exclamation-triangle text-sm"
+                      [style.color]="'var(--p-finance-loss)'"
+                      pTooltip="Понад поріг"
+                    ></i>
+                  }
                 </div>
                 <div class="text-xs text-muted-color">
                   @if (tax.points.length) {
-                    зиск <span [appSignedValue]="tax.gain">{{ tax.gain | money: 'PLN' : 0 }}</span>@if (tax.dividends) { · дивіденди {{ tax.dividends | money: 'PLN' : 0 }} }
-                  } @else { продажів і дивідендів ще не було }
-                  @if (tax.taxedAccounts > 1) { · {{ tax.taxedAccounts }} рахунки }
+                    зиск <span [appSignedValue]="tax.gain">{{ tax.gain | money: 'PLN' : 0 }}</span>
+                    @if (tax.dividends) {
+                      · дивіденди {{ tax.dividends | money: 'PLN' : 0 }}
+                    }
+                  } @else {
+                    продажів і дивідендів ще не було
+                  }
+                  @if (tax.taxedAccounts > 1) {
+                    · {{ tax.taxedAccounts }} рахунки
+                  }
                 </div>
               }
             } @else {
@@ -168,22 +323,39 @@
             <div class="mb-3">
               <h2 class="text-lg font-semibold m-0">Податок</h2>
               <div class="text-sm text-muted-color mt-1">
-                зараз {{ tax.taxDue | money: 'PLN' : 0 }}
-                · за 30 днів <span [appSignedValue]="-store.taxLast30Days()">{{ store.taxLast30Days() >= 0 ? '+' : '' }}{{ store.taxLast30Days() | money: 'PLN' : 0 }}</span>
-                @if (store.taxAlert(); as alert) { · {{ alert.ratio | percent }} вартості рахунків }
+                зараз {{ tax.taxDue | money: 'PLN' : 0 }} · за 30 днів
+                <span [appSignedValue]="-store.taxLast30Days()"
+                  >{{ store.taxLast30Days() >= 0 ? '+' : ''
+                  }}{{ store.taxLast30Days() | money: 'PLN' : 0 }}</span
+                >
+                @if (store.taxAlert(); as alert) {
+                  · {{ alert.ratio | percent }} вартості рахунків
+                }
               </div>
             </div>
             @for (message of tax.incomplete; track $index) {
-              <p-message severity="warn" size="small" styleClass="mb-2" [text]="message + ' — сума може бути заниженою'" />
+              <p-message
+                severity="warn"
+                size="small"
+                styleClass="mb-2"
+                [text]="message + ' — сума може бути заниженою'"
+              />
             }
             @defer (on idle) {
-              <app-tax-progress-chart [progress]="tax" [threshold]="store.taxAlert()?.limit ?? null" />
+              <app-tax-progress-chart
+                [progress]="tax"
+                [threshold]="store.taxAlert()?.limit ?? null"
+              />
             } @placeholder {
               <p-skeleton height="15rem" />
             }
             <div class="text-xs text-muted-color mt-2">
-              PIT-38 за всіма рахунками на кожен день: зиски й збитки сальдуються, дивіденди — з урахуванням податку за кордоном.
-              @if (tax.alertShare !== null) { Червоним — понад поріг: {{ tax.alertShare | percent }} поточної вартості всіх рахунків. }
+              PIT-38 за всіма рахунками на кожен день: зиски й збитки сальдуються, дивіденди — з
+              урахуванням податку за кордоном.
+              @if (tax.alertShare !== null) {
+                Червоним — понад поріг: {{ tax.alertShare | percent }} поточної вартості всіх
+                рахунків.
+              }
             </div>
           </div>
         }
@@ -193,26 +365,56 @@
         @if (store.isAll()) {
           <div class="card mb-0">
             <h2 class="text-lg font-semibold mb-4">Рахунки</h2>
-            <p-table [value]="d.accounts" size="small" tableStyleClass="sm:min-w-[28rem]" [rowHover]="true">
+            <p-table
+              [value]="d.accounts"
+              size="small"
+              tableStyleClass="sm:min-w-[28rem]"
+              [rowHover]="true"
+            >
               <ng-template #header>
-                <tr><th>Рахунок</th><th class="text-right">Вартість</th><th class="text-right hidden sm:table-cell">Частка</th><th class="text-right hidden sm:table-cell">TWR</th></tr>
+                <tr>
+                  <th>Рахунок</th>
+                  <th class="text-right">Вартість</th>
+                  <th class="text-right hidden sm:table-cell">Частка</th>
+                  <th class="text-right hidden sm:table-cell">TWR</th>
+                </tr>
               </ng-template>
               <ng-template #body let-account>
-                <tr class="cursor-pointer" (click)="store.showAccount(account.id)" pTooltip="Відкрити огляд цього рахунку" tooltipPosition="left">
+                <tr
+                  class="cursor-pointer"
+                  (click)="store.showAccount(account.id)"
+                  pTooltip="Відкрити огляд цього рахунку"
+                  tooltipPosition="left"
+                >
                   <td>
                     <div class="font-medium">{{ account.name }}</div>
-                    <div class="text-xs text-muted-color">{{ account.broker }} · {{ account.baseCurrency }}</div>
+                    <div class="text-xs text-muted-color">
+                      {{ account.broker }} · {{ account.baseCurrency }}
+                    </div>
                   </td>
                   <td class="text-right">
                     <app-money [amount]="account.value" [currency]="d.currency" [digits]="0" />
-                    <div class="sm:hidden text-xs text-muted-color whitespace-nowrap">{{ account.share | percent }} · TWR <span [appSignedValue]="account.twr">{{ account.twr | signedPercent }}</span></div>
+                    <div class="sm:hidden text-xs text-muted-color whitespace-nowrap">
+                      {{ account.share | percent }} · TWR
+                      <span [appSignedValue]="account.twr">{{ account.twr | signedPercent }}</span>
+                    </div>
                   </td>
-                  <td class="text-right font-medium hidden sm:table-cell whitespace-nowrap">{{ account.share | percent }}</td>
-                  <td class="text-right hidden sm:table-cell whitespace-nowrap" [appSignedValue]="account.twr">{{ account.twr | signedPercent }}</td>
+                  <td class="text-right font-medium hidden sm:table-cell whitespace-nowrap">
+                    {{ account.share | percent }}
+                  </td>
+                  <td
+                    class="text-right hidden sm:table-cell whitespace-nowrap"
+                    [appSignedValue]="account.twr"
+                  >
+                    {{ account.twr | signedPercent }}
+                  </td>
                 </tr>
               </ng-template>
             </p-table>
-            <div class="text-xs text-muted-color mt-3">Суми — у {{ d.currency }} за курсом NBP кожного дня; TWR рахунку — у його власній валюті.</div>
+            <div class="text-xs text-muted-color mt-3">
+              Суми — у {{ d.currency }} за курсом NBP кожного дня; TWR рахунку — у його власній
+              валюті.
+            </div>
           </div>
         } @else {
           <div class="card mb-0">
@@ -229,10 +431,21 @@
           }
           @if (!store.isAll() && store.latestRisk(); as risk) {
             <div class="flex flex-wrap items-center justify-between gap-2 mt-4">
-              <span class="text-sm text-muted-color">Остання перевірка ризику: {{ risk.generatedAt | dateTime }}</span>
+              <span class="text-sm text-muted-color"
+                >Остання перевірка ризику: {{ risk.generatedAt | dateTime }}</span
+              >
               <div class="flex items-center gap-2">
-                @if (risk.actionsTotal) { <p-tag [value]="risk.actionsTotal + ' сигналів виходу'" severity="danger" /> } @else { <p-tag value="без сигналів виходу" severity="success" /> }
-                <p-button label="Відкрити" size="small" [text]="true" [routerLink]="['/reports', risk.id]" />
+                @if (risk.actionsTotal) {
+                  <p-tag [value]="risk.actionsTotal + ' сигналів виходу'" severity="danger" />
+                } @else {
+                  <p-tag value="без сигналів виходу" severity="success" />
+                }
+                <p-button
+                  label="Відкрити"
+                  size="small"
+                  [text]="true"
+                  [routerLink]="['/reports', risk.id]"
+                />
               </div>
             </div>
           }

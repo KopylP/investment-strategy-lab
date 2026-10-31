@@ -11,8 +11,12 @@ export class InstrumentCatalog {
   });
 
   readonly instruments = computed(() => this.instrumentsResource.value() ?? []);
-  readonly byId = computed(() => new Map(this.instruments().map((instrument) => [instrument.id, instrument])));
-  readonly etfs = computed(() => this.instruments().filter((instrument) => instrument.kind === 'Etf'));
+  readonly byId = computed(
+    () => new Map(this.instruments().map((instrument) => [instrument.id, instrument])),
+  );
+  readonly etfs = computed(() =>
+    this.instruments().filter((instrument) => instrument.kind === 'Etf'),
+  );
 
   symbol(id: string | null | undefined): string {
     if (!id) return '—';

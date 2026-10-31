@@ -18,7 +18,16 @@ export interface FillDialogData {
 
 @Component({
   selector: 'app-fill-dialog',
-  imports: [ReactiveFormsModule, Button, DatePicker, InputNumber, Textarea, Message, MoneyPipe, QuantityPipe],
+  imports: [
+    ReactiveFormsModule,
+    Button,
+    DatePicker,
+    InputNumber,
+    Textarea,
+    Message,
+    MoneyPipe,
+    QuantityPipe,
+  ],
   templateUrl: './fill-dialog.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -29,16 +38,28 @@ export class FillDialog {
   protected readonly partial = this.data.mode === 'partial';
 
   protected readonly form = inject(NonNullableFormBuilder).group({
-    quantity: [this.partial ? 0 : this.defaultQuantity(), [Validators.required, Validators.min(0.00000001)]],
-    price: [this.action.isMoney ? 1 : this.action.plannedPrice, [Validators.required, Validators.min(0.00000001)]],
+    quantity: [
+      this.partial ? 0 : this.defaultQuantity(),
+      [Validators.required, Validators.min(0.00000001)],
+    ],
+    price: [
+      this.action.isMoney ? 1 : this.action.plannedPrice,
+      [Validators.required, Validators.min(0.00000001)],
+    ],
     fee: [0, [Validators.required, Validators.min(0)]],
     executedOn: [new Date(), Validators.required],
     note: [''],
   });
 
-  private readonly values = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
-  protected readonly total = computed(() => (this.values().quantity ?? 0) * (this.values().price ?? 0));
-  protected readonly tooMuch = computed(() => this.partial && (this.values().quantity ?? 0) >= this.action.remainingQuantity);
+  private readonly values = toSignal(this.form.valueChanges, {
+    initialValue: this.form.getRawValue(),
+  });
+  protected readonly total = computed(
+    () => (this.values().quantity ?? 0) * (this.values().price ?? 0),
+  );
+  protected readonly tooMuch = computed(
+    () => this.partial && (this.values().quantity ?? 0) >= this.action.remainingQuantity,
+  );
   protected readonly submitted = signal(false);
   protected readonly today = new Date();
 
@@ -64,6 +85,8 @@ export class FillDialog {
   }
 
   private defaultQuantity(): number {
-    return this.action.remainingQuantity > 0 ? this.action.remainingQuantity : this.action.plannedQuantity;
+    return this.action.remainingQuantity > 0
+      ? this.action.remainingQuantity
+      : this.action.plannedQuantity;
   }
 }

@@ -1,5 +1,20 @@
-<app-page-header title="Позиції" [subtitle]="store.isAll() ? 'Усі рахунки разом у ' + store.currency() + ' (курс NBP) · лоти FIFO по під-портфелях' : 'Віртуальні лоти FIFO по під-портфелях за останніми котируваннями'">
-  <p-datepicker [ngModel]="store.asOf()" (ngModelChange)="store.asOf.set($event)" placeholder="Сьогодні" dateFormat="dd.mm.yy" [showIcon]="true" [showClear]="true" [maxDate]="today" />
+<app-page-header
+  title="Позиції"
+  [subtitle]="
+    store.isAll()
+      ? 'Усі рахунки разом у ' + store.currency() + ' (курс NBP) · лоти FIFO по під-портфелях'
+      : 'Віртуальні лоти FIFO по під-портфелях за останніми котируваннями'
+  "
+>
+  <p-datepicker
+    [ngModel]="store.asOf()"
+    (ngModelChange)="store.asOf.set($event)"
+    placeholder="Сьогодні"
+    dateFormat="dd.mm.yy"
+    [showIcon]="true"
+    [showClear]="true"
+    [maxDate]="today"
+  />
 </app-page-header>
 
 @if (store.isLoading() && !store.sleeves().length) {
@@ -7,7 +22,11 @@
 } @else if (store.loadError()) {
   <div class="card"><p-message severity="error" text="Не вдалося завантажити позиції" /></div>
 } @else if (!store.account()) {
-  <div class="card"><app-empty-state icon="pi pi-wallet" title="Немає рахунку"><p-button label="Відкрити рахунок" routerLink="/accounts/new" /></app-empty-state></div>
+  <div class="card">
+    <app-empty-state icon="pi pi-wallet" title="Немає рахунку"
+      ><p-button label="Відкрити рахунок" routerLink="/accounts/new"
+    /></app-empty-state>
+  </div>
 } @else {
   @let totals = store.totals();
   <div class="card">
@@ -15,16 +34,39 @@
       <div>
         <div class="text-muted-color text-sm flex items-center gap-1">
           Вартість · {{ store.asOf() ? 'на вибрану дату' : 'за останніми котируваннями' }}
-          <i class="pi pi-info-circle text-xs" pTooltip="Ціни — закриття біржі за останній торговий день, валюти — курс NBP. Застосунок брокера (Revolut) показує поточну ціну й свій ринковий курс, тож сума може відрізнятися на кілька десятих відсотка." tooltipPosition="bottom"></i>
+          <i
+            class="pi pi-info-circle text-xs"
+            pTooltip="Ціни — закриття біржі за останній торговий день, валюти — курс NBP. Застосунок брокера (Revolut) показує поточну ціну й свій ринковий курс, тож сума може відрізнятися на кілька десятих відсотка."
+            tooltipPosition="bottom"
+          ></i>
         </div>
-        <div class="text-4xl sm:text-5xl font-bold tracking-tight mt-1 leading-tight"><app-money [amount]="totals.value" [currency]="store.currency()" /></div>
+        <div class="text-4xl sm:text-5xl font-bold tracking-tight mt-1 leading-tight">
+          <app-money [amount]="totals.value" [currency]="store.currency()" />
+        </div>
         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3">
-          <span class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-semibold"
-            [style.background]="totals.pnl >= 0 ? 'color-mix(in srgb, var(--p-finance-gain) 14%, transparent)' : 'color-mix(in srgb, var(--p-finance-loss) 14%, transparent)'"
-            [appSignedValue]="totals.pnl">
-            <i class="pi text-xs" [class.pi-arrow-up-right]="totals.pnl >= 0" [class.pi-arrow-down-right]="totals.pnl < 0"></i>
-            {{ totals.pnl >= 0 ? '+' : '' }}<app-money [amount]="totals.pnl" [currency]="store.currency()" [hideOriginal]="true" />
-            @if (totals.pnlPct !== null) { · {{ totals.pnlPct | signedPercent }} }
+          <span
+            class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-semibold"
+            [style.background]="
+              totals.pnl >= 0
+                ? 'color-mix(in srgb, var(--p-finance-gain) 14%, transparent)'
+                : 'color-mix(in srgb, var(--p-finance-loss) 14%, transparent)'
+            "
+            [appSignedValue]="totals.pnl"
+          >
+            <i
+              class="pi text-xs"
+              [class.pi-arrow-up-right]="totals.pnl >= 0"
+              [class.pi-arrow-down-right]="totals.pnl < 0"
+            ></i>
+            {{ totals.pnl >= 0 ? '+' : ''
+            }}<app-money
+              [amount]="totals.pnl"
+              [currency]="store.currency()"
+              [hideOriginal]="true"
+            />
+            @if (totals.pnlPct !== null) {
+              · {{ totals.pnlPct | signedPercent }}
+            }
           </span>
           <span class="text-sm text-muted-color">нереалізований результат відкритих позицій</span>
         </div>
@@ -34,9 +76,23 @@
         <div class="text-muted-color text-sm mb-2">Склад</div>
         <div class="flex gap-0.5 -my-2" role="img" aria-label="Частки інструментів">
           @for (slice of store.composition(); track slice.label; let first = $first, last = $last) {
-            <div class="py-2 min-w-0" [style.width.%]="slice.weight * 100" tooltipPosition="top"
-                 [pTooltip]="slice.label + ' · ' + (slice.weight | percent) + (slice.name && slice.name !== slice.label ? ' — ' + slice.name : '')">
-              <div class="h-3" [class.rounded-l-full]="first" [class.rounded-r-full]="last" [style.background]="slice.color"></div>
+            <div
+              class="py-2 min-w-0"
+              [style.width.%]="slice.weight * 100"
+              tooltipPosition="top"
+              [pTooltip]="
+                slice.label +
+                ' · ' +
+                (slice.weight | percent) +
+                (slice.name && slice.name !== slice.label ? ' — ' + slice.name : '')
+              "
+            >
+              <div
+                class="h-3"
+                [class.rounded-l-full]="first"
+                [class.rounded-r-full]="last"
+                [style.background]="slice.color"
+              ></div>
             </div>
           }
         </div>
@@ -57,20 +113,31 @@
     <div class="app-tiles">
       <div class="px-1 sm:px-4 lg:border-r border-surface">
         <div class="text-muted-color text-xs uppercase tracking-wide">Інвестовано</div>
-        <div class="text-xl font-semibold mt-1"><app-money [amount]="totals.invested" [currency]="store.currency()" /></div>
+        <div class="text-xl font-semibold mt-1">
+          <app-money [amount]="totals.invested" [currency]="store.currency()" />
+        </div>
         <div class="text-xs text-muted-color">вартість позицій</div>
       </div>
       <div class="px-1 sm:px-4 lg:border-r border-surface">
         <div class="text-muted-color text-xs uppercase tracking-wide">Собівартість</div>
-        <div class="text-xl font-semibold mt-1"><app-money [amount]="totals.costBasis" [currency]="store.currency()" /></div>
+        <div class="text-xl font-semibold mt-1">
+          <app-money [amount]="totals.costBasis" [currency]="store.currency()" />
+        </div>
         <div class="text-xs text-muted-color">скільки заплачено за них</div>
       </div>
       <div class="px-1 sm:px-4 lg:border-r border-surface">
         <div class="text-muted-color text-xs uppercase tracking-wide">Вільний кеш</div>
-        <div class="text-xl font-semibold mt-1"><app-money [amount]="totals.cash" [currency]="store.currency()" /></div>
+        <div class="text-xl font-semibold mt-1">
+          <app-money [amount]="totals.cash" [currency]="store.currency()" />
+        </div>
         @if (totals.hasForeignCash) {
-          <div class="text-xs text-muted-color" pTooltip="Брокер тримає кеш окремо в кожній валюті; інші валюти тут — за поточним курсом NBP">
-            @for (part of totals.cashParts; track part.currency; let last = $last) { {{ part.amount | money: part.currency }}{{ last ? '' : ' · ' }} }
+          <div
+            class="text-xs text-muted-color"
+            pTooltip="Брокер тримає кеш окремо в кожній валюті; інші валюти тут — за поточним курсом NBP"
+          >
+            @for (part of totals.cashParts; track part.currency; let last = $last) {
+              {{ part.amount | money: part.currency }}{{ last ? '' : ' · ' }}
+            }
           </div>
         } @else {
           <div class="text-xs text-muted-color">ще не вкладено</div>
@@ -85,47 +152,122 @@
   </div>
 
   @if (store.staleQuotes()) {
-    <p-message severity="warn" styleClass="mb-4" text="Частина котирувань застаріла або відсутня — вартість таких позицій може бути неточною." />
+    <p-message
+      severity="warn"
+      styleClass="mb-4"
+      text="Частина котирувань застаріла або відсутня — вартість таких позицій може бути неточною."
+    />
   }
 
   @for (sleeve of store.sleeves(); track sleeve.id) {
     <div class="card">
       <div class="flex items-start justify-between gap-3 mb-3 sm:mb-4">
         <div class="min-w-0">
-          @if (sleeve.accountName) { <div class="text-xs uppercase tracking-wide text-muted-color">{{ sleeve.accountName }}</div> }
+          @if (sleeve.accountName) {
+            <div class="text-xs uppercase tracking-wide text-muted-color">
+              {{ sleeve.accountName }}
+            </div>
+          }
           <h2 class="text-lg font-semibold m-0">{{ sleeve.name }}</h2>
-          <div class="text-sm text-muted-color">частка {{ sleeve.accountName ? 'в рахунку ' : '' }}{{ sleeve.actualShare | percent }} при цілі {{ sleeve.targetShare | percent: 0 }}</div>
-          <div class="text-sm text-muted-color">кеш <app-money [amount]="sleeve.cash" [currency]="store.currency()" [inline]="true" />
-            @if (sleeve.cashParts.length > 1) { <span class="text-xs ml-1">(@for (part of sleeve.cashParts; track part.currency; let last = $last) {{{ part.amount | money: part.currency }}@if (!last) { · }})</span> }</div>
+          <div class="text-sm text-muted-color">
+            частка {{ sleeve.accountName ? 'в рахунку ' : ''
+            }}{{ sleeve.actualShare | percent }} при цілі {{ sleeve.targetShare | percent: 0 }}
+          </div>
+          <div class="text-sm text-muted-color">
+            кеш <app-money [amount]="sleeve.cash" [currency]="store.currency()" [inline]="true" />
+            @if (sleeve.cashParts.length > 1) {
+              <span class="text-xs ml-1"
+                >(
+                @for (part of sleeve.cashParts; track part.currency; let last = $last) {
+                  {{ part.amount | money: part.currency }}
+                  @if (!last) {
+                    ·
+                  }
+                }
+                )</span
+              >
+            }
+          </div>
         </div>
         <div class="text-right shrink-0">
-          <div class="text-xl font-semibold"><app-money [amount]="sleeve.value" [currency]="store.currency()" /></div>
-          <div class="text-sm" [appSignedValue]="sleeve.pnl"><app-money [amount]="sleeve.pnl" [currency]="store.currency()" /></div>
+          <div class="text-xl font-semibold">
+            <app-money [amount]="sleeve.value" [currency]="store.currency()" />
+          </div>
+          <div class="text-sm" [appSignedValue]="sleeve.pnl">
+            <app-money [amount]="sleeve.pnl" [currency]="store.currency()" />
+          </div>
         </div>
       </div>
       @if (sleeve.positions.length) {
-        <p-table [value]="sleeve.positions" dataKey="instrumentId" tableStyleClass="sm:min-w-[52rem]" size="small">
+        <p-table
+          [value]="sleeve.positions"
+          dataKey="instrumentId"
+          tableStyleClass="sm:min-w-[52rem]"
+          size="small"
+        >
           <ng-template #header>
-            <tr><th class="w-10"></th><th>ETF</th><th class="text-right hidden sm:table-cell">Штук</th><th class="text-right hidden sm:table-cell">Середня ціна</th><th class="text-right hidden sm:table-cell">Ціна</th><th class="text-right">Вартість</th><th class="text-right hidden sm:table-cell">Вага</th><th class="text-right hidden sm:table-cell">Результат</th></tr>
+            <tr>
+              <th class="w-10"></th>
+              <th>ETF</th>
+              <th class="text-right hidden sm:table-cell">Штук</th>
+              <th class="text-right hidden sm:table-cell">Середня ціна</th>
+              <th class="text-right hidden sm:table-cell">Ціна</th>
+              <th class="text-right">Вартість</th>
+              <th class="text-right hidden sm:table-cell">Вага</th>
+              <th class="text-right hidden sm:table-cell">Результат</th>
+            </tr>
           </ng-template>
           <ng-template #body let-position let-expanded="expanded">
             <tr>
-              <td><p-button [pRowToggler]="position" [text]="true" [rounded]="true" severity="secondary" [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" ariaLabel="Лоти" /></td>
+              <td>
+                <p-button
+                  [pRowToggler]="position"
+                  [text]="true"
+                  [rounded]="true"
+                  severity="secondary"
+                  [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                  ariaLabel="Лоти"
+                />
+              </td>
               <td>
                 <div class="font-medium">{{ position.symbol }}</div>
                 <div class="hidden sm:block text-xs text-muted-color">{{ position.name }}</div>
-                <div class="sm:hidden text-xs text-muted-color"><span class="whitespace-nowrap">{{ position.quantity | quantity }} шт.</span> · <span class="whitespace-nowrap">{{ position.weight | percent }}</span></div>
+                <div class="sm:hidden text-xs text-muted-color">
+                  <span class="whitespace-nowrap">{{ position.quantity | quantity }} шт.</span> ·
+                  <span class="whitespace-nowrap">{{ position.weight | percent }}</span>
+                </div>
               </td>
               <td class="text-right hidden sm:table-cell">{{ position.quantity | quantity }}</td>
-              <td class="text-right hidden sm:table-cell"><app-money [amount]="position.averageCost" [currency]="store.currency()" /></td>
               <td class="text-right hidden sm:table-cell">
-                @if (position.quotedPrice === null) { — } @else { <app-money [amount]="position.quotedPrice" [currency]="position.quoteCurrency" /> }
-                @if (position.isStale) { <i class="pi pi-exclamation-triangle text-xs" [pTooltip]="'Котирування на ' + (position.priceDate | date)"></i> }
+                <app-money [amount]="position.averageCost" [currency]="store.currency()" />
+              </td>
+              <td class="text-right hidden sm:table-cell">
+                @if (position.quotedPrice === null) {
+                  —
+                } @else {
+                  <app-money [amount]="position.quotedPrice" [currency]="position.quoteCurrency" />
+                }
+                @if (position.isStale) {
+                  <i
+                    class="pi pi-exclamation-triangle text-xs"
+                    [pTooltip]="'Котирування на ' + (position.priceDate | date)"
+                  ></i>
+                }
               </td>
               <td class="text-right">
-                <div class="font-medium"><app-money [amount]="position.value" [currency]="store.currency()" [hideOriginal]="viewport.phone()" /></div>
+                <div class="font-medium">
+                  <app-money
+                    [amount]="position.value"
+                    [currency]="store.currency()"
+                    [hideOriginal]="viewport.phone()"
+                  />
+                </div>
                 <div class="sm:hidden text-sm" [appSignedValue]="position.pnl">
-                  <app-money [amount]="position.pnl" [currency]="store.currency()" [hideOriginal]="true" />
+                  <app-money
+                    [amount]="position.pnl"
+                    [currency]="store.currency()"
+                    [hideOriginal]="true"
+                  />
                   <div class="text-xs">{{ position.pnlPct | signedPercent }}</div>
                 </div>
               </td>
@@ -141,23 +283,58 @@
               <td class="hidden sm:table-cell"></td>
               <td colspan="8">
                 <div class="app-row-detail">
-                <div class="sm:hidden flex flex-wrap gap-x-4 gap-y-1 text-sm mb-3">
-                  <span class="inline-flex gap-1"><span class="text-muted-color">Середня ціна</span><app-money [amount]="position.averageCost" [currency]="store.currency()" [inline]="true" /></span>
-                  <span class="inline-flex gap-1"><span class="text-muted-color">Ціна</span>@if (position.quotedPrice === null) { — } @else { <app-money [amount]="position.quotedPrice" [currency]="position.quoteCurrency" [inline]="true" /> }</span>
-                </div>
-                @if (position.description) {
-                  <div class="font-medium text-sm mb-1">{{ position.name }}</div>
-                  <app-instrument-about [text]="position.description" class="block mb-4 max-w-4xl" />
-                }
-                <div class="font-medium text-sm mb-2">Ціна й ваші угоди <span class="text-muted-color font-normal">(▲ купівля, ▼ продаж)</span></div>
-                <div class="mb-4 max-w-4xl"><app-position-chart [instrumentId]="position.instrumentId" [currency]="position.quoteCurrency" /></div>
-                <div class="font-medium text-sm mb-2">Лоти (FIFO)</div>
-                @for (lot of position.lots; track $index) {
-                  <div class="flex flex-wrap justify-between gap-x-4 text-sm py-1 max-w-xl">
-                    <span>{{ lot.openedOn | date }}</span>
-                    <span class="text-right ml-auto">{{ lot.quantity | quantity }} шт. × <app-money [amount]="lot.unitCost" [currency]="store.currency()" [digits]="4" [inline]="true" /></span>
+                  <div class="sm:hidden flex flex-wrap gap-x-4 gap-y-1 text-sm mb-3">
+                    <span class="inline-flex gap-1"
+                      ><span class="text-muted-color">Середня ціна</span
+                      ><app-money
+                        [amount]="position.averageCost"
+                        [currency]="store.currency()"
+                        [inline]="true"
+                    /></span>
+                    <span class="inline-flex gap-1"
+                      ><span class="text-muted-color">Ціна</span>
+                      @if (position.quotedPrice === null) {
+                        —
+                      } @else {
+                        <app-money
+                          [amount]="position.quotedPrice"
+                          [currency]="position.quoteCurrency"
+                          [inline]="true"
+                        />
+                      }
+                    </span>
                   </div>
-                }
+                  @if (position.description) {
+                    <div class="font-medium text-sm mb-1">{{ position.name }}</div>
+                    <app-instrument-about
+                      [text]="position.description"
+                      class="block mb-4 max-w-4xl"
+                    />
+                  }
+                  <div class="font-medium text-sm mb-2">
+                    Ціна й ваші угоди
+                    <span class="text-muted-color font-normal">(▲ купівля, ▼ продаж)</span>
+                  </div>
+                  <div class="mb-4 max-w-4xl">
+                    <app-position-chart
+                      [instrumentId]="position.instrumentId"
+                      [currency]="position.quoteCurrency"
+                    />
+                  </div>
+                  <div class="font-medium text-sm mb-2">Лоти (FIFO)</div>
+                  @for (lot of position.lots; track $index) {
+                    <div class="flex flex-wrap justify-between gap-x-4 text-sm py-1 max-w-xl">
+                      <span>{{ lot.openedOn | date }}</span>
+                      <span class="text-right ml-auto"
+                        >{{ lot.quantity | quantity }} шт. ×
+                        <app-money
+                          [amount]="lot.unitCost"
+                          [currency]="store.currency()"
+                          [digits]="4"
+                          [inline]="true"
+                      /></span>
+                    </div>
+                  }
                 </div>
               </td>
             </tr>
@@ -168,6 +345,12 @@
       }
     </div>
   } @empty {
-    <div class="card"><app-empty-state icon="pi pi-chart-pie" title="Позицій ще немає" text="Імпортуйте positions.json на сторінці рахунку або відмітьте виконання в рапорті." /></div>
+    <div class="card">
+      <app-empty-state
+        icon="pi pi-chart-pie"
+        title="Позицій ще немає"
+        text="Імпортуйте positions.json на сторінці рахунку або відмітьте виконання в рапорті."
+      />
+    </div>
   }
 }

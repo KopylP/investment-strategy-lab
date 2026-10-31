@@ -15,7 +15,10 @@ import { Viewport } from '../../../../shared/ui/viewport';
 import { ReportDetailStore } from '../../data-access/report-detail-store';
 import { FillInput, ReportActionVm } from '../../models/report-vm';
 import { FillDialog } from '../../ui/fill-dialog/fill-dialog';
-import { LoadOperationsData, LoadOperationsDialog } from '../../ui/load-operations-dialog/load-operations-dialog';
+import {
+  LoadOperationsData,
+  LoadOperationsDialog,
+} from '../../ui/load-operations-dialog/load-operations-dialog';
 import { ReportActionsTable } from '../../ui/report-actions-table/report-actions-table';
 import { ReportProgress } from '../../ui/report-progress/report-progress';
 import { ReportStatusTag } from '../../ui/report-status-tag/report-status-tag';
@@ -25,8 +28,25 @@ import { SkipDialog } from '../../ui/skip-dialog/skip-dialog';
 @Component({
   selector: 'app-report-detail-page',
   imports: [
-    RouterLink, Button, Menu, Message, Skeleton, Tag, Tabs, TabList, Tab, TabPanels, TabPanel,
-    PageHeader, ReportProgress, ReportActionsTable, ReportStatusTag, SectionPanel, DatePipe, DateTimePipe, MoneyPipe,
+    RouterLink,
+    Button,
+    Menu,
+    Message,
+    Skeleton,
+    Tag,
+    Tabs,
+    TabList,
+    Tab,
+    TabPanels,
+    TabPanel,
+    PageHeader,
+    ReportProgress,
+    ReportActionsTable,
+    ReportStatusTag,
+    SectionPanel,
+    DatePipe,
+    DateTimePipe,
+    MoneyPipe,
   ],
   providers: [ReportDetailStore],
   templateUrl: './report-detail-page.html',
@@ -45,11 +65,35 @@ export class ReportDetailPage {
     const report = this.store.report();
     const busy = this.store.busy();
     return [
-      ...(this.store.canMark() ? [{ label: 'Довантажити операції', icon: 'pi pi-download', command: () => this.openLoadOperations() }] : []),
-      ...(report && report.summary.status !== 'Superseded'
-        ? [{ label: 'Згенерувати заново', icon: 'pi pi-refresh', disabled: busy === 'regenerate', command: () => this.confirmRegenerate() }]
+      ...(this.store.canMark()
+        ? [
+            {
+              label: 'Довантажити операції',
+              icon: 'pi pi-download',
+              command: () => this.openLoadOperations(),
+            },
+          ]
         : []),
-      ...(this.store.canMark() ? [{ label: 'Закрити рапорт', icon: 'pi pi-lock', disabled: busy === 'close', command: () => this.confirmClose() }] : []),
+      ...(report && report.summary.status !== 'Superseded'
+        ? [
+            {
+              label: 'Згенерувати заново',
+              icon: 'pi pi-refresh',
+              disabled: busy === 'regenerate',
+              command: () => this.confirmRegenerate(),
+            },
+          ]
+        : []),
+      ...(this.store.canMark()
+        ? [
+            {
+              label: 'Закрити рапорт',
+              icon: 'pi pi-lock',
+              disabled: busy === 'close',
+              command: () => this.confirmClose(),
+            },
+          ]
+        : []),
     ];
   });
 
@@ -67,7 +111,14 @@ export class ReportDetailPage {
 
   protected openSkip(action: ReportActionVm): void {
     this.dialogs
-      .open(SkipDialog, { header: `Пропустити · ${action.title}`, modal: true, width: '32rem', closable: true, data: { action }, breakpoints: { '640px': '95vw' } })
+      .open(SkipDialog, {
+        header: `Пропустити · ${action.title}`,
+        modal: true,
+        width: '32rem',
+        closable: true,
+        data: { action },
+        breakpoints: { '640px': '95vw' },
+      })
       ?.onClose.pipe(filter((reason): reason is string => !!reason))
       .subscribe((reason) => void this.store.skip(action, reason));
   }
@@ -75,9 +126,21 @@ export class ReportDetailPage {
   protected openLoadOperations(): void {
     const report = this.store.report();
     if (!report) return;
-    const data: LoadOperationsData = { reportId: report.summary.id, accountId: report.summary.accountId, currency: report.summary.currency, actions: this.store.actions() };
+    const data: LoadOperationsData = {
+      reportId: report.summary.id,
+      accountId: report.summary.accountId,
+      currency: report.summary.currency,
+      actions: this.store.actions(),
+    };
     this.dialogs
-      .open(LoadOperationsDialog, { header: 'Довантажити операції', modal: true, width: '40rem', closable: true, data, breakpoints: { '640px': '95vw' } })
+      .open(LoadOperationsDialog, {
+        header: 'Довантажити операції',
+        modal: true,
+        width: '40rem',
+        closable: true,
+        data,
+        breakpoints: { '640px': '95vw' },
+      })
       ?.onClose.pipe(filter((count): count is number => typeof count === 'number'))
       .subscribe((count) => this.store.marked(count));
   }
@@ -103,7 +166,8 @@ export class ReportDetailPage {
   protected confirmClose(): void {
     this.confirm.confirm({
       header: 'Закрити рапорт?',
-      message: 'Дії без відмітки буде позначено як пропущені («закрито без відмітки»). Відмітки можна буде скасувати й пізніше.',
+      message:
+        'Дії без відмітки буде позначено як пропущені («закрито без відмітки»). Відмітки можна буде скасувати й пізніше.',
       icon: 'pi pi-lock',
       acceptLabel: 'Закрити',
       rejectLabel: 'Скасувати',
@@ -115,19 +179,25 @@ export class ReportDetailPage {
   protected confirmRegenerate(): void {
     this.confirm.confirm({
       header: 'Згенерувати заново?',
-      message: 'Новий план рахується від фактичних позицій і кешу; цей рапорт буде замінено. Уже зроблені відмітки лишаються в журналі.',
+      message:
+        'Новий план рахується від фактичних позицій і кешу; цей рапорт буде замінено. Уже зроблені відмітки лишаються в журналі.',
       icon: 'pi pi-refresh',
       acceptLabel: 'Згенерувати',
       rejectLabel: 'Скасувати',
       rejectButtonProps: { severity: 'secondary', text: true },
       accept: async () => {
         const requestId = await this.store.regenerate();
-        if (requestId) await this.router.navigate(['/reports'], { queryParams: { request: requestId } });
+        if (requestId)
+          await this.router.navigate(['/reports'], { queryParams: { request: requestId } });
       },
     });
   }
 
-  private openFillDialog(action: ReportActionVm, mode: 'full' | 'partial', save: (fill: FillInput) => Promise<void>): void {
+  private openFillDialog(
+    action: ReportActionVm,
+    mode: 'full' | 'partial',
+    save: (fill: FillInput) => Promise<void>,
+  ): void {
     this.dialogs
       .open(FillDialog, {
         header: `${mode === 'partial' ? 'Частково виконано' : 'Виконано'} · ${action.title}`,

@@ -47,23 +47,54 @@ export class AccountsApi {
   }
 
   changeTargetShares(id: string, sharesPercent: Record<string, number>): Promise<AccountSetup> {
-    return this.api.put<AccountSetup>(`/api/portfolio/accounts/${id}/target-shares`, { targetShares: sharesPercent });
+    return this.api.put<AccountSetup>(`/api/portfolio/accounts/${id}/target-shares`, {
+      targetShares: sharesPercent,
+    });
   }
 
-  changeContributionPolicy(id: string, kind: string, driftBandPercent: number | null): Promise<AccountSetup> {
-    return this.api.put<AccountSetup>(`/api/portfolio/accounts/${id}/contribution-policy`, { kind, driftBandPercent });
+  changeContributionPolicy(
+    id: string,
+    kind: string,
+    driftBandPercent: number | null,
+  ): Promise<AccountSetup> {
+    return this.api.put<AccountSetup>(`/api/portfolio/accounts/${id}/contribution-policy`, {
+      kind,
+      driftBandPercent,
+    });
   }
 
-  assignStrategy(id: string, subPortfolioId: string, strategyId: string | null, pinnedVersion: number | null): Promise<AccountSetup> {
-    return this.api.put<AccountSetup>(`/api/portfolio/accounts/${id}/sub-portfolios/${subPortfolioId}/strategy`, { strategyId, pinnedVersion });
+  assignStrategy(
+    id: string,
+    subPortfolioId: string,
+    strategyId: string | null,
+    pinnedVersion: number | null,
+  ): Promise<AccountSetup> {
+    return this.api.put<AccountSetup>(
+      `/api/portfolio/accounts/${id}/sub-portfolios/${subPortfolioId}/strategy`,
+      { strategyId, pinnedVersion },
+    );
   }
 
-  addSubPortfolio(id: string, subPortfolio: SubPortfolioInput, targetSharesOfOthers: Record<string, number>): Promise<AccountSetup> {
-    return this.api.post<AccountSetup>(`/api/portfolio/accounts/${id}/sub-portfolios`, { subPortfolio, targetSharesOfOthers });
+  addSubPortfolio(
+    id: string,
+    subPortfolio: SubPortfolioInput,
+    targetSharesOfOthers: Record<string, number>,
+  ): Promise<AccountSetup> {
+    return this.api.post<AccountSetup>(`/api/portfolio/accounts/${id}/sub-portfolios`, {
+      subPortfolio,
+      targetSharesOfOthers,
+    });
   }
 
-  retire(id: string, subPortfolioId: string, targetSharesOfRemaining: Record<string, number>): Promise<AccountSetup> {
-    return this.api.post<AccountSetup>(`/api/portfolio/accounts/${id}/sub-portfolios/${subPortfolioId}/retire`, { targetSharesOfRemaining });
+  retire(
+    id: string,
+    subPortfolioId: string,
+    targetSharesOfRemaining: Record<string, number>,
+  ): Promise<AccountSetup> {
+    return this.api.post<AccountSetup>(
+      `/api/portfolio/accounts/${id}/sub-portfolios/${subPortfolioId}/retire`,
+      { targetSharesOfRemaining },
+    );
   }
 
   planSettings(id: string): Promise<PlanSettings> {
@@ -86,8 +117,17 @@ export class AccountsApi {
     return this.api.post<StrategyOption[]>('/api/strategies/defaults', {});
   }
 
-  importPositions(id: string, subPortfolioId: string, positionsJson: unknown, asOf: string): Promise<unknown> {
-    return this.api.post(`/api/portfolio/accounts/${id}/sub-portfolios/${subPortfolioId}/import-positions`, positionsJson, { asOf });
+  importPositions(
+    id: string,
+    subPortfolioId: string,
+    positionsJson: unknown,
+    asOf: string,
+  ): Promise<unknown> {
+    return this.api.post(
+      `/api/portfolio/accounts/${id}/sub-portfolios/${subPortfolioId}/import-positions`,
+      positionsJson,
+      { asOf },
+    );
   }
 }
 
@@ -97,7 +137,8 @@ export function normalizeToHundred(weights: Record<string, number>): Record<stri
   if (!keys.length || total <= 0) return weights;
   const result: Record<string, number> = {};
   for (const key of keys) result[key] = Math.round((weights[key] / total) * 10000) / 100;
-  const rest = Math.round((100 - Object.values(result).reduce((sum, value) => sum + value, 0)) * 100) / 100;
+  const rest =
+    Math.round((100 - Object.values(result).reduce((sum, value) => sum + value, 0)) * 100) / 100;
   const largest = keys.reduce((best, key) => (result[key] > result[best] ? key : best), keys[0]);
   result[largest] = Math.round((result[largest] + rest) * 100) / 100;
   return result;

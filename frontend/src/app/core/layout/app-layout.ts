@@ -39,6 +39,8 @@ export class AppLayout {
   });
 
   constructor() {
-    effect(() => document.body.classList.toggle('blocked-scroll', this.layout.layoutState().mobileMenuActive));
+    effect(() =>
+      document.body.classList.toggle('blocked-scroll', this.layout.layoutState().mobileMenuActive),
+    );
   }
 }

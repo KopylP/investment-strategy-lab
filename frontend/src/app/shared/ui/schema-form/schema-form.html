@@ -4,7 +4,9 @@
       @if (disabled() && viewport.phone()) {
         <dl class="m-0 flex flex-col">
           @for (field of group.fields; track field.path.join('.')) {
-            <div class="flex items-baseline justify-between gap-3 py-1.5 border-b border-surface last:border-b-0 text-sm">
+            <div
+              class="flex items-baseline justify-between gap-3 py-1.5 border-b border-surface last:border-b-0 text-sm"
+            >
               <dt class="text-muted-color flex items-center gap-1 min-w-0">
                 {{ field.label }}
                 @if (field.description) {
@@ -16,36 +18,69 @@
           }
         </dl>
       } @else {
-      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        @for (field of group.fields; track field.path.join('.')) {
-          <div class="flex flex-col gap-2">
-            <label class="font-medium text-sm flex items-center gap-1" [attr.for]="field.path.join('-')">
-              {{ field.label }}
-              @if (field.description) {
-                <i class="pi pi-info-circle text-muted-color text-xs" [pTooltip]="field.description"></i>
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          @for (field of group.fields; track field.path.join('.')) {
+            <div class="flex flex-col gap-2">
+              <label
+                class="font-medium text-sm flex items-center gap-1"
+                [attr.for]="field.path.join('-')"
+              >
+                {{ field.label }}
+                @if (field.description) {
+                  <i
+                    class="pi pi-info-circle text-muted-color text-xs"
+                    [pTooltip]="field.description"
+                  ></i>
+                }
+              </label>
+              @switch (field.kind) {
+                @case ('boolean') {
+                  <p-toggleswitch
+                    [inputId]="field.path.join('-')"
+                    [ngModel]="read(field.path)"
+                    (ngModelChange)="write(field.path, $event)"
+                    [disabled]="disabled()"
+                  />
+                }
+                @case ('enum') {
+                  <p-select
+                    [inputId]="field.path.join('-')"
+                    [options]="field.options"
+                    optionLabel="label"
+                    optionValue="value"
+                    [ngModel]="read(field.path)"
+                    (ngModelChange)="write(field.path, $event)"
+                    [disabled]="disabled()"
+                    fluid
+                  />
+                }
+                @case ('text') {
+                  <input
+                    pInputText
+                    [id]="field.path.join('-')"
+                    [ngModel]="read(field.path)"
+                    (ngModelChange)="write(field.path, $event)"
+                    [disabled]="disabled()"
+                  />
+                }
+                @default {
+                  <p-inputnumber
+                    [inputId]="field.path.join('-')"
+                    [ngModel]="read(field.path)"
+                    (ngModelChange)="write(field.path, $event)"
+                    [min]="field.min"
+                    [max]="field.max"
+                    [minFractionDigits]="field.kind === 'integer' ? 0 : 0"
+                    [maxFractionDigits]="field.kind === 'integer' ? 0 : 4"
+                    [showButtons]="field.kind === 'integer'"
+                    [disabled]="disabled()"
+                    fluid
+                  />
+                }
               }
-            </label>
-            @switch (field.kind) {
-              @case ('boolean') {
-                <p-toggleswitch [inputId]="field.path.join('-')" [ngModel]="read(field.path)" (ngModelChange)="write(field.path, $event)" [disabled]="disabled()" />
-              }
-              @case ('enum') {
-                <p-select [inputId]="field.path.join('-')" [options]="field.options" optionLabel="label" optionValue="value"
-                          [ngModel]="read(field.path)" (ngModelChange)="write(field.path, $event)" [disabled]="disabled()" fluid />
-              }
-              @case ('text') {
-                <input pInputText [id]="field.path.join('-')" [ngModel]="read(field.path)" (ngModelChange)="write(field.path, $event)" [disabled]="disabled()" />
-              }
-              @default {
-                <p-inputnumber [inputId]="field.path.join('-')" [ngModel]="read(field.path)" (ngModelChange)="write(field.path, $event)"
-                               [min]="field.min" [max]="field.max" [minFractionDigits]="field.kind === 'integer' ? 0 : 0"
-                               [maxFractionDigits]="field.kind === 'integer' ? 0 : 4" [showButtons]="field.kind === 'integer'"
-                               [disabled]="disabled()" fluid />
-              }
-            }
-          </div>
-        }
-      </div>
+            </div>
+          }
+        </div>
       }
     </p-fieldset>
   }

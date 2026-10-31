@@ -9,12 +9,30 @@ import { Message } from 'primeng/message';
 import { Skeleton } from 'primeng/skeleton';
 import { Tooltip } from 'primeng/tooltip';
 import { DatePipe, MoneyPipe } from '../../../../shared/pipes/format-pipes';
-import { DeclarationAccountLine, DeclarationField, formValue, Pit8CAmounts, TaxDeclaration } from '../../data-access/declarations';
+import {
+  DeclarationAccountLine,
+  DeclarationField,
+  formValue,
+  Pit8CAmounts,
+  TaxDeclaration,
+} from '../../data-access/declarations';
 import { TapTooltip } from '../../../../shared/ui/tap-tooltip';
 
 @Component({
   selector: 'app-declaration-dialog',
-  imports: [NgTemplateOutlet, FormsModule, InputNumber, Dialog, Button, Message, Skeleton, Tooltip, TapTooltip, MoneyPipe, DatePipe],
+  imports: [
+    NgTemplateOutlet,
+    FormsModule,
+    InputNumber,
+    Dialog,
+    Button,
+    Message,
+    Skeleton,
+    Tooltip,
+    TapTooltip,
+    MoneyPipe,
+    DatePipe,
+  ],
   templateUrl: './declaration-dialog.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -33,16 +51,27 @@ export class DeclarationDialog {
   readonly pit8c = output<{ accountId: string; amounts: Pit8CAmounts }>();
   readonly pit8cRemoved = output<string>();
 
-  protected readonly editing = signal<{ accountId: string; revenue: number | null; costs: number | null } | null>(null);
+  protected readonly editing = signal<{
+    accountId: string;
+    revenue: number | null;
+    costs: number | null;
+  } | null>(null);
 
   protected edit(account: DeclarationAccountLine): void {
-    this.editing.set({ accountId: account.accountId, revenue: account.pit8C?.revenue ?? null, costs: account.pit8C?.costs ?? null });
+    this.editing.set({
+      accountId: account.accountId,
+      revenue: account.pit8C?.revenue ?? null,
+      costs: account.pit8C?.costs ?? null,
+    });
   }
 
   protected save(): void {
     const draft = this.editing();
     if (!draft || draft.revenue === null || draft.costs === null) return;
-    this.pit8c.emit({ accountId: draft.accountId, amounts: { revenue: draft.revenue, costs: draft.costs } });
+    this.pit8c.emit({
+      accountId: draft.accountId,
+      amounts: { revenue: draft.revenue, costs: draft.costs },
+    });
     this.editing.set(null);
   }
 
@@ -55,8 +84,18 @@ export class DeclarationDialog {
   protected async copyAll(declaration: TaxDeclaration): Promise<void> {
     const lines = [
       `${declaration.form} за ${declaration.year}`,
-      ...declaration.sections.flatMap((section) => [`${section.code}. ${section.title}`, ...section.fields.map((field) => `  poz. ${field.position} ${field.label}: ${formValue(field)}`)]),
-      ...declaration.attachments.flatMap((attachment) => [attachment.title, ...attachment.fields.map((field) => `  poz. ${field.position} ${field.label}: ${formValue(field)}`)]),
+      ...declaration.sections.flatMap((section) => [
+        `${section.code}. ${section.title}`,
+        ...section.fields.map(
+          (field) => `  poz. ${field.position} ${field.label}: ${formValue(field)}`,
+        ),
+      ]),
+      ...declaration.attachments.flatMap((attachment) => [
+        attachment.title,
+        ...attachment.fields.map(
+          (field) => `  poz. ${field.position} ${field.label}: ${formValue(field)}`,
+        ),
+      ]),
     ];
     await this.write(lines.join('\n'), 'Усі позиції скопійовано');
   }

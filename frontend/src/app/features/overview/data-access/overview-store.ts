@@ -36,20 +36,43 @@ export class OverviewStore {
 
   readonly period = signal<DashboardPeriod>('ALL');
 
-  private readonly strategiesResource = resource({ loader: () => this.api.get<unknown[]>('/api/strategies') });
+  private readonly strategiesResource = resource({
+    loader: () => this.api.get<unknown[]>('/api/strategies'),
+  });
 
   private readonly dashboardResource = resource({
     params: () => {
-      if (this.accounts.isAll()) return { url: '/api/performance/dashboard', currency: this.display.code() ?? undefined, period: this.period() };
+      if (this.accounts.isAll())
+        return {
+          url: '/api/performance/dashboard',
+          currency: this.display.code() ?? undefined,
+          period: this.period(),
+        };
       const accountId = this.accounts.currentId();
-      return accountId ? { url: `/api/performance/accounts/${accountId}/dashboard`, currency: undefined, period: this.period() } : undefined;
+      return accountId
+        ? {
+            url: `/api/performance/accounts/${accountId}/dashboard`,
+            currency: undefined,
+            period: this.period(),
+          }
+        : undefined;
     },
-    loader: ({ params }) => this.api.get<DashboardDto>(params.url, { period: params.period, currency: params.currency }),
+    loader: ({ params }) =>
+      this.api.get<DashboardDto>(params.url, { period: params.period, currency: params.currency }),
   });
 
   private readonly reportsResource = resource({
-    params: () => (this.accounts.isAll() ? { all: true } : this.accounts.currentId() ? { accountId: this.accounts.currentId() } : undefined),
-    loader: ({ params }) => this.api.get<ReportSummary[]>('/api/rebalancing/reports', 'accountId' in params ? { accountId: params.accountId } : undefined),
+    params: () =>
+      this.accounts.isAll()
+        ? { all: true }
+        : this.accounts.currentId()
+          ? { accountId: this.accounts.currentId() }
+          : undefined,
+    loader: ({ params }) =>
+      this.api.get<ReportSummary[]>(
+        '/api/rebalancing/reports',
+        'accountId' in params ? { accountId: params.accountId } : undefined,
+      ),
   });
 
   readonly taxYear = new Date().getFullYear();
@@ -60,7 +83,8 @@ export class OverviewStore {
 
   private readonly totalResource = resource({
     params: () => (this.tax()?.alertShare != null ? true : undefined),
-    loader: () => this.api.get<DashboardDto>('/api/performance/dashboard', { currency: 'PLN', period: '1M' }),
+    loader: () =>
+      this.api.get<DashboardDto>('/api/performance/dashboard', { currency: 'PLN', period: '1M' }),
   });
 
   readonly accountsLoaded = this.accounts.hasLoaded;
@@ -75,13 +99,18 @@ export class OverviewStore {
     ),
   );
 
-  readonly dashboard = linkedSignal<{ value: DashboardDto | undefined; loading: boolean; accountId: string | null }, DashboardDto | undefined>({
+  readonly dashboard = linkedSignal<
+    { value: DashboardDto | undefined; loading: boolean; accountId: string | null },
+    DashboardDto | undefined
+  >({
     source: () => ({
       value: this.dashboardResource.hasValue() ? this.dashboardResource.value() : undefined,
       loading: this.dashboardResource.isLoading(),
       accountId: this.accounts.currentId() ?? null,
     }),
-    computation: (next, previous) => next.value ?? (next.loading && previous?.value?.accountId === next.accountId ? previous.value : undefined),
+    computation: (next, previous) =>
+      next.value ??
+      (next.loading && previous?.value?.accountId === next.accountId ? previous.value : undefined),
   });
   readonly isLoading = this.dashboardResource.isLoading;
   readonly loadError = this.dashboardResource.error;
@@ -98,29 +127,48 @@ export class OverviewStore {
   readonly hasHistory = computed(() => (this.dashboard()?.series.length ?? 0) > 0);
 
   readonly reports = computed(() => this.reportsResource.value() ?? []);
-  readonly openReports = computed(() => this.reports().filter((report) => report.kind !== 'RiskReview' && (report.status === 'New' || report.status === 'InProgress')));
-  readonly latestRisk = computed(() => this.reports().find((report) => report.kind === 'RiskReview'));
+  readonly openReports = computed(() =>
+    this.reports().filter(
+      (report) =>
+        report.kind !== 'RiskReview' && (report.status === 'New' || report.status === 'InProgress'),
+    ),
+  );
+  readonly latestRisk = computed(() =>
+    this.reports().find((report) => report.kind === 'RiskReview'),
+  );
   readonly planGap = computed(() => {
     const dashboard = this.dashboard();
     return dashboard?.planValue != null ? dashboard.value - dashboard.planValue : null;
   });
 
-  readonly tax = computed(() => (this.taxResource.hasValue() ? this.taxResource.value() : undefined));
-  readonly taxError = computed(() => (this.taxResource.error() ? toProblemMessage(this.taxResource.error()) : null));
-  readonly allAccountsValuePln = computed(() => (this.totalResource.hasValue() ? (this.totalResource.value()?.value ?? null) : null));
+  readonly tax = computed(() =>
+    this.taxResource.hasValue() ? this.taxResource.value() : undefined,
+  );
+  readonly taxError = computed(() =>
+    this.taxResource.error() ? toProblemMessage(this.taxResource.error()) : null,
+  );
+  readonly allAccountsValuePln = computed(() =>
+    this.totalResource.hasValue() ? (this.totalResource.value()?.value ?? null) : null,
+  );
   readonly taxAlert = computed(() => {
     const tax = this.tax();
     const value = this.allAccountsValuePln();
     if (!tax || tax.alertShare === null || !value) return null;
     const limit = value * tax.alertShare;
-    return { share: tax.alertShare, limit, ratio: tax.taxDue / value, exceeded: tax.taxDue > limit };
+    return {
+      share: tax.alertShare,
+      limit,
+      ratio: tax.taxDue / value,
+      exceeded: tax.taxDue > limit,
+    };
   });
   readonly taxLast30Days = computed(() => {
     const tax = this.tax();
     if (!tax) return 0;
     const since = new Date();
     since.setDate(since.getDate() - 30);
-    const before = [...tax.points].reverse().find((point) => new Date(point.date) < since)?.taxDue ?? 0;
+    const before =
+      [...tax.points].reverse().find((point) => new Date(point.date) < since)?.taxDue ?? 0;
     return tax.taxDue - before;
   });
   accountName(id: string): string {

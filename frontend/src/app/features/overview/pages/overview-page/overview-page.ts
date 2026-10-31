@@ -8,7 +8,14 @@ import { Skeleton } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
 import { Tag } from 'primeng/tag';
 import { Tooltip } from 'primeng/tooltip';
-import { DateTimePipe, DatePipe, MoneyPipe, PercentPipe, PeriodPipe, SignedPercentPipe } from '../../../../shared/pipes/format-pipes';
+import {
+  DateTimePipe,
+  DatePipe,
+  MoneyPipe,
+  PercentPipe,
+  PeriodPipe,
+  SignedPercentPipe,
+} from '../../../../shared/pipes/format-pipes';
 import { Money } from '../../../../shared/ui/money/money';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { SignedValue } from '../../../../shared/ui/signed-value';
@@ -23,8 +30,29 @@ import { TapTooltip } from '../../../../shared/ui/tap-tooltip';
 @Component({
   selector: 'app-overview-page',
   imports: [
-    FormsModule, RouterLink, Button, Message, SelectButton, Skeleton, TableModule, Tag, Tooltip, TapTooltip, PageHeader, SignedValue, ValueChart, DrawdownChart, AllocationCard, TaxProgressChart, Money,
-    MoneyPipe, PercentPipe, SignedPercentPipe, PeriodPipe, DateTimePipe, DatePipe,
+    FormsModule,
+    RouterLink,
+    Button,
+    Message,
+    SelectButton,
+    Skeleton,
+    TableModule,
+    Tag,
+    Tooltip,
+    TapTooltip,
+    PageHeader,
+    SignedValue,
+    ValueChart,
+    DrawdownChart,
+    AllocationCard,
+    TaxProgressChart,
+    Money,
+    MoneyPipe,
+    PercentPipe,
+    SignedPercentPipe,
+    PeriodPipe,
+    DateTimePipe,
+    DatePipe,
   ],
   providers: [OverviewStore],
   templateUrl: './overview-page.html',

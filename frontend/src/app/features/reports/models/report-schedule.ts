@@ -1,4 +1,3 @@
-
 export type ReportMode = 'rebalance' | 'riskReview';
 
 export interface ReportTiming {
@@ -46,7 +45,10 @@ const weekdayLabels: Record<string, string> = {
   sunday: 'неділя',
 };
 
-export const weekdayOptions = Object.entries(weekdayLabels).map(([value, label]) => ({ label: label[0].toUpperCase() + label.slice(1), value }));
+export const weekdayOptions = Object.entries(weekdayLabels).map(([value, label]) => ({
+  label: label[0].toUpperCase() + label.slice(1),
+  value,
+}));
 
 export function scheduleLabel(timing: ReportTiming): string {
   const at = `о ${timing.time}`;
@@ -66,7 +68,13 @@ export function scheduleLabel(timing: ReportTiming): string {
   }
 }
 
-export function editableTiming({ frequency, day, weekday, time, minute }: ReportTiming): ReportTiming {
+export function editableTiming({
+  frequency,
+  day,
+  weekday,
+  time,
+  minute,
+}: ReportTiming): ReportTiming {
   return { frequency: frequency.toLowerCase(), day, weekday: weekday.toLowerCase(), time, minute };
 }
 
@@ -77,13 +85,18 @@ export function isTimingComplete(timing: ReportTiming): boolean {
     case 'off':
       return true;
     default:
-      return /^([01]\d|2[0-3]):[0-5]\d$/.test(timing.time ?? '')
-        && (!['monthly', 'quarterly'].includes(timing.frequency) || (Number.isInteger(timing.day) && timing.day >= 1 && timing.day <= 31));
+      return (
+        /^([01]\d|2[0-3]):[0-5]\d$/.test(timing.time ?? '') &&
+        (!['monthly', 'quarterly'].includes(timing.frequency) ||
+          (Number.isInteger(timing.day) && timing.day >= 1 && timing.day <= 31))
+      );
   }
 }
 
 export function distinctReports(reports: ScheduledReport[]): ScheduledReport[] {
-  return reports.filter((report, index) => reports.findIndex((other) => other.code === report.code) === index);
+  return reports.filter(
+    (report, index) => reports.findIndex((other) => other.code === report.code) === index,
+  );
 }
 
 export function reportIcon(mode: ReportMode): string {
@@ -100,7 +113,8 @@ export function upcomingReports(reports: ScheduledReport[]): ScheduledReport[] {
   const soonest = new Map<string, ScheduledReport>();
   for (const report of reports) {
     const known = soonest.get(report.code);
-    if (!known || (report.next && (!known.next || report.next < known.next))) soonest.set(report.code, report);
+    if (!known || (report.next && (!known.next || report.next < known.next)))
+      soonest.set(report.code, report);
   }
   return [...soonest.values()].sort((a, b) => (a.next ?? '￿').localeCompare(b.next ?? '￿'));
 }

@@ -27,8 +27,16 @@ export class AllocationCard {
     return {
       labels: subs.map((sub) => sub.name),
       datasets: [
-        { label: 'Факт', data: subs.map((sub) => sub.actualShare * 100), backgroundColor: palette.series },
-        { label: 'Ціль', data: subs.map((sub) => sub.targetShare * 100), backgroundColor: palette.series.map((color) => withAlpha(color, 0.35)) },
+        {
+          label: 'Факт',
+          data: subs.map((sub) => sub.actualShare * 100),
+          backgroundColor: palette.series,
+        },
+        {
+          label: 'Ціль',
+          data: subs.map((sub) => sub.targetShare * 100),
+          backgroundColor: palette.series.map((color) => withAlpha(color, 0.35)),
+        },
       ],
     };
   });
@@ -37,7 +45,12 @@ export class AllocationCard {
     cutout: '55%',
     plugins: {
       legend: { display: false },
-      tooltip: { callbacks: { label: (context: { dataset: { label: string }; label: string; parsed: number }) => `${context.label} · ${context.dataset.label}: ${context.parsed.toFixed(1)}%` } },
+      tooltip: {
+        callbacks: {
+          label: (context: { dataset: { label: string }; label: string; parsed: number }) =>
+            `${context.label} · ${context.dataset.label}: ${context.parsed.toFixed(1)}%`,
+        },
+      },
     },
   }));
 

@@ -6,7 +6,8 @@ import { MessageService } from 'primeng/api';
   host: {
     '[style.outline]': "over() ? '2px dashed var(--p-primary-color)' : null",
     '[style.outline-offset]': "over() ? '2px' : null",
-    '[style.background]': "over() ? 'color-mix(in srgb, var(--p-primary-color) 10%, transparent)' : null",
+    '[style.background]':
+      "over() ? 'color-mix(in srgb, var(--p-primary-color) 10%, transparent)' : null",
     '(dragenter)': 'enter($event)',
     '(dragover)': 'hover($event)',
     '(dragleave)': 'leave()',
@@ -47,7 +48,14 @@ export class FileDrop {
     const file = event.dataTransfer?.files[0];
     if (!input || !file) return;
     if (!matches(file, input.accept)) {
-      this.messages.add({ severity: 'warn', summary: 'Не той файл', detail: `Потрібен файл ${input.accept.split(',').filter((type) => type.startsWith('.')).join(' або ')}` });
+      this.messages.add({
+        severity: 'warn',
+        summary: 'Не той файл',
+        detail: `Потрібен файл ${input.accept
+          .split(',')
+          .filter((type) => type.startsWith('.'))
+          .join(' або ')}`,
+      });
       return;
     }
     const files = new DataTransfer();
@@ -67,8 +75,13 @@ export class FileDrop {
 }
 
 function matches(file: File, accept: string): boolean {
-  const allowed = accept.split(',').map((type) => type.trim().toLowerCase()).filter(Boolean);
+  const allowed = accept
+    .split(',')
+    .map((type) => type.trim().toLowerCase())
+    .filter(Boolean);
   if (!allowed.length) return true;
   const name = file.name.toLowerCase();
-  return allowed.some((type) => (type.startsWith('.') ? name.endsWith(type) : file.type.toLowerCase() === type));
+  return allowed.some((type) =>
+    type.startsWith('.') ? name.endsWith(type) : file.type.toLowerCase() === type,
+  );
 }

@@ -49,10 +49,14 @@ export class AppTopbar {
   );
 
   protected readonly accountOptions = computed(() =>
-    this.scope() === 'all' ? [{ id: allAccounts, name: 'Усі рахунки' }, ...this.accounts.accounts()] : this.accounts.accounts(),
+    this.scope() === 'all'
+      ? [{ id: allAccounts, name: 'Усі рахунки' }, ...this.accounts.accounts()]
+      : this.accounts.accounts(),
   );
 
-  protected readonly selectedAccount = computed(() => (this.scope() === 'all' && this.accounts.isAll() ? allAccounts : this.accounts.currentId()));
+  protected readonly selectedAccount = computed(() =>
+    this.scope() === 'all' && this.accounts.isAll() ? allAccounts : this.accounts.currentId(),
+  );
 
   protected readonly userMenu = computed<MenuItem[]>(() => {
     const phone = this.viewport.phone();
@@ -63,7 +67,10 @@ export class AppTopbar {
             {
               label: 'Рахунок',
               items: this.accountOptions().map((account) => ({
-                label: 'baseCurrency' in account ? `${account.name} · ${account.baseCurrency}` : account.name,
+                label:
+                  'baseCurrency' in account
+                    ? `${account.name} · ${account.baseCurrency}`
+                    : account.name,
                 icon: account.id === this.selectedAccount() ? 'pi pi-check' : 'pi pi-wallet',
                 command: () => this.chooseAccount(account.id),
               })),
@@ -72,13 +79,28 @@ export class AppTopbar {
           ]
         : [];
     const themeItems: MenuItem[] = phone
-      ? [{ label: this.layout.isDarkTheme() ? 'Світла тема' : 'Темна тема', icon: this.layout.isDarkTheme() ? 'pi pi-sun' : 'pi pi-moon', command: () => this.toggleDarkMode() }]
+      ? [
+          {
+            label: this.layout.isDarkTheme() ? 'Світла тема' : 'Темна тема',
+            icon: this.layout.isDarkTheme() ? 'pi pi-sun' : 'pi pi-moon',
+            command: () => this.toggleDarkMode(),
+          },
+        ]
       : [];
     return [
       ...accountItems,
-      { label: 'Профіль', icon: 'pi pi-user', command: () => void this.router.navigate(['/profile']) },
+      {
+        label: 'Профіль',
+        icon: 'pi pi-user',
+        command: () => void this.router.navigate(['/profile']),
+      },
       ...themeItems,
-      ...(this.auth.user()?.viaHomeAssistant ? [] : [{ separator: true }, { label: 'Вийти', icon: 'pi pi-sign-out', command: () => void this.signOut() }]),
+      ...(this.auth.user()?.viaHomeAssistant
+        ? []
+        : [
+            { separator: true },
+            { label: 'Вийти', icon: 'pi pi-sign-out', command: () => void this.signOut() },
+          ]),
     ];
   });
 

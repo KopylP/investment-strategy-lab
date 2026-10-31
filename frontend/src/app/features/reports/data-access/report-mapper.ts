@@ -1,6 +1,24 @@
 import { formatMoney, formatPeriod, formatQuantity } from '../../../shared/pipes/format';
-import { ActionKind, ReportActionDto, ReportDetailsDto, ReportRequestDto, ReportSectionDto, ReportSummaryDto, SectionColumnDto, SectionOrderDto, SectionScoreDto } from '../models/report-dto';
-import { ReportActionVm, ReportProgressVm, ReportRequestVm, ReportSummaryVm, ReportVm, ScoreTableVm, SectionVm } from '../models/report-vm';
+import {
+  ActionKind,
+  ReportActionDto,
+  ReportDetailsDto,
+  ReportRequestDto,
+  ReportSectionDto,
+  ReportSummaryDto,
+  SectionColumnDto,
+  SectionOrderDto,
+  SectionScoreDto,
+} from '../models/report-dto';
+import {
+  ReportActionVm,
+  ReportProgressVm,
+  ReportRequestVm,
+  ReportSummaryVm,
+  ReportVm,
+  ScoreTableVm,
+  SectionVm,
+} from '../models/report-vm';
 
 const kindLabels: Record<ReportSummaryDto['kind'], string> = {
   Monthly: 'внесок, купівлі й продажі',
@@ -23,7 +41,8 @@ export function toRequestVm(request: ReportRequestDto): ReportRequestVm {
     triggerLabel: triggerLabels[request.trigger],
     status: request.status === 'Failed' ? 'Failed' : 'Pending',
     requestedAt: request.requestedAt,
-    progressLabel: request.strategies > 0 ? `${request.strategiesAnswered} з ${request.strategies}` : null,
+    progressLabel:
+      request.strategies > 0 ? `${request.strategiesAnswered} з ${request.strategies}` : null,
     error: request.error,
   };
 }
@@ -56,12 +75,16 @@ const guid = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
 
 export function toReportVm(report: ReportDetailsDto): ReportVm {
   const summary = toSummaryVm(report.summary);
-  const symbol = (id: string | null) => (id ? (report.instruments[id]?.symbol ?? id.slice(0, 8)) : '');
-  const readable = (text: string) => text.replace(guid, (id) => report.instruments[id.toLowerCase()]?.symbol ?? id);
+  const symbol = (id: string | null) =>
+    id ? (report.instruments[id]?.symbol ?? id.slice(0, 8)) : '';
+  const readable = (text: string) =>
+    text.replace(guid, (id) => report.instruments[id.toLowerCase()]?.symbol ?? id);
   const subName = (id: string | null) => (id ? (report.subPortfolios[id] ?? 'під-портфель') : '');
   const isOpenForMarking = summary.status === 'New' || summary.status === 'InProgress';
 
-  const actions = report.actions.map((action) => toActionVm(action, summary.currency, symbol, readable, subName, isOpenForMarking, report));
+  const actions = report.actions.map((action) =>
+    toActionVm(action, summary.currency, symbol, readable, subName, isOpenForMarking, report),
+  );
   return {
     summary,
     isOpenForMarking,
@@ -71,8 +94,14 @@ export function toReportVm(report: ReportDetailsDto): ReportVm {
     quotesLookStale: report.warnings.some((warning) => warning.includes('котирув')),
     contribution: {
       total: report.contributionPlan.total,
-      splitLabel: report.contributionPlan.split === 'FixedSplit' ? 'за цільовими частками' : 'тому, хто найбільше відстає',
-      parts: report.contributionPlan.parts.map((part) => ({ name: subName(part.subPortfolioId), amount: part.amount })),
+      splitLabel:
+        report.contributionPlan.split === 'FixedSplit'
+          ? 'за цільовими частками'
+          : 'тому, хто найбільше відстає',
+      parts: report.contributionPlan.parts.map((part) => ({
+        name: subName(part.subPortfolioId),
+        amount: part.amount,
+      })),
       transfer: report.contributionPlan.transfer
         ? {
             from: subName(report.contributionPlan.transfer.fromSubPortfolioId),
@@ -84,8 +113,12 @@ export function toReportVm(report: ReportDetailsDto): ReportVm {
     review: report.review,
     taxEstimate: report.taxEstimate,
     totals: {
-      buys: actions.filter((action) => action.kind === 'Buy' || action.kind === 'Park').reduce((sum, action) => sum + action.plannedAmount, 0),
-      sells: actions.filter((action) => action.isSell).reduce((sum, action) => sum + action.plannedAmount, 0),
+      buys: actions
+        .filter((action) => action.kind === 'Buy' || action.kind === 'Park')
+        .reduce((sum, action) => sum + action.plannedAmount, 0),
+      sells: actions
+        .filter((action) => action.isSell)
+        .reduce((sum, action) => sum + action.plannedAmount, 0),
     },
   };
 }
@@ -111,8 +144,15 @@ function toActionVm(
   return {
     id: action.id,
     kind: action.kind,
-    title: titleOf(action.kind, ticker, subName(action.fromSubPortfolioId), subName(action.toSubPortfolioId)),
-    instrumentName: action.instrumentId ? (report.instruments[action.instrumentId]?.name ?? '') : '',
+    title: titleOf(
+      action.kind,
+      ticker,
+      subName(action.fromSubPortfolioId),
+      subName(action.toSubPortfolioId),
+    ),
+    instrumentName: action.instrumentId
+      ? (report.instruments[action.instrumentId]?.name ?? '')
+      : '',
     instrumentId: action.instrumentId,
     symbol: ticker,
     reason: readable(action.reason),
@@ -164,7 +204,10 @@ function titleOf(kind: ActionKind, ticker: string, from: string, to: string): st
   }
 }
 
-const orderLabels: Record<SectionOrderDto['kind'], { label: string; severity: SectionVm['orders'][number]['severity'] }> = {
+const orderLabels: Record<
+  SectionOrderDto['kind'],
+  { label: string; severity: SectionVm['orders'][number]['severity'] }
+> = {
   Exit: { label: 'Вихід', severity: 'danger' },
   Trim: { label: 'Зменшити', severity: 'warn' },
   Unpark: { label: 'Розпаркувати', severity: 'info' },
@@ -173,12 +216,60 @@ const orderLabels: Record<SectionOrderDto['kind'], { label: string; severity: Se
 };
 
 const legacyColumns: SectionColumnDto[] = [
-  { id: 'momentum', label: 'Моментум', format: 'signedPercent', hint: null, compact: true, trueHint: null, falseHint: null },
-  { id: 'return1m', label: '1 міс', format: 'signedPercent', hint: null, compact: false, trueHint: null, falseHint: null },
-  { id: 'return3m', label: '3 міс', format: 'signedPercent', hint: null, compact: false, trueHint: null, falseHint: null },
-  { id: 'return12m', label: '12 міс', format: 'signedPercent', hint: null, compact: false, trueHint: null, falseHint: null },
-  { id: 'volatility', label: 'Волатильність', format: 'percent', hint: null, compact: false, trueHint: null, falseHint: null },
-  { id: 'ma200', label: 'MA200', format: 'trend', hint: null, compact: true, trueHint: 'Ціна вище MA200', falseHint: 'Ціна нижче MA200' },
+  {
+    id: 'momentum',
+    label: 'Моментум',
+    format: 'signedPercent',
+    hint: null,
+    compact: true,
+    trueHint: null,
+    falseHint: null,
+  },
+  {
+    id: 'return1m',
+    label: '1 міс',
+    format: 'signedPercent',
+    hint: null,
+    compact: false,
+    trueHint: null,
+    falseHint: null,
+  },
+  {
+    id: 'return3m',
+    label: '3 міс',
+    format: 'signedPercent',
+    hint: null,
+    compact: false,
+    trueHint: null,
+    falseHint: null,
+  },
+  {
+    id: 'return12m',
+    label: '12 міс',
+    format: 'signedPercent',
+    hint: null,
+    compact: false,
+    trueHint: null,
+    falseHint: null,
+  },
+  {
+    id: 'volatility',
+    label: 'Волатильність',
+    format: 'percent',
+    hint: null,
+    compact: false,
+    trueHint: null,
+    falseHint: null,
+  },
+  {
+    id: 'ma200',
+    label: 'MA200',
+    format: 'trend',
+    hint: null,
+    compact: true,
+    trueHint: 'Ціна вище MA200',
+    falseHint: 'Ціна нижче MA200',
+  },
 ];
 
 function legacyValues(score: SectionScoreDto): Record<string, number | boolean | null> {
@@ -225,13 +316,21 @@ function toScoreTable(
   };
 }
 
-function toSectionVm(section: ReportSectionDto, symbol: (id: string | null) => string, readable: (text: string) => string): SectionVm {
-  const targets = new Map(section.decision?.targets.map((target) => [target.instrumentId, target.weight]) ?? []);
+function toSectionVm(
+  section: ReportSectionDto,
+  symbol: (id: string | null) => string,
+  readable: (text: string) => string,
+): SectionVm {
+  const targets = new Map(
+    section.decision?.targets.map((target) => [target.instrumentId, target.weight]) ?? [],
+  );
   return {
     id: section.subPortfolioId,
     name: section.name,
     targetShare: section.targetShare,
-    strategyLabel: section.strategyCode ? `${section.strategyCode} · версія ${section.strategyVersion}` : 'стратегія не відповіла',
+    strategyLabel: section.strategyCode
+      ? `${section.strategyCode} · версія ${section.strategyVersion}`
+      : 'стратегія не відповіла',
     contribution: section.contribution,
     marketIsFavorable: section.decision?.marketIsFavorable ?? null,
     investFraction: section.decision?.investFraction ?? null,
@@ -249,7 +348,12 @@ function toSectionVm(section: ReportSectionDto, symbol: (id: string | null) => s
       reason: readable(order.reason),
     })),
     allocation: section.allocation.map((row) => ({
-      label: row.role === 'Cash' ? (row.instrumentId ? `Кеш · ${symbol(row.instrumentId)}` : 'Кеш') : symbol(row.instrumentId),
+      label:
+        row.role === 'Cash'
+          ? row.instrumentId
+            ? `Кеш · ${symbol(row.instrumentId)}`
+            : 'Кеш'
+          : symbol(row.instrumentId),
       role: row.role,
       valueBefore: row.valueBefore,
       valueAfter: row.valueAfter,
@@ -291,5 +395,12 @@ export function summarizeProgress(actions: readonly ReportActionVm[]): ReportPro
   const skipped = actions.filter((action) => action.status === 'Skipped').length;
   const partial = actions.filter((action) => action.status === 'PartiallyExecuted').length;
   const resolved = executed + skipped;
-  return { total: actions.length, resolved, executed, partial, skipped, percent: actions.length ? Math.round((resolved / actions.length) * 100) : 100 };
+  return {
+    total: actions.length,
+    resolved,
+    executed,
+    partial,
+    skipped,
+    percent: actions.length ? Math.round((resolved / actions.length) * 100) : 100,
+  };
 }

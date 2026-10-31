@@ -2,23 +2,53 @@
   <div class="card mb-0">
     <div class="flex items-baseline justify-between gap-2">
       <span class="text-muted-color text-sm">Виконано дій</span>
-      <span class="font-semibold">{{ progress().resolved }} / {{ progress().total }}@if (progress().partial) {<span class="text-muted-color font-normal text-sm"> · частково {{ progress().partial }}</span>}</span>
+      <span class="font-semibold"
+        >{{ progress().resolved }} / {{ progress().total }}
+        @if (progress().partial) {
+          <span class="text-muted-color font-normal text-sm">
+            · частково {{ progress().partial }}</span
+          >
+        }
+      </span>
     </div>
     <p-progressbar [value]="progress().percent" [showValue]="false" styleClass="mt-2 h-2" />
     <div class="grid grid-cols-3 gap-2 mt-3 text-sm">
       <div>
         <div class="text-muted-color text-xs">Внесок</div>
-        <div class="font-semibold"><app-money [amount]="report().contribution.total" [currency]="report().summary.currency" [digits]="0" [hideOriginal]="true" /></div>
+        <div class="font-semibold">
+          <app-money
+            [amount]="report().contribution.total"
+            [currency]="report().summary.currency"
+            [digits]="0"
+            [hideOriginal]="true"
+          />
+        </div>
       </div>
       <div>
         <div class="text-muted-color text-xs">Купівлі</div>
-        <div class="font-semibold"><app-money [amount]="report().totals.buys" [currency]="report().summary.currency" [digits]="0" [hideOriginal]="true" /></div>
+        <div class="font-semibold">
+          <app-money
+            [amount]="report().totals.buys"
+            [currency]="report().summary.currency"
+            [digits]="0"
+            [hideOriginal]="true"
+          />
+        </div>
       </div>
       <div>
         <div class="text-muted-color text-xs">Продажі</div>
-        <div class="font-semibold"><app-money [amount]="report().totals.sells" [currency]="report().summary.currency" [digits]="0" [hideOriginal]="true" /></div>
+        <div class="font-semibold">
+          <app-money
+            [amount]="report().totals.sells"
+            [currency]="report().summary.currency"
+            [digits]="0"
+            [hideOriginal]="true"
+          />
+        </div>
         @if (report().taxEstimate?.isTaxed && report().totals.sells > 0) {
-          <div class="text-xs" style="color: var(--p-finance-tax)">≈ податок {{ report().taxEstimate!.taxPln | money: 'PLN' : 0 }}</div>
+          <div class="text-xs" style="color: var(--p-finance-tax)">
+            ≈ податок {{ report().taxEstimate!.taxPln | money: 'PLN' : 0 }}
+          </div>
         }
       </div>
     </div>
@@ -35,19 +65,27 @@
     </div>
     <div class="card mb-0">
       <div class="text-muted-color text-sm mb-2">Внесок</div>
-      <div class="text-2xl font-semibold"><app-money [amount]="report().contribution.total" [currency]="report().summary.currency" /></div>
+      <div class="text-2xl font-semibold">
+        <app-money [amount]="report().contribution.total" [currency]="report().summary.currency" />
+      </div>
       <div class="text-sm text-muted-color mt-2">{{ report().contribution.splitLabel }}</div>
     </div>
     <div class="card mb-0">
       <div class="text-muted-color text-sm mb-2">Купівлі</div>
-      <div class="text-2xl font-semibold"><app-money [amount]="report().totals.buys" [currency]="report().summary.currency" /></div>
+      <div class="text-2xl font-semibold">
+        <app-money [amount]="report().totals.buys" [currency]="report().summary.currency" />
+      </div>
       <div class="text-sm text-muted-color mt-2">разом із парковкою</div>
     </div>
     <div class="card mb-0">
       <div class="text-muted-color text-sm mb-2">Продажі</div>
-      <div class="text-2xl font-semibold"><app-money [amount]="report().totals.sells" [currency]="report().summary.currency" /></div>
+      <div class="text-2xl font-semibold">
+        <app-money [amount]="report().totals.sells" [currency]="report().summary.currency" />
+      </div>
       @if (report().taxEstimate?.isTaxed && report().totals.sells > 0) {
-        <div class="text-sm mt-2" style="color: var(--p-finance-tax)">≈ податок {{ report().taxEstimate!.taxPln | money: 'PLN' : 0 }}</div>
+        <div class="text-sm mt-2" style="color: var(--p-finance-tax)">
+          ≈ податок {{ report().taxEstimate!.taxPln | money: 'PLN' : 0 }}
+        </div>
       } @else {
         <div class="text-sm text-muted-color mt-2">виходи, зменшення, розпаркування</div>
       }

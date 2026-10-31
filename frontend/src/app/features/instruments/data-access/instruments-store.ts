@@ -37,7 +37,13 @@ export interface InstrumentRow {
   held: boolean;
 }
 
-const periodDays: Record<ChartPeriod, number> = { '1M': 31, '3M': 92, '6M': 183, '1Y': 366, '3Y': 1096 };
+const periodDays: Record<ChartPeriod, number> = {
+  '1M': 31,
+  '3M': 92,
+  '6M': 183,
+  '1Y': 366,
+  '3Y': 1096,
+};
 
 function daysAgo(days: number): string {
   const date = new Date();
@@ -58,40 +64,76 @@ export class InstrumentsStore {
   readonly period = signal<ChartPeriod>('1Y');
   readonly busy = signal<'quotes' | 'fx' | null>(null);
 
-  private readonly ids = computed(() => this.catalog.instruments().map((instrument) => instrument.id));
+  private readonly ids = computed(() =>
+    this.catalog.instruments().map((instrument) => instrument.id),
+  );
 
   private readonly pricesResource = resource({
     params: () => this.ids(),
-    loader: ({ params: ids }) => (ids.length ? this.api.get<LatestPrice[]>('/api/market-data/quotes/latest', { instrumentIds: ids }) : Promise.resolve([])),
+    loader: ({ params: ids }) =>
+      ids.length
+        ? this.api.get<LatestPrice[]>('/api/market-data/quotes/latest', { instrumentIds: ids })
+        : Promise.resolve([]),
   });
 
   private readonly monthResource = resource({
     params: () => this.ids(),
     loader: ({ params: ids }) =>
-      ids.length ? this.api.get<QuoteSeries[]>('/api/market-data/quotes/history', { instrumentIds: ids, from: daysAgo(35), to: daysAgo(0) }) : Promise.resolve([]),
+      ids.length
+        ? this.api.get<QuoteSeries[]>('/api/market-data/quotes/history', {
+            instrumentIds: ids,
+            from: daysAgo(35),
+            to: daysAgo(0),
+          })
+        : Promise.resolve([]),
   });
 
   private readonly holdingsResource = resource({
     params: () => this.accounts.currentId() ?? undefined,
-    loader: ({ params: accountId }) => this.api.get<AccountHoldings>(`/api/portfolio/accounts/${accountId}/holdings`),
+    loader: ({ params: accountId }) =>
+      this.api.get<AccountHoldings>(`/api/portfolio/accounts/${accountId}/holdings`),
   });
 
   private readonly detailResource = resource({
-    params: () => (this.selectedId() ? { id: this.selectedId()!, period: this.period() } : undefined),
+    params: () =>
+      this.selectedId() ? { id: this.selectedId()!, period: this.period() } : undefined,
     loader: ({ params }) =>
-      this.api.get<QuoteSeries>(`/api/market-data/quotes/${params.id}`, { from: daysAgo(periodDays[params.period]), to: daysAgo(0) }),
+      this.api.get<QuoteSeries>(`/api/market-data/quotes/${params.id}`, {
+        from: daysAgo(periodDays[params.period]),
+        to: daysAgo(0),
+      }),
   });
 
   readonly isLoading = computed(() => this.pricesResource.isLoading());
   readonly detailLoading = this.detailResource.isLoading;
 
   private readonly heldIds = computed(
-    () => new Set(((this.holdingsResource.hasValue() ? this.holdingsResource.value() : undefined)?.subPortfolios ?? []).flatMap((sub) => sub.positions.filter((position) => position.quantity > 0).map((position) => position.instrumentId))),
+    () =>
+      new Set(
+        (
+          (this.holdingsResource.hasValue() ? this.holdingsResource.value() : undefined)
+            ?.subPortfolios ?? []
+        ).flatMap((sub) =>
+          sub.positions
+            .filter((position) => position.quantity > 0)
+            .map((position) => position.instrumentId),
+        ),
+      ),
   );
 
   readonly rows = computed<InstrumentRow[]>(() => {
-    const prices = new Map((this.pricesResource.hasValue() ? this.pricesResource.value() : []).map((price) => [price.instrumentId, price]));
-    const months = new Map((this.monthResource.hasValue() ? this.monthResource.value() : []).map((series) => [series.instrumentId, series.points]));
+    const prices = new Map(
+      (this.pricesResource.hasValue() ? this.pricesResource.value() : []).map((price) => [
+        price.instrumentId,
+        price,
+      ]),
+    );
+    const months = new Map(
+      (this.monthResource.hasValue() ? this.monthResource.value() : []).map((series) => [
+        series.instrumentId,
+        series.points,
+      ]),
+    );
     const held = this.heldIds();
     return this.catalog
       .instruments()
@@ -117,33 +159,52 @@ export class InstrumentsStore {
           held: held.has(instrument.id),
         };
       })
-      .sort((left, right) => Number(right.held) - Number(left.held) || left.kind.localeCompare(right.kind) || left.group.localeCompare(right.group) || left.symbol.localeCompare(right.symbol));
+      .sort(
+        (left, right) =>
+          Number(right.held) - Number(left.held) ||
+          left.kind.localeCompare(right.kind) ||
+          left.group.localeCompare(right.group) ||
+          left.symbol.localeCompare(right.symbol),
+      );
   });
 
   readonly visibleRows = computed(() => {
     const text = this.search().trim().toLowerCase();
     const filter = this.filter();
     return this.rows().filter((row) => {
-      if (text && !`${row.symbol} ${row.name} ${row.isin ?? ''}`.toLowerCase().includes(text)) return false;
+      if (text && !`${row.symbol} ${row.name} ${row.isin ?? ''}`.toLowerCase().includes(text))
+        return false;
       switch (filter) {
-        case 'mine': return row.held;
-        case 'eu': return row.kind === 'Etf' && row.currency === 'EUR';
-        case 'us': return row.kind === 'Etf' && row.currency === 'USD';
-        case 'stocks': return row.kind === 'Stock';
-        case 'other': return row.kind !== 'Etf' && row.kind !== 'Stock';
-        default: return true;
+        case 'mine':
+          return row.held;
+        case 'eu':
+          return row.kind === 'Etf' && row.currency === 'EUR';
+        case 'us':
+          return row.kind === 'Etf' && row.currency === 'USD';
+        case 'stocks':
+          return row.kind === 'Stock';
+        case 'other':
+          return row.kind !== 'Etf' && row.kind !== 'Stock';
+        default:
+          return true;
       }
     });
   });
 
-  readonly selected = computed(() => this.rows().find((row) => row.id === this.selectedId()) ?? null);
-  readonly detailPoints = linkedSignal<{ points: QuotePoint[] | undefined; loading: boolean; id: string | null }, QuotePoint[]>({
+  readonly selected = computed(
+    () => this.rows().find((row) => row.id === this.selectedId()) ?? null,
+  );
+  readonly detailPoints = linkedSignal<
+    { points: QuotePoint[] | undefined; loading: boolean; id: string | null },
+    QuotePoint[]
+  >({
     source: () => ({
       points: this.detailResource.hasValue() ? this.detailResource.value().points : undefined,
       loading: this.detailResource.isLoading(),
       id: this.selectedId() ?? null,
     }),
-    computation: (next, previous) => next.points ?? (next.loading && previous?.source.id === next.id ? previous.value : []),
+    computation: (next, previous) =>
+      next.points ?? (next.loading && previous?.source.id === next.id ? previous.value : []),
   });
   readonly detailError = computed(() => !!this.detailResource.error());
 
@@ -159,9 +220,12 @@ export class InstrumentsStore {
       peak = Math.max(peak, point.adjustedClose);
       maxDrawdown = Math.min(maxDrawdown, point.adjustedClose / peak - 1);
     }
-    const daily = points.slice(1).map((point, index) => point.adjustedClose / points[index].adjustedClose - 1);
+    const daily = points
+      .slice(1)
+      .map((point, index) => point.adjustedClose / points[index].adjustedClose - 1);
     const mean = daily.reduce((sum, value) => sum + value, 0) / daily.length;
-    const variance = daily.reduce((sum, value) => sum + (value - mean) ** 2, 0) / Math.max(1, daily.length - 1);
+    const variance =
+      daily.reduce((sum, value) => sum + (value - mean) ** 2, 0) / Math.max(1, daily.length - 1);
     return {
       change: last / first - 1,
       high: Math.max(...closes),
@@ -172,7 +236,13 @@ export class InstrumentsStore {
     };
   });
 
-  readonly lastQuoteDate = computed(() => (this.pricesResource.hasValue() ? this.pricesResource.value() : []).map((price) => price.date).sort().at(-1) ?? null);
+  readonly lastQuoteDate = computed(
+    () =>
+      (this.pricesResource.hasValue() ? this.pricesResource.value() : [])
+        .map((price) => price.date)
+        .sort()
+        .at(-1) ?? null,
+  );
   readonly counts = computed(() => {
     const rows = this.rows();
     return {
@@ -191,11 +261,17 @@ export class InstrumentsStore {
 
   async ingestQuotes(): Promise<void> {
     await this.run('quotes', async () => {
-      const report = await this.api.post<{ quotesAdded: number; quotesUpdated: number; missingSymbols: string[] }>('/api/market-data/quotes/ingest');
+      const report = await this.api.post<{
+        quotesAdded: number;
+        quotesUpdated: number;
+        missingSymbols: string[];
+      }>('/api/market-data/quotes/ingest');
       this.pricesResource.reload();
       this.monthResource.reload();
       this.detailResource.reload();
-      const missing = report.missingSymbols.length ? `; без даних: ${report.missingSymbols.join(', ')}` : '';
+      const missing = report.missingSymbols.length
+        ? `; без даних: ${report.missingSymbols.join(', ')}`
+        : '';
       return `Нових котирувань: ${report.quotesAdded}, оновлено: ${report.quotesUpdated}${missing}`;
     });
   }
@@ -212,7 +288,12 @@ export class InstrumentsStore {
     try {
       this.messages.add({ severity: 'success', summary: await command() });
     } catch (error) {
-      this.messages.add({ severity: 'error', summary: 'Не вдалося оновити', detail: toProblemMessage(error), life: 8000 });
+      this.messages.add({
+        severity: 'error',
+        summary: 'Не вдалося оновити',
+        detail: toProblemMessage(error),
+        life: 8000,
+      });
     } finally {
       this.busy.set(null);
     }

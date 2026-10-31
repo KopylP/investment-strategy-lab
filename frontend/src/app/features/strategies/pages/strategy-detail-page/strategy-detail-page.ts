@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
@@ -16,7 +24,18 @@ import { StrategyDetailStore } from '../../data-access/strategies-store';
 
 @Component({
   selector: 'app-strategy-detail-page',
-  imports: [FormsModule, Button, Message, MultiSelect, Select, Skeleton, Tag, PageHeader, SchemaForm, DateTimePipe],
+  imports: [
+    FormsModule,
+    Button,
+    Message,
+    MultiSelect,
+    Select,
+    Skeleton,
+    Tag,
+    PageHeader,
+    SchemaForm,
+    DateTimePipe,
+  ],
   providers: [StrategyDetailStore],
   templateUrl: './strategy-detail-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -33,13 +52,24 @@ export class StrategyDetailPage {
   protected readonly cashInstrumentId = signal<string | null>(null);
   protected readonly benchmarkInstrumentId = signal<string | null>(null);
   protected readonly reports = computed(() =>
-    (this.store.type()?.reports ?? []).map((report) => ({ ...report, when: report.schedule ? scheduleLabel(report.schedule) : 'лише вручну' })),
+    (this.store.type()?.reports ?? []).map((report) => ({
+      ...report,
+      when: report.schedule ? scheduleLabel(report.schedule) : 'лише вручну',
+    })),
   );
-  
+
   protected readonly etfOptions = computed(() =>
-    this.store.instruments.etfs().map((instrument) => ({ label: `${symbolOf(instrument)} · ${instrument.name}`, value: instrument.id, group: instrument.group ?? '' })),
+    this.store.instruments
+      .etfs()
+      .map((instrument) => ({
+        label: `${symbolOf(instrument)} · ${instrument.name}`,
+        value: instrument.id,
+        group: instrument.group ?? '',
+      })),
   );
-  protected readonly isLatest = computed(() => this.store.strategy()?.version.number === this.store.strategy()?.latestVersion);
+  protected readonly isLatest = computed(
+    () => this.store.strategy()?.version.number === this.store.strategy()?.latestVersion,
+  );
 
   constructor() {
     effect(() => this.store.open(this.strategyId()));

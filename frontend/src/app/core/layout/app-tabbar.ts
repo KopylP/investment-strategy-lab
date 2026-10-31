@@ -14,8 +14,13 @@ interface Tab {
   imports: [RouterLink, RouterLinkActive],
   template: `<nav class="layout-tabbar" aria-label="Розділи">
     @for (tab of tabs; track tab.link) {
-      <a class="layout-tabbar-item" [routerLink]="tab.link" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: tab.exact }"
-         ariaCurrentWhenActive="page">
+      <a
+        class="layout-tabbar-item"
+        [routerLink]="tab.link"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: tab.exact }"
+        ariaCurrentWhenActive="page"
+      >
         <span class="layout-tabbar-icon">
           <i [class]="tab.icon"></i>
           @if (tab.link === '/reports' && openActions.count(); as count) {

@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, linkedSignal, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  linkedSignal,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ConfirmationService } from 'primeng/api';
@@ -33,9 +42,25 @@ import { StrategyPicker } from '../../../strategies/ui/strategy-picker/strategy-
 import { Viewport } from '../../../../shared/ui/viewport';
 @Component({
   selector: 'app-account-detail-page',
-  imports: [ReportScheduleCard, StrategyPicker,
-    FormsModule, RouterLink, Button, DatePicker, Dialog, InputNumber, InputText, Message, Select, Skeleton, TableModule, Tag,
-    PageHeader, PlanSettingsForm, FileDrop, PercentPipe,
+  imports: [
+    ReportScheduleCard,
+    StrategyPicker,
+    FormsModule,
+    RouterLink,
+    Button,
+    DatePicker,
+    Dialog,
+    InputNumber,
+    InputText,
+    Message,
+    Select,
+    Skeleton,
+    TableModule,
+    Tag,
+    PageHeader,
+    PlanSettingsForm,
+    FileDrop,
+    PercentPipe,
   ],
   providers: [AccountDetailStore],
   templateUrl: './account-detail-page.html',
@@ -51,15 +76,30 @@ export class AccountDetailPage {
 
   protected readonly editingShares = signal(false);
   protected readonly shares = signal<Record<string, number>>({});
-  protected readonly sharesTotal = computed(() => Math.round(Object.values(this.shares()).reduce((sum, share) => sum + (share ?? 0), 0) * 100) / 100);
+  protected readonly sharesTotal = computed(
+    () =>
+      Math.round(Object.values(this.shares()).reduce((sum, share) => sum + (share ?? 0), 0) * 100) /
+      100,
+  );
 
-  protected readonly plan = linkedSignal<PlanSettingsVm | undefined>(() => this.store.planSettings());
+  protected readonly plan = linkedSignal<PlanSettingsVm | undefined>(() =>
+    this.store.planSettings(),
+  );
 
   protected readonly pickFor = signal<SubPortfolioSetup | null>(null);
-  protected readonly cashOptions = computed(() => this.instruments.etfs().map((etf) => ({ label: `${symbolOf(etf)} · ${etf.name}`, value: etf.id })));
+  protected readonly cashOptions = computed(() =>
+    this.instruments
+      .etfs()
+      .map((etf) => ({ label: `${symbolOf(etf)} · ${etf.name}`, value: etf.id })),
+  );
 
   protected readonly addVisible = signal(false);
-  protected readonly draft = signal<SubPortfolioDraft>({ name: '', share: 10, strategyId: null, cashInstrumentId: null });
+  protected readonly draft = signal<SubPortfolioDraft>({
+    name: '',
+    share: 10,
+    strategyId: null,
+    cashInstrumentId: null,
+  });
 
   protected readonly importVisible = signal(false);
   protected readonly importSleeve = signal<string | null>(null);
@@ -73,7 +113,11 @@ export class AccountDetailPage {
   }
 
   protected startEditingShares(): void {
-    this.shares.set(Object.fromEntries(this.store.active().map((sub) => [sub.id, Math.round(sub.targetShare * 10000) / 100])));
+    this.shares.set(
+      Object.fromEntries(
+        this.store.active().map((sub) => [sub.id, Math.round(sub.targetShare * 10000) / 100]),
+      ),
+    );
     this.editingShares.set(true);
   }
 
@@ -86,9 +130,15 @@ export class AccountDetailPage {
   }
 
   protected blurbOf(strategyId: string | null): string {
-    const strategy = strategyId ? this.store.strategies().find((each) => each.id === strategyId) : undefined;
+    const strategy = strategyId
+      ? this.store.strategies().find((each) => each.id === strategyId)
+      : undefined;
     if (!strategy) return 'Рапорти цей під-портфель не чіпають — оберіть стратегію';
-    return describeStrategy(strategy, (id) => this.instruments.symbol(id), (id) => this.instruments.byId().get(id)?.tradingCurrency).headline;
+    return describeStrategy(
+      strategy,
+      (id) => this.instruments.symbol(id),
+      (id) => this.instruments.byId().get(id)?.tradingCurrency,
+    ).headline;
   }
 
   protected assign(sub: SubPortfolioSetup, strategyId: string | null): void {
@@ -98,7 +148,8 @@ export class AccountDetailPage {
   protected confirmRetire(sub: SubPortfolioSetup): void {
     this.confirm.confirm({
       header: `Вивести «${sub.name}»?`,
-      message: 'Частку буде пропорційно розподілено між іншими під-портфелями. Позиції лишаються видимими, їх можна перенести внутрішнім переказом.',
+      message:
+        'Частку буде пропорційно розподілено між іншими під-портфелями. Позиції лишаються видимими, їх можна перенести внутрішнім переказом.',
       icon: 'pi pi-sign-out',
       acceptLabel: 'Вивести',
       rejectLabel: 'Скасувати',
@@ -161,6 +212,7 @@ export class AccountDetailPage {
     const sleeve = this.importSleeve();
     const json = this.importJson();
     if (!sleeve || !json) return;
-    if (await this.store.importPositions(sleeve, json, toIsoDate(this.importDate()))) this.importVisible.set(false);
+    if (await this.store.importPositions(sleeve, json, toIsoDate(this.importDate())))
+      this.importVisible.set(false);
   }
 }

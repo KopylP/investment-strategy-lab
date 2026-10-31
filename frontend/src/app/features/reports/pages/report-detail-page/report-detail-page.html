@@ -1,22 +1,61 @@
 @if (store.isLoading() && !store.report()) {
-  <div class="card"><p-skeleton height="2rem" width="20rem" styleClass="mb-4" /><p-skeleton height="12rem" /></div>
+  <div class="card">
+    <p-skeleton height="2rem" width="20rem" styleClass="mb-4" /><p-skeleton height="12rem" />
+  </div>
 } @else if (store.loadError()) {
   <div class="card"><p-message severity="error" text="Не вдалося завантажити рапорт" /></div>
 } @else if (store.report(); as report) {
-  <app-page-header backLink="/reports" backLabel="Рапорти" [title]="report.summary.title" [subtitle]="report.summary.accountName + ' · котирування на ' + (report.summary.marketAsOf | date) + ' · згенеровано ' + (report.summary.generatedAt | dateTime) + ' ' + report.summary.triggerLabel">
+  <app-page-header
+    backLink="/reports"
+    backLabel="Рапорти"
+    [title]="report.summary.title"
+    [subtitle]="
+      report.summary.accountName +
+      ' · котирування на ' +
+      (report.summary.marketAsOf | date) +
+      ' · згенеровано ' +
+      (report.summary.generatedAt | dateTime) +
+      ' ' +
+      report.summary.triggerLabel
+    "
+  >
     <app-report-status-tag [status]="report.summary.status" />
     @if (viewport.phone()) {
       @if (pageActions().length) {
-        <p-button icon="pi pi-ellipsis-v" [text]="true" [rounded]="true" severity="secondary" ariaLabel="Дії з рапортом" (onClick)="pageMenu.toggle($event)" />
+        <p-button
+          icon="pi pi-ellipsis-v"
+          [text]="true"
+          [rounded]="true"
+          severity="secondary"
+          ariaLabel="Дії з рапортом"
+          (onClick)="pageMenu.toggle($event)"
+        />
         <p-menu #pageMenu [model]="pageActions()" [popup]="true" appendTo="body" />
       }
     } @else {
       @if (report.summary.status !== 'Superseded') {
-        <p-button label="Згенерувати заново" icon="pi pi-refresh" severity="secondary" [outlined]="true" [loading]="store.busy() === 'regenerate'" (onClick)="confirmRegenerate()" />
+        <p-button
+          label="Згенерувати заново"
+          icon="pi pi-refresh"
+          severity="secondary"
+          [outlined]="true"
+          [loading]="store.busy() === 'regenerate'"
+          (onClick)="confirmRegenerate()"
+        />
       }
       @if (store.canMark()) {
-        <p-button label="Довантажити операції" icon="pi pi-download" (onClick)="openLoadOperations()" />
-        <p-button label="Закрити рапорт" icon="pi pi-lock" severity="secondary" [loading]="store.busy() === 'close'" (onClick)="confirmClose()" />
+        <p-button
+          label="Довантажити операції"
+          icon="pi pi-download"
+          (onClick)="openLoadOperations()"
+        />
+        <p-button
+          label="Закрити рапорт"
+          icon="pi pi-lock"
+          severity="secondary"
+          [loading]="store.busy() === 'close'"
+          (onClick)="confirmClose()"
+        />
       }
     }
   </app-page-header>
@@ -24,7 +63,9 @@
   @if (report.summary.supersededBy) {
     <p-message severity="info" styleClass="mb-4">
       <span>Цей рапорт замінено новішим. </span>
-      <a [routerLink]="['/reports', report.summary.supersededBy]" class="font-medium underline">Відкрити актуальний</a>
+      <a [routerLink]="['/reports', report.summary.supersededBy]" class="font-medium underline"
+        >Відкрити актуальний</a
+      >
     </p-message>
   }
 
@@ -35,7 +76,14 @@
       }
       @if (report.quotesLookStale && store.canMark()) {
         <div>
-          <p-button label="Оновити котирування" icon="pi pi-cloud-download" size="small" [outlined]="true" [loading]="store.busy() === 'quotes'" (onClick)="store.refreshQuotes()" />
+          <p-button
+            label="Оновити котирування"
+            icon="pi pi-cloud-download"
+            size="small"
+            [outlined]="true"
+            [loading]="store.busy() === 'quotes'"
+            (onClick)="store.refreshQuotes()"
+          />
         </div>
       }
     </div>
@@ -46,7 +94,9 @@
   <div class="card mt-3 sm:mt-4">
     <div class="flex flex-wrap items-center justify-between gap-2 mb-2 sm:mb-4">
       <h2 class="text-xl font-semibold m-0">Що зробити в брокера</h2>
-      <span class="hidden sm:inline text-sm text-muted-color">Порядок: внесок → продажі → перекази → купівлі → парковка</span>
+      <span class="hidden sm:inline text-sm text-muted-color"
+        >Порядок: внесок → продажі → перекази → купівлі → парковка</span
+      >
     </div>
     @if (store.actions().length) {
       <app-report-actions-table
@@ -55,15 +105,30 @@
         (markExecuted)="openFill($event)"
         (partialFill)="openPartialFill($event)"
         (skip)="openSkip($event)"
-        (undo)="confirmUndo($event)" />
+        (undo)="confirmUndo($event)"
+      />
     } @else {
-      <p-message severity="success" text="Цього разу нічого робити не треба: портфель відповідає стратегіям." />
+      <p-message
+        severity="success"
+        text="Цього разу нічого робити не треба: портфель відповідає стратегіям."
+      />
     }
   </div>
 
   @if (report.contribution.transfer; as transfer) {
-    <p-message severity="info" styleClass="mt-4"
-      [text]="'Під-портфелі відійшли від цільових часток: варто перенести ' + (transfer.amount | money: report.summary.currency) + ' з «' + transfer.from + '» до «' + transfer.to + '».'" />
+    <p-message
+      severity="info"
+      styleClass="mt-4"
+      [text]="
+        'Під-портфелі відійшли від цільових часток: варто перенести ' +
+        (transfer.amount | money: report.summary.currency) +
+        ' з «' +
+        transfer.from +
+        '» до «' +
+        transfer.to +
+        '».'
+      "
+    />
   }
 
   @if (report.sections.length) {
@@ -74,7 +139,9 @@
           @for (section of report.sections; track section.id) {
             <p-tab [value]="section.id">
               {{ section.name }}
-              @if (section.error) { <p-tag value="помилка" severity="danger" styleClass="ml-2" /> }
+              @if (section.error) {
+                <p-tag value="помилка" severity="danger" styleClass="ml-2" />
+              }
             </p-tab>
           }
         </p-tablist>

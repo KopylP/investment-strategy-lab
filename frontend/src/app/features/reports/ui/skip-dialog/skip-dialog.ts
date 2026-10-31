@@ -14,9 +14,15 @@ import { ReportActionVm } from '../../models/report-vm';
 })
 export class SkipDialog {
   private readonly ref = inject(DynamicDialogRef);
-  protected readonly action = (inject(DynamicDialogConfig).data as { action: ReportActionVm }).action;
+  protected readonly action = (inject(DynamicDialogConfig).data as { action: ReportActionVm })
+    .action;
 
-  protected readonly presets = ['Сума замала', 'Немає вільних коштів', 'Вирішив почекати', 'Брокер не дав виконати'].map((label) => ({ label, value: label }));
+  protected readonly presets = [
+    'Сума замала',
+    'Немає вільних коштів',
+    'Вирішив почекати',
+    'Брокер не дав виконати',
+  ].map((label) => ({ label, value: label }));
   protected readonly reason = signal('');
 
   protected choose(preset: string | null): void {

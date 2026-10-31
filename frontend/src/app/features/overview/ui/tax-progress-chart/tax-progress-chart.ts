@@ -1,7 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { ChartTheme, withAlpha } from '../../../../shared/charts/chart-theme';
 import { LiveChart } from '../../../../shared/charts/live-chart';
-import { formatAxisNumber, formatDate, formatMoney, shortenDate } from '../../../../shared/pipes/format';
+import {
+  formatAxisNumber,
+  formatDate,
+  formatMoney,
+  shortenDate,
+} from '../../../../shared/pipes/format';
 import { toIsoDate } from '../../../../shared/models/api';
 import { Viewport } from '../../../../shared/ui/viewport';
 import { TaxProgress } from '../../data-access/overview-store';
@@ -9,7 +14,11 @@ import { TaxProgress } from '../../data-access/overview-store';
 @Component({
   selector: 'app-tax-progress-chart',
   imports: [LiveChart],
-  template: `<app-live-chart [data]="data()" [options]="options()" [height]="viewport.phone() ? '12rem' : '15rem'" />`,
+  template: `<app-live-chart
+    [data]="data()"
+    [options]="options()"
+    [height]="viewport.phone() ? '12rem' : '15rem'"
+  />`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TaxProgressChart {
@@ -45,7 +54,11 @@ export class TaxProgressChart {
           label: 'Податок',
           data: days.map((day) => day.tax),
           borderColor: aboveThreshold(threshold, palette.tax, palette.loss),
-          backgroundColor: aboveThreshold(threshold, withAlpha(palette.tax, 0.15), withAlpha(palette.loss, 0.2)),
+          backgroundColor: aboveThreshold(
+            threshold,
+            withAlpha(palette.tax, 0.15),
+            withAlpha(palette.loss, 0.2),
+          ),
           fill: 'origin',
           stepped: true,
           borderWidth: 2,
@@ -66,20 +79,33 @@ export class TaxProgressChart {
       plugins: {
         legend: { display: false },
         tooltip: {
-          callbacks: { label: (context: { dataset: { label: string }; parsed: { y: number } }) => `${context.dataset.label}: ${formatMoney(context.parsed.y, 'PLN', 0)}` },
+          callbacks: {
+            label: (context: { dataset: { label: string }; parsed: { y: number } }) =>
+              `${context.dataset.label}: ${formatMoney(context.parsed.y, 'PLN', 0)}`,
+          },
         },
       },
       scales: {
         x: {
           ticks: {
-            color: palette.muted, maxTicksLimit: phone ? 4 : 12, maxRotation: 0, font: phone ? { size: 11 } : undefined,
-            callback(this: { getLabelForValue: (value: number) => string }, value: number) { return shortenDate(this.getLabelForValue(value)); },
+            color: palette.muted,
+            maxTicksLimit: phone ? 4 : 12,
+            maxRotation: 0,
+            font: phone ? { size: 11 } : undefined,
+            callback(this: { getLabelForValue: (value: number) => string }, value: number) {
+              return shortenDate(this.getLabelForValue(value));
+            },
           },
           grid: { display: false },
         },
         y: {
           min: 0,
-          ticks: { color: palette.muted, maxTicksLimit: 5, callback: (value: number) => (phone ? formatAxisNumber(value) : formatMoney(value, 'PLN', 0)) },
+          ticks: {
+            color: palette.muted,
+            maxTicksLimit: 5,
+            callback: (value: number) =>
+              phone ? formatAxisNumber(value) : formatMoney(value, 'PLN', 0),
+          },
           grid: { color: palette.grid },
         },
       },
@@ -88,15 +114,25 @@ export class TaxProgressChart {
 }
 
 interface ChartContext {
-  chart: { ctx: CanvasRenderingContext2D; chartArea?: { top: number; bottom: number }; scales: { y?: { getPixelForValue: (value: number) => number } } };
+  chart: {
+    ctx: CanvasRenderingContext2D;
+    chartArea?: { top: number; bottom: number };
+    scales: { y?: { getPixelForValue: (value: number) => number } };
+  };
 }
 
-function aboveThreshold(threshold: number | null, below: string, above: string): string | ((context: ChartContext) => string | CanvasGradient) {
+function aboveThreshold(
+  threshold: number | null,
+  below: string,
+  above: string,
+): string | ((context: ChartContext) => string | CanvasGradient) {
   if (threshold === null) return below;
   return ({ chart }) => {
     const { ctx, chartArea, scales } = chart;
     if (!chartArea || !scales.y || chartArea.bottom <= chartArea.top) return below;
-    const at = (chartArea.bottom - scales.y.getPixelForValue(threshold)) / (chartArea.bottom - chartArea.top);
+    const at =
+      (chartArea.bottom - scales.y.getPixelForValue(threshold)) /
+      (chartArea.bottom - chartArea.top);
     if (at >= 1) return below;
     const stop = Math.max(0, at);
     const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);

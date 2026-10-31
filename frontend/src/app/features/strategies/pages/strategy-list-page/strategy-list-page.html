@@ -1,6 +1,16 @@
-<app-page-header title="Стратегії" subtitle="Стратегія вирішує, які ETF тримати в під-портфелі й як часто переглядати; що купити й продати рахує сервіс">
+<app-page-header
+  title="Стратегії"
+  subtitle="Стратегія вирішує, які ETF тримати в під-портфелі й як часто переглядати; що купити й продати рахує сервіс"
+>
   @if (store.strategies().length) {
-    <p-button label="Додати стандартні" icon="pi pi-plus" severity="secondary" [outlined]="true" [loading]="store.creatingDefaults()" (onClick)="store.createDefaults()" />
+    <p-button
+      label="Додати стандартні"
+      icon="pi pi-plus"
+      severity="secondary"
+      [outlined]="true"
+      [loading]="store.creatingDefaults()"
+      (onClick)="store.createDefaults()"
+    />
   }
 </app-page-header>
 
@@ -10,15 +20,26 @@
   <div class="card"><p-message severity="error" text="Не вдалося завантажити стратегії" /></div>
 } @else if (!store.strategies().length) {
   <div class="card">
-    <app-empty-state icon="pi pi-sliders-h" title="У вас ще немає стратегій"
-      text="Почніть зі стандартних: моментум для європейських ETF і для американських — ті самі, що рахує Python-флоу. Параметри можна змінити будь-коли, кожна зміна — нова версія.">
-      <p-button label="Створити стандартні стратегії" icon="pi pi-bolt" [loading]="store.creatingDefaults()" (onClick)="store.createDefaults()" />
+    <app-empty-state
+      icon="pi pi-sliders-h"
+      title="У вас ще немає стратегій"
+      text="Почніть зі стандартних: моментум для європейських ETF і для американських — ті самі, що рахує Python-флоу. Параметри можна змінити будь-коли, кожна зміна — нова версія."
+    >
+      <p-button
+        label="Створити стандартні стратегії"
+        icon="pi pi-bolt"
+        [loading]="store.creatingDefaults()"
+        (onClick)="store.createDefaults()"
+      />
     </app-empty-state>
   </div>
 } @else {
   <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
     @for (strategy of store.strategies(); track strategy.id) {
-      <a [routerLink]="['/strategies', strategy.id]" class="card mb-0 block hover:shadow-md transition-shadow">
+      <a
+        [routerLink]="['/strategies', strategy.id]"
+        class="card mb-0 block hover:shadow-md transition-shadow"
+      >
         <div class="flex items-start justify-between gap-2 mb-3">
           <div>
             <div class="text-lg font-semibold">{{ strategy.name }}</div>
@@ -33,7 +54,9 @@
         @let info = blurb(strategy);
         <div class="text-sm mb-2">{{ info.headline }}</div>
         <ul class="text-xs text-muted-color mt-0 mb-3 pl-4">
-          @for (point of info.points; track point) { <li>{{ point }}</li> }
+          @for (point of info.points; track point) {
+            <li>{{ point }}</li>
+          }
         </ul>
         <div class="flex flex-wrap gap-1 mb-3">
           @for (id of strategy.version.universe.slice(0, 8); track id) {
@@ -45,14 +68,19 @@
         </div>
         <div class="text-sm text-muted-color">
           Бенчмарк {{ store.instruments.symbol(strategy.version.benchmarkInstrumentId) }}
-          @if (strategy.version.cashInstrumentId) { · кеш у {{ store.instruments.symbol(strategy.version.cashInstrumentId) }} }
+          @if (strategy.version.cashInstrumentId) {
+            · кеш у {{ store.instruments.symbol(strategy.version.cashInstrumentId) }}
+          }
           · з {{ strategy.createdAt | date }}
         </div>
         <div class="text-sm mt-3 pt-3 border-t border-surface">
           @if (usage().get(strategy.id); as places) {
             <i class="pi pi-wallet text-xs mr-1 text-primary"></i>Працює в: {{ places.join(', ') }}
           } @else {
-            <span class="text-muted-color"><i class="pi pi-info-circle text-xs mr-1"></i>Ще ніде не використовується — оберіть її в під-портфелі рахунку</span>
+            <span class="text-muted-color"
+              ><i class="pi pi-info-circle text-xs mr-1"></i>Ще ніде не використовується — оберіть
+              її в під-портфелі рахунку</span
+            >
           }
         </div>
       </a>

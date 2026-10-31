@@ -19,7 +19,12 @@ import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { SignedValue } from '../../../../shared/ui/signed-value';
 import { Viewport } from '../../../../shared/ui/viewport';
-import { CashInput, TradeInput, TransactionsStore, TransactionVm } from '../../data-access/transactions-store';
+import {
+  CashInput,
+  TradeInput,
+  TransactionsStore,
+  TransactionVm,
+} from '../../data-access/transactions-store';
 import { CashDialog } from '../../ui/cash-dialog/cash-dialog';
 import { TradeDialog } from '../../ui/trade-dialog/trade-dialog';
 
@@ -27,9 +32,27 @@ import { Money } from '../../../../shared/ui/money/money';
 import { TapTooltip } from '../../../../shared/ui/tap-tooltip';
 @Component({
   selector: 'app-ledger-page',
-  imports: [Money,
-    FormsModule, RouterLink, Button, IconField, InputIcon, InputText, Message, Select, Skeleton, TableModule, Tag, Tooltip, TapTooltip,
-    PageHeader, EmptyState, SignedValue, TradeDialog, CashDialog, DatePipe,
+  imports: [
+    Money,
+    FormsModule,
+    RouterLink,
+    Button,
+    IconField,
+    InputIcon,
+    InputText,
+    Message,
+    Select,
+    Skeleton,
+    TableModule,
+    Tag,
+    Tooltip,
+    TapTooltip,
+    PageHeader,
+    EmptyState,
+    SignedValue,
+    TradeDialog,
+    CashDialog,
+    DatePipe,
   ],
   providers: [TransactionsStore],
   templateUrl: './ledger-page.html',
@@ -54,9 +77,13 @@ export class LedgerPage {
     { label: 'Перекази', value: 'InternalTransfer' },
     { label: 'Сторно', value: 'Reversal' },
   ];
-  protected readonly instrumentOptions = computed(() => this.catalog.etfs().map((etf) => ({ label: `${symbolOf(etf)} · ${etf.name}`, value: etf.id })));
+  protected readonly instrumentOptions = computed(() =>
+    this.catalog.etfs().map((etf) => ({ label: `${symbolOf(etf)} · ${etf.name}`, value: etf.id })),
+  );
   protected readonly subOptions = computed(() =>
-    (this.store.account()?.subPortfolios ?? []).filter((sub) => sub.status === 'Active').map((sub) => ({ label: sub.name, value: sub.id })),
+    (this.store.account()?.subPortfolios ?? [])
+      .filter((sub) => sub.status === 'Active')
+      .map((sub) => ({ label: sub.name, value: sub.id })),
   );
   protected readonly currency = computed(() => this.store.account()?.baseCurrency ?? 'EUR');
 
@@ -67,9 +94,18 @@ export class LedgerPage {
       const kindOk =
         !filter ||
         (filter === 'trade' && (transaction.kind === 'Buy' || transaction.kind === 'Sell')) ||
-        (filter === 'cash' && ['Contribution', 'Withdrawal', 'Fee', 'TaxPayment', 'Dividend'].includes(transaction.kind)) ||
+        (filter === 'cash' &&
+          ['Contribution', 'Withdrawal', 'Fee', 'TaxPayment', 'Dividend'].includes(
+            transaction.kind,
+          )) ||
         transaction.kind === filter;
-      return kindOk && (!text || `${transaction.kindLabel} ${transaction.description} ${transaction.allocation}`.toLowerCase().includes(text));
+      return (
+        kindOk &&
+        (!text ||
+          `${transaction.kindLabel} ${transaction.description} ${transaction.allocation}`
+            .toLowerCase()
+            .includes(text))
+      );
     });
   });
 
