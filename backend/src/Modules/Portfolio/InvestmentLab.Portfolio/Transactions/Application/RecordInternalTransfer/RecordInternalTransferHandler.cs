@@ -13,9 +13,6 @@ public sealed record RecordInternalTransferCommand(
 
 public sealed class RecordInternalTransferHandler(TransactionRecorder recorder)
 {
-    public Task<Result<RecordedTransaction>> Handle(Guid accountId, RecordInternalTransferCommand command, CancellationToken cancellationToken) =>
-        Handle(accountId, command, TransactionSource.Manual, cancellationToken);
-
     public Task<Result<RecordedTransaction>> Handle(
         Guid accountId, RecordInternalTransferCommand command, TransactionSource source, CancellationToken cancellationToken) =>
         recorder.RecordAsync(accountId, context => Create(context, command, source), cancellationToken);

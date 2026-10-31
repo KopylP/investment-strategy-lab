@@ -1,26 +1,34 @@
 using InvestmentLab.Strategies.Contracts;
 using InvestmentLab.Strategies.Evaluation.Application;
-using InvestmentLab.Strategies.Evaluation.Application.EvaluateStrategy;
-using Microsoft.EntityFrameworkCore;
+using InvestmentLab.Strategies.Evaluation.Application.AssessStrategyRisk;
+using InvestmentLab.Strategies.Evaluation.Application.DecideStrategy;
+using InvestmentLab.Strategies.Evaluation.Application.PollStrategyDecision;
+using InvestmentLab.Strategies.Evaluation.Application.PollStrategyRisk;
+using InvestmentLab.Strategies.Evaluation.Application.SubmitStrategyJob;
 
 namespace InvestmentLab.Strategies.Evaluation.Infrastructure;
 
-internal sealed class StrategyEvaluation(EvaluateStrategyHandler evaluate) : IStrategyEvaluation
+internal sealed class StrategyEvaluation(
+    DecideStrategyHandler decide,
+    AssessStrategyRiskHandler assessRisk,
+    SubmitStrategyJobHandler submit,
+    PollStrategyDecisionHandler pollDecision,
+    PollStrategyRiskHandler pollRisk) : IStrategyEvaluation
 {
     public async Task<StrategyEvaluationResult<StrategyDecisionDto>> EvaluateAsync(EvaluateStrategyRequest request, CancellationToken cancellationToken) =>
-        ToContract(await evaluate.Decide(request, cancellationToken));
+        ToContract(await decide.Handle(request, cancellationToken));
 
     public async Task<StrategyEvaluationResult<RiskAssessmentDto>> AssessRiskAsync(EvaluateStrategyRequest request, CancellationToken cancellationToken) =>
-        ToContract(await evaluate.AssessRisk(request, cancellationToken));
+        ToContract(await assessRisk.Handle(request, cancellationToken));
 
     public async Task<StrategyEvaluationResult<StrategyJobTicket>> SubmitAsync(StrategyTask task, EvaluateStrategyRequest request, CancellationToken cancellationToken) =>
-        ToContract(await evaluate.Submit(task, request, cancellationToken));
+        ToContract(await submit.Handle(task, request, cancellationToken));
 
     public async Task<StrategyJobPoll<StrategyDecisionDto>> PollDecisionAsync(StrategyJobTicket ticket, CancellationToken cancellationToken) =>
-        ToContract(await evaluate.PollDecision(ticket, cancellationToken));
+        ToContract(await pollDecision.Handle(ticket, cancellationToken));
 
     public async Task<StrategyJobPoll<RiskAssessmentDto>> PollRiskAsync(StrategyJobTicket ticket, CancellationToken cancellationToken) =>
-        ToContract(await evaluate.PollRisk(ticket, cancellationToken));
+        ToContract(await pollRisk.Handle(ticket, cancellationToken));
 
     private static StrategyJobPoll<T> ToContract<T>(EngineJobPoll<T> poll) where T : class =>
         new(poll.State, poll.Result is { } result ? ToContract(result) : null);

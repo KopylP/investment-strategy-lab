@@ -6,6 +6,8 @@ using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.MarketData.Contracts.Quotes;
 using InvestmentLab.MarketData.FxRates.Api;
 using InvestmentLab.MarketData.FxRates.Application;
+using InvestmentLab.MarketData.FxRates.Application.BackfillFxRates;
+using InvestmentLab.MarketData.FxRates.Application.GetLatestFxRates;
 using InvestmentLab.MarketData.FxRates.Application.IngestFxRates;
 using InvestmentLab.MarketData.FxRates.Infrastructure;
 using InvestmentLab.MarketData.FxRates.Infrastructure.Nbp;
@@ -71,8 +73,9 @@ public sealed class MarketDataModule : IModule
         services.AddScoped<IFxRateStore>(provider => provider.GetRequiredService<FxRateStore>());
         services.AddScoped<IFxRates>(provider => provider.GetRequiredService<FxRateStore>());
         services.AddScoped<IngestFxRatesHandler>();
+        services.AddScoped<GetLatestFxRatesHandler>();
         services.AddScheduledJob<DailyFxRatesJob>(DailyFxRatesJob.Schedule, runAtStartup: true);
-        services.AddScoped<IFxRateBackfill>(provider => provider.GetRequiredService<IngestFxRatesHandler>());
+        services.AddScoped<IFxRateBackfill, BackfillFxRatesHandler>();
         services.AddHttpClient<NbpFxRateProvider>(http => http.BaseAddress = new Uri(NbpFxRateProvider.BaseAddress));
         services.AddScoped<IFxRateProvider>(provider => provider.GetRequiredService<NbpFxRateProvider>());
     }

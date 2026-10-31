@@ -14,14 +14,24 @@ internal static class ProfileEndpoints
     {
         var profile = group.MapGroup("/profile").WithTags("Profile");
 
-        profile.MapGet("", async (GetProfileHandler handler, ICurrentUser user, CancellationToken ct) =>
-                (await handler.Handle(user.RequiredId, ct)).ToHttpResult())
-            .WithName("GetProfile");
-
-        profile.MapPut("", async (UpdateProfileCommand body, UpdateProfileHandler handler, ICurrentUser user, CancellationToken ct) =>
-                (await handler.Handle(user.RequiredId, body, ct)).ToHttpResult())
-            .WithName("UpdateProfile");
+        profile.MapGet("", GetProfile).WithName("GetProfile");
+        profile.MapPut("", UpdateProfile).WithName("UpdateProfile");
 
         return group;
+    }
+
+    private static async Task<IResult> GetProfile(GetProfileHandler handler, ICurrentUser user, CancellationToken cancellationToken)
+    {
+        var profile = await handler.Handle(user.RequiredId, cancellationToken);
+
+        return profile.ToHttpResult();
+    }
+
+    private static async Task<IResult> UpdateProfile(
+        UpdateProfileCommand body, UpdateProfileHandler handler, ICurrentUser user, CancellationToken cancellationToken)
+    {
+        var updated = await handler.Handle(user.RequiredId, body, cancellationToken);
+
+        return updated.ToHttpResult();
     }
 }

@@ -1,9 +1,12 @@
 using InvestmentLab.Strategies.Catalog.Application;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 
 namespace InvestmentLab.Strategies.Catalog.Api;
+
+public sealed record SyncedStrategyCatalogResponse(int StrategyTypes);
 
 internal static class CatalogEndpoints
 {
@@ -11,13 +14,25 @@ internal static class CatalogEndpoints
     {
         var catalog = group.MapGroup("/catalog").WithTags("Strategy catalog");
 
-        catalog.MapGet("", async (GetStrategyCatalogHandler handler, CancellationToken ct) => TypedResults.Ok(await handler.Handle(ct)))
-            .WithName("GetStrategyCatalog");
-
-        catalog.MapPost("/sync", async (IStrategyCatalog strategyCatalog, CancellationToken ct) =>
-                TypedResults.Ok(new { strategyTypes = await strategyCatalog.SyncAsync(ct) }))
-            .WithName("SyncStrategyCatalog");
+        catalog.MapGet("", GetStrategyCatalog).WithName("GetStrategyCatalog");
+        catalog.MapPost("/sync", SyncStrategyCatalog).WithName("SyncStrategyCatalog");
 
         return group;
+    }
+
+    private static async Task<Ok<IReadOnlyList<StrategyTypeDto>>> GetStrategyCatalog(
+        GetStrategyCatalogHandler handler, CancellationToken cancellationToken)
+    {
+        var strategyTypes = await handler.Handle(cancellationToken);
+
+        return TypedResults.Ok(strategyTypes);
+    }
+
+    private static async Task<Ok<SyncedStrategyCatalogResponse>> SyncStrategyCatalog(
+        IStrategyCatalog catalog, CancellationToken cancellationToken)
+    {
+        var strategyTypes = await catalog.SyncAsync(cancellationToken);
+
+        return TypedResults.Ok(new SyncedStrategyCatalogResponse(strategyTypes));
     }
 }
