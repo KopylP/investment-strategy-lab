@@ -48,6 +48,13 @@ public sealed class PlanSettings : AggregateRoot<Guid>
         return Result.Success();
     }
 
+    public decimal RemainingContribution(decimal contributed, decimal plannedShares, decimal allShares)
+    {
+        var part = allShares > 0m ? plannedShares / allShares : 1m;
+
+        return Math.Max(0m, decimal.Round(MonthlyContribution * part, 2) - contributed);
+    }
+
     public OwnReportSchedule? ScheduleOf(string code) => ReportSchedules.FirstOrDefault(own => own.Code == code);
 
     public void Schedule(string code, Cadence cadence, DateTimeOffset now)

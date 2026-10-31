@@ -223,6 +223,18 @@ public sealed class RebalancingReport : AggregateRoot<ReportId>
         return Result.Success();
     }
 
+    public void SupersedeOpen(IEnumerable<RebalancingReport> others, DateTimeOffset now)
+    {
+        foreach (var other in others.Where(Replaces))
+            other.SupersedeBy(Id, now);
+    }
+
+    private bool Replaces(RebalancingReport other) =>
+        other.IsOpen && other.Code == Code && (Kind == ReportKind.RiskReview ? other.Kind == ReportKind.RiskReview : other.Kind is ReportKind.Monthly or ReportKind.Recalculation);
+
+    public static decimal ContributedIn(IEnumerable<RebalancingReport> reports, string code) =>
+        reports.Where(report => report.Code == code).Sum(report => report.ContributedAmount);
+
     public decimal ContributedAmount =>
         _actions.Where(action => action.Kind == ActionKind.Contribute).SelectMany(action => action.Fills).Sum(fill => fill.Amount);
 

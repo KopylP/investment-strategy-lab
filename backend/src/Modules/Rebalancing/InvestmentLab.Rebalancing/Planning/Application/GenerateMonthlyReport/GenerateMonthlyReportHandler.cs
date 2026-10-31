@@ -9,9 +9,8 @@ namespace InvestmentLab.Rebalancing.Planning.Application.GenerateMonthlyReport;
 public sealed class GenerateMonthlyReportHandler(
     MonthlyPlanPreparation preparation,
     PlanningInputs inputs,
-    IReportRepository reports,
     IPlanReviewer reviewer,
-    SaleTaxes taxes)
+    GeneratedReportSaver saver)
 {
     public async Task<Result<ReportId>> Handle(
         GenerateMonthlyReportCommand command,
@@ -34,7 +33,7 @@ public sealed class GenerateMonthlyReportHandler(
         AddReportWarnings(plan, outcomes, request);
 
         var report = await ComposeAsync(plan, outcomes, request, cancellationToken);
-        await SaveAsync(report, plan, request, cancellationToken);
+        await saver.SaveAsync(report, plan.PeriodReports, plan.AsOf, plan.Now, request, cancellationToken);
 
         return report.Id;
     }
@@ -70,7 +69,7 @@ public sealed class GenerateMonthlyReportHandler(
         {
             plan.Warnings.Add($"Стратегія під-портфеля «{sub.Name}» не відповіла: {result.ErrorMessage}. Його позиції цього разу не змінюються.");
 
-            return new SubPortfolioOutcome(sub.Id, sub.Name, sub.TargetShare, share, null, null, null, [], [], Error: result.ErrorMessage);
+            return SubPortfolioOutcome.Failed(sub.Id, sub.Name, sub.TargetShare, share, result.ErrorMessage);
         }
 
         return RebalancedOutcome(sub, plan, share, result.Value!);
@@ -139,8 +138,7 @@ public sealed class GenerateMonthlyReportHandler(
         var from = NameOf(plan.Account, transfer.FromSubPortfolioId);
         var to = NameOf(plan.Account, transfer.ToSubPortfolioId);
 
-        return $"Під-портфелі відхилилися від цільових часток більше ніж на {Percentage.Of(plan.Account.DriftBand)}: " +
-               $"варто перенести {transfer.Amount:0.00} {plan.Currency} з «{from}» до «{to}».";
+        return transfer.WarningFor(from, to, Percentage.Of(plan.Account.DriftBand), plan.Currency);
     }
 
     private static string NameOf(AccountSetupDto account, Guid subPortfolioId) =>
@@ -149,7 +147,7 @@ public sealed class GenerateMonthlyReportHandler(
     private async Task<RebalancingReport> ComposeAsync(
         MonthlyPlan plan, List<SubPortfolioOutcome> outcomes, ReportRequest request, CancellationToken cancellationToken)
     {
-        var marketAsOf = plan.Prices.Count > 0 ? plan.Prices.Values.Max(price => price.Date) : plan.AsOf;
+        var marketAsOf = ReportHeader.MarketDateOf([.. plan.Prices.Values.Select(price => price.Date)], plan.AsOf);
         var header = new ReportHeader(
             AccountId: plan.Account.Id,
             OwnerId: UserId.Of(plan.Account.OwnerId),
@@ -166,18 +164,5 @@ public sealed class GenerateMonthlyReportHandler(
         draft = draft with { Review = await reviewer.ReviewAsync(draft, cancellationToken) };
 
         return RebalancingReport.Generate(draft, plan.Now);
-    }
-
-    private async Task SaveAsync(RebalancingReport report, MonthlyPlan plan, ReportRequest request, CancellationToken cancellationToken)
-    {
-        await taxes.EstimateAsync(report, plan.AsOf, cancellationToken);
-        reports.Add(report);
-
-        foreach (var open in plan.PeriodReports.Where(each => each.IsOpen && each.Code == plan.Code && each.Kind is ReportKind.Monthly or ReportKind.Recalculation))
-            open.SupersedeBy(report.Id, plan.Now);
-
-        report.Generated(request.RequestedAt, plan.Now);
-        request.Complete(report.Id, plan.Now);
-        await reports.SaveChangesAsync(cancellationToken);
     }
 }

@@ -2,6 +2,9 @@ namespace InvestmentLab.Rebalancing.Planning.Domain;
 
 public static class ContributionAllocator
 {
+    public static ContributionSplit SplitOf(string policy) =>
+        Enum.TryParse<ContributionSplit>(policy, out var split) ? split : ContributionSplit.FillUnderweight;
+
     public static ContributionAllocation Allocate(
         decimal contribution, IReadOnlyList<SubPortfolioStanding> subPortfolios, ContributionSplit split, Percentage driftBand)
     {

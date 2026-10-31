@@ -141,7 +141,9 @@ public sealed class PlanningInputs(
         var subPortfolios = declared.Select(each => new SubPortfolioReport(
             each.SubPortfolio.Id, each.SubPortfolio.Name, each.Strategy.Name, CadenceOf(each.Report.Schedule)));
 
-        return new AccountReport(first.Code, first.Name, first.Description, first.Mode, [.. subPortfolios], settings?.ScheduleOf(first.Code));
+        var kind = first.Mode == StrategyReportDto.RiskReview ? ReportKind.RiskReview : ReportKind.Monthly;
+
+        return new AccountReport(first.Code, first.Name, first.Description, first.Mode, kind, [.. subPortfolios], settings?.ScheduleOf(first.Code));
     }
 
     private static Cadence CadenceOf(StrategyReportScheduleDto schedule) =>

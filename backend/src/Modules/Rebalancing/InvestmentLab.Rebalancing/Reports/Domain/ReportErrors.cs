@@ -2,6 +2,11 @@ namespace InvestmentLab.Rebalancing.Reports.Domain;
 
 public static class ReportErrors
 {
+    public static Error NoSuchReport(Guid accountId, string? code) =>
+        code is null
+            ? NoActiveSubPortfolios(accountId)
+            : Error.NotFound("report.definition_not_found", $"No strategy of account {accountId} makes the report '{code}'.");
+
     public static Error NotFound(Guid reportId) => Error.NotFound("report.not_found", $"Report {reportId} does not exist.");
 
     public static Error ActionNotFound(Guid actionId) => Error.NotFound("report.action_not_found", $"The report has no action {actionId}.");
