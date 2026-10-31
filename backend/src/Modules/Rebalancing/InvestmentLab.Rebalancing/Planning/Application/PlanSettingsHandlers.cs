@@ -19,7 +19,7 @@ public sealed record ChangePlanSettingsCommand(
 /// <param name="Minute">Hourly: the minute of every hour.</param>
 public sealed record ReportTimingDto(string Frequency, int Day, string Weekday, string Time, int Minute)
 {
-    public static ReportTimingDto Of(ReportCadence cadence) => new(
+    public static ReportTimingDto Of(Cadence cadence) => new(
         cadence.Frequency.ToString(), cadence.Day, cadence.Weekday.ToString(), cadence.Time.ToString("HH:mm", CultureInfo.InvariantCulture), cadence.Minute);
 }
 
@@ -36,7 +36,7 @@ public sealed record ScheduledReportDto(
 
 public sealed record ReportScheduleDto(bool GenerateOnSchedule, string TimeZone, IReadOnlyList<ScheduledReportDto> Reports);
 
-/// <summary>The user's own time for one of the account's reports (<see cref="ReportCadence.TryOf"/>).</summary>
+/// <summary>The user's own time for one of the account's reports (<see cref="Cadence.TryOf"/>).</summary>
 /// <param name="Frequency">off, hourly, daily, weekly, monthly or quarterly.</param>
 /// <param name="Day">Monthly, quarterly: 1–31.</param>
 /// <param name="Weekday">Weekly: monday … sunday.</param>
@@ -92,7 +92,7 @@ public sealed class PlanSettingsHandler(PlanningInputs inputs, IPlanSettingsRepo
     /// <summary>The report with this code comes at the user's time on this account, whatever its strategies say.</summary>
     public async Task<Result<ReportScheduleDto>> ChangeSchedule(Guid accountId, string code, ChangeReportScheduleCommand command, CancellationToken cancellationToken)
     {
-        var cadence = ReportCadence.TryOf(command.Frequency, command.Day, command.Weekday, command.Time, command.Minute);
+        var cadence = Cadence.TryOf(command.Frequency, command.Day, command.Weekday, command.Time, command.Minute);
         if (cadence.IsFailure)
             return cadence.Error;
         return await ChangeOwnScheduleAsync(accountId, code, (plan, now) => plan.Schedule(code, cadence.Value, now), cancellationToken);
