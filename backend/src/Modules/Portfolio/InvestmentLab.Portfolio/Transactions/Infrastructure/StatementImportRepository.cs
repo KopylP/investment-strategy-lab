@@ -1,6 +1,6 @@
 using InvestmentLab.Portfolio.Accounts.Domain;
 using InvestmentLab.Portfolio.Shared.Infrastructure;
-using InvestmentLab.Portfolio.Transactions.Application.ImportStatement;
+using InvestmentLab.Portfolio.Transactions.Application.Shared;
 using InvestmentLab.Portfolio.Transactions.Domain;
 using Microsoft.EntityFrameworkCore;
 

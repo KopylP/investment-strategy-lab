@@ -1,4 +1,4 @@
-namespace InvestmentLab.Portfolio.Transactions.Application.ImportStatement;
+namespace InvestmentLab.Portfolio.Transactions.Application.Shared;
 
 public sealed record StatementRowDto(
     int Number, DateOnly OccurredOn, string Kind, string RawType, string? Ticker, decimal? Quantity, decimal? Price, decimal Amount, string Currency,

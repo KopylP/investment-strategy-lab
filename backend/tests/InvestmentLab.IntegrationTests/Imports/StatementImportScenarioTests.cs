@@ -4,7 +4,7 @@ using InvestmentLab.IntegrationTests.MarketData;
 using InvestmentLab.IntegrationTests.Portfolio;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Portfolio.Contracts.Holdings;
-using InvestmentLab.Portfolio.Transactions.Application.ImportStatement;
+using InvestmentLab.Portfolio.Transactions.Application.Shared;
 
 namespace InvestmentLab.IntegrationTests.Imports;
 
