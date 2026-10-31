@@ -24,7 +24,11 @@ public class HomeAssistantApiFactory : WebApplicationFactory<api::Program>, IAsy
         builder.UseSetting("ConnectionStrings:investmentlab", _postgres.GetConnectionString())
             .UseSetting("Scheduling:RunAtStartup", "false")
             .UseSetting("HomeAssistant:IngressPort", "8098")
-            .ConfigureTestServices(services => services.AddTransient<IStartupFilter, PeerFromHeader>());
+            .ConfigureTestServices(services =>
+            {
+                services.RemoveReactionsThatNeedTheStrategyEngine();
+                services.AddTransient<IStartupFilter, PeerFromHeader>();
+            });
 
     public override async ValueTask DisposeAsync()
     {
