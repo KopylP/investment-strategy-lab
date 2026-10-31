@@ -1,5 +1,5 @@
 using System.Globalization;
-using InvestmentLab.Taxation.Declarations.Application;
+using InvestmentLab.Taxation.Declarations.Application.Shared;
 using InvestmentLab.Taxation.Declarations.Domain;
 using UglyToad.PdfPig.Core;
 using UglyToad.PdfPig.Writer;

@@ -1,6 +1,6 @@
 using InvestmentLab.Portfolio.Accounts.Domain;
 using InvestmentLab.Portfolio.Contracts.Transactions;
-using InvestmentLab.Portfolio.Transactions.Application;
+using InvestmentLab.Portfolio.Transactions.Application.Shared;
 
 namespace InvestmentLab.Portfolio.Transactions.Infrastructure;
 

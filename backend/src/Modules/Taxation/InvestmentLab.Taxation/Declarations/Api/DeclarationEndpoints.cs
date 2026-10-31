@@ -1,5 +1,10 @@
 using InvestmentLab.BuildingBlocks.Http;
-using InvestmentLab.Taxation.Declarations.Application;
+using InvestmentLab.Taxation.Declarations.Application.GetDeclaration;
+using InvestmentLab.Taxation.Declarations.Application.GetDeclarationPdf;
+using InvestmentLab.Taxation.Declarations.Application.ListDeclarationForms;
+using InvestmentLab.Taxation.Declarations.Application.RemovePit8C;
+using InvestmentLab.Taxation.Declarations.Application.SetPit8C;
+using InvestmentLab.Taxation.Declarations.Application.Shared;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -23,25 +28,25 @@ internal static class DeclarationEndpoints
     }
 
     private static async Task<Ok<IReadOnlyList<DeclarationFormDto>>> GetDeclarationForms(
-        int year, DeclarationQueries queries, CancellationToken cancellationToken)
+        int year, ListDeclarationFormsHandler handler, CancellationToken cancellationToken)
     {
-        var forms = await queries.Available(year, cancellationToken);
+        var forms = await handler.Handle(year, cancellationToken);
 
         return TypedResults.Ok(forms);
     }
 
     private static async Task<IResult> GetDeclaration(
-        int year, string code, DeclarationQueries queries, CancellationToken cancellationToken)
+        int year, string code, GetDeclarationHandler handler, CancellationToken cancellationToken)
     {
-        var declaration = await queries.Fill(year, code, cancellationToken);
+        var declaration = await handler.Handle(year, code, cancellationToken);
 
         return declaration.ToHttpResult();
     }
 
     private static async Task<IResult> GetDeclarationPdf(
-        int year, string code, string? kind, DeclarationQueries queries, CancellationToken cancellationToken)
+        int year, string code, string? kind, GetDeclarationPdfHandler handler, CancellationToken cancellationToken)
     {
-        var pdf = await queries.Pdf(year, code, kind ?? "summary", cancellationToken);
+        var pdf = await handler.Handle(year, code, kind ?? "summary", cancellationToken);
         if (pdf.IsFailure)
             return pdf.Error.ToProblem();
 
@@ -49,17 +54,17 @@ internal static class DeclarationEndpoints
     }
 
     private static async Task<IResult> SetPit8C(
-        int year, Guid accountId, Pit8CCommand body, DeclarationQueries queries, CancellationToken cancellationToken)
+        int year, Guid accountId, Pit8CCommand body, SetPit8CHandler handler, CancellationToken cancellationToken)
     {
-        var set = await queries.SetPit8C(year, accountId, body, cancellationToken);
+        var set = await handler.Handle(year, accountId, body, cancellationToken);
 
         return set.ToHttpResult();
     }
 
     private static async Task<IResult> RemovePit8C(
-        int year, Guid accountId, DeclarationQueries queries, CancellationToken cancellationToken)
+        int year, Guid accountId, RemovePit8CHandler handler, CancellationToken cancellationToken)
     {
-        var removed = await queries.RemovePit8C(year, accountId, cancellationToken);
+        var removed = await handler.Handle(year, accountId, cancellationToken);
 
         return removed.ToHttpResult();
     }

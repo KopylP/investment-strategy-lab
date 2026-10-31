@@ -2,7 +2,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using InvestmentLab.Strategies.Contracts;
-using InvestmentLab.Strategies.Evaluation.Application;
+using InvestmentLab.Strategies.Evaluation.Application.Shared;
 using InvestmentLab.Strategies.Evaluation.Infrastructure;
 using InvestmentLab.Strategies.Shared.Infrastructure.Engine;
 

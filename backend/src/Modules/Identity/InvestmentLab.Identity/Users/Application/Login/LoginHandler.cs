@@ -1,3 +1,5 @@
+using InvestmentLab.Identity.Users.Application.Shared;
+
 namespace InvestmentLab.Identity.Users.Application.Login;
 
 public sealed record LoginCommand(string Email, string Password, bool Remember = true);

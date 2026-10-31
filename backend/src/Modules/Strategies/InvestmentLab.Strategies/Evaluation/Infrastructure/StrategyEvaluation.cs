@@ -1,9 +1,9 @@
 using InvestmentLab.Strategies.Contracts;
-using InvestmentLab.Strategies.Evaluation.Application;
 using InvestmentLab.Strategies.Evaluation.Application.AssessStrategyRisk;
 using InvestmentLab.Strategies.Evaluation.Application.DecideStrategy;
 using InvestmentLab.Strategies.Evaluation.Application.PollStrategyDecision;
 using InvestmentLab.Strategies.Evaluation.Application.PollStrategyRisk;
+using InvestmentLab.Strategies.Evaluation.Application.Shared;
 using InvestmentLab.Strategies.Evaluation.Application.SubmitStrategyJob;
 
 namespace InvestmentLab.Strategies.Evaluation.Infrastructure;

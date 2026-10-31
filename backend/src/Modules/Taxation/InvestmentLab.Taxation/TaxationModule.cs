@@ -4,14 +4,29 @@ using InvestmentLab.BuildingBlocks.Modules;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.Portfolio.Contracts.Transactions;
 using InvestmentLab.Taxation.Assessments.Api;
-using InvestmentLab.Taxation.Assessments.Application;
+using InvestmentLab.Taxation.Assessments.Application.GetTaxProgress;
+using InvestmentLab.Taxation.Assessments.Application.GetTaxYear;
+using InvestmentLab.Taxation.Assessments.Application.GetTaxYears;
 using InvestmentLab.Taxation.Assessments.Application.Integration;
+using InvestmentLab.Taxation.Assessments.Application.ListBrokerStatements;
+using InvestmentLab.Taxation.Assessments.Application.ListLossCarryforwards;
+using InvestmentLab.Taxation.Assessments.Application.RecordLossCarryforward;
+using InvestmentLab.Taxation.Assessments.Application.RemoveBrokerStatement;
+using InvestmentLab.Taxation.Assessments.Application.RemoveLossCarryforward;
+using InvestmentLab.Taxation.Assessments.Application.Shared;
+using InvestmentLab.Taxation.Assessments.Application.UploadBrokerStatement;
+using InvestmentLab.Taxation.Assessments.Domain;
 using InvestmentLab.Taxation.Assessments.Infrastructure;
 using InvestmentLab.Taxation.BrokerStatements.Domain;
 using InvestmentLab.Taxation.BrokerStatements.Infrastructure;
 using InvestmentLab.Taxation.Contracts;
 using InvestmentLab.Taxation.Declarations.Api;
-using InvestmentLab.Taxation.Declarations.Application;
+using InvestmentLab.Taxation.Declarations.Application.GetDeclaration;
+using InvestmentLab.Taxation.Declarations.Application.GetDeclarationPdf;
+using InvestmentLab.Taxation.Declarations.Application.ListDeclarationForms;
+using InvestmentLab.Taxation.Declarations.Application.RemovePit8C;
+using InvestmentLab.Taxation.Declarations.Application.SetPit8C;
+using InvestmentLab.Taxation.Declarations.Application.Shared;
 using InvestmentLab.Taxation.Declarations.Domain;
 using InvestmentLab.Taxation.Declarations.Infrastructure;
 using InvestmentLab.Taxation.Ledger.Domain;
@@ -21,7 +36,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using InvestmentLab.Taxation.Assessments.Domain;
 
 namespace InvestmentLab.Taxation;
 
@@ -42,10 +56,20 @@ public sealed class TaxationModule : IModule
         services.AddScoped<IAssessmentRepository, AssessmentRepository>();
         services.AddScoped<TaxInputs>();
         services.AddScoped<TaxRecalculator>();
-        services.AddScoped<TaxQueries>();
+        services.AddScoped<GetTaxYearsHandler>();
+        services.AddScoped<GetTaxYearHandler>();
+        services.AddScoped<GetTaxProgressHandler>();
+        services.AddScoped<ListLossCarryforwardsHandler>();
+        services.AddScoped<RecordLossCarryforwardHandler>();
+        services.AddScoped<RemoveLossCarryforwardHandler>();
         services.AddSingleton(new TaxAlertOptions(
             decimal.TryParse(builder.Configuration["Taxation:AlertShare"], CultureInfo.InvariantCulture, out var share) && share is > 0m and <= 1m ? share : null));
-        services.AddScoped<DeclarationQueries>();
+        services.AddScoped<DeclarationAccounts>();
+        services.AddScoped<ListDeclarationFormsHandler>();
+        services.AddScoped<GetDeclarationHandler>();
+        services.AddScoped<GetDeclarationPdfHandler>();
+        services.AddScoped<SetPit8CHandler>();
+        services.AddScoped<RemovePit8CHandler>();
 
         services.AddSingleton<ITaxDeclarationForm, Pit38Form>();
         services.AddScoped<ITaxpayerHistory, TaxpayerHistory>();
@@ -55,7 +79,9 @@ public sealed class TaxationModule : IModule
         services.AddScoped<ITaxEstimator, TaxEstimator>();
         services.AddScoped<IBrokerStatementRepository, BrokerStatementRepository>();
         services.AddSingleton<IBrokerStatementParser, RevolutPnlPdfParser>();
-        services.AddScoped<BrokerStatementService>();
+        services.AddScoped<ListBrokerStatementsHandler>();
+        services.AddScoped<UploadBrokerStatementHandler>();
+        services.AddScoped<RemoveBrokerStatementHandler>();
         services.AddIntegrationEventHandler<TransactionRecordedV1, RecomputeOnTransactionRecorded>();
         services.AddIntegrationEventHandler<TransactionReversedV1, RecomputeOnTransactionReversed>();
     }

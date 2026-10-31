@@ -1,8 +1,10 @@
 using InvestmentLab.BuildingBlocks.Http;
 using InvestmentLab.BuildingBlocks.Security;
-using InvestmentLab.Notifications.Delivery.Application;
+using InvestmentLab.Notifications.Delivery.Application.ChangeNotificationSettings;
 using InvestmentLab.Notifications.Delivery.Application.GetMutedSignals;
+using InvestmentLab.Notifications.Delivery.Application.GetNotificationSettings;
 using InvestmentLab.Notifications.Delivery.Application.HearSignal;
+using InvestmentLab.Notifications.Delivery.Application.SendTestNotification;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;

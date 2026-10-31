@@ -1,6 +1,7 @@
 using InvestmentLab.MarketData.Contracts.Quotes;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Portfolio.Contracts.Holdings;
+using InvestmentLab.Rebalancing.Planning.Application.Shared;
 using InvestmentLab.Rebalancing.Planning.Domain;
 using InvestmentLab.Rebalancing.Reports.Domain;
 using InvestmentLab.Strategies.Contracts;

@@ -3,9 +3,9 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using InvestmentLab.IntegrationTests.Portfolio;
-using InvestmentLab.Strategies.Catalog.Application;
+using InvestmentLab.Strategies.Catalog.Application.Shared;
 using InvestmentLab.Strategies.Contracts;
-using InvestmentLab.Strategies.Definitions.Application;
+using InvestmentLab.Strategies.Definitions.Application.Shared;
 
 namespace InvestmentLab.IntegrationTests.Strategies;
 

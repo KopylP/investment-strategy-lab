@@ -1,7 +1,7 @@
 using InvestmentLab.MarketData.Contracts.Instruments;
-using InvestmentLab.MarketData.Instruments.Application;
 using InvestmentLab.MarketData.Instruments.Application.DescribeInstruments;
 using InvestmentLab.MarketData.Instruments.Application.RegisterInstrument;
+using InvestmentLab.MarketData.Instruments.Application.Shared;
 using InvestmentLab.MarketData.Instruments.Domain;
 
 namespace InvestmentLab.MarketData.Instruments.Infrastructure;

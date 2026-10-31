@@ -1,6 +1,6 @@
 using InvestmentLab.Strategies.Catalog.Domain;
 using InvestmentLab.Strategies.Contracts;
-using InvestmentLab.Strategies.Definitions.Application;
+using InvestmentLab.Strategies.Definitions.Domain;
 using InvestmentLab.Strategies.Shared.Infrastructure.Engine;
 
 namespace InvestmentLab.Strategies.Definitions.Infrastructure;

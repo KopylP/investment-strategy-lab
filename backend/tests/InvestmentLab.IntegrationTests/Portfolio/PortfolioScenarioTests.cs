@@ -4,8 +4,8 @@ using System.Text.Json;
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Portfolio.Contracts.Holdings;
-using InvestmentLab.Portfolio.Transactions.Application;
 using InvestmentLab.Portfolio.Transactions.Application.ImportPositions;
+using InvestmentLab.Portfolio.Transactions.Application.Shared;
 
 namespace InvestmentLab.IntegrationTests.Portfolio;
 

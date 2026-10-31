@@ -1,5 +1,7 @@
 extern alias api;
 
+using InvestmentLab.MarketData.FxRates.Application.Shared;
+using InvestmentLab.MarketData.Quotes.Application.Shared;
 using System.Collections.Concurrent;
 using InvestmentLab.IntegrationTests.MarketData;
 using InvestmentLab.MarketData.FxRates.Application;

@@ -1,6 +1,6 @@
 using System.Reflection;
 using System.Text.Json;
-using InvestmentLab.Strategies.Definitions.Application;
+using InvestmentLab.Strategies.Definitions.Application.Shared;
 using InvestmentLab.Strategies.Shared.Infrastructure.Engine;
 
 namespace InvestmentLab.Strategies.Definitions.Infrastructure;

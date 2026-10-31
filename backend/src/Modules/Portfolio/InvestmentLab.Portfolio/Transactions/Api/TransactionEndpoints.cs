@@ -1,11 +1,11 @@
 using InvestmentLab.BuildingBlocks.Http;
-using InvestmentLab.Portfolio.Transactions.Application;
 using InvestmentLab.Portfolio.Transactions.Application.GetTransactions;
 using InvestmentLab.Portfolio.Transactions.Application.RecordCashMovement;
 using InvestmentLab.Portfolio.Transactions.Application.RecordContribution;
 using InvestmentLab.Portfolio.Transactions.Application.RecordInternalTransfer;
 using InvestmentLab.Portfolio.Transactions.Application.RecordTrade;
 using InvestmentLab.Portfolio.Transactions.Application.ReverseTransaction;
+using InvestmentLab.Portfolio.Transactions.Application.Shared;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;

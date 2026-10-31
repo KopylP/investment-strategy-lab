@@ -1,5 +1,5 @@
 using InvestmentLab.MarketData.Contracts.FxRates;
-using InvestmentLab.MarketData.FxRates.Application;
+using InvestmentLab.MarketData.FxRates.Application.Shared;
 using InvestmentLab.MarketData.FxRates.Domain;
 using InvestmentLab.MarketData.Shared.Infrastructure;
 using Microsoft.EntityFrameworkCore;

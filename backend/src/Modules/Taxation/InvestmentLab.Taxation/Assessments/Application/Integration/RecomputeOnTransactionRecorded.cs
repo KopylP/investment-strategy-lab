@@ -1,5 +1,6 @@
 using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.Portfolio.Contracts.Transactions;
+using InvestmentLab.Taxation.Assessments.Application.Shared;
 
 namespace InvestmentLab.Taxation.Assessments.Application.Integration;
 

@@ -2,7 +2,7 @@ using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.Portfolio.Accounts.Domain;
 using InvestmentLab.Portfolio.Holdings.Domain;
 using InvestmentLab.Portfolio.Shared.Infrastructure;
-using InvestmentLab.Portfolio.Transactions.Application;
+using InvestmentLab.Portfolio.Transactions.Application.Shared;
 using InvestmentLab.Portfolio.Transactions.Domain;
 using Microsoft.EntityFrameworkCore;
 

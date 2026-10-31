@@ -1,4 +1,5 @@
 using InvestmentLab.Portfolio.Contracts.Accounts;
+using InvestmentLab.Rebalancing.Planning.Application.Shared;
 using InvestmentLab.Rebalancing.Reports.Domain;
 using InvestmentLab.Strategies.Contracts;
 

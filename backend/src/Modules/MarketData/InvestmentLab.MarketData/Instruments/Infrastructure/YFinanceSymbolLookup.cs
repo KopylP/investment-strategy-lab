@@ -1,5 +1,5 @@
 using System.Net.Http.Json;
-using InvestmentLab.MarketData.Instruments.Application;
+using InvestmentLab.MarketData.Instruments.Application.Shared;
 using Microsoft.Extensions.Logging;
 
 namespace InvestmentLab.MarketData.Instruments.Infrastructure;

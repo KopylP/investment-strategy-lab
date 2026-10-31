@@ -1,4 +1,5 @@
 using InvestmentLab.BuildingBlocks.Messaging;
+using InvestmentLab.Notifications.Delivery.Application.Shared;
 using InvestmentLab.Rebalancing.Contracts;
 
 namespace InvestmentLab.Notifications.Delivery.Application.Integration;

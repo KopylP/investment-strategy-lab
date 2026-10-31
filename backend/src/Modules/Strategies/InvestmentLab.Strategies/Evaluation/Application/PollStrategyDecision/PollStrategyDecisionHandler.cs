@@ -1,4 +1,5 @@
 using InvestmentLab.Strategies.Contracts;
+using InvestmentLab.Strategies.Evaluation.Application.Shared;
 
 namespace InvestmentLab.Strategies.Evaluation.Application.PollStrategyDecision;
 

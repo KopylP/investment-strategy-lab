@@ -1,3 +1,4 @@
+using InvestmentLab.Rebalancing.Reports.Application.Shared;
 using InvestmentLab.Rebalancing.Reports.Domain;
 using InvestmentLab.Rebalancing.Reviews.Domain;
 

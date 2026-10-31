@@ -1,4 +1,5 @@
 using InvestmentLab.Portfolio.Contracts.Transactions;
+using InvestmentLab.Portfolio.Transactions.Application.Shared;
 using InvestmentLab.Portfolio.Transactions.Domain;
 
 namespace InvestmentLab.Portfolio.Transactions.Application.RecordCashMovement;

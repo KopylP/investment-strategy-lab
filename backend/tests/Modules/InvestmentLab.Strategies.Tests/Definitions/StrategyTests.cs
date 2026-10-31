@@ -1,6 +1,6 @@
 using System.Text.Json;
 using InvestmentLab.Strategies.Catalog.Domain;
-using InvestmentLab.Strategies.Definitions.Application;
+using InvestmentLab.Strategies.Definitions.Application.Shared;
 using InvestmentLab.Strategies.Definitions.Domain;
 
 namespace InvestmentLab.Strategies.Tests.Definitions;

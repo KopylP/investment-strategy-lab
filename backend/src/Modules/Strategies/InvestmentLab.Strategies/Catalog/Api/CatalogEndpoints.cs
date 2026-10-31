@@ -1,4 +1,5 @@
-using InvestmentLab.Strategies.Catalog.Application;
+using InvestmentLab.Strategies.Catalog.Application.GetStrategyCatalog;
+using InvestmentLab.Strategies.Catalog.Application.Shared;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;

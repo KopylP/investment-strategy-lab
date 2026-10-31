@@ -1,4 +1,5 @@
 using InvestmentLab.BuildingBlocks.Messaging;
+using InvestmentLab.Notifications.Delivery.Application.Shared;
 using InvestmentLab.Notifications.Delivery.Domain;
 using InvestmentLab.Signals.Contracts;
 

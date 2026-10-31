@@ -1,5 +1,5 @@
 using InvestmentLab.MarketData.Instruments.Domain;
-using InvestmentLab.MarketData.Quotes.Application;
+using InvestmentLab.MarketData.Quotes.Application.Shared;
 using InvestmentLab.MarketData.Quotes.Domain;
 using InvestmentLab.MarketData.Shared.Infrastructure;
 using Microsoft.EntityFrameworkCore;

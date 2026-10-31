@@ -6,10 +6,10 @@ using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Portfolio.Contracts.Holdings;
 using InvestmentLab.Rebalancing.Contracts;
 using InvestmentLab.Rebalancing.Planning.Api;
-using InvestmentLab.Rebalancing.Planning.Application;
 using InvestmentLab.Rebalancing.Planning.Application.RequestReport;
+using InvestmentLab.Rebalancing.Planning.Application.Shared;
 using InvestmentLab.Rebalancing.Reports.Application.GetReport;
-using InvestmentLab.Strategies.Definitions.Application;
+using InvestmentLab.Strategies.Definitions.Application.Shared;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace InvestmentLab.IntegrationTests.Rebalancing;
