@@ -50,6 +50,46 @@ Modules/<Module>/
   and to `Domain/` when it is a concept of the domain rather than of the use cases.
 - A new action, or a split or move of existing code, leaves the tree in this shape in the same change.
 
+### Inside an action
+
+One file `<ActionName>Handler.cs` holds the command record, the DTOs only this action uses, and the handler with one
+public method `Handle`. It reads as steps; rules live in the aggregate.
+
+```csharp
+public sealed record RetireSubPortfolioCommand(Guid AccountId, Guid SubPortfolioId);
+
+public sealed class RetireSubPortfolioHandler(IAccountRepository accounts, TimeProvider clock)
+{
+    public async Task<Result> Handle(RetireSubPortfolioCommand command, CancellationToken cancellationToken)
+    {
+        var account = await accounts.FindAsync(command.AccountId, cancellationToken);
+        if (account is null)
+            return AccountErrors.NotFound(command.AccountId);
+
+        var retired = account.RetireSubPortfolio(command.SubPortfolioId, clock.GetUtcNow());
+        if (retired.IsFailure)
+            return retired;
+
+        await accounts.SaveChangesAsync(cancellationToken);
+
+        return Result.Success();
+    }
+}
+```
+
+- **A command** changes state: load the aggregate, call its method, save. The order is guards, gathering data, the domain
+  call, saving, returning, with a blank line between them. The handler has no business rules and publishes nothing: the
+  aggregate raises a domain event, and a mapper turns it into an integration event in the same save.
+- **A query** only reads: load, map to a DTO, return. It changes nothing and raises nothing. Name it `Get…` or `List…`.
+- **Failures** are returned as `Result` with an error from `<Feature>Errors` in `Domain/`, not thrown. Parsing input into
+  value objects is a private method or lives on the input DTO.
+- **An endpoint** is a named private method that calls one handler and returns `ToHttpResult()`; the route table at the
+  top of the file only maps routes to those methods.
+- **An integration event handler** reacts to one event, is idempotent because delivery is at-least-once, and is named
+  for what it does (`RequestReportsOnSignal`).
+- **A job** only decides what is due and calls a handler per item, each in its own scope, so one failure does not stop
+  the others.
+
 ## Rules (enforced by `InvestmentLab.ArchitectureTests`)
 
 - A module uses another only through its `.Contracts` project: integration events (`…V1` records) and query
