@@ -1,6 +1,4 @@
-<app-page-header title="Імпорт з Revolut" [subtitle]="'Виписка операцій (CSV) стає записами журналу рахунку «' + (store.account()?.name ?? '') + '»: угоди, поповнення, виводи, дивіденди'">
-  <p-button label="До журналу" icon="pi pi-arrow-left" severity="secondary" [text]="true" routerLink="/transactions" />
-</app-page-header>
+<app-page-header backLink="/transactions" backLabel="До журналу" title="Імпорт з Revolut" [subtitle]="'Виписка операцій (CSV) стає записами журналу рахунку «' + (store.account()?.name ?? '') + '»: угоди, поповнення, виводи, дивіденди'" />
 
 @if (!store.current()) {
   <div class="card">

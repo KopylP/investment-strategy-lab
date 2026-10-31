@@ -155,25 +155,37 @@
       }
       <p-table [value]="risk.positionsVm" tableStyleClass="sm:min-w-[48rem]" size="small">
         <ng-template #header>
-          <tr><th>ETF</th><th class="text-right hidden sm:table-cell">Вартість</th><th class="text-right">P&amp;L</th><th class="text-right">Від піку</th><th class="text-right hidden sm:table-cell">Вихід</th><th>Сигнали</th></tr>
+          <tr><th>ETF</th><th class="text-right hidden sm:table-cell">Вартість</th><th class="text-right">P&amp;L</th><th class="text-right whitespace-nowrap">Від піку</th><th class="text-right hidden sm:table-cell">Вихід</th><th class="hidden sm:table-cell">Сигнали</th></tr>
         </ng-template>
         <ng-template #body let-position>
+          @let signalled = position.sell || position.alerts.length > 0;
           <tr>
-            <td class="font-medium">{{ position.symbol }}</td>
+            <td class="font-medium" [class.max-sm:border-b-0!]="signalled">{{ position.symbol }}</td>
             <td class="text-right hidden sm:table-cell">{{ position.value | money: currency() }}</td>
-            <td class="text-right" [appSignedValue]="position.pnlPct">{{ position.pnlPct | signedPercent }}</td>
-            <td class="text-right" [appSignedValue]="position.drawdownFromHigh">{{ position.drawdownFromHigh | signedPercent }}</td>
+            <td class="text-right" [class.max-sm:border-b-0!]="signalled" [appSignedValue]="position.pnlPct">{{ position.pnlPct | signedPercent }}</td>
+            <td class="text-right" [class.max-sm:border-b-0!]="signalled" [appSignedValue]="position.drawdownFromHigh">{{ position.drawdownFromHigh | signedPercent }}</td>
             <td class="text-right hidden sm:table-cell">
               {{ position.exitPrice === null ? '—' : (position.exitPrice | money: currency()) }}
               <div class="text-xs text-muted-color">{{ position.exitRule }}</div>
             </td>
-            <td>
+            <td class="hidden sm:table-cell">
               @if (position.sell) { <p-tag value="продати" severity="danger" /> }
               @for (alert of position.alerts; track $index) {
                 <div class="text-xs text-muted-color">{{ alert }}</div>
               }
             </td>
           </tr>
+          <!-- Phone: the signals take the whole width under their position; a column of their own squeezes the numbers. -->
+          @if (signalled) {
+            <tr class="sm:hidden">
+              <td colspan="3" class="pt-0!">
+                @if (position.sell) { <p-tag value="продати" severity="danger" styleClass="mb-1" /> }
+                @for (alert of position.alerts; track $index) {
+                  <div class="text-xs text-muted-color">{{ alert }}</div>
+                }
+              </td>
+            </tr>
+          }
         </ng-template>
       </p-table>
     </div>

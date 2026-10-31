@@ -16,7 +16,6 @@ import { ReportDetailStore } from '../../data-access/report-detail-store';
 import { FillInput, ReportActionVm } from '../../models/report-vm';
 import { FillDialog } from '../../ui/fill-dialog/fill-dialog';
 import { LoadOperationsData, LoadOperationsDialog } from '../../ui/load-operations-dialog/load-operations-dialog';
-import { NextReports } from '../../ui/next-reports/next-reports';
 import { ReportActionsTable } from '../../ui/report-actions-table/report-actions-table';
 import { ReportProgress } from '../../ui/report-progress/report-progress';
 import { ReportStatusTag } from '../../ui/report-status-tag/report-status-tag';
@@ -27,7 +26,7 @@ import { SkipDialog } from '../../ui/skip-dialog/skip-dialog';
   selector: 'app-report-detail-page',
   imports: [
     RouterLink, Button, Menu, Message, Skeleton, Tag, Tabs, TabList, Tab, TabPanels, TabPanel,
-    PageHeader, ReportProgress, ReportActionsTable, NextReports, ReportStatusTag, SectionPanel, DatePipe, DateTimePipe, MoneyPipe,
+    PageHeader, ReportProgress, ReportActionsTable, ReportStatusTag, SectionPanel, DatePipe, DateTimePipe, MoneyPipe,
   ],
   providers: [ReportDetailStore],
   templateUrl: './report-detail-page.html',

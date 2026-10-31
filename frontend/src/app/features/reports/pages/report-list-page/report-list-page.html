@@ -21,6 +21,12 @@
     </p-message>
   }
 
+  @if (store.schedule(); as schedule) {
+    @if (schedule.reports.length && store.account(); as account) {
+      <app-next-reports class="block mb-3 sm:mb-4" [schedule]="schedule" [accountId]="account.id" />
+    }
+  }
+
   <div class="card">
     @if (store.isLoading() && !store.rows().length) {
       <p-skeleton height="10rem" />

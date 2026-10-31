@@ -58,6 +58,8 @@ export class ReportListStore {
   /** The reports the account's strategies declare, one per code: the "generate" buttons. */
   readonly definitions = computed(() => distinctReports(this.scheduleResource.value()?.reports ?? []));
   readonly definitionsLoaded = computed(() => this.scheduleResource.hasValue());
+  /** When the account's reports come next. */
+  readonly schedule = computed(() => (this.scheduleResource.hasValue() ? this.scheduleResource.value() : undefined));
   /** Code of the report being asked for (the request itself, not the strategies' thinking). */
   readonly generating = signal<string | null>(null);
   /** Reports being made: «Готується» until their strategies have answered. */
@@ -137,6 +139,7 @@ export class ReportListStore {
     }
     if (finished) {
       this.reportsResource.reload();
+      this.scheduleResource.reload();
       this.badge.refresh();
     }
   }

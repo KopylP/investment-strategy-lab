@@ -3,7 +3,7 @@
 } @else if (store.loadError()) {
   <div class="card"><p-message severity="error" text="Не вдалося завантажити рапорт" /></div>
 } @else if (store.report(); as report) {
-  <app-page-header [title]="report.summary.title" [subtitle]="report.summary.accountName + ' · котирування на ' + (report.summary.marketAsOf | date) + ' · згенеровано ' + (report.summary.generatedAt | dateTime) + ' ' + report.summary.triggerLabel">
+  <app-page-header backLink="/reports" backLabel="До рапортів" [title]="report.summary.title" [subtitle]="report.summary.accountName + ' · котирування на ' + (report.summary.marketAsOf | date) + ' · згенеровано ' + (report.summary.generatedAt | dateTime) + ' ' + report.summary.triggerLabel">
     <app-report-status-tag [status]="report.summary.status" />
     @if (viewport.phone()) {
       <!-- Phone: the page is for marking actions; regenerate, load and close wait in a menu. -->
@@ -65,10 +65,6 @@
   @if (report.contribution.transfer; as transfer) {
     <p-message severity="info" styleClass="mt-4"
       [text]="'Під-портфелі відійшли від цільових часток: варто перенести ' + (transfer.amount | money: report.summary.currency) + ' з «' + transfer.from + '» до «' + transfer.to + '».'" />
-  }
-
-  @if (store.schedule(); as schedule) {
-    <app-next-reports class="block mt-3 sm:mt-4" [schedule]="schedule" [accountId]="report.summary.accountId" [code]="report.summary.code" />
   }
 
   @if (report.sections.length) {
