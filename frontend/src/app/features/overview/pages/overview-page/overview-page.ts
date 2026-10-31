@@ -35,7 +35,6 @@ export class OverviewPage {
 
   protected readonly viewport = inject(Viewport);
 
-  /** On a phone the six periods keep to one row. */
   protected readonly periods = computed(() => [
     { label: '1М', value: '1M' },
     { label: '3М', value: '3M' },

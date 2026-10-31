@@ -1,6 +1,5 @@
 <app-page-header title="Рапорти" subtitle="Рапорти, які задають стратегії рахунку: робочий документ, у якому ви відмічаєте виконане">
   @if (store.hasAccount()) {
-    <!-- One button per report the account's strategies declare; the rebalance ones first and filled. -->
     @for (report of store.definitions(); track report.code) {
       <p-button [label]="report.name" [icon]="icon(report.mode)" [severity]="report.mode === 'rebalance' ? undefined : 'secondary'" [outlined]="report.mode !== 'rebalance'"
                 [loading]="store.generating() === report.code || store.isPreparing(report.code)" [disabled]="!!store.generating() || store.isPreparing(report.code)" (onClick)="start(report)" />
@@ -50,7 +49,6 @@
         </ng-template>
         <ng-template #body let-row>
           @if (row.request; as request) {
-            <!-- Strategies may think for minutes or hours (an AI agent): the row becomes the report when they have answered. -->
             <tr class="text-muted-color">
               <td>
                 <span class="font-medium text-color">{{ request.title }}</span>
@@ -78,7 +76,6 @@
               <td>
                 <a [routerLink]="['/reports', row.report.id]" class="font-medium">{{ row.report.title }}</a>
                 <div class="hidden sm:block text-sm text-muted-color">{{ row.report.kindLabel }} · {{ row.report.triggerLabel }}</div>
-                <!-- Phone: status and date under the title instead of their own columns. -->
                 <div class="sm:hidden flex items-center gap-2 mt-1 text-xs text-muted-color">
                   <app-report-status-tag [status]="row.report.status" />{{ row.report.generatedAt | date }}
                 </div>

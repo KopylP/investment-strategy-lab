@@ -53,7 +53,6 @@ export class InstrumentListPage {
     return all.filter((filter) => filter.value === 'all' || counts[filter.value] > 0);
   }
 
-  /** Below `lg` the list and the details replace each other, so the new one starts at its top. */
   protected toggle(id: string): void {
     this.store.select(id);
     if (this.layout.isMobile()) window.scrollTo({ top: 0 });

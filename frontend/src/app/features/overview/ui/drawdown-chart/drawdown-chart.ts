@@ -5,7 +5,6 @@ import { formatDate, formatSignedPercent, shortenDate } from '../../../../shared
 import { Viewport } from '../../../../shared/ui/viewport';
 import { DashboardDto } from '../../data-access/dashboard-api';
 
-/** How far below its best the time-weighted index was on each day. */
 @Component({
   selector: 'app-drawdown-chart',
   imports: [LiveChart],

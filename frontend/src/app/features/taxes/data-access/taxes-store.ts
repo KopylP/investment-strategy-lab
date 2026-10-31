@@ -17,7 +17,6 @@ export interface TaxYearSummary {
   dividendTax: number;
   taxDue: number;
   lossToCarry: number;
-  /** Tax paid abroad on the year's dividends that reduces the Polish tax. */
   dividendTaxCredit: number;
 }
 
@@ -33,12 +32,10 @@ export interface Realization {
   fxRateDate: string | null;
   lots: { buyTransactionId: string; acquiredOn: string; quantity: number; costPln: number; fromBroker: boolean }[];
   unmatchedQuantity: number;
-  /** The broker's own gain of the sale (its report), to compare with ours. */
   brokerGainPln: number | null;
   accountId: string;
 }
 
-/** An account of the taxpayer; IKE / IKZE accounts are not taxed and stay out of PIT-38. */
 export interface TaxAccount {
   id: string;
   name: string;
@@ -57,12 +54,10 @@ export interface DividendIncome {
   transactionId: string;
   receivedOn: string;
   instrumentId: string;
-  /** As received (net), in {@link currency} (the dividend's own; missing in years computed before it was kept). */
   amount: number;
   currency: string | null;
   amountPln: number;
   fxRate: number;
-  /** Before the tax withheld abroad; 0 in years computed before the broker reports existed. */
   grossPln: number;
   withheldPln: number;
   accountId: string;
@@ -110,11 +105,6 @@ export interface LossCarryforward {
   alreadyUsed: number;
 }
 
-/**
- * Belka per year for the signed-in person — one PIT-38 over all taxed accounts: FIFO within each account, gains and
- * losses of all brokers netted, carried losses, the tax due. Always recomputed on read. Broker reports belong to an
- * account (the chosen one).
- */
 @Injectable()
 export class TaxesStore {
   private readonly api = inject(ApiClient);
@@ -143,7 +133,6 @@ export class TaxesStore {
     loader: () => this.api.get<LossCarryforward[]>('/api/taxation/losses'),
   });
 
-  /** Forms the user's accounts call for in the selected year (none for IKE-only or foreign policies yet). */
   private readonly formsResource = resource({
     params: () => this.year() ?? undefined,
     loader: ({ params: year }) => this.api.get<DeclarationForm[]>(`/api/taxation/declarations/${year}`),
@@ -160,7 +149,6 @@ export class TaxesStore {
   readonly declaration = computed(() => (this.declarationResource.hasValue() ? this.declarationResource.value() : undefined));
   readonly declarationLoading = this.declarationResource.isLoading;
   readonly declarationError = this.declarationResource.error;
-  /** Why the return was not filled (missing NBP rates, sold units without a purchase, conflicting losses). */
   readonly declarationProblem = computed(() => toProblemMessage(this.declarationResource.error()));
 
   async setPit8C(accountId: string, amounts: Pit8CAmounts): Promise<boolean> {
@@ -173,7 +161,6 @@ export class TaxesStore {
 
   readonly pdfLoading = signal<'summary' | 'form' | null>(null);
 
-  /** The filled return as a file: a cheat sheet of what to type where, or the official form (PIT-38 with its PIT/ZG). */
   async downloadDeclarationPdf(kind: 'summary' | 'form'): Promise<void> {
     const code = this.declarationCode();
     const year = this.year();
@@ -187,7 +174,6 @@ export class TaxesStore {
       link.click();
       setTimeout(() => URL.revokeObjectURL(link.href), 10_000);
     } catch (error) {
-      // A blob response carries the problem details as a blob too: read them so the reason shows, not "Помилка 400".
       const body = error instanceof HttpErrorResponse && error.error instanceof Blob ? await error.error.text().catch(() => '') : '';
       const problem = body ? new HttpErrorResponse({ error: safeJson(body), status: (error as HttpErrorResponse).status }) : error;
       this.messages.add({ severity: 'error', summary: 'PDF не створено', detail: toProblemMessage(problem) });
@@ -202,7 +188,6 @@ export class TaxesStore {
   readonly taxAccounts = computed(() => (this.yearsResource.hasValue() ? (this.yearsResource.value()?.accounts ?? []) : []));
   readonly taxedAccounts = computed(() => this.taxAccounts().filter((account) => account.isTaxed));
   readonly untaxedAccounts = computed(() => this.taxAccounts().filter((account) => !account.isTaxed));
-  /** The account column matters only when more than one account goes into PIT-38. */
   readonly showAccount = computed(() => this.taxedAccounts().length > 1);
   readonly isLoading = computed(() => this.yearsResource.isLoading() || this.detailsResource.isLoading());
   readonly loadError = this.yearsResource.error;
@@ -221,7 +206,6 @@ export class TaxesStore {
     return this.taxAccounts().find((account) => account.id === id)?.name ?? '';
   }
 
-  /** Broker reports go to an account: the one chosen here (and in the top bar). */
   chooseAccount(id: string): void {
     this.accounts.choose(id);
   }
@@ -234,7 +218,6 @@ export class TaxesStore {
     return this.change(() => this.api.delete(`/api/taxation/losses/${loss.id}`), 'Збиток видалено');
   }
 
-  /** The broker's P&L report (PDF) goes as base64 inside JSON, like the CSV statement goes as text. */
   async uploadBrokerStatement(file: File): Promise<boolean> {
     const bytes = new Uint8Array(await file.arrayBuffer());
     let binary = '';

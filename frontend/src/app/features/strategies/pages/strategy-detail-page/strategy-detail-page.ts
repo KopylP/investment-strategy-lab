@@ -32,7 +32,6 @@ export class StrategyDetailPage {
   protected readonly universe = signal<string[]>([]);
   protected readonly cashInstrumentId = signal<string | null>(null);
   protected readonly benchmarkInstrumentId = signal<string | null>(null);
-  /** The reports the strategy's type declares, with when they come unless the user sets their own time for the account. */
   protected readonly reports = computed(() =>
     (this.store.type()?.reports ?? []).map((report) => ({ ...report, when: report.schedule ? scheduleLabel(report.schedule) : 'лише вручну' })),
   );

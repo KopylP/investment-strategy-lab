@@ -34,8 +34,6 @@
             @if (transaction.isReversed) { <p-tag value="сторновано" severity="secondary" styleClass="ml-1" /> }
           </td>
           <td>
-            <!-- Phone: the date and the kind above the details, the sub-portfolios under them; a date column would leave
-                 the details too narrow for big amounts. -->
             <div class="sm:hidden flex flex-wrap items-center gap-x-2 gap-y-1 mb-1 text-sm text-muted-color">{{ transaction.occurredOn | date }} <p-tag [value]="transaction.kindLabel" [severity]="transaction.severity" /></div>
             {{ transaction.description }}
             <div class="sm:hidden text-xs text-muted-color">{{ transaction.allocation }}@if (transaction.isReversed) { · сторновано }</div>
@@ -47,7 +45,6 @@
             @if (transaction.canReverse) {
               <p-button icon="pi pi-replay" [text]="true" severity="secondary" pTooltip="Сторнувати" ariaLabel="Сторнувати" [disabled]="store.busy()" (onClick)="confirmReverse(transaction)" />
             } @else if (transaction.sourceLabel === 'з рапорту' && !transaction.isReversed && transaction.kind !== 'Reversal') {
-              <!-- As wide as the reverse button above it, so the icons stand in one column. -->
               <i class="pi pi-info-circle text-muted-color text-center w-(--p-button-icon-only-width)" pTooltip="Скасовується відміткою в рапорті"></i>
             }
           </td>

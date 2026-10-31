@@ -32,9 +32,7 @@ export interface InstrumentRow {
   currency: string;
   isAccumulating: boolean | null;
   price: LatestPrice | null;
-  /** Change over the last month (adjusted close), for the list. */
   change1m: number | null;
-  /** Last ~30 closes for the sparkline. */
   spark: number[];
   held: boolean;
 }
@@ -47,7 +45,6 @@ function daysAgo(days: number): string {
   return toIsoDate(date);
 }
 
-/** The catalog as a market screen: latest price, a month of history per instrument, a detailed chart for the chosen one. */
 @Injectable()
 export class InstrumentsStore {
   private readonly api = inject(ApiClient);
@@ -140,7 +137,6 @@ export class InstrumentsStore {
   });
 
   readonly selected = computed(() => this.rows().find((row) => row.id === this.selectedId()) ?? null);
-  /** Another period of the same instrument loads behind the current chart: the line is swapped, not blanked. */
   readonly detailPoints = linkedSignal<{ points: QuotePoint[] | undefined; loading: boolean; id: string | null }, QuotePoint[]>({
     source: () => ({
       points: this.detailResource.hasValue() ? this.detailResource.value().points : undefined,
@@ -151,7 +147,6 @@ export class InstrumentsStore {
   });
   readonly detailError = computed(() => !!this.detailResource.error());
 
-  /** Period statistics of the chosen instrument (adjusted close: dividends of distributing ETFs count as return). */
   readonly detailStats = computed(() => {
     const points = this.detailPoints();
     if (points.length < 2) return null;

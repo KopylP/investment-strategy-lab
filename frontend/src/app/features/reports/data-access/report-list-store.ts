@@ -10,14 +10,8 @@ import { ReportListRow } from '../models/report-vm';
 import { ReportsApi } from './reports-api';
 import { toRequestVm, toSummaryVm } from './report-mapper';
 
-/** How often reports being made are checked while the page is open. */
 const REQUEST_POLL_MS = 3000;
 
-/**
- * Reports of the current account and "generate now" (D14) for each report its strategies declare. Strategies may
- * think for minutes or hours, so a report asked for shows as «Готується» until it is made; the one the user just
- * asked for opens by itself when it is ready.
- */
 @Injectable()
 export class ReportListStore {
   private readonly api = inject(ReportsApi);
@@ -55,16 +49,11 @@ export class ReportListStore {
   readonly loadError = this.reportsResource.error;
   readonly monthlyContribution = computed(() => this.settingsResource.value()?.monthlyContribution ?? 0);
   readonly openReport = computed(() => this.reports().find((report) => report.kind !== 'RiskReview' && (report.status === 'New' || report.status === 'InProgress')));
-  /** The reports the account's strategies declare, one per code: the "generate" buttons. */
   readonly definitions = computed(() => distinctReports(this.scheduleResource.value()?.reports ?? []));
   readonly definitionsLoaded = computed(() => this.scheduleResource.hasValue());
-  /** When the account's reports come next. */
   readonly schedule = computed(() => (this.scheduleResource.hasValue() ? this.scheduleResource.value() : undefined));
-  /** Code of the report being asked for (the request itself, not the strategies' thinking). */
   readonly generating = signal<string | null>(null);
-  /** Reports being made: «Готується» until their strategies have answered. */
   readonly preparing = computed(() => (this.requestsResource.value() ?? []).filter((request) => request.status === 'Pending'));
-  /** Reports that could not be made in the last day, unless a newer one of the same code came after. */
   readonly failed = computed(() =>
     (this.requestsResource.value() ?? []).filter(
       (request) =>
@@ -74,19 +63,15 @@ export class ReportListStore {
     ),
   );
 
-  /** The list: reports being made (and those that could not be) first, then the reports. */
   readonly rows = computed<ReportListRow[]>(() => [
     ...[...this.preparing(), ...this.failed()].map((request) => ({ id: request.id, request: toRequestVm(request) })),
     ...this.reports().map((report) => ({ id: report.id, report })),
   ]);
 
-  /** The request the user just made (here or by "generate again"): its report opens when it is ready. */
   private awaited: string | null = this.route.snapshot.queryParamMap.get('request');
-  /** Requests seen pending, to tell when one has finished. */
   private readonly seenPending = new Set<string>();
 
   constructor() {
-    // Taken into memory and off the address: «back» from the opened report must not wait for that report again and reopen it.
     if (this.awaited) afterNextRender(() => void this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true }));
     effect((onCleanup) => {
       const requests = this.requestsResource.value();
@@ -118,7 +103,6 @@ export class ReportListStore {
     }
   }
 
-  /** A request that has just finished: the list gets its report, and the one the user waits for opens. */
   private followUp(requests: ReportRequestDto[]): void {
     let finished = false;
     for (const request of requests) {

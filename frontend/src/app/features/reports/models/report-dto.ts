@@ -1,4 +1,3 @@
-/** Report as the API returns it (Rebalancing module). */
 
 export type ReportStatus = 'New' | 'InProgress' | 'Closed' | 'Superseded';
 export type ReportKind = 'Monthly' | 'Recalculation' | 'RiskReview';
@@ -11,9 +10,7 @@ export interface ReportSummaryDto {
   accountName: string;
   period: string;
   kind: ReportKind;
-  /** Which of the strategies' reports this is, e.g. "rebalance". */
   code: string;
-  /** Its name as the strategy declared it. */
   title: string;
   trigger: 'Scheduled' | 'OnDemand' | 'Signal';
   status: ReportStatus;
@@ -27,7 +24,6 @@ export interface ReportSummaryDto {
   supersededBy: string | null;
 }
 
-/** A report asked for: «Готується» while its strategies think (minutes or hours for an AI agent), then made or failed. */
 export interface ReportRequestDto {
   id: string;
   accountId: string;
@@ -36,10 +32,8 @@ export interface ReportRequestDto {
   kind: ReportKind;
   trigger: 'Scheduled' | 'OnDemand' | 'Signal';
   status: 'Pending' | 'Completed' | 'Failed';
-  /** The market date the report is for (yyyy-MM-dd): its period. */
   asOf: string;
   requestedAt: string;
-  /** Strategies still silent by then count as not answered. */
   deadline: string;
   completedAt: string | null;
   reportId: string | null;
@@ -56,7 +50,6 @@ export interface FillDto {
   executedOn: string;
   note: string | null;
   transactionId: string | null;
-  /** Marked with an entry that was already in the journal (e.g. an imported statement row). */
   linked?: boolean;
 }
 
@@ -102,19 +95,16 @@ export interface SectionScoreDto {
   rank: number | null;
   status: string;
   reason: string;
-  /** The strategy's metrics under the ids of SectionDecisionDto.columns; absent in older reports. */
   values?: Record<string, number | boolean | string | null> | null;
 }
 
 export type ColumnFormat = 'percent' | 'signedPercent' | 'number' | 'money' | 'trend' | 'text';
 
-/** A column of the "why" table as the strategy described it. */
 export interface SectionColumnDto {
   id: string;
   label: string;
   format: ColumnFormat;
   hint: string | null;
-  /** Shown on a phone too. */
   compact: boolean;
   trueHint: string | null;
   falseHint: string | null;
@@ -128,7 +118,6 @@ export interface SectionDecisionDto {
   targets: { instrumentId: string; weight: number }[];
   scores: SectionScoreDto[];
   warnings: string[];
-  /** Null in reports made before strategies described their table. */
   scoreTitle?: string | null;
   instrumentLabel?: string | null;
   columns?: SectionColumnDto[] | null;

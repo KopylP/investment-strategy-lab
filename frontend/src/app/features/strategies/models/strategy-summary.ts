@@ -1,7 +1,6 @@
 import { Strategy } from './strategy';
 
 export interface StrategyBlurb {
-  /** One sentence a beginner understands: what the strategy buys. */
   headline: string;
   points: string[];
   region: string;
@@ -13,10 +12,6 @@ function read(parameters: unknown, ...path: string[]): unknown {
   return node;
 }
 
-/**
- * Plain-language description of a strategy from its settings, so choosing one does not require reading parameters.
- * `currencyOf` tells EU (EUR) from US (USD) universes.
- */
 export function describeStrategy(strategy: Strategy, symbol: (id: string | null) => string, currencyOf: (id: string) => string | undefined): StrategyBlurb {
   const version = strategy.version;
   const count = version.universe.length;

@@ -5,7 +5,6 @@ import { PriceChart } from '../../../shared/charts/price-chart';
 import { AccountTrades } from '../../../shared/data/account-trades';
 import { toIsoDate } from '../../../shared/models/api';
 
-/** The position's price since a month before the first buy (at least a year), with every buy and sell marked. */
 @Component({
   selector: 'app-position-chart',
   imports: [PriceChart, Skeleton],
@@ -23,7 +22,6 @@ export class PositionChart {
   private readonly trades = inject(AccountTrades);
 
   readonly instrumentId = input.required<string>();
-  /** Trading currency of the instrument: quotes are in it. */
   readonly currency = input.required<string>();
 
   protected readonly markers = computed(() => this.trades.of(this.instrumentId()));

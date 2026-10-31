@@ -2,7 +2,6 @@
   @for (group of groups(); track group.title) {
     <p-fieldset [legend]="group.title" [toggleable]="true">
       @if (disabled() && viewport.phone()) {
-        <!-- Phone, read only: label and value in a row instead of a column of disabled fields. -->
         <dl class="m-0 flex flex-col">
           @for (field of group.fields; track field.path.join('.')) {
             <div class="flex items-baseline justify-between gap-3 py-1.5 border-b border-surface last:border-b-0 text-sm">

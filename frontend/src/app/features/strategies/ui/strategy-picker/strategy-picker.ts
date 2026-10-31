@@ -4,7 +4,6 @@ import { InstrumentCatalog } from '../../../../core/context/instrument-catalog';
 import { Strategy } from '../../models/strategy';
 import { describeStrategy } from '../../models/strategy-summary';
 
-/** Strategies as cards that say what each one does; one is chosen (or none, when allowed). */
 @Component({
   selector: 'app-strategy-picker',
   imports: [Tag],

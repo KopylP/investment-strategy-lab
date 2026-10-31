@@ -11,11 +11,6 @@ import { DashboardDto } from '../../data-access/dashboard-api';
 const showPlanKey = 'overview.valueChart.showPlan';
 const showHeldKey = 'overview.valueChart.showHeld';
 
-/**
- * Value over time against the money paid in, with the same two lines "everything as planned" and report markers.
- * The held-assets switch swaps the pair for the positions without cash against what was paid for them: the gap between
- * the lines is then the gain on what is held. The plan has no such pair, so its lines step aside meanwhile.
- */
 @Component({
   selector: 'app-value-chart',
   imports: [FormsModule, LiveChart, ToggleSwitch],
@@ -38,7 +33,6 @@ export class ValueChart {
   private readonly display = inject(DisplayCurrency);
   protected readonly viewport = inject(Viewport);
 
-  /** The chart in the display currency at today's NBP rate (the shape is the account's; only the scale changes). */
   private readonly scale = computed(() => {
     const currency = this.dashboard().currency;
     const target = this.display.code();
@@ -49,9 +43,7 @@ export class ValueChart {
   readonly dashboard = input.required<DashboardDto>();
 
   protected readonly hasPlan = computed(() => this.dashboard().series.some((point) => point.planValue !== null));
-  /** The plan lines are on unless switched off here; the choice is remembered on this device. */
   protected readonly showPlan = signal(readChoice(showPlanKey, true));
-  /** Off unless switched on here; the choice is remembered on this device. */
   protected readonly showHeld = signal(readChoice(showHeldKey, false));
 
   protected setShowPlan(show: boolean): void {
@@ -97,7 +89,6 @@ export class ValueChart {
           borderWidth: 1.5,
           fill: false,
         },
-        // The plan drawn like the real pair, in its own colour: its value solid, the money it would have paid in dashed.
         ...(this.hasPlan() && this.showPlan() && !held
           ? [
               {
@@ -131,7 +122,6 @@ export class ValueChart {
     const { currency } = this.scale();
     const held = this.showHeld();
     const reportDays = new Map(reports.map((report) => [formatDate(report.date), report]));
-    // A phone keeps the lines and drops the ink: a one-row legend, four unrotated dates, amounts without the currency.
     const phone = this.viewport.phone();
     return {
       maintainAspectRatio: false,
@@ -189,6 +179,5 @@ function remember(key: string, choice: boolean): void {
   try {
     localStorage.setItem(key, String(choice));
   } catch {
-    /* private mode: the choice is just not remembered */
   }
 }

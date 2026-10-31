@@ -11,10 +11,6 @@ import {
 } from '../../../reports/models/report-schedule';
 import { ReportTimingEditor } from '../../../reports/ui/report-timing-editor/report-timing-editor';
 
-/**
- * Which reports the account gets and when. The strategies of its sub-portfolios declare the reports and a default time;
- * the user sets their own time for the account (a rebalance on payday) or goes back to the strategy's.
- */
 @Component({
   selector: 'app-report-schedule',
   imports: [RouterLink, Button, Message, Tag, DatePipe, ReportTimingEditor],
@@ -39,7 +35,6 @@ import { ReportTimingEditor } from '../../../reports/ui/report-timing-editor/rep
                     {{ report.own ? 'Ваш час · стратегія: ' + label(report.strategySchedule) : 'Час стратегії' }} · {{ report.strategies.join(' · ') }}
                   </div>
                 </div>
-                <!-- Wrapped under the text on a phone: one line instead of a right-aligned pair. -->
                 <div class="text-sm flex flex-wrap items-center gap-2 sm:flex-col sm:items-end">
                   @if (report.next) {
                     <div class="flex gap-1 sm:block sm:text-right">
@@ -88,7 +83,6 @@ export class ReportScheduleCard {
   protected readonly icon = reportIcon;
   protected readonly complete = isTimingComplete;
 
-  /** The code of the report whose time is being changed. */
   protected readonly editing = signal<string | null>(null);
   protected readonly draft = signal<ReportTiming>({ frequency: 'monthly', day: 1, weekday: 'sunday', time: '20:00', minute: 0 });
   protected readonly saving = signal(false);

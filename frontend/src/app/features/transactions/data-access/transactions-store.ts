@@ -72,7 +72,6 @@ const sources: Record<TransactionDto['source'], string> = {
   Import: 'імпорт',
 };
 
-/** The account's journal: every entry, newest first; manual entries and reversals. */
 @Injectable()
 export class TransactionsStore {
   private readonly api = inject(ApiClient);
@@ -179,7 +178,6 @@ export class TransactionsStore {
   }
 }
 
-/** " · розраховано 110,00 $" when the broker settled the entry in another currency. */
 function settled(entry: { settledAmount?: number | null; settledCurrency?: string | null }): string {
   return entry.settledAmount && entry.settledCurrency ? ` · у брокера ${formatMoney(entry.settledAmount, entry.settledCurrency)}` : '';
 }

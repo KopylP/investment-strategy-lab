@@ -23,7 +23,6 @@ export class StrategyListPage {
   protected readonly store = inject(StrategiesStore);
   private readonly accounts = inject(AccountContext);
 
-  /** Strategy → "Рахунок › під-портфель" it runs in, so it is clear what changing it affects. */
   protected readonly usage = computed(() => {
     const usage = new Map<string, string[]>();
     for (const account of this.accounts.accounts())

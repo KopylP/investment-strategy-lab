@@ -4,7 +4,6 @@ import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { SignalNotificationSettings } from '../../../signals/ui/signal-notification-settings/signal-notification-settings';
 import { NotificationSettingsCard } from '../../ui/notification-settings/notification-settings';
 
-/** The user's own settings. The display currency is switched in the top bar. */
 @Component({
   selector: 'app-profile-page',
   imports: [PageHeader, NotificationSettingsCard, SignalNotificationSettings],

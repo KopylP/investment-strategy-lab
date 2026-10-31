@@ -33,7 +33,6 @@ export class ReportActionsTable {
   readonly skip = output<ReportActionVm>();
   readonly undo = output<ReportActionVm>();
 
-  /** Built once per actions change: a new array on every check would re-render the open menu under the cursor. */
   protected readonly secondaryActions = computed(
     () =>
       new Map<string, MenuItem[]>(
@@ -47,7 +46,6 @@ export class ReportActionsTable {
       ),
   );
 
-  /** What the instrument is (Yahoo's description), shown in the action's details. */
   protected about(action: ReportActionVm): string | null {
     return (action.instrumentId && this.instruments.byId().get(action.instrumentId)?.description) || null;
   }
@@ -56,7 +54,6 @@ export class ReportActionsTable {
     return action.hasBreakdown || !!this.about(action);
   }
 
-  /** Phone cards whose breakdown (split by sub-portfolio, fills) is open. */
   protected readonly expanded = signal(new Set<string>());
 
   protected toggle(actionId: string): void {

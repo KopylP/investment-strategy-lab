@@ -6,7 +6,6 @@ import { SelectButton } from 'primeng/selectbutton';
 import { Textarea } from 'primeng/textarea';
 import { ReportActionVm } from '../../models/report-vm';
 
-/** A deliberate "not doing this" with a reason the user can find later. */
 @Component({
   selector: 'app-skip-dialog',
   imports: [FormsModule, Button, SelectButton, Textarea],

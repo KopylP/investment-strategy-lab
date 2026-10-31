@@ -55,7 +55,6 @@ export class AccountDetailPage {
 
   protected readonly plan = linkedSignal<PlanSettingsVm | undefined>(() => this.store.planSettings());
 
-  /** The sub-portfolio whose strategy is being chosen in the picker dialog. */
   protected readonly pickFor = signal<SubPortfolioSetup | null>(null);
   protected readonly cashOptions = computed(() => this.instruments.etfs().map((etf) => ({ label: `${symbolOf(etf)} · ${etf.name}`, value: etf.id })));
 

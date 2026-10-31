@@ -23,7 +23,6 @@ interface SchemaNode {
   $ref?: string;
   allOf?: SchemaNode[];
   enum?: (string | number)[];
-  /** Human labels of enum values, published by the engine next to the enum. */
   'x-enumLabels'?: Record<string, string>;
   minimum?: number;
   maximum?: number;
@@ -48,7 +47,6 @@ interface GroupVm {
   fields: FieldVm[];
 }
 
-/** Fields for strategy parameters, built from the JSON Schema the engine publishes (§11.5). */
 @Component({
   selector: 'app-schema-form',
   imports: [FormsModule, Fieldset, InputNumber, InputText, Select, ToggleSwitch, Tooltip, TapTooltip],
@@ -70,7 +68,6 @@ export class SchemaForm {
     return node;
   }
 
-  /** A read-only value as text: "так" / "ні", an enum's label, a number in the user's locale. */
   protected shown(field: FieldVm): string {
     const value = this.read(field.path);
     if (value === null) return '—';
@@ -123,7 +120,6 @@ function toField(property: SchemaNode, path: string[], key: string): FieldVm {
   };
 }
 
-/** "topN" / "Top N" → "Top n". */
 function humanize(text: string): string {
   const spaced = text.replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/_/g, ' ').trim();
   return spaced.charAt(0).toUpperCase() + spaced.slice(1).toLowerCase();

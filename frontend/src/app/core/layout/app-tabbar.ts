@@ -9,10 +9,6 @@ interface Tab {
   exact: boolean;
 }
 
-/**
- * A phone's top-level navigation (HIG › Tab bars): the five sections of investing, one tap away at the bottom of the
- * screen; the settings stay in the side menu.
- */
 @Component({
   selector: 'app-tabbar',
   imports: [RouterLink, RouterLinkActive],

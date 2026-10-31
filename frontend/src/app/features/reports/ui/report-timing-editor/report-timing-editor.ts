@@ -5,7 +5,6 @@ import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { frequencyOptions, ReportTiming, weekdayOptions } from '../../models/report-schedule';
 
-/** When one report comes: the frequency, then only what it reads — the minute, the time, the weekday or the day of the month. */
 @Component({
   selector: 'app-report-timing-editor',
   imports: [FormsModule, InputNumber, InputText, Select],
@@ -55,9 +54,7 @@ import { frequencyOptions, ReportTiming, weekdayOptions } from '../../models/rep
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ReportTimingEditor {
-  /** Prefix of the fields' ids, unique on the page (the report's code). */
   readonly id = input.required<string>();
-  /** Lower-case frequency and weekday, as the API takes them. */
   readonly timing = model.required<ReportTiming>();
 
   readonly frequencies = input(frequencyOptions);

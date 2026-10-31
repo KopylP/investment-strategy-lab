@@ -41,7 +41,6 @@ export class ReportDetailPage {
 
   readonly reportId = input.required<string>();
 
-  /** The header buttons as one menu on a phone. */
   protected readonly pageActions = computed<MenuItem[]>(() => {
     const report = this.store.report();
     const busy = this.store.busy();

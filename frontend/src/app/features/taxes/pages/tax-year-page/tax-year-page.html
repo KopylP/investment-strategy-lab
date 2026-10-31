@@ -43,7 +43,6 @@
   @for (warning of details.warnings; track $index) {
     <p-message severity="warn" styleClass="mb-3" [text]="warning" />
   }
-  <!-- Hero: the tax of the year and the return to file; the rest in one quiet strip, as on the overview. -->
   <div class="card">
     <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
       <div>
@@ -104,7 +103,6 @@
           <tr>
             <td><p-button [pRowToggler]="r" [text]="true" [rounded]="true" severity="secondary" [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" ariaLabel="Лоти" /></td>
             <td class="hidden sm:table-cell whitespace-nowrap">{{ r.soldOn | date }}</td>
-            <!-- Phone: the date under the ticker; a date column leaves too little for the gain. -->
             <td class="font-medium">{{ store.symbol(r.instrumentId) }}<div class="sm:hidden text-xs text-muted-color font-normal whitespace-nowrap">{{ r.soldOn | date }}</div>@if (store.showAccount()) { <div class="sm:hidden text-xs text-muted-color font-normal">{{ store.accountName(r.accountId) }}</div> }</td>
             @if (store.showAccount()) { <td class="text-sm hidden sm:table-cell">{{ store.accountName(r.accountId) }}</td> }
             <td class="text-right hidden sm:table-cell">{{ r.quantity | quantity }}</td>
@@ -126,7 +124,6 @@
             <td class="hidden sm:table-cell"></td>
             <td [attr.colspan]="store.showAccount() ? 9 : 8">
               <div class="app-row-detail">
-              <!-- Phone: the sale's numbers that have no column there. -->
               <div class="sm:hidden grid grid-cols-2 gap-x-4 gap-y-1 text-sm mb-3">
                 <span class="text-muted-color">Штук</span><span class="text-right">{{ r.quantity | quantity }}</span>
                 <span class="text-muted-color">Виручка</span><span class="text-right">{{ r.proceedsPln | money: 'PLN' }}</span>
@@ -203,7 +200,6 @@
 }
 
 @if (store.account()) {
-  <!-- The broker's P&L report: what the journal cannot know (tax withheld abroad, cost of shares from a spin-off). -->
   <div class="card">
     <div class="flex flex-wrap items-start justify-between gap-3 mb-2">
       <div class="flex flex-wrap items-center gap-3 min-w-0 w-full sm:w-auto">

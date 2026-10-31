@@ -1,6 +1,5 @@
 import { computed, Directive, input } from '@angular/core';
 
-/** Gain/loss colour from the theme tokens (--p-finance-gain / --p-finance-loss), never a hard-coded colour. */
 @Directive({
   selector: '[appSignedValue]',
   host: { '[style.color]': 'color()' },

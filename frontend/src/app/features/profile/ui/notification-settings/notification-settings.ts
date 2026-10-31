@@ -13,19 +13,16 @@ export interface NotificationDestination {
   id: string;
   channel: string;
   label: string;
-  /** The channel believes it is the user's own (Home Assistant: a tracker of their person). */
   suggested: boolean;
   selected: boolean;
 }
 
 export interface NotificationSettings {
-  /** Empty outside Home Assistant: nothing is sent. */
   channels: string[];
   automatic: boolean;
   destinations: NotificationDestination[];
 }
 
-/** Where the user's report notifications are pushed, and a test notification to check it. */
 @Component({
   selector: 'app-notification-settings',
   imports: [FormsModule, NgTemplateOutlet, Button, Checkbox, Message, Skeleton, Tag],
@@ -42,7 +39,6 @@ export class NotificationSettingsCard {
   protected readonly saving = signal(false);
   protected readonly testing = signal(false);
 
-  /** The user's own phones and whatever they picked; the household's other phones only on request. */
   protected readonly own = computed(() => this.settings()?.destinations.filter((each) => each.suggested || each.selected) ?? []);
   protected readonly others = computed(() => this.settings()?.destinations.filter((each) => !each.suggested && !each.selected) ?? []);
   protected readonly showOthers = signal(false);

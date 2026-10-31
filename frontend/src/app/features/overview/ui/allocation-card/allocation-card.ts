@@ -9,7 +9,6 @@ import { SignedValue } from '../../../../shared/ui/signed-value';
 import { Viewport } from '../../../../shared/ui/viewport';
 import { DashboardDto } from '../../data-access/dashboard-api';
 
-/** Sub-portfolios: actual share against target, value and return. */
 @Component({
   selector: 'app-allocation-card',
   imports: [RouterLink, UIChart, TableModule, Money, PercentPipe, SignedPercentPipe, SignedValue],

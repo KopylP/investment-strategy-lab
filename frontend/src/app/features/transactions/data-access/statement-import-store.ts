@@ -63,7 +63,6 @@ export interface ImportSummary {
   recorded: number;
 }
 
-/** The statement import wizard: one upload at a time, every change re-planned on the server. */
 @Injectable()
 export class StatementImportStore {
   private readonly api = inject(ApiClient);
@@ -80,7 +79,6 @@ export class StatementImportStore {
 
   readonly account = this.accounts.current;
   readonly accountOptions = this.accounts.accounts;
-  /** The account the open import belongs to; switching the account in the top bar closes the wizard instead of mixing them. */
   private readonly importAccountId = signal<string | undefined>(undefined);
   readonly history = computed(() => this.historyResource.value() ?? []);
   readonly unmappedCount = computed(() => this.current()?.mappings.filter((mapping) => !mapping.subPortfolioId).length ?? 0);
@@ -132,7 +130,6 @@ export class StatementImportStore {
     );
   }
 
-  /** One click for many tickers: every one without a sub-portfolio goes to the chosen one. */
   async assignUnmappedTo(subPortfolioId: string): Promise<void> {
     const current = this.current();
     const accountId = this.accounts.currentId();

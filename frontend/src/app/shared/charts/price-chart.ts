@@ -9,7 +9,6 @@ export interface PricePoint {
   close: number;
 }
 
-/** A trade of the account drawn on the price line; its price is in the account currency. */
 export interface TradeMarker {
   date: string;
   side: 'Buy' | 'Sell';
@@ -18,10 +17,6 @@ export interface TradeMarker {
   currency: string;
 }
 
-/**
- * Close price over a period, filled in the gain/loss colour of the period. Trades show as triangles on the line
- * (▲ buy, ▼ sell) on the first trading day on or after the trade, with the real price in the tooltip.
- */
 @Component({
   selector: 'app-price-chart',
   imports: [LiveChart],
@@ -44,7 +39,6 @@ export class PriceChart {
     return (points.at(-1)?.close ?? 0) >= (points.at(0)?.close ?? 0) ? palette.gain : palette.loss;
   });
 
-  /** Trades grouped by the chart point they land on. */
   private readonly tradesByIndex = computed(() => {
     const points = this.points();
     const byIndex = new Map<number, TradeMarker[]>();
@@ -79,7 +73,6 @@ export class PriceChart {
         },
         ...(byIndex.size
           ? [
-              // Colours that are never the line's own (green/red), with a white ring so they stand out on the fill.
               { label: 'Купівля', data: markers('Buy'), showLine: false, pointStyle: 'triangle', pointRadius: 9, pointHoverRadius: 11, backgroundColor: palette.primary, borderColor: '#ffffff', borderWidth: 2, order: 0 },
               { label: 'Продаж', data: markers('Sell'), showLine: false, pointStyle: 'triangle', rotation: 180, pointRadius: 9, pointHoverRadius: 11, backgroundColor: palette.tax, borderColor: '#ffffff', borderWidth: 2, order: 0 },
             ]
@@ -88,7 +81,6 @@ export class PriceChart {
     };
   });
 
-  /** A dashed vertical line through every trade day, so trades are visible at a glance even where the line is busy. */
   protected readonly tradeLines = computed(() => {
     const byIndex = this.tradesByIndex();
     const palette = this.theme.palette();
@@ -117,9 +109,7 @@ export class PriceChart {
     const currency = this.currency();
     const byIndex = this.tradesByIndex();
     const closes = this.points().map((point) => point.close);
-    // Narrow ranges need cents on the axis, or neighbouring ticks read the same ("18 EUR", "18 EUR").
     const digits = Math.max(...closes) - Math.min(...closes) < 50 ? 2 : 0;
-    // On a phone: three unrotated dates and prices without the currency (it is in the price above the chart).
     const phone = this.viewport.phone();
     return {
       maintainAspectRatio: false,

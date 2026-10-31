@@ -34,13 +34,11 @@ export interface StrategyType {
   reports: ReportDefinition[];
 }
 
-/** A report the type makes, and when it comes unless the user sets their own time for the account. */
 export interface ReportDefinition {
   code: string;
   name: string;
   description: string;
   mode: 'rebalance' | 'riskReview';
-  /** Null in a catalog synced before schedules existed. */
   schedule: ReportTiming | null;
 }
 

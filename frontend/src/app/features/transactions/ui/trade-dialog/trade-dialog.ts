@@ -15,7 +15,6 @@ export interface Option {
   value: string;
 }
 
-/** A trade done outside any report (manual entry). */
 @Component({
   selector: 'app-trade-dialog',
   imports: [FormsModule, Button, DatePicker, Dialog, InputNumber, Select, SelectButton, MoneyPipe],

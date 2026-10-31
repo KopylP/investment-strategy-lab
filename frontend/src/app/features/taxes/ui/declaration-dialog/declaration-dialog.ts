@@ -12,7 +12,6 @@ import { DatePipe, MoneyPipe } from '../../../../shared/pipes/format-pipes';
 import { DeclarationAccountLine, DeclarationField, formValue, Pit8CAmounts, TaxDeclaration } from '../../data-access/declarations';
 import { TapTooltip } from '../../../../shared/ui/tap-tooltip';
 
-/** The filled return, field by field with its "poz." number, each value one click from the clipboard. */
 @Component({
   selector: 'app-declaration-dialog',
   imports: [NgTemplateOutlet, FormsModule, InputNumber, Dialog, Button, Message, Skeleton, Tooltip, TapTooltip, MoneyPipe, DatePipe],
@@ -27,7 +26,6 @@ export class DeclarationDialog {
   readonly loading = input(false);
   readonly visible = input(false);
   readonly pdfLoading = input<'summary' | 'form' | null>(null);
-  /** Why the return could not be filled; shown in place of it. */
   readonly problem = input<string | null>(null);
   readonly saving = input(false);
   readonly closed = output<void>();
@@ -35,7 +33,6 @@ export class DeclarationDialog {
   readonly pit8c = output<{ accountId: string; amounts: Pit8CAmounts }>();
   readonly pit8cRemoved = output<string>();
 
-  /** The account whose PIT-8C amounts are being typed, with the draft. */
   protected readonly editing = signal<{ accountId: string; revenue: number | null; costs: number | null } | null>(null);
 
   protected edit(account: DeclarationAccountLine): void {

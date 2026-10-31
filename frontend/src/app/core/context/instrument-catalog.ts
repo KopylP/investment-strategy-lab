@@ -2,7 +2,6 @@ import { computed, inject, Injectable, resource } from '@angular/core';
 import { ApiClient } from '../api/api-client';
 import { Instrument, symbolOf } from '../../shared/models/api';
 
-/** Instruments the platform knows, loaded once: names and tickers for every screen. */
 @Injectable({ providedIn: 'root' })
 export class InstrumentCatalog {
   private readonly api = inject(ApiClient);
