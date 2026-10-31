@@ -44,6 +44,9 @@ Modules/<Module>/
     └── Shared/Infrastructure/            the module's DbContext and Migrations/
 ```
 
+- `Application/` holds only folders, never a file directly: `<ActionName>/`, `Integration/` and `Shared/`.
+- Repository interfaces (`IAccountRepository`) go in `Domain/`. Input types and mappings that several actions use
+  (`AccountInput`, `AccountMapping`) go in `Application/Shared/`; used by one action, in that action's folder.
 - `<ActionName>` is a verb phrase and the namespace follows the folder: `Accounts/Application/OpenAccount/OpenAccountHandler.cs`.
 - A background job is an action too: `Monitoring/Application/CheckDueSignals/SignalsJob.cs`.
 - A type used by one action stays in that action's folder. It moves to `Application/Shared/` when a second action needs it,
