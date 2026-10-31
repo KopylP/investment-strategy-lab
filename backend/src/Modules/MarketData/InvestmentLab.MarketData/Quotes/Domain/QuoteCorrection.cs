@@ -15,7 +15,13 @@ public sealed class QuoteCorrection : AggregateRoot<QuoteCorrectionId>
     public DateTimeOffset CorrectedAt { get; private set; }
 
     public static Result<QuoteCorrection> Record(
-        InstrumentId instrumentId, DateOnly tradingDate, decimal close, decimal adjustedClose, string reason, string correctedBy, DateTimeOffset correctedAt)
+        InstrumentId instrumentId,
+        DateOnly tradingDate,
+        decimal close,
+        decimal adjustedClose,
+        string reason,
+        string correctedBy,
+        DateTimeOffset correctedAt)
     {
         if (close <= 0m || adjustedClose <= 0m)
             return QuoteErrors.PriceNotPositive();

@@ -37,7 +37,12 @@ public sealed class BrokerStatement
         if (statement.Lots.Count == 0 && statement.Dividends.Count == 0)
             return BrokerStatementErrors.Empty;
 
-        return new BrokerStatement(accountId, ownerId, string.IsNullOrWhiteSpace(fileName) ? "statement.pdf" : fileName.Trim(), statement, uploadedAt);
+        return new BrokerStatement(
+            accountId,
+            ownerId,
+            string.IsNullOrWhiteSpace(fileName) ? "statement.pdf" : fileName.Trim(),
+            statement,
+            uploadedAt);
     }
 
     public (DateOnly From, DateOnly To) Span
@@ -54,7 +59,8 @@ public sealed class BrokerStatement
     {
         var ordered = statements.OrderByDescending(statement => statement.UploadedAt).ToList();
         var lots = ordered.SelectMany(statement => statement.Lots).DistinctBy(lot => (lot.SoldOn, lot.AcquiredOn, lot.Isin, lot.Quantity)).ToList();
-        var dividends = ordered.SelectMany(statement => statement.Dividends).DistinctBy(dividend => (dividend.PaidOn, dividend.Isin, dividend.Net)).ToList();
+        var dividends =
+            ordered.SelectMany(statement => statement.Dividends).DistinctBy(dividend => (dividend.PaidOn, dividend.Isin, dividend.Net)).ToList();
 
         return (lots, dividends);
     }

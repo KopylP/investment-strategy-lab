@@ -10,7 +10,8 @@ namespace InvestmentLab.Rebalancing.Shared.Infrastructure;
 internal static class JsonColumn
 {
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web);
-    private static readonly JsonSerializerOptions TextEnumOptions = new(JsonSerializerDefaults.Web) { Converters = { new JsonStringEnumConverter() } };
+    private static readonly JsonSerializerOptions TextEnumOptions =
+        new(JsonSerializerDefaults.Web) { Converters = { new JsonStringEnumConverter() } };
 
     public static PropertyBuilder<T> HasJsonConversion<T>(this PropertyBuilder<T> property, bool enumsAsText = false)
     {

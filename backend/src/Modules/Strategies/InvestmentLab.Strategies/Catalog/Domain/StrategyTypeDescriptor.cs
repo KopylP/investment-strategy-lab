@@ -37,8 +37,23 @@ public sealed class StrategyTypeDescriptor
 
     public static StrategyTypeDescriptor Of(
         string code, string name, string description, string engine, string engineVersion, bool supportsState,
-        IEnumerable<string> requiredSeriesRoles, string parametersSchema, string defaultParameters, IEnumerable<ReportDefinition> reports, DateTimeOffset syncedAt) =>
-        new(code, name, description, engine, engineVersion, supportsState, [.. requiredSeriesRoles], parametersSchema, defaultParameters, [.. reports], syncedAt);
+        IEnumerable<string> requiredSeriesRoles,
+        string parametersSchema,
+        string defaultParameters,
+        IEnumerable<ReportDefinition> reports,
+        DateTimeOffset syncedAt) =>
+        new(
+            code,
+            name,
+            description,
+            engine,
+            engineVersion,
+            supportsState,
+            [.. requiredSeriesRoles],
+            parametersSchema,
+            defaultParameters,
+            [.. reports],
+            syncedAt);
 
     public void RefreshFrom(StrategyTypeDescriptor published)
     {

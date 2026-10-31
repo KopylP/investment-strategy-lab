@@ -25,7 +25,9 @@ internal sealed class PythonStrategyEngine(StrategyEngineClient client) : IStrat
             var (jobId, statusCode, error) = await client.SubmitJobAsync(typeCode, ActionOf(task), ToEngineContext(context), cancellationToken);
 
             if (jobId is null)
-                return statusCode is 404 or 422 ? EvaluationErrors.EngineRejected(error ?? "") : EvaluationErrors.EngineUnavailable($"{statusCode}: {error}");
+                return statusCode is 404 or 422
+                    ? EvaluationErrors.EngineRejected(error ?? "")
+                    : EvaluationErrors.EngineUnavailable($"{statusCode}: {error}");
 
             return jobId;
         }
@@ -52,7 +54,8 @@ internal sealed class PythonStrategyEngine(StrategyEngineClient client) : IStrat
         {
             null => new EngineJobPoll<T>(StrategyJobState.Lost),
             { Status: "running" } => new EngineJobPoll<T>(StrategyJobState.Running),
-            { Status: "succeeded", Result: { } result } => new EngineJobPoll<T>(StrategyJobState.Finished, result.Deserialize<T>(StrategyEngineClient.Json)!),
+            { Status: "succeeded", Result: { } result } =>
+                new EngineJobPoll<T>(StrategyJobState.Finished, result.Deserialize<T>(StrategyEngineClient.Json)!),
             _ => new EngineJobPoll<T>(StrategyJobState.Finished, job.ErrorStatusCode is 422
                 ? EvaluationErrors.EngineRejected(job.ErrorDetail ?? "")
                 : EvaluationErrors.StrategyFailed(job.ErrorDetail ?? job.Status)),
@@ -103,7 +106,9 @@ internal sealed class PythonStrategyEngine(StrategyEngineClient client) : IStrat
             var (answer, statusCode, error) = await client.PostContextAsync(typeCode, action, ToEngineContext(context), cancellationToken);
 
             if (answer is null)
-                return statusCode is 404 or 422 ? EvaluationErrors.EngineRejected(error ?? "") : EvaluationErrors.EngineUnavailable($"{statusCode}: {error}");
+                return statusCode is 404 or 422
+                    ? EvaluationErrors.EngineRejected(error ?? "")
+                    : EvaluationErrors.EngineUnavailable($"{statusCode}: {error}");
 
             return answer.Deserialize<T>(StrategyEngineClient.Json)!;
         }

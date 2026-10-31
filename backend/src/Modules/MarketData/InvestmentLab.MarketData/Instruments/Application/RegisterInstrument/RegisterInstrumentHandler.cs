@@ -28,7 +28,8 @@ public sealed class RegisterInstrumentHandler(IInstrumentRepository instruments)
         if (group.IsFailure)
             return group.Error;
 
-        var registered = Instrument.Register(command.Kind, isin.Value, command.Name, command.Exchange, currency.Value, group.Value, command.IsAccumulating);
+        var registered =
+            Instrument.Register(command.Kind, isin.Value, command.Name, command.Exchange, currency.Value, group.Value, command.IsAccumulating);
         if (registered.IsFailure)
             return registered.Error;
 

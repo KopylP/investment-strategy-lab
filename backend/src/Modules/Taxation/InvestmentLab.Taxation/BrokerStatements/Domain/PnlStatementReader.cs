@@ -234,7 +234,11 @@ public static partial class PnlStatementReader
         var groupMark = GroupMarkOf(body);
         var normalized = body.Replace(groupMark.ToString(), "").Replace(',', '.');
 
-        return decimal.TryParse(normalized, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var value) ? value : null;
+        return decimal.TryParse(
+            normalized,
+            NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint,
+            CultureInfo.InvariantCulture,
+            out var value) ? value : null;
     }
 
     private static string WithoutSpaces(string text) => string.Concat(text.Where(character => !char.IsWhiteSpace(character)));

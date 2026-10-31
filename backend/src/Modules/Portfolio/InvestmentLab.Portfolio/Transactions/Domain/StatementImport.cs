@@ -41,7 +41,8 @@ public sealed class StatementImport
         ReversedTransactionIds = [];
     }
 
-    private StatementImport() => (Broker, FileName, Rows, Mappings, Warnings, Outcomes, RecordedReferences, ReversedTransactionIds) = (null!, null!, null!, null!, null!, null!, null!, null!);
+    private StatementImport() => (Broker, FileName, Rows, Mappings, Warnings, Outcomes, RecordedReferences, ReversedTransactionIds) =
+        (null!, null!, null!, null!, null!, null!, null!, null!);
 
     public static StatementImport Upload(
         AccountId accountId,

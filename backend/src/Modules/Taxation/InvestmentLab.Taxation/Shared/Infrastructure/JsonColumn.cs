@@ -12,7 +12,8 @@ internal static class JsonColumn
 
     public static PropertyBuilder<T> HasJsonConversion<T>(this PropertyBuilder<T> property)
     {
-        var converter = new ValueConverter<T, string>(value => JsonSerializer.Serialize(value, Options), json => JsonSerializer.Deserialize<T>(json, Options)!);
+        var converter =
+            new ValueConverter<T, string>(value => JsonSerializer.Serialize(value, Options), json => JsonSerializer.Deserialize<T>(json, Options)!);
         var comparer = new ValueComparer<T>(
             (left, right) => JsonSerializer.Serialize(left, Options) == JsonSerializer.Serialize(right, Options),
             value => JsonSerializer.Serialize(value, Options).GetHashCode(),

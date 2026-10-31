@@ -88,7 +88,10 @@ public sealed class ReportAction : Entity<ReportActionId>
         }
 
         Rejection = null;
-        Status = Kind == ActionKind.Contribute || FilledQuantity >= PlannedQuantity - QuantityTolerance ? ActionStatus.Executed : ActionStatus.PartiallyExecuted;
+        Status = Kind == ActionKind.Contribute
+            || FilledQuantity >= PlannedQuantity - QuantityTolerance
+            ? ActionStatus.Executed
+            : ActionStatus.PartiallyExecuted;
 
         return Result.Success();
     }

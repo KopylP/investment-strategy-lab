@@ -50,7 +50,8 @@ public sealed class JournalOperationsLoader(IReportRepository reports, IJournalQ
     private static JournalOperation? ToOperation(TransactionRecordedV1 entry) => entry switch
     {
         { Trade: { } trade } => FromTrade(entry, trade),
-        { Cash: { Kind: "Contribution" } cash } => new JournalOperation(entry.TransactionId, entry.OccurredOn, JournalOperationKind.Contribution, null, cash.Amount, 1m, 0m),
+        { Cash: { Kind: "Contribution" } cash } =>
+            new JournalOperation(entry.TransactionId, entry.OccurredOn, JournalOperationKind.Contribution, null, cash.Amount, 1m, 0m),
         _ => null,
     };
 

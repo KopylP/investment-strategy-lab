@@ -5,7 +5,8 @@ namespace InvestmentLab.MarketData.Instruments.Application.DescribeInstruments;
 
 public sealed class InstrumentDescriptionsJob(DescribeInstrumentsHandler describe, ILogger<InstrumentDescriptionsJob> logger) : IScheduledJob
 {
-    public static readonly DailySchedule Schedule = new(new TimeOnly(23, 15), TimeZoneInfo.FindSystemTimeZoneById("Europe/Warsaw"), WeekdaysOnly: false);
+    public static readonly DailySchedule Schedule =
+        new(new TimeOnly(23, 15), TimeZoneInfo.FindSystemTimeZoneById("Europe/Warsaw"), WeekdaysOnly: false);
 
     public async Task RunAsync(CancellationToken cancellationToken)
     {

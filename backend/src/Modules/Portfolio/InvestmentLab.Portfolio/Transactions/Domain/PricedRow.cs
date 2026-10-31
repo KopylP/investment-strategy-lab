@@ -1,6 +1,15 @@
 namespace InvestmentLab.Portfolio.Transactions.Domain;
 
-public sealed record PricedRow(StatementRow Row, Guid? InstrumentId, Guid? SubPortfolioId, decimal Quantity, decimal Price, decimal Amount, Money? Settlement = null, decimal Fee = 0m,
+public sealed record PricedRow(
+    StatementRow Row,
+    Guid? InstrumentId,
+    Guid? SubPortfolioId,
+    decimal Quantity,
+    decimal Price,
+    decimal Amount,
+    Money? Settlement = null,
+    decimal Fee = 0m,
+
     bool MissingRate = false)
 {
     private const decimal RoundingNoise = 0.015m;

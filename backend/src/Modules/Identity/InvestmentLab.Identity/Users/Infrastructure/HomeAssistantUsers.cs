@@ -7,6 +7,7 @@ internal sealed class HomeAssistantUsers(UserManager<User> users) : IHomeAssista
 {
     public async Task<string?> FindHomeAssistantUserIdAsync(Guid userId, CancellationToken cancellationToken) =>
         await users.FindByIdAsync(userId.ToString()) is { } user
-            ? (await users.GetLoginsAsync(user)).FirstOrDefault(login => login.LoginProvider == HomeAssistantAuthenticationHandler.LoginProvider)?.ProviderKey
+            ? (await users.GetLoginsAsync(user))
+                .FirstOrDefault(login => login.LoginProvider == HomeAssistantAuthenticationHandler.LoginProvider)?.ProviderKey
             : null;
 }

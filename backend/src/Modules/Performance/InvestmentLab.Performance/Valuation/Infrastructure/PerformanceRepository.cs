@@ -14,12 +14,17 @@ internal sealed class PerformanceRepository(PerformanceDbContext db) : IPerforma
             return existing;
 
         await db.Database.ExecuteSqlAsync(
-            $"INSERT INTO performance.recalculation_markers (account_id, owner_id, dirty_from) VALUES ({accountId}, {ownerId.Value}, {DateOnly.MinValue}) ON CONFLICT (account_id) DO NOTHING",
+            $"""
+            INSERT INTO performance.recalculation_markers (account_id, owner_id, dirty_from)
+            VALUES ({accountId}, {ownerId.Value}, {DateOnly.MinValue})
+            ON CONFLICT (account_id) DO NOTHING
+            """,
             cancellationToken);
         return await db.Markers.IgnoreQueryFilters().SingleAsync(marker => marker.AccountId == accountId, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<RecalculationMarker>> MarkersAsync(CancellationToken cancellationToken) => await db.Markers.ToListAsync(cancellationToken);
+    public async Task<IReadOnlyList<RecalculationMarker>> MarkersAsync(CancellationToken cancellationToken) =>
+        await db.Markers.ToListAsync(cancellationToken);
 
     public Task ReplaceSnapshotsAsync(Guid accountId, IReadOnlyList<ValuationSnapshot> snapshots, CancellationToken cancellationToken) =>
 

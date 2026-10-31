@@ -25,7 +25,8 @@ public sealed class TaxAssessment : AggregateRoot<Guid>
         CarryforwardUses = [];
     }
 
-    private TaxAssessment(Guid id) : base(id) => (PolicyCode, InputHash, Summary, Realizations, Dividends, CarryforwardUses) = (null!, null!, null!, null!, null!, null!);
+    private TaxAssessment(Guid id) : base(id) =>
+        (PolicyCode, InputHash, Summary, Realizations, Dividends, CarryforwardUses) = (null!, null!, null!, null!, null!, null!);
 
     public static TaxAssessment Start(UserId ownerId, int year) => new(ownerId, year);
 

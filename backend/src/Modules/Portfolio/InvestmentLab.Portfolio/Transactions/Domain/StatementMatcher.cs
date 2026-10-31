@@ -28,7 +28,8 @@ public static class StatementMatcher
     {
         var live = LiveAfterUpFrontReversals(journal, mode);
         var imported = LatestImportedByIdentity(live);
-        var manualOrFromReports = live.Where(entry => entry.Source.Kind is TransactionSourceKind.ReportAction or TransactionSourceKind.Manual).ToList();
+        var manualOrFromReports =
+            live.Where(entry => entry.Source.Kind is TransactionSourceKind.ReportAction or TransactionSourceKind.Manual).ToList();
         var claimed = new HashSet<TransactionId>();
 
         var outcomes = new List<RowOutcome>();

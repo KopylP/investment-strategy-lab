@@ -15,7 +15,9 @@ public sealed record RebalancingPolicy
     public static RebalancingPolicy Default => new(DefaultMinTrade, DefaultTrimBand, true);
 
     public static RebalancingPolicy Of(decimal minTrade, Percentage trimBand, bool allowFractionalShares) =>
-        minTrade >= 0m ? new(minTrade, trimBand, allowFractionalShares) : throw new ArgumentOutOfRangeException(nameof(minTrade), minTrade, "Minimum trade cannot be negative.");
+        minTrade >= 0m
+            ? new(minTrade, trimBand, allowFractionalShares)
+            : throw new ArgumentOutOfRangeException(nameof(minTrade), minTrade, "Minimum trade cannot be negative.");
 
     public static Result<RebalancingPolicy> TryOf(decimal minTrade, decimal trimBand, bool allowFractionalShares)
     {

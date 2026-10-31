@@ -4,7 +4,9 @@ using InvestmentLab.Portfolio.Transactions.Application.RecordInternalTransfer;
 
 namespace InvestmentLab.Portfolio.Transactions.Application.Integration;
 
-internal sealed class RecordTransferFromReport(RecordInternalTransferHandler transfers, CommandRejection rejection) : IIntegrationEventHandler<RecordInternalTransferV1>
+internal sealed class RecordTransferFromReport(
+    RecordInternalTransferHandler transfers,
+    CommandRejection rejection) : IIntegrationEventHandler<RecordInternalTransferV1>
 {
     public async Task Handle(RecordInternalTransferV1 command, CancellationToken cancellationToken)
     {

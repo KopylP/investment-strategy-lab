@@ -15,12 +15,21 @@ internal sealed class TransactionDetailsConverter() : ValueConverter<Transaction
     {
         TradeDetails trade => new DetailsJson("trade", Trade: new TradeJson(
             trade.InstrumentId, trade.Side.ToString(), trade.Quantity.Value, trade.Price.Amount, trade.Price.Currency.Code, trade.Fee.Amount,
-            [.. trade.Allocations.Select(a => new PartJson(a.SubPortfolioId.Value, a.Quantity.Value))], trade.Settlement?.Amount, trade.Settlement?.Currency.Code)),
+            [.. trade.Allocations.Select(a => new PartJson(
+                a.SubPortfolioId.Value,
+                a.Quantity.Value))], trade.Settlement?.Amount, trade.Settlement?.Currency.Code)),
         CashMovementDetails cash => new DetailsJson("cash", Cash: new CashJson(
             cash.Kind.ToString(), cash.Amount.Amount, cash.Amount.Currency.Code, cash.InstrumentId,
-            [.. cash.Allocations.Select(a => new PartJson(a.SubPortfolioId.Value, a.Amount.Amount))], cash.Settlement?.Amount, cash.Settlement?.Currency.Code)),
+            [.. cash.Allocations.Select(a => new PartJson(
+                a.SubPortfolioId.Value,
+                a.Amount.Amount))], cash.Settlement?.Amount, cash.Settlement?.Currency.Code)),
         InternalTransferDetails transfer => new DetailsJson("transfer", Transfer: new TransferJson(
-            transfer.From.Value, transfer.To.Value, transfer.InstrumentId, transfer.Quantity?.Value, transfer.Amount?.Amount, transfer.Amount?.Currency.Code)),
+            transfer.From.Value,
+            transfer.To.Value,
+            transfer.InstrumentId,
+            transfer.Quantity?.Value,
+            transfer.Amount?.Amount,
+            transfer.Amount?.Currency.Code)),
         ReversalDetails reversal => new DetailsJson("reversal", Reversal: new ReversalJson(reversal.Original.Value, reversal.Reason)),
         _ => throw new ArgumentOutOfRangeException(nameof(details), details.GetType().Name, null),
     }, Json);
@@ -35,15 +44,24 @@ internal sealed class TransactionDetailsConverter() : ValueConverter<Transaction
                 var trade = details.Trade!;
                 var currency = Currency.Of(trade.Currency);
 
-                return new TradeDetails(trade.InstrumentId, Enum.Parse<TradeSide>(trade.Side), Quantity.Of(trade.Quantity), Price.Of(trade.Price, currency),
-                    Money.Of(trade.Fee, currency), [.. trade.Allocations.Select(p => new Allocation(SubPortfolioId.Of(p.SubPortfolioId), Quantity.Of(p.Value)))],
+                return new TradeDetails(
+                    trade.InstrumentId,
+                    Enum.Parse<TradeSide>(trade.Side),
+                    Quantity.Of(trade.Quantity),
+                    Price.Of(trade.Price, currency),
+
+                    Money.Of(
+                        trade.Fee,
+                        currency), [.. trade.Allocations.Select(p => new Allocation(SubPortfolioId.Of(p.SubPortfolioId), Quantity.Of(p.Value)))],
                     Settlement(trade.SettledAmount, trade.SettledCurrency));
             case "cash":
                 var cash = details.Cash!;
                 var cashCurrency = Currency.Of(cash.Currency);
 
                 return new CashMovementDetails(Enum.Parse<CashMovementKind>(cash.Kind), Money.Of(cash.Amount, cashCurrency),
-                    [.. cash.Allocations.Select(p => new CashAllocation(SubPortfolioId.Of(p.SubPortfolioId), Money.Of(p.Value, cashCurrency)))], cash.InstrumentId,
+                    [.. cash.Allocations.Select(p => new CashAllocation(
+                        SubPortfolioId.Of(p.SubPortfolioId),
+                        Money.Of(p.Value, cashCurrency)))], cash.InstrumentId,
                     Settlement(cash.SettledAmount, cash.SettledCurrency));
             case "transfer":
                 var transfer = details.Transfer!;

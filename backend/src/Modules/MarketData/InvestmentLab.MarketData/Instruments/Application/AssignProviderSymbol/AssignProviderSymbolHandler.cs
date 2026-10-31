@@ -12,7 +12,8 @@ public sealed class AssignProviderSymbolHandler(IInstrumentRepository instrument
         if (symbol.IsFailure)
             return symbol.Error;
 
-        if (command.InstrumentId == Guid.Empty || await instruments.FindAsync(InstrumentId.Of(command.InstrumentId), cancellationToken) is not { } instrument)
+        if (command.InstrumentId == Guid.Empty
+            || await instruments.FindAsync(InstrumentId.Of(command.InstrumentId), cancellationToken) is not { } instrument)
             return InstrumentErrors.NotFound(command.InstrumentId);
 
         if (await instruments.FindOwnerAsync(symbol.Value, cancellationToken) is { } owner && owner != instrument.Id)

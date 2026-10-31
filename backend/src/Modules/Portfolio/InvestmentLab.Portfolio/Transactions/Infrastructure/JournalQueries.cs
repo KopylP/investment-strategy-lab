@@ -17,7 +17,9 @@ internal sealed class JournalQueries(ITransactionJournal journal) : IJournalQuer
             account.Id.Value,
             account.OwnerId.Value,
             account.BaseCurrency.Code,
-            [.. entries.OrderBy(entry => entry.OccurredOn).ThenBy(entry => entry.RecordedAt).Select(entry => entry.ToRecordedEvent(account.BaseCurrency))],
+            [.. entries.OrderBy(entry => entry.OccurredOn)
+                .ThenBy(entry => entry.RecordedAt)
+                .Select(entry => entry.ToRecordedEvent(account.BaseCurrency))],
             [.. entries.Where(entry => entry.ReversalOf is not null).Select(entry => entry.ReversalOf!.Value.Value)]);
     }
 }

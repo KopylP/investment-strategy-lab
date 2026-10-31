@@ -39,7 +39,9 @@ public sealed class UserProfile : AggregateRoot<UserId>
     {
         try
         {
-            return !string.IsNullOrWhiteSpace(locale) && System.Globalization.CultureInfo.GetCultureInfo(locale, predefinedOnly: true).Name.Length > 0;
+            return !string.IsNullOrWhiteSpace(
+                locale) && System.Globalization.CultureInfo.GetCultureInfo(locale,
+                predefinedOnly: true).Name.Length > 0;
         }
         catch (System.Globalization.CultureNotFoundException)
         {

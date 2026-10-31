@@ -17,7 +17,9 @@ internal sealed class TransactionJournal(PortfolioDbContext db) : ITransactionJo
         await db.Transactions.Where(entry => entry.AccountId == accountId).ToListAsync(cancellationToken);
 
     public Task<bool> SourceExistsAsync(string sourceReference, CancellationToken cancellationToken) =>
-        db.Transactions.IgnoreQueryFilters([ModuleDbContext.OwnerFilter]).AnyAsync(entry => entry.Source.Reference == sourceReference, cancellationToken);
+        db.Transactions.IgnoreQueryFilters(
+            [ModuleDbContext.OwnerFilter]).AnyAsync(entry => entry.Source.Reference == sourceReference,
+            cancellationToken);
 
     public void Add(Transaction transaction) => db.Transactions.Add(transaction);
 

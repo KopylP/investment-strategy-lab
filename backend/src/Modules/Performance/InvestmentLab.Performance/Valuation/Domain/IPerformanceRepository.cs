@@ -11,7 +11,11 @@ public interface IPerformanceRepository
 
     Task ReplaceSnapshotsAsync(Guid accountId, IReadOnlyList<ValuationSnapshot> snapshots, CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<ValuationSnapshot>> SnapshotsAsync(Guid accountId, SnapshotScenario scenario, DateOnly from, CancellationToken cancellationToken);
+    Task<IReadOnlyList<ValuationSnapshot>> SnapshotsAsync(
+        Guid accountId,
+        SnapshotScenario scenario,
+        DateOnly from,
+        CancellationToken cancellationToken);
 
     Task<IReadOnlyList<PlannedReport>> PlannedReportsAsync(Guid accountId, CancellationToken cancellationToken);
 

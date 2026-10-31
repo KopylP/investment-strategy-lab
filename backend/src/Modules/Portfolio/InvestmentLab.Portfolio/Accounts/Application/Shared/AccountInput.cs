@@ -30,7 +30,12 @@ internal static class AccountInput
         if (maxTurnover.IsFailure)
             return maxTurnover.Error;
 
-        return new SubPortfolioDraft(input.Name ?? "", share.Value, strategy, input.CashInstrumentId, new Guardrails(maxWeight.Value, maxTurnover.Value));
+        return new SubPortfolioDraft(
+            input.Name ?? "",
+            share.Value,
+            strategy,
+            input.CashInstrumentId,
+            new Guardrails(maxWeight.Value, maxTurnover.Value));
     }
 
     public static Result<IReadOnlyDictionary<SubPortfolioId, TargetShare>> ToShares(IReadOnlyDictionary<Guid, decimal>? percents)

@@ -21,6 +21,9 @@ internal sealed class StrategyTypeConfiguration : IEntityTypeConfiguration<Strat
         type.Property(t => t.Reports).HasColumnType("jsonb").HasConversion(
             reports => JsonSerializer.Serialize(reports, JsonSerializerOptions.Web),
             json => JsonSerializer.Deserialize<List<ReportDefinition>>(json, JsonSerializerOptions.Web) ?? new List<ReportDefinition>(),
-            new ValueComparer<List<ReportDefinition>>((a, b) => a!.SequenceEqual(b!), reports => reports.Aggregate(0, (hash, report) => HashCode.Combine(hash, report)), reports => reports.ToList()));
+            new ValueComparer<List<ReportDefinition>>(
+                (a, b) => a!.SequenceEqual(b!),
+                reports => reports.Aggregate(0, (hash, report) => HashCode.Combine(hash, report)),
+                reports => reports.ToList()));
     }
 }

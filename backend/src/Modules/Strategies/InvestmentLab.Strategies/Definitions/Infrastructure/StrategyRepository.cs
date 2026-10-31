@@ -15,7 +15,9 @@ internal sealed class StrategyRepository(StrategiesDbContext db) : IStrategyRepo
         await db.Strategies.OrderBy(strategy => strategy.CreatedAt).ToListAsync(cancellationToken);
 
     public Task<bool> NameTakenAsync(UserId ownerId, string name, CancellationToken cancellationToken) =>
-        db.Strategies.IgnoreQueryFilters([ModuleDbContext.OwnerFilter]).AnyAsync(strategy => strategy.OwnerId == ownerId && strategy.Name == name, cancellationToken);
+        db.Strategies.IgnoreQueryFilters(
+            [ModuleDbContext.OwnerFilter]).AnyAsync(strategy => strategy.OwnerId == ownerId && strategy.Name == name,
+            cancellationToken);
 
     public void Add(Strategy strategy) => db.Strategies.Add(strategy);
 

@@ -5,7 +5,10 @@ using Microsoft.Extensions.Logging;
 namespace InvestmentLab.Notifications.Delivery.Application.Shared;
 
 public sealed class Notifier(
-    IEnumerable<INotificationChannel> channels, INotificationPreferencesRepository preferences, IHomeAssistantUsers homeAssistantUsers, ILogger<Notifier> logger)
+    IEnumerable<INotificationChannel> channels,
+    INotificationPreferencesRepository preferences,
+    IHomeAssistantUsers homeAssistantUsers,
+    ILogger<Notifier> logger)
 {
     public IReadOnlyList<INotificationChannel> Channels { get; } = [.. channels];
 

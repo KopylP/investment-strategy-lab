@@ -34,7 +34,9 @@ public sealed class HoldingRow
 
             foreach (var line in sub.Lines)
                 yield return New(holdings, ownerId, sub.SubPortfolioId, line.InstrumentId, line.Quantity.Value, line.CostBasis,
-                    JsonSerializer.Serialize(line.Lots.Select(lot => new LotJson(lot.OpenedBy.Value, lot.OpenedOn, lot.Quantity.Value, lot.UnitCost)), Json));
+                    JsonSerializer.Serialize(
+                        line.Lots.Select(lot => new LotJson(lot.OpenedBy.Value, lot.OpenedOn, lot.Quantity.Value, lot.UnitCost)),
+                        Json));
         }
     }
 
@@ -48,14 +50,27 @@ public sealed class HoldingRow
             .Select(sub => new SubPortfolioHoldings(
             Accounts.Domain.SubPortfolioId.Of(sub.Key),
             Money.Of(sub.Where(row => row.InstrumentId is null && row.Currency == account.BaseCurrency).Sum(row => row.Amount), account.BaseCurrency),
-            [.. sub.Where(row => row.InstrumentId is null && row.Currency != account.BaseCurrency).OrderBy(row => row.Currency.Code).Select(row => Money.Of(row.Amount, row.Currency))],
+            [.. sub.Where(row => row.InstrumentId is null && row.Currency != account.BaseCurrency)
+                .OrderBy(row => row.Currency.Code)
+                .Select(row => Money.Of(row.Amount, row.Currency))],
             [.. sub.Where(row => row.InstrumentId is not null).OrderBy(row => row.InstrumentId).Select(row => new HoldingLine(
                 row.InstrumentId!.Value,
                 [.. JsonSerializer.Deserialize<List<LotJson>>(row.Lots, Json)!.Select(lot =>
-                    new VirtualLot(TransactionId.Of(lot.OpenedBy), lot.OpenedOn, InvestmentLab.SharedKernel.Quantity.Of(lot.Quantity), lot.UnitCost))]))]))]);
+                    new VirtualLot(
+                        TransactionId.Of(lot.OpenedBy),
+                        lot.OpenedOn,
+                        InvestmentLab.SharedKernel.Quantity.Of(lot.Quantity),
+                        lot.UnitCost))]))]))]);
 
     private static HoldingRow New(
-        AccountHoldings holdings, UserId ownerId, SubPortfolioId sub, Guid? instrumentId, decimal quantity, decimal amount, string lots, Currency? currency = null) =>
+        AccountHoldings holdings,
+        UserId ownerId,
+        SubPortfolioId sub,
+        Guid? instrumentId,
+        decimal quantity,
+        decimal amount,
+        string lots,
+        Currency? currency = null) =>
         new()
         {
             Id = Guid.CreateVersion7(),

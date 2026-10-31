@@ -21,7 +21,8 @@ public static class HomeAssistantIngress
             if (!int.TryParse(configuration["HomeAssistant:IngressPort"], out var port) || context.Connection.LocalPort != port)
                 return false;
 
-            var supervisor = IPAddress.TryParse(configuration["HomeAssistant:SupervisorAddress"], out var configured) ? configured : DefaultSupervisor;
+            var supervisor =
+                IPAddress.TryParse(configuration["HomeAssistant:SupervisorAddress"], out var configured) ? configured : DefaultSupervisor;
 
             return context.Connection.RemoteIpAddress is { } remote
                 && (remote.IsIPv4MappedToIPv6 ? remote.MapToIPv4() : remote).Equals(supervisor);

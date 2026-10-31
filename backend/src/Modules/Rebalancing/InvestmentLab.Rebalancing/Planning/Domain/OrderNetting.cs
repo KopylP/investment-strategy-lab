@@ -32,7 +32,12 @@ public static class OrderNetting
             {
                 var left = side.Where(allocation => allocation.Quantity > 0m).ToList();
                 if (left.Count > 0)
-                    brokerOrders.Add(new BrokerOrder(left.Min(allocation => allocation.Kind), instrument.Key, left.Sum(allocation => allocation.Quantity), price, left));
+                    brokerOrders.Add(new BrokerOrder(
+                        left.Min(allocation => allocation.Kind),
+                        instrument.Key,
+                        left.Sum(allocation => allocation.Quantity),
+                        price,
+                        left));
             }
         }
 

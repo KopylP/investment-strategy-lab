@@ -12,47 +12,116 @@ public sealed class TaxEstimator(TaxInputs inputs, IAssessmentRepository assessm
         DateOnly asOf,
         CancellationToken cancellationToken)
     {
-        var taxpayer = await inputs.OwnerOfAsync(accountId, cancellationToken) is { } ownerId
-            ? await assessments.SerializedAsync(ownerId, () => inputs.TaxpayerAsync(ownerId, cancellationToken), cancellationToken)
-            : null;
+        var taxpayer = await TaxpayerOfAsync(accountId, cancellationToken);
         if (taxpayer?.Accounts.FirstOrDefault(candidate => candidate.AccountId == accountId) is not { } account)
             return new TaxEstimateDto("", false, 0m, 0m, null, [], ["Рахунок не знайдено."]);
 
         var policy = TaxPolicies.For(account.PolicyCode);
         if (!policy.IsTaxed)
-            return new TaxEstimateDto(policy.Code, false, 0m, 0m, null, [.. sales.Select(sale => new SaleEstimateDto(sale.Key, 0m, 0m))], []);
+            return new TaxEstimateDto(policy.Code, false, 0m, 0m, null, NothingFor(sales), []);
 
         var (events, missing) = await inputs.EventsAsync(taxpayer.Taxed, cancellationToken);
         var losses = await inputs.LossesAsync(account.OwnerId, cancellationToken);
         var (rate, rateDate) = await inputs.RateAsync(account.Currency, asOf.AddDays(1), cancellationToken);
+        var notes = NotesOf(missing);
+
+        if (rate is not { } fx || sales.Count == 0)
+            return WithoutEstimate(policy, rate, sales, notes);
+
+        var scenario = new SaleScenario(accountId, asOf, events, losses, policy, fx, rateDate);
+
+        return Estimate(scenario, sales, notes);
+    }
+
+    private async Task<Taxpayer?> TaxpayerOfAsync(Guid accountId, CancellationToken cancellationToken)
+    {
+        if (await inputs.OwnerOfAsync(accountId, cancellationToken) is not { } ownerId)
+            return null;
+
+        return await assessments.SerializedAsync(ownerId, () => inputs.TaxpayerAsync(ownerId, cancellationToken), cancellationToken);
+    }
+
+    private static List<SaleEstimateDto> NothingFor(IReadOnlyList<ProposedSaleDto> sales) =>
+        [.. sales.Select(sale => new SaleEstimateDto(sale.Key, 0m, 0m))];
+
+    private static List<string> NotesOf(IReadOnlyList<string> missing)
+    {
         var notes = new List<string> { "Оцінка: остаточний податок — за PIT-8C брокера." };
 
         if (missing.Count > 0)
             notes.Add("Частина операцій без курсу NBP не врахована.");
 
-        if (rate is not { } fx || sales.Count == 0)
-            return new TaxEstimateDto(policy.Code, policy.IsTaxed, 0m, 0m, rate, [.. sales.Select(sale => new SaleEstimateDto(sale.Key, 0m, 0m))],
-                rate is null ? [.. notes, "Немає курсу NBP на сьогодні — податок не оцінено."] : notes);
+        return notes;
+    }
 
-        var baseline = YearTax(TaxCalculator.Compute(events, policy, losses), asOf.Year);
-        var sequence = events.Count;
-        TaxEvent Sale(ProposedSaleDto sale) => new(sale.Key, asOf, sequence++, TaxableKind.Sell, sale.InstrumentId, sale.Quantity, sale.Price, 0m,
-            sale.Quantity * sale.Price, [.. sale.SubPortfolioIds.Select(id => new EntryAllocation(id, sale.Quantity / Math.Max(1, sale.SubPortfolioIds.Count)))], fx, rateDate, AccountId: accountId);
+    private static TaxEstimateDto WithoutEstimate(ITaxPolicy policy, decimal? rate, IReadOnlyList<ProposedSaleDto> sales, List<string> notes)
+    {
+        var shown = rate is null ? [.. notes, "Немає курсу NBP на сьогодні — податок не оцінено."] : notes;
 
-        var all = TaxCalculator.Compute([.. events, .. sales.Select(Sale)], policy, losses);
-        var perSale = new List<SaleEstimateDto>();
+        return new TaxEstimateDto(policy.Code, policy.IsTaxed, 0m, 0m, rate, NothingFor(sales), shown);
+    }
 
-        foreach (var sale in sales)
-        {
-            var alone = TaxCalculator.Compute([.. events, Sale(sale)], policy, losses);
-            var gain = alone.Year(asOf.Year)?.Realizations.FirstOrDefault(r => r.SaleTransactionId == sale.Key)?.GainPln ?? 0m;
-            perSale.Add(new SaleEstimateDto(sale.Key, gain, Math.Max(0m, YearTax(alone, asOf.Year) - baseline)));
-        }
+    private static TaxEstimateDto Estimate(SaleScenario scenario, IReadOnlyList<ProposedSaleDto> sales, List<string> notes)
+    {
+        var year = scenario.AsOf.Year;
+        var baseline = YearTax(scenario.Compute([]), year);
+        var all = scenario.Compute(sales);
 
-        var totalGain = all.Year(asOf.Year)?.Realizations.Where(r => sales.Any(sale => sale.Key == r.SaleTransactionId)).Sum(r => r.GainPln) ?? 0m;
+        var perSale = sales.Select(sale => EstimateOf(sale, scenario, baseline)).ToList();
 
-        return new TaxEstimateDto(policy.Code, policy.IsTaxed, totalGain, Math.Max(0m, YearTax(all, asOf.Year) - baseline), fx, perSale, notes);
+        var realizations = all.Year(year)?.Realizations.Where(realization => sales.Any(sale => sale.Key == realization.SaleTransactionId));
+        var totalGain = realizations?.Sum(realization => realization.GainPln) ?? 0m;
+        var totalTax = Math.Max(0m, YearTax(all, year) - baseline);
+
+        return new TaxEstimateDto(scenario.Policy.Code, scenario.Policy.IsTaxed, totalGain, totalTax, scenario.Rate, perSale, notes);
+    }
+
+    private static SaleEstimateDto EstimateOf(ProposedSaleDto sale, SaleScenario scenario, decimal baseline)
+    {
+        var year = scenario.AsOf.Year;
+        var alone = scenario.Compute([sale]);
+        var realization = alone.Year(year)?.Realizations.FirstOrDefault(each => each.SaleTransactionId == sale.Key);
+
+        return new SaleEstimateDto(sale.Key, realization?.GainPln ?? 0m, Math.Max(0m, YearTax(alone, year) - baseline));
     }
 
     private static decimal YearTax(TaxComputation computation, int year) => computation.Year(year)?.Summary.CapitalTax ?? 0m;
+
+    private sealed record SaleScenario(
+        Guid AccountId,
+        DateOnly AsOf,
+        IReadOnlyList<TaxEvent> Events,
+        IReadOnlyList<LossYear> Losses,
+        ITaxPolicy Policy,
+        decimal Rate,
+        DateOnly? RateDate)
+    {
+        public TaxComputation Compute(IEnumerable<ProposedSaleDto> sales)
+        {
+            var proposed = sales.Select((sale, index) => EventOf(sale, Events.Count + index));
+
+            return TaxCalculator.Compute([.. Events, .. proposed], Policy, Losses);
+        }
+
+        private TaxEvent EventOf(ProposedSaleDto sale, int sequence)
+        {
+            var shareOfSub = sale.Quantity / Math.Max(1, sale.SubPortfolioIds.Count);
+            var allocations = sale.SubPortfolioIds.Select(id => new EntryAllocation(id, shareOfSub));
+
+            return new TaxEvent(
+                sale.Key,
+                AsOf,
+                sequence,
+                TaxableKind.Sell,
+                sale.InstrumentId,
+                sale.Quantity,
+                sale.Price,
+                0m,
+                sale.Quantity * sale.Price,
+                [.. allocations],
+                Rate,
+                RateDate,
+                AccountId: AccountId);
+        }
+    }
 }

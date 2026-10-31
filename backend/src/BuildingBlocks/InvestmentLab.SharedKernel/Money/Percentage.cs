@@ -10,7 +10,9 @@ public sealed record Percentage : IComparable<Percentage>
     private Percentage(decimal value) => Value = value;
 
     public static Percentage Of(decimal fraction) =>
-        fraction is >= 0m and <= 1m ? new(fraction) : throw new ArgumentOutOfRangeException(nameof(fraction), fraction, "Expected a fraction between 0 and 1.");
+        fraction is >= 0m and <= 1m
+            ? new(fraction)
+            : throw new ArgumentOutOfRangeException(nameof(fraction), fraction, "Expected a fraction between 0 and 1.");
 
     public static Result<Percentage> TryOf(decimal fraction) =>
         fraction is >= 0m and <= 1m

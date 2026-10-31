@@ -6,7 +6,9 @@ namespace InvestmentLab.Taxation.Declarations.Application.Shared;
 public sealed class DeclarationAccounts(ITaxpayerHistory taxpayer, IPit8CRepository pit8C)
 {
     public static bool HasTaxableYear(IReadOnlyList<DeclarationAccount> declared, ITaxDeclarationForm form) =>
-        declared.Any(account => account.Policy.Jurisdiction == form.Jurisdiction && account.Policy.IsTaxed && (account.Sales.Count > 0 || account.Dividends.Count > 0));
+        declared.Any(account => account.Policy.Jurisdiction == form.Jurisdiction
+            && account.Policy.IsTaxed
+            && (account.Sales.Count > 0 || account.Dividends.Count > 0));
 
     public async Task<(IReadOnlyList<DeclarationAccount> Accounts, TaxpayerHistoryDto History)> LoadAsync(
         int year,

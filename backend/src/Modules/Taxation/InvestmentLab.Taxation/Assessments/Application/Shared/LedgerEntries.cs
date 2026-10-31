@@ -30,7 +30,9 @@ public static class LedgerEntries
                 ? (settled, own)
                 : (cash.Amount, recorded.Currency);
             return TaxLedgerEntry.Dividend(recorded.TransactionId, recorded.AccountId, owner, recorded.OccurredOn, recordedAt,
-                instrumentId, amount, currency, [.. cash.Allocations.Select(allocation => new EntryAllocation(allocation.SubPortfolioId, allocation.Amount))]);
+                instrumentId, amount, currency, [.. cash.Allocations.Select(allocation => new EntryAllocation(
+                    allocation.SubPortfolioId,
+                    allocation.Amount))]);
         }
 
         return null;

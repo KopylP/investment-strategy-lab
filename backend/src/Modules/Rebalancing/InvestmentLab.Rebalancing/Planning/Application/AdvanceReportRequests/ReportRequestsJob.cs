@@ -22,7 +22,12 @@ public sealed class ReportRequestsJob(
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
-                logger.LogError(exception, "Report request {RequestId} ({Code}) of account {AccountId} could not be moved on", pending.Id, pending.Code, pending.AccountId);
+                logger.LogError(
+                    exception,
+                    "Report request {RequestId} ({Code}) of account {AccountId} could not be moved on",
+                    pending.Id,
+                    pending.Code,
+                    pending.AccountId);
                 await GiveUpWhenDueAsync(pending.Id, exception, cancellationToken);
             }
         }

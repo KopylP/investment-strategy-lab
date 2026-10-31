@@ -20,8 +20,24 @@ public static class ShadowPortfolioSimulator
             var movement = action.Kind switch
             {
                 "Contribute" => new Movement(plan.MarketAsOf, sequence++, part.SubPortfolioId, null, 0m, part.Quantity, part.Quantity),
-                "Buy" or "Park" => new Movement(plan.MarketAsOf, sequence++, part.SubPortfolioId, action.InstrumentId, part.Quantity, -amount, 0m, TradePrice: action.Price),
-                "Sell" or "Unpark" => new Movement(plan.MarketAsOf, sequence++, part.SubPortfolioId, action.InstrumentId, -part.Quantity, amount, 0m, TradePrice: action.Price),
+                "Buy" or "Park" => new Movement(
+                    plan.MarketAsOf,
+                    sequence++,
+                    part.SubPortfolioId,
+                    action.InstrumentId,
+                    part.Quantity,
+                    -amount,
+                    0m,
+                    TradePrice: action.Price),
+                "Sell" or "Unpark" => new Movement(
+                    plan.MarketAsOf,
+                    sequence++,
+                    part.SubPortfolioId,
+                    action.InstrumentId,
+                    -part.Quantity,
+                    amount,
+                    0m,
+                    TradePrice: action.Price),
                 _ => null,
             };
 
@@ -30,8 +46,24 @@ public static class ShadowPortfolioSimulator
 
             if (action is { Kind: "Transfer", FromSubPortfolioId: { } source })
             {
-                movements.Add(new Movement(plan.MarketAsOf, sequence++, source, action.InstrumentId, -part.Quantity, 0m, 0m, TransferQuantity: -part.Quantity));
-                movements.Add(new Movement(plan.MarketAsOf, sequence++, part.SubPortfolioId, action.InstrumentId, part.Quantity, 0m, 0m, TransferQuantity: part.Quantity));
+                movements.Add(new Movement(
+                    plan.MarketAsOf,
+                    sequence++,
+                    source,
+                    action.InstrumentId,
+                    -part.Quantity,
+                    0m,
+                    0m,
+                    TransferQuantity: -part.Quantity));
+                movements.Add(new Movement(
+                    plan.MarketAsOf,
+                    sequence++,
+                    part.SubPortfolioId,
+                    action.InstrumentId,
+                    part.Quantity,
+                    0m,
+                    0m,
+                    TransferQuantity: part.Quantity));
             }
         }
 

@@ -16,31 +16,46 @@ public static class JournalMatcher
 
         foreach (var action in report.Actions.Where(action => action.Status is ActionStatus.Pending or ActionStatus.PartiallyExecuted))
         {
-            if (OperationKindOf(action.Kind) is not { } kind)
-                continue;
-
-            var remaining = action.Kind == ActionKind.Contribute
-                ? action.PlannedAmount - action.Fills.Sum(fill => fill.Amount)
-                : action.RemainingQuantity;
-            var picked = new List<JournalOperation>();
-
-            foreach (var operation in candidates.Where(operation => operation.Kind == kind && !claimed.Contains(operation.TransactionId)
-                                                                     && (kind == JournalOperationKind.Contribution || operation.InstrumentId == action.InstrumentId)))
-            {
-                if (remaining <= Tolerance)
-                    break;
-
-                picked.Add(operation);
-                claimed.Add(operation.TransactionId);
-                remaining -= operation.Quantity;
-            }
-
-            if (picked.Count > 0)
-                matches.Add(new ActionMatch(action.Id, picked, action.Kind == ActionKind.Contribute || remaining <= Tolerance));
+            if (MatchOf(action, candidates, claimed) is { } match)
+                matches.Add(match);
         }
 
         return matches;
     }
+
+    private static ActionMatch? MatchOf(ReportAction action, List<JournalOperation> candidates, HashSet<Guid> claimed)
+    {
+        if (OperationKindOf(action.Kind) is not { } kind)
+            return null;
+
+        var remaining = RemainingOf(action);
+        var picked = new List<JournalOperation>();
+
+        foreach (var operation in candidates.Where(operation => Fits(operation, action, kind, claimed)))
+        {
+            if (remaining <= Tolerance)
+                break;
+
+            picked.Add(operation);
+            claimed.Add(operation.TransactionId);
+            remaining -= operation.Quantity;
+        }
+
+        if (picked.Count == 0)
+            return null;
+
+        return new ActionMatch(action.Id, picked, action.Kind == ActionKind.Contribute || remaining <= Tolerance);
+    }
+
+    private static decimal RemainingOf(ReportAction action) =>
+        action.Kind == ActionKind.Contribute
+            ? action.PlannedAmount - action.Fills.Sum(fill => fill.Amount)
+            : action.RemainingQuantity;
+
+    private static bool Fits(JournalOperation operation, ReportAction action, JournalOperationKind kind, HashSet<Guid> claimed) =>
+        operation.Kind == kind
+        && !claimed.Contains(operation.TransactionId)
+        && (kind == JournalOperationKind.Contribution || operation.InstrumentId == action.InstrumentId);
 
     private static JournalOperationKind? OperationKindOf(ActionKind kind) => kind switch
     {
