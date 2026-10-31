@@ -52,11 +52,8 @@ export class HoldingsStore {
 
   private readonly holdingsResource = resource({
     params: () => {
-      const accountIds = this.accounts.isAll()
-        ? this.accounts.accounts().map((account) => account.id)
-        : this.accounts.currentId()
-          ? [this.accounts.currentId()!]
-          : [];
+      const accountIds = this.accountIdsInView();
+
       return accountIds.length
         ? { accountIds, asOf: this.asOf() ? toIsoDate(this.asOf()!) : undefined }
         : undefined;
@@ -84,6 +81,7 @@ export class HoldingsStore {
             asOf: params.asOf,
           })
         : [];
+
       return { all, prices: new Map(prices.map((price) => [price.instrumentId, price])) };
     },
   });
@@ -102,12 +100,14 @@ export class HoldingsStore {
     const data = this.holdingsResource.value();
     const currency = this.currency();
     if (!data) return [];
+
     return data.all.flatMap((holdings) => {
       const account = this.accounts
         .accounts()
         .find((candidate) => candidate.id === holdings.accountId);
       const factor =
         holdings.currency === currency ? 1 : (this.fx.rate(holdings.currency, currency) ?? 1);
+
       return this.sleevesOf(
         holdings,
         currency,
@@ -135,6 +135,7 @@ export class HoldingsStore {
         const rate = quote ? this.fx.rate(quote.currency, currency) : null;
         const price = quote && rate !== null ? quote.close * rate : null;
         const value = price !== null ? position.quantity * price : position.costBasis * factor;
+
         return {
           instrumentId: position.instrumentId,
           symbol: this.instruments.symbol(position.instrumentId),
@@ -166,8 +167,10 @@ export class HoldingsStore {
           0,
         );
       const value = positions.reduce((sum, position) => sum + position.value, 0) + cash;
+
       positions.forEach((position) => (position.weight = value ? position.value / value : 0));
       const costBasis = positions.reduce((sum, position) => sum + position.costBasis, 0);
+
       return {
         id: sub.subPortfolioId,
         name: sub.name,
@@ -183,7 +186,9 @@ export class HoldingsStore {
       };
     });
     const total = sleeves.reduce((sum, sleeve) => sum + sleeve.value, 0);
+
     sleeves.forEach((sleeve) => (sleeve.actualShare = total ? sleeve.value / total : 0));
+
     return sleeves;
   }
 
@@ -192,11 +197,14 @@ export class HoldingsStore {
     const value = sleeves.reduce((sum, sleeve) => sum + sleeve.value, 0);
     const cash = sleeves.reduce((sum, sleeve) => sum + sleeve.cash, 0);
     const parts = new Map<string, number>();
+
     for (const part of sleeves.flatMap((sleeve) => sleeve.cashParts))
       parts.set(part.currency, (parts.get(part.currency) ?? 0) + part.amount);
+
     const cashParts = [...parts].map(([currency, amount]) => ({ currency, amount }));
     const costBasis = sleeves.reduce((sum, sleeve) => sum + sleeve.costBasis, 0);
     const pnl = sleeves.reduce((sum, sleeve) => sum + sleeve.pnl, 0);
+
     return {
       value,
       cash,
@@ -221,12 +229,15 @@ export class HoldingsStore {
   readonly composition = computed(() => {
     const total = this.totals().value;
     if (!total) return [];
+
     const byInstrument = new Map<string, { name: string; value: number }>();
+
     for (const position of this.sleeves().flatMap((sleeve) => sleeve.positions))
       byInstrument.set(position.symbol, {
         name: position.name,
         value: (byInstrument.get(position.symbol)?.value ?? 0) + position.value,
       });
+
     const palette = this.theme.palette();
     const colors = [...palette.series, palette.gain, palette.tax];
     const slices = [...byInstrument]
@@ -238,6 +249,7 @@ export class HoldingsStore {
         color: colors[index % colors.length],
       }));
     const cash = this.totals().cash;
+
     return cash > 0
       ? [...slices, { label: 'Кеш', name: '', weight: cash / total, color: palette.neutral }]
       : slices;
@@ -246,4 +258,12 @@ export class HoldingsStore {
   readonly staleQuotes = computed(() =>
     this.sleeves().some((sleeve) => sleeve.positions.some((position) => position.isStale)),
   );
+
+  private accountIdsInView(): string[] {
+    if (this.accounts.isAll()) return this.accounts.accounts().map((account) => account.id);
+
+    const currentId = this.accounts.currentId();
+
+    return currentId ? [currentId] : [];
+  }
 }

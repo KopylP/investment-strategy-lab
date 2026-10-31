@@ -35,11 +35,14 @@ export class TaxProgressChart {
     const byDay = new Map(points.map((point) => [point.date, point.taxDue]));
     const days: { date: string; tax: number }[] = [];
     let tax = 0;
+
     for (const day = new Date(year, 0, 1); day <= end; day.setDate(day.getDate() + 1)) {
       const iso = toIsoDate(day);
+
       tax = byDay.get(iso) ?? tax;
       days.push({ date: iso, tax });
     }
+
     return days;
   });
 
@@ -47,6 +50,7 @@ export class TaxProgressChart {
     const palette = this.theme.palette();
     const days = this.days();
     const threshold = this.threshold();
+
     return {
       labels: days.map((day) => formatDate(day.date)),
       datasets: [
@@ -72,6 +76,7 @@ export class TaxProgressChart {
   protected readonly options = computed(() => {
     const palette = this.theme.palette();
     const phone = this.viewport.phone();
+
     return {
       maintainAspectRatio: false,
       animation: false,
@@ -127,19 +132,24 @@ function aboveThreshold(
   above: string,
 ): string | ((context: ChartContext) => string | CanvasGradient) {
   if (threshold === null) return below;
+
   return ({ chart }) => {
     const { ctx, chartArea, scales } = chart;
     if (!chartArea || !scales.y || chartArea.bottom <= chartArea.top) return below;
+
     const at =
       (chartArea.bottom - scales.y.getPixelForValue(threshold)) /
       (chartArea.bottom - chartArea.top);
     if (at >= 1) return below;
+
     const stop = Math.max(0, at);
     const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+
     gradient.addColorStop(0, below);
     gradient.addColorStop(stop, below);
     gradient.addColorStop(stop, above);
     gradient.addColorStop(1, above);
+
     return gradient;
   };
 }

@@ -6,6 +6,7 @@ export function formatMoney(
   digits = 2,
 ): string {
   if (amount === null || amount === undefined) return '—';
+
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
@@ -16,11 +17,13 @@ export function formatMoney(
 
 export function formatQuantity(quantity: number | null | undefined): string {
   if (quantity === null || quantity === undefined) return '—';
+
   return new Intl.NumberFormat(locale, { maximumFractionDigits: 8 }).format(quantity);
 }
 
 export function formatPercent(fraction: number | null | undefined, digits = 1): string {
   if (fraction === null || fraction === undefined) return '—';
+
   return new Intl.NumberFormat(locale, {
     style: 'percent',
     minimumFractionDigits: digits,
@@ -30,6 +33,7 @@ export function formatPercent(fraction: number | null | undefined, digits = 1): 
 
 export function formatSignedPercent(fraction: number | null | undefined, digits = 1): string {
   if (fraction === null || fraction === undefined) return '—';
+
   return new Intl.NumberFormat(locale, {
     style: 'percent',
     minimumFractionDigits: digits,
@@ -40,7 +44,9 @@ export function formatSignedPercent(fraction: number | null | undefined, digits 
 
 export function formatDate(value: string | null | undefined): string {
   if (!value) return '—';
+
   const date = value.length === 10 ? new Date(`${value}T00:00:00`) : new Date(value);
+
   return new Intl.DateTimeFormat(locale, {
     day: '2-digit',
     month: '2-digit',
@@ -50,6 +56,7 @@ export function formatDate(value: string | null | undefined): string {
 
 export function formatDateTime(value: string | null | undefined): string {
   if (!value) return '—';
+
   return new Intl.DateTimeFormat(locale, {
     day: '2-digit',
     month: '2-digit',
@@ -64,6 +71,7 @@ export function formatPeriod(period: string): string {
   const name = new Intl.DateTimeFormat(locale, { month: 'long' }).format(
     new Date(year, month - 1, 1),
   );
+
   return `${name} ${year}`;
 }
 

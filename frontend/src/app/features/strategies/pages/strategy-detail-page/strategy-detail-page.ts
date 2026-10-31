@@ -59,13 +59,11 @@ export class StrategyDetailPage {
   );
 
   protected readonly etfOptions = computed(() =>
-    this.store.instruments
-      .etfs()
-      .map((instrument) => ({
-        label: `${symbolOf(instrument)} · ${instrument.name}`,
-        value: instrument.id,
-        group: instrument.group ?? '',
-      })),
+    this.store.instruments.etfs().map((instrument) => ({
+      label: `${symbolOf(instrument)} · ${instrument.name}`,
+      value: instrument.id,
+      group: instrument.group ?? '',
+    })),
   );
   protected readonly isLatest = computed(
     () => this.store.strategy()?.version.number === this.store.strategy()?.latestVersion,
@@ -78,6 +76,7 @@ export class StrategyDetailPage {
   protected startEditing(): void {
     const version = this.store.strategy()?.version;
     if (!version) return;
+
     this.parameters.set(structuredClone(version.parameters));
     this.universe.set([...version.universe]);
     this.cashInstrumentId.set(version.cashInstrumentId);
@@ -88,6 +87,7 @@ export class StrategyDetailPage {
   protected async save(): Promise<void> {
     const version = this.store.strategy()?.version;
     if (!version) return;
+
     const saved = await this.store.save({
       universe: this.universe(),
       benchmarkInstrumentId: this.benchmarkInstrumentId() ?? version.benchmarkInstrumentId,

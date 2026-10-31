@@ -59,6 +59,7 @@ export class TradeDialog {
 
   protected submit(): void {
     if (!this.valid()) return;
+
     this.save.emit({
       instrumentId: this.instrumentId()!,
       side: this.side(),

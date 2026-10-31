@@ -49,6 +49,7 @@ export class CashDialog {
 
   protected submit(): void {
     if (!this.valid()) return;
+
     this.save.emit({
       kind: this.kind(),
       amount: this.amount()!,

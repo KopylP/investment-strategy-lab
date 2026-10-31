@@ -48,7 +48,9 @@ export class OverviewStore {
           currency: this.display.code() ?? undefined,
           period: this.period(),
         };
+
       const accountId = this.accounts.currentId();
+
       return accountId
         ? {
             url: `/api/performance/accounts/${accountId}/dashboard`,
@@ -93,11 +95,15 @@ export class OverviewStore {
   readonly allAccounts = this.accounts.accounts;
   readonly hasStrategies = computed(() => (this.strategiesResource.value()?.length ?? 0) > 0);
   readonly strategiesLoaded = computed(() => this.strategiesResource.hasValue());
-  readonly withoutStrategy = computed(() =>
-    (this.isAll() ? this.allAccounts() : this.account() ? [this.account()!] : []).filter(
-      (account) => !account.subPortfolios.some((sub) => sub.status === 'Active' && sub.strategyId),
-    ),
-  );
+  readonly withoutStrategy = computed(() => this.accountsInView().filter(hasNoActiveStrategy));
+
+  private accountsInView() {
+    if (this.isAll()) return this.allAccounts();
+
+    const account = this.account();
+
+    return account ? [account] : [];
+  }
 
   readonly dashboard = linkedSignal<
     { value: DashboardDto | undefined; loading: boolean; accountId: string | null },
@@ -116,12 +122,15 @@ export class OverviewStore {
   readonly loadError = this.dashboardResource.error;
   readonly gainPct = computed(() => {
     const d = this.dashboard();
+
     return d && d.netContributions > 0 ? d.gain / d.netContributions : null;
   });
   readonly heldGain = computed(() => {
     const d = this.dashboard();
     if (!d || !d.costBasis) return null;
+
     const amount = d.positionsValue - d.costBasis;
+
     return { amount, pct: amount / d.costBasis, costBasis: d.costBasis };
   });
   readonly hasHistory = computed(() => (this.dashboard()?.series.length ?? 0) > 0);
@@ -138,6 +147,7 @@ export class OverviewStore {
   );
   readonly planGap = computed(() => {
     const dashboard = this.dashboard();
+
     return dashboard?.planValue != null ? dashboard.value - dashboard.planValue : null;
   });
 
@@ -154,7 +164,9 @@ export class OverviewStore {
     const tax = this.tax();
     const value = this.allAccountsValuePln();
     if (!tax || tax.alertShare === null || !value) return null;
+
     const limit = value * tax.alertShare;
+
     return {
       share: tax.alertShare,
       limit,
@@ -165,10 +177,13 @@ export class OverviewStore {
   readonly taxLast30Days = computed(() => {
     const tax = this.tax();
     if (!tax) return 0;
+
     const since = new Date();
+
     since.setDate(since.getDate() - 30);
     const before =
       [...tax.points].reverse().find((point) => new Date(point.date) < since)?.taxDue ?? 0;
+
     return tax.taxDue - before;
   });
   accountName(id: string): string {
@@ -178,4 +193,10 @@ export class OverviewStore {
   showAccount(id: string): void {
     this.accounts.choose(id);
   }
+}
+
+function hasNoActiveStrategy(account: {
+  subPortfolios: { status: string; strategyId: unknown }[];
+}) {
+  return !account.subPortfolios.some((sub) => sub.status === 'Active' && sub.strategyId);
 }

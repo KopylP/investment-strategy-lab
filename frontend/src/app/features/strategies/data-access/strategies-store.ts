@@ -26,8 +26,10 @@ export class StrategiesStore {
 
   async createDefaults(): Promise<void> {
     this.creatingDefaults.set(true);
+
     try {
       const created = await this.api.createDefaults();
+
       this.messages.add({
         severity: 'success',
         summary: created.length ? 'Стратегії створено' : 'Стандартні стратегії вже є',
@@ -87,9 +89,12 @@ export class StrategyDetailStore {
   async save(setup: StrategySetupInput): Promise<boolean> {
     const id = this.id();
     if (!id) return false;
+
     this.saving.set(true);
+
     try {
       const saved = await this.api.reconfigure(id, setup);
+
       this.messages.add({
         severity: 'success',
         summary: `Збережено як версію ${saved.latestVersion}`,
@@ -98,6 +103,7 @@ export class StrategyDetailStore {
       });
       this.versionNumber.set(undefined);
       this.strategyResource.reload();
+
       return true;
     } catch (error) {
       this.messages.add({
@@ -106,6 +112,7 @@ export class StrategyDetailStore {
         detail: toProblemMessage(error),
         life: 10000,
       });
+
       return false;
     } finally {
       this.saving.set(false);
@@ -115,6 +122,7 @@ export class StrategyDetailStore {
   async archive(): Promise<void> {
     const id = this.id();
     if (!id) return;
+
     try {
       await this.api.archive(id);
       this.messages.add({ severity: 'success', summary: 'Стратегію архівовано' });

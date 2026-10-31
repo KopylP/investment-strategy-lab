@@ -86,6 +86,7 @@ export class AccountNewPage {
         await this.strategiesApi.createDefaults();
         strategies = await this.strategiesApi.list();
       }
+
       return strategies;
     },
   });
@@ -166,8 +167,10 @@ export class AccountNewPage {
     const strategies = new Map(this.strategies().map((strategy) => [strategy.id, strategy]));
     const types = new Map((this.catalogResource.value() ?? []).map((type) => [type.code, type]));
     const reports = new Map<string, ReportDefinition & { strategyTiming: ReportTiming }>();
+
     for (const sleeve of this.sleeves()) {
       const strategy = sleeve.strategyId ? strategies.get(sleeve.strategyId) : undefined;
+
       for (const report of (strategy && types.get(strategy.typeCode)?.reports) || []) {
         if (!reports.has(report.code))
           reports.set(report.code, {
@@ -184,8 +187,10 @@ export class AccountNewPage {
           });
       }
     }
+
     return [...reports.values()].map((report) => {
       const own = this.ownTimes()[report.code] ?? null;
+
       return { ...report, own, timing: own ?? report.strategyTiming };
     });
   });
@@ -201,8 +206,10 @@ export class AccountNewPage {
 
   protected readonly summary = computed(() => {
     const byId = new Map(this.strategies().map((strategy) => [strategy.id, strategy]));
+
     return this.sleeves().map((sleeve) => {
       const strategy = sleeve.strategyId ? byId.get(sleeve.strategyId) : undefined;
+
       return {
         name: sleeve.name,
         share: sleeve.targetSharePercent,
@@ -268,7 +275,9 @@ export class AccountNewPage {
   protected balance(): void {
     const sleeves = this.sleeves();
     if (!sleeves.length) return;
+
     const others = sleeves.slice(0, -1).reduce((sum, sleeve) => sum + sleeve.targetSharePercent, 0);
+
     this.update(sleeves.at(-1)!.key, {
       targetSharePercent: Math.max(1, Math.round((100 - others) * 100) / 100),
     });
@@ -277,6 +286,7 @@ export class AccountNewPage {
   protected useOwn(code: string, strategyTiming: ReportTiming, own: boolean): void {
     this.ownTimes.update((times) => {
       const { [code]: _, ...rest } = times;
+
       return own ? { ...rest, [code]: times[code] ?? strategyTiming } : rest;
     });
   }
@@ -295,33 +305,13 @@ export class AccountNewPage {
 
   protected async save(): Promise<void> {
     if (!this.accountValid() || !this.sleevesValid()) return;
+
     this.saving.set(true);
+
     try {
-      const plan = this.plan();
-      const account = await this.api.open({
-        name: this.name().trim(),
-        broker: this.broker().trim(),
-        baseCurrency: this.currency(),
-        taxPolicyCode: this.taxPolicy(),
-        subPortfolios: this.sleeves().map((sleeve): SubPortfolioInput => ({
-          name: sleeve.name.trim(),
-          targetSharePercent: sleeve.targetSharePercent,
-          strategyId: sleeve.strategyId,
-          cashInstrumentId: null,
-          maxPositionWeightPercent: null,
-        })),
-        contributionPolicy: {
-          kind: plan.contributionPolicy,
-          driftBandPercent: plan.driftBandPercent,
-        },
-      });
-      await this.api.changePlanSettings(account.id, {
-        monthlyContribution: plan.monthlyContribution,
-        minTrade: plan.minTrade,
-        trimBand: plan.trimBandPercent / 100,
-        allowFractionalShares: plan.allowFractionalShares,
-        generateOnSchedule: plan.generateOnSchedule,
-      });
+      const account = await this.openAccount();
+
+      await this.saveInitialPlan(account.id);
       await this.saveOwnTimes(account.id);
       this.accounts.reload();
       this.accounts.choose(account.id);
@@ -339,11 +329,46 @@ export class AccountNewPage {
     }
   }
 
+  private openAccount() {
+    const plan = this.plan();
+
+    return this.api.open({
+      name: this.name().trim(),
+      broker: this.broker().trim(),
+      baseCurrency: this.currency(),
+      taxPolicyCode: this.taxPolicy(),
+      subPortfolios: this.sleeves().map((sleeve): SubPortfolioInput => ({
+        name: sleeve.name.trim(),
+        targetSharePercent: sleeve.targetSharePercent,
+        strategyId: sleeve.strategyId,
+        cashInstrumentId: null,
+        maxPositionWeightPercent: null,
+      })),
+      contributionPolicy: {
+        kind: plan.contributionPolicy,
+        driftBandPercent: plan.driftBandPercent,
+      },
+    });
+  }
+
+  private saveInitialPlan(accountId: string) {
+    const plan = this.plan();
+
+    return this.api.changePlanSettings(accountId, {
+      monthlyContribution: plan.monthlyContribution,
+      minTrade: plan.minTrade,
+      trimBand: plan.trimBandPercent / 100,
+      allowFractionalShares: plan.allowFractionalShares,
+      generateOnSchedule: plan.generateOnSchedule,
+    });
+  }
+
   protected readonly createdId = signal<string | null>(null);
 
   private async saveOwnTimes(accountId: string): Promise<void> {
     for (const report of this.reports()) {
       if (!report.own) continue;
+
       try {
         await this.api.changeReportSchedule(accountId, report.code, report.own);
       } catch (error) {

@@ -23,6 +23,7 @@ export class AccountContext {
 
   readonly current = computed<AccountSetup | undefined>(() => {
     const accounts = this.accounts();
+
     return accounts.find((account) => account.id === this.chosenId()) ?? accounts[0];
   });
 

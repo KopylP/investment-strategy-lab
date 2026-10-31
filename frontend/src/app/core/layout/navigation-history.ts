@@ -20,6 +20,7 @@ export class NavigationHistory {
 
   constructor() {
     let restoredId: number | undefined;
+
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationStart) restoredId = event.restoredState?.navigationId;
       else if (event instanceof NavigationEnd) this.record(event, restoredId);

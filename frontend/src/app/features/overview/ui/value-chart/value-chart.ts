@@ -50,6 +50,7 @@ export class ValueChart {
     const currency = this.dashboard().currency;
     const target = this.display.code();
     const rate = target ? this.display.rate(currency, target) : null;
+
     return rate === null ? { rate: 1, currency } : { rate, currency: target! };
   });
 
@@ -79,6 +80,7 @@ export class ValueChart {
     const reportDays = new Map(reports.map((report) => [report.date, report]));
     const plan = palette.series[1];
     const held = this.showHeld();
+
     return {
       labels: series.map((point) => formatDate(point.date)),
       datasets: [
@@ -138,6 +140,7 @@ export class ValueChart {
     const held = this.showHeld();
     const reportDays = new Map(reports.map((report) => [formatDate(report.date), report]));
     const phone = this.viewport.phone();
+
     return {
       maintainAspectRatio: false,
       animation: false,
@@ -162,6 +165,7 @@ export class ValueChart {
             afterBody: (items: { label: string; parsed: { y: number } }[]) => {
               const report = reportDays.get(items[0]?.label);
               const gain = held && items.length >= 2 ? items[0].parsed.y - items[1].parsed.y : null;
+
               return [
                 ...(gain === null
                   ? []
@@ -222,6 +226,7 @@ export class ValueChart {
 function readChoice(key: string, fallback: boolean): boolean {
   try {
     const stored = localStorage.getItem(key);
+
     return stored === null ? fallback : stored !== 'false';
   } catch {
     return fallback;

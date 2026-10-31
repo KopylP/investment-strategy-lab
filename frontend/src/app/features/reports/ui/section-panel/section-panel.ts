@@ -39,6 +39,7 @@ export class SectionPanel {
 
   protected cellClass(column: SectionColumnDto): string {
     const numeric = column.format !== 'text' && column.format !== 'trend';
+
     return [numeric ? 'text-right' : '', column.compact ? '' : 'hidden sm:table-cell']
       .join(' ')
       .trim();

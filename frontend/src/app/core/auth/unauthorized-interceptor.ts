@@ -11,6 +11,7 @@ export const unauthorizedInterceptor: HttpInterceptorFn = (request, next) => {
   const auth = inject(AuthStore);
   const router = inject(Router);
   const ingress = inject(IngressSession);
+
   return next(request).pipe(
     catchError((error: unknown) => {
       if (
@@ -20,8 +21,10 @@ export const unauthorizedInterceptor: HttpInterceptorFn = (request, next) => {
         request.url.endsWith('/login')
       )
         return throwError(() => error);
+
       if (auth.inHomeAssistantPanel && auth.isSignedIn()) {
         if (request.context.get(retriedWithNewSession)) return throwError(() => error);
+
         return from(ingress.renew()).pipe(
           switchMap((renewed) =>
             renewed
@@ -30,8 +33,10 @@ export const unauthorizedInterceptor: HttpInterceptorFn = (request, next) => {
           ),
         );
       }
+
       auth.signedOut();
       void router.navigate(['/auth/login'], { queryParams: { returnUrl: router.url } });
+
       return throwError(() => error);
     }),
   );

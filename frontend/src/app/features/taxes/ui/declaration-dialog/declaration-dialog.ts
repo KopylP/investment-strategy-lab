@@ -68,6 +68,7 @@ export class DeclarationDialog {
   protected save(): void {
     const draft = this.editing();
     if (!draft || draft.revenue === null || draft.costs === null) return;
+
     this.pit8c.emit({
       accountId: draft.accountId,
       amounts: { revenue: draft.revenue, costs: draft.costs },
@@ -97,6 +98,7 @@ export class DeclarationDialog {
         ),
       ]),
     ];
+
     await this.write(lines.join('\n'), 'Усі позиції скопійовано');
   }
 

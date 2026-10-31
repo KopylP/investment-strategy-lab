@@ -127,6 +127,7 @@ export class TransactionsStore {
     const account = this.account();
     const names = new Map(account?.subPortfolios.map((sub) => [sub.id, sub.name]) ?? []);
     const currency = account?.baseCurrency ?? 'EUR';
+
     return [...(this.journalResource.value() ?? [])]
       .sort(
         (left, right) =>
@@ -181,18 +182,22 @@ export class TransactionsStore {
   private async command(path: string, body: unknown, success: string): Promise<boolean> {
     const accountId = this.accounts.currentId();
     if (!accountId) return false;
+
     this.busy.set(true);
+
     try {
       const result = await this.api.post<{ warnings?: string[] }>(
         `/api/portfolio/accounts/${accountId}/${path}`,
         body,
       );
+
       this.messages.add({
         severity: 'success',
         summary: success,
         detail: result?.warnings?.join(' ') || undefined,
       });
       this.journalResource.reload();
+
       return true;
     } catch (error) {
       this.messages.add({
@@ -201,10 +206,83 @@ export class TransactionsStore {
         detail: toProblemMessage(error),
         life: 8000,
       });
+
       return false;
     } finally {
       this.busy.set(false);
     }
+  }
+
+  private detailsOf(
+    transaction: TransactionDto,
+    currency: string,
+    sub: (id: string) => string,
+  ): TransactionDetails {
+    const { trade, cash, transfer } = transaction;
+
+    if (trade) return this.tradeDetails(trade, currency, sub);
+
+    if (cash) return this.cashDetails(cash, currency, sub);
+
+    if (transfer) return this.transferDetails(transfer, currency, sub);
+
+    const description = transaction.kind === 'Reversal' ? (transaction.reversalReason ?? '') : '';
+
+    return { description, allocation: '', amount: null };
+  }
+
+  private tradeDetails(
+    trade: NonNullable<TransactionDto['trade']>,
+    currency: string,
+    sub: (id: string) => string,
+  ): TransactionDetails {
+    const symbol = this.instruments.symbol(trade.instrumentId);
+    const size = `${formatQuantity(trade.quantity)} × ${formatMoney(trade.price, currency)}`;
+    const fee = trade.fee ? ` · комісія ${formatMoney(trade.fee, currency)}` : '';
+    const allocation = trade.allocations
+      .map((part) => `${sub(part.subPortfolioId)}: ${formatQuantity(part.quantity)}`)
+      .join(', ');
+    const direction = trade.side === 'Buy' ? -1 : 1;
+
+    return {
+      description: `${symbol} · ${size}${fee}${settled(trade)}`,
+      allocation,
+      amount: direction * trade.quantity * trade.price - trade.fee,
+    };
+  }
+
+  private cashDetails(
+    cash: NonNullable<TransactionDto['cash']>,
+    currency: string,
+    sub: (id: string) => string,
+  ): TransactionDetails {
+    const symbol = cash.instrumentId ? this.instruments.symbol(cash.instrumentId) : '';
+    const allocation = cash.allocations
+      .map((part) => `${sub(part.subPortfolioId)}: ${formatMoney(part.amount, currency)}`)
+      .join(', ');
+    const isIncome = cash.kind === 'Contribution' || cash.kind === 'Dividend';
+
+    return {
+      description: `${symbol}${settled(cash)}`.replace(/^ · /, ''),
+      allocation,
+      amount: isIncome ? cash.amount : -cash.amount,
+    };
+  }
+
+  private transferDetails(
+    transfer: NonNullable<TransactionDto['transfer']>,
+    currency: string,
+    sub: (id: string) => string,
+  ): TransactionDetails {
+    const description = transfer.instrumentId
+      ? `${this.instruments.symbol(transfer.instrumentId)} · ${formatQuantity(transfer.quantity)}`
+      : formatMoney(transfer.amount, currency);
+
+    return {
+      description,
+      allocation: `${sub(transfer.fromSubPortfolioId)} → ${sub(transfer.toSubPortfolioId)}`,
+      amount: null,
+    };
   }
 
   private toVm(
@@ -212,35 +290,8 @@ export class TransactionsStore {
     currency: string,
     sub: (id: string) => string,
   ): TransactionVm {
-    const { trade, cash, transfer } = transaction;
-    let description = '';
-    let allocation = '';
-    let amount: number | null = null;
-    if (trade) {
-      description = `${this.instruments.symbol(trade.instrumentId)} · ${formatQuantity(trade.quantity)} × ${formatMoney(trade.price, currency)}${trade.fee ? ` · комісія ${formatMoney(trade.fee, currency)}` : ''}${settled(trade)}`;
-      allocation = trade.allocations
-        .map((part) => `${sub(part.subPortfolioId)}: ${formatQuantity(part.quantity)}`)
-        .join(', ');
-      amount = (trade.side === 'Buy' ? -1 : 1) * trade.quantity * trade.price - trade.fee;
-    } else if (cash) {
-      description =
-        `${cash.instrumentId ? this.instruments.symbol(cash.instrumentId) : ''}${settled(cash)}`.replace(
-          /^ · /,
-          '',
-        );
-      allocation = cash.allocations
-        .map((part) => `${sub(part.subPortfolioId)}: ${formatMoney(part.amount, currency)}`)
-        .join(', ');
-      amount =
-        cash.kind === 'Contribution' || cash.kind === 'Dividend' ? cash.amount : -cash.amount;
-    } else if (transfer) {
-      description = transfer.instrumentId
-        ? `${this.instruments.symbol(transfer.instrumentId)} · ${formatQuantity(transfer.quantity)}`
-        : formatMoney(transfer.amount, currency);
-      allocation = `${sub(transfer.fromSubPortfolioId)} → ${sub(transfer.toSubPortfolioId)}`;
-    } else if (transaction.kind === 'Reversal') {
-      description = transaction.reversalReason ?? '';
-    }
+    const { description, allocation, amount } = this.detailsOf(transaction, currency, sub);
+
     return {
       id: transaction.id,
       occurredOn: transaction.occurredOn,
@@ -259,6 +310,12 @@ export class TransactionsStore {
       reversalReason: transaction.reversalReason,
     };
   }
+}
+
+interface TransactionDetails {
+  description: string;
+  allocation: string;
+  amount: number | null;
 }
 
 function settled(entry: {

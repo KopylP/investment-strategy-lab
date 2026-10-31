@@ -35,14 +35,19 @@ export class Sparkline {
   protected readonly path = computed(() => {
     const values = this.values();
     if (values.length < 2) return null;
+
     const min = Math.min(...values);
     const span = Math.max(...values) - min || 1;
     const [width, height] = [this.width(), this.height()];
-    return values
-      .map(
-        (value, index) =>
-          `${index ? 'L' : 'M'}${((index / (values.length - 1)) * (width - 2) + 1).toFixed(1)},${(height - 1 - ((value - min) / span) * (height - 2)).toFixed(1)}`,
-      )
-      .join(' ');
+
+    const toPathStep = (value: number, index: number) => {
+      const command = index ? 'L' : 'M';
+      const x = (index / (values.length - 1)) * (width - 2) + 1;
+      const y = height - 1 - ((value - min) / span) * (height - 2);
+
+      return `${command}${x.toFixed(1)},${y.toFixed(1)}`;
+    };
+
+    return values.map(toPathStep).join(' ');
   });
 }

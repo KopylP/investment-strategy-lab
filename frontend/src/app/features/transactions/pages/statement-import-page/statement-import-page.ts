@@ -145,6 +145,7 @@ export class StatementImportPage {
 
   protected readonly rows = computed(() => {
     const rows = this.store.current()?.rows ?? [];
+
     return (
       this.onlyChanges()
         ? rows.filter(
@@ -162,11 +163,15 @@ export class StatementImportPage {
   protected readonly blockers = computed(() => {
     const current = this.store.current();
     if (!current || this.store.canConfirm()) return null;
+
     const unmapped = current.rows.filter((row) => row.decision === 'NeedsMapping');
     if (unmapped.length === 0) return ['У виписці немає нових операцій: усе вже в журналі.'];
+
     const reasons = new Map<string, number>();
+
     for (const row of unmapped)
       reasons.set(row.note ?? 'не зіставлено', (reasons.get(row.note ?? 'не зіставлено') ?? 0) + 1);
+
     return [
       `Рядків без зіставлення: ${unmapped.length}.`,
       ...[...reasons].map(([reason, count]) => `${reason} (рядків: ${count})`),
@@ -210,11 +215,13 @@ export class StatementImportPage {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (file) await this.store.upload(file);
+
     input.value = '';
   }
 
   protected fromDate(): Date | null {
     const value = this.store.current()?.fromDate;
+
     return value ? fromIsoDate(value) : null;
   }
 
@@ -225,10 +232,14 @@ export class StatementImportPage {
   protected confirm(): void {
     const current = this.store.current();
     if (!current) return;
+
     const dangerous = current.mode === 'Replace' || current.mode === 'FromScratch';
+    const toReverse = current.counts.toReverse;
+    const reversals = toReverse ? `, сторновано ${toReverse}` : '';
+
     this.confirmation.confirm({
       header: dangerous ? 'Сторнувати й імпортувати заново?' : 'Імпортувати виписку?',
-      message: `Буде записано ${current.counts.toRecord} операцій${current.counts.toReverse ? `, сторновано ${current.counts.toReverse}` : ''}. Імпорт можна скасувати одним кроком.`,
+      message: `Буде записано ${current.counts.toRecord} операцій${reversals}. Імпорт можна скасувати одним кроком.`,
       icon: dangerous ? 'pi pi-exclamation-triangle' : 'pi pi-upload',
       acceptLabel: 'Імпортувати',
       rejectLabel: 'Скасувати',

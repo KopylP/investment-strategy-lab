@@ -53,6 +53,7 @@ export class AppSidebar implements OnInit, OnDestroy {
       )
       .subscribe((event) => {
         const navEvent = event as NavigationEnd;
+
         this.onRouteChange(navEvent.urlAfterRedirects);
       });
 

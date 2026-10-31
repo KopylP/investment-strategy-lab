@@ -48,6 +48,7 @@ export class AccountDetailStore {
     const settings = this.settingsResource.value();
     const account = this.account();
     if (!settings || !account) return undefined;
+
     return {
       monthlyContribution: settings.monthlyContribution,
       minTrade: settings.minTrade,
@@ -94,8 +95,10 @@ export class AccountDetailStore {
       const drift =
         Math.round((remaining - ids.reduce((sum, id) => sum + others[id], 0)) * 100) / 100;
       const largest = ids.reduce((best, id) => (others[id] > others[best] ? id : best), ids[0]);
+
       others[largest] = Math.round((others[largest] + drift) * 100) / 100;
     }
+
     return this.run(
       'add',
       () => this.api.addSubPortfolio(this.requireId(), input, others),
@@ -109,6 +112,7 @@ export class AccountDetailStore {
         .filter((sub) => sub.id !== subPortfolioId)
         .map((sub) => [sub.id, sub.targetShare * 100]),
     );
+
     return this.run(
       `retire-${subPortfolioId}`,
       () => this.api.retire(this.requireId(), subPortfolioId, normalizeToHundred(remaining)),
@@ -118,7 +122,9 @@ export class AccountDetailStore {
 
   async savePlan(settings: PlanSettingsVm): Promise<boolean> {
     const id = this.requireId();
+
     this.busy.set('plan');
+
     try {
       await this.api.changePlanSettings(id, {
         monthlyContribution: settings.monthlyContribution,
@@ -132,9 +138,11 @@ export class AccountDetailStore {
         settings.contributionPolicy,
         settings.driftBandPercent,
       );
+
       this.accountResource.set(account);
       this.settingsResource.reload();
       this.messages.add({ severity: 'success', summary: 'План збережено' });
+
       return true;
     } catch (error) {
       this.messages.add({
@@ -142,6 +150,7 @@ export class AccountDetailStore {
         summary: 'План не збережено',
         detail: toProblemMessage(error),
       });
+
       return false;
     } finally {
       this.busy.set(null);
@@ -150,6 +159,7 @@ export class AccountDetailStore {
 
   async importPositions(subPortfolioId: string, json: unknown, asOf: string): Promise<boolean> {
     this.busy.set('import');
+
     try {
       await this.api.importPositions(this.requireId(), subPortfolioId, json, asOf);
       this.messages.add({
@@ -157,6 +167,7 @@ export class AccountDetailStore {
         summary: 'Позиції імпортовано',
         detail: 'Повторний імпорт того самого файлу нічого не змінить',
       });
+
       return true;
     } catch (error) {
       this.messages.add({
@@ -165,6 +176,7 @@ export class AccountDetailStore {
         detail: toProblemMessage(error),
         life: 10000,
       });
+
       return false;
     } finally {
       this.busy.set(null);
@@ -177,10 +189,12 @@ export class AccountDetailStore {
     success: string,
   ): Promise<boolean> {
     this.busy.set(key);
+
     try {
       this.accountResource.set(await command());
       this.context.reload();
       this.messages.add({ severity: 'success', summary: success });
+
       return true;
     } catch (error) {
       this.messages.add({
@@ -189,6 +203,7 @@ export class AccountDetailStore {
         detail: toProblemMessage(error),
         life: 8000,
       });
+
       return false;
     } finally {
       this.busy.set(null);
@@ -198,6 +213,7 @@ export class AccountDetailStore {
   private requireId(): string {
     const id = this.id();
     if (!id) throw new Error('Account is not opened');
+
     return id;
   }
 }

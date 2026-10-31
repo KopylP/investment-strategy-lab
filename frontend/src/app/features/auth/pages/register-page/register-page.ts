@@ -38,12 +38,16 @@ export class RegisterPage {
   protected async submit(): Promise<void> {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+
       return;
     }
+
     this.busy.set(true);
     this.error.set(null);
+
     try {
       const { email, password } = this.form.getRawValue();
+
       await this.auth.register(email, password);
       await this.router.navigateByUrl('/');
     } catch (error) {

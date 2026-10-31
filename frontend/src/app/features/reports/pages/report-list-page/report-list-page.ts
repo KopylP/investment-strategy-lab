@@ -52,8 +52,10 @@ export class ReportListPage {
   protected start(report: ScheduledReport): void {
     if (report.mode !== 'rebalance') {
       void this.store.generate(report);
+
       return;
     }
+
     this.contribution.set(this.store.monthlyContribution());
     this.asking.set(report);
   }
@@ -61,8 +63,10 @@ export class ReportListPage {
   protected async generate(): Promise<void> {
     const report = this.asking();
     if (!report) return;
+
     const settingsAmount = this.store.monthlyContribution();
     const amount = this.contribution();
+
     await this.store.generate(report, amount === settingsAmount ? null : amount);
     this.asking.set(null);
   }

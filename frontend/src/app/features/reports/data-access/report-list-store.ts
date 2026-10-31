@@ -109,12 +109,17 @@ export class ReportListStore {
             replaceUrl: true,
           }),
       );
+
     effect((onCleanup) => {
       const requests = this.requestsResource.value();
       if (!requests) return;
+
       this.followUp(requests);
+
       if (!requests.some((request) => request.status === 'Pending')) return;
+
       const timer = setTimeout(() => this.requestsResource.reload(), REQUEST_POLL_MS);
+
       onCleanup(() => clearTimeout(timer));
     });
   }
@@ -126,9 +131,12 @@ export class ReportListStore {
   async generate(report: ScheduledReport, contribution: number | null = null): Promise<void> {
     const accountId = this.accounts.currentId();
     if (!accountId) return;
+
     this.generating.set(report.code);
+
     try {
       const { requestId } = await this.api.generate(accountId, report.code, contribution);
+
       this.awaited = requestId;
       this.messages.add({
         severity: 'info',
@@ -150,33 +158,44 @@ export class ReportListStore {
 
   private followUp(requests: ReportRequestDto[]): void {
     let finished = false;
+
     for (const request of requests) {
       if (request.status === 'Pending') {
         this.seenPending.add(request.id);
         continue;
       }
+
       const awaited = request.id === this.awaited;
       if (!this.seenPending.delete(request.id) && !awaited) continue;
+
       finished = true;
+
       if (awaited) this.awaited = null;
-      if (request.status === 'Failed') {
-        this.messages.add({
-          severity: 'error',
-          summary: `Не вдалося підготувати «${request.title}»`,
-          detail: request.error ?? undefined,
-          life: 8000,
-        });
-      } else if (awaited && request.reportId) {
-        this.messages.add({ severity: 'success', summary: `${request.title}: рапорт готовий` });
-        void this.router.navigate(['/reports', request.reportId]);
-      } else {
-        this.messages.add({ severity: 'success', summary: `${request.title}: рапорт готовий` });
-      }
+
+      this.announce(request, awaited);
     }
+
     if (finished) {
       this.reportsResource.reload();
       this.scheduleResource.reload();
       this.badge.refresh();
     }
+  }
+
+  private announce(request: ReportRequestDto, awaited: boolean): void {
+    if (request.status === 'Failed') {
+      this.messages.add({
+        severity: 'error',
+        summary: `Не вдалося підготувати «${request.title}»`,
+        detail: request.error ?? undefined,
+        life: 8000,
+      });
+
+      return;
+    }
+
+    this.messages.add({ severity: 'success', summary: `${request.title}: рапорт готовий` });
+
+    if (awaited && request.reportId) void this.router.navigate(['/reports', request.reportId]);
   }
 }

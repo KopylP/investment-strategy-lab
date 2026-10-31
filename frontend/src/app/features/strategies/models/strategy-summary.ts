@@ -8,8 +8,10 @@ export interface StrategyBlurb {
 
 function read(parameters: unknown, ...path: string[]): unknown {
   let node = parameters;
+
   for (const key of path)
     node = node && typeof node === 'object' ? (node as Record<string, unknown>)[key] : undefined;
+
   return node;
 }
 
@@ -45,5 +47,6 @@ export function describeStrategy(
     points.push(
       `Слабкий ринок: інвестує ${Math.round(weak * 100)}% внеску${version.cashInstrumentId ? `, решта — в ${symbol(version.cashInstrumentId)}` : ''}`,
     );
+
   return { headline: headline.replace(/\s+/g, ' '), points, region };
 }

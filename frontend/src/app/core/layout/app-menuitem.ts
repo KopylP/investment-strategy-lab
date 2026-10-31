@@ -136,10 +136,12 @@ export class AppMenuitem {
   fullPath = computed(() => {
     const itemPath = this.item()?.path;
     if (!itemPath) return this.parentPath();
+
     const parent = this.parentPath();
     if (parent && !itemPath.startsWith(parent)) {
       return parent + itemPath;
     }
+
     return itemPath;
   });
 
@@ -148,6 +150,7 @@ export class AppMenuitem {
     if (this.item()?.path) {
       return activePath?.startsWith(this.fullPath() ?? '') ?? false;
     }
+
     return false;
   });
 
@@ -200,6 +203,7 @@ export class AppMenuitem {
 
     if (item?.disabled) {
       event.preventDefault();
+
       return;
     }
 

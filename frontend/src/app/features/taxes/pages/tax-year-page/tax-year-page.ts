@@ -72,6 +72,7 @@ export class TaxYearPage {
     const year = this.lossYear();
     const amount = this.lossAmount();
     if (!year || !amount) return;
+
     if (await this.store.addLoss(year, amount, this.lossUsed() ?? 0)) this.lossAmount.set(null);
   }
 
@@ -82,7 +83,9 @@ export class TaxYearPage {
   protected async uploadBroker(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
+
     input.value = '';
+
     if (file) await this.store.uploadBrokerStatement(file);
   }
 

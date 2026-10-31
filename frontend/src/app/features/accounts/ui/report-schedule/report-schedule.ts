@@ -167,6 +167,7 @@ export class ReportScheduleCard {
 
   private async apply(request: () => Promise<ReportSchedule>, summary: string): Promise<void> {
     this.saving.set(true);
+
     try {
       this.schedule.set(await request());
       this.editing.set(null);

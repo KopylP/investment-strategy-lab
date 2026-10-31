@@ -64,6 +64,7 @@ export class ReportDetailPage {
   protected readonly pageActions = computed<MenuItem[]>(() => {
     const report = this.store.report();
     const busy = this.store.busy();
+
     return [
       ...(this.store.canMark()
         ? [
@@ -126,12 +127,14 @@ export class ReportDetailPage {
   protected openLoadOperations(): void {
     const report = this.store.report();
     if (!report) return;
+
     const data: LoadOperationsData = {
       reportId: report.summary.id,
       accountId: report.summary.accountId,
       currency: report.summary.currency,
       actions: this.store.actions(),
     };
+
     this.dialogs
       .open(LoadOperationsDialog, {
         header: 'Довантажити операції',
@@ -147,6 +150,7 @@ export class ReportDetailPage {
 
   protected confirmUndo(action: ReportActionVm): void {
     const linkedOnly = action.fills.length > 0 && action.fills.every((fill) => fill.linked);
+
     this.confirm.confirm({
       header: 'Скасувати відмітку?',
       message: linkedOnly
