@@ -1,32 +1,27 @@
-using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.Taxation.Assessments.Application.Shared;
 using InvestmentLab.Taxation.Assessments.Domain;
 
 namespace InvestmentLab.Taxation.Assessments.Application.GetTaxYear;
 
-public sealed class GetTaxYearHandler(
-    TaxRecalculator recalculator, IAssessmentRepository assessments, IInstrumentCatalog instruments, ICurrentUser currentUser, TimeProvider clock)
+public sealed class GetTaxYearHandler(IAssessmentRepository assessments, IInstrumentCatalog instruments, TimeProvider clock)
 {
     private const string YahooPrefix = "yfinance:";
     private const int ShortIdLength = 8;
 
-    public async Task<Result<TaxYearDetailsDto>> Handle(int year, CancellationToken cancellationToken)
+    public async Task<Result<TaxYearDetailsDto>> Handle(int year, RecomputeOutcome refreshed, CancellationToken cancellationToken)
     {
-        var owner = currentUser.RequiredId;
-        var outcome = await recalculator.RecomputeOwnerAsync(owner, cancellationToken);
-
-        var assessed = await assessments.ForOwnerAsync(owner, cancellationToken);
+        var assessed = await assessments.ForOwnerAsync(refreshed.Taxpayer.OwnerId, cancellationToken);
         if (assessed.FirstOrDefault(assessment => assessment.Year == year) is not { } assessment)
             return Error.NotFound("tax.year_not_found", $"No taxable events in {year}.");
 
-        var openLots = year == clock.GetUtcNow().Year ? outcome.Computation.OpenLots : [];
+        var openLots = year == clock.GetUtcNow().Year ? refreshed.Computation.OpenLots : [];
         var labels = await LabelsAsync(assessment, openLots, cancellationToken);
 
         return new TaxYearDetailsDto(
             year,
             assessment.PolicyCode,
-            outcome.Taxpayer.Policy.FxRule,
+            refreshed.Taxpayer.Policy.FxRule,
             assessment.ComputedAt,
             assessment.Summary,
             assessment.Realizations,
@@ -34,8 +29,8 @@ public sealed class GetTaxYearHandler(
             assessment.CarryforwardUses,
             openLots,
             labels,
-            TaxAccountMapping.AccountsOf(outcome.Taxpayer),
-            outcome.Warnings);
+            TaxAccountMapping.AccountsOf(refreshed.Taxpayer),
+            refreshed.Warnings);
     }
 
     private async Task<Dictionary<Guid, string>> LabelsAsync(

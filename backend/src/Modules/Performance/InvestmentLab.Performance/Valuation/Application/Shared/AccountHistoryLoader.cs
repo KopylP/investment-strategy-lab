@@ -3,12 +3,10 @@ using InvestmentLab.Portfolio.Contracts.Accounts;
 
 namespace InvestmentLab.Performance.Valuation.Application.Shared;
 
-public sealed class AccountHistoryLoader(SnapshotBuilder builder, IPerformanceRepository store)
+public sealed class AccountHistoryLoader(IPerformanceRepository store)
 {
     public async Task<AccountHistory> LoadAsync(AccountSetupDto account, CancellationToken cancellationToken)
     {
-        await builder.EnsureFreshAsync(account.Id, cancellationToken);
-
         var snapshots = await store.SnapshotsAsync(account.Id, SnapshotScenario.Actual, DateOnly.MinValue, cancellationToken);
         var planned = await store.PlannedReportsAsync(account.Id, cancellationToken);
         var plan = planned.Any(report => report.CountsForPlan) ? await PlanAsync(account.Id, cancellationToken) : null;

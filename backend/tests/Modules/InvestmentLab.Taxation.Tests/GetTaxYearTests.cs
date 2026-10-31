@@ -3,6 +3,7 @@ using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Portfolio.Contracts.Transactions;
 using InvestmentLab.Taxation.Assessments.Application.GetTaxYear;
+using InvestmentLab.Taxation.Assessments.Application.RefreshTaxAssessments;
 using InvestmentLab.Taxation.Assessments.Application.Shared;
 using InvestmentLab.Taxation.Assessments.Domain;
 using InvestmentLab.Taxation.BrokerStatements.Domain;
@@ -89,6 +90,8 @@ public sealed class GetTaxYearTests
     {
         private readonly List<TaxAssessment> _assessments = [];
 
+        public int Saves { get; private set; }
+
         public Task<IReadOnlyList<TaxAssessment>> ForOwnerAsync(UserId ownerId, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<TaxAssessment>>(_assessments);
 
@@ -101,7 +104,12 @@ public sealed class GetTaxYearTests
 
         public void RemoveLoss(LossCarryforward loss) => throw new NotSupportedException();
 
-        public Task SaveChangesAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task SaveChangesAsync(CancellationToken cancellationToken)
+        {
+            Saves++;
+
+            return Task.CompletedTask;
+        }
 
         public Task<T> SerializedAsync<T>(UserId ownerId, Func<Task<T>> work, CancellationToken cancellationToken) => work();
     }
@@ -113,10 +121,13 @@ public sealed class GetTaxYearTests
         var repository = new InMemoryAssessments();
         var inputs = new TaxInputs(new BuyAndDividendLedger(), repository, new NoStatements(), null!, new NoInstruments(), new OneAccount(), new EmptyJournal());
         var recalculator = new TaxRecalculator(inputs, repository, clock);
-        var handler = new GetTaxYearHandler(recalculator, repository, new NoInstruments(), new SignedIn(), clock);
+        var refreshed = await new RefreshTaxAssessmentsHandler(recalculator, new SignedIn()).Handle(TestContext.Current.CancellationToken);
+        var query = new GetTaxYearHandler(repository, new NoInstruments(), clock);
 
-        var details = await handler.Handle(Now.Year, TestContext.Current.CancellationToken);
+        var saves = repository.Saves;
+        var details = await query.Handle(Now.Year, refreshed, TestContext.Current.CancellationToken);
 
         details.Value.OpenLots.ShouldNotBeEmpty();
+        repository.Saves.ShouldBe(saves);
     }
 }

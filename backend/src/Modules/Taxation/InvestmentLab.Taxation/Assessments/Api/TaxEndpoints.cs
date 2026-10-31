@@ -4,6 +4,7 @@ using InvestmentLab.Taxation.Assessments.Application.GetTaxYear;
 using InvestmentLab.Taxation.Assessments.Application.GetTaxYears;
 using InvestmentLab.Taxation.Assessments.Application.ListLossCarryforwards;
 using InvestmentLab.Taxation.Assessments.Application.RecordLossCarryforward;
+using InvestmentLab.Taxation.Assessments.Application.RefreshTaxAssessments;
 using InvestmentLab.Taxation.Assessments.Application.RemoveLossCarryforward;
 using InvestmentLab.Taxation.Assessments.Application.Shared;
 using Microsoft.AspNetCore.Builder;
@@ -19,9 +20,9 @@ internal static class TaxEndpoints
     {
         var taxes = group.MapGroup("").WithTags("Taxes");
 
-        taxes.MapGet("/years", GetTaxYears).WithName("GetTaxYears");
-        taxes.MapGet("/years/{year:int}", GetTaxYear).WithName("GetTaxYear");
-        taxes.MapGet("/progress/{year:int}", GetTaxProgress).WithName("GetTaxProgress");
+        taxes.MapGet("/years", RefreshAndGetTaxYears).WithName("GetTaxYears");
+        taxes.MapGet("/years/{year:int}", RefreshAndGetTaxYear).WithName("GetTaxYear");
+        taxes.MapGet("/progress/{year:int}", RefreshAndGetTaxProgress).WithName("GetTaxProgress");
         taxes.MapGet("/losses", GetLossCarryforwards).WithName("GetLossCarryforwards");
         taxes.MapPost("/losses", RecordLossCarryforward).WithName("RecordLossCarryforward");
         taxes.MapDelete("/losses/{lossId:guid}", RemoveLossCarryforward).WithName("RemoveLossCarryforward");
@@ -29,23 +30,29 @@ internal static class TaxEndpoints
         return group;
     }
 
-    private static async Task<Ok<TaxOverviewDto>> GetTaxYears(GetTaxYearsHandler handler, CancellationToken cancellationToken)
+    private static async Task<Ok<TaxOverviewDto>> RefreshAndGetTaxYears(
+        RefreshTaxAssessmentsHandler refresh, GetTaxYearsHandler query, CancellationToken cancellationToken)
     {
-        var overview = await handler.Handle(cancellationToken);
+        var refreshed = await refresh.Handle(cancellationToken);
+        var overview = await query.Handle(refreshed, cancellationToken);
 
         return TypedResults.Ok(overview);
     }
 
-    private static async Task<IResult> GetTaxYear(int year, GetTaxYearHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> RefreshAndGetTaxYear(
+        int year, RefreshTaxAssessmentsHandler refresh, GetTaxYearHandler query, CancellationToken cancellationToken)
     {
-        var taxYear = await handler.Handle(year, cancellationToken);
+        var refreshed = await refresh.Handle(cancellationToken);
+        var taxYear = await query.Handle(year, refreshed, cancellationToken);
 
         return taxYear.ToHttpResult();
     }
 
-    private static async Task<Ok<TaxProgressDto>> GetTaxProgress(int year, GetTaxProgressHandler handler, CancellationToken cancellationToken)
+    private static async Task<Ok<TaxProgressDto>> RefreshAndGetTaxProgress(
+        int year, RefreshTaxAssessmentsHandler refresh, GetTaxProgressHandler query, CancellationToken cancellationToken)
     {
-        var progress = await handler.Handle(year, cancellationToken);
+        var refreshed = await refresh.Handle(cancellationToken);
+        var progress = query.Handle(year, refreshed);
 
         return TypedResults.Ok(progress);
     }
