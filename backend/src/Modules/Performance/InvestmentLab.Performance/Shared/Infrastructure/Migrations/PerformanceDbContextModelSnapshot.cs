@@ -167,6 +167,11 @@ namespace InvestmentLab.Performance.Shared.Infrastructure.Migrations
                         .HasColumnType("numeric(20,8)")
                         .HasColumnName("cash");
 
+                    b.Property<decimal>("CostBasis")
+                        .HasPrecision(20, 8)
+                        .HasColumnType("numeric(20,8)")
+                        .HasColumnName("cost_basis");
+
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date")
                         .HasColumnName("date");

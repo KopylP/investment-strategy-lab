@@ -97,6 +97,13 @@ export class OverviewStore {
     const d = this.dashboard();
     return d && d.netContributions > 0 ? d.gain / d.netContributions : null;
   });
+  /** Gain on the units held now over what was paid for them: without cash and without what was already sold. */
+  readonly heldGain = computed(() => {
+    const d = this.dashboard();
+    if (!d || !d.costBasis) return null;
+    const amount = d.positionsValue - d.costBasis;
+    return { amount, pct: amount / d.costBasis, costBasis: d.costBasis };
+  });
   readonly hasHistory = computed(() => (this.dashboard()?.series.length ?? 0) > 0);
 
   readonly reports = computed(() => this.reportsResource.value() ?? []);

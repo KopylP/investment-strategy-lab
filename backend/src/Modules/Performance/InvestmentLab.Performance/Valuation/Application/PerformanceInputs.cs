@@ -53,7 +53,8 @@ public static class MovementMapper
                         ? (-sign * settled * share, code)
                         : (-sign * allocation.Quantity * trade.Price - trade.Fee * share, (string?)null);
                     movements.Add(new Movement(day, sequence++, allocation.SubPortfolioId, trade.InstrumentId, sign * allocation.Quantity,
-                        cashDelta, 0m, TradePrice: trade.Price, CashCurrency: currency));
+                        cashDelta, 0m, TradePrice: trade.Price, CashCurrency: currency,
+                        UnitCost: allocation.Quantity > 0m ? trade.Price + trade.Fee * share / allocation.Quantity : null));
                 }
             }
             else if (entry.Cash is { } cash)

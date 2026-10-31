@@ -9,6 +9,7 @@ namespace InvestmentLab.Performance.Valuation.Domain;
 /// Null: <see cref="CashDelta"/> is in the account currency. Otherwise it moves the balance the broker keeps in that
 /// currency, which is valued every day at that day's rate (so its value follows the rate, as at the broker).
 /// </param>
+/// <param name="UnitCost">What one bought unit cost with its share of the fee; without it, the trade price.</param>
 public sealed record Movement(
     DateOnly Date,
     int Sequence,
@@ -19,11 +20,13 @@ public sealed record Movement(
     decimal ExternalFlow,
     decimal TransferQuantity = 0m,
     decimal? TradePrice = null,
-    string? CashCurrency = null);
+    string? CashCurrency = null,
+    decimal? UnitCost = null);
 
 /// <summary>Value of the account (no sub-portfolio) or of one sub-portfolio at the end of a day.</summary>
 /// <param name="Flow">External money that came in (or out) that day, counted at the start of the day.</param>
 /// <param name="TwrIndex">Time-weighted growth of 1 since the first day.</param>
+/// <param name="CostBasis">What was paid for the units held at the end of the day, fees included; the holdings' own figure.</param>
 public sealed record Snapshot(
     DateOnly Date,
     Guid? SubPortfolioId,
@@ -31,7 +34,8 @@ public sealed record Snapshot(
     decimal Cash,
     decimal Flow,
     decimal NetContributions,
-    decimal TwrIndex);
+    decimal TwrIndex,
+    decimal CostBasis = 0m);
 
 /// <summary>The latest known price of an instrument on or before a day, in the account currency.</summary>
 public delegate decimal? PriceOn(Guid instrumentId, DateOnly day);
@@ -54,6 +58,7 @@ public static class ValuationCalculator
         var lastTradePrice = new Dictionary<Guid, decimal>();
         var foreign = new Dictionary<(Guid Sub, string Currency), decimal>();
         var lastRate = new Dictionary<string, decimal>();
+        var costs = new CostBook();
 
         decimal Rate(string currency, DateOnly day)
         {
@@ -74,6 +79,7 @@ public static class ValuationCalculator
             for (; next < ordered.Count && ordered[next].Date <= day; next++)
             {
                 var movement = ordered[next];
+                costs.Apply(movement);
                 if (movement.InstrumentId is { } instrument)
                 {
                     var key = (movement.SubPortfolioId, instrument);
@@ -93,6 +99,7 @@ public static class ValuationCalculator
 
             var accountValue = 0m;
             var accountCash = 0m;
+            var accountCost = 0m;
             foreach (var sub in subs)
             {
                 var subCash = cash[sub] + foreign.Where(entry => entry.Key.Sub == sub && entry.Value != 0m)
@@ -101,9 +108,11 @@ public static class ValuationCalculator
                     .Sum(entry => entry.Value * Price(entry.Key.Instrument, day));
                 accountValue += value;
                 accountCash += subCash;
-                snapshots.Add(state[sub].Next(day, sub, value, subCash, flows[sub]));
+                var subCost = costs.Of(sub);
+                accountCost += subCost;
+                snapshots.Add(state[sub].Next(day, sub, value, subCash, flows[sub], subCost));
             }
-            snapshots.Add(state[Guid.Empty].Next(day, null, accountValue, accountCash, accountFlow));
+            snapshots.Add(state[Guid.Empty].Next(day, null, accountValue, accountCash, accountFlow, accountCost));
         }
         return snapshots;
     }
@@ -114,15 +123,70 @@ public static class ValuationCalculator
         private decimal _index = 1m;
         private decimal _contributions;
 
-        public Snapshot Next(DateOnly day, Guid? sub, decimal value, decimal cash, decimal flow)
+        public Snapshot Next(DateOnly day, Guid? sub, decimal value, decimal cash, decimal flow, decimal costBasis)
         {
             var start = _previousValue + flow;
             if (start > 0m)
                 _index *= value / start;
             _contributions += flow;
             _previousValue = value;
-            return new Snapshot(day, sub, decimal.Round(value, 2), decimal.Round(cash, 2), decimal.Round(flow, 2), decimal.Round(_contributions, 2), decimal.Round(_index, 8));
+            return new Snapshot(day, sub, decimal.Round(value, 2), decimal.Round(cash, 2), decimal.Round(flow, 2), decimal.Round(_contributions, 2), decimal.Round(_index, 8), decimal.Round(costBasis, 2));
         }
+    }
+
+    /// <summary>
+    /// The lots each sub-portfolio holds, the way Portfolio's holdings keep them: sales and transfers take units
+    /// first-in, first-out, and a transfer carries the cost along, so it changes nothing for the account.
+    /// </summary>
+    private sealed class CostBook
+    {
+        private readonly Dictionary<(Guid Sub, Guid Instrument), List<Lot>> _lots = [];
+        private readonly Dictionary<Guid, List<Lot>> _inTransfer = [];
+
+        public void Apply(Movement movement)
+        {
+            if (movement.InstrumentId is not { } instrument || movement.QuantityDelta == 0m)
+                return;
+            var key = (movement.SubPortfolioId, instrument);
+            if (movement.TransferQuantity < 0m)
+                InTransfer(instrument).AddRange(Take(LotsOf(key), -movement.QuantityDelta));
+            else if (movement.TransferQuantity > 0m)
+            {
+                var lots = LotsOf(key);
+                lots.AddRange(Take(InTransfer(instrument), movement.QuantityDelta));
+                lots.Sort((left, right) => left.OpenedOn.CompareTo(right.OpenedOn));
+            }
+            else if (movement.QuantityDelta > 0m)
+                LotsOf(key).Add(new Lot(movement.Date, movement.QuantityDelta, movement.UnitCost ?? movement.TradePrice ?? 0m));
+            else
+                Take(LotsOf(key), -movement.QuantityDelta);
+        }
+
+        public decimal Of(Guid sub) => _lots.Where(entry => entry.Key.Sub == sub).Sum(entry => entry.Value.Sum(lot => lot.Quantity * lot.UnitCost));
+
+        private List<Lot> LotsOf((Guid Sub, Guid Instrument) key) => _lots.TryGetValue(key, out var lots) ? lots : _lots[key] = [];
+
+        private List<Lot> InTransfer(Guid instrument) => _inTransfer.TryGetValue(instrument, out var lots) ? lots : _inTransfer[instrument] = [];
+
+        /// <summary>Removes up to <paramref name="quantity"/> units, oldest first; the journal has already checked they are held.</summary>
+        private static List<Lot> Take(List<Lot> lots, decimal quantity)
+        {
+            var taken = new List<Lot>();
+            while (quantity > 0m && lots.Count > 0)
+            {
+                var oldest = lots[0];
+                var part = Math.Min(oldest.Quantity, quantity);
+                taken.Add(oldest with { Quantity = part });
+                quantity -= part;
+                if (part == oldest.Quantity)
+                    lots.RemoveAt(0);
+                else
+                    lots[0] = oldest with { Quantity = oldest.Quantity - part };
+            }
+            return taken;
+        }
+
+        private sealed record Lot(DateOnly OpenedOn, decimal Quantity, decimal UnitCost);
     }
 }
 
