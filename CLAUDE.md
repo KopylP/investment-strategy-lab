@@ -58,5 +58,8 @@ New and changed code follows these rules; they win over the style of older code 
 - **No dense expressions.** Never nest construction, LINQ and formatting in one statement. Name intermediate results.
   Constructors with many arguments use named arguments, one per line.
 - **One type per file,** except a handler with the small command and DTO records only it uses.
+- **No orphan files.** Every file sits where the structure says, in every change, including mechanical ones and work
+  done by an agent: a handler or job in its action's folder (`Application/<ActionName>/`), shared types in a named folder
+  or in `Domain`, never loose in `Application/`. A file's name says what it holds; a file emptied by a split is deleted.
 - **Small types over long parameter lists.** Group arguments that travel together into a value object.
 - **Intention-revealing names,** no abbreviations; named constants instead of magic numbers.
