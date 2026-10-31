@@ -23,7 +23,13 @@ using InvestmentLab.Portfolio.Shared.Infrastructure;
 using InvestmentLab.Portfolio.Transactions.Api;
 using InvestmentLab.Portfolio.Transactions.Application.GetTransactions;
 using InvestmentLab.Portfolio.Transactions.Application.ImportPositions;
-using InvestmentLab.Portfolio.Transactions.Application.ImportStatement;
+using InvestmentLab.Portfolio.Transactions.Application.ConfigureStatementImport;
+using InvestmentLab.Portfolio.Transactions.Application.ConfirmStatementImport;
+using InvestmentLab.Portfolio.Transactions.Application.GetStatementImport;
+using InvestmentLab.Portfolio.Transactions.Application.ListStatementImports;
+using InvestmentLab.Portfolio.Transactions.Application.Shared;
+using InvestmentLab.Portfolio.Transactions.Application.UndoStatementImport;
+using InvestmentLab.Portfolio.Transactions.Application.UploadStatement;
 using InvestmentLab.Portfolio.Transactions.Application.Integration;
 using InvestmentLab.Portfolio.Transactions.Application.RecordCashMovement;
 using InvestmentLab.Portfolio.Transactions.Application.RecordContribution;
@@ -31,7 +37,6 @@ using InvestmentLab.Portfolio.Transactions.Application.RecordInternalTransfer;
 using InvestmentLab.Portfolio.Transactions.Application.RecordTrade;
 using InvestmentLab.Portfolio.Transactions.Application.ReverseRecordedTransaction;
 using InvestmentLab.Portfolio.Transactions.Application.ReverseTransaction;
-using InvestmentLab.Portfolio.Transactions.Application.Shared;
 using InvestmentLab.Portfolio.Transactions.Domain;
 using InvestmentLab.Portfolio.Transactions.Infrastructure;
 using Microsoft.AspNetCore.Builder;
@@ -104,7 +109,15 @@ public sealed class PortfolioModule : IModule
     {
         services.AddScoped<IStatementParser, RevolutStatementParser>();
         services.AddScoped<IStatementImportRepository, StatementImportRepository>();
-        services.AddScoped<StatementImportService>();
+        services.AddScoped<StatementPricing>();
+        services.AddScoped<StatementPreview>();
+        services.AddScoped<StatementImportLoader>();
+        services.AddScoped<ListStatementImportsHandler>();
+        services.AddScoped<UploadStatementHandler>();
+        services.AddScoped<GetStatementImportHandler>();
+        services.AddScoped<ConfigureStatementImportHandler>();
+        services.AddScoped<ConfirmStatementImportHandler>();
+        services.AddScoped<UndoStatementImportHandler>();
         services.AddScoped<ImportPositionsHandler>();
 
     }

@@ -1,4 +1,4 @@
-namespace InvestmentLab.Portfolio.Transactions.Application.ImportStatement;
+namespace InvestmentLab.Portfolio.Transactions.Application.Shared;
 
 public sealed record StatementImportSummaryDto(
     Guid Id,

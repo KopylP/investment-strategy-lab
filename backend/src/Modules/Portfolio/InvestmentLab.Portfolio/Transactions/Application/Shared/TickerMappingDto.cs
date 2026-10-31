@@ -1,6 +1,6 @@
 using InvestmentLab.Portfolio.Accounts.Domain;
 
-namespace InvestmentLab.Portfolio.Transactions.Application.ImportStatement;
+namespace InvestmentLab.Portfolio.Transactions.Application.Shared;
 
 public sealed record TickerMappingDto(
     string Ticker,
