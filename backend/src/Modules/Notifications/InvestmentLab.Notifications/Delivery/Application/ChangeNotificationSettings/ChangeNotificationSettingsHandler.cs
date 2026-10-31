@@ -8,7 +8,10 @@ public sealed record ChangeNotificationSettingsCommand(IReadOnlyList<string>? De
 public sealed class ChangeNotificationSettingsHandler(
     INotificationPreferencesRepository preferences, GetNotificationSettingsHandler settings, TimeProvider clock)
 {
-    public async Task<Result<NotificationSettingsDto>> Handle(UserId userId, ChangeNotificationSettingsCommand command, CancellationToken cancellationToken)
+    public async Task<Result<NotificationSettingsDto>> Handle(
+        UserId userId,
+        ChangeNotificationSettingsCommand command,
+        CancellationToken cancellationToken)
     {
         var current = await FindOrAddAsync(userId, cancellationToken);
 

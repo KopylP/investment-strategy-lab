@@ -1,6 +1,14 @@
 namespace InvestmentLab.Rebalancing.Reports.Domain;
 
-public sealed record Fill(int Number, decimal Quantity, decimal Price, decimal Fee, DateOnly ExecutedOn, string? Note, Guid? TransactionId, bool Linked = false)
+public sealed record Fill(
+    int Number,
+    decimal Quantity,
+    decimal Price,
+    decimal Fee,
+    DateOnly ExecutedOn,
+    string? Note,
+    Guid? TransactionId,
+    bool Linked = false)
 {
     public decimal Amount => decimal.Round(Quantity * Price, 2);
 

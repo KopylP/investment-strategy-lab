@@ -6,7 +6,11 @@ namespace InvestmentLab.Performance.Valuation.Infrastructure;
 
 internal sealed class ValuationHistory(IPerformanceRepository store, SnapshotBuilder builder) : IValuationHistory
 {
-    public async Task<IReadOnlyList<TwrPointDto>> GetTwrHistory(Guid accountId, Guid? subPortfolioId, DateOnly from, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<TwrPointDto>> GetTwrHistory(
+        Guid accountId,
+        Guid? subPortfolioId,
+        DateOnly from,
+        CancellationToken cancellationToken)
     {
         await builder.EnsureFreshAsync(accountId, cancellationToken);
 

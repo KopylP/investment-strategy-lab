@@ -14,7 +14,9 @@ public sealed class PlanningInputs(
 {
     private const string YahooPrefix = "yfinance:";
 
-    public Task<AccountSetupDto?> AccountAsync(Guid accountId, CancellationToken cancellationToken) => accounts.GetAccountSetup(accountId, cancellationToken);
+    public Task<AccountSetupDto?> AccountAsync(
+        Guid accountId,
+        CancellationToken cancellationToken) => accounts.GetAccountSetup(accountId, cancellationToken);
 
     public Task<IReadOnlyList<AccountSetupDto>> AccountsAsync(CancellationToken cancellationToken) => accounts.GetAccountSetups(cancellationToken);
 
@@ -161,7 +163,10 @@ public sealed class PlanningInputs(
         sub.MaxPositionWeight is { } weight ? Percentage.Of(weight) : null,
         sub.MaxMonthlyTurnover is { } turnover ? Percentage.Of(turnover) : null);
 
-    public static IEnumerable<string> PriceWarnings(IEnumerable<Guid> needed, IReadOnlyDictionary<Guid, LatestPriceDto> prices, IReadOnlyDictionary<Guid, string> labels)
+    public static IEnumerable<string> PriceWarnings(
+        IEnumerable<Guid> needed,
+        IReadOnlyDictionary<Guid, LatestPriceDto> prices,
+        IReadOnlyDictionary<Guid, string> labels)
     {
         string Label(Guid id) => labels.TryGetValue(id, out var label) ? label : id.ToString();
 

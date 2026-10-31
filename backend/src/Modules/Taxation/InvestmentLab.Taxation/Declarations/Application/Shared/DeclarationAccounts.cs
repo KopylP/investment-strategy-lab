@@ -8,7 +8,9 @@ public sealed class DeclarationAccounts(ITaxpayerHistory taxpayer, IPit8CReposit
     public static bool HasTaxableYear(IReadOnlyList<DeclarationAccount> declared, ITaxDeclarationForm form) =>
         declared.Any(account => account.Policy.Jurisdiction == form.Jurisdiction && account.Policy.IsTaxed && (account.Sales.Count > 0 || account.Dividends.Count > 0));
 
-    public async Task<(IReadOnlyList<DeclarationAccount> Accounts, TaxpayerHistoryDto History)> LoadAsync(int year, CancellationToken cancellationToken)
+    public async Task<(IReadOnlyList<DeclarationAccount> Accounts, TaxpayerHistoryDto History)> LoadAsync(
+        int year,
+        CancellationToken cancellationToken)
     {
         var history = await taxpayer.LoadAsync(cancellationToken);
         var statements = (await pit8C.AllAsync(cancellationToken)).ToLookup(statement => statement.AccountId);

@@ -61,7 +61,12 @@ internal sealed class TransactionDetailsConverter() : ValueConverter<Transaction
     private static Money? Settlement(decimal? amount, string? currency) =>
         amount is { } value && currency is { Length: > 0 } code ? Money.Of(value, Currency.Of(code)) : null;
 
-    private sealed record DetailsJson(string Type, TradeJson? Trade = null, CashJson? Cash = null, TransferJson? Transfer = null, ReversalJson? Reversal = null);
+    private sealed record DetailsJson(
+        string Type,
+        TradeJson? Trade = null,
+        CashJson? Cash = null,
+        TransferJson? Transfer = null,
+        ReversalJson? Reversal = null);
 
     private sealed record PartJson(Guid SubPortfolioId, decimal Value);
 

@@ -38,7 +38,10 @@ public sealed class GetTaxYearHandler(
             outcome.Warnings);
     }
 
-    private async Task<Dictionary<Guid, string>> LabelsAsync(TaxAssessment assessment, IReadOnlyList<OpenLotSnapshot> openLots, CancellationToken cancellationToken)
+    private async Task<Dictionary<Guid, string>> LabelsAsync(
+        TaxAssessment assessment,
+        IReadOnlyList<OpenLotSnapshot> openLots,
+        CancellationToken cancellationToken)
     {
         var known = await instruments.GetInstruments(cancellationToken);
         var catalog = known.ToDictionary(instrument => instrument.Id);

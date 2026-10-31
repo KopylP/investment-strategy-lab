@@ -74,7 +74,9 @@ public sealed class TaxInputs(
         return new Taxpayer(ownerId, known, setups.ToDictionary(setup => setup.Id));
     }
 
-    public async Task<(IReadOnlyList<TaxEvent> Events, IReadOnlyList<string> Missing)> EventsAsync(IReadOnlyList<TaxAccount> taxAccounts, CancellationToken cancellationToken)
+    public async Task<(IReadOnlyList<TaxEvent> Events, IReadOnlyList<string> Missing)> EventsAsync(
+        IReadOnlyList<TaxAccount> taxAccounts,
+        CancellationToken cancellationToken)
     {
         var events = new List<TaxEvent>();
         var missing = new List<string>();
@@ -89,7 +91,9 @@ public sealed class TaxInputs(
         return (events, missing);
     }
 
-    public async Task<(IReadOnlyList<TaxEvent> Events, IReadOnlyList<string> Missing)> EventsAsync(TaxAccount account, CancellationToken cancellationToken)
+    public async Task<(IReadOnlyList<TaxEvent> Events, IReadOnlyList<string> Missing)> EventsAsync(
+        TaxAccount account,
+        CancellationToken cancellationToken)
     {
         var entries = (await ledger.EntriesAsync(account.AccountId, cancellationToken)).Where(entry => !entry.IsReversed)
             .OrderBy(entry => entry.OccurredOn).ThenBy(entry => entry.RecordedAt).ToList();
@@ -127,7 +131,11 @@ public sealed class TaxInputs(
         return ([.. events.Select(e => e with { Broker = sales.GetValueOrDefault(e.TransactionId), Withholding = match.Dividends.GetValueOrDefault(e.TransactionId) })], missing);
     }
 
-    private async Task<SaleFacts> AtNbpRatesAsync(SaleFacts facts, string? entryCurrency, Dictionary<(string, DateOnly), FxRateDto?> rates, CancellationToken cancellationToken)
+    private async Task<SaleFacts> AtNbpRatesAsync(
+        SaleFacts facts,
+        string? entryCurrency,
+        Dictionary<(string, DateOnly), FxRateDto?> rates,
+        CancellationToken cancellationToken)
     {
         var lots = new List<BrokerLotFact>();
 

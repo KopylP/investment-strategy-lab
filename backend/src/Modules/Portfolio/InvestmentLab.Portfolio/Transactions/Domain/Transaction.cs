@@ -107,7 +107,12 @@ public sealed class Transaction : AggregateRoot<TransactionId>
             new InternalTransferDetails(from, to, instrumentId, quantity, amount), recordedAt);
     }
 
-    public Result<Transaction> Reverse(InvestmentAccount account, string reason, DateOnly reversedOn, TransactionSource source, DateTimeOffset recordedAt)
+    public Result<Transaction> Reverse(
+        InvestmentAccount account,
+        string reason,
+        DateOnly reversedOn,
+        TransactionSource source,
+        DateTimeOffset recordedAt)
     {
         if (Kind == TransactionKind.Reversal)
             return TransactionErrors.CannotReverseReversal();

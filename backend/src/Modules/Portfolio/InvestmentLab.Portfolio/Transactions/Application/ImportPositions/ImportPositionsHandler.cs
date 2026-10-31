@@ -112,7 +112,9 @@ public sealed class ImportPositionsHandler(TransactionRecorder recorder, IInstru
         return new ImportReport(recorded, skipped, warnings);
     }
 
-    private async Task<Result<IReadOnlyDictionary<string, Guid>>> ResolveInstrumentsAsync(IReadOnlyList<LegacyPosition> positions, CancellationToken cancellationToken)
+    private async Task<Result<IReadOnlyDictionary<string, Guid>>> ResolveInstrumentsAsync(
+        IReadOnlyList<LegacyPosition> positions,
+        CancellationToken cancellationToken)
     {
         var bySymbol = await InstrumentsByYahooSymbolAsync(cancellationToken);
 

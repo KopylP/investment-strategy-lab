@@ -14,7 +14,11 @@ internal sealed class PythonStrategyEngine(StrategyEngineClient client) : IStrat
     public Task<Result<RiskAssessmentDto>> AssessRiskAsync(string typeCode, StrategyEvaluationContext context, CancellationToken cancellationToken) =>
         PostAsync<RiskAssessmentDto>(typeCode, "risk", context, cancellationToken);
 
-    public async Task<Result<string>> SubmitAsync(string typeCode, StrategyTask task, StrategyEvaluationContext context, CancellationToken cancellationToken)
+    public async Task<Result<string>> SubmitAsync(
+        string typeCode,
+        StrategyTask task,
+        StrategyEvaluationContext context,
+        CancellationToken cancellationToken)
     {
         try
         {

@@ -15,13 +15,20 @@ internal sealed class StrategyEvaluation(
     PollStrategyDecisionHandler pollDecision,
     PollStrategyRiskHandler pollRisk) : IStrategyEvaluation
 {
-    public async Task<StrategyEvaluationResult<StrategyDecisionDto>> EvaluateAsync(EvaluateStrategyRequest request, CancellationToken cancellationToken) =>
+    public async Task<StrategyEvaluationResult<StrategyDecisionDto>> EvaluateAsync(
+        EvaluateStrategyRequest request,
+        CancellationToken cancellationToken) =>
         ToContract(await decide.Handle(request, cancellationToken));
 
-    public async Task<StrategyEvaluationResult<RiskAssessmentDto>> AssessRiskAsync(EvaluateStrategyRequest request, CancellationToken cancellationToken) =>
+    public async Task<StrategyEvaluationResult<RiskAssessmentDto>> AssessRiskAsync(
+        EvaluateStrategyRequest request,
+        CancellationToken cancellationToken) =>
         ToContract(await assessRisk.Handle(request, cancellationToken));
 
-    public async Task<StrategyEvaluationResult<StrategyJobTicket>> SubmitAsync(StrategyTask task, EvaluateStrategyRequest request, CancellationToken cancellationToken) =>
+    public async Task<StrategyEvaluationResult<StrategyJobTicket>> SubmitAsync(
+        StrategyTask task,
+        EvaluateStrategyRequest request,
+        CancellationToken cancellationToken) =>
         ToContract(await submit.Handle(task, request, cancellationToken));
 
     public async Task<StrategyJobPoll<StrategyDecisionDto>> PollDecisionAsync(StrategyJobTicket ticket, CancellationToken cancellationToken) =>

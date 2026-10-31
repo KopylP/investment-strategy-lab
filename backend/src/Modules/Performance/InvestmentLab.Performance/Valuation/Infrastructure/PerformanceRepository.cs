@@ -34,7 +34,11 @@ internal sealed class PerformanceRepository(PerformanceDbContext db) : IPerforma
             await transaction.CommitAsync(cancellationToken);
         });
 
-    public async Task<IReadOnlyList<ValuationSnapshot>> SnapshotsAsync(Guid accountId, SnapshotScenario scenario, DateOnly from, CancellationToken cancellationToken) =>
+    public async Task<IReadOnlyList<ValuationSnapshot>> SnapshotsAsync(
+        Guid accountId,
+        SnapshotScenario scenario,
+        DateOnly from,
+        CancellationToken cancellationToken) =>
         await db.Snapshots.AsNoTracking()
             .Where(snapshot => snapshot.AccountId == accountId && snapshot.Scenario == scenario && snapshot.Date >= from)
             .OrderBy(snapshot => snapshot.Date)

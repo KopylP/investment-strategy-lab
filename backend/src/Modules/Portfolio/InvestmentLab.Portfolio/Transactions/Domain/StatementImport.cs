@@ -43,7 +43,12 @@ public sealed class StatementImport
 
     private StatementImport() => (Broker, FileName, Rows, Mappings, Warnings, Outcomes, RecordedReferences, ReversedTransactionIds) = (null!, null!, null!, null!, null!, null!, null!, null!);
 
-    public static StatementImport Upload(AccountId accountId, UserId ownerId, string fileName, ParsedStatement statement, DateTimeOffset uploadedAt) =>
+    public static StatementImport Upload(
+        AccountId accountId,
+        UserId ownerId,
+        string fileName,
+        ParsedStatement statement,
+        DateTimeOffset uploadedAt) =>
         new(accountId, ownerId, string.IsNullOrWhiteSpace(fileName) ? "statement.csv" : fileName.Trim(), statement, uploadedAt);
 
     public bool IsPreview => Status == StatementImportStatus.Preview;
@@ -63,7 +68,11 @@ public sealed class StatementImport
 
     public void Plan(IReadOnlyList<RowOutcome> outcomes) => Outcomes = [.. outcomes];
 
-    public Result Confirm(IReadOnlyList<RowOutcome> outcomes, IReadOnlyList<string> recordedReferences, IReadOnlyList<Guid> reversed, DateTimeOffset now)
+    public Result Confirm(
+        IReadOnlyList<RowOutcome> outcomes,
+        IReadOnlyList<string> recordedReferences,
+        IReadOnlyList<Guid> reversed,
+        DateTimeOffset now)
     {
         if (!IsPreview)
             return StatementImportErrors.NotInPreview(Id);

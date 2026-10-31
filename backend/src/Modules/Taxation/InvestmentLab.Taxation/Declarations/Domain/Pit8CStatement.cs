@@ -9,7 +9,10 @@ public sealed class Pit8CStatement
     public decimal Revenue { get; private set; }
     public decimal Costs { get; private set; }
 
-    private Pit8CStatement(Guid accountId, UserId ownerId, int year) => (Id, AccountId, OwnerId, Year) = (Guid.CreateVersion7(), accountId, ownerId, year);
+    private Pit8CStatement(
+        Guid accountId,
+        UserId ownerId,
+        int year) => (Id, AccountId, OwnerId, Year) = (Guid.CreateVersion7(), accountId, ownerId, year);
 
     private Pit8CStatement() { }
 

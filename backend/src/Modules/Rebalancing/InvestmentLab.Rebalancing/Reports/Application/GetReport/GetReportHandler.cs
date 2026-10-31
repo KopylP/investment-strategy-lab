@@ -27,7 +27,9 @@ public sealed class GetReportHandler(IReportRepository reports, IInstrumentCatal
             SubPortfolios: report.Sections.ToDictionary(section => section.SubPortfolioId, section => section.Name));
     }
 
-    private async Task<Dictionary<Guid, InstrumentLabelDto>> LabelsOfInstrumentsUsedAsync(RebalancingReport report, CancellationToken cancellationToken)
+    private async Task<Dictionary<Guid, InstrumentLabelDto>> LabelsOfInstrumentsUsedAsync(
+        RebalancingReport report,
+        CancellationToken cancellationToken)
     {
         var known = await instruments.GetInstruments(cancellationToken);
         var catalog = known.ToDictionary(instrument => instrument.Id);

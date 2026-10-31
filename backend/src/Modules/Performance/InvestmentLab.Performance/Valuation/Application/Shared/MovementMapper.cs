@@ -51,7 +51,11 @@ public static class MovementMapper
         }
     }
 
-    private static (decimal CashDelta, string? Currency) TradeCash(TradeRecordedDto trade, QuantityAllocationDto allocation, decimal sign, decimal share)
+    private static (decimal CashDelta, string? Currency) TradeCash(
+        TradeRecordedDto trade,
+        QuantityAllocationDto allocation,
+        decimal sign,
+        decimal share)
     {
         if (trade is { SettledAmount: { } settled, SettledCurrency: { } code })
             return (-sign * settled * share, code);
