@@ -5,6 +5,10 @@ namespace InvestmentLab.Taxation.Assessments.Domain;
 
 public static class TaxCalculator
 {
+    private const int SameLotDayTolerance = 3;
+    private const decimal BrokerCostTolerance = 0.02m;
+    private const decimal BrokerCostToleranceShare = 0.005m;
+
     public static TaxComputation Compute(IReadOnlyList<TaxEvent> events, ITaxPolicy policy, IReadOnlyList<LossYear> earlierLosses)
     {
         var lots = new Dictionary<(Guid Account, Guid Instrument), List<OpenLot>>();
@@ -17,9 +21,7 @@ public static class TaxCalculator
             switch (entry.Kind)
             {
                 case TaxableKind.Buy:
-                    var cost = Pln(entry.Quantity * entry.Price, entry.FxRate) + Pln(entry.Fee, entry.FxRate);
-                    Lots(lots, entry).Add(new OpenLot(entry.TransactionId, entry.OccurredOn, entry.Sequence, entry.InstrumentId, entry.Quantity, cost, entry.FxRate,
-                        entry.Quantity * entry.Price, entry.AccountId));
+                    Lots(lots, entry).Add(LotOf(entry));
                     break;
 
                 case TaxableKind.Sell:
@@ -31,58 +33,118 @@ public static class TaxCalculator
                     break;
 
                 case TaxableKind.Dividend:
-                    var net = Pln(entry.Amount, entry.FxRate);
-                    var gross = entry.Withholding is { } withholding ? Pln(entry.Amount * withholding.GrossPerNet, entry.FxRate) : net;
-                    var withheld = entry.Withholding is { } paidAbroad ? Pln(entry.Amount * paidAbroad.WithheldPerNet, entry.FxRate) : 0m;
-                    dividends.Add(new DividendIncome(entry.TransactionId, entry.OccurredOn, entry.InstrumentId, entry.Amount, net, entry.FxRate, gross, withheld, entry.Currency,
-                        entry.Withholding is not null, entry.AccountId));
+                    dividends.Add(DividendOf(entry));
                     break;
             }
         }
 
-        var years = realizations.Select(r => r.SoldOn.Year).Concat(dividends.Select(d => d.ReceivedOn.Year)).Distinct().Order().ToList();
-        if (years.Count > 0)
-            years = [.. Enumerable.Range(years[0], years[^1] - years[0] + 1)];
+        var results = YearResults(realizations, dividends, policy, earlierLosses);
+        var openLots = lots.Values.SelectMany(list => list).Select(lot => lot.Snapshot());
 
+        return new TaxComputation(results, [.. openLots], warnings);
+    }
+
+    private static OpenLot LotOf(TaxEvent buy)
+    {
+        var gross = buy.Quantity * buy.Price;
+        var cost = Pln(gross, buy.FxRate) + Pln(buy.Fee, buy.FxRate);
+
+        return new OpenLot(buy.TransactionId, buy.OccurredOn, buy.Sequence, buy.InstrumentId, buy.Quantity, cost, buy.FxRate, gross, buy.AccountId);
+    }
+
+    private static DividendIncome DividendOf(TaxEvent entry)
+    {
+        var net = Pln(entry.Amount, entry.FxRate);
+        var gross = entry.Withholding is { } withholding ? Pln(entry.Amount * withholding.GrossPerNet, entry.FxRate) : net;
+        var withheld = entry.Withholding is { } paidAbroad ? Pln(entry.Amount * paidAbroad.WithheldPerNet, entry.FxRate) : 0m;
+
+        return new DividendIncome(
+            entry.TransactionId,
+            entry.OccurredOn,
+            entry.InstrumentId,
+            entry.Amount,
+            net,
+            entry.FxRate,
+            gross,
+            withheld,
+            entry.Currency,
+            entry.Withholding is not null,
+            entry.AccountId);
+    }
+
+    private static List<TaxYearResult> YearResults(
+        List<Realization> realizations, List<DividendIncome> dividends, ITaxPolicy policy, IReadOnlyList<LossYear> earlierLosses)
+    {
         var losses = earlierLosses.Select(loss => new LossPool(loss)).ToList();
         var results = new List<TaxYearResult>();
 
-        foreach (var year in years)
+        foreach (var year in YearsOf(realizations, dividends))
         {
-            var sold = realizations.Where(r => r.SoldOn.Year == year).ToList();
-            var received = dividends.Where(d => d.ReceivedOn.Year == year).ToList();
-            var revenue = sold.Sum(r => r.ProceedsPln);
-            var costs = sold.Sum(r => r.CostPln);
-            var gain = revenue - costs;
+            var sold = realizations.Where(realization => realization.SoldOn.Year == year).ToList();
+            var received = dividends.Where(dividend => dividend.ReceivedOn.Year == year).ToList();
 
-            var uses = LossPool.UseAgainst(losses, year, gain, policy.LossCarryforward);
-            var used = uses.Sum(use => use.Amount);
-            var taxBase = policy.IsTaxed ? policy.Rounding.Base(Math.Max(0m, gain - used)) : 0m;
-            var capitalTax = policy.Rounding.Tax(taxBase * policy.RateSchedule.Rate.Value);
-
-            var rate = policy.RateSchedule.Rate.Value;
-            var dividendIncome = received.Sum(d => d.GrossPln);
-            var dividendCredit = received.Sum(d => Math.Min(d.WithheldPln, d.GrossPln * rate));
-            var dividendTax = policy.IsTaxed ? policy.Rounding.Tax(Math.Max(0m, dividendIncome * rate - dividendCredit)) : 0m;
-            var loss = gain < 0m ? -gain : 0m;
-            if (loss > 0m && policy.IsTaxed)
-                losses.Add(new LossPool(new LossYear(year, loss)));
-
-            results.Add(new TaxYearResult(
-                new TaxYearSummary(year, revenue, costs, gain, used, taxBase, capitalTax, dividendIncome, dividendTax, capitalTax + dividendTax, loss,
-                    policy.IsTaxed ? decimal.Round(dividendCredit, 2, MidpointRounding.AwayFromZero) : 0m),
-                sold,
-                received,
-                uses));
+            results.Add(YearResult(year, sold, received, policy, losses));
         }
 
-        return new TaxComputation(results, [.. lots.Values.SelectMany(list => list).Select(lot => lot.Snapshot())], warnings);
+        return results;
     }
 
-    public static IReadOnlyList<TaxTimelinePoint> Timeline(IReadOnlyList<TaxEvent> events, ITaxPolicy policy, IReadOnlyList<LossYear> earlierLosses, int year)
+    private static List<int> YearsOf(List<Realization> realizations, List<DividendIncome> dividends)
+    {
+        var years = realizations.Select(realization => realization.SoldOn.Year)
+            .Concat(dividends.Select(dividend => dividend.ReceivedOn.Year))
+            .Order()
+            .ToList();
+
+        return years.Count == 0 ? [] : [.. Enumerable.Range(years[0], years[^1] - years[0] + 1)];
+    }
+
+    private static TaxYearResult YearResult(int year, List<Realization> sold, List<DividendIncome> received, ITaxPolicy policy, List<LossPool> losses)
+    {
+        var rate = policy.RateSchedule.Rate.Value;
+        var revenue = sold.Sum(realization => realization.ProceedsPln);
+        var costs = sold.Sum(realization => realization.CostPln);
+        var gain = revenue - costs;
+
+        var uses = LossPool.UseAgainst(losses, year, gain, policy.LossCarryforward);
+        var used = uses.Sum(use => use.Amount);
+        var taxBase = policy.IsTaxed ? policy.Rounding.Base(Math.Max(0m, gain - used)) : 0m;
+        var capitalTax = policy.Rounding.Tax(taxBase * rate);
+
+        var dividendIncome = received.Sum(dividend => dividend.GrossPln);
+        var dividendCredit = received.Sum(dividend => Math.Min(dividend.WithheldPln, dividend.GrossPln * rate));
+        var dividendTax = policy.IsTaxed ? policy.Rounding.Tax(Math.Max(0m, dividendIncome * rate - dividendCredit)) : 0m;
+
+        var loss = gain < 0m ? -gain : 0m;
+        if (loss > 0m && policy.IsTaxed)
+            losses.Add(new LossPool(new LossYear(year, loss)));
+
+        var summary = new TaxYearSummary(
+            year,
+            revenue,
+            costs,
+            gain,
+            used,
+            taxBase,
+            capitalTax,
+            dividendIncome,
+            dividendTax,
+            capitalTax + dividendTax,
+            loss,
+            policy.IsTaxed ? decimal.Round(dividendCredit, 2, MidpointRounding.AwayFromZero) : 0m);
+
+        return new TaxYearResult(summary, sold, received, uses);
+    }
+
+    public static IReadOnlyList<TaxTimelinePoint> Timeline(
+        IReadOnlyList<TaxEvent> events,
+        ITaxPolicy policy,
+        IReadOnlyList<LossYear> earlierLosses,
+        int year)
     {
         var days = events.Where(e => e.OccurredOn.Year == year && e.Kind is TaxableKind.Sell or TaxableKind.Dividend)
             .Select(e => e.OccurredOn).Distinct().Order();
+
         return [.. days.Select(day =>
         {
             var summary = Compute([.. events.Where(e => e.OccurredOn <= day)], policy, earlierLosses).Year(year)?.Summary;
@@ -107,39 +169,78 @@ public static class TaxCalculator
         var cost = matches.Sum(match => match.CostPln) + Pln(sale.Fee, sale.FxRate);
         var gain = proceeds - cost;
 
-        var total = sale.Allocations.Sum(allocation => allocation.Quantity);
-        var attributions = total > 0m
-            ? sale.Allocations.Select(allocation => new GainAttribution(allocation.SubPortfolioId, decimal.Round(gain * allocation.Quantity / total, 2))).ToList()
-            : [];
+        return new Realization(
+            sale.TransactionId,
+            sale.OccurredOn,
+            sale.InstrumentId,
+            sale.Quantity,
+            proceeds,
+            cost,
+            gain,
+            sale.FxRate,
+            sale.FxRateDate,
+            matches,
+            AttributionsOf(sale, gain),
+            unmatched,
+            sale.Broker?.GainPln,
+            sale.AccountId);
+    }
 
-        return new Realization(sale.TransactionId, sale.OccurredOn, sale.InstrumentId, sale.Quantity, proceeds, cost, gain, sale.FxRate, sale.FxRateDate, matches, attributions, unmatched,
-            sale.Broker?.GainPln, sale.AccountId);
+    private static List<GainAttribution> AttributionsOf(TaxEvent entry, decimal gain)
+    {
+        var total = entry.Allocations.Sum(allocation => allocation.Quantity);
+        if (total <= 0m)
+            return [];
+
+        return [.. entry.Allocations.Select(allocation => new GainAttribution(
+            allocation.SubPortfolioId,
+            decimal.Round(gain * allocation.Quantity / total, 2)))];
     }
 
     private static List<LotMatch> WithBrokerCost(List<LotMatch> own, SaleFacts broker, ref decimal unmatched)
     {
         var added = new List<LotMatch>();
 
-        foreach (var lot in broker.Lots.Where(lot => !own.Any(match => Math.Abs(match.AcquiredOn.DayNumber - lot.AcquiredOn.DayNumber) <= 3)))
+        foreach (var lot in broker.Lots.Where(lot => !IsAmongOwn(lot, own)))
         {
             if (unmatched <= 0m)
                 break;
 
             var taken = Math.Min(lot.Quantity, unmatched);
-            var share = taken / lot.Quantity;
-            added.Add(new LotMatch(Guid.Empty, lot.AcquiredOn, taken, decimal.Round(lot.CostPln * share, 2, MidpointRounding.AwayFromZero), FromBroker: true, Gross: lot.Cost * share));
+
+            added.Add(BrokerLotMatch(lot, taken));
             unmatched -= taken;
         }
 
-        var ownGross = own.Sum(match => match.Gross);
-        if (broker.Cost is { } brokerCost && ownGross > 0m)
-        {
-            var delta = brokerCost - added.Sum(match => match.Gross) - ownGross;
-            if (Math.Abs(delta) > Math.Max(0.02m, ownGross * 0.005m))
-                own = [.. own.Select(match => match with { CostPln = match.CostPln + decimal.Round(delta * match.Gross / ownGross * match.FxRate, 2, MidpointRounding.AwayFromZero), FromBroker = true })];
-        }
+        return [.. CorrectedToBrokerCost(own, added, broker), .. added];
+    }
 
-        return [.. own, .. added];
+    private static bool IsAmongOwn(BrokerLotFact lot, List<LotMatch> own) =>
+        own.Any(match => Math.Abs(match.AcquiredOn.DayNumber - lot.AcquiredOn.DayNumber) <= SameLotDayTolerance);
+
+    private static LotMatch BrokerLotMatch(BrokerLotFact lot, decimal taken)
+    {
+        var share = taken / lot.Quantity;
+        var costPln = decimal.Round(lot.CostPln * share, 2, MidpointRounding.AwayFromZero);
+
+        return new LotMatch(Guid.Empty, lot.AcquiredOn, taken, costPln, FromBroker: true, Gross: lot.Cost * share);
+    }
+
+    private static List<LotMatch> CorrectedToBrokerCost(List<LotMatch> own, List<LotMatch> added, SaleFacts broker)
+    {
+        var ownGross = own.Sum(match => match.Gross);
+        if (broker.Cost is not { } brokerCost || ownGross <= 0m)
+            return own;
+
+        var delta = brokerCost - added.Sum(match => match.Gross) - ownGross;
+        if (Math.Abs(delta) <= Math.Max(BrokerCostTolerance, ownGross * BrokerCostToleranceShare))
+            return own;
+
+        return [.. own.Select(match => match with
+        {
+            CostPln = match.CostPln + decimal.Round(delta * match.Gross / ownGross * match.FxRate, 2, MidpointRounding.AwayFromZero),
+            FromBroker = true,
+        })];
     }
 
     private static Realization SaleOfIncome(TaxEvent income, SaleFacts sold)
@@ -147,12 +248,22 @@ public static class TaxCalculator
         var proceeds = Pln(income.Amount, income.FxRate);
         var cost = sold.Lots.Sum(lot => lot.CostPln);
         var gain = proceeds - cost;
-        var total = income.Allocations.Sum(allocation => allocation.Quantity);
-        var attributions = total > 0m
-            ? income.Allocations.Select(allocation => new GainAttribution(allocation.SubPortfolioId, decimal.Round(gain * allocation.Quantity / total, 2))).ToList()
-            : [];
-        return new Realization(income.TransactionId, income.OccurredOn, income.InstrumentId, sold.Lots.Sum(lot => lot.Quantity), proceeds, cost, gain, income.FxRate, income.FxRateDate,
-            [.. sold.Lots.Select(lot => new LotMatch(Guid.Empty, lot.AcquiredOn, lot.Quantity, lot.CostPln, FromBroker: true, Gross: lot.Cost))], attributions, 0m, sold.GainPln,
+        var matches = sold.Lots.Select(lot => new LotMatch(Guid.Empty, lot.AcquiredOn, lot.Quantity, lot.CostPln, FromBroker: true, Gross: lot.Cost));
+
+        return new Realization(
+            income.TransactionId,
+            income.OccurredOn,
+            income.InstrumentId,
+            sold.Lots.Sum(lot => lot.Quantity),
+            proceeds,
+            cost,
+            gain,
+            income.FxRate,
+            income.FxRateDate,
+            [.. matches],
+            AttributionsOf(income, gain),
+            0m,
+            sold.GainPln,
             income.AccountId);
     }
 

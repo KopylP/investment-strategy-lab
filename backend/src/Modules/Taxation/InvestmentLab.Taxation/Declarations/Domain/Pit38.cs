@@ -8,178 +8,70 @@ public sealed class Pit38Form : ITaxDeclarationForm
     public string Title => "PIT-38 · Podatek Belki";
     public string Jurisdiction => TaxPolicies.Poland;
 
-    private static readonly Dictionary<string, decimal> TreatyDividendRates = new() { ["JP"] = 0.10m, ["IT"] = 0.10m };
-
-    private const decimal UsualTreatyDividendRate = 0.15m;
-
     public TaxDeclaration Fill(DeclarationInput input)
     {
-        var (year, accounts, earlierLosses, countryOf) = (input.Year, input.Accounts, input.EarlierLosses, input.CountryOf);
         ITaxPolicy policy = new BelkaTaxPolicy();
-        var taxed = accounts.Where(account => account.Policy.IsTaxed).ToList();
-        var rate = policy.RateSchedule.Rate.Value;
-        var rounding = policy.Rounding;
+        var taxed = input.Accounts.Where(account => account.Policy.IsTaxed).ToList();
+        var rows = new Pit38BrokerRows(input.Year, taxed);
 
-        decimal Sum(IEnumerable<DeclarationAccount> of, Func<TaxYearSummary, decimal> amount) => of.Sum(account => account.In(year) is { } summary ? amount(summary) : 0m);
+        var gains = Pit38CapitalGains.Of(input, rows, taxed, policy);
+        var dividends = Pit38Dividends.Of(input, taxed, policy);
+        var sales = new Pit38ForeignSales(rows.WithoutPit8CForm, input.CountryOf);
+        var attachments = sales.AttachmentsWhen(gains.P28);
 
-        var row1 = taxed.Where(account => PolishBrokers.IssuesPit8C(account.Broker)).ToList();
-        var row2 = taxed.Except(row1).ToList();
-        var brokers = row1.GroupBy(account => PolishBrokers.Key(account.Broker)).ToList();
-        DeclarationAccount? EnteredOn(IEnumerable<DeclarationAccount> broker, int number) => broker.FirstOrDefault(account => account.Pit8COf(number) is not null);
-        (decimal Revenue, decimal Costs) Row1(int number) => brokers.Aggregate((Revenue: 0m, Costs: 0m), (total, broker) =>
-            EnteredOn(broker, number)?.Pit8COf(number) is { } entered
-                ? (total.Revenue + entered.Revenue, total.Costs + entered.Costs)
-                : (total.Revenue + broker.Sum(account => account.In(number)?.Revenue ?? 0m), total.Costs + broker.Sum(account => account.In(number)?.Costs ?? 0m)));
-        var withoutPit8C = brokers.Where(broker => EnteredOn(broker, year) is null && broker.Any(account => account.In(year) is { Revenue: > 0m })).Select(broker => broker.Key).ToList();
-        var (p20, p21) = Row1(year);
-        var (p22, p23) = (Sum(row2, s => s.Revenue), Sum(row2, s => s.Costs));
-        var (p26, p27) = (p20 + p22, p21 + p23);
-        var p28 = Math.Max(0m, p26 - p27);
-        var p29 = Math.Max(0m, p27 - p26);
+        var figures = new Pit38Figures(input, rows, gains, dividends, policy.RateSchedule.Rate.Value, attachments, sales.WithUnknownCountry);
 
-        var gains = taxed.SelectMany(account => account.Years).Select(summary => summary.Year).Distinct()
-            .ToDictionary(number => number, number => Row1(number) is var filed ? filed.Revenue - filed.Costs + row2.Sum(account => account.In(number)?.Gain ?? 0m) : 0m);
-        gains[year] = p26 - p27;
-        var p30 = CarryforwardUsed(year, gains, earlierLosses, policy.LossCarryforward);
-        var p31 = rounding.Base(p28 - p30);
-        var p33 = Grosze(p31 * rate);
-        const decimal p34 = 0m;
-        var p35 = rounding.Tax(Math.Max(0m, p33 - p34));
+        return new TaxDeclaration(
+            Code,
+            Title,
+            input.Year,
+            Deadline(input.Year),
+            Pit38Sections.Of(figures),
+            attachments,
+            AccountLinesOf(input, rows),
+            Pit38Notes.Of(figures),
+            dividends.P49 + gains.P35,
+            FactsOf(dividends.Foreign));
+    }
 
-        var foreign = taxed.SelectMany(account => account.Dividends).Where(dividend => countryOf(dividend.InstrumentId) != "PL").ToList();
-        var polish = taxed.SelectMany(account => account.Dividends.Select(dividend => (Account: account, Dividend: dividend)))
-            .Where(paid => countryOf(paid.Dividend.InstrumentId) == "PL").ToList();
-        var p47 = Grosze(foreign.Sum(dividend => dividend.GrossPln) * rate);
+    private static List<DeclarationAccountLine> AccountLinesOf(DeclarationInput input, Pit38BrokerRows rows) =>
+        [.. input.Accounts.Select(account => AccountLineOf(account, input.Year, rows))];
 
-        var p48 = Math.Min(p47, Grosze(foreign.Sum(dividend => Math.Min(dividend.WithheldPln, dividend.GrossPln * rate))));
-        var p49 = rounding.Tax(Math.Max(0m, p47 - p48));
-        var p51 = p35 + p49;
+    private static DeclarationAccountLine AccountLineOf(DeclarationAccount account, int year, Pit38BrokerRows rows)
+    {
+        var summary = account.In(year);
 
-        decimal TreatyRate(DividendIncome dividend) =>
-            countryOf(dividend.InstrumentId) is { } code && TreatyDividendRates.TryGetValue(code, out var treaty) ? treaty : UsualTreatyDividendRate;
+        return new DeclarationAccountLine(
+            account.Name,
+            account.Broker,
+            TreatmentOf(account, rows),
+            summary?.Revenue ?? 0m,
+            summary?.Costs ?? 0m,
+            summary?.DividendIncome ?? 0m,
+            summary?.DividendTaxCredit ?? 0m,
+            account.AccountId,
+            rows.TakesPit8C(account),
+            account.Pit8COf(year),
+            rows.Pit8CCoveredBy(account));
+    }
 
-        var overTreaty = foreign.Where(dividend => dividend.GrossPln > 0m && dividend.WithheldPln > Grosze(dividend.GrossPln * TreatyRate(dividend)) + 0.01m).ToList();
-        var kisCredit = Math.Min(p47, Grosze(foreign.Sum(dividend => Math.Min(dividend.WithheldPln, dividend.GrossPln * Math.Min(rate, TreatyRate(dividend))))));
-        var kisP49 = rounding.Tax(Math.Max(0m, p47 - kisCredit));
-        var withholdingUnknown = foreign.Where(dividend => !dividend.WithholdingKnown && dividend.GrossPln > 0m).ToList();
+    private static string TreatmentOf(DeclarationAccount account, Pit38BrokerRows rows)
+    {
+        if (!account.Policy.IsTaxed)
+            return "Не оподатковується";
 
-        bool IsCountry(string? code) => code is { Length: 2 } && code != "PL" && code != "EU" && !code.StartsWith('X');
-        var foreignSales = row2.SelectMany(account => account.Sales).ToList();
-        var attachments = p28 <= 0m ? [] : foreignSales
-            .GroupBy(sale => countryOf(sale.InstrumentId))
-            .Where(group => IsCountry(group.Key))
-            .Select(group => (Code: group.Key!, Income: group.Sum(sale => sale.GainPln)))
-            .Where(country => country.Income > 0m)
-            .OrderBy(country => country.Code)
-            .Select(country => new DeclarationAttachment("PIT/ZG", $"PIT/ZG · {Countries.Name(country.Code)}", [
-                new(6, "Państwo uzyskania dochodu", null, Countries.Name(country.Code)),
-                new(7, "Kod kraju", null, country.Code),
-                new(29, "Dochód, o którym mowa w art. 30b ust. 5a i 5b", country.Income, Hint: "Прибуток від продажу паперів цієї країни (за ISIN)"),
-                new(30, "Podatek zapłacony za granicą od dochodów z poz. 29", 0m, Hint: "Брокер податку з продажу не утримує"),
-            ]))
-            .ToList();
-        var unknownCountry = foreignSales.Count(sale => !IsCountry(countryOf(sale.InstrumentId)) && countryOf(sale.InstrumentId) != "PL");
+        return rows.TakesPit8C(account) ? "Рядок 1 (PIT-8C) · дивіденди в G" : "Рядок 2 · дивіденди в G";
+    }
 
-        var sections = new List<DeclarationSection>
-        {
-            new("C", "Dochody / straty – art. 30b ust. 1", [
-                new(20, "Przychód – wiersz 1 (PIT-8C)", p20, Hint: row1.Count == 0 ? null : withoutPit8C.Count == 0 ? "poz. 35 з PIT-8C брокера" : "Наш розрахунок — введіть poz. 35 з PIT-8C"),
-                new(21, "Koszty – wiersz 1 (PIT-8C)", p21, Hint: row1.Count == 0 ? null : withoutPit8C.Count == 0 ? "poz. 36 з PIT-8C брокера" : "Наш розрахунок — введіть poz. 36 з PIT-8C"),
-                new(22, "Przychód – wiersz 2 (inne, z zagranicy)", p22, Hint: "Продажі брокерів без PIT-8C, за курсом NBP дня перед угодою"),
-                new(23, "Koszty – wiersz 2", p23, Hint: "Купівля проданих лотів (FIFO) і комісії купівлі та продажу"),
-                new(24, "Przychód – wiersz 3 (art. 21 ust. 1 pkt 105a)", 0m, Hint: "Пільга IPO — не застосовується"),
-                new(25, "Koszty – wiersz 3", 0m),
-                new(26, "Razem przychód", p26, Hint: "poz. 20 + 22 − 24", Computed: true),
-                new(27, "Razem koszty", p27, Hint: "poz. 21 + 23 − 25", Computed: true),
-                new(28, "Dochód", p28, Computed: true),
-                new(29, "Strata", p29, Hint: p29 > 0m ? "Збиток можна віднімати від доходу наступних 5 років, до половини на рік" : null, Computed: true),
-            ]),
-            new("D", "Obliczenie zobowiązania podatkowego", [
-                new(30, "Straty z lat ubiegłych", p30, Hint: "Не більше половини збитку кожного року за останні 5 років і не більше poz. 28"),
-                new(31, "Podstawa obliczenia podatku", p31, Hint: "poz. 28 − 30, до повних злотих", Computed: true),
-                new(32, "Stawka podatku (%)", decimal.Round(rate * 100m, 0)),
-                new(33, "Podatek od dochodów z poz. 31", p33, Computed: true),
-                new(34, "Podatek zapłacony za granicą (art. 30b ust. 5a i 5b)", p34, Hint: "З продажів за кордоном податок не утримано"),
-                new(35, "Podatek należny", p35, Hint: "poz. 33 − 34, до повних злотих", Computed: true),
-            ]),
-            new("G", "Podatek do zapłaty / nadpłata", [
-                new(46, "Zryczałtowany podatek niepobrany przez płatnika", 0m),
-                new(47, "Zryczałtowany podatek od przychodów zagranicznych (art. 30a ust. 1 pkt 1–5)", p47, Hint: "19% від іноземних дивідендів брутто (до утримання за кордоном), усіх брокерів"),
-                new(48, "Podatek zapłacony za granicą (art. 30a ust. 9)", p48, Hint: "Утриманий за кордоном податок, не більше 19% кожного дивіденду"),
-                new(49, "Różnica", p49, Hint: "poz. 47 − 48, до повних злотих", Computed: true),
-                new(50, "Zaliczki przekazane spółce nieruchomościowej", 0m),
-                new(51, "Podatek do zapłaty", p51, Hint: "poz. 35 + 45 + 46 + 49 − 50", Computed: true),
-                new(52, "Nadpłata", 0m, Computed: true),
-            ]),
-            new("L", "Informacje o załącznikach", [
-                new(72, "Liczba załączników PIT/ZG", attachments.Count, Hint: "Один PIT/ZG на кожну країну з доходом від продажів; дивіденди в нього не входять"),
-            ]),
-        };
-
-        var notes = new List<DeclarationNote>
-        {
-            new("Суми в PLN за середнім курсом NBP останнього робочого дня перед датою угоди чи виплати (art. 11a). Закон пов’язує дохід з переходом власності (art. 17 ust. 1ab) — частина брокерів і порадників бере курс дня перед датою розрахунку (T+1 США, T+2 ЄС), тоді суми трохи інші."),
-            year == 2025
-                ? new("Номери позицій — за формою PIT-38(18) і брошурою Міністерства фінансів за 2025 рік.")
-                : new($"Номери позицій — за формою PIT-38(18) за 2025 рік; форми за {year} рік ще немає — перевірте номери, коли її опублікують.", true,
-                    $"Номери poz. — за формою 2025 року: звірте з формою за {year}."),
-            new("Частини E/F (криптовалюти) не заповнені: якщо маєте крипто, впишіть їх самі."),
-        };
-
-        if (withoutPit8C.Count > 0)
-            notes.Add(new($"Рядок 1 — {string.Join(", ", withoutPit8C)}: введіть суми з PIT-8C брокера (poz. 35 і 36; один PIT-8C на всі ваші рахунки в цього брокера), і решта форми перерахується від них.", true,
-                $"poz. 20/21: впишіть poz. 35/36 з PIT-8C ({string.Join(", ", withoutPit8C)}), тут — наш розрахунок."));
-        if (row1.Any(account => account.Dividends.Any(dividend => countryOf(dividend.InstrumentId) != "PL")))
-            notes.Add(new("Іноземні дивіденди з польського брокера — у розділі G: брокер не є їх платником. Виняток — акції іноземних компаній на GPW, з яких брокер сам утримав 19% (видно у виписці): такі приберіть із poz. 47/48."));
-
-        if (withholdingUnknown.Count > 0)
-            notes.Add(new($"Іноземні дивіденди без даних про утриманий за кордоном податок ({withholdingUnknown.Count}): poz. 47 рахується з отриманої суми, poz. 48 — без нього, тож податок завищено. Завантажте звіт брокера (Revolut P&L) або перевірте суми брутто й утримане самі. Якщо за кордоном нічого не утримали (напр. ірландські ETF), усе правильно.", true,
-                $"Дивіденди без даних про утримане за кордоном ({withholdingUnknown.Count}): звірте poz. 47/48 з виписками брокера."));
-        if (polish.Count > 0)
-        {
-            var abroad = polish.Any(paid => row2.Contains(paid.Account));
-            notes.Add(new($"{polish.Count} дивідендів польських компаній не в розділі G: податок утримує польський платник." +
-                (abroad ? " На іноземному брокері перевірте, що 19% справді утримали — інакше їх треба вписати в poz. 46." : ""), abroad,
-                abroad ? "Дивіденди польських компаній на іноземному брокері: якщо 19% не утримали — впишіть у poz. 46." : null));
-        }
-
-        if (accounts.Any(account => !account.Policy.IsTaxed))
-            notes.Add(new($"Не входять: {string.Join(", ", accounts.Where(account => !account.Policy.IsTaxed).Select(account => account.Name))} (IKE/IKZE не оподатковуються)."));
-
-        if (p29 > 0m)
-            notes.Add(new("За рік збиток: подайте PIT-38 усе одно — без нього збиток не можна буде відняти в наступні роки.", true,
-                "Збиток: подайте PIT-38 усе одно, щоб відняти його в наступні роки."));
-        if (p30 > 0m)
-            notes.Add(new("poz. 30 — за правилом «до 50% збитку року» і з припущенням, що в кожній минулій декларації відняли стільки, скільки дозволено. Якщо відняли менше або не подавали — сума інша. Закон дозволяє й раз за 5 років відняти до 5 000 000 zł одного збитку — тоді суму змініть самі."));
-
-        if (attachments.Count > 0)
-            notes.Add(new("PIT/ZG: країна — за ISIN цінного папера. Чи обов’язковий PIT/ZG, коли за кордоном податку з продажу не утримано, — спірно (брошура МФ пов’язує його з методом пропорційного відрахування), але e-Urząd вимагає його для доходу з-за кордону, і він нічого не змінює в податку."));
-
-        if (unknownCountry > 0)
-            notes.Add(new($"{unknownCountry} продажів без країни в ISIN (немає ISIN або XS/EU): їх немає в PIT/ZG — перевірте країну емітента.", true,
-                $"{unknownCountry} продажів без країни в ISIN — їх немає в PIT/ZG."));
-        if (overTreaty.Count > 0 && kisP49 != p49)
-            notes.Add(new($"{overTreaty.Count} дивідендів з утриманням понад ставку договору (немає W-8BEN?). Тут залік до 19% (art. 30a ust. 9, NSA); податкова (KIS) зараховує лише за ставкою договору — тоді poz. 48 = {Typed(kisCredit)}, poz. 49 = {Typed(kisP49)} zł.", true,
-                $"Утримано понад ставку договору: за позицією KIS poz. 48 = {Typed(kisCredit)}, poz. 49 = {Typed(kisP49)} zł."));
-
-        var facts = new List<DeclarationFact>
-        {
+    private static List<DeclarationFact> FactsOf(IReadOnlyList<DividendIncome> foreign)
+    {
+        List<DeclarationFact> facts =
+        [
             new("Дивіденди з-за кордону брутто", foreign.Sum(dividend => dividend.GrossPln)),
             new("Утримано за кордоном з них (у poz. 48 — не більше 19% кожного)", foreign.Sum(dividend => dividend.WithheldPln)),
-        };
+        ];
 
-        string Treatment(DeclarationAccount account) =>
-            !account.Policy.IsTaxed ? "Не оподатковується" : row1.Contains(account) ? "Рядок 1 (PIT-8C) · дивіденди в G" : "Рядок 2 · дивіденди в G";
-        string? CoveredBy(DeclarationAccount account) =>
-            row1.Contains(account) && account.Pit8COf(year) is null && EnteredOn(row1.Where(other => PolishBrokers.Key(other.Broker) == PolishBrokers.Key(account.Broker)), year) is { } owner
-                ? owner.Name : null;
-        var lines = accounts.Select(account => account.In(year) is { } summary
-            ? new DeclarationAccountLine(account.Name, account.Broker, Treatment(account), summary.Revenue, summary.Costs, summary.DividendIncome, summary.DividendTaxCredit,
-                account.AccountId, row1.Contains(account), account.Pit8COf(year), CoveredBy(account))
-            : new DeclarationAccountLine(account.Name, account.Broker, Treatment(account), 0m, 0m, 0m, 0m, account.AccountId, row1.Contains(account), account.Pit8COf(year),
-                CoveredBy(account))).ToList();
-
-        return new TaxDeclaration(Code, Title, year, Deadline(year), sections, attachments, lines, notes, p51, [.. facts.Where(fact => fact.Amount != 0m)]);
+        return [.. facts.Where(fact => fact.Amount != 0m)];
     }
 
     public static DateOnly Deadline(int year)
@@ -190,30 +82,5 @@ public sealed class Pit38Form : ITaxDeclarationForm
             day = day.AddDays(1);
 
         return day;
-    }
-
-    private static decimal Grosze(decimal amount) => decimal.Round(amount, 2, MidpointRounding.AwayFromZero);
-
-    private static string Typed(decimal amount) => decimal.IsInteger(amount)
-        ? amount.ToString("0", System.Globalization.CultureInfo.InvariantCulture)
-        : amount.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture).Replace('.', ',');
-
-    private static decimal CarryforwardUsed(int year, IReadOnlyDictionary<int, decimal> gains, IReadOnlyList<LossYear> earlierLosses, ILossCarryforwardRule rule)
-    {
-        var entered = earlierLosses.Select(loss => loss.Year).ToHashSet();
-        var pools = earlierLosses.Select(loss => new LossPool(loss)).ToList();
-        var first = gains.Keys.Min();
-        var used = 0m;
-
-        for (var number = first; number <= year; number++)
-        {
-            var gain = gains.GetValueOrDefault(number);
-            used = LossPool.UseAgainst(pools, number, gain, rule).Sum(use => use.Amount);
-
-            if (gain < 0m && !entered.Contains(number))
-                pools.Add(new LossPool(new LossYear(number, -gain)));
-        }
-
-        return used;
     }
 }
