@@ -3,7 +3,6 @@ using InvestmentLab.Portfolio.Contracts.Accounts;
 
 namespace InvestmentLab.Portfolio.Accounts.Application.AddSubPortfolio;
 
-/// <param name="TargetSharesOfOthers">New shares (percent) of every other active sub-portfolio.</param>
 public sealed record AddSubPortfolioCommand(SubPortfolioInput SubPortfolio, IReadOnlyDictionary<Guid, decimal> TargetSharesOfOthers);
 
 public sealed class AddSubPortfolioHandler(IAccountRepository accounts, TimeProvider clock)
@@ -16,18 +15,17 @@ public sealed class AddSubPortfolioHandler(IAccountRepository accounts, TimeProv
         var draft = AccountInput.ToDraft(command.SubPortfolio);
         if (draft.IsFailure)
             return draft.Error;
+
         var shares = AccountInput.ToShares(command.TargetSharesOfOthers);
         if (shares.IsFailure)
             return shares.Error;
 
-        var added = account.AddSubPortfolio(draft.Value, shares.Value);
+        var added = account.AddSubPortfolio(draft.Value, shares.Value, clock.GetUtcNow());
         if (added.IsFailure)
             return added.Error;
 
-        var now = clock.GetUtcNow();
-        accounts.Publish(new SubPortfolioAddedV1(account.Id.Value, added.Value.Value, draft.Value.Name.Trim()), now);
-        accounts.Publish(account.ToSharesChanged(now), now);
         await accounts.SaveChangesAsync(cancellationToken);
+
         return account.ToSetupDto();
     }
 }

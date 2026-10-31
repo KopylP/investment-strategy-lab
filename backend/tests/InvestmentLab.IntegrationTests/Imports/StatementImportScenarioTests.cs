@@ -8,11 +8,6 @@ using InvestmentLab.Portfolio.Transactions.Application.ImportStatement;
 
 namespace InvestmentLab.IntegrationTests.Imports;
 
-/// <summary>
-/// Stage 10 end to end: a Revolut statement (synthetic) → suggested mapping, a new US stock registered → preview →
-/// confirmed rows in the journal (USD converted at the NBP cross rate) → the same file again changes nothing →
-/// undoing the import takes the batch back.
-/// </summary>
 public sealed class StatementImportScenarioTests(MarketDataApiFactory factory) : IClassFixture<MarketDataApiFactory>
 {
     private const string Statement = """
@@ -38,9 +33,9 @@ public sealed class StatementImportScenarioTests(MarketDataApiFactory factory) :
         var preview = await SendAsync(client, HttpMethod.Post, url, new { fileName = "revolut.csv", content = Statement }, ct);
         preview.Rows.Count.ShouldBe(6);
         var sxr8 = preview.Mappings.Single(mapping => mapping.Ticker == "SXR8");
-        sxr8.InstrumentId.ShouldNotBeNull();                                  // found in the catalog as SXR8.DE
-        preview.Mappings.Single(mapping => mapping.Ticker == "AAPL").InstrumentName.ShouldBe("Apple");  // stocks of the statement are in the catalog too
-        preview.Counts.NeedsMapping.ShouldBe(3);                              // no strategy says which sleeve for the buys (the dividend falls back to the cash sleeve)
+        sxr8.InstrumentId.ShouldNotBeNull();
+        preview.Mappings.Single(mapping => mapping.Ticker == "AAPL").InstrumentName.ShouldBe("Apple");
+        preview.Counts.NeedsMapping.ShouldBe(3);
 
         var configured = await SendAsync(client, HttpMethod.Put, $"{url}/{preview.Id}", new
         {
@@ -57,29 +52,28 @@ public sealed class StatementImportScenarioTests(MarketDataApiFactory factory) :
             counts => counts.New.ShouldBe(5),
             counts => counts.Unsupported.ShouldBe(1),
             counts => counts.ToRecord.ShouldBe(5));
-        // USD 215 at the fake NBP rates (USD 3.90, EUR 4.30 PLN) → 195.00 EUR.
+
         configured.Rows.Single(row => row.Ticker == "AAPL").AmountInAccountCurrency.ShouldBe(195m);
 
         var confirmed = await SendAsync(client, HttpMethod.Post, $"{url}/{preview.Id}/confirm", new { }, ct);
         confirmed.Status.ShouldBe("Confirmed");
         confirmed.Rows.Where(row => row.WillRecord && row.Ticker != "SFGYY").ShouldAllBe(row => row.Result == "записано");
-        // Sold without a buy (a spin-off): recorded as income, not refused.
+
         confirmed.Rows.Single(row => row.Ticker == "SFGYY").Result.ShouldStartWith("записано як дохід");
 
         var holdings = await client.GetFromJsonAsync<AccountHoldingsDto>($"/api/portfolio/accounts/{account.Id}/holdings", ct);
         var sxr8Position = holdings!.SubPortfolios.Single(sub => sub.SubPortfolioId == eu).Positions.Single();
         sxr8Position.Quantity.ShouldBe(2m);
-        sxr8Position.CostBasis.ShouldBe(201m);                                // the 1 € hidden in the total is the fee
+        sxr8Position.CostBasis.ShouldBe(201m);
 
         var apple = holdings.SubPortfolios.Single(sub => sub.SubPortfolioId == us).Positions.ShouldHaveSingleItem();
         apple.AverageCost.ShouldBe(195m);
         holdings.SubPortfolios.Single(sub => sub.SubPortfolioId == eu).Cash.ShouldBe(1000m - 201m + 1.50m);
-        // The AAPL buy was settled in dollars: the USD balance pays, the EUR cash of its sleeve does not move.
+
         var usSleeve = holdings.SubPortfolios.Single(sub => sub.SubPortfolioId == us);
         usSleeve.Cash.ShouldBe(0m);
         usSleeve.ForeignCash.ShouldNotBeNull().ShouldHaveSingleItem().ShouldBe(new CashBalanceDto("USD", -215m + 2m));
 
-        // The same statement again: everything is already there.
         var again = await SendAsync(client, HttpMethod.Post, url, new { fileName = "revolut.csv", content = Statement }, ct);
         again = await SendAsync(client, HttpMethod.Put, $"{url}/{again.Id}", new
         {
@@ -100,7 +94,7 @@ public sealed class StatementImportScenarioTests(MarketDataApiFactory factory) :
     {
         var ct = TestContext.Current.CancellationToken;
         var client = await factory.CreateSignedInClientAsync(ct);
-        // No FX ingest here: uploading a statement in dollars loads the NBP rates it needs.
+
         var opened = await client.PostAsJsonAsync("/api/portfolio/accounts", new
         {
             name = "Revolut",
@@ -122,7 +116,7 @@ public sealed class StatementImportScenarioTests(MarketDataApiFactory factory) :
         var rheinmetall = preview.Mappings.Single(mapping => mapping.Ticker == "RHM");
         (rheinmetall.InstrumentId, rheinmetall.RegisterAs, rheinmetall.InstrumentName).ShouldBe((null, "RHM.DE", "Rheinmetall AG"));
         var unknown = preview.Mappings.Single(mapping => mapping.Ticker == "ZZZZ");
-        (unknown.RegisterAs, unknown.InstrumentName).ShouldBe(("ZZZZ", null));      // Yahoo has nothing: the ticker as it is
+        (unknown.RegisterAs, unknown.InstrumentName).ShouldBe(("ZZZZ", null));
         preview.Mappings.ShouldAllBe(mapping => mapping.SubPortfolioId == account.SubPortfolios[0].Id);
         preview.Counts.NeedsMapping.ShouldBe(0);
 
@@ -134,6 +128,7 @@ public sealed class StatementImportScenarioTests(MarketDataApiFactory factory) :
     {
         var response = await client.SendAsync(new HttpRequestMessage(method, url) { Content = JsonContent.Create(body) }, ct);
         response.StatusCode.ShouldBe(HttpStatusCode.OK, await response.Content.ReadAsStringAsync(ct));
+
         return (await response.Content.ReadFromJsonAsync<StatementImportDto>(ct))!;
     }
 }

@@ -2,29 +2,8 @@ using InvestmentLab.Rebalancing.Reports.Domain;
 
 namespace InvestmentLab.Rebalancing.Planning.Domain;
 
-public sealed record StrategyInfo(Guid StrategyId, int Version, string Code, string EngineVersion);
-
-/// <summary>What planning produced for one sub-portfolio; <see cref="Error"/> when its strategy could not be evaluated.</summary>
-public sealed record SubPortfolioOutcome(
-    Guid SubPortfolioId,
-    string Name,
-    decimal TargetShare,
-    decimal Contribution,
-    StrategyInfo? Strategy,
-    SectionDecision? Decision,
-    SubPortfolioPlan? Plan,
-    IReadOnlyList<PlannedOrder> Orders,
-    IReadOnlyList<string> Notes,
-    SectionRisk? Risk = null,
-    string? Error = null);
-
-public sealed record ReportHeader(
-    Guid AccountId, UserId OwnerId, string AccountName, Currency Currency, YearMonth Period, ReportKind Kind, ReportTrigger Trigger, DateOnly MarketAsOf, string Code, string Title);
-
-/// <summary>Turns the plans of all sub-portfolios into a report draft: contribution first, then netted broker actions.</summary>
 public static class ReportComposer
 {
-    /// <summary>Quantities are cut (never rounded up) to 8 decimals: a sell never exceeds what is held.</summary>
     private const int QuantityDecimals = 8;
 
     public static ReportDraft Compose(
@@ -33,6 +12,7 @@ public static class ReportComposer
         var netted = OrderNetting.Net([.. outcomes.SelectMany(outcome => outcome.Orders.Select(order => new SubPortfolioOrder(outcome.SubPortfolioId, order)))]);
 
         var actions = new List<ActionDraft>();
+
         if (contribution is { Total: > 0m })
             actions.Add(new ActionDraft(
                 ActionKind.Contribute, null, contribution.Total, 1m,
@@ -54,7 +34,6 @@ public static class ReportComposer
                 [new ActionAllocation(transfer.ToSubPortfolioId, Cut(transfer.Quantity), transfer.Reason)],
                 transfer.Reason, transfer.FromSubPortfolioId, transfer.ToSubPortfolioId));
 
-        // Sells first (they pay for the buys), then transfers, then buys and parking.
         actions.AddRange(brokerActions.Concat(transfers).OrderBy(action => action.Kind));
 
         var contributionPlan = contribution is null

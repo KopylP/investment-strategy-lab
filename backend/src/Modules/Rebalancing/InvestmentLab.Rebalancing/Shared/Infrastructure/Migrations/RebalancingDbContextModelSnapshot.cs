@@ -128,6 +128,11 @@ namespace InvestmentLab.Rebalancing.Shared.Infrastructure.Migrations
                         .HasColumnType("date")
                         .HasColumnName("as_of");
 
+                    b.Property<string>("Cause")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("cause");
+
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -174,6 +179,10 @@ namespace InvestmentLab.Rebalancing.Shared.Infrastructure.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("runs_planned");
 
+                    b.Property<Guid?>("SignalTriggerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("signal_trigger_id");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -211,7 +220,55 @@ namespace InvestmentLab.Rebalancing.Shared.Infrastructure.Migrations
                     b.HasIndex("Status", "RequestedAt")
                         .HasDatabaseName("ix_report_requests_status_requested_at");
 
+                    b.HasIndex("SignalTriggerId", "AccountId", "Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_report_requests_signal_trigger_id_account_id_code")
+                        .HasFilter("signal_trigger_id IS NOT NULL");
+
                     b.ToTable("report_requests", "rebalancing");
+                });
+
+            modelBuilder.Entity("InvestmentLab.Rebalancing.Planning.Domain.SignalReportRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_id");
+
+                    b.Property<string>("Problem")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("problem");
+
+                    b.Property<string>("ReportCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("report_code");
+
+                    b.Property<Guid>("SignalId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("signal_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_signal_report_rules");
+
+                    b.HasIndex("SignalId", "AccountId", "ReportCode")
+                        .IsUnique()
+                        .HasDatabaseName("ix_signal_report_rules_signal_id_account_id_report_code");
+
+                    b.ToTable("signal_report_rules", "rebalancing");
                 });
 
             modelBuilder.Entity("InvestmentLab.Rebalancing.Reports.Domain.RebalancingReport", b =>

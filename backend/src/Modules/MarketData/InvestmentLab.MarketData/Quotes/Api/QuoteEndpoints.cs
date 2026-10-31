@@ -25,7 +25,6 @@ internal static class QuoteEndpoints
                 TypedResults.Ok(await history.GetLatestPrices(instrumentIds, asOf ?? DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime), ct)))
             .WithName("GetLatestPrices");
 
-        // Several series at once (sparklines and changes in the instrument list).
         quotes.MapGet("/history", async ([FromQuery] Guid[] instrumentIds, DateOnly from, DateOnly to, IQuoteHistory history, CancellationToken ct) =>
                 TypedResults.Ok(await history.GetQuoteHistory(instrumentIds, from, to, ct)))
             .WithName("GetQuoteHistories");

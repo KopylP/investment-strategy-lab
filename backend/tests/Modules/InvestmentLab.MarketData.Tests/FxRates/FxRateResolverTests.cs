@@ -28,7 +28,6 @@ public sealed class FxRateResolverTests
     [Fact]
     public void Holidays_without_a_table_fall_back_to_the_previous_published_rate()
     {
-        // 1 and 3 May are Polish holidays, 2–3 May a weekend: no NBP table between 30 April and 4 May.
         var resolved = FxRateResolver.Resolve(Rates, Currency.EUR, Currency.PLN, transactionDate: new DateOnly(2026, 5, 4));
 
         resolved.Value.EffectiveDate.ShouldBe(new DateOnly(2026, 4, 30));

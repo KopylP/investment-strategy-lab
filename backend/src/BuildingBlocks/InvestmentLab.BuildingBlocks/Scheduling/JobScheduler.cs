@@ -6,27 +6,6 @@ using Microsoft.Extensions.Logging;
 
 namespace InvestmentLab.BuildingBlocks.Scheduling;
 
-/// <param name="RunAtStartup">Also run once when the host starts, so a fresh install does not wait for the first occurrence.</param>
-public sealed record ScheduledJobRegistration(Type JobType, IJobSchedule Schedule, bool RunAtStartup = false);
-
-public static class SchedulingRegistration
-{
-    extension(IServiceCollection services)
-    {
-        public IServiceCollection AddScheduledJob<TJob>(IJobSchedule schedule, bool runAtStartup = false)
-            where TJob : class, IScheduledJob
-        {
-            services.TryAddScoped<TJob>();
-            services.AddSingleton(new ScheduledJobRegistration(typeof(TJob), schedule, runAtStartup));
-            return services;
-        }
-    }
-}
-
-/// <summary>
-/// Runs every registered job at its next occurrence (and the startup ones right away, unless
-/// <c>Scheduling:RunAtStartup</c> is false, as in tests); a failed run is logged and waits for the next one.
-/// </summary>
 internal sealed class JobScheduler(
     IEnumerable<ScheduledJobRegistration> jobs,
     IServiceScopeFactory scopes,

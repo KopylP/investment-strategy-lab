@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Routing;
 
 namespace InvestmentLab.Taxation.Assessments.Api;
 
-/// <summary>Tax belongs to the signed-in taxpayer (one PIT-38 over all their accounts), so no account in the routes.</summary>
 internal static class TaxEndpoints
 {
     public static RouteGroupBuilder MapAssessments(this RouteGroupBuilder group)

@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 
 namespace InvestmentLab.Rebalancing.Planning.Application;
 
-/// <summary>Asks Taxation what the plan's sells would cost (§7.1 EstimateSales); a failure never blocks the report.</summary>
 public sealed class SaleTaxes(ITaxEstimator estimator, ILogger<SaleTaxes> logger)
 {
     public async Task EstimateAsync(RebalancingReport report, DateOnly asOf, CancellationToken cancellationToken)

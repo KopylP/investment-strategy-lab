@@ -12,6 +12,7 @@ internal sealed class JournalQueries(ITransactionJournal journal) : IJournalQuer
             return null;
 
         var entries = await journal.GetEntriesAsync(account.Id, cancellationToken);
+
         return new JournalSnapshotDto(
             account.Id.Value,
             account.OwnerId.Value,

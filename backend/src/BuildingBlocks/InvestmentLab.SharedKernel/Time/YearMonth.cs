@@ -2,7 +2,6 @@ using System.Globalization;
 
 namespace InvestmentLab.SharedKernel;
 
-/// <summary>A calendar month, e.g. the period of a monthly report.</summary>
 public readonly record struct YearMonth : IComparable<YearMonth>
 {
     public int Year { get; }
@@ -15,6 +14,7 @@ public readonly record struct YearMonth : IComparable<YearMonth>
         ArgumentOutOfRangeException.ThrowIfLessThan(month, 1);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(month, 12);
         ArgumentOutOfRangeException.ThrowIfLessThan(year, 1);
+
         return new(year, month);
     }
 

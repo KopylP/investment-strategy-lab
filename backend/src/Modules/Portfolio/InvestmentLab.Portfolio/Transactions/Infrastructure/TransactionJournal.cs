@@ -28,7 +28,7 @@ internal sealed class TransactionJournal(PortfolioDbContext db) : ITransactionJo
         db.HoldingRows.AddRange(HoldingRow.From(holdings, ownerId));
     }
 
-    public void Publish<TEvent>(TEvent integrationEvent, DateTimeOffset occurredAt) where TEvent : class => db.Publish(integrationEvent, occurredAt);
+    public void Record(IDomainEvent domainEvent) => db.Record(domainEvent);
 
     public Task SaveChangesAsync(CancellationToken cancellationToken) => db.SaveChangesAsync(cancellationToken);
 }

@@ -7,29 +7,20 @@ using UglyToad.PdfPig.Writer;
 
 namespace InvestmentLab.Taxation.Declarations.Infrastructure;
 
-/// <summary>
-/// PIT-38 on the Ministry's own form, PIT-38(18), followed by one PIT/ZG(8) per country: the official PDFs (not
-/// fillable) with the amounts written into their boxes. Personal data (parts A, B) is left for the taxpayer. The box
-/// positions were measured on these exact files: złoty end at the comma printed in the box, grosze follow it.
-/// </summary>
 public sealed class Pit38PdfPrinter : IDeclarationPrinter
 {
     private const double FontSize = 9;
 
-    /// <summary>Points from the end of the złoty to the printed comma, and from the comma to the grosze.</summary>
     private const double BeforeComma = 2, AfterComma = 4;
 
-    /// <summary>Parts D and G print "zł" just before the comma, from x 542: the złoty end before it.</summary>
     private const double InPrintedZl = 540;
 
-    /// <summary>Box 1 of poz. 6, "złożenie zeznania" (a correction is ticked by hand).</summary>
     private static readonly PdfPoint FilingBox = new(75.6, 507.5);
 
     public string Kind => "form";
 
     public bool Prints(TaxDeclaration declaration) => declaration.Form == "PIT-38";
 
-    /// <summary>Positions of PIT-38(18) by "poz." number; the year is position 4.</summary>
     public static readonly IReadOnlyDictionary<int, Box> Pit38 = new Dictionary<int, Box>
     {
         [4] = new Cells(1, [290.5, 305.0, 321.2, 337.4, 353.6], 699.5),
@@ -59,7 +50,6 @@ public sealed class Pit38PdfPrinter : IDeclarationPrinter
         [72] = new Text(3, 60, 717),
     };
 
-    /// <summary>Positions of PIT/ZG(8); the year is position 2.</summary>
     public static readonly IReadOnlyDictionary<int, Box> PitZg = new Dictionary<int, Box>
     {
         [2] = new Cells(1, [278.0, 294.2, 310.4, 326.6, 342.8], 700),
@@ -78,8 +68,10 @@ public sealed class Pit38PdfPrinter : IDeclarationPrinter
 
         var pages = Fill(builder, font, pit38, Pit38, 4, declaration.Year, declaration.Sections.SelectMany(section => section.Fields));
         pages[0].AddText("X", 11, FilingBox, font);
+
         foreach (var attachment in declaration.Attachments.Where(attachment => attachment.Form == "PIT/ZG"))
             Fill(builder, font, pitZg, PitZg, 2, declaration.Year, attachment.Fields);
+
         return builder.Build();
     }
 
@@ -88,12 +80,15 @@ public sealed class Pit38PdfPrinter : IDeclarationPrinter
     {
         var pages = Enumerable.Range(1, form.NumberOfPages).Select(number => builder.AddPage(form, number)).ToList();
         Write(pages, font, layout[yearPosition], year.ToString(CultureInfo.InvariantCulture));
+
         foreach (var field in fields)
         {
             if (!layout.TryGetValue(field.Position, out var box))
                 throw new InvalidOperationException($"The form has no box for poz. {field.Position}.");
+
             Write(pages, font, box, field.Amount is { } amount ? Format(amount, box) : field.Text ?? "");
         }
+
         return pages;
     }
 
@@ -121,6 +116,7 @@ public sealed class Pit38PdfPrinter : IDeclarationPrinter
                     var middle = (cells.Edges[index] + cells.Edges[index + 1]) / 2 + 1.8;
                     page.AddText(character, FontSize, new PdfPoint(middle - Width(character) / 2, cells.Baseline), font);
                 }
+
                 break;
             case Text text:
                 page.AddText(value, FontSize, new PdfPoint(text.Left, text.Baseline), font);
@@ -128,23 +124,18 @@ public sealed class Pit38PdfPrinter : IDeclarationPrinter
         }
     }
 
-    /// <summary>"8385,00" for a box with grosze, "1490" for a whole-złoty box (the form prints "zł" after it).</summary>
     private static string Format(decimal amount, Box box) => box is Amount
         ? Math.Abs(amount).ToString("0.00", CultureInfo.InvariantCulture).Replace('.', ',')
         : decimal.Round(Math.Abs(amount), 0, MidpointRounding.AwayFromZero).ToString("0", CultureInfo.InvariantCulture);
 
     private static byte[] Resource(string name) => FormResources.Load(name);
 
-    /// <summary>Where a value goes on a page (1-based), in points from the page's bottom left.</summary>
     public abstract record Box(int Page);
 
-    /// <summary>A "zł, gr" box: <paramref name="Comma"/> is where the form prints the comma; <paramref name="ZlotyEnd"/> where the złoty must end when "zł" is printed before it.</summary>
     public sealed record Amount(int Page, double Comma, double Baseline, double? ZlotyEnd = null) : Box(Page);
 
-    /// <summary>A whole-złoty box, right-aligned before the printed "zł".</summary>
     public sealed record Whole(int Page, double Right, double Baseline) : Box(Page);
 
-    /// <summary>One character per printed cell; <paramref name="Edges"/> are the cell borders.</summary>
     public sealed record Cells(int Page, IReadOnlyList<double> Edges, double Baseline) : Box(Page);
 
     public sealed record Text(int Page, double Left, double Baseline) : Box(Page);

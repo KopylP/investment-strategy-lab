@@ -38,6 +38,10 @@
     <Project Path="src/Modules/Strategies/InvestmentLab.Strategies.Contracts/InvestmentLab.Strategies.Contracts.csproj" />
     <Project Path="src/Modules/Strategies/InvestmentLab.Strategies/InvestmentLab.Strategies.csproj" />
   </Folder>
+  <Folder Name="/src/Modules/Signals/">
+    <Project Path="src/Modules/Signals/InvestmentLab.Signals.Contracts/InvestmentLab.Signals.Contracts.csproj" />
+    <Project Path="src/Modules/Signals/InvestmentLab.Signals/InvestmentLab.Signals.csproj" />
+  </Folder>
   <Folder Name="/src/Modules/Taxation/">
     <Project Path="src/Modules/Taxation/InvestmentLab.Taxation.Contracts/InvestmentLab.Taxation.Contracts.csproj" />
     <Project Path="src/Modules/Taxation/InvestmentLab.Taxation/InvestmentLab.Taxation.csproj" />
@@ -53,6 +57,7 @@
     <Project Path="tests/Modules/InvestmentLab.Performance.Tests/InvestmentLab.Performance.Tests.csproj" />
     <Project Path="tests/Modules/InvestmentLab.Portfolio.Tests/InvestmentLab.Portfolio.Tests.csproj" />
     <Project Path="tests/Modules/InvestmentLab.Rebalancing.Tests/InvestmentLab.Rebalancing.Tests.csproj" />
+    <Project Path="tests/Modules/InvestmentLab.Signals.Tests/InvestmentLab.Signals.Tests.csproj" />
     <Project Path="tests/Modules/InvestmentLab.Strategies.Tests/InvestmentLab.Strategies.Tests.csproj" />
     <Project Path="tests/Modules/InvestmentLab.Taxation.Tests/InvestmentLab.Taxation.Tests.csproj" />
   </Folder>

@@ -1,4 +1,3 @@
-using InvestmentLab.Identity.Contracts;
 using InvestmentLab.Identity.Profiles.Domain;
 
 namespace InvestmentLab.Identity.Users.Application.Register;
@@ -12,9 +11,10 @@ public sealed class RegisterHandler(IUserAccounts accounts, TimeProvider clock)
         var userId = UserId.New();
         var email = command.Email.Trim();
 
-        var registered = await accounts.RegisterAsync(
-            userId, email, command.Password, UserProfile.CreateDefault(userId),
-            new UserRegisteredV1(userId.Value, email, clock.GetUtcNow()), cancellationToken);
+        var profile = UserProfile.CreateDefault(userId);
+        profile.Registered(email, clock.GetUtcNow());
+
+        var registered = await accounts.RegisterAsync(userId, email, command.Password, profile, cancellationToken);
 
         return registered.IsSuccess ? new CurrentUserDto(userId.Value, email) : registered.Error;
     }

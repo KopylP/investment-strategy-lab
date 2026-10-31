@@ -9,6 +9,10 @@ using InvestmentLab.Rebalancing.Planning.Application;
 using InvestmentLab.Rebalancing.Planning.Application.GenerateMonthlyReport;
 using InvestmentLab.Rebalancing.Planning.Application.GenerateRiskReview;
 using InvestmentLab.Rebalancing.Planning.Application.RequestReport;
+using InvestmentLab.Rebalancing.Planning.Application.AddSignalReportRule;
+using InvestmentLab.Rebalancing.Planning.Application.GetSignalReportRules;
+using InvestmentLab.Rebalancing.Planning.Application.Integration;
+using InvestmentLab.Rebalancing.Planning.Application.RemoveSignalReportRule;
 using InvestmentLab.Rebalancing.Planning.Domain;
 using InvestmentLab.Rebalancing.Planning.Infrastructure;
 using InvestmentLab.Rebalancing.Reports.Api;
@@ -19,6 +23,7 @@ using InvestmentLab.Rebalancing.Reports.Application.MarkActions;
 using InvestmentLab.Rebalancing.Reports.Domain;
 using InvestmentLab.Rebalancing.Reports.Infrastructure;
 using InvestmentLab.Rebalancing.Shared.Infrastructure;
+using InvestmentLab.Signals.Contracts;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,19 +41,40 @@ public sealed class RebalancingModule : IModule
     {
         builder.AddModuleDbContext<RebalancingDbContext>(Schema);
 
+        builder.Services.AddDomainEventMapper<ReportGenerated, ReportGeneratedV1, ReportGeneratedMapper>();
+        builder.Services.AddDomainEventMapper<ReportSuperseded, ReportSupersededV1, ReportSupersededMapper>();
+        builder.Services.AddDomainEventMapper<ReportClosed, ReportClosedV1, ReportClosedMapper>();
+        builder.Services.AddDomainEventMapper<ContributionMarked, RecordContributionV1, ContributionMarkedMapper>();
+        builder.Services.AddDomainEventMapper<TransferMarked, RecordInternalTransferV1, TransferMarkedMapper>();
+        builder.Services.AddDomainEventMapper<TradeMarked, RecordTradeV1, TradeMarkedMapper>();
+        builder.Services.AddDomainEventMapper<MarkUndone, ReverseTransactionV1, MarkUndoneMapper>();
+        builder.Services.AddDomainEventMapper<ReportRequestFailed, ReportRequestFailedV1, ReportRequestFailedMapper>();
+
         var services = builder.Services;
         services.AddScoped<IReportRepository, ReportRepository>();
         services.AddScoped<IReportQueries, ReportQueries>();
         services.AddScoped<ReportQueriesHandler>();
-        services.AddScoped<MarkingHandler>();
-        services.AddScoped<LoadOperationsHandler>();
-        services.AddIntegrationEventHandler<TransactionRecordedV1, TransactionResults>();
-        services.AddIntegrationEventHandler<TransactionRejectedV1, TransactionResults>();
+        services.AddScoped<FillMarker>();
+        services.AddScoped<MarkActionExecutedHandler>();
+        services.AddScoped<RecordPartialFillHandler>();
+        services.AddScoped<SkipActionHandler>();
+        services.AddScoped<UndoMarkHandler>();
+        services.AddScoped<CloseReportHandler>();
+        services.AddScoped<JournalOperationsLoader>();
+        services.AddScoped<PreviewJournalMatchesHandler>();
+        services.AddScoped<ApplyJournalMatchesHandler>();
+        services.AddIntegrationEventHandler<TransactionRecordedV1, LinkRecordedTransaction>();
+        services.AddIntegrationEventHandler<TransactionRejectedV1, RollBackRejectedTransaction>();
 
         services.AddScoped<IPlanSettingsRepository, PlanSettingsRepository>();
         services.AddScoped<PlanningInputs>();
         services.AddScoped<SaleTaxes>();
-        services.AddScoped<PlanSettingsHandler>();
+        services.AddScoped<GetPlanSettingsHandler>();
+        services.AddScoped<ChangePlanSettingsHandler>();
+        services.AddScoped<GetReportScheduleHandler>();
+        services.AddScoped<OwnReportScheduleChange>();
+        services.AddScoped<ChangeReportScheduleHandler>();
+        services.AddScoped<UseStrategyScheduleHandler>();
         services.AddScoped<IReportScheduleQueries, ReportScheduleQueries>();
         services.AddScoped<GenerateMonthlyReportHandler>();
         services.AddScoped<GenerateRiskReviewHandler>();
@@ -56,6 +82,12 @@ public sealed class RebalancingModule : IModule
         services.AddScoped<RequestReportHandler>();
         services.AddScoped<ReportRequestQueriesHandler>();
         services.AddScoped<ReportRequestProcessor>();
+        services.AddScoped<ISignalReportRuleRepository, SignalReportRuleRepository>();
+        services.AddScoped<GetSignalReportRulesHandler>();
+        services.AddScoped<AddSignalReportRuleHandler>();
+        services.AddScoped<RemoveSignalReportRuleHandler>();
+        services.AddIntegrationEventHandler<SignalTriggeredV1, RequestReportsOnSignal>();
+        services.AddIntegrationEventHandler<SignalDeletedV1, RemoveRulesOfDeletedSignal>();
         services.AddScheduledJob<StrategyReportsJob>(ReportSchedules.Check);
         services.AddScheduledJob<ReportRequestsJob>(ReportSchedules.Requests);
 

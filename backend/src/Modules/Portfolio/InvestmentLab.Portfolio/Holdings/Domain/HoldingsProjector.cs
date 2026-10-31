@@ -3,12 +3,6 @@ using InvestmentLab.Portfolio.Transactions.Domain;
 
 namespace InvestmentLab.Portfolio.Holdings.Domain;
 
-/// <summary>
-/// Replays the journal in date order into holdings per sub-portfolio. A reversed entry and its reversal are skipped,
-/// so holdings look as if the entry never happened. Fails when, at any date, a sub-portfolio gives away units it does not hold.
-/// Sales and transfers take units first-in, first-out. Entries settled in another currency move that currency's balance
-/// (as the broker keeps it), not the account-currency cash.
-/// </summary>
 public static class HoldingsProjector
 {
     public static Result<ProjectedHoldings> Project(InvestmentAccount account, IEnumerable<Transaction> journal, DateOnly? asOf = null)
@@ -33,6 +27,7 @@ public static class HoldingsProjector
                 InternalTransferDetails transfer => ApplyTransfer(entry, transfer, SleeveOf),
                 _ => null,
             };
+
             if (applied is not null)
                 return applied;
         }
@@ -48,6 +43,7 @@ public static class HoldingsProjector
             .ToList();
 
         var lastDate = effective.Count > 0 ? effective[^1].OccurredOn : (DateOnly?)null;
+
         return new ProjectedHoldings(new AccountHoldings(account.Id, account.BaseCurrency, asOf ?? lastDate, subPortfolios), warnings);
     }
 
@@ -67,17 +63,18 @@ public static class HoldingsProjector
 
             if (trade.Side == TradeSide.Buy)
             {
-                // Cash pays the rounded total; the lot keeps the exact unit price so the average cost equals the trade price.
                 if (settled is { } paid)
                     sleeve.AddForeign(trade.Settlement!.Currency, -paid);
                 else
                     sleeve.Cash -= gross + fees[i].Amount;
+
                 sleeve.LotsOf(trade.InstrumentId).Add(new Lot(entry.Id, entry.OccurredOn, quantity.Value, trade.Price.Amount + fees[i].Amount / quantity.Value));
             }
             else
             {
                 if (sleeve.Take(trade.InstrumentId, quantity.Value) is null)
                     return TransactionErrors.NotEnoughUnits(subPortfolioId.Value, trade.InstrumentId, sleeve.Units(trade.InstrumentId), quantity.Value, entry.OccurredOn);
+
                 if (settled is { } received)
                     sleeve.AddForeign(trade.Settlement!.Currency, received);
                 else
@@ -91,11 +88,14 @@ public static class HoldingsProjector
     private static Error? ApplyCash(CashMovementDetails cash, Func<SubPortfolioId, Sleeve> sleeveOf)
     {
         var sign = cash.IsInflow ? 1m : -1m;
+
         if (cash.Settlement is { } settlement)
         {
             var parts = Split(settlement.Amount, [.. cash.Allocations.Select(allocation => allocation.Amount.Amount)]);
+
             for (var i = 0; i < cash.Allocations.Count; i++)
                 sleeveOf(cash.Allocations[i].SubPortfolioId).AddForeign(settlement.Currency, sign * parts[i]);
+
             return null;
         }
 
@@ -105,12 +105,12 @@ public static class HoldingsProjector
         return null;
     }
 
-    /// <summary>Splits a settled amount in proportion to the allocations; the last part takes the rounding rest.</summary>
     private static decimal[] Split(decimal amount, IReadOnlyList<decimal> weights)
     {
         var total = weights.Sum();
         var parts = weights.Select(weight => total > 0m ? decimal.Round(amount * weight / total, 8) : 0m).ToArray();
         parts[^1] += amount - parts.Sum();
+
         return parts;
     }
 
@@ -122,6 +122,7 @@ public static class HoldingsProjector
         {
             from.Cash -= amount.Amount;
             to.Cash += amount.Amount;
+
             return null;
         }
 
@@ -133,6 +134,7 @@ public static class HoldingsProjector
         var lots = to.LotsOf(instrumentId);
         lots.AddRange(moved);
         lots.Sort((left, right) => left.OpenedOn.CompareTo(right.OpenedOn));
+
         return null;
     }
 
@@ -142,7 +144,6 @@ public static class HoldingsProjector
 
         public decimal Cash { get; set; }
 
-        /// <summary>Balances the broker keeps in other currencies (USD after selling a US stock), in that currency.</summary>
         public Dictionary<Currency, decimal> Foreign { get; } = [];
 
         public void AddForeign(Currency currency, decimal amount) => Foreign[currency] = Foreign.GetValueOrDefault(currency) + amount;
@@ -152,7 +153,6 @@ public static class HoldingsProjector
 
         public decimal Units(Guid instrumentId) => _lots.TryGetValue(instrumentId, out var lots) ? lots.Sum(lot => lot.Quantity) : 0m;
 
-        /// <summary>Removes units first-in, first-out and returns them as lots; null when not enough are held.</summary>
         public List<Lot>? Take(Guid instrumentId, decimal quantity)
         {
             if (Units(instrumentId) < quantity)
@@ -160,6 +160,7 @@ public static class HoldingsProjector
 
             var lots = LotsOf(instrumentId);
             var taken = new List<Lot>();
+
             while (quantity > 0m)
             {
                 var oldest = lots[0];

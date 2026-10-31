@@ -2,10 +2,6 @@ using InvestmentLab.Rebalancing.Planning.Domain;
 
 namespace InvestmentLab.Rebalancing.Planning.Application.RequestReport;
 
-/// <summary>A report asked for, as the app shows it while its strategies think («Готується») and once it is made or failed.</summary>
-/// <param name="Status">Pending, Completed or Failed.</param>
-/// <param name="AsOf">The market date the report is for: its period.</param>
-/// <param name="StrategiesAnswered">Of <paramref name="Strategies"/>, how many have answered (or failed) so far.</param>
 public sealed record ReportRequestDto(
     Guid Id,
     Guid AccountId,
@@ -25,7 +21,6 @@ public sealed record ReportRequestDto(
 
 public sealed class ReportRequestQueriesHandler(IReportRequestRepository requests, TimeProvider clock)
 {
-    /// <summary>Finished requests stay listed this long, so a failed one is seen.</summary>
     public static readonly TimeSpan RecentlyFinished = TimeSpan.FromDays(1);
 
     public async Task<IReadOnlyList<ReportRequestDto>> List(Guid? accountId, CancellationToken cancellationToken) =>

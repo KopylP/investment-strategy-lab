@@ -2,32 +2,14 @@ using System.Globalization;
 
 namespace InvestmentLab.SharedKernel;
 
-public enum CadenceFrequency
-{
-    Off,
-    Hourly,
-    Daily,
-    Weekly,
-    Monthly,
-    Quarterly,
-}
-
-/// <summary>
-/// When something recurring comes, in the service's local time (a report, a check of a signal):
-/// every hour at <see cref="Minute"/>; every day, on <see cref="Weekday"/> each week, or on <see cref="Day"/> of each
-/// month or of the quarter's first month (a shorter month: its last day) at <see cref="Time"/>.
-/// </summary>
 public sealed record Cadence(CadenceFrequency Frequency, int Day, DayOfWeek Weekday, TimeOnly Time, int Minute)
 {
     public static readonly Cadence Off = new(CadenceFrequency.Off, 1, DayOfWeek.Sunday, new TimeOnly(20, 0), 0);
 
-    /// <summary>
-    /// An unknown frequency is off; a field out of range, or one the frequency does not read, keeps its default (so two
-    /// things with the same schedule have equal cadences).
-    /// </summary>
     public static Cadence Of(string frequency, int day, string weekday, string time, int minute)
     {
         var parsed = Enum.TryParse<CadenceFrequency>(frequency, ignoreCase: true, out var known) && Enum.IsDefined(known) ? known : CadenceFrequency.Off;
+
         return new Cadence(
             parsed,
             parsed is CadenceFrequency.Monthly or CadenceFrequency.Quarterly && day is >= 1 and <= 31 ? day : Off.Day,
@@ -38,47 +20,48 @@ public sealed record Cadence(CadenceFrequency Frequency, int Day, DayOfWeek Week
             parsed == CadenceFrequency.Hourly && minute is >= 0 and <= 59 ? minute : Off.Minute);
     }
 
-    /// <summary>
-    /// A schedule the user typed, strictly: the frequency and the fields it reads must be valid (a monthly one needs a day
-    /// and a time, an hourly one a minute); fields it does not read are ignored.
-    /// </summary>
     public static Result<Cadence> TryOf(string frequency, int? day, string? weekday, string? time, int? minute)
     {
         if (!Enum.TryParse<CadenceFrequency>(frequency, ignoreCase: true, out var parsed) || !Enum.IsDefined(parsed) || int.TryParse(frequency, out _))
             return Error.Validation("cadence.frequency", $"Unknown frequency '{frequency}': off, hourly, daily, weekly, monthly or quarterly.");
+
         if (parsed is CadenceFrequency.Monthly or CadenceFrequency.Quarterly && day is not (>= 1 and <= 31))
             return Error.Validation("cadence.day", "The day of the month must be 1–31.");
+
         if (parsed == CadenceFrequency.Weekly && (weekday is null || int.TryParse(weekday, out _) || !Enum.TryParse<DayOfWeek>(weekday, ignoreCase: true, out _)))
             return Error.Validation("cadence.weekday", "The weekday must be monday … sunday.");
+
         if (parsed is not (CadenceFrequency.Off or CadenceFrequency.Hourly)
             && !TimeOnly.TryParseExact(time, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
             return Error.Validation("cadence.time", "The time must be HH:mm.");
         if (parsed == CadenceFrequency.Hourly && minute is not (>= 0 and <= 59))
             return Error.Validation("cadence.minute", "The minute must be 0–59.");
+
         return Of(frequency, day ?? Off.Day, weekday ?? "", time ?? "", minute ?? Off.Minute);
     }
 
-    /// <summary>The latest time at or before <paramref name="now"/> (local); null when it is off.</summary>
     public DateTime? Last(DateTime now)
     {
         if (Frequency == CadenceFrequency.Off)
             return null;
+
         var period = PeriodOf(now);
         var at = At(period);
+
         return at <= now ? at : At(Step(period, -1));
     }
 
-    /// <summary>The first time after <paramref name="now"/> (local); null when it is off.</summary>
     public DateTime? Next(DateTime now)
     {
         if (Frequency == CadenceFrequency.Off)
             return null;
+
         var period = PeriodOf(now);
         var at = At(period);
+
         return at > now ? at : At(Step(period, 1));
     }
 
-    /// <summary>The start of the hour, day, week (Monday), month or quarter holding <paramref name="instant"/>.</summary>
     private DateTime PeriodOf(DateTime instant) => Frequency switch
     {
         CadenceFrequency.Hourly => instant.Date.AddHours(instant.Hour),

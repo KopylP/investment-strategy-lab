@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Http;
 
 namespace InvestmentLab.BuildingBlocks.Security;
 
-/// <summary>Reads the user id from the authentication cookie's name identifier claim.</summary>
 internal sealed class HttpCurrentUser(IHttpContextAccessor accessor) : ICurrentUser
 {
     public UserId? Id =>

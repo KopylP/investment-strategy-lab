@@ -20,7 +20,6 @@ public sealed class TaxCalculatorTests
     [Fact]
     public void Fifo_takes_the_oldest_lots_and_converts_each_leg_at_its_own_rate()
     {
-        // Bought 10 @ 100 EUR (fee 1) at 4.30, then 10 @ 120 EUR (fee 1) at 4.40; sold 15 @ 130 EUR (fee 2) at 4.25.
         var computation = TaxCalculator.Compute([
             Buy("2025-01-10", 10m, 100m, 1m, 4.30m),
             Buy("2025-03-10", 10m, 120m, 1m, 4.40m),
@@ -28,14 +27,14 @@ public sealed class TaxCalculatorTests
         ], Belka, []);
 
         var sale = computation.Year(2025)!.Realizations.ShouldHaveSingleItem();
-        sale.ProceedsPln.ShouldBe(8287.50m);                         // 1950 EUR × 4.25: the sale's fee is a cost (PIT-38 poz. 23)
+        sale.ProceedsPln.ShouldBe(8287.50m);
         sale.Lots.Select(lot => lot.Quantity).ShouldBe([10m, 5m]);
-        sale.CostPln.ShouldBe(4304.30m + 2642.20m + 8.50m);          // whole first lot + half of the second (5284.40 / 2) + fee 2 × 4.25
+        sale.CostPln.ShouldBe(4304.30m + 2642.20m + 8.50m);
         sale.GainPln.ShouldBe(8287.50m - 6955.00m);
 
         var year = computation.Year(2025)!.Summary;
-        year.TaxBase.ShouldBe(1333m);                                // 1332.50 → whole złoty, half rounds up
-        year.CapitalTax.ShouldBe(253m);                              // 1333 × 19% = 253.27
+        year.TaxBase.ShouldBe(1333m);
+        year.CapitalTax.ShouldBe(253m);
         computation.OpenLots.ShouldHaveSingleItem().Quantity.ShouldBe(5m);
     }
 
@@ -44,11 +43,11 @@ public sealed class TaxCalculatorTests
     {
         var computation = TaxCalculator.Compute([
             Buy("2023-01-10", 10m, 100m, 0m, 4m),
-            Sell("2023-06-10", 10m, 60m, 0m, 4m),        // loss 1600
+            Sell("2023-06-10", 10m, 60m, 0m, 4m),
             Buy("2024-01-10", 10m, 100m, 0m, 4m),
-            Sell("2024-06-10", 10m, 200m, 0m, 4m),       // gain 4000 → at most 800 of the loss
+            Sell("2024-06-10", 10m, 200m, 0m, 4m),
             Buy("2025-01-10", 10m, 100m, 0m, 4m),
-            Sell("2025-06-10", 10m, 150m, 0m, 4m),       // gain 2000 → the other 800
+            Sell("2025-06-10", 10m, 150m, 0m, 4m),
         ], Belka, []);
 
         computation.Year(2023)!.Summary.LossToCarry.ShouldBe(1600m);
@@ -64,11 +63,11 @@ public sealed class TaxCalculatorTests
     {
         var computation = TaxCalculator.Compute([
             Buy("2025-01-10", 10m, 100m, 0m, 4m),
-            Sell("2025-06-10", 10m, 200m, 0m, 4m),        // gain 4000
+            Sell("2025-06-10", 10m, 200m, 0m, 4m),
         ], Belka, [new LossYear(2019, 5000m), new LossYear(2022, 3000m, AlreadyUsed: 2000m)]);
 
         var year = computation.Year(2025)!;
-        year.CarryforwardUses.ShouldBe([new CarryforwardUse(2022, 1000m)]);   // 2019 expired; 2022 has 1000 left
+        year.CarryforwardUses.ShouldBe([new CarryforwardUse(2022, 1000m)]);
         year.Summary.TaxBase.ShouldBe(3000m);
     }
 
@@ -85,8 +84,8 @@ public sealed class TaxCalculatorTests
         sale.Attributions.ShouldBe([new GainAttribution(Eu, 240m), new GainAttribution(Us, 160m)]);
         var year = computation.Year(2025)!.Summary;
         year.DividendIncome.ShouldBe(210m);
-        computation.Year(2025)!.Dividends.Single().WithholdingKnown.ShouldBeFalse();   // no broker report: gross is what was received
-        year.DividendTax.ShouldBe(40m);                   // 210 × 19% = 39.90
+        computation.Year(2025)!.Dividends.Single().WithholdingKnown.ShouldBeFalse();
+        year.DividendTax.ShouldBe(40m);
         year.TaxDue.ShouldBe(year.CapitalTax + 40m);
     }
 
@@ -107,9 +106,9 @@ public sealed class TaxCalculatorTests
         new(Guid.NewGuid(), DateOnly.Parse(date), _sequence++, TaxableKind.Dividend, Other, 0m, 0m, 0m, net, [new(Eu, 0m)], rate, null, Withholding: withholding);
 
     [Theory]
-    [InlineData("1000.49", 1000, 190)]   // under half a złoty drops: 1000 × 19% = 190
-    [InlineData("1000.50", 1001, 190)]   // half a złoty rounds up: 1001 × 19% = 190.19
-    [InlineData("1002.50", 1003, 191)]   // 1003 × 19% = 190.57 rounds up
+    [InlineData("1000.49", 1000, 190)]
+    [InlineData("1000.50", 1001, 190)]
+    [InlineData("1002.50", 1003, 191)]
     public void Tax_base_and_tax_are_whole_zloty_half_rounding_up(string gain, int taxBase, int tax)
     {
         var computation = TaxCalculator.Compute([
@@ -126,8 +125,8 @@ public sealed class TaxCalculatorTests
     public void Both_fees_are_costs_each_at_the_rate_of_its_own_trade()
     {
         var computation = TaxCalculator.Compute([
-            Buy("2025-01-10", 10m, 10m, 2m, 4m),     // 400 + fee 8
-            Sell("2025-06-10", 10m, 20m, 3m, 5m),    // 1000, fee 15
+            Buy("2025-01-10", 10m, 10m, 2m, 4m),
+            Sell("2025-06-10", 10m, 20m, 3m, 5m),
         ], Belka, []);
 
         var sale = computation.Year(2025)!.Realizations.Single();
@@ -140,7 +139,7 @@ public sealed class TaxCalculatorTests
     public void A_partly_sold_lot_gives_a_proportional_share_of_its_cost_and_the_rest_goes_with_the_last_units()
     {
         var computation = TaxCalculator.Compute([
-            Buy("2025-01-10", 3m, 10m, 1m, 1m),      // 31 for three
+            Buy("2025-01-10", 3m, 10m, 1m, 1m),
             Sell("2025-02-10", 1m, 20m, 0m, 1m),
             Sell("2025-03-10", 2m, 20m, 0m, 1m),
         ], Belka, []);
@@ -170,7 +169,7 @@ public sealed class TaxCalculatorTests
         ], Belka, []);
 
         var year = computation.Year(2025)!;
-        year.Realizations.Single().GainPln.ShouldBe(4000m - 4300m);   // a currency loss is a loss
+        year.Realizations.Single().GainPln.ShouldBe(4000m - 4300m);
         year.Summary.LossToCarry.ShouldBe(300m);
         year.Summary.TaxDue.ShouldBe(0m);
     }
@@ -180,11 +179,11 @@ public sealed class TaxCalculatorTests
     {
         var computation = TaxCalculator.Compute([
             Buy("2024-01-10", 10m, 1000m, 0m, 1m),
-            Sell("2024-06-10", 10m, 0m, 0m, 1m),           // loss 10000
+            Sell("2024-06-10", 10m, 0m, 0m, 1m),
             Buy("2025-01-10", 10m, 100m, 0m, 1m),
-            Sell("2025-06-10", 10m, 200m, 0m, 1m),         // gain 1000: all of it covered
+            Sell("2025-06-10", 10m, 200m, 0m, 1m),
             Buy("2026-01-10", 10m, 100m, 0m, 1m),
-            Sell("2026-06-10", 10m, 1100m, 0m, 1m),        // gain 10000: half of the loss, 5000
+            Sell("2026-06-10", 10m, 1100m, 0m, 1m),
         ], Belka, []);
 
         computation.Year(2025)!.Summary.CarryforwardUsed.ShouldBe(1000m);
@@ -199,9 +198,9 @@ public sealed class TaxCalculatorTests
         var losses = new[] { new LossYear(2020, 1000m), new LossYear(2023, 1000m) };
         var computation = TaxCalculator.Compute([
             Buy("2025-01-10", 1m, 100m, 0m, 1m),
-            Sell("2025-06-10", 1m, 700m, 0m, 1m),          // gain 600: 500 of 2020 (its last year), 100 of 2023
+            Sell("2025-06-10", 1m, 700m, 0m, 1m),
             Buy("2026-01-10", 1m, 100m, 0m, 1m),
-            Sell("2026-06-10", 1m, 2100m, 0m, 1m),         // gain 2000: 2020 expired, 2023 has 900 left, at most 500 a year
+            Sell("2026-06-10", 1m, 2100m, 0m, 1m),
         ], Belka, losses);
 
         computation.Year(2025)!.CarryforwardUses.ShouldBe([new CarryforwardUse(2020, 500m), new CarryforwardUse(2023, 100m)]);
@@ -211,7 +210,6 @@ public sealed class TaxCalculatorTests
     [Fact]
     public void Tax_paid_abroad_on_a_dividend_is_credited_only_up_to_the_polish_19_percent_of_it()
     {
-        // 70 USD received of 100, 30 withheld (no W-8BEN), at 4 PLN: 19% of 400 is 76, so 76 of the 120 counts.
         var computation = TaxCalculator.Compute([Dividend("2025-05-16", 70m, 4m, new WithholdingFacts(100m / 70m, 30m / 70m))], Belka, []);
 
         var year = computation.Year(2025)!.Summary;
@@ -225,10 +223,10 @@ public sealed class TaxCalculatorTests
     {
         var computation = TaxCalculator.Compute([
             Buy("2025-01-10", 1m, 1000m, 0m, 1m),
-            Sell("2025-02-10", 1m, 500m, 0m, 1m),           // loss 500
+            Sell("2025-02-10", 1m, 500m, 0m, 1m),
             Dividend("2025-03-10", 100m, 1m),
-            Dividend("2025-04-10", 100m, 1m),               // 200 × 19% = 38
-            Dividend("2025-05-10", 2.70m, 1m),              // 202.70 × 19% = 38.513 → 39
+            Dividend("2025-04-10", 100m, 1m),
+            Dividend("2025-05-10", 2.70m, 1m),
         ], Belka, []);
 
         var year = computation.Year(2025)!.Summary;
@@ -244,9 +242,9 @@ public sealed class TaxCalculatorTests
         Guid revolut = Guid.NewGuid(), xtb = Guid.NewGuid();
         var computation = TaxCalculator.Compute([
             Buy("2025-01-10", 10m, 100m, 0m, 4m) with { AccountId = revolut },
-            Buy("2025-02-10", 10m, 50m, 0m, 4m) with { AccountId = xtb },       // cheaper, but another account's lot
-            Sell("2025-06-10", 10m, 120m, 0m, 4m) with { AccountId = revolut },  // gain 800 against the Revolut lot
-            Sell("2025-07-10", 10m, 30m, 0m, 4m) with { AccountId = xtb },       // loss 800 against the XTB lot
+            Buy("2025-02-10", 10m, 50m, 0m, 4m) with { AccountId = xtb },
+            Sell("2025-06-10", 10m, 120m, 0m, 4m) with { AccountId = revolut },
+            Sell("2025-07-10", 10m, 30m, 0m, 4m) with { AccountId = xtb },
         ], Belka, []);
 
         var year = computation.Year(2025)!;
@@ -264,10 +262,10 @@ public sealed class TaxCalculatorTests
         [
             Buy("2025-01-10", 10m, 100m, 0m, 4m),
             Buy("2025-01-10", 10m, 100m, 0m, 4m, Other),
-            Sell("2025-03-10", 5m, 150m, 0m, 4m),            // gain 1000 → 190
-            Sell("2025-05-10", 5m, 200m, 0m, 4m),            // gain 2000 more → 3000 → 570
+            Sell("2025-03-10", 5m, 150m, 0m, 4m),
+            Sell("2025-05-10", 5m, 200m, 0m, 4m),
         ];
-        events.Add(new TaxEvent(Guid.NewGuid(), DateOnly.Parse("2025-08-10"), _sequence++, TaxableKind.Sell, Other, 10m, 50m, 0m, 500m, [new(Eu, 10m)], 4m, null));  // loss 2000
+        events.Add(new TaxEvent(Guid.NewGuid(), DateOnly.Parse("2025-08-10"), _sequence++, TaxableKind.Sell, Other, 10m, 50m, 0m, 500m, [new(Eu, 10m)], 4m, null));
 
         var timeline = TaxCalculator.Timeline(events, Belka, [], 2025);
 

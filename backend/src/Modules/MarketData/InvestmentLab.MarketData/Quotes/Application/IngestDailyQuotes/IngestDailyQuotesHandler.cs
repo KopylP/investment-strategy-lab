@@ -1,16 +1,8 @@
-using InvestmentLab.MarketData.Contracts.Quotes;
 using InvestmentLab.MarketData.Instruments.Domain;
 using InvestmentLab.MarketData.Quotes.Domain;
 
 namespace InvestmentLab.MarketData.Quotes.Application.IngestDailyQuotes;
 
-public sealed record IngestReport(int Instruments, int QuotesAdded, int QuotesUpdated, IReadOnlyList<string> MissingSymbols);
-
-/// <summary>
-/// Fetches quotes from the newest stored day (or <see cref="InitialHistoryYears"/> back) for every instrument the provider knows;
-/// instruments starting on the same day share one request. The newest day is fetched again because a run during trading hours
-/// stores a provisional close. Hand-corrected quotes stay as they are.
-/// </summary>
 public sealed class IngestDailyQuotesHandler(IQuoteStore store, IQuoteProvider provider, TimeProvider clock)
 {
     public const int InitialHistoryYears = 3;
@@ -44,6 +36,7 @@ public sealed class IngestDailyQuotesHandler(IQuoteStore store, IQuoteProvider p
                     continue;
 
                 var (seriesAdded, seriesUpdated) = await StoreSeriesAsync(instrument.Id, from, series, now, cancellationToken);
+
                 if (seriesAdded + seriesUpdated == 0)
                     continue;
 
@@ -54,9 +47,10 @@ public sealed class IngestDailyQuotesHandler(IQuoteStore store, IQuoteProvider p
         }
 
         if (ingested.Count > 0)
-            store.Publish(new DailyQuotesIngestedV1(now, ingested, firstDate), now);
+            store.Record(new DailyQuotesIngested(ingested, firstDate, now));
 
         await store.SaveChangesAsync(cancellationToken);
+
         return new IngestReport(instruments.Count, added, updated, missing);
     }
 
@@ -76,6 +70,7 @@ public sealed class IngestDailyQuotesHandler(IQuoteStore store, IQuoteProvider p
             {
                 if (existing.Refresh(close, adjustedClose, provider.Provider.Code, now))
                     updated++;
+
                 continue;
             }
 

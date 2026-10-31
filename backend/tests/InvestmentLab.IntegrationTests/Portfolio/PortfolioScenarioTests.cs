@@ -9,7 +9,6 @@ using InvestmentLab.Portfolio.Transactions.Application.ImportPositions;
 
 namespace InvestmentLab.IntegrationTests.Portfolio;
 
-/// <summary>Stage 3 end to end: sign-in → account with two sub-portfolios → import positions.json → reversal.</summary>
 public sealed class PortfolioScenarioTests(PortfolioApiFactory factory) : IClassFixture<PortfolioApiFactory>
 {
     [Fact]
@@ -96,10 +95,10 @@ public sealed class PortfolioScenarioTests(PortfolioApiFactory factory) : IClass
     {
         var response = await client.PostAsync(url, content, ct);
         response.StatusCode.ShouldBe(HttpStatusCode.OK, await response.Content.ReadAsStringAsync(ct));
+
         return (await response.Content.ReadFromJsonAsync<T>(ct))!;
     }
 
-    /// <summary>The live file of the Python flow, so the test proves the migration of the real data.</summary>
     internal static string PositionsJsonPath()
     {
         for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir is not null; dir = dir.Parent)
@@ -126,6 +125,7 @@ public sealed class PortfolioScenarioTests(PortfolioApiFactory factory) : IClass
             },
         }, ct);
         response.StatusCode.ShouldBe(HttpStatusCode.OK, await response.Content.ReadAsStringAsync(ct));
+
         return (await response.Content.ReadFromJsonAsync<AccountSetupDto>(ct))!;
     }
 }

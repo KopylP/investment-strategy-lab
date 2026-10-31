@@ -20,10 +20,3 @@ public sealed class MarketDataDbContext(DbContextOptions<MarketDataDbContext> op
     protected override void OnModuleModelCreating(ModelBuilder modelBuilder) =>
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(MarketDataDbContext).Assembly);
 }
-
-internal sealed class MarketDataDesignTimeDbContextFactory : ModuleDesignTimeDbContextFactory<MarketDataDbContext>
-{
-    protected override string Schema => MarketDataDbContext.SchemaName;
-
-    protected override MarketDataDbContext Create(DbContextOptions<MarketDataDbContext> options) => new(options);
-}

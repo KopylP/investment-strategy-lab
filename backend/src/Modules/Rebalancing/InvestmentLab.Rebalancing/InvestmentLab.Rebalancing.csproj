@@ -4,6 +4,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../../Signals/InvestmentLab.Signals.Contracts/InvestmentLab.Signals.Contracts.csproj" />
     <ProjectReference Include="../../MarketData/InvestmentLab.MarketData.Contracts/InvestmentLab.MarketData.Contracts.csproj" />
     <ProjectReference Include="../../Portfolio/InvestmentLab.Portfolio.Contracts/InvestmentLab.Portfolio.Contracts.csproj" />
     <ProjectReference Include="../../Strategies/InvestmentLab.Strategies.Contracts/InvestmentLab.Strategies.Contracts.csproj" />

@@ -25,6 +25,7 @@ public sealed class Pit38PdfPrinterTests
     {
         var declaration = Declaration();
         var pdf = new Pit38PdfPrinter().Print(declaration);
+
         if (Environment.GetEnvironmentVariable("PIT38_SAMPLE") is { Length: > 0 } sample)
             File.WriteAllBytes(sample, pdf);
 
@@ -32,32 +33,30 @@ public sealed class Pit38PdfPrinterTests
         document.NumberOfPages.ShouldBe(3 + 2 * declaration.Attachments.Count);
         declaration.Attachments.Count.ShouldBe(2);
 
-        // Read back what was written in our font: each value lies in its box, the złoty before the printed comma.
         var written = document.GetPages().SelectMany(page => page.Letters.Where(letter => (letter.FontName ?? "").Contains("DejaVu")).Select(letter => (page.Number, letter))).ToList();
         string Line(int page, double baseline, double from, double to) => string.Concat(written
             .Where(w => w.Number == page && Math.Abs(w.letter.StartBaseLine.Y - baseline) < 0.5 && w.letter.StartBaseLine.X >= from && w.letter.StartBaseLine.X < to)
             .OrderBy(w => w.letter.StartBaseLine.X).Select(w => w.letter.Value));
 
-        Line(1, 284.1, 139, 249).ShouldBe("1200000");          // poz. 20: 12000 | 00
-        Line(1, 258.6, 139, 249).ShouldBe("838500");           // poz. 22: 8385 | 00
-        Line(1, 258.6, 249, 359).ShouldBe("689505");           // poz. 23: 6895 | 05
-        Line(1, 200.8, 359, 468).ShouldBe("198945");           // poz. 28: 1989 | 45
-        Line(1, 125.3, 465, 570).ShouldBe("1989");             // poz. 31
-        Line(1, 100.3, 124, 210).ShouldBe("1900");             // poz. 32: 19 | 00 %
+        Line(1, 284.1, 139, 249).ShouldBe("1200000");
+        Line(1, 258.6, 139, 249).ShouldBe("838500");
+        Line(1, 258.6, 249, 359).ShouldBe("689505");
+        Line(1, 200.8, 359, 468).ShouldBe("198945");
+        Line(1, 125.3, 465, 570).ShouldBe("1989");
+        Line(1, 100.3, 124, 210).ShouldBe("1900");
         written.Where(w => w.Number == 1 && Math.Abs(w.letter.StartBaseLine.Y - 100.3) < 0.5 && w.letter.StartBaseLine.X is > 124 and < 210)
-            .Select(w => w.letter.StartBaseLine.X).OrderBy(x => x).Skip(2).First().ShouldBeGreaterThan(187.5);   // the grosze after the printed comma
-        Line(1, 48.8, 465, 570).ShouldBe("378");               // poz. 35: 1989 × 19% = 377.91
-        Line(1, 699.5, 285, 360).ShouldBe("2025");             // poz. 4
-        Line(2, 497.7, 465, 570).ShouldBe("19050");            // poz. 47: 190 | 50
-        Line(2, 398.1, 465, 570).ShouldBe("41800");            // poz. 51: 378 + 40
-        Line(3, 717, 25, 200).ShouldBe("2");                   // poz. 72
-        Line(4, 545, 50, 400).ShouldBe("Holandia");            // PIT/ZG poz. 6, countries in code order: NL first
+            .Select(w => w.letter.StartBaseLine.X).OrderBy(x => x).Skip(2).First().ShouldBeGreaterThan(187.5);
+        Line(1, 48.8, 465, 570).ShouldBe("378");
+        Line(1, 699.5, 285, 360).ShouldBe("2025");
+        Line(2, 497.7, 465, 570).ShouldBe("19050");
+        Line(2, 398.1, 465, 570).ShouldBe("41800");
+        Line(3, 717, 25, 200).ShouldBe("2");
+        Line(4, 545, 50, 400).ShouldBe("Holandia");
         Line(6, 545, 50, 400).ShouldBe("Stany Zjednoczone Ameryki");
-        Line(6, 173.4, 371, 570).ShouldBe("120000");           // PIT/ZG poz. 29
-        Line(6, 545.5, 490, 530).ShouldBe("US");               // PIT/ZG poz. 7, a letter per cell
-        Line(1, 507.5, 70, 90).ShouldBe("X");                  // poz. 6: złożenie zeznania
+        Line(6, 173.4, 371, 570).ShouldBe("120000");
+        Line(6, 545.5, 490, 530).ShouldBe("US");
+        Line(1, 507.5, 70, 90).ShouldBe("X");
 
-        // Parts D and G print "zł" before the comma from x 542: the złoty stay clear of it.
         written.Where(w => w.Number == 2 && Math.Abs(w.letter.StartBaseLine.Y - 497.7) < 0.5 && w.letter.StartBaseLine.X < 546).Max(w => w.letter.EndBaseLine.X).ShouldBeLessThan(542);
 
         var zloty = written.Where(w => w.Number == 1 && Math.Abs(w.letter.StartBaseLine.Y - 258.6) < 0.5 && w.letter.StartBaseLine.X < 222.9).ToList();

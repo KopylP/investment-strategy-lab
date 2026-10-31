@@ -5,12 +5,12 @@ using InvestmentLab.Notifications;
 using InvestmentLab.Performance;
 using InvestmentLab.Portfolio;
 using InvestmentLab.Rebalancing;
+using InvestmentLab.Signals;
 using InvestmentLab.Strategies;
 using InvestmentLab.Taxation;
 
 namespace InvestmentLab.Api;
 
-/// <summary>Composition root: the only place that knows which modules make up the monolith.</summary>
 internal static class Modules
 {
     public static IModule[] All() =>
@@ -22,6 +22,7 @@ internal static class Modules
         new RebalancingModule(),
         new TaxationModule(),
         new PerformanceModule(),
+        new SignalsModule(),
         new NotificationsModule(),
     ];
 }

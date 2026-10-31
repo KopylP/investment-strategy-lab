@@ -1,5 +1,4 @@
 using System.Text.Json;
-using InvestmentLab.Rebalancing.Contracts;
 using InvestmentLab.Rebalancing.Planning.Application.GenerateMonthlyReport;
 using InvestmentLab.Rebalancing.Planning.Application.GenerateRiskReview;
 using InvestmentLab.Rebalancing.Planning.Domain;
@@ -8,11 +7,6 @@ using InvestmentLab.Strategies.Contracts;
 
 namespace InvestmentLab.Rebalancing.Planning.Application.RequestReport;
 
-/// <summary>
-/// Moves one pending <see cref="ReportRequest"/> on: submits its strategies to the engine as background jobs (again,
-/// when the engine lost one), collects their answers and, once every strategy has answered or the deadline passed,
-/// makes and publishes the report — or records why none could be made.
-/// </summary>
 public sealed class ReportRequestProcessor(
     IReportRequestRepository requests,
     IStrategyEvaluation strategies,
@@ -20,7 +14,6 @@ public sealed class ReportRequestProcessor(
     GenerateRiskReviewHandler riskReview,
     TimeProvider clock)
 {
-    /// <summary>A job the engine keeps losing (it keeps restarting) is not submitted more often than this.</summary>
     public const int MaxSubmissions = 5;
 
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
@@ -37,6 +30,7 @@ public sealed class ReportRequestProcessor(
             {
                 Fail(request, asked.Error.Message);
                 await requests.SaveChangesAsync(cancellationToken);
+
                 return;
             }
 
@@ -49,26 +43,25 @@ public sealed class ReportRequestProcessor(
 
         if (request.IsReady)
         {
-            // The report and the completed request are saved together.
             var made = await GenerateAsync(request, cancellationToken);
             if (made.IsSuccess)
                 return;
+
             Fail(request, made.Error.Message);
         }
+
         await requests.SaveChangesAsync(cancellationToken);
     }
 
-    /// <summary>No report: the request says why, and the user is told (<see cref="ReportRequestFailedV1"/>).</summary>
     private void Fail(ReportRequest request, string error)
     {
-        var now = clock.GetUtcNow();
-        request.Fail(error, now);
-        requests.Publish(request.ToFailedEvent(), now);
+        request.Fail(error, clock.GetUtcNow());
     }
 
     private async Task SubmitAsync(ReportRequest request, IReadOnlyDictionary<Guid, EvaluateStrategyRequest> asked, CancellationToken cancellationToken)
     {
         var task = TaskOf(request);
+
         foreach (var run in request.Runs.Where(run => run is { IsDone: false, Job: null }).ToList())
         {
             if (!asked.TryGetValue(run.SubPortfolioId, out var ask))
@@ -76,6 +69,7 @@ public sealed class ReportRequestProcessor(
                 request.RunFailed(run.SubPortfolioId, "strategy.not_asked", "під-портфель більше не входить у звіт");
                 continue;
             }
+
             if (run.Submissions >= MaxSubmissions)
             {
                 request.RunFailed(run.SubPortfolioId, "strategy.job_lost", "рушій стратегій кілька разів втратив її задачу");
@@ -90,7 +84,6 @@ public sealed class ReportRequestProcessor(
             }
             else if (submitted.ErrorCode != StrategyErrorCodes.EngineUnavailable)
                 request.RunFailed(run.SubPortfolioId, submitted.ErrorCode!, submitted.ErrorMessage ?? submitted.ErrorCode!);
-            // An unavailable engine is asked again on the next run, until the deadline.
         }
     }
 
@@ -154,23 +147,4 @@ public sealed class ReportRequestProcessor(
     private static GenerateMonthlyReportCommand RebalanceOf(ReportRequest request) => new(request.AccountId, request.Contribution, request.AsOf, ScopeOf(request));
 
     private static GenerateRiskReviewCommand RiskReviewOf(ReportRequest request) => new(request.AccountId, request.AsOf, ScopeOf(request));
-}
-
-internal static class ReportRequestEventMapping
-{
-    extension(ReportRequest request)
-    {
-        public ReportRequestFailedV1 ToFailedEvent() => new(
-            request.Id.Value,
-            request.AccountId,
-            request.OwnerId.Value,
-            request.Code,
-            request.Title,
-            request.Kind.ToString(),
-            request.Trigger.ToString(),
-            YearMonth.Containing(request.AsOf).ToString(),
-            request.Error ?? "",
-            request.RequestedAt,
-            request.CompletedAt ?? request.RequestedAt);
-    }
 }

@@ -29,6 +29,7 @@ internal static class UserEndpoints
         users.MapPost("/logout", async (IUserAccounts accounts) =>
             {
                 await accounts.SignOutAsync();
+
                 return TypedResults.NoContent();
             })
             .WithName("Logout");

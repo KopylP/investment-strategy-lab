@@ -30,27 +30,3 @@ public sealed class PortfolioDbContext(DbContextOptions<PortfolioDbContext> opti
         modelBuilder.ApplyConfiguration(new StatementImportConfiguration(this));
     }
 }
-
-internal static class PortfolioConverters
-{
-    public sealed class AccountIdConverter() : Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<AccountId, Guid>(
-        id => id.Value, value => AccountId.Of(value));
-
-    public sealed class SubPortfolioIdConverter() : Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<SubPortfolioId, Guid>(
-        id => id.Value, value => SubPortfolioId.Of(value));
-
-    public sealed class TargetShareConverter() : Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<TargetShare, decimal>(
-        share => share.Value.Value, value => TargetShare.Of(Percentage.Of(value)));
-}
-
-internal sealed class PortfolioDesignTimeDbContextFactory : ModuleDesignTimeDbContextFactory<PortfolioDbContext>
-{
-    protected override string Schema => PortfolioDbContext.SchemaName;
-
-    protected override PortfolioDbContext Create(DbContextOptions<PortfolioDbContext> options) => new(options, new NoUser());
-
-    private sealed class NoUser : ICurrentUser
-    {
-        public UserId? Id => null;
-    }
-}

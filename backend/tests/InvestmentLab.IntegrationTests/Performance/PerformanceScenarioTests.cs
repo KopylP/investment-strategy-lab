@@ -6,10 +6,6 @@ using InvestmentLab.Performance.Valuation.Application;
 
 namespace InvestmentLab.IntegrationTests.Performance;
 
-/// <summary>
-/// Stage 8 end to end: daily snapshots from the journal and quotes; a contribution recorded back in time rebuilds
-/// them (D9) and changes the time-weighted return, while the value follows the money.
-/// </summary>
 public sealed class PerformanceScenarioTests(MarketDataApiFactory factory) : IClassFixture<MarketDataApiFactory>
 {
     [Fact]
@@ -20,7 +16,7 @@ public sealed class PerformanceScenarioTests(MarketDataApiFactory factory) : ICl
         (await client.PostAsync("/api/market-data/quotes/ingest", null, ct)).EnsureSuccessStatusCode();
         var instruments = await client.GetFromJsonAsync<List<InstrumentRow>>("/api/market-data/instruments", ct);
         var sxr8 = instruments!.Single(instrument => instrument.ProviderSymbols.Contains("yfinance:SXR8.DE")).Id;
-        var days = FakeQuoteProvider.TradingDays();   // close 100 + n on the n-th day
+        var days = FakeQuoteProvider.TradingDays();
 
         var account = await PortfolioScenarioTests.OpenTwoSleeveAccountAsync(client, ct);
         var sleeve = account.SubPortfolios[0].Id;
@@ -35,7 +31,6 @@ public sealed class PerformanceScenarioTests(MarketDataApiFactory factory) : ICl
         first.MaxDrawdown.ShouldBe(0m);
         first.SubPortfolios.Single(sub => sub.Id == sleeve).ActualShare.ShouldBe(1m);
 
-        // Money paid in on day 5 and left as cash: the value grows by it, the time-weighted return falls (cash earns nothing).
         await PostAsync(client, $"/api/portfolio/accounts/{account.Id}/contributions", new { amount = 500m, occurredOn = days[5], allocations = new[] { new { subPortfolioId = sleeve, amount = 500m } } }, ct);
 
         var rebuilt = await DashboardAsync(client, account.Id, dashboard => dashboard.Value == 1640m, ct);
@@ -44,7 +39,6 @@ public sealed class PerformanceScenarioTests(MarketDataApiFactory factory) : ICl
         rebuilt.Series[5].NetContributions.ShouldBe(1500m);
         rebuilt.Xirr.ShouldNotBeNull();
 
-        // A second account with cash only: the all-accounts dashboard sums both, day by day.
         var other = await PortfolioScenarioTests.OpenTwoSleeveAccountAsync(client, ct);
         await PostAsync(client, $"/api/portfolio/accounts/{other.Id}/contributions",
             new { amount = 360m, occurredOn = days[0], allocations = new[] { new { subPortfolioId = other.SubPortfolios[0].Id, amount = 360m } } }, ct);
@@ -70,6 +64,7 @@ public sealed class PerformanceScenarioTests(MarketDataApiFactory factory) : ICl
     private static async Task<DashboardDto> DashboardAsync(HttpClient client, Guid accountId, Func<DashboardDto, bool> condition, CancellationToken ct)
     {
         var deadline = DateTime.UtcNow.AddSeconds(30);
+
         while (true)
         {
             var response = await client.GetAsync($"/api/performance/accounts/{accountId}/dashboard", ct);
@@ -77,8 +72,10 @@ public sealed class PerformanceScenarioTests(MarketDataApiFactory factory) : ICl
             var dashboard = await response.Content.ReadFromJsonAsync<DashboardDto>(ct);
             if (dashboard is not null && condition(dashboard))
                 return dashboard;
+
             if (DateTime.UtcNow > deadline)
                 throw new TimeoutException($"Dashboard did not reach the expected state: value {dashboard?.Value}.");
+
             await Task.Delay(300, ct);
         }
     }

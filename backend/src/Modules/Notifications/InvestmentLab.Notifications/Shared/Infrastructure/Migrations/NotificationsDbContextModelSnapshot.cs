@@ -78,6 +78,13 @@ namespace InvestmentLab.Notifications.Shared.Infrastructure.Migrations
                         .HasColumnType("text[]")
                         .HasColumnName("destinations");
 
+                    b.PrimitiveCollection<List<Guid>>("MutedSignalIds")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid[]")
+                        .HasColumnName("muted_signal_ids")
+                        .HasDefaultValueSql("'{}'::uuid[]");
+
                     b.Property<Guid>("OwnerId")
                         .HasColumnType("uuid")
                         .HasColumnName("owner_id");

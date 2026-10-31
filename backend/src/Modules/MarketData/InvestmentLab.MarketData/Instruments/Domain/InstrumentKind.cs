@@ -6,6 +6,5 @@ public enum InstrumentKind
     Index,
     FxPair,
 
-    /// <summary>A single share, e.g. bought outside the strategies and brought in by a statement import.</summary>
     Stock,
 }

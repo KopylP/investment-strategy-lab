@@ -6,7 +6,6 @@ using Testcontainers.PostgreSql;
 
 namespace InvestmentLab.IntegrationTests.Portfolio;
 
-/// <summary>The API on a throwaway Postgres; nightly jobs do not fire during a test run, nor at its start.</summary>
 public sealed class PortfolioApiFactory : WebApplicationFactory<api::Program>, IAsyncLifetime
 {
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17").Build();

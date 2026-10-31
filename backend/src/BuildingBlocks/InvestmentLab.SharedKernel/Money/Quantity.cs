@@ -1,6 +1,5 @@
 namespace InvestmentLab.SharedKernel;
 
-/// <summary>Number of units of an instrument; fractional shares allowed, never negative.</summary>
 public sealed record Quantity : IComparable<Quantity>
 {
     public static readonly Quantity None = new(0m);

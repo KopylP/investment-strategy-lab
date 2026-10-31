@@ -6,10 +6,6 @@ using Microsoft.Extensions.Logging;
 
 namespace InvestmentLab.BuildingBlocks.Messaging;
 
-/// <summary>
-/// Polls every module's outbox and delivers pending events in-process, oldest first.
-/// An event nobody handles is marked processed; a failing one is retried up to <see cref="OutboxMessage.MaxAttempts"/>.
-/// </summary>
 internal sealed class OutboxDispatcher(
     IEnumerable<ModuleDbContextType> contexts,
     IEnumerable<IIntegrationEventDelivery> deliveries,
@@ -41,6 +37,7 @@ internal sealed class OutboxDispatcher(
                 }
             }
         }
+
         while (await WaitForNextTickAsync(timer, stoppingToken));
     }
 
@@ -69,12 +66,12 @@ internal sealed class OutboxDispatcher(
         if (!_deliveries.TryGetValue(message.Type, out var delivery))
         {
             message.MarkProcessed(clock.GetUtcNow());
+
             return;
         }
 
         try
         {
-            // Handlers get a fresh scope: their DbContexts are not the outbox's.
             await using var handlerScope = scopes.CreateAsyncScope();
             await delivery.DeliverAsync(handlerScope.ServiceProvider, message.Payload, stoppingToken);
             message.MarkProcessed(clock.GetUtcNow());

@@ -1,13 +1,5 @@
 namespace InvestmentLab.MarketData.FxRates.Domain;
 
-public enum FxRateSource
-{
-    /// <summary>Narodowy Bank Polski, table A (average rates) — the rate Polish tax law uses.</summary>
-    Nbp,
-    Ecb,
-}
-
-/// <summary>How many <see cref="Quote"/> units one <see cref="Base"/> unit cost on <see cref="EffectiveDate"/>.</summary>
 public sealed class FxRate
 {
     private FxRate() { }
@@ -18,7 +10,6 @@ public sealed class FxRate
     public DateOnly EffectiveDate { get; private set; }
     public decimal Rate { get; private set; }
 
-    /// <summary>Published table, e.g. <c>085/A/NBP/2026</c>; tax returns cite it.</summary>
     public string? TableNumber { get; private set; }
 
     public static FxRate Of(FxRateSource source, Currency @base, Currency quote, DateOnly effectiveDate, decimal rate, string? tableNumber) =>

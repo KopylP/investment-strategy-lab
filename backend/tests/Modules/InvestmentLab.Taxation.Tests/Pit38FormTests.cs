@@ -3,7 +3,6 @@ using InvestmentLab.Taxation.Declarations.Domain;
 
 namespace InvestmentLab.Taxation.Tests;
 
-/// <summary>PIT-38(18) as the Ministry's brochure for 2025 fills it; the positions are the form's "poz." numbers.</summary>
 public sealed class Pit38FormTests
 {
     private static readonly Guid Apple = Guid.NewGuid(), Vwce = Guid.NewGuid(), Orlen = Guid.NewGuid(), Asml = Guid.NewGuid(), NoIsin = Guid.NewGuid(), Toyota = Guid.NewGuid(),
@@ -36,8 +35,6 @@ public sealed class Pit38FormTests
 
     private static decimal? Poz(TaxDeclaration declaration, int position) =>
         declaration.Sections.SelectMany(section => section.Fields).Single(field => field.Position == position).Amount;
-
-    // Part C: rows and netting
 
     [Fact]
     public void Brokers_with_PIT_8C_go_to_row_1_others_to_row_2_and_their_gains_and_losses_net()
@@ -95,12 +92,9 @@ public sealed class Pit38FormTests
         Poz(declaration, 35).ShouldBe(p35);
     }
 
-    // Part D: losses of earlier years
-
     [Fact]
     public void Earlier_losses_are_the_persons_netted_across_accounts_and_deducted_at_most_half_a_year()
     {
-        // 2024: one account lost 1000, the other gained 200 — the person lost 800, so 2025 may deduct 400, not 500.
         var declaration = Fill(
             Account("Revolut", [Year(2024, 1000m, 2000m), Year(2025, 3000m, 1000m)]),
             Account("Trading 212", [Year(2024, 700m, 500m)]));
@@ -127,7 +121,7 @@ public sealed class Pit38FormTests
     {
         var declaration = Fill(2025, [new LossYear(2019, 5000m), new LossYear(2022, 3000m, AlreadyUsed: 2000m)], Account("Revolut", [Year(2025, 5000m, 1000m)]));
 
-        Poz(declaration, 30).ShouldBe(1000m);   // 2019 expired; 2022 has 1000 left (under its half, 1500)
+        Poz(declaration, 30).ShouldBe(1000m);
         Poz(declaration, 31).ShouldBe(3000m);
     }
 
@@ -136,7 +130,7 @@ public sealed class Pit38FormTests
     {
         var declaration = Fill(2025, [new LossYear(2020, 1000m), new LossYear(2023, 1000m)], Account("Revolut", [Year(2025, 700m, 100m)]));
 
-        Poz(declaration, 30).ShouldBe(600m);   // 500 of 2020 (its last year), 100 of 2023
+        Poz(declaration, 30).ShouldBe(600m);
         Poz(declaration, 31).ShouldBe(0m);
     }
 
@@ -153,7 +147,6 @@ public sealed class Pit38FormTests
     [Fact]
     public void What_earlier_years_deducted_is_no_longer_there()
     {
-        // 2022 loss 1000: 2023 takes 300 (its whole gain), 2024 takes 500 (the half), 2025 the last 200.
         var declaration = Fill(Account("Revolut", [Year(2022, 0m, 1000m), Year(2023, 300m, 0m), Year(2024, 1000m, 0m), Year(2025, 1000m, 0m)]));
 
         Poz(declaration, 30).ShouldBe(200m);
@@ -185,18 +178,15 @@ public sealed class Pit38FormTests
         Poz(declaration, 31).ShouldBe(1000m);
     }
 
-    // Part G: foreign dividends
-
     [Fact]
     public void Foreign_dividends_of_every_broker_are_in_part_G_and_those_of_Polish_companies_are_not()
     {
-        // No Polish broker is the payer of tax on foreign dividends (XTB, mBank): theirs are declared too.
         var declaration = Fill(
             Account("Revolut", [Year(2025, 0m, 0m)], dividends: [Paid(1000m, 150m)]),
             Account("XTB", [Year(2025, 0m, 0m)], dividends: [Paid(5000m, 750m), Paid(500m, 95m, Orlen)]));
 
         Poz(declaration, 46).ShouldBe(0m);
-        Poz(declaration, 47).ShouldBe(1140.00m);   // 6000 × 19%
+        Poz(declaration, 47).ShouldBe(1140.00m);
         Poz(declaration, 48).ShouldBe(900m);
         Poz(declaration, 49).ShouldBe(240m);
         Poz(declaration, 51).ShouldBe(240m);
@@ -215,7 +205,6 @@ public sealed class Pit38FormTests
     [Fact]
     public void Poz_47_keeps_grosze_and_poz_49_is_whole_zloty()
     {
-        // 1002.63 × 19% = 190.4997 → 190.50; less 150.25 = 40.25 → 40.
         var declaration = Fill(Account("Revolut", [Year(2025, 0m, 0m)], dividends: [Paid(1002.63m, 150.25m)]));
 
         Poz(declaration, 47).ShouldBe(190.50m);
@@ -249,7 +238,7 @@ public sealed class Pit38FormTests
         var declaration = Fill(Account("Revolut", [Year(2025, 0m, 0m)], dividends: [Paid(1000m, 300m), Paid(1000m, 100m)]));
 
         Poz(declaration, 47).ShouldBe(380m);
-        Poz(declaration, 48).ShouldBe(290m);       // 190 + 100, not 400
+        Poz(declaration, 48).ShouldBe(290m);
         Poz(declaration, 49).ShouldBe(90m);
     }
 
@@ -266,7 +255,6 @@ public sealed class Pit38FormTests
     [Fact]
     public void Tax_withheld_over_the_treaty_rate_is_credited_up_to_19_percent_with_the_tax_offices_reading_in_a_note()
     {
-        // 30% withheld (no W-8BEN): the courts credit up to 19%, KIS only the treaty's 15%.
         var declaration = Fill(Account("Revolut", [Year(2025, 0m, 0m)], dividends: [Paid(1000m, 300m)]));
 
         Poz(declaration, 48).ShouldBe(190m);
@@ -286,7 +274,6 @@ public sealed class Pit38FormTests
     [Fact]
     public void A_grosz_over_the_treaty_rate_is_rounding_not_a_missing_W_8BEN()
     {
-        // 15% of 412.37 is 61.8555, withheld 61.86.
         var declaration = Fill(Account("Revolut", [Year(2025, 0m, 0m)], dividends: [Paid(412.37m, 61.86m)]));
 
         declaration.Notes.ShouldNotContain(note => note.Text.Contains("KIS"));
@@ -297,6 +284,7 @@ public sealed class Pit38FormTests
     {
         var culture = System.Globalization.CultureInfo.CurrentCulture;
         System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
+
         try
         {
             var declaration = Fill(Account("Revolut", [Year(2025, 0m, 0m)], dividends: [Paid(10000.5m, 3000m)]));
@@ -317,8 +305,6 @@ public sealed class Pit38FormTests
         declaration.Notes.ShouldNotContain(note => note.Text.Contains("KIS"));
     }
 
-    // Row 1 from the broker's PIT-8C
-
     [Fact]
     public void Entered_PIT_8C_amounts_stand_in_row_1_and_everything_below_follows_them()
     {
@@ -328,7 +314,7 @@ public sealed class Pit38FormTests
 
         (Poz(declaration, 20), Poz(declaration, 21)).ShouldBe((5100m, 5350m));
         Poz(declaration, 28).ShouldBe(750m);
-        Poz(declaration, 35).ShouldBe(143m);         // 750 × 19% = 142.50
+        Poz(declaration, 35).ShouldBe(143m);
         declaration.Notes.ShouldNotContain(note => note.Text.Contains("введіть суми з PIT-8C"));
         declaration.Accounts.Single(account => account.Broker == "XTB").Pit8C.ShouldBe(new Pit8CAmounts(5100m, 5350m));
     }
@@ -336,7 +322,6 @@ public sealed class Pit38FormTests
     [Fact]
     public void One_PIT_8C_covers_every_account_of_its_broker()
     {
-        // XTB sends one PIT-8C per client: entered on one account, it stands for both, never added twice.
         var declaration = Fill(
             Account("XTB", [Year(2025, 5000m, 4000m)], name: "XTB PLN", pit8C: new Pit8CAmounts(8100m, 6050m)),
             Account("XTB S.A.", [Year(2025, 3000m, 2000m)], name: "XTB USD"));
@@ -350,7 +335,6 @@ public sealed class Pit38FormTests
     [Fact]
     public void An_earlier_years_PIT_8C_makes_the_loss_carried_from_it()
     {
-        // 2024: the journal says a loss of 900, the PIT-8C as filed 1000 — 2025 may deduct 500.
         var declaration = Fill(Account("XTB", [Year(2024, 100m, 1000m), Year(2025, 5000m, 0m)],
             pit8CByYear: new Dictionary<int, Pit8CAmounts> { [2024] = new(100m, 1100m), [2025] = new(5000m, 0m) }));
 
@@ -366,8 +350,6 @@ public sealed class Pit38FormTests
         declaration.Notes.ShouldContain(note => note.Text.Contains("введіть суми з PIT-8C"));
         declaration.Accounts.Single().TakesPit8C.ShouldBeTrue();
     }
-
-    // PIT/ZG and the attachment count
 
     [Fact]
     public void PIT_ZG_is_one_per_country_of_the_instruments_sold_with_a_net_gain_in_country_order()
@@ -423,8 +405,6 @@ public sealed class Pit38FormTests
         declaration.Notes.ShouldContain(note => note.Text.Contains("без країни"));
     }
 
-    // Accounts, form and notes
-
     [Fact]
     public void IKE_accounts_are_left_out_and_named()
     {
@@ -455,10 +435,10 @@ public sealed class Pit38FormTests
     }
 
     [Theory]
-    [InlineData(2025, "2026-04-30")]   // Thursday
-    [InlineData(2027, "2028-05-02")]   // Sunday, then 1 May
-    [InlineData(2022, "2023-05-02")]   // Sunday, then 1 May
-    [InlineData(2028, "2029-04-30")]   // Monday
+    [InlineData(2025, "2026-04-30")]
+    [InlineData(2027, "2028-05-02")]
+    [InlineData(2022, "2023-05-02")]
+    [InlineData(2028, "2029-04-30")]
     public void A_deadline_on_a_weekend_or_holiday_moves_to_the_next_working_day(int year, string deadline) =>
         Pit38Form.Deadline(year).ShouldBe(DateOnly.Parse(deadline, System.Globalization.CultureInfo.InvariantCulture));
 

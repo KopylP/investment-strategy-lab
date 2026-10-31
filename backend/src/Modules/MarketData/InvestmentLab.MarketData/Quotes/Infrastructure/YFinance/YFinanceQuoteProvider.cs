@@ -4,7 +4,6 @@ using InvestmentLab.MarketData.Quotes.Application;
 
 namespace InvestmentLab.MarketData.Quotes.Infrastructure.YFinance;
 
-/// <summary>Anti-corruption layer over the strategy engine's <c>POST /v1/prices</c> (Yahoo Finance).</summary>
 internal sealed class YFinanceQuoteProvider(HttpClient http) : IQuoteProvider
 {
     private sealed record PricesRequest(IReadOnlyList<string> Symbols, DateOnly Start);
@@ -32,7 +31,6 @@ internal sealed class YFinanceQuoteProvider(HttpClient http) : IQuoteProvider
             body.Missing);
     }
 
-    // Yahoo prices come as floats; 8 decimals is what the database keeps.
     private static decimal? ToPrice(double? value) =>
         value is { } price && double.IsFinite(price) && price > 0 ? decimal.Round((decimal)price, 8) : null;
 }

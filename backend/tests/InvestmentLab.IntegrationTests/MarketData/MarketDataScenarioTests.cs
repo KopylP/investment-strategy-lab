@@ -7,7 +7,6 @@ using InvestmentLab.MarketData.Quotes.Application.IngestDailyQuotes;
 
 namespace InvestmentLab.IntegrationTests.MarketData;
 
-/// <summary>Stage 2 end to end: ingest → history → correction → event from the outbox → re-ingest keeps the correction.</summary>
 public sealed class MarketDataScenarioTests(MarketDataApiFactory factory) : IClassFixture<MarketDataApiFactory>
 {
     [Fact]
@@ -62,6 +61,7 @@ public sealed class MarketDataScenarioTests(MarketDataApiFactory factory) : ICla
     {
         var response = await client.PostAsync(url, null, ct);
         response.EnsureSuccessStatusCode();
+
         return (await response.Content.ReadFromJsonAsync<T>(ct))!;
     }
 

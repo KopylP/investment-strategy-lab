@@ -30,6 +30,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Hosting;
+using InvestmentLab.BuildingBlocks.Messaging;
+using InvestmentLab.MarketData.Quotes.Application.Integration;
+using InvestmentLab.MarketData.Quotes.Domain;
 
 namespace InvestmentLab.MarketData;
 
@@ -42,6 +45,9 @@ public sealed class MarketDataModule : IModule
     public void AddServices(IHostApplicationBuilder builder)
     {
         builder.AddModuleDbContext<MarketDataDbContext>(Schema);
+
+        builder.Services.AddDomainEventMapper<QuoteCorrected, QuoteCorrectedV1, QuoteCorrectedMapper>();
+        builder.Services.AddDomainEventMapper<DailyQuotesIngested, DailyQuotesIngestedV1, DailyQuotesIngestedMapper>();
 
         var services = builder.Services;
         services.AddScoped<IInstrumentRepository, InstrumentRepository>();
@@ -75,8 +81,6 @@ public sealed class MarketDataModule : IModule
     {
         var baseAddress = builder.Configuration["MarketData:StrategyEngineUrl"] ?? "https+http://strategy-engine";
 
-        // Three years of daily quotes for twenty symbols take Yahoo a while: longer timeouts than the defaults.
-        // RemoveAllResilienceHandlers is experimental (EXTEXP0001) but the documented way to replace the defaults.
 #pragma warning disable EXTEXP0001
         builder.Services.AddHttpClient<YFinanceQuoteProvider>(http => http.BaseAddress = new Uri(baseAddress))
             .RemoveAllResilienceHandlers()
@@ -88,7 +92,6 @@ public sealed class MarketDataModule : IModule
             });
         builder.Services.AddScoped<IQuoteProvider>(services => services.GetRequiredService<YFinanceQuoteProvider>());
 
-        // A statement's unknown tickers, each tried on a few exchanges: a minute is plenty.
         builder.Services.AddHttpClient<YFinanceSymbolLookup>(http => http.BaseAddress = new Uri(baseAddress))
             .RemoveAllResilienceHandlers()
             .AddStandardResilienceHandler(resilience =>

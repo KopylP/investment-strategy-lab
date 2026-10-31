@@ -19,11 +19,8 @@ internal sealed class AssessmentRepository(TaxationDbContext db) : IAssessmentRe
 
     public void RemoveLoss(LossCarryforward loss) => db.Losses.Remove(loss);
 
-    public void Publish<TEvent>(TEvent integrationEvent, DateTimeOffset occurredAt) where TEvent : class => db.Publish(integrationEvent, occurredAt);
-
     public Task SaveChangesAsync(CancellationToken cancellationToken) => db.SaveChangesAsync(cancellationToken);
 
-    // Retries (Aspire's Npgsql execution strategy) repeat the whole unit, lock included.
     public Task<T> SerializedAsync<T>(UserId ownerId, Func<Task<T>> work, CancellationToken cancellationToken) =>
         db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
@@ -32,9 +29,9 @@ internal sealed class AssessmentRepository(TaxationDbContext db) : IAssessmentRe
             await db.Database.ExecuteSqlAsync($"SELECT pg_advisory_xact_lock({TaxpayerLockClass}, {owner})", cancellationToken);
             var result = await work();
             await transaction.CommitAsync(cancellationToken);
+
             return result;
         });
 
-    /// <summary>First key of the two-key advisory lock, so taxpayer locks never meet other modules' locks.</summary>
     private const int TaxpayerLockClass = 0x7A78;
 }

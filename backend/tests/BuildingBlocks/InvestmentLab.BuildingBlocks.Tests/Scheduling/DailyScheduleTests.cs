@@ -11,7 +11,6 @@ public sealed class DailyScheduleTests
     [Fact]
     public void Runs_later_the_same_day_when_the_time_has_not_come_yet()
     {
-        // Wednesday 2026-07-15, 10:00 in Warsaw (UTC+2 in summer).
         var next = NightlyOnWeekdays.NextOccurrenceAfter(new DateTimeOffset(2026, 7, 15, 8, 0, 0, TimeSpan.Zero));
 
         next.ShouldBe(new DateTimeOffset(2026, 7, 15, 20, 30, 0, TimeSpan.Zero));
@@ -36,7 +35,6 @@ public sealed class DailyScheduleTests
     [Fact]
     public void Weekdays_only_skips_the_weekend()
     {
-        // Friday 2026-07-17 after the run → Monday 2026-07-20.
         var next = NightlyOnWeekdays.NextOccurrenceAfter(new DateTimeOffset(2026, 7, 17, 21, 0, 0, TimeSpan.Zero));
 
         next.ShouldBe(new DateTimeOffset(2026, 7, 20, 20, 30, 0, TimeSpan.Zero));
@@ -55,7 +53,6 @@ public sealed class DailyScheduleTests
     [Fact]
     public void Local_time_follows_the_winter_offset()
     {
-        // Warsaw is UTC+1 in winter: 22:30 local = 21:30 UTC.
         var next = NightlyOnWeekdays.NextOccurrenceAfter(new DateTimeOffset(2026, 1, 14, 8, 0, 0, TimeSpan.Zero));
 
         next.ShouldBe(new DateTimeOffset(2026, 1, 14, 21, 30, 0, TimeSpan.Zero));
@@ -64,24 +61,22 @@ public sealed class DailyScheduleTests
     [Fact]
     public void A_time_skipped_by_the_clock_change_runs_right_after_the_jump()
     {
-        // 2026-03-29: Warsaw clocks jump 02:00 → 03:00, so 02:30 does not exist that day.
         var earlyMorning = new DailySchedule(new TimeOnly(2, 30), Warsaw, WeekdaysOnly: false);
 
         var next = earlyMorning.NextOccurrenceAfter(new DateTimeOffset(2026, 3, 28, 23, 0, 0, TimeSpan.Zero));
 
-        next.ShouldBe(new DateTimeOffset(2026, 3, 29, 1, 30, 0, TimeSpan.Zero)); // 03:30 local, UTC+2
+        next.ShouldBe(new DateTimeOffset(2026, 3, 29, 1, 30, 0, TimeSpan.Zero));
     }
 
     [Fact]
     public void A_time_repeated_by_the_clock_change_runs_once_at_its_first_occurrence()
     {
-        // 2026-10-25: Warsaw clocks go back 03:00 → 02:00, so 02:30 happens twice.
         var earlyMorning = new DailySchedule(new TimeOnly(2, 30), Warsaw, WeekdaysOnly: false);
 
         var first = earlyMorning.NextOccurrenceAfter(new DateTimeOffset(2026, 10, 24, 23, 0, 0, TimeSpan.Zero));
         var afterFirst = earlyMorning.NextOccurrenceAfter(first);
 
-        first.ShouldBe(new DateTimeOffset(2026, 10, 25, 0, 30, 0, TimeSpan.Zero)); // 02:30 local, UTC+2
+        first.ShouldBe(new DateTimeOffset(2026, 10, 25, 0, 30, 0, TimeSpan.Zero));
         afterFirst.ShouldBe(new DateTimeOffset(2026, 10, 26, 1, 30, 0, TimeSpan.Zero));
     }
 }

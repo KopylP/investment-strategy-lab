@@ -1,6 +1,5 @@
 namespace InvestmentLab.SharedKernel;
 
-/// <summary>A share between 0 and 1 (weights, target shares, tax rates).</summary>
 public sealed record Percentage : IComparable<Percentage>
 {
     public static readonly Percentage Zero = new(0m);
@@ -25,19 +24,4 @@ public sealed record Percentage : IComparable<Percentage>
     public int CompareTo(Percentage? other) => other is null ? 1 : Value.CompareTo(other.Value);
 
     public override string ToString() => $"{Value * 100m:0.##}%";
-}
-
-/// <summary>A fraction that may be negative: returns, drawdowns, changes.</summary>
-public sealed record SignedPercentage
-{
-    public decimal Value { get; }
-
-    private SignedPercentage(decimal value) => Value = value;
-
-    public static SignedPercentage Of(decimal fraction) => new(fraction);
-    public static SignedPercentage FromPercent(decimal percent) => new(percent / 100m);
-
-    public bool IsNegative => Value < 0m;
-
-    public override string ToString() => $"{Value * 100m:+0.##;-0.##;0}%";
 }

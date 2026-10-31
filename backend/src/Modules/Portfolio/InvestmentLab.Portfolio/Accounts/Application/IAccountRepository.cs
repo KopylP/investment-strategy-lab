@@ -10,7 +10,5 @@ public interface IAccountRepository
 
     void Add(InvestmentAccount account);
 
-    void Publish<TEvent>(TEvent integrationEvent, DateTimeOffset occurredAt) where TEvent : class;
-
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }

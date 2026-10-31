@@ -3,8 +3,6 @@ using InvestmentLab.Portfolio.Transactions.Domain;
 
 namespace InvestmentLab.Portfolio.Transactions.Application.RecordCashMovement;
 
-/// <param name="Kind">Contribution, Withdrawal, Fee, TaxPayment or Dividend.</param>
-/// <param name="Allocations">Null: split by target shares, or by held units for a dividend of an instrument.</param>
 public sealed record RecordCashMovementCommand(
     string Kind,
     decimal Amount,
@@ -28,6 +26,7 @@ public sealed class RecordCashMovementHandler(TransactionRecorder recorder)
         var kind = TransactionInput.ParseEnum<CashMovementKind>(command.Kind, "transaction.cash_kind_unknown");
         if (kind.IsFailure)
             return kind.Error;
+
         if (command.Amount <= 0m)
             return TransactionErrors.AmountNotPositive();
 

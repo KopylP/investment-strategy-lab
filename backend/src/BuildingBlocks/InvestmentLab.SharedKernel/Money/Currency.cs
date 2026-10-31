@@ -1,6 +1,5 @@
 namespace InvestmentLab.SharedKernel;
 
-/// <summary>ISO 4217 currency code.</summary>
 public sealed record Currency
 {
     public static readonly Currency EUR = new("EUR");

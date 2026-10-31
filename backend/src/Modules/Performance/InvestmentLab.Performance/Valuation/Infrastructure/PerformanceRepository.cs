@@ -13,7 +13,6 @@ internal sealed class PerformanceRepository(PerformanceDbContext db) : IPerforma
         if (await db.Markers.IgnoreQueryFilters().SingleOrDefaultAsync(marker => marker.AccountId == accountId, cancellationToken) is { } existing)
             return existing;
 
-        // Insert-if-missing in the database: the dashboard and event handlers may create it at the same moment.
         await db.Database.ExecuteSqlAsync(
             $"INSERT INTO performance.recalculation_markers (account_id, owner_id, dirty_from) VALUES ({accountId}, {ownerId.Value}, {DateOnly.MinValue}) ON CONFLICT (account_id) DO NOTHING",
             cancellationToken);
@@ -22,10 +21,8 @@ internal sealed class PerformanceRepository(PerformanceDbContext db) : IPerforma
 
     public async Task<IReadOnlyList<RecalculationMarker>> MarkersAsync(CancellationToken cancellationToken) => await db.Markers.ToListAsync(cancellationToken);
 
-
-    /// <summary>Replaces the snapshots and saves pending changes (the marker) in one transaction; concurrent rebuilds of one account queue up.</summary>
     public Task ReplaceSnapshotsAsync(Guid accountId, IReadOnlyList<ValuationSnapshot> snapshots, CancellationToken cancellationToken) =>
-        // Retries (Aspire's Npgsql execution strategy) repeat the whole unit, lock and delete included.
+
         db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
             await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);

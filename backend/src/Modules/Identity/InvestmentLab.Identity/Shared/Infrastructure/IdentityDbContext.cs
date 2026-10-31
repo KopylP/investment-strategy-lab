@@ -20,10 +20,3 @@ public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> option
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(IdentityDbContext).Assembly);
     }
 }
-
-internal sealed class IdentityDesignTimeDbContextFactory : ModuleDesignTimeDbContextFactory<IdentityDbContext>
-{
-    protected override string Schema => IdentityDbContext.SchemaName;
-
-    protected override IdentityDbContext Create(DbContextOptions<IdentityDbContext> options) => new(options);
-}

@@ -11,41 +11,6 @@ using InvestmentLab.Taxation.Ledger.Domain;
 
 namespace InvestmentLab.Taxation.Assessments.Application;
 
-public interface IAssessmentRepository
-{
-    Task<IReadOnlyList<TaxAssessment>> ForOwnerAsync(UserId ownerId, CancellationToken cancellationToken);
-
-    Task<IReadOnlyList<LossCarryforward>> LossesAsync(UserId ownerId, CancellationToken cancellationToken);
-
-    void Add(TaxAssessment assessment);
-
-    void AddLoss(LossCarryforward loss);
-
-    void RemoveLoss(LossCarryforward loss);
-
-    void Publish<TEvent>(TEvent integrationEvent, DateTimeOffset occurredAt) where TEvent : class;
-
-    Task SaveChangesAsync(CancellationToken cancellationToken);
-
-    /// <summary>
-    /// Runs <paramref name="work"/> in one transaction holding the taxpayer's lock: a request and event handlers of
-    /// different accounts recompute the same years, so they queue up instead of inserting the same year twice.
-    /// </summary>
-    Task<T> SerializedAsync<T>(UserId ownerId, Func<Task<T>> work, CancellationToken cancellationToken);
-}
-
-/// <summary>A taxpayer's accounts as Taxation knows them; only the taxed ones (Belka) make up the yearly PIT-38.</summary>
-public sealed record Taxpayer(UserId OwnerId, IReadOnlyList<TaxAccount> Accounts, IReadOnlyDictionary<Guid, AccountSetupDto> Setups)
-{
-    public IReadOnlyList<TaxAccount> Taxed { get; } = [.. Accounts.Where(account => TaxPolicies.For(account.PolicyCode).IsTaxed)];
-
-    public ITaxPolicy Policy => TaxPolicies.For(Taxed.Count > 0 ? Taxed[0].PolicyCode : null);
-}
-
-/// <summary>
-/// Turns the ledger copy into tax events with NBP rates (last table before the transaction day, §6.7), with what the
-/// broker's tax reports add to them (tax withheld from dividends, lots the journal has no buy for).
-/// </summary>
 public sealed class TaxInputs(
     ITaxLedgerRepository ledger, IAssessmentRepository assessments, IBrokerStatementRepository statements, IFxRates fxRates, IInstrumentCatalog instruments,
     IAccountSetupQueries accounts, IJournalQueries journal)
@@ -53,10 +18,6 @@ public sealed class TaxInputs(
     private const string Pln = "PLN";
     private const string YahooPrefix = "yfinance:";
 
-    /// <summary>
-    /// The account's tax facts, with the ledger copy caught up from Portfolio's journal: entries the events have not
-    /// brought yet are added, reversals applied. Idempotent, so reads never show a stale year.
-    /// </summary>
     public async Task<TaxAccount?> EnsureAccountAsync(Guid accountId, CancellationToken cancellationToken)
     {
         var setup = await accounts.GetAccountSetup(accountId, cancellationToken);
@@ -77,49 +38,54 @@ public sealed class TaxInputs(
         var copied = (await ledger.EntriesAsync(accountId, cancellationToken)).ToDictionary(entry => entry.TransactionId);
         var reversed = snapshot.ReversedIds.ToHashSet();
         var recordedAt = DateTimeOffset.UnixEpoch;
+
         foreach (var recorded in snapshot.Entries)
         {
             recordedAt = recordedAt.AddSeconds(1);
+
             if (!copied.TryGetValue(recorded.TransactionId, out var entry) && LedgerEntries.From(recorded, recordedAt) is { } added)
             {
                 ledger.AddEntry(added);
                 entry = added;
             }
             else if (entry is not null && LedgerEntries.From(recorded, entry.RecordedAt) is { } current)
-                entry.Restate(current);   // copies made by an earlier version of the rules (e.g. in the account currency) catch up
+                entry.Restate(current);
+
             if (entry is { IsReversed: false } && reversed.Contains(entry.TransactionId))
                 entry.Reverse();
         }
 
         await ledger.SaveChangesAsync(cancellationToken);
+
         return account;
     }
 
     public async Task<UserId?> OwnerOfAsync(Guid accountId, CancellationToken cancellationToken) =>
         await accounts.GetAccountSetup(accountId, cancellationToken) is { } setup ? UserId.Of(setup.OwnerId) : null;
 
-    /// <summary>Every account of the owner, each caught up from the journal (background work sees all accounts, so they are filtered).</summary>
     public async Task<Taxpayer> TaxpayerAsync(UserId ownerId, CancellationToken cancellationToken)
     {
         var setups = (await accounts.GetAccountSetups(cancellationToken)).Where(setup => setup.OwnerId == ownerId.Value).OrderBy(setup => setup.Name).ToList();
         var known = new List<TaxAccount>();
+
         foreach (var setup in setups)
             if (await EnsureAccountAsync(setup.Id, cancellationToken) is { } account)
                 known.Add(account);
         return new Taxpayer(ownerId, known, setups.ToDictionary(setup => setup.Id));
     }
 
-    /// <summary>Tax events of the accounts; each carries its account, so lots never cross accounts.</summary>
     public async Task<(IReadOnlyList<TaxEvent> Events, IReadOnlyList<string> Missing)> EventsAsync(IReadOnlyList<TaxAccount> taxAccounts, CancellationToken cancellationToken)
     {
         var events = new List<TaxEvent>();
         var missing = new List<string>();
+
         foreach (var account in taxAccounts)
         {
             var (own, lacking) = await EventsAsync(account, cancellationToken);
             events.AddRange(own);
             missing.AddRange(lacking);
         }
+
         return (events, missing);
     }
 
@@ -130,15 +96,18 @@ public sealed class TaxInputs(
         var rates = new Dictionary<(string, DateOnly), FxRateDto?>();
         var events = new List<TaxEvent>();
         var missing = new List<string>();
+
         for (var index = 0; index < entries.Count; index++)
         {
             var entry = entries[index];
             var (rate, date) = await RateAsync(entry.Currency, entry.OccurredOn, rates, cancellationToken);
+
             if (rate is null)
             {
                 missing.Add($"{entry.Currency} {entry.OccurredOn:yyyy-MM-dd}");
                 continue;
             }
+
             events.Add(new TaxEvent(entry.TransactionId, entry.OccurredOn, index, entry.Kind, entry.InstrumentId, entry.Quantity, entry.Price, entry.Fee, entry.Amount,
                 entry.Allocations, rate.Value, date, Currency: entry.Currency, AccountId: account.AccountId));
         }
@@ -146,27 +115,28 @@ public sealed class TaxInputs(
         var uploaded = await statements.ForAccountAsync(account.AccountId, cancellationToken);
         if (uploaded.Count == 0)
             return (events, missing);
+
         var (lots, dividends) = BrokerStatement.Combine(uploaded);
         var match = BrokerFacts.Match(events, lots, dividends, await InstrumentKeysAsync(cancellationToken));
         var currencies = entries.ToDictionary(entry => entry.TransactionId, entry => entry.Currency);
         var sales = new Dictionary<Guid, SaleFacts>();
+
         foreach (var (transactionId, facts) in match.Sales)
             sales[transactionId] = await AtNbpRatesAsync(facts, currencies.GetValueOrDefault(transactionId), rates, cancellationToken);
+
         return ([.. events.Select(e => e with { Broker = sales.GetValueOrDefault(e.TransactionId), Withholding = match.Dividends.GetValueOrDefault(e.TransactionId) })], missing);
     }
 
-    /// <summary>
-    /// The broker's lots at the policy's rate (NBP, the day before each purchase) instead of the broker's own; its cost
-    /// basis is comparable with ours only when the journal entry is in the same currency.
-    /// </summary>
     private async Task<SaleFacts> AtNbpRatesAsync(SaleFacts facts, string? entryCurrency, Dictionary<(string, DateOnly), FxRateDto?> rates, CancellationToken cancellationToken)
     {
         var lots = new List<BrokerLotFact>();
+
         foreach (var lot in facts.Lots)
         {
             var (rate, _) = await RateAsync(facts.Currency, lot.AcquiredOn, rates, cancellationToken);
             lots.Add(rate is { } nbp ? lot with { CostPln = decimal.Round(lot.Cost * nbp, 2, MidpointRounding.AwayFromZero) } : lot);
         }
+
         return facts with { Lots = lots, Cost = entryCurrency == facts.Currency ? facts.Cost : null };
     }
 
@@ -182,7 +152,6 @@ public sealed class TaxInputs(
     public async Task<IReadOnlyList<LossYear>> LossesAsync(UserId ownerId, CancellationToken cancellationToken) =>
         [.. (await assessments.LossesAsync(ownerId, cancellationToken)).Select(loss => loss.ToLossYear())];
 
-    /// <summary>Fingerprint of everything a year depends on: events up to its end, rates, carried losses, the policy.</summary>
     public static string HashFor(int year, IReadOnlyList<TaxEvent> events, IReadOnlyList<LossYear> losses, ITaxPolicy policy)
     {
         var input = JsonSerializer.Serialize(new
@@ -192,6 +161,7 @@ public sealed class TaxInputs(
                 .Select(e => new { e.TransactionId, e.AccountId, e.OccurredOn, e.Kind, e.Quantity, e.Price, e.Fee, e.Amount, e.FxRate, e.Allocations, e.Broker, e.Withholding, e.Currency }),
             losses,
         });
+
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(input)));
     }
 
@@ -200,45 +170,10 @@ public sealed class TaxInputs(
     {
         if (currency == Pln)
             return (1m, null);
+
         if (!cache.TryGetValue((currency, transactionDate), out var rate))
             rate = cache[(currency, transactionDate)] = await fxRates.GetFxRate(currency, Pln, transactionDate, cancellationToken);
-        return rate is null ? (null, null) : (rate.Rate, rate.EffectiveDate);
-    }
-}
 
-/// <summary>
-/// Journal entries that matter for tax: trades and dividends. One settled in another currency than the account's (a
-/// USD stock on a EUR account) is taken in that currency, so it gets that currency's NBP rate of the day before — not
-/// the account currency's rate applied to an amount the import converted at another day's cross rate.
-/// </summary>
-public static class LedgerEntries
-{
-    /// <param name="recordedAt">Keeps the journal order of entries of the same day.</param>
-    public static TaxLedgerEntry? From(TransactionRecordedV1 recorded, DateTimeOffset recordedAt)
-    {
-        var owner = UserId.Of(recorded.OwnerId);
-        if (recorded.Trade is { } trade)
-        {
-            var (price, fee, currency) = (trade.Price, trade.Fee, recorded.Currency);
-            var total = trade.Side == "Buy" ? trade.Quantity * trade.Price + trade.Fee : trade.Quantity * trade.Price - trade.Fee;
-            if (trade is { SettledAmount: > 0m and var settled, SettledCurrency: { Length: 3 } own } && own != recorded.Currency && total > 0m)
-            {
-                // The settled total is quantity × price ± fee in the trade's own currency: scale price and fee back to it.
-                var back = settled / total;
-                (price, fee, currency) = (decimal.Round(trade.Price * back, 8), decimal.Round(trade.Fee * back, 2), own);
-            }
-            return TaxLedgerEntry.Trade(recorded.TransactionId, recorded.AccountId, owner, recorded.OccurredOn, recordedAt,
-                trade.Side == "Buy", trade.InstrumentId, trade.Quantity, price, fee, currency,
-                [.. trade.Allocations.Select(allocation => new EntryAllocation(allocation.SubPortfolioId, allocation.Quantity))]);
-        }
-        if (recorded.Cash is { Kind: "Dividend", InstrumentId: { } instrumentId } cash)
-        {
-            var (amount, currency) = cash is { SettledAmount: > 0m and var settled, SettledCurrency: { Length: 3 } own } && own != recorded.Currency
-                ? (settled, own)
-                : (cash.Amount, recorded.Currency);
-            return TaxLedgerEntry.Dividend(recorded.TransactionId, recorded.AccountId, owner, recorded.OccurredOn, recordedAt,
-                instrumentId, amount, currency, [.. cash.Allocations.Select(allocation => new EntryAllocation(allocation.SubPortfolioId, allocation.Amount))]);
-        }
-        return null;
+        return rate is null ? (null, null) : (rate.Rate, rate.EffectiveDate);
     }
 }

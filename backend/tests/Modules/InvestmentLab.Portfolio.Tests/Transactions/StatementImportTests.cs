@@ -5,7 +5,6 @@ namespace InvestmentLab.Portfolio.Tests.Transactions;
 
 public sealed class StatementImportTests
 {
-    /// <summary>A synthetic statement in Revolut's format (made-up numbers).</summary>
     internal const string Statement = """
         Date,Ticker,Type,Quantity,Price per share,Total Amount,Currency,FX Rate
         2026-06-01T09:00:00.100Z,,CASH TOP-UP,,,EUR 500,EUR,0.2340
@@ -33,9 +32,9 @@ public sealed class StatementImportTests
             row => row.Amount.ShouldBe(200m),
             row => row.Currency.ShouldBe("EUR"),
             row => row.OccurredOn.ShouldBe(new DateOnly(2026, 6, 2)));
-        rows[5].Amount.ShouldBe(1000.25m);                       // quoted "EUR -1,000.25" → positive amount
+        rows[5].Amount.ShouldBe(1000.25m);
         rows.Select(row => row.Identity).Distinct().Count().ShouldBe(rows.Count);
-        Rows().Select(row => row.Identity).ShouldBe(rows.Select(row => row.Identity));   // the same file gives the same identities
+        Rows().Select(row => row.Identity).ShouldBe(rows.Select(row => row.Identity));
     }
 
     [Fact]
@@ -49,7 +48,7 @@ public sealed class StatementImportTests
     {
         var fixture = new PortfolioFixture();
         var rows = Priced(fixture);
-        // Row 2 was imported before; row 3's trade was marked in a report at a different price.
+
         fixture.Add(Transaction.Trade(fixture.Account, TradeSide.Buy, PortfolioFixture.Etf, Quantity.Of(2m), Price.Of(100m, Currency.EUR), Money.Zero(Currency.EUR),
             [new Allocation(fixture.A, Quantity.Of(2m))], new DateOnly(2026, 6, 2), new TransactionSource(TransactionSourceKind.Import, rows[1].Row.Identity), DateTimeOffset.UtcNow));
         var marked = fixture.Add(Transaction.Trade(fixture.Account, TradeSide.Buy, PortfolioFixture.Etf, Quantity.Of(1m), Price.Of(109m, Currency.EUR), Money.Zero(Currency.EUR),
@@ -60,7 +59,7 @@ public sealed class StatementImportTests
         outcomes.Select(outcome => outcome.Decision).ShouldBe([
             RowDecision.New, RowDecision.AlreadyImported, RowDecision.MatchesExisting, RowDecision.New, RowDecision.New, RowDecision.New, RowDecision.Unsupported]);
         var corrected = outcomes[2];
-        (corrected.ExistingTransactionId, corrected.WillReverseExisting, corrected.WillRecord).ShouldBe((marked.Id.Value, true, true));   // the statement's price wins
+        (corrected.ExistingTransactionId, corrected.WillReverseExisting, corrected.WillRecord).ShouldBe((marked.Id.Value, true, true));
         outcomes.Count(outcome => outcome.WillRecord).ShouldBe(5);
     }
 
@@ -94,7 +93,7 @@ public sealed class StatementImportTests
 
         var outcomes = StatementMatcher.Match(rows, [], ImportMode.Merge, null);
 
-        outcomes.Count(outcome => outcome.Decision == RowDecision.NeedsMapping).ShouldBe(4);   // buys, sell and dividend of ETF
+        outcomes.Count(outcome => outcome.Decision == RowDecision.NeedsMapping).ShouldBe(4);
     }
 
     private static List<PricedRow> Priced(PortfolioFixture fixture) =>

@@ -29,7 +29,7 @@ public sealed class QuoteRulesTests
         QuoteQualityInspector.Inspect(quotes, previous: null);
 
         quotes[1].QualityFlags.ShouldBe(QualityFlags.Spike);
-        quotes[2].QualityFlags.ShouldBe(QualityFlags.None); // 90 / 79 = +13.9%
+        quotes[2].QualityFlags.ShouldBe(QualityFlags.None);
     }
 
     [Fact]
@@ -45,7 +45,6 @@ public sealed class QuoteRulesTests
     [Fact]
     public void More_than_five_missing_business_days_is_a_gap()
     {
-        // Wed 2026-07-01 → Thu 2026-07-09: Thu, Fri, Mon, Tue, Wed missing = 5 (no gap); → Fri 2026-07-10 = 6 (gap).
         var noGap = new[] { Quote(7, 1, 100m), Quote(7, 9, 100m) };
         var gap = new[] { Quote(7, 1, 100m), Quote(7, 10, 100m) };
 
@@ -67,8 +66,8 @@ public sealed class QuoteRulesTests
     }
 
     [Theory]
-    [InlineData(2026, 7, 13, false)] // Monday a week ago: 5 business days since → fresh
-    [InlineData(2026, 7, 10, true)]  // Friday before: 6 business days since → stale
+    [InlineData(2026, 7, 13, false)]
+    [InlineData(2026, 7, 10, true)]
     public void A_last_quote_older_than_five_business_days_is_stale(int year, int month, int day, bool stale)
     {
         QuoteQualityInspector.IsStale(new DateOnly(year, month, day), asOf: new DateOnly(2026, 7, 20)).ShouldBe(stale);

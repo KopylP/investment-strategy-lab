@@ -4,7 +4,6 @@ using InvestmentLab.Portfolio.Transactions.Domain;
 
 namespace InvestmentLab.Portfolio.Transactions.Application.GetTransactions;
 
-/// <summary>A journal entry for the transactions page; exactly one of trade, cash, transfer or reversal is set.</summary>
 public sealed record TransactionDto(
     Guid Id,
     string Kind,

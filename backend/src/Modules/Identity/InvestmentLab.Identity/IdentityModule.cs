@@ -21,6 +21,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using InvestmentLab.BuildingBlocks.Messaging;
+using InvestmentLab.Identity.Profiles.Domain;
+using InvestmentLab.Identity.Users.Application.Integration;
 
 namespace InvestmentLab.Identity;
 
@@ -37,7 +40,7 @@ public sealed class IdentityModule : IModule
         builder.AddModuleDbContext<IdentityDbContext>(Schema);
 
         var services = builder.Services;
-        // The cookie, except in the Home Assistant panel, where Home Assistant has already said who the user is.
+
         services.AddAuthentication(AuthenticationScheme)
             .AddPolicyScheme(AuthenticationScheme, null, policy => policy.ForwardDefaultSelector = context =>
                 context.HomeAssistantUserId() is null ? IdentityConstants.ApplicationScheme : HomeAssistantAuthenticationHandler.SchemeName)
@@ -45,13 +48,12 @@ public sealed class IdentityModule : IModule
             .AddIdentityCookies();
         services.ConfigureApplicationCookie(cookie =>
         {
-            // BFF: the Angular app is served from the same origin, so a strict, http-only cookie is enough.
             cookie.Cookie.Name = CookieName;
             cookie.Cookie.HttpOnly = true;
             cookie.Cookie.SameSite = SameSiteMode.Strict;
             cookie.ExpireTimeSpan = TimeSpan.FromDays(14);
             cookie.SlidingExpiration = true;
-            // An API answers 401/403 instead of redirecting to a login page.
+
             cookie.Events.OnRedirectToLogin = context => Respond(context.Response, StatusCodes.Status401Unauthorized);
             cookie.Events.OnRedirectToAccessDenied = context => Respond(context.Response, StatusCodes.Status403Forbidden);
         });
@@ -69,11 +71,11 @@ public sealed class IdentityModule : IModule
         services.AddScoped<UserStore>();
         services.AddScoped<IUserStore<User>>(provider => provider.GetRequiredService<UserStore>());
 
-        // Every endpoint needs a signed-in user unless it says AllowAnonymous (login, register, health).
         services.AddAuthorizationBuilder()
             .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
 
         services.AddScoped<IUserAccounts, UserAccounts>();
+        services.AddDomainEventMapper<UserRegistered, UserRegisteredV1, UserRegisteredMapper>();
         services.AddScoped<IHomeAssistantUsers, HomeAssistantUsers>();
         services.AddScoped<RegisterHandler>();
         services.AddScoped<LoginHandler>();
@@ -86,6 +88,7 @@ public sealed class IdentityModule : IModule
     private static Task Respond(HttpResponse response, int statusCode)
     {
         response.StatusCode = statusCode;
+
         return Task.CompletedTask;
     }
 

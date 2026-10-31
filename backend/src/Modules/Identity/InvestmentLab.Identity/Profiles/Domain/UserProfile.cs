@@ -1,6 +1,5 @@
 namespace InvestmentLab.Identity.Profiles.Domain;
 
-/// <summary>How a user wants to see their data: currency of totals, language and time zone of dates.</summary>
 public sealed class UserProfile : AggregateRoot<UserId>
 {
     public static readonly Currency DefaultDisplayCurrency = Currency.EUR;
@@ -18,16 +17,21 @@ public sealed class UserProfile : AggregateRoot<UserId>
 
     public static UserProfile CreateDefault(UserId userId) => new(userId, DefaultDisplayCurrency, DefaultLocale, DefaultTimeZone);
 
+    public void Registered(string email, DateTimeOffset now) => Raise(new UserRegistered(Id, email, now));
+
     public Result Update(Currency displayCurrency, string locale, string timeZone)
     {
         if (!DisplayCurrencies.Contains(displayCurrency))
             return ProfileErrors.UnsupportedCurrency(displayCurrency);
+
         if (!IsKnownLocale(locale))
             return ProfileErrors.UnknownLocale(locale);
+
         if (!TimeZoneInfo.TryFindSystemTimeZoneById(timeZone, out _))
             return ProfileErrors.UnknownTimeZone(timeZone);
 
         (DisplayCurrency, Locale, TimeZone) = (displayCurrency, locale, timeZone);
+
         return Result.Success();
     }
 
@@ -42,16 +46,4 @@ public sealed class UserProfile : AggregateRoot<UserId>
             return false;
         }
     }
-}
-
-public static class ProfileErrors
-{
-    public static Error NotFound(UserId userId) => Error.NotFound("profile.not_found", $"User {userId} has no profile.");
-
-    public static Error UnsupportedCurrency(Currency currency) =>
-        Error.Validation("profile.currency_unsupported", $"Totals can be shown in EUR, USD or PLN, not {currency}.");
-
-    public static Error UnknownLocale(string locale) => Error.Validation("profile.locale_unknown", $"'{locale}' is not a known locale.");
-
-    public static Error UnknownTimeZone(string timeZone) => Error.Validation("profile.time_zone_unknown", $"'{timeZone}' is not a known IANA time zone.");
 }

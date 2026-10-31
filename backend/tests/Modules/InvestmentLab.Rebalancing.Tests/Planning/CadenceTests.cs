@@ -11,21 +11,20 @@ public sealed class CadenceTests
 
     public static TheoryData<Cadence, string, string, string> Times => new()
     {
-        // cadence, now, last at or before now, next after now
         { Make("hourly", minute: 15), "2026-11-04T10:20", "2026-11-04T10:15", "2026-11-04T11:15" },
         { Make("hourly", minute: 15), "2026-11-04T10:15", "2026-11-04T10:15", "2026-11-04T11:15" },
         { Make("hourly", minute: 45), "2026-11-04T00:10", "2026-11-03T23:45", "2026-11-04T00:45" },
         { Make("daily", time: "08:30"), "2026-11-04T08:00", "2026-11-03T08:30", "2026-11-04T08:30" },
-        { Make("weekly", weekday: "friday", time: "18:00"), "2026-11-04T12:00", "2026-10-30T18:00", "2026-11-06T18:00" },  // a Wednesday
+        { Make("weekly", weekday: "friday", time: "18:00"), "2026-11-04T12:00", "2026-10-30T18:00", "2026-11-06T18:00" },
         { Make("weekly", weekday: "sunday", time: "19:00"), "2026-11-08T19:30", "2026-11-08T19:00", "2026-11-15T19:00" },
         { Make("monthly", day: 15, time: "09:00"), "2026-11-04T12:00", "2026-10-15T09:00", "2026-11-15T09:00" },
-        { Make("monthly", day: 31), "2026-11-30T21:00", "2026-11-30T20:00", "2026-12-31T20:00" },  // November has 30 days
+        { Make("monthly", day: 31), "2026-11-30T21:00", "2026-11-30T20:00", "2026-12-31T20:00" },
         { Make("monthly", day: 31), "2027-03-01T10:00", "2027-02-28T20:00", "2027-03-31T20:00" },
         { Make("quarterly", day: 5), "2026-11-04T12:00", "2026-10-05T20:00", "2027-01-05T20:00" },
     };
 
     [Theory]
-    [MemberData(nameof(Times), DisableDiscoveryEnumeration = true)]  // Cadence is not serializable
+    [MemberData(nameof(Times), DisableDiscoveryEnumeration = true)]
     public void Report_times_follow_the_schedule_the_strategy_sets(Cadence cadence, string now, string last, string next)
     {
         cadence.Last(At(now)).ShouldBe(At(last));
@@ -77,7 +76,6 @@ public sealed class CadenceTests
         settings.ScheduleOf("risk-review").ShouldBeNull();
         settings.ReportSchedules.Count.ShouldBe(1);
 
-        // Stored as jsonb and read back the same.
         var options = new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web);
         System.Text.Json.JsonSerializer.Deserialize<List<OwnReportSchedule>>(System.Text.Json.JsonSerializer.Serialize(settings.ReportSchedules, options), options)
             .ShouldBe(settings.ReportSchedules);

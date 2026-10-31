@@ -2,16 +2,9 @@ using System.Text.Json;
 using InvestmentLab.Portfolio.Accounts.Domain;
 using InvestmentLab.Portfolio.Holdings.Domain;
 using InvestmentLab.Portfolio.Transactions.Domain;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InvestmentLab.Portfolio.Shared.Infrastructure;
 
-/// <summary>
-/// Stored holdings read model: one row per position (with its lots as JSON) and one cash row
-/// (<see cref="InstrumentId"/> null) per sub-portfolio and currency — the account currency plus every balance kept in
-/// another one. Rewritten as a whole with every journal change.
-/// </summary>
 public sealed class HoldingRow
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
@@ -23,7 +16,6 @@ public sealed class HoldingRow
     public Guid? InstrumentId { get; private set; }
     public decimal Quantity { get; private set; }
 
-    /// <summary>Cash for a cash row, cost basis for a position.</summary>
     public decimal Amount { get; private set; }
 
     public Currency Currency { get; private set; } = null!;
@@ -35,6 +27,7 @@ public sealed class HoldingRow
         foreach (var sub in holdings.SubPortfolios)
         {
             yield return New(holdings, ownerId, sub.SubPortfolioId, null, 0m, sub.Cash.Amount, "[]");
+
             foreach (var foreign in sub.ForeignCash)
                 yield return New(holdings, ownerId, sub.SubPortfolioId, null, 0m, foreign.Amount, "[]", foreign.Currency);
 
@@ -48,7 +41,7 @@ public sealed class HoldingRow
         account.Id,
         account.BaseCurrency,
         rows.Select(row => row.AsOf).FirstOrDefault(),
-        // Same order as the projector: sub-portfolios as the account lists them.
+
         [.. rows.GroupBy(row => row.SubPortfolioId)
             .OrderBy(sub => account.SubPortfolios.ToList().FindIndex(s => s.Id.Value == sub.Key))
             .Select(sub => new SubPortfolioHoldings(
@@ -77,16 +70,4 @@ public sealed class HoldingRow
         };
 
     private sealed record LotJson(Guid OpenedBy, DateOnly OpenedOn, decimal Quantity, decimal UnitCost);
-}
-
-internal sealed class HoldingRowConfiguration(PortfolioDbContext context) : IEntityTypeConfiguration<HoldingRow>
-{
-    public void Configure(EntityTypeBuilder<HoldingRow> row)
-    {
-        row.ToTable("holdings");
-        row.HasKey(r => r.Id);
-        row.Property(r => r.Lots).HasColumnType("jsonb");
-        row.HasIndex(r => new { r.AccountId, r.SubPortfolioId, r.InstrumentId, r.Currency }).IsUnique().AreNullsDistinct(false);
-        context.HasOwnerFilter(row, r => r.OwnerId);
-    }
 }

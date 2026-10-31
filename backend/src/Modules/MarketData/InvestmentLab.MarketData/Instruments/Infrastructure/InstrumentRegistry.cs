@@ -6,10 +6,6 @@ using InvestmentLab.MarketData.Instruments.Domain;
 
 namespace InvestmentLab.MarketData.Instruments.Infrastructure;
 
-/// <summary>
-/// Registers an instrument under its Yahoo symbol and asks Yahoo what it is; an instrument that already owns the symbol is
-/// returned as it is.
-/// </summary>
 internal sealed class InstrumentRegistry(
     IInstrumentRepository instruments, RegisterInstrumentHandler register, ISymbolLookup lookup, DescribeInstrumentsHandler describe) : IInstrumentRegistry
 {
@@ -26,6 +22,7 @@ internal sealed class InstrumentRegistry(
         var symbol = ProviderSymbol.TryParse($"yfinance:{instrument.YahooSymbol.Trim().ToUpperInvariant()}");
         if (symbol.IsFailure)
             return new RegisteredInstrumentDto(null, symbol.Error.Message);
+
         if (await instruments.FindOwnerAsync(symbol.Value, cancellationToken) is { } owner)
             return new RegisteredInstrumentDto(owner.Value, null);
 
@@ -50,11 +47,12 @@ internal sealed class InstrumentRegistry(
             [symbol.Value.ToString()]), cancellationToken);
         if (result.IsFailure)
             return new RegisteredInstrumentDto(null, result.Error.Message);
+
         await describe.Handle([InstrumentId.Of(result.Value)], cancellationToken);
+
         return new RegisteredInstrumentDto(result.Value, null);
     }
 
-    /// <summary>Yahoo symbols of the exchanges a broker most likely trades the ticker on in that currency, most likely first.</summary>
     private static IReadOnlyList<string> Candidates(string ticker, string currency)
     {
         var symbol = ticker.Trim().ToUpperInvariant();
@@ -66,7 +64,7 @@ internal sealed class InstrumentRegistry(
             "PLN" => [".WA"],
             _ => [""],
         };
-        // US share classes are written with a dash on Yahoo: BRK.B → BRK-B.
+
         return [.. suffixes.Select(suffix => suffix.Length == 0 ? symbol.Replace('.', '-') : symbol + suffix)];
     }
 }

@@ -9,10 +9,6 @@ using InvestmentLab.Strategies.Definitions.Application;
 
 namespace InvestmentLab.IntegrationTests.Strategies;
 
-/// <summary>
-/// Stage 4 end to end: catalog from the Python engine → default strategies from the TOML files → a sub-portfolio
-/// with the imported positions.json → the .NET decision equals the engine's answer to the same context.
-/// </summary>
 public sealed class StrategiesScenarioTests : IClassFixture<StrategiesApiFactory>
 {
     private readonly AppHostFixture _appHost;
@@ -34,7 +30,6 @@ public sealed class StrategiesScenarioTests : IClassFixture<StrategiesApiFactory
         var catalog = await client.GetFromJsonAsync<List<StrategyTypeDto>>("/api/strategies/catalog", ct);
         catalog!.ShouldContain(type => type.Code == "etf-momentum");
 
-        // Made at registration; asking again creates nothing.
         var defaults = await client.DefaultStrategiesAsync<StrategyDto>(strategy => strategy.Name, ct);
         defaults.Select(strategy => strategy.Name).ShouldBe(["EU ETF momentum", "US ETF momentum"]);
         var eu = defaults[0];
@@ -62,7 +57,6 @@ public sealed class StrategiesScenarioTests : IClassFixture<StrategiesApiFactory
         decision.Targets.Count.ShouldBeLessThanOrEqualTo(4);
         decision.Targets.Select(target => target.InstrumentId).ShouldBeSubsetOf(eu.Version.Universe);
 
-        // The same context, posted to the engine directly, gives the same targets.
         var context = _factory.EngineRequests.ShouldHaveSingleItem();
         JsonNode.Parse(context)!["subPortfolio"]!["holdings"]!.AsArray().Count.ShouldBe(3);
         using var engine = _appHost.CreateStrategyEngineClient();
@@ -120,6 +114,7 @@ public sealed class StrategiesScenarioTests : IClassFixture<StrategiesApiFactory
     {
         var response = await client.PostAsJsonAsync(url, body, ct);
         response.StatusCode.ShouldBe(HttpStatusCode.OK, await response.Content.ReadAsStringAsync(ct));
+
         return (await response.Content.ReadFromJsonAsync<T>(ct))!;
     }
 }

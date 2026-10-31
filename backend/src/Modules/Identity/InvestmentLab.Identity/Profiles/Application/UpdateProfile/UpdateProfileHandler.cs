@@ -20,6 +20,7 @@ public sealed class UpdateProfileHandler(IUserProfileRepository profiles)
             return updated.Error;
 
         await profiles.SaveChangesAsync(cancellationToken);
+
         return profile.ToDto();
     }
 }

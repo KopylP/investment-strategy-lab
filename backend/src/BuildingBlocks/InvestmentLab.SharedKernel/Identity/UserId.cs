@@ -1,6 +1,5 @@
 namespace InvestmentLab.SharedKernel;
 
-/// <summary>Owner of user data; every aggregate in other modules carries one.</summary>
 public readonly record struct UserId
 {
     public Guid Value { get; }

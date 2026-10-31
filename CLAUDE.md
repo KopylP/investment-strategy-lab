@@ -36,9 +36,27 @@ cd frontend && npx ng build
 
 - Everything the user sees is in **Ukrainian** (UI, report texts, notifications, add-on docs). Code, identifiers and
   code comments are in English. A report is «рапорт» in the UI.
-- Comments and doc comments say what a thing means for the user or the domain, in full sentences; match the density
-  of the surrounding code rather than adding narration.
+- Commit messages and code follow the code rules below; the why of a decision goes in an ADR, not in a comment.
 - Commit messages: one descriptive paragraph of what changed for the user and why (see `git log`), no type prefixes.
 - Do not bump `deploy/home-assistant/investlab/config.yaml` `version` by hand: a workflow bumps it on every push to
   `main` that touches `backend/`, `frontend/`, `strategy-engine/` or the add-on. Backend pushes are also auto-formatted
   by `dotnet format` and committed back — pull before pushing again.
+
+## Code rules (Clean Code)
+
+New and changed code follows these rules; they win over the style of older code around it.
+
+- **Code documents itself.** No `<summary>` or doc comments and no comments that narrate. If code needs explaining,
+  rename or extract until it does not.
+- **One action, one handler.** Each use case has its own handler in its own folder (`Application/CreateSignal/`). No
+  handler class with `Get`, `Create` and `Delete` methods. An integration event handler reacts to one event.
+- **Small functions, one thing each,** at one level of abstraction. A function reads as steps; the details live in the
+  functions it calls.
+- **Every cohesive block that does one thing is its own function.** A long `if` condition or a LINQ chain moves to a
+  function whose name says what it finds or decides.
+- **Blank lines separate logical segments:** guards, then gathering data, then deciding, then saving, then returning.
+- **No dense expressions.** Never nest construction, LINQ and formatting in one statement. Name intermediate results.
+  Constructors with many arguments use named arguments, one per line.
+- **One type per file,** except a handler with the small command and DTO records only it uses.
+- **Small types over long parameter lists.** Group arguments that travel together into a value object.
+- **Intention-revealing names,** no abbreviations; named constants instead of magic numbers.

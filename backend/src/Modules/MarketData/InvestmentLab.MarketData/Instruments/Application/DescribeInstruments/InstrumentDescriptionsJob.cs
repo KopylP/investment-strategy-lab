@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 
 namespace InvestmentLab.MarketData.Instruments.Application.DescribeInstruments;
 
-/// <summary>Nightly, after the quotes: the descriptions Yahoo has not given yet or gave a month ago.</summary>
 public sealed class InstrumentDescriptionsJob(DescribeInstrumentsHandler describe, ILogger<InstrumentDescriptionsJob> logger) : IScheduledJob
 {
     public static readonly DailySchedule Schedule = new(new TimeOnly(23, 15), TimeZoneInfo.FindSystemTimeZoneById("Europe/Warsaw"), WeekdaysOnly: false);

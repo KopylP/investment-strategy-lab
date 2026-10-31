@@ -10,12 +10,11 @@ internal enum LocationKind
     External,
 }
 
-/// <summary>Where a namespace sits in the architecture: InvestmentLab.&lt;Module&gt;.&lt;Feature&gt;.&lt;Layer&gt;.</summary>
 internal sealed record CodeLocation(LocationKind Kind, string Namespace, string? Module = null, string? Feature = null, string? Layer = null)
 {
     public const string SharedFeature = "Shared";
 
-    public static readonly string[] Modules = ["Identity", "MarketData", "Strategies", "Portfolio", "Rebalancing", "Taxation", "Performance", "Notifications"];
+    public static readonly string[] Modules = ["Identity", "MarketData", "Strategies", "Portfolio", "Rebalancing", "Taxation", "Performance", "Signals", "Notifications"];
     public static readonly string[] Layers = ["Domain", "Application", "Infrastructure", "Api"];
     private static readonly string[] Hosts = ["Api", "AppHost", "ServiceDefaults"];
 
@@ -30,10 +29,13 @@ internal sealed record CodeLocation(LocationKind Kind, string Namespace, string?
 
         if (second == "SharedKernel")
             return new(LocationKind.SharedKernel, ns);
+
         if (second == "BuildingBlocks")
             return new(LocationKind.BuildingBlocks, ns);
+
         if (Hosts.Contains(second))
             return new(LocationKind.Host, ns);
+
         if (!Modules.Contains(second))
             return new(LocationKind.External, ns);
 
@@ -42,6 +44,7 @@ internal sealed record CodeLocation(LocationKind Kind, string Namespace, string?
 
         var feature = parts.Length > 2 ? parts[2] : null;
         var layer = parts.Length > 3 && Layers.Contains(parts[3]) ? parts[3] : null;
+
         return new(LocationKind.Module, ns, second, feature, layer);
     }
 

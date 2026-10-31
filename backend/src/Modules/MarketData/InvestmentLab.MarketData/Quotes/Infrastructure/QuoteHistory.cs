@@ -20,6 +20,7 @@ internal sealed class QuoteHistory(MarketDataDbContext db) : IQuoteHistory
             .ToListAsync(cancellationToken);
 
         var byInstrument = quotes.ToLookup(quote => quote.InstrumentId);
+
         return [.. ids.Select(id => new QuoteSeriesDto(id.Value, [.. byInstrument[id].Select(ToPoint)]))];
     }
 

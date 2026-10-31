@@ -17,7 +17,6 @@ public sealed class BrokerStatementTests
     [Fact]
     public void Rows_are_read_by_their_shape_whatever_the_headings_say()
     {
-        // Revolut's layout with headings in another language: the reader never looks at them.
         var statement = PnlStatementReader.Read("Revolut", Lines(
             "Sprzedaż",
             "Data nabycia Data sprzedaży Symbol Nazwa ISIN Kraj Ilość Koszt Przychód Zysk Opłaty",
@@ -36,10 +35,10 @@ public sealed class BrokerStatementTests
 
         statement.Lots.Count.ShouldBe(2);
         statement.Lots[0].ShouldBe(new BrokerSaleLot(new(2025, 4, 23), new(2025, 7, 7), "TM", "US8923313071", "USD", 0.35583561m, 64.94m, 59.67m, 1.07m, 245.70m, 216m, 4.04m));
-        statement.Lots[1].CostPln.ShouldBe(8.30m);                               // the wrapped name does not break the row
+        statement.Lots[1].CostPln.ShouldBe(8.30m);
         statement.Dividends.ShouldHaveSingleItem().ShouldBe(
             new BrokerDividend(new(2025, 5, 6), "ASME", "NL0010273215", "EUR", 0.08m, 0.01m, 0.07m, 0.34m, 0.04m));
-        statement.Warnings.ShouldHaveSingleItem().ShouldContain("ISIN");          // interest is not a security
+        statement.Warnings.ShouldHaveSingleItem().ShouldContain("ISIN");
     }
 
     [Fact]
@@ -65,7 +64,6 @@ public sealed class BrokerStatementTests
     [Fact]
     public void Dividend_tax_is_on_gross_less_the_tax_withheld_abroad()
     {
-        // Received 85 USD net of 15 withheld in the US, at 4 PLN: gross 400 PLN, 60 PLN paid abroad.
         var computation = TaxCalculator.Compute([
             new TaxEvent(Guid.NewGuid(), new(2025, 5, 16), 0, TaxableKind.Dividend, Apple, 0m, 0m, 0m, 85m, [new(Eu, 0m)], 4m, null,
                 Withholding: new WithholdingFacts(100m / 85m, 15m / 85m)),
@@ -78,7 +76,7 @@ public sealed class BrokerStatementTests
         var year = computation.Year(2025)!.Summary;
         year.DividendIncome.ShouldBe(400m);
         year.DividendTaxCredit.ShouldBe(60m);
-        year.DividendTax.ShouldBe(16m);                   // 400 × 19% = 76, less 60 paid abroad
+        year.DividendTax.ShouldBe(16m);
     }
 
     [Fact]
@@ -92,7 +90,7 @@ public sealed class BrokerStatementTests
         var sale = computation.Year(2025)!.Realizations.ShouldHaveSingleItem();
         sale.UnmatchedQuantity.ShouldBe(0m);
         sale.Lots.ShouldHaveSingleItem().ShouldBe(new LotMatch(Guid.Empty, new(2025, 10, 8), 0.56779242m, 8.30m, FromBroker: true, Gross: 2.27m));
-        sale.CostPln.ShouldBe(8.30m + 4.00m);             // the broker's lot + the sale's fee 1.09 × 3.67
+        sale.CostPln.ShouldBe(8.30m + 4.00m);
         sale.BrokerGainPln.ShouldBe(1.09m);
         computation.Warnings.ShouldBeEmpty();
     }
@@ -100,20 +98,18 @@ public sealed class BrokerStatementTests
     [Fact]
     public void A_usd_trade_on_a_eur_account_is_taxed_in_usd()
     {
-        // Bought 0.15214042 MA at 525.83 USD (80 USD), recorded in EUR at a cross rate of the trade day (≈ 0.8696).
         var recorded = new TransactionRecordedV1(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "Buy", new(2025, 4, 22), "Import", null, "EUR",
             new TradeRecordedDto(Apple, "Buy", 0.15214042m, 457.27m, 0m, [new(Eu, 0.15214042m)], SettledAmount: 80m, SettledCurrency: "USD"), null, null);
 
         var entry = LedgerEntries.From(recorded, DateTimeOffset.UnixEpoch)!;
 
-        entry.Currency.ShouldBe("USD");                  // so the NBP USD rate of the day before applies, not EUR's
+        entry.Currency.ShouldBe("USD");
         (entry.Quantity * entry.Price).ShouldBe(80m, 0.0001m);
     }
 
     [Fact]
     public void A_cost_the_broker_carved_out_for_a_spin_off_is_taken_at_our_rate()
     {
-        // Bought 2.8389621 SONY for 68.93 USD (+1.06 fee) at 3.7661; the broker's cost basis is 66.66 USD after the spin-off.
         TaxEvent buy = new(Guid.NewGuid(), new(2025, 4, 22), 0, TaxableKind.Buy, Sony, 2.8389621m, 24.28m, 1.06m, 68.93m, [new(Eu, 2.8389621m)], 3.7661m, null);
         TaxEvent sell = new(Guid.NewGuid(), new(2026, 1, 26), 1, TaxableKind.Sell, Sony, 2.8389621m, 23.10m, 0.01m, 65.58m, [new(Eu, 2.8389621m)], 3.55m, null,
             Broker: new SaleFacts([new BrokerLotFact(new(2025, 4, 22), 2.8389621m, 66.66m, 251.05m)], -23.39m, "USD", 66.66m));

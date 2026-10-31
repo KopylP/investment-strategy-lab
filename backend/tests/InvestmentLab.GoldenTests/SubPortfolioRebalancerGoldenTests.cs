@@ -5,10 +5,6 @@ using InvestmentLab.Rebalancing.Planning.Domain;
 
 namespace InvestmentLab.GoldenTests;
 
-/// <summary>
-/// The .NET rebalancer reproduces <c>plan.py</c> on fixtures exported by <c>tools/export_golden_fixtures.py</c>:
-/// 17 synthetic cases (one per rule) and the last 12 monthly plans of a backtest. Amounts match to the cent.
-/// </summary>
 public sealed class SubPortfolioRebalancerGoldenTests
 {
     private const decimal Cent = 0.01m;
@@ -18,8 +14,10 @@ public sealed class SubPortfolioRebalancerGoldenTests
     public static TheoryData<string> Fixtures()
     {
         var data = new TheoryData<string>();
+
         foreach (var path in Directory.GetFiles(Path.Combine(AppContext.BaseDirectory, "Fixtures"), "*.json", SearchOption.AllDirectories).Order())
             data.Add(Path.GetRelativePath(Path.Combine(AppContext.BaseDirectory, "Fixtures"), path));
+
         return data;
     }
 
@@ -38,6 +36,7 @@ public sealed class SubPortfolioRebalancerGoldenTests
 
         var orders = expected.GetProperty("orders").EnumerateArray().ToList();
         plan.Orders.Select(Describe).ShouldBe(orders.Select(order => $"{order.GetProperty("kind").GetString()} {order.GetProperty("ticker").GetString()}"));
+
         foreach (var (actual, order) in plan.Orders.Zip(orders))
         {
             actual.Amount.ShouldBe(order.GetProperty("amount").GetDecimal(), Cent, Describe(actual));
@@ -53,6 +52,7 @@ public sealed class SubPortfolioRebalancerGoldenTests
 
         var rows = expected.GetProperty("allocation").EnumerateArray().ToList();
         plan.Allocation.Count.ShouldBe(rows.Count);
+
         foreach (var (actual, row) in plan.Allocation.Zip(rows))
         {
             var ticker = row.GetProperty("ticker").GetString()!;
@@ -70,7 +70,6 @@ public sealed class SubPortfolioRebalancerGoldenTests
                 actual.TargetWeight!.Value.ShouldBe(target.GetDecimal(), WeightTolerance, label);
         }
 
-        // The CLI hint about --contribution has no place in the web app.
         var notes = expected.GetProperty("notes").EnumerateArray()
             .Select(note => note.GetString()!.Replace(" Вкажіть monthly_contribution у config або передайте --contribution.", ""));
         plan.Notes.ShouldBe(notes);
@@ -97,6 +96,7 @@ public sealed class SubPortfolioRebalancerGoldenTests
         var positions = portfolio.GetProperty("holdings").EnumerateArray().Select(holding =>
         {
             var key = holding.GetProperty("key").GetString()!;
+
             return new SubPortfolioPosition(IdOf(key), Quantity.Of(holding.GetProperty("quantity").GetDecimal()), costBasis.GetValueOrDefault(key));
         }).ToList();
 
@@ -129,8 +129,10 @@ public sealed class SubPortfolioRebalancerGoldenTests
     private static Guid IdOf(string ticker)
     {
         var id = new Guid(MD5.HashData(Encoding.UTF8.GetBytes(ticker)));
+
         lock (Tickers)
             Tickers[id] = ticker;
+
         return id;
     }
 
