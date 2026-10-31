@@ -3,7 +3,7 @@
 } @else if (store.loadError()) {
   <div class="card"><p-message severity="error" text="Рахунок не знайдено" /></div>
 } @else if (store.account(); as account) {
-  <app-page-header backLink="/accounts" backLabel="До рахунків" [title]="account.name" [subtitle]="account.broker + ' · ' + account.baseCurrency + ' · податки ' + account.taxPolicyCode">
+  <app-page-header backLink="/accounts" backLabel="Рахунки" [title]="account.name" [subtitle]="account.broker + ' · ' + account.baseCurrency + ' · податки ' + account.taxPolicyCode">
     <p-button [label]="viewport.phone() ? 'Імпорт' : 'Імпорт positions.json'" icon="pi pi-upload" severity="secondary" [outlined]="true" (onClick)="openImport()" />
     <p-button label="Рапорти" icon="pi pi-list-check" routerLink="/reports" />
   </app-page-header>

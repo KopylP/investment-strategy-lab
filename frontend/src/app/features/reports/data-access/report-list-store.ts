@@ -1,4 +1,4 @@
-import { computed, effect, inject, Injectable, resource, signal } from '@angular/core';
+import { afterNextRender, computed, effect, inject, Injectable, resource, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { toProblemMessage } from '../../../core/api/api-client';
@@ -86,6 +86,8 @@ export class ReportListStore {
   private readonly seenPending = new Set<string>();
 
   constructor() {
+    // Taken into memory and off the address: «back» from the opened report must not wait for that report again and reopen it.
+    if (this.awaited) afterNextRender(() => void this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true }));
     effect((onCleanup) => {
       const requests = this.requestsResource.value();
       if (!requests) return;

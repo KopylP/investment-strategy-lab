@@ -1,5 +1,5 @@
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
-import { ApplicationConfig, LOCALE_ID, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
+import { ApplicationConfig, inject, LOCALE_ID, provideBrowserGlobalErrorListeners, provideEnvironmentInitializer, provideZonelessChangeDetection } from '@angular/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideRouter, withComponentInputBinding, withInMemoryScrolling, withNavigationErrorHandler } from '@angular/router';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -9,6 +9,7 @@ import { routes } from './app.routes';
 import { basePathInterceptor } from './core/api/base-path-interceptor';
 import { reloadWithNewIngressSession } from './core/auth/ingress-session';
 import { unauthorizedInterceptor } from './core/auth/unauthorized-interceptor';
+import { NavigationHistory } from './core/layout/navigation-history';
 import { InvestmentLabPreset } from './core/theme/investment-lab.preset';
 import { ukTranslation } from './core/theme/uk-translation';
 
@@ -18,6 +19,8 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideAnimationsAsync(),
     provideRouter(routes, withComponentInputBinding(), withInMemoryScrolling({ scrollPositionRestoration: 'enabled' }), withNavigationErrorHandler(reloadWithNewIngressSession)),
+    // Created before the first navigation, so the way back is known from the first page on.
+    provideEnvironmentInitializer(() => inject(NavigationHistory)),
     provideHttpClient(withFetch(), withInterceptors([basePathInterceptor, unauthorizedInterceptor])),
     providePrimeNG({
       theme: {

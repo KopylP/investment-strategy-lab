@@ -3,7 +3,7 @@
 } @else if (store.loadError()) {
   <div class="card"><p-message severity="error" text="Стратегію не знайдено" /></div>
 } @else if (store.strategy(); as strategy) {
-  <app-page-header backLink="/strategies" backLabel="До стратегій" [title]="strategy.name" [subtitle]="(store.type()?.name ?? strategy.typeCode) + ' · рушій ' + (store.type()?.engine ?? '') + ' ' + (store.type()?.engineVersion ?? '')">
+  <app-page-header backLink="/strategies" backLabel="Стратегії" [title]="strategy.name" [subtitle]="(store.type()?.name ?? strategy.typeCode) + ' · рушій ' + (store.type()?.engine ?? '') + ' ' + (store.type()?.engineVersion ?? '')">
     <p-select [options]="store.versions()" [ngModel]="strategy.version.number" (ngModelChange)="store.showVersion($event)" [disabled]="editing()" size="small">
       <ng-template #selectedItem let-number>Версія {{ number }}</ng-template>
       <ng-template #item let-number>Версія {{ number }}{{ number === strategy.latestVersion ? ' (остання)' : '' }}</ng-template>
