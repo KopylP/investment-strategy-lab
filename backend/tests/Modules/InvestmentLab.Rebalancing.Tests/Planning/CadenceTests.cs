@@ -4,7 +4,7 @@ namespace InvestmentLab.Rebalancing.Tests.Planning;
 
 public sealed class CadenceTests
 {
-    private static Cadence Cadence(string frequency, int day = 1, string weekday = "sunday", string time = "20:00", int minute = 0) =>
+    private static Cadence Make(string frequency, int day = 1, string weekday = "sunday", string time = "20:00", int minute = 0) =>
         Cadence.Of(frequency, day, weekday, time, minute);
 
     private static DateTime At(string local) => DateTime.Parse(local, System.Globalization.CultureInfo.InvariantCulture);
@@ -12,16 +12,16 @@ public sealed class CadenceTests
     public static TheoryData<Cadence, string, string, string> Times => new()
     {
         // cadence, now, last at or before now, next after now
-        { Cadence("hourly", minute: 15), "2026-11-04T10:20", "2026-11-04T10:15", "2026-11-04T11:15" },
-        { Cadence("hourly", minute: 15), "2026-11-04T10:15", "2026-11-04T10:15", "2026-11-04T11:15" },
-        { Cadence("hourly", minute: 45), "2026-11-04T00:10", "2026-11-03T23:45", "2026-11-04T00:45" },
-        { Cadence("daily", time: "08:30"), "2026-11-04T08:00", "2026-11-03T08:30", "2026-11-04T08:30" },
-        { Cadence("weekly", weekday: "friday", time: "18:00"), "2026-11-04T12:00", "2026-10-30T18:00", "2026-11-06T18:00" },  // a Wednesday
-        { Cadence("weekly", weekday: "sunday", time: "19:00"), "2026-11-08T19:30", "2026-11-08T19:00", "2026-11-15T19:00" },
-        { Cadence("monthly", day: 15, time: "09:00"), "2026-11-04T12:00", "2026-10-15T09:00", "2026-11-15T09:00" },
-        { Cadence("monthly", day: 31), "2026-11-30T21:00", "2026-11-30T20:00", "2026-12-31T20:00" },  // November has 30 days
-        { Cadence("monthly", day: 31), "2027-03-01T10:00", "2027-02-28T20:00", "2027-03-31T20:00" },
-        { Cadence("quarterly", day: 5), "2026-11-04T12:00", "2026-10-05T20:00", "2027-01-05T20:00" },
+        { Make("hourly", minute: 15), "2026-11-04T10:20", "2026-11-04T10:15", "2026-11-04T11:15" },
+        { Make("hourly", minute: 15), "2026-11-04T10:15", "2026-11-04T10:15", "2026-11-04T11:15" },
+        { Make("hourly", minute: 45), "2026-11-04T00:10", "2026-11-03T23:45", "2026-11-04T00:45" },
+        { Make("daily", time: "08:30"), "2026-11-04T08:00", "2026-11-03T08:30", "2026-11-04T08:30" },
+        { Make("weekly", weekday: "friday", time: "18:00"), "2026-11-04T12:00", "2026-10-30T18:00", "2026-11-06T18:00" },  // a Wednesday
+        { Make("weekly", weekday: "sunday", time: "19:00"), "2026-11-08T19:30", "2026-11-08T19:00", "2026-11-15T19:00" },
+        { Make("monthly", day: 15, time: "09:00"), "2026-11-04T12:00", "2026-10-15T09:00", "2026-11-15T09:00" },
+        { Make("monthly", day: 31), "2026-11-30T21:00", "2026-11-30T20:00", "2026-12-31T20:00" },  // November has 30 days
+        { Make("monthly", day: 31), "2027-03-01T10:00", "2027-02-28T20:00", "2027-03-31T20:00" },
+        { Make("quarterly", day: 5), "2026-11-04T12:00", "2026-10-05T20:00", "2027-01-05T20:00" },
     };
 
     [Theory]
@@ -34,15 +34,15 @@ public sealed class CadenceTests
 
     [Fact]
     public void A_report_switched_off_has_no_times() =>
-        Cadence("off").Next(At("2026-11-04T12:00")).ShouldBeNull();
+        Make("off").Next(At("2026-11-04T12:00")).ShouldBeNull();
 
     [Fact]
     public void An_unknown_frequency_is_off_and_fields_the_frequency_does_not_read_are_ignored()
     {
-        Cadence("yearly").ShouldBe(Cadence.Off);
-        Cadence("weekly", day: 15, weekday: "monday", time: "19:30", minute: 10)
+        Make("yearly").ShouldBe(Cadence.Off);
+        Make("weekly", day: 15, weekday: "monday", time: "19:30", minute: 10)
             .ShouldBe(new Cadence(CadenceFrequency.Weekly, 1, DayOfWeek.Monday, new TimeOnly(19, 30), 0));
-        Cadence("monthly", day: 40, time: "25:00").ShouldBe(new Cadence(CadenceFrequency.Monthly, 1, DayOfWeek.Sunday, new TimeOnly(20, 0), 0));
+        Make("monthly", day: 40, time: "25:00").ShouldBe(new Cadence(CadenceFrequency.Monthly, 1, DayOfWeek.Sunday, new TimeOnly(20, 0), 0));
     }
 
     [Theory]
@@ -71,7 +71,7 @@ public sealed class CadenceTests
         var payday = Cadence.TryOf("monthly", 10, null, "09:00", null).Value;
 
         var setAt = new DateTimeOffset(2026, 10, 30, 19, 43, 0, TimeSpan.Zero);
-        settings.Schedule("rebalance", Cadence("weekly"), setAt.AddDays(-1));
+        settings.Schedule("rebalance", Make("weekly"), setAt.AddDays(-1));
         settings.Schedule("rebalance", payday, setAt);
         settings.ScheduleOf("rebalance").ShouldBe(new OwnReportSchedule("rebalance", payday, setAt));
         settings.ScheduleOf("risk-review").ShouldBeNull();
