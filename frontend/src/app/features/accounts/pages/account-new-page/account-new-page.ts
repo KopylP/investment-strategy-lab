@@ -261,7 +261,8 @@ export class AccountNewPage {
   }
 
   protected async go(path: string[]): Promise<void> {
-    await this.router.navigate(path);
+    // The finished wizard is left behind: «back» from the new account does not reopen it.
+    await this.router.navigate(path, { replaceUrl: true });
   }
 
   private sleeve(name: string, share: number, strategyId: string | null): SleeveDraft {

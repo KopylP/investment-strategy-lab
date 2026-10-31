@@ -28,5 +28,7 @@ specs yet; verify UI changes by building and, when a stack is running, in the br
   report results via PrimeNG `MessageService`.
 - PrimeNG components for controls, Tailwind/PrimeUI utility classes for layout (`card`, `text-muted-color`…).
   Check phone layout: pages switch on `Viewport.phone()`.
+- A page below a list gives `app-page-header` its parent (`backLink`, `backLabel`); «back» itself follows where the
+  user came from (`core/layout/navigation-history.ts`), so a programmatic step that should not be returned to uses `replaceUrl`.
 - All user-facing text is Ukrainian; dates as `dd.MM.yyyy`, money through the `money` pipe.
 - When the API changes, update the DTO in `models/*-dto.ts` and the mapper together.
