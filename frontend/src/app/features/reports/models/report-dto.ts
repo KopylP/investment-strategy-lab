@@ -15,7 +15,7 @@ export interface ReportSummaryDto {
   code: string;
   /** Its name as the strategy declared it. */
   title: string;
-  trigger: 'Scheduled' | 'OnDemand';
+  trigger: 'Scheduled' | 'OnDemand' | 'Signal';
   status: ReportStatus;
   marketAsOf: string;
   generatedAt: string;
@@ -34,7 +34,7 @@ export interface ReportRequestDto {
   code: string;
   title: string;
   kind: ReportKind;
-  trigger: 'Scheduled' | 'OnDemand';
+  trigger: 'Scheduled' | 'OnDemand' | 'Signal';
   status: 'Pending' | 'Completed' | 'Failed';
   /** The market date the report is for (yyyy-MM-dd): its period. */
   asOf: string;

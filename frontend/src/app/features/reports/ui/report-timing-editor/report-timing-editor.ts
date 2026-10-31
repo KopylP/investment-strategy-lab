@@ -10,10 +10,10 @@ import { frequencyOptions, ReportTiming, weekdayOptions } from '../../models/rep
   selector: 'app-report-timing-editor',
   imports: [FormsModule, InputNumber, InputText, Select],
   template: `
-    <div class="grid gap-3 sm:grid-cols-3">
+    <div class="grid gap-3" [class]="columns()">
       <div class="flex flex-col gap-1">
         <label class="text-sm font-medium" [attr.for]="id() + '-frequency'">Як часто</label>
-        <p-select [inputId]="id() + '-frequency'" [options]="frequencies" optionLabel="label" optionValue="value"
+        <p-select [inputId]="id() + '-frequency'" [options]="frequencies()" optionLabel="label" optionValue="value"
                   [ngModel]="timing().frequency" (ngModelChange)="change({ frequency: $event })" fluid />
       </div>
       @switch (timing().frequency) {
@@ -60,7 +60,8 @@ export class ReportTimingEditor {
   /** Lower-case frequency and weekday, as the API takes them. */
   readonly timing = model.required<ReportTiming>();
 
-  protected readonly frequencies = frequencyOptions;
+  readonly frequencies = input(frequencyOptions);
+  readonly columns = input('sm:grid-cols-3');
   protected readonly weekdays = weekdayOptions;
 
   protected change(part: Partial<ReportTiming>): void {
