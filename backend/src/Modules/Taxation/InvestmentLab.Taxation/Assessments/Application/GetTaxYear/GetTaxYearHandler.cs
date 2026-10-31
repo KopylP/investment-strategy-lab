@@ -6,7 +6,7 @@ using InvestmentLab.Taxation.Assessments.Domain;
 namespace InvestmentLab.Taxation.Assessments.Application.GetTaxYear;
 
 public sealed class GetTaxYearHandler(
-    TaxRecalculator recalculator, IAssessmentRepository assessments, IInstrumentCatalog instruments, ICurrentUser currentUser)
+    TaxRecalculator recalculator, IAssessmentRepository assessments, IInstrumentCatalog instruments, ICurrentUser currentUser, TimeProvider clock)
 {
     private const string YahooPrefix = "yfinance:";
     private const int ShortIdLength = 8;
@@ -20,7 +20,7 @@ public sealed class GetTaxYearHandler(
         if (assessed.FirstOrDefault(assessment => assessment.Year == year) is not { } assessment)
             return Error.NotFound("tax.year_not_found", $"No taxable events in {year}.");
 
-        var openLots = year == DateTime.UtcNow.Year ? outcome.Computation.OpenLots : [];
+        var openLots = year == clock.GetUtcNow().Year ? outcome.Computation.OpenLots : [];
         var labels = await LabelsAsync(assessment, openLots, cancellationToken);
 
         return new TaxYearDetailsDto(
