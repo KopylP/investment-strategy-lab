@@ -27,7 +27,9 @@ public sealed class UndoStatementImportHandler(
         await ReverseRecordedAsync(account.Id.Value, statement, cancellationToken);
 
         if (statement.ReversedTransactionIds.Count > 0)
-            statement.Warnings.Add($"{statement.ReversedTransactionIds.Count} операцій, сторнованих під час імпорту, не відновлено: за потреби запишіть їх заново.");
+            statement.Warnings.Add(
+                $"{statement.ReversedTransactionIds.Count} операцій, сторнованих під час імпорту, не відновлено: " +
+                "за потреби запишіть їх заново.");
 
         statement.Undo(clock.GetUtcNow());
         await imports.SaveChangesAsync(cancellationToken);

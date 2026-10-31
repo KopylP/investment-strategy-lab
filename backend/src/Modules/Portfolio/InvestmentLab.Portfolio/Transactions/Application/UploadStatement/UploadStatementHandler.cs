@@ -95,7 +95,8 @@ public sealed class UploadStatementHandler(
     private async Task<Dictionary<string, ListedSymbolDto?>> ListedElsewhereAsync(List<StatementTicker> tickers, CancellationToken cancellationToken)
     {
         var unknown = tickers.Where(ticker => ticker.Match is null).ToList();
-        var found = await registry.ResolveAsync([.. unknown.Select(ticker => new BrokerTickerDto(ticker.Ticker, ticker.Currency))], cancellationToken);
+        var found =
+            await registry.ResolveAsync([.. unknown.Select(ticker => new BrokerTickerDto(ticker.Ticker, ticker.Currency))], cancellationToken);
 
         return unknown.Zip(found).ToDictionary(pair => pair.First.Ticker, pair => pair.Second);
     }
@@ -143,7 +144,12 @@ public sealed class UploadStatementHandler(
     private static Guid? SuggestCashSubPortfolio(InvestmentAccount account, IReadOnlyList<StatementRow> rows, IReadOnlyList<TickerMapping> mappings)
     {
         var mostSpentOn = rows.Where(row => row.Kind == StatementRowKind.Buy)
-            .Select(row => (Sub: mappings.FirstOrDefault(mapping => string.Equals(mapping.Ticker, row.Ticker, StringComparison.OrdinalIgnoreCase))?.SubPortfolioId, row.Amount))
+            .Select(row => (
+                Sub: mappings.FirstOrDefault(mapping => string.Equals(
+                    mapping.Ticker,
+                    row.Ticker,
+                    StringComparison.OrdinalIgnoreCase))?.SubPortfolioId,
+                row.Amount))
             .Where(entry => entry.Sub is not null)
             .GroupBy(entry => entry.Sub!.Value)
             .OrderByDescending(group => group.Sum(entry => entry.Amount))

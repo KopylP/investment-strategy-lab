@@ -15,6 +15,8 @@ public sealed class Pit38PdfPrinter : IDeclarationPrinter
 
     private const double InPrintedZl = 540;
 
+    private const double CellShift = 1.8;
+
     private static readonly PdfPoint FilingBox = new(75.6, 507.5);
 
     public string Kind => "form";
@@ -75,7 +77,13 @@ public sealed class Pit38PdfPrinter : IDeclarationPrinter
         return builder.Build();
     }
 
-    private static IReadOnlyList<PdfPageBuilder> Fill(PdfDocumentBuilder builder, PdfDocumentBuilder.AddedFont font, PdfDocument form, IReadOnlyDictionary<int, Box> layout, int yearPosition, int year,
+    private static IReadOnlyList<PdfPageBuilder> Fill(
+        PdfDocumentBuilder builder,
+        PdfDocumentBuilder.AddedFont font,
+        PdfDocument form,
+        IReadOnlyDictionary<int, Box> layout,
+        int yearPosition,
+        int year,
         IEnumerable<DeclarationField> fields)
     {
         var pages = Enumerable.Range(1, form.NumberOfPages).Select(number => builder.AddPage(form, number)).ToList();
@@ -95,33 +103,53 @@ public sealed class Pit38PdfPrinter : IDeclarationPrinter
     private static void Write(IReadOnlyList<PdfPageBuilder> pages, PdfDocumentBuilder.AddedFont font, Box box, string value)
     {
         var page = pages[box.Page - 1];
-        double Width(string text) => text.Length == 0 ? 0 : page.MeasureText(text, FontSize, new PdfPoint(0, 0), font) is var letters && letters.Count > 0
-            ? letters[^1].EndBaseLine.X - letters[0].StartBaseLine.X
-            : 0;
 
         switch (box)
         {
             case Amount amount:
-                var (zloty, grosze) = (value.Split(',')[0], value.Split(',')[1]);
-                page.AddText(zloty, FontSize, new PdfPoint((amount.ZlotyEnd ?? amount.Comma - BeforeComma) - Width(zloty), amount.Baseline), font);
-                page.AddText(grosze, FontSize, new PdfPoint(amount.Comma + AfterComma, amount.Baseline), font);
+                WriteAmount(page, font, amount, value);
                 break;
             case Whole whole:
-                page.AddText(value, FontSize, new PdfPoint(whole.Right - Width(value), whole.Baseline), font);
+                page.AddText(value, FontSize, new PdfPoint(whole.Right - WidthOf(page, font, value), whole.Baseline), font);
                 break;
             case Cells cells:
-                for (var index = 0; index < value.Length && index + 1 < cells.Edges.Count; index++)
-                {
-                    var character = value[index].ToString();
-                    var middle = (cells.Edges[index] + cells.Edges[index + 1]) / 2 + 1.8;
-                    page.AddText(character, FontSize, new PdfPoint(middle - Width(character) / 2, cells.Baseline), font);
-                }
-
+                WriteCells(page, font, cells, value);
                 break;
             case Text text:
                 page.AddText(value, FontSize, new PdfPoint(text.Left, text.Baseline), font);
                 break;
         }
+    }
+
+    private static void WriteAmount(PdfPageBuilder page, PdfDocumentBuilder.AddedFont font, Amount amount, string value)
+    {
+        var parts = value.Split(',');
+        var (zloty, grosze) = (parts[0], parts[1]);
+        var zlotyEnd = amount.ZlotyEnd ?? amount.Comma - BeforeComma;
+
+        page.AddText(zloty, FontSize, new PdfPoint(zlotyEnd - WidthOf(page, font, zloty), amount.Baseline), font);
+        page.AddText(grosze, FontSize, new PdfPoint(amount.Comma + AfterComma, amount.Baseline), font);
+    }
+
+    private static void WriteCells(PdfPageBuilder page, PdfDocumentBuilder.AddedFont font, Cells cells, string value)
+    {
+        for (var index = 0; index < value.Length && index + 1 < cells.Edges.Count; index++)
+        {
+            var character = value[index].ToString();
+            var middle = (cells.Edges[index] + cells.Edges[index + 1]) / 2 + CellShift;
+
+            page.AddText(character, FontSize, new PdfPoint(middle - WidthOf(page, font, character) / 2, cells.Baseline), font);
+        }
+    }
+
+    private static double WidthOf(PdfPageBuilder page, PdfDocumentBuilder.AddedFont font, string text)
+    {
+        if (text.Length == 0)
+            return 0;
+
+        var letters = page.MeasureText(text, FontSize, new PdfPoint(0, 0), font);
+
+        return letters.Count > 0 ? letters[^1].EndBaseLine.X - letters[0].StartBaseLine.X : 0;
     }
 
     private static string Format(decimal amount, Box box) => box is Amount

@@ -74,7 +74,14 @@ public sealed class StatementPreview(
         var rowCount = statement.Rows.Count(row => string.Equals(row.Ticker, mapping.Ticker, StringComparison.OrdinalIgnoreCase));
         var name = mapping.InstrumentId is { } id ? names.GetValueOrDefault(id) : mapping.RegisterName;
 
-        return new TickerMappingDto(mapping.Ticker, mapping.Currency, mapping.InstrumentId, mapping.RegisterAs, mapping.SubPortfolioId, rowCount, name);
+        return new TickerMappingDto(
+            mapping.Ticker,
+            mapping.Currency,
+            mapping.InstrumentId,
+            mapping.RegisterAs,
+            mapping.SubPortfolioId,
+            rowCount,
+            name);
     }
 
     private static List<StatementRowDto> RowsOf(StatementImport statement, IReadOnlyList<RowOutcome> outcomes, IReadOnlyList<PricedRow> priced)

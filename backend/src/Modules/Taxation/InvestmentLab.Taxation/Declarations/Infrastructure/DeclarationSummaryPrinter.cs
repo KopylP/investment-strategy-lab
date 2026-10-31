@@ -15,37 +15,58 @@ public sealed class DeclarationSummaryPrinter : IDeclarationPrinter
     public byte[] Print(TaxDeclaration declaration)
     {
         var builder = new PdfDocumentBuilder();
-        var sheet = new Sheet(builder, builder.AddTrueTypeFont(FormResources.Load("DejaVuSans.ttf")), builder.AddTrueTypeFont(FormResources.Load("DejaVuSans-Bold.ttf")));
+        var regular = builder.AddTrueTypeFont(FormResources.Load("DejaVuSans.ttf"));
+        var bold = builder.AddTrueTypeFont(FormResources.Load("DejaVuSans-Bold.ttf"));
+        var sheet = new Sheet(builder, regular, bold);
+
+        PrintHeader(sheet, declaration);
+        PrintFields(sheet, declaration);
+        PrintFacts(sheet, declaration);
+        PrintActions(sheet, declaration);
+
+        return builder.Build();
+    }
+
+    private static void PrintHeader(Sheet sheet, TaxDeclaration declaration)
+    {
+        var deadline = declaration.Deadline.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture);
 
         sheet.Title($"{declaration.Form} за {declaration.Year} — що куди вписати");
-        sheet.Note($"Подати з 15.02 до {declaration.Deadline.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture)} · e-Urząd Skarbowy (podatki.gov.pl) → Twój e-PIT → {declaration.Form}. " +
+        sheet.Note($"Подати з 15.02 до {deadline} · e-Urząd Skarbowy (podatki.gov.pl) → Twój e-PIT → {declaration.Form}. " +
             "Поля, яких тут немає, — 0 (порожні).");
         sheet.Total("До сплати", $"{Amount(declaration.TaxDue)} zł");
+    }
 
+    private static void PrintFields(Sheet sheet, TaxDeclaration declaration)
+    {
         foreach (var section in declaration.Sections)
             sheet.Section($"{section.Code}. {section.Title}", Shown(section.Fields));
 
         foreach (var attachment in declaration.Attachments)
             sheet.Section($"Załącznik {attachment.Title}", attachment.Fields);
+    }
 
-        if (declaration.Facts is { Count: > 0 } facts)
-        {
-            sheet.Heading("Довідково");
+    private static void PrintFacts(Sheet sheet, TaxDeclaration declaration)
+    {
+        if (declaration.Facts is not { Count: > 0 } facts)
+            return;
 
-            foreach (var fact in facts)
-                sheet.Row(null, fact.Label, $"{Amount(fact.Amount)} zł", computed: false);
-        }
+        sheet.Heading("Довідково");
 
+        foreach (var fact in facts)
+            sheet.Row(null, fact.Label, $"{Amount(fact.Amount)} zł", computed: false);
+    }
+
+    private static void PrintActions(Sheet sheet, TaxDeclaration declaration)
+    {
         var actions = declaration.Notes.Where(note => note.Action).Select(note => note.Short ?? note.Text).ToList();
-        if (actions.Count > 0)
-        {
-            sheet.Heading("Перед поданням");
+        if (actions.Count == 0)
+            return;
 
-            foreach (var action in actions)
-                sheet.Bullet(action);
-        }
+        sheet.Heading("Перед поданням");
 
-        return builder.Build();
+        foreach (var action in actions)
+            sheet.Bullet(action);
     }
 
     private static IReadOnlyList<DeclarationField> Shown(IReadOnlyList<DeclarationField> fields) =>
@@ -60,6 +81,8 @@ public sealed class DeclarationSummaryPrinter : IDeclarationPrinter
     private sealed class Sheet(PdfDocumentBuilder builder, PdfDocumentBuilder.AddedFont regular, PdfDocumentBuilder.AddedFont bold)
     {
         private const double Width = 595.28, Height = 841.89, Margin = 48, PositionX = Margin, LabelX = Margin + 48, ValueRight = Width - Margin;
+        private const double LineHeight = 13, RowGap = 16, MarkGap = 8;
+        private const string ComputedMark = "рахує форма — звірте";
         private static readonly (byte R, byte G, byte B) Ink = (15, 23, 42), Grey = (100, 116, 139), Rule = (226, 232, 240), Accent = (79, 70, 229);
 
         private PdfPageBuilder? _page;
@@ -119,38 +142,50 @@ public sealed class DeclarationSummaryPrinter : IDeclarationPrinter
 
         public void Row(string? position, string label, string value, bool computed)
         {
-            const string Mark = "рахує форма — звірте";
             var valueWidth = Measure(value, bold, 11);
-            var room = ValueRight - valueWidth - 16 - LabelX;
+            var room = ValueRight - valueWidth - RowGap - LabelX;
             var lines = Wrap(label, regular, 10, room);
-            var markInline = computed && Measure(lines[^1], regular, 10) + 8 + Measure(Mark, regular, 8) <= room;
-            var height = (lines.Count + (computed && !markInline ? 1 : 0)) * 13;
+            var markInline = computed && Measure(lines[^1], regular, 10) + MarkGap + Measure(ComputedMark, regular, 8) <= room;
+            var height = (lines.Count + (computed && !markInline ? 1 : 0)) * LineHeight;
+
             Space(8 + height);
-            _y -= 13;
+            _y -= LineHeight;
 
             if (position is not null)
                 Text(position, PositionX, 9, regular, Grey);
 
             Text(value, ValueRight - valueWidth, 11, bold, computed ? Grey : Ink);
+            LabelLines(lines);
 
+            if (computed)
+                Mark(lines[^1], markInline);
+
+            _y -= 6;
+            Line();
+        }
+
+        private void LabelLines(List<string> lines)
+        {
             for (var index = 0; index < lines.Count; index++)
             {
                 Text(lines[index], LabelX, 10, regular, Ink);
 
                 if (index < lines.Count - 1)
-                    _y -= 13;
+                    _y -= LineHeight;
             }
+        }
 
-            if (computed && markInline)
-                Text(Mark, LabelX + Measure(lines[^1], regular, 10) + 8, 8, regular, Grey);
-            else if (computed)
+        private void Mark(string lastLine, bool inline)
+        {
+            if (inline)
             {
-                _y -= 13;
-                Text(Mark, LabelX, 8, regular, Grey);
+                Text(ComputedMark, LabelX + Measure(lastLine, regular, 10) + MarkGap, 8, regular, Grey);
+
+                return;
             }
 
-            _y -= 6;
-            Line();
+            _y -= LineHeight;
+            Text(ComputedMark, LabelX, 8, regular, Grey);
         }
 
         public void Bullet(string text)
@@ -196,8 +231,15 @@ public sealed class DeclarationSummaryPrinter : IDeclarationPrinter
             Page.DrawLine(new PdfPoint(Margin, _y), new PdfPoint(ValueRight, _y), 0.5);
         }
 
-        private double Measure(string text, PdfDocumentBuilder.AddedFont font, double size) =>
-            text.Length == 0 ? 0 : Page.MeasureText(text, size, new PdfPoint(0, 0), font) is { Count: > 0 } letters ? letters[^1].EndBaseLine.X - letters[0].StartBaseLine.X : 0;
+        private double Measure(string text, PdfDocumentBuilder.AddedFont font, double size)
+        {
+            if (text.Length == 0)
+                return 0;
+
+            var letters = Page.MeasureText(text, size, new PdfPoint(0, 0), font);
+
+            return letters.Count > 0 ? letters[^1].EndBaseLine.X - letters[0].StartBaseLine.X : 0;
+        }
 
         private List<string> Wrap(string text, PdfDocumentBuilder.AddedFont font, double size, double width)
         {

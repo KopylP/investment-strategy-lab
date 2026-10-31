@@ -6,80 +6,131 @@ public static class ValuationCalculator
     {
         var ordered = movements.OrderBy(movement => movement.Date).ThenBy(movement => movement.Sequence).ToList();
         var subs = ordered.Select(movement => movement.SubPortfolioId).Distinct().ToList();
-        var quantities = new Dictionary<(Guid Sub, Guid Instrument), decimal>();
-        var cash = subs.ToDictionary(sub => sub, _ => 0m);
-        var lastTradePrice = new Dictionary<Guid, decimal>();
-        var foreign = new Dictionary<(Guid Sub, string Currency), decimal>();
-        var lastRate = new Dictionary<string, decimal>();
-        var costs = new CostBook();
 
-        decimal Rate(string currency, DateOnly day)
-        {
-            if (fxOn?.Invoke(currency, day) is { } rate)
-                lastRate[currency] = rate;
-
-            return lastRate.GetValueOrDefault(currency);
-        }
-
-        var state = subs.Cast<Guid?>().Append(null).ToDictionary(sub => sub ?? Guid.Empty, _ => new Chain());
-
-        decimal Price(Guid instrument, DateOnly day) => priceOn(instrument, day) ?? lastTradePrice.GetValueOrDefault(instrument);
+        var book = new PositionBook(subs, priceOn, fxOn);
+        var chains = subs.ToDictionary(sub => sub, _ => new Chain());
+        var accountChain = new Chain();
 
         var snapshots = new List<Snapshot>();
         var next = 0;
 
         foreach (var day in days)
         {
-            var flows = subs.ToDictionary(sub => sub, _ => 0m);
-            var accountFlow = 0m;
+            var flows = new DayFlows(subs);
 
             for (; next < ordered.Count && ordered[next].Date <= day; next++)
-            {
-                var movement = ordered[next];
-                costs.Apply(movement);
+                book.Apply(ordered[next], day, flows);
 
-                if (movement.InstrumentId is { } instrument)
-                {
-                    var key = (movement.SubPortfolioId, instrument);
-                    quantities[key] = quantities.GetValueOrDefault(key) + movement.QuantityDelta;
-
-                    if (movement.TradePrice is { } tradePrice)
-                        lastTradePrice[instrument] = tradePrice;
-
-                    if (movement.TransferQuantity != 0m)
-                        flows[movement.SubPortfolioId] += movement.TransferQuantity * Price(instrument, day);
-                }
-
-                if (movement.CashCurrency is { } currency)
-                    foreign[(movement.SubPortfolioId, currency)] = foreign.GetValueOrDefault((movement.SubPortfolioId, currency)) + movement.CashDelta;
-                else
-                    cash[movement.SubPortfolioId] += movement.CashDelta;
-
-                flows[movement.SubPortfolioId] += movement.ExternalFlow;
-                accountFlow += movement.ExternalFlow;
-            }
-
-            var accountValue = 0m;
-            var accountCash = 0m;
-            var accountCost = 0m;
+            var account = new AccountTotals();
 
             foreach (var sub in subs)
             {
-                var subCash = cash[sub] + foreign.Where(entry => entry.Key.Sub == sub && entry.Value != 0m)
-                    .Sum(entry => entry.Value * Rate(entry.Key.Currency, day));
-                var value = subCash + quantities.Where(entry => entry.Key.Sub == sub && entry.Value != 0m)
-                    .Sum(entry => entry.Value * Price(entry.Key.Instrument, day));
-                accountValue += value;
-                accountCash += subCash;
-                var subCost = costs.Of(sub);
-                accountCost += subCost;
-                snapshots.Add(state[sub].Next(day, sub, value, subCash, flows[sub], subCost));
+                var (value, cash, cost) = book.ValuationOf(sub, day);
+
+                account.Add(value, cash, cost);
+                snapshots.Add(chains[sub].Next(day, sub, value, cash, flows.OfSub[sub], cost));
             }
 
-            snapshots.Add(state[Guid.Empty].Next(day, null, accountValue, accountCash, accountFlow, accountCost));
+            snapshots.Add(accountChain.Next(day, null, account.Value, account.Cash, flows.OfAccount, account.Cost));
         }
 
         return snapshots;
+    }
+
+    private sealed class DayFlows(List<Guid> subs)
+    {
+        public Dictionary<Guid, decimal> OfSub { get; } = subs.ToDictionary(sub => sub, _ => 0m);
+        public decimal OfAccount { get; private set; }
+
+        public void AddTransfer(Guid sub, decimal amount) => OfSub[sub] += amount;
+
+        public void AddExternal(Guid sub, decimal amount)
+        {
+            OfSub[sub] += amount;
+            OfAccount += amount;
+        }
+    }
+
+    private sealed class AccountTotals
+    {
+        public decimal Value { get; private set; }
+        public decimal Cash { get; private set; }
+        public decimal Cost { get; private set; }
+
+        public void Add(decimal value, decimal cash, decimal cost)
+        {
+            Value += value;
+            Cash += cash;
+            Cost += cost;
+        }
+    }
+
+    private sealed class PositionBook(List<Guid> subs, PriceOn priceOn, FxOn? fxOn)
+    {
+        private readonly Dictionary<(Guid Sub, Guid Instrument), decimal> _quantities = [];
+        private readonly Dictionary<Guid, decimal> _cash = subs.ToDictionary(sub => sub, _ => 0m);
+        private readonly Dictionary<Guid, decimal> _lastTradePrice = [];
+        private readonly Dictionary<(Guid Sub, string Currency), decimal> _foreign = [];
+        private readonly Dictionary<string, decimal> _lastRate = [];
+        private readonly CostBook _costs = new();
+
+        public void Apply(Movement movement, DateOnly day, DayFlows flows)
+        {
+            _costs.Apply(movement);
+
+            if (movement.InstrumentId is { } instrument)
+                ApplyToPosition(movement, instrument, day, flows);
+
+            ApplyToCash(movement);
+            flows.AddExternal(movement.SubPortfolioId, movement.ExternalFlow);
+        }
+
+        public (decimal Value, decimal Cash, decimal Cost) ValuationOf(Guid sub, DateOnly day)
+        {
+            var foreignInAccountCurrency = _foreign
+                .Where(entry => entry.Key.Sub == sub && entry.Value != 0m)
+                .Sum(entry => entry.Value * Rate(entry.Key.Currency, day));
+            var cash = _cash[sub] + foreignInAccountCurrency;
+
+            var positions = _quantities
+                .Where(entry => entry.Key.Sub == sub && entry.Value != 0m)
+                .Sum(entry => entry.Value * Price(entry.Key.Instrument, day));
+
+            return (cash + positions, cash, _costs.Of(sub));
+        }
+
+        private void ApplyToPosition(Movement movement, Guid instrument, DateOnly day, DayFlows flows)
+        {
+            var key = (movement.SubPortfolioId, instrument);
+            _quantities[key] = _quantities.GetValueOrDefault(key) + movement.QuantityDelta;
+
+            if (movement.TradePrice is { } tradePrice)
+                _lastTradePrice[instrument] = tradePrice;
+
+            if (movement.TransferQuantity != 0m)
+                flows.AddTransfer(movement.SubPortfolioId, movement.TransferQuantity * Price(instrument, day));
+        }
+
+        private void ApplyToCash(Movement movement)
+        {
+            if (movement.CashCurrency is { } currency)
+            {
+                var key = (movement.SubPortfolioId, currency);
+                _foreign[key] = _foreign.GetValueOrDefault(key) + movement.CashDelta;
+            }
+            else
+                _cash[movement.SubPortfolioId] += movement.CashDelta;
+        }
+
+        private decimal Rate(string currency, DateOnly day)
+        {
+            if (fxOn?.Invoke(currency, day) is { } rate)
+                _lastRate[currency] = rate;
+
+            return _lastRate.GetValueOrDefault(currency);
+        }
+
+        private decimal Price(Guid instrument, DateOnly day) => priceOn(instrument, day) ?? _lastTradePrice.GetValueOrDefault(instrument);
     }
 
     private sealed class Chain
@@ -97,7 +148,15 @@ public static class ValuationCalculator
             _contributions += flow;
             _previousValue = value;
 
-            return new Snapshot(day, sub, decimal.Round(value, 2), decimal.Round(cash, 2), decimal.Round(flow, 2), decimal.Round(_contributions, 2), decimal.Round(_index, 8), decimal.Round(costBasis, 2));
+            return new Snapshot(
+                day,
+                sub,
+                decimal.Round(value, 2),
+                decimal.Round(cash, 2),
+                decimal.Round(flow, 2),
+                decimal.Round(_contributions, 2),
+                decimal.Round(_index, 8),
+                decimal.Round(costBasis, 2));
         }
     }
 
@@ -127,7 +186,12 @@ public static class ValuationCalculator
                 Take(LotsOf(key), -movement.QuantityDelta);
         }
 
-        public decimal Of(Guid sub) => _lots.Where(entry => entry.Key.Sub == sub).Sum(entry => entry.Value.Sum(lot => lot.Quantity * lot.UnitCost));
+        public decimal Of(Guid sub)
+        {
+            var ofSub = _lots.Where(entry => entry.Key.Sub == sub);
+
+            return ofSub.Sum(entry => entry.Value.Sum(lot => lot.Quantity * lot.UnitCost));
+        }
 
         private List<Lot> LotsOf((Guid Sub, Guid Instrument) key) => _lots.TryGetValue(key, out var lots) ? lots : _lots[key] = [];
 
