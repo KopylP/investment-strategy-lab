@@ -1,7 +1,4 @@
-<app-page-header
-  title="Сигнали"
-  subtitle="Стежать за ринком і вашим портфелем та кажуть, коли умова спрацювала"
->
+<app-page-header title="Сигнали" subtitle="Стежать за ринком і вашим портфелем та кажуть, коли умова спрацювала">
   <p-button label="Новий сигнал" icon="pi pi-plus" (onClick)="create()" />
 </app-page-header>
 
@@ -14,108 +11,69 @@
   </div>
 } @else {
   <div>
-    <section class="card">
-      <h2 class="text-lg font-semibold mt-0 mb-3">Зараз спрацювали</h2>
+    <section class="card p-0 overflow-hidden">
+      <h2 class="text-lg font-semibold m-0 p-3 sm:p-4">Зараз спрацювали</h2>
 
-      @if (store.active().length) {
-        <ul class="list-none m-0 p-0 flex flex-col gap-3">
-          @for (occurrence of store.active(); track occurrence.id) {
-            <li
-              class="flex flex-wrap items-center justify-between gap-2 border-l-4 border-red-500 pl-3"
-            >
-              <div class="min-w-0">
-                <div class="font-medium">{{ occurrence.signalName }}</div>
-                <div class="text-sm text-muted-color">
-                  {{ occurrence.subjectLabel }} · спрацював {{ occurrence.triggerDate | date }} на
-                  {{ triggerValue(occurrence) }}
-                </div>
-              </div>
-              <div class="text-right">
-                <div class="font-semibold text-red-500">{{ latestValue(occurrence) }}</div>
-                <div class="text-xs text-muted-color">
-                  станом на {{ occurrence.latestDate | date }}
-                </div>
-              </div>
-            </li>
-          }
-        </ul>
-      } @else {
-        <p class="m-0 text-muted-color">
-          <i class="pi pi-check-circle mr-2"></i>Жоден сигнал зараз не спрацював.
+      @for (occurrence of store.active(); track occurrence.id) {
+        <app-signal-row
+          icon="pi pi-exclamation-triangle"
+          tone="danger"
+          [title]="occurrence.subjectLabel"
+          [subtitle]="occurrence.signalName"
+          (pick)="openSignalOf(occurrence)"
+        >
+          <span class="block font-semibold whitespace-nowrap text-red-500">{{ latestValue(occurrence) }}</span>
+          <span class="block text-xs text-muted-color whitespace-nowrap">{{ occurrence.latestDate | date }}</span>
+        </app-signal-row>
+      } @empty {
+        <p class="m-0 px-3 sm:px-4 pb-4 text-muted-color">
+          <i class="pi pi-check-circle mr-2" aria-hidden="true"></i>Жоден сигнал зараз не спрацював.
         </p>
       }
     </section>
 
     @if (store.recent().length) {
-      <section class="card">
-        <h2 class="text-lg font-semibold mt-0 mb-3">Останні події</h2>
+      <section class="card p-0 overflow-hidden">
+        <h2 class="text-lg font-semibold m-0 p-3 sm:p-4">Останні події</h2>
 
-        <ul class="list-none m-0 p-0 flex flex-col gap-2">
-          @for (occurrence of store.recent(); track occurrence.id) {
-            <li class="flex flex-wrap items-center justify-between gap-2 text-sm">
-              <span class="min-w-0"
-                >{{ occurrence.signalName }} · {{ occurrence.subjectLabel }}</span
-              >
-              <span class="text-muted-color">
-                {{ occurrence.triggerDate | date }}, {{ triggerValue(occurrence) }} —
-                {{ clearReasonLabel(occurrence.clearReason) }}
-              </span>
-            </li>
-          }
-        </ul>
+        @for (occurrence of store.recent(); track occurrence.id) {
+          <app-signal-row
+            icon="pi pi-history"
+            tone="muted"
+            [title]="occurrence.subjectLabel"
+            [subtitle]="occurrence.signalName"
+            [detail]="clearReasonLabel(occurrence.clearReason)"
+            (pick)="openSignalOf(occurrence)"
+          >
+            <span class="block font-medium whitespace-nowrap">{{ triggerValue(occurrence) }}</span>
+            <span class="block text-xs text-muted-color whitespace-nowrap">{{ occurrence.triggerDate | date }}</span>
+          </app-signal-row>
+        }
       </section>
     }
 
     <section class="card p-0 overflow-hidden">
-      <h2 class="text-lg font-semibold m-0 p-4 pb-3">Мої сигнали</h2>
+      <h2 class="text-lg font-semibold m-0 p-3 sm:p-4">Мої сигнали</h2>
 
-      @if (store.signals().length) {
-        <ul class="list-none m-0 p-0">
-          @for (item of store.signals(); track item.id) {
-            <li class="border-t border-surface">
-              <button
-                type="button"
-                class="w-full flex flex-wrap items-center gap-3 p-4 border-0 bg-transparent text-left text-color cursor-pointer hover:bg-emphasis"
-                (click)="edit(item)"
-              >
-                <span class="flex-1 min-w-48">
-                  <span class="block font-medium">{{ item.name }}</span>
-                  <span class="block text-sm text-muted-color"
-                    >{{ store.targetLabel(item) }} · {{ conditionLabel(item.condition) }}</span
-                  >
-                  <span class="block text-xs text-muted-color">{{
-                    scheduleLabel(item.schedule)
-                  }}</span>
-                </span>
-
-                <span class="flex items-center gap-3">
-                  <i
-                    [class]="
-                      store.notifies(item.id) ? 'pi pi-bell' : 'pi pi-bell-slash text-muted-color'
-                    "
-                    [attr.aria-label]="store.notifies(item.id) ? 'Сповіщає' : 'Не сповіщає'"
-                  ></i>
-                  @if (store.rulesOf(item.id).length; as rules) {
-                    <span class="flex items-center gap-1" aria-label="Запускає рапорти"
-                      ><i class="pi pi-file"></i>{{ rules }}</span
-                    >
-                  }
-                  @if (!item.enabled) {
-                    <p-tag value="Вимкнено" severity="secondary" />
-                  } @else if (item.activeCount) {
-                    <p-tag [value]="'Спрацював: ' + item.activeCount" severity="danger" />
-                  } @else {
-                    <p-tag value="Зведений" severity="success" />
-                  }
-                </span>
-              </button>
-            </li>
+      @for (item of store.signals(); track item.id) {
+        <app-signal-row
+          [icon]="targetIcon(item)"
+          [tone]="toneOf(item)"
+          [title]="item.name"
+          [subtitle]="conditionLabel(item.condition)"
+          [detail]="detailOf(item)"
+          (pick)="edit(item)"
+        >
+          @if (!item.enabled) {
+            <p-tag value="Вимкнено" severity="secondary" />
+          } @else if (item.activeCount) {
+            <p-tag [value]="'Спрацював: ' + item.activeCount" severity="danger" />
+          } @else {
+            <p-tag value="Зведений" severity="success" />
           }
-        </ul>
-      } @else {
-        <p class="m-0 p-4 pt-0 text-muted-color">
-          Вбудовані сигнали з'являться, щойно буде рахунок. Можна також створити свій.
-        </p>
+        </app-signal-row>
+      } @empty {
+        <p class="m-0 px-3 sm:px-4 pb-4 text-muted-color">Вбудовані сигнали з'являться, щойно буде рахунок. Можна також створити свій.</p>
       }
     </section>
   </div>
