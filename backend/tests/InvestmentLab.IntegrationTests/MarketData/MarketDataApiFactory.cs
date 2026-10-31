@@ -39,6 +39,7 @@ public sealed class MarketDataApiFactory : WebApplicationFactory<api::Program>, 
         builder.UseSetting("Scheduling:RunAtStartup", "false");
         builder.ConfigureTestServices(services =>
         {
+            services.RemoveReactionsThatNeedTheStrategyEngine();
             services.AddSingleton<IQuoteProvider>(Quotes);
             services.AddSingleton<IFxRateProvider, FakeNbpProvider>();
             services.AddSingleton<ISymbolLookup, FakeSymbolLookup>();

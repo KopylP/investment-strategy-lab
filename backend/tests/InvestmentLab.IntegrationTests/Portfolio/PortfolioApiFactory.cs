@@ -2,6 +2,7 @@ extern alias api;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Testcontainers.PostgreSql;
 
 namespace InvestmentLab.IntegrationTests.Portfolio;
@@ -14,7 +15,8 @@ public sealed class PortfolioApiFactory : WebApplicationFactory<api::Program>, I
 
     protected override void ConfigureWebHost(IWebHostBuilder builder) =>
         builder.UseSetting("ConnectionStrings:investmentlab", _postgres.GetConnectionString())
-            .UseSetting("Scheduling:RunAtStartup", "false");
+            .UseSetting("Scheduling:RunAtStartup", "false")
+            .ConfigureTestServices(services => services.RemoveReactionsThatNeedTheStrategyEngine());
 
     public override async ValueTask DisposeAsync()
     {
