@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { defaultStrategies } from './default-strategies';
 
 /** Stage 10: a (synthetic) Revolut statement through the wizard: mapping → preview → import → undo. */
 const statement = [
@@ -20,7 +21,7 @@ test('a Revolut statement is mapped, previewed, imported and undone', async ({ p
 
   const api = page.request;
   await api.post('/api/market-data/fx-rates/ingest');
-  const strategies = await (await api.post('/api/strategies/defaults', { data: {} })).json();
+  const strategies = await defaultStrategies(page);
   await api.post('/api/portfolio/accounts', {
     data: {
       name: 'Revolut', broker: 'Revolut', baseCurrency: 'EUR',
@@ -38,7 +39,7 @@ test('a Revolut statement is mapped, previewed, imported and undone', async ({ p
 
   // QDVE is in the EU strategy's universe → its sleeve is suggested; AAPL is new and goes to "Акції".
   const apple = page.locator('tr', { hasText: 'AAPL' }).first();
-  await apple.locator('p-select').nth(1).click();
+  await apple.getByRole('combobox').nth(1).click();
   await page.getByRole('option', { name: 'Акції' }).click();
   await expect(page.getByText('без зіставлення')).toHaveCount(0);
   await page.screenshot({ path: 'e2e/screenshots/19-import-preview.png', fullPage: true });

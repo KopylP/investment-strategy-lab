@@ -1,18 +1,7 @@
 import { expect, Page, test } from '@playwright/test';
+import { defaultStrategies } from './default-strategies';
 
 const screenshotsDir = process.env['SIGNALS_SCREENSHOTS'] ?? 'e2e/screenshots';
-
-async function defaultStrategyId(page: Page): Promise<string> {
-  let strategies: { id: string }[] = [];
-
-  await expect(async () => {
-    await page.request.post('/api/strategies/defaults', { data: {} });
-    strategies = await (await page.request.get('/api/strategies')).json();
-    expect(strategies.length).toBeGreaterThan(0);
-  }).toPass({ timeout: 20_000 });
-
-  return strategies[0].id;
-}
 
 async function registerWithAccount(page: Page): Promise<void> {
   await page.goto('/auth/register');
@@ -22,14 +11,14 @@ async function registerWithAccount(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Зареєструватися' }).click();
   await expect(page.getByRole('heading', { name: 'Огляд' })).toBeVisible();
 
-  const strategyId = await defaultStrategyId(page);
+  const [strategy] = await defaultStrategies(page);
 
   const account = await page.request.post('/api/portfolio/accounts', {
     data: {
       name: 'XTB EUR',
       broker: 'XTB',
       baseCurrency: 'EUR',
-      subPortfolios: [{ name: 'EU momentum', targetSharePercent: 100, strategyId }],
+      subPortfolios: [{ name: 'EU momentum', targetSharePercent: 100, strategyId: strategy.id }],
     },
   });
 

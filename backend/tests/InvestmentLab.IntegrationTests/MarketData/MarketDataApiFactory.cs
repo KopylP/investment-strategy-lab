@@ -14,6 +14,7 @@ using InvestmentLab.MarketData.Instruments.Domain;
 using InvestmentLab.MarketData.Quotes.Application;
 using InvestmentLab.MarketData.Quotes.Domain;
 using InvestmentLab.SharedKernel;
+using InvestmentLab.Strategies.Contracts;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -41,6 +42,7 @@ public sealed class MarketDataApiFactory : WebApplicationFactory<api::Program>, 
             services.AddSingleton<IQuoteProvider>(Quotes);
             services.AddSingleton<IFxRateProvider, FakeNbpProvider>();
             services.AddSingleton<ISymbolLookup, FakeSymbolLookup>();
+            services.AddSingleton<IStrategyDirectory, NoStrategies>();
             services.AddSingleton(this);
             services.AddIntegrationEventHandler<QuoteCorrectedV1, QuoteCorrectedRecorder>();
         });
@@ -61,6 +63,12 @@ public sealed class MarketDataApiFactory : WebApplicationFactory<api::Program>, 
             return Task.CompletedTask;
         }
     }
+}
+
+public sealed class NoStrategies : IStrategyDirectory
+{
+    public Task<IReadOnlyList<StrategySummaryDto>> GetStrategies(CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<StrategySummaryDto>>([]);
 }
 
 public sealed class FakeQuoteProvider : IQuoteProvider

@@ -245,6 +245,20 @@
         display: none;
     }
 
+    .p-stepper-separator {
+        min-width: 0.25rem;
+    }
+
+    .p-step {
+        min-width: 0;
+    }
+
+    .p-step-active .p-step-title {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
     /* A long dialog (a filled tax return) takes the whole screen instead of floating cut off over the page. */
     .p-dialog.app-sheet {
         width: 100vw !important;
