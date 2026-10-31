@@ -23,8 +23,32 @@ Tests are xunit v3 on Microsoft.Testing.Platform with Shouldly (`dotnet test --p
   (messaging/outbox, persistence, `IScheduledJob` scheduling, `IModule`).
 - `src/Modules/<Module>/` — `InvestmentLab.<Module>` and `InvestmentLab.<Module>.Contracts`. Modules: Identity,
   Portfolio, MarketData, Strategies, Rebalancing, Performance, Taxation, Signals, Notifications.
-- Inside a module: feature folders (`Planning/`, `Reports/`…) each with `Domain/`, `Application/`, `Infrastructure/`,
-  `Api/`; module-wide pieces in `Shared/`; registration in `<Module>Module.cs`.
+
+### Inside a module
+
+Every file has one place. Nothing lies loose in `Application/` or in the module's root except `<Module>Module.cs`.
+
+```
+Modules/<Module>/
+├── InvestmentLab.<Module>.Contracts/     integration events (…V1) and query interfaces: primitives only
+└── InvestmentLab.<Module>/
+    ├── <Module>Module.cs                 registration
+    ├── <Feature>/                        Accounts, Planning, Monitoring…
+    │   ├── Api/                          endpoints of the feature
+    │   ├── Application/
+    │   │   ├── <ActionName>/             one use case: its handler or job, with the command and DTOs only it uses
+    │   │   ├── Integration/              reactions to other modules' events, one handler per event
+    │   │   └── Shared/                   what several actions of the feature use (DTOs, inputs, helpers)
+    │   ├── Domain/                       aggregates, value objects, domain events, errors, repository interfaces
+    │   └── Infrastructure/               EF configurations, repositories, outside services
+    └── Shared/Infrastructure/            the module's DbContext and Migrations/
+```
+
+- `<ActionName>` is a verb phrase and the namespace follows the folder: `Accounts/Application/OpenAccount/OpenAccountHandler.cs`.
+- A background job is an action too: `Monitoring/Application/CheckDueSignals/SignalsJob.cs`.
+- A type used by one action stays in that action's folder. It moves to `Application/Shared/` when a second action needs it,
+  and to `Domain/` when it is a concept of the domain rather than of the use cases.
+- A new action, or a split or move of existing code, leaves the tree in this shape in the same change.
 
 ## Rules (enforced by `InvestmentLab.ArchitectureTests`)
 
