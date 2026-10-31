@@ -22,73 +22,25 @@ public sealed class ImportPositionsHandler(TransactionRecorder recorder, IInstru
             return instruments.Error;
 
         var importDate = command.AsOf ?? DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
-        var buys = command.Positions.Select(position => new PositionBuy(position, position.EntryDate ?? importDate)).ToList();
-        var target = new ImportTarget(SubPortfolioId.Of(command.SubPortfolioId), $"import:{command.SubPortfolioId}");
+        var buys = command.Positions.Select(position => BuyOf(position, importDate)).ToList();
+        var import = new PositionImport(SubPortfolioId.Of(command.SubPortfolioId), command.Cash, buys, importDate);
 
         var entries = new List<Func<RecordingContext, Result<Transaction>>>
         {
-            context => Contribution(context, target, command.Cash, buys, importDate),
+            context => import.Contribution(context.Account, context.Now),
         };
-        entries.AddRange(buys.Select<PositionBuy, Func<RecordingContext, Result<Transaction>>>(
-            buy => context => Buy(context, target, buy, instruments.Value[buy.Position.Ticker])));
+        entries.AddRange(buys.Select<ImportedBuy, Func<RecordingContext, Result<Transaction>>>(
+            buy => context => import.Buy(context.Account, buy, instruments.Value[buy.Ticker], context.Now)));
 
         return await RecordAllAsync(accountId, entries, cancellationToken);
     }
 
-    private static Result<Transaction> Contribution(
-        RecordingContext context, ImportTarget target, decimal cash, List<PositionBuy> buys, DateOnly importDate)
-    {
-        var currency = context.Account.BaseCurrency;
-        var total = buys.Aggregate(Money.Of(cash, currency), (sum, buy) => sum + CostOf(buy, currency));
-        if (total.Amount <= 0m)
-            return TransactionErrors.AmountNotPositive();
-
-        var paidOn = buys.Count > 0 ? buys.Min(buy => buy.Date) : importDate;
-        var source = new TransactionSource(TransactionSourceKind.Import, $"{target.Reference}:contribution");
-        CashAllocation[] allocations = [new CashAllocation(target.SubPortfolioId, total)];
-
-        return Transaction.CashMovement(
-            context.Account, CashMovementKind.Contribution, total, allocations, null, paidOn, source, context.Now);
-    }
-
-    private static Money CostOf(PositionBuy buy, Currency currency)
-    {
-        var price = Price.Of(buy.Position.EntryPrice, currency);
-
-        return price.TotalFor(Quantity.Of(buy.Position.Shares));
-    }
-
-    private static Result<Transaction> Buy(RecordingContext context, ImportTarget target, PositionBuy buy, Guid instrumentId)
-    {
-        var position = buy.Position;
-
-        var currency = Currency.TryOf(position.Currency);
-        if (currency.IsFailure)
-            return currency.Error;
-
-        var price = Price.TryOf(position.EntryPrice, currency.Value);
-        if (price.IsFailure)
-            return price.Error;
-
-        var quantity = Quantity.TryOf(position.Shares);
-        if (quantity.IsFailure)
-            return quantity.Error;
-
-        var source = new TransactionSource(TransactionSourceKind.Import, $"{target.Reference}:{position.Ticker}");
-        Allocation[] allocations = [new Allocation(target.SubPortfolioId, quantity.Value)];
-
-        return Transaction.Trade(
-            context.Account,
-            TradeSide.Buy,
-            instrumentId,
-            quantity.Value,
-            price.Value,
-            Money.Zero(currency.Value),
-            allocations,
-            buy.Date,
-            source,
-            context.Now);
-    }
+    private static ImportedBuy BuyOf(LegacyPosition position, DateOnly importDate) => new(
+        position.Ticker,
+        position.Shares,
+        position.EntryPrice,
+        position.Currency,
+        position.EntryDate ?? importDate);
 
     private async Task<Result<ImportReport>> RecordAllAsync(
         Guid accountId, List<Func<RecordingContext, Result<Transaction>>> entries, CancellationToken cancellationToken)
@@ -122,8 +74,7 @@ public sealed class ImportPositionsHandler(TransactionRecorder recorder, IInstru
         if (unknown.Count > 0)
             return Error.Validation("import.unknown_tickers", $"No instrument has the Yahoo symbol {string.Join(", ", unknown)}.");
 
-        var byTicker = positions.GroupBy(position => position.Ticker, StringComparer.OrdinalIgnoreCase);
-        if (byTicker.Any(group => group.Count() > 1))
+        if (PositionImport.TickersRepeat(positions.Select(position => position.Ticker)))
             return Error.Validation("import.ticker_repeated", "Each ticker may appear only once.");
 
         return bySymbol;
@@ -144,8 +95,4 @@ public sealed class ImportPositionsHandler(TransactionRecorder recorder, IInstru
 
         return bySymbol;
     }
-
-    private sealed record PositionBuy(LegacyPosition Position, DateOnly Date);
-
-    private sealed record ImportTarget(SubPortfolioId SubPortfolioId, string Reference);
 }

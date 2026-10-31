@@ -87,6 +87,7 @@ public sealed class RebalancingModule : IModule
         services.AddScoped<IPlanSettingsRepository, PlanSettingsRepository>();
         services.AddScoped<PlanningInputs>();
         services.AddScoped<SaleTaxes>();
+        services.AddScoped<GeneratedReportSaver>();
         services.AddScoped<GetPlanSettingsHandler>();
         services.AddScoped<ChangePlanSettingsHandler>();
         services.AddScoped<GetReportScheduleHandler>();

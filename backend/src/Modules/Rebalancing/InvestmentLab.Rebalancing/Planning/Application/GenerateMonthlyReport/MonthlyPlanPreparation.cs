@@ -84,11 +84,9 @@ public sealed class MonthlyPlanPreparation(
         List<SubPortfolioSetupDto> all,
         List<SubPortfolioSetupDto> planned)
     {
-        var contributed = periodReports.Where(report => report.Code == code).Sum(report => report.ContributedAmount);
-        var allShares = all.Sum(sub => sub.TargetShare);
-        var part = allShares > 0m ? planned.Sum(sub => sub.TargetShare) / allShares : 1m;
+        var contributed = RebalancingReport.ContributedIn(periodReports, code);
 
-        return Math.Max(0m, decimal.Round(planSettings.MonthlyContribution * part, 2) - contributed);
+        return planSettings.RemainingContribution(contributed, planned.Sum(sub => sub.TargetShare), all.Sum(sub => sub.TargetShare));
     }
 
     private async Task<Dictionary<Guid, LatestPriceDto>> HeldAndCashPricesAsync(
@@ -114,20 +112,21 @@ public sealed class MonthlyPlanPreparation(
         Dictionary<Guid, SubPortfolioHoldingsDto> snapshots,
         Dictionary<Guid, LatestPriceDto> prices)
     {
-        var standings = planned
-            .Select(sub => new SubPortfolioStanding(sub.Id, Percentage.Of(sub.TargetShare), ValueOf(snapshots.GetValueOrDefault(sub.Id), prices)))
-            .ToList();
-        var split = Enum.TryParse<ContributionSplit>(account.ContributionPolicy, out var policy) ? policy : ContributionSplit.FillUnderweight;
+        var standings = planned.Select(sub => StandingOf(sub, snapshots.GetValueOrDefault(sub.Id), prices)).ToList();
+        var split = ContributionAllocator.SplitOf(account.ContributionPolicy);
 
         return ContributionAllocator.Allocate(contribution, standings, split, Percentage.Of(account.DriftBand));
     }
 
-    private static decimal ValueOf(SubPortfolioHoldingsDto? snapshot, Dictionary<Guid, LatestPriceDto> prices)
+    private static SubPortfolioStanding StandingOf(
+        SubPortfolioSetupDto sub, SubPortfolioHoldingsDto? snapshot, Dictionary<Guid, LatestPriceDto> prices)
     {
-        if (snapshot is null)
-            return 0m;
+        var positions = snapshot?.Positions ?? [];
+        var holdings = positions.Select(position => new HoldingValuation(
+            position.Quantity,
+            prices.GetValueOrDefault(position.InstrumentId)?.Close,
+            position.AverageCost));
 
-        return snapshot.Cash + snapshot.Positions.Sum(position =>
-            position.Quantity * (prices.TryGetValue(position.InstrumentId, out var price) ? price.Close : position.AverageCost));
+        return SubPortfolioStanding.Valued(sub.Id, sub.TargetShare, snapshot?.Cash ?? 0m, holdings);
     }
 }

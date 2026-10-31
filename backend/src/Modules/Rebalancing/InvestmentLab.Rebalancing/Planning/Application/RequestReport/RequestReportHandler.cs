@@ -15,19 +15,13 @@ public sealed class RequestReportHandler(PlanningInputs inputs, IReportRequestRe
             return Error.NotFound("account.not_found", $"Account {command.AccountId} does not exist.");
 
         var reports = await inputs.ReportsAsync(account, settings: null, cancellationToken);
-        var report = command.Code is { } code
-            ? reports.FirstOrDefault(each => each.Code == code)
-            : reports.FirstOrDefault(each => each.Kind == ReportKind.Monthly);
-        if (report is null)
-            return command.Code is null
-                ? ReportErrors.NoActiveSubPortfolios(account.Id)
-                : Error.NotFound("report.definition_not_found", $"No strategy of account {account.Id} makes the report '{command.Code}'.");
+        if (AccountReport.Choose(reports, command.Code) is not { } report)
+            return ReportErrors.NoSuchReport(account.Id, command.Code);
+
         if (command.Contribution is < 0m)
             return ReportErrors.ContributionNegative();
 
-        var subPortfolios = report.SubPortfolios.Select(sub => sub.SubPortfolioId)
-            .Where(id => command.SubPortfolioIds?.Contains(id) ?? true)
-            .ToList();
+        var subPortfolios = report.SubPortfoliosWithin(command.SubPortfolioIds);
         if (subPortfolios.Count == 0)
             return ReportErrors.NoActiveSubPortfolios(account.Id);
 
@@ -37,7 +31,7 @@ public sealed class RequestReportHandler(PlanningInputs inputs, IReportRequestRe
         var now = clock.GetUtcNow();
         var request = ReportRequest.Create(
             account.Id, UserId.Of(account.OwnerId), report.Code, report.Name, report.Kind, trigger,
-            report.Kind == ReportKind.Monthly ? command.Contribution : null,
+            report.ContributionOf(command.Contribution),
             command.AsOf ?? DateOnly.FromDateTime(now.UtcDateTime), subPortfolios, now, command.Cause);
         requests.Add(request);
         await requests.SaveChangesAsync(cancellationToken);

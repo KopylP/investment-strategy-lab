@@ -8,7 +8,7 @@ using InvestmentLab.Strategies.Contracts;
 
 namespace InvestmentLab.Rebalancing.Planning.Application.GenerateRiskReview;
 
-public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepository reports, SaleTaxes taxes, TimeProvider clock)
+public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepository reports, GeneratedReportSaver saver, TimeProvider clock)
 {
     public async Task<Result<ReportId>> Handle(
         GenerateRiskReviewCommand command,
@@ -43,7 +43,7 @@ public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepo
 
         var code = command.Scope?.Code ?? ReportDefaults.CodeOf(ReportKind.RiskReview);
         var title = command.Scope?.Title ?? ReportDefaults.TitleOf(ReportKind.RiskReview);
-        var marketAsOf = prices.Count > 0 ? prices.Values.Max(price => price.Date) : asOf;
+        var marketAsOf = ReportHeader.MarketDateOf([.. prices.Values.Select(price => price.Date)], asOf);
         var header = new ReportHeader(
             AccountId: account.Id,
             OwnerId: UserId.Of(account.OwnerId),
@@ -59,7 +59,8 @@ public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepo
         var draft = ReportComposer.Compose(header, null, outcomes, warnings);
         var report = RebalancingReport.Generate(draft, now);
 
-        await SaveAsync(report, account.Id, code, asOf, now, request, cancellationToken);
+        var open = await reports.OpenAsync(account.Id, cancellationToken);
+        await saver.SaveAsync(report, open, asOf, now, request, cancellationToken);
 
         return report.Id;
     }
@@ -97,24 +98,14 @@ public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepo
     {
         review.Warnings.Add($"Оцінка ризику під-портфеля «{sub.Name}» не вдалася: {error}.");
 
-        return new SubPortfolioOutcome(sub.Id, sub.Name, sub.TargetShare, 0m, null, null, null, [], [], Error: error);
+        return SubPortfolioOutcome.Failed(sub.Id, sub.Name, sub.TargetShare, 0m, error);
     }
 
     private static SubPortfolioOutcome AssessedOutcome(
         SubPortfolioSetupDto sub, SubPortfolioHoldingsDto snapshot, RiskAssessmentDto assessment, RiskReviewInputs review)
     {
-        var orders = new List<PlannedOrder>();
-        var notes = new List<string>();
-
-        foreach (var signal in assessment.Signals)
-        {
-            var position = snapshot.Positions.FirstOrDefault(each => each.InstrumentId == signal.InstrumentId);
-
-            if (signal.Kind == ExitSignal && position is not null && review.Prices.TryGetValue(signal.InstrumentId, out var price))
-                orders.Add(ExitOrder(signal.InstrumentId, position, price, signal.Reason));
-            else
-                notes.Add($"{review.LabelOf(signal.InstrumentId)}: {signal.Reason}");
-        }
+        var signals = assessment.Signals.Select(signal => new RiskSignal(signal.InstrumentId, signal.Kind, signal.Reason));
+        var exits = ExitPlan.Of(signals, HeldQuantities(snapshot), Closes(review), review.LabelOf);
 
         return new SubPortfolioOutcome(
             SubPortfolioId: sub.Id,
@@ -124,20 +115,23 @@ public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepo
             Strategy: new StrategyInfo(assessment.StrategyId, assessment.StrategyVersion, assessment.StrategyCode, assessment.EngineVersion),
             Decision: null,
             Plan: null,
-            Orders: orders,
-            Notes: notes,
+            Orders: exits.Orders,
+            Notes: exits.Notes,
             Risk: SectionRiskOf(assessment));
     }
 
-    private const string ExitSignal = "exit";
+    private static Dictionary<Guid, decimal> HeldQuantities(SubPortfolioHoldingsDto snapshot)
+    {
+        var quantities = new Dictionary<Guid, decimal>();
 
-    private static PlannedOrder ExitOrder(Guid instrumentId, PositionDto position, LatestPriceDto price, string reason) => new(
-        OrderKind.Exit,
-        instrumentId,
-        position.Quantity,
-        price.Close,
-        position.Quantity * price.Close,
-        $"сигнал виходу: {reason}");
+        foreach (var position in snapshot.Positions)
+            quantities.TryAdd(position.InstrumentId, position.Quantity);
+
+        return quantities;
+    }
+
+    private static Dictionary<Guid, decimal> Closes(RiskReviewInputs review) =>
+        review.Prices.ToDictionary(price => price.Key, price => price.Value.Close);
 
     private static SectionRisk SectionRiskOf(RiskAssessmentDto assessment) => new(
         assessment.Status,
@@ -160,22 +154,6 @@ public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepo
         ExitDistance: position.ExitDistance,
         Alerts: position.Alerts,
         Sell: position.Sell);
-
-    private async Task SaveAsync(
-        RebalancingReport report, Guid accountId, string code, DateOnly asOf, DateTimeOffset now, ReportRequest request, CancellationToken cancellationToken)
-    {
-        await taxes.EstimateAsync(report, asOf, cancellationToken);
-        reports.Add(report);
-
-        var open = await reports.OpenAsync(accountId, cancellationToken);
-
-        foreach (var superseded in open.Where(each => each.Kind == ReportKind.RiskReview && each.Code == code))
-            superseded.SupersedeBy(report.Id, now);
-
-        report.Generated(request.RequestedAt, now);
-        request.Complete(report.Id, now);
-        await reports.SaveChangesAsync(cancellationToken);
-    }
 
     private sealed record RiskReviewInputs(
         IReadOnlyDictionary<Guid, string> Labels, IReadOnlyDictionary<Guid, LatestPriceDto> Prices, List<string> Warnings)

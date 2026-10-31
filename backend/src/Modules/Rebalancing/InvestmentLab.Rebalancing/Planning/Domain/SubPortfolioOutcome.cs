@@ -13,4 +13,8 @@ public sealed record SubPortfolioOutcome(
     IReadOnlyList<PlannedOrder> Orders,
     IReadOnlyList<string> Notes,
     SectionRisk? Risk = null,
-    string? Error = null);
+    string? Error = null)
+{
+    public static SubPortfolioOutcome Failed(Guid subPortfolioId, string name, decimal targetShare, decimal contribution, string? error) =>
+        new(subPortfolioId, name, targetShare, contribution, null, null, null, [], [], Error: error);
+}
