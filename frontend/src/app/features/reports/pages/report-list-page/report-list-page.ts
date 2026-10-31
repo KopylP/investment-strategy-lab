@@ -14,11 +14,12 @@ import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { ReportListStore } from '../../data-access/report-list-store';
 import { reportIcon, ScheduledReport } from '../../models/report-schedule';
+import { NextReports } from '../../ui/next-reports/next-reports';
 import { ReportStatusTag } from '../../ui/report-status-tag/report-status-tag';
 
 @Component({
   selector: 'app-report-list-page',
-  imports: [FormsModule, NgTemplateOutlet, RouterLink, Button, Dialog, InputNumber, Message, Skeleton, TableModule, Tag, PageHeader, EmptyState, ReportStatusTag, MoneyPipe, DatePipe, DateTimePipe],
+  imports: [FormsModule, NgTemplateOutlet, RouterLink, Button, Dialog, InputNumber, Message, Skeleton, TableModule, Tag, PageHeader, EmptyState, NextReports, ReportStatusTag, MoneyPipe, DatePipe, DateTimePipe],
   providers: [ReportListStore],
   templateUrl: './report-list-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

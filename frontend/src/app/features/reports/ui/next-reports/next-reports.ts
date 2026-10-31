@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { RouterLink } from '@angular/router';
 import { nextLabel, reportIcon, ReportSchedule, scheduleLabel, upcomingReports } from '../../models/report-schedule';
 
-/** When to expect the account's next reports: this one's next issue first in the line, then the others, soonest first. */
+/** When to expect the account's next reports, soonest first, each with its schedule. */
 @Component({
   selector: 'app-next-reports',
   imports: [RouterLink],
@@ -14,16 +14,16 @@ import { nextLabel, reportIcon, ReportSchedule, scheduleLabel, upcomingReports }
       </div>
       @if (!schedule().generateOnSchedule) {
         <div class="text-muted-color">Автоматична генерація вимкнена в плані — наступні рапорти лише вручну.</div>
-      } @else if (reports().length) {
+      } @else {
         <ul class="list-none m-0 p-0 flex flex-col gap-2">
           @for (report of reports(); track report.code) {
             <li class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-              <span class="flex items-center gap-2" [class.font-semibold]="report.code === code()">
+              <span class="flex items-center gap-2">
                 <i [class]="icon(report.mode)"></i>
-                {{ report.name }}@if (report.code === code()) {<span class="text-muted-color font-normal text-sm">· цей рапорт</span>}
+                {{ report.name }}
               </span>
               @if (report.next) {
-                <span class="text-sm"><span class="font-semibold">{{ next(report.next) }}</span> <span class="text-muted-color">· {{ label(report.schedule) }}</span></span>
+                <span class="text-sm"><span class="font-semibold">{{ next(report.next) }}</span><span class="text-muted-color"> · {{ label(report.schedule) }}</span></span>
               } @else {
                 <span class="text-sm text-muted-color">лише вручну</span>
               }
@@ -31,8 +31,6 @@ import { nextLabel, reportIcon, ReportSchedule, scheduleLabel, upcomingReports }
           }
         </ul>
         <div class="text-xs text-muted-color mt-3">Час — {{ schedule().timeZone }}.</div>
-      } @else {
-        <div class="text-muted-color">Стратегії рахунку не задають рапортів за розкладом.</div>
       }
     </div>
   `,
@@ -41,8 +39,6 @@ import { nextLabel, reportIcon, ReportSchedule, scheduleLabel, upcomingReports }
 export class NextReports {
   readonly schedule = input.required<ReportSchedule>();
   readonly accountId = input.required<string>();
-  /** The code of the report on the page. */
-  readonly code = input.required<string>();
 
   protected readonly reports = computed(() => upcomingReports(this.schedule().reports));
   protected readonly next = nextLabel;

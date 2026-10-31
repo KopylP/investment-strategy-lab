@@ -58,7 +58,7 @@ export function toReportVm(report: ReportDetailsDto): ReportVm {
   const subName = (id: string | null) => (id ? (report.subPortfolios[id] ?? 'під-портфель') : '');
   const isOpenForMarking = summary.status === 'New' || summary.status === 'InProgress';
 
-  const actions = report.actions.map((action) => toActionVm(action, summary.currency, symbol, subName, isOpenForMarking, report));
+  const actions = report.actions.map((action) => toActionVm(action, summary.currency, symbol, readable, subName, isOpenForMarking, report));
   return {
     summary,
     isOpenForMarking,
@@ -92,6 +92,7 @@ function toActionVm(
   action: ReportActionDto,
   currency: string,
   symbol: (id: string | null) => string,
+  readable: (text: string) => string,
   subName: (id: string | null) => string,
   isOpen: boolean,
   report: ReportDetailsDto,
@@ -112,7 +113,7 @@ function toActionVm(
     instrumentName: action.instrumentId ? (report.instruments[action.instrumentId]?.name ?? '') : '',
     instrumentId: action.instrumentId,
     symbol: ticker,
-    reason: action.reason,
+    reason: readable(action.reason),
     isMoney,
     plannedQuantity: action.plannedQuantity,
     plannedPrice: action.plannedPrice,
@@ -133,7 +134,7 @@ function toActionVm(
     allocations: action.allocations.map((allocation) => ({
       subPortfolio: subName(allocation.subPortfolioId),
       quantity: allocation.quantity,
-      reason: allocation.reason,
+      reason: allocation.reason && readable(allocation.reason),
     })),
     taxLabel:
       action.estimatedTaxPln !== null && report.taxEstimate?.isTaxed
@@ -247,7 +248,7 @@ function toSectionVm(section: ReportSectionDto, symbol: (id: string | null) => s
       quantity: order.quantity,
       price: order.price,
       amount: order.amount,
-      reason: order.reason,
+      reason: readable(order.reason),
     })),
     allocation: section.allocation.map((row) => ({
       label: row.role === 'Cash' ? (row.instrumentId ? `Кеш · ${symbol(row.instrumentId)}` : 'Кеш') : symbol(row.instrumentId),
@@ -266,6 +267,8 @@ function toSectionVm(section: ReportSectionDto, symbol: (id: string | null) => s
     risk: section.risk
       ? {
           ...section.risk,
+          marketAlerts: section.risk.marketAlerts.map(readable),
+          portfolioAlerts: section.risk.portfolioAlerts.map(readable),
           positionsVm: section.risk.positions.map((position) => ({
             symbol: symbol(position.instrumentId),
             status: position.status,
@@ -276,7 +279,7 @@ function toSectionVm(section: ReportSectionDto, symbol: (id: string | null) => s
             exitPrice: position.exitPrice,
             exitRule: position.exitRule,
             exitDistance: position.exitDistance,
-            alerts: position.alerts,
+            alerts: position.alerts.map(readable),
             sell: position.sell,
           })),
         }

@@ -1,5 +1,8 @@
 <div class="flex flex-wrap items-start justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
   <div class="min-w-0">
+    @if (backLink(); as link) {
+      <a [routerLink]="link" class="inline-flex items-center gap-1 text-sm text-primary no-underline mb-2"><i class="pi pi-arrow-left text-xs"></i>{{ backLabel() }}</a>
+    }
     <h1 class="text-2xl font-semibold m-0">{{ title() }}</h1>
     <!-- The subtitle explains the page; on a phone the screen goes to the content. It sits on the page's grey, not a
          card's white, so the light theme takes a shade darker than the muted colour to keep 4.5:1. -->
