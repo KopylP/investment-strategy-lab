@@ -1,0 +1,118 @@
+<p-dialog [header]="isEditing() ? 'Сигнал' : 'Новий сигнал'" [modal]="true" [(visible)]="visible" [style]="{ width: '40rem' }" [breakpoints]="{ '640px': '95vw' }">
+  <div class="flex flex-col gap-4">
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-medium" for="signal-name">Назва</label>
+      <input pInputText id="signal-name" [ngModel]="form().name" (ngModelChange)="patch({ name: $event })" maxlength="100" />
+    </div>
+
+    <div class="grid gap-3 sm:grid-cols-2">
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium" for="signal-target">За чим стежить</label>
+        <p-select inputId="signal-target" [options]="targets" optionLabel="label" optionValue="value" [ngModel]="form().target" (ngModelChange)="changeTarget($event)" [disabled]="isEditing()" fluid />
+      </div>
+
+      @if (form().target === 'Instrument') {
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-medium" for="signal-instrument">Інструмент</label>
+          <p-select inputId="signal-instrument" [options]="instruments()" optionLabel="label" optionValue="value" [filter]="true" [ngModel]="form().instrumentId" (ngModelChange)="patch({ instrumentId: $event })" [disabled]="isEditing()" placeholder="Виберіть" fluid />
+        </div>
+      } @else {
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-medium" for="signal-account">Рахунок</label>
+          <p-select inputId="signal-account" [options]="accounts()" optionLabel="label" optionValue="value" [ngModel]="form().accountId" (ngModelChange)="patch({ accountId: $event, subPortfolioId: null })" [disabled]="isEditing()" fluid />
+        </div>
+      }
+
+      @if (form().target === 'SubPortfolio') {
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-medium" for="signal-sub-portfolio">Під-портфель</label>
+          <p-select inputId="signal-sub-portfolio" [options]="subPortfolios()" optionLabel="label" optionValue="value" [ngModel]="form().subPortfolioId" (ngModelChange)="patch({ subPortfolioId: $event })" [disabled]="isEditing()" placeholder="Виберіть" fluid />
+        </div>
+      }
+    </div>
+
+    <div class="grid gap-3 sm:grid-cols-2">
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium" for="signal-metric">Умова</label>
+        <p-select inputId="signal-metric" [options]="metrics()" optionLabel="label" optionValue="value" [ngModel]="form().metric" (ngModelChange)="patch({ metric: $event })" fluid />
+      </div>
+
+      @if (isLevel()) {
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-medium" for="signal-direction">Напрямок</label>
+          <p-select inputId="signal-direction" [options]="directions" optionLabel="label" optionValue="value" [ngModel]="form().direction" (ngModelChange)="patch({ direction: $event })" fluid />
+        </div>
+      }
+
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium" for="signal-threshold">Поріг</label>
+        <p-inputnumber inputId="signal-threshold" [ngModel]="form().threshold" (ngModelChange)="patch({ threshold: $event })" [suffix]="unit()" [min]="0" [maxFractionDigits]="2" fluid />
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium" for="signal-rearm">Зводиться знову при</label>
+        <p-inputnumber inputId="signal-rearm" [ngModel]="form().rearmAt" (ngModelChange)="patch({ rearmAt: $event })" [suffix]="unit()" [min]="0" [maxFractionDigits]="2" placeholder="Автоматично" fluid />
+      </div>
+
+      @if (form().metric === 'DrawdownFromPeak') {
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-medium" for="signal-window">Шукати пік за, днів</label>
+          <p-inputnumber inputId="signal-window" [ngModel]="form().windowDays" (ngModelChange)="patch({ windowDays: $event })" [min]="2" placeholder="Уся історія" fluid />
+        </div>
+      }
+    </div>
+
+    <app-report-timing-editor id="signal" [timing]="form().schedule" (timingChange)="changeSchedule($event)" [frequencies]="frequencies" columns="sm:grid-cols-2" />
+
+    <p class="m-0 text-xs text-muted-color">Котирування оновлюються раз на день о 22:30, тому частіша перевірка побачить ті самі дані.</p>
+
+    @if (isEditing()) {
+      <label class="flex items-center gap-3 min-h-11" for="signal-enabled">
+        <p-toggleswitch inputId="signal-enabled" [ngModel]="form().enabled" (ngModelChange)="patch({ enabled: $event })" />
+        Сигнал увімкнено
+      </label>
+    }
+
+    @if (editedSignal(); as current) {
+      <label class="flex items-center gap-3 min-h-11" for="signal-notify">
+        <p-toggleswitch inputId="signal-notify" [ngModel]="store.notifies(current.id)" (ngModelChange)="store.setNotify(current.id, $event)" [disabled]="store.saving()" />
+        Надсилати сповіщення
+      </label>
+
+      <div class="flex flex-col gap-2">
+        <div class="font-semibold" role="heading" aria-level="3">Рапорти, які запускає сигнал</div>
+
+        @for (rule of rules(); track rule.id) {
+          <div class="flex items-center justify-between gap-2">
+            <span class="min-w-0"><i class="pi pi-file mr-2"></i>{{ store.ruleLabel(rule) }}</span>
+            <p-button icon="pi pi-times" severity="secondary" [text]="true" size="small" ariaLabel="Від’єднати рапорт" [disabled]="store.saving()" (onClick)="store.removeReportRule(rule.id)" />
+          </div>
+          @if (rule.problem; as problem) {
+            <p-message severity="warn" [text]="problem" size="small" />
+          }
+        } @empty {
+          <p class="m-0 text-sm text-muted-color">Поки жодного. Стратегії не знають про сигнал: це той самий рапорт, лише раніше.</p>
+        }
+
+        <div class="grid gap-2 sm:grid-cols-[1fr_1fr_auto] items-center">
+          <p-select [options]="accounts()" optionLabel="label" optionValue="value" [ngModel]="ruleAccountId()" (ngModelChange)="ruleAccountId.set($event); ruleReportCode.set(null)" ariaLabel="Рахунок" fluid />
+          <p-select [options]="ruleReports()" optionLabel="label" optionValue="value" [ngModel]="ruleReportCode()" (ngModelChange)="ruleReportCode.set($event)" placeholder="Рапорт" ariaLabel="Рапорт" fluid />
+          <p-button label="Під’єднати" icon="pi pi-plus" severity="secondary" [disabled]="!ruleReportCode() || store.saving()" (onClick)="addRule(current.id)" />
+        </div>
+      </div>
+    } @else {
+      <p class="m-0 text-sm text-muted-color">Сповіщення ввімкнуться самі. Рапорти можна під’єднати, коли сигнал буде створено.</p>
+    }
+  </div>
+
+  <ng-template #footer>
+    @if (editedSignal(); as current) {
+      <p-button label="Перевірити зараз" icon="pi pi-refresh" severity="secondary" [text]="true" [disabled]="store.saving()" (onClick)="store.check(current.id)" />
+      @if (!current.builtIn) {
+        <p-button label="Видалити" icon="pi pi-trash" severity="danger" [text]="true" [disabled]="store.saving()" (onClick)="confirmDelete(current.id)" />
+      }
+    }
+    <p-button label="Скасувати" severity="secondary" [text]="true" (onClick)="visible.set(false)" />
+    <p-button label="Зберегти" icon="pi pi-check" [disabled]="!isComplete() || store.saving()" [loading]="store.saving()" (onClick)="save()" />
+  </ng-template>
+</p-dialog>

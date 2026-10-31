@@ -11,6 +11,7 @@ export const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', loadChildren: () => import('./features/overview/overview.routes').then((m) => m.overviewRoutes) },
       { path: 'reports', loadChildren: () => import('./features/reports/reports.routes').then((m) => m.reportsRoutes) },
+      { path: 'signals', loadChildren: () => import('./features/signals/signals.routes').then((m) => m.signalsRoutes) },
       { path: 'holdings', loadChildren: () => import('./features/holdings/holdings.routes').then((m) => m.holdingsRoutes) },
       { path: 'transactions', loadChildren: () => import('./features/transactions/transactions.routes').then((m) => m.transactionsRoutes) },
       { path: 'taxes', loadChildren: () => import('./features/taxes/taxes.routes').then((m) => m.taxesRoutes) },

@@ -10,13 +10,19 @@ const kindLabels: Record<ReportSummaryDto['kind'], string> = {
 };
 
 /** Named like the report it becomes: "Ребаланс · жовтень 2026". */
+const triggerLabels: Record<ReportSummaryDto['trigger'], string> = {
+  Scheduled: 'за розкладом',
+  OnDemand: 'на вимогу',
+  Signal: 'за сигналом',
+};
+
 export function toRequestVm(request: ReportRequestDto): ReportRequestVm {
   return {
     id: request.id,
     code: request.code,
     title: `${request.title} · ${formatPeriod(request.asOf.slice(0, 7))}`,
     kindLabel: kindLabels[request.kind],
-    triggerLabel: request.trigger === 'Scheduled' ? 'за розкладом' : 'на вимогу',
+    triggerLabel: triggerLabels[request.trigger],
     status: request.status === 'Failed' ? 'Failed' : 'Pending',
     requestedAt: request.requestedAt,
     progressLabel: request.strategies > 0 ? `${request.strategiesAnswered} з ${request.strategies}` : null,
@@ -35,7 +41,7 @@ export function toSummaryVm(summary: ReportSummaryDto): ReportSummaryVm {
     kind: summary.kind,
     kindLabel: kindLabels[summary.kind],
     status: summary.status,
-    triggerLabel: summary.trigger === 'Scheduled' ? 'за розкладом' : 'на вимогу',
+    triggerLabel: triggerLabels[summary.trigger],
     marketAsOf: summary.marketAsOf,
     generatedAt: summary.generatedAt,
     closedAt: summary.closedAt,

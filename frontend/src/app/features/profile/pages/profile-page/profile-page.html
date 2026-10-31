@@ -1,3 +1,7 @@
 <app-page-header title="Профіль" [subtitle]="auth.user()?.email ?? ''" />
 
-<app-notification-settings />
+<div class="flex flex-col gap-4">
+  <app-notification-settings />
+
+  <app-signal-notification-settings />
+</div>

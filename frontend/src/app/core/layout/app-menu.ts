@@ -30,6 +30,7 @@ export class AppMenu {
           icon: 'pi pi-fw pi-list-check',
           routerLink: ['/reports'],
         },
+        { label: 'Сигнали', icon: 'pi pi-fw pi-bell', routerLink: ['/signals'] },
         { label: 'Позиції', icon: 'pi pi-fw pi-chart-pie', routerLink: ['/holdings'] },
         { label: 'Журнал операцій', icon: 'pi pi-fw pi-book', routerLink: ['/transactions'] },
         { label: 'Податки', icon: 'pi pi-fw pi-percentage', routerLink: ['/taxes'] },
