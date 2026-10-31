@@ -10,14 +10,30 @@ internal static class DashboardEndpoints
 {
     public static RouteGroupBuilder MapDashboard(this RouteGroupBuilder group)
     {
-        group.MapGet("/accounts/{accountId:guid}/dashboard", async (Guid accountId, string? period, DashboardQueries queries, CancellationToken ct) =>
-                (await queries.Get(accountId, period, ct)).ToHttpResult())
+        group.MapGet("/accounts/{accountId:guid}/dashboard", GetDashboard)
             .WithTags("Performance")
             .WithName("GetDashboard");
-        group.MapGet("/dashboard", async (string? currency, string? period, DashboardQueries queries, CancellationToken ct) =>
-                (await queries.GetAll(currency, period, ct)).ToHttpResult())
+
+        group.MapGet("/dashboard", GetAllAccountsDashboard)
             .WithTags("Performance")
             .WithName("GetAllAccountsDashboard");
+
         return group;
+    }
+
+    private static async Task<IResult> GetDashboard(
+        Guid accountId, string? period, DashboardQueries queries, CancellationToken cancellationToken)
+    {
+        var dashboard = await queries.Get(accountId, period, cancellationToken);
+
+        return dashboard.ToHttpResult();
+    }
+
+    private static async Task<IResult> GetAllAccountsDashboard(
+        string? currency, string? period, DashboardQueries queries, CancellationToken cancellationToken)
+    {
+        var dashboard = await queries.GetAll(currency, period, cancellationToken);
+
+        return dashboard.ToHttpResult();
     }
 }

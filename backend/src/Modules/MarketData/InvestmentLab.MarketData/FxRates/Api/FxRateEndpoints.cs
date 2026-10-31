@@ -1,6 +1,6 @@
 using InvestmentLab.MarketData.Contracts.FxRates;
 using InvestmentLab.MarketData.FxRates.Application.IngestFxRates;
-using InvestmentLab.MarketData.FxRates.Application;
+using InvestmentLab.MarketData.FxRates.Application.GetLatestFxRates;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -14,26 +14,32 @@ internal static class FxRateEndpoints
     {
         var fxRates = group.MapGroup("/fx-rates").WithTags("FX rates");
 
-        fxRates.MapPost("/ingest", async (IngestFxRatesHandler handler, CancellationToken ct) => TypedResults.Ok(await handler.Handle(ct)))
-            .WithName("IngestFxRates");
-
-        fxRates.MapGet("/latest", async (IFxRateStore store, CancellationToken ct) =>
-            {
-                var rates = await store.LatestToPlnAsync(ct);
-
-                return TypedResults.Ok(new LatestFxRatesDto(
-                    rates.Count > 0 ? rates.Min(rate => rate.EffectiveDate) : null,
-                    rates.ToDictionary(rate => rate.Base.Code, rate => rate.Rate).Append(KeyValuePair.Create("PLN", 1m)).ToDictionary()));
-            })
-            .WithName("GetLatestFxRates");
-
-        fxRates.MapGet("/{baseCurrency}/{quoteCurrency}", async Task<Results<Ok<FxRateDto>, NotFound>> (
-                string baseCurrency, string quoteCurrency, DateOnly transactionDate, IFxRates rates, CancellationToken ct) =>
-                await rates.GetFxRate(baseCurrency, quoteCurrency, transactionDate, ct) is { } rate ? TypedResults.Ok(rate) : TypedResults.NotFound())
-            .WithName("GetFxRate");
+        fxRates.MapPost("/ingest", IngestFxRates).WithName("IngestFxRates");
+        fxRates.MapGet("/latest", GetLatestFxRates).WithName("GetLatestFxRates");
+        fxRates.MapGet("/{baseCurrency}/{quoteCurrency}", GetFxRate).WithName("GetFxRate");
 
         return group;
     }
-}
 
-public sealed record LatestFxRatesDto(DateOnly? EffectiveDate, IReadOnlyDictionary<string, decimal> ToPln);
+    private static async Task<Ok<FxIngestReport>> IngestFxRates(IngestFxRatesHandler handler, CancellationToken cancellationToken)
+    {
+        var report = await handler.Handle(cancellationToken);
+
+        return TypedResults.Ok(report);
+    }
+
+    private static async Task<Ok<LatestFxRatesDto>> GetLatestFxRates(GetLatestFxRatesHandler handler, CancellationToken cancellationToken)
+    {
+        var rates = await handler.Handle(cancellationToken);
+
+        return TypedResults.Ok(rates);
+    }
+
+    private static async Task<Results<Ok<FxRateDto>, NotFound>> GetFxRate(
+        string baseCurrency, string quoteCurrency, DateOnly transactionDate, IFxRates rates, CancellationToken cancellationToken)
+    {
+        var rate = await rates.GetFxRate(baseCurrency, quoteCurrency, transactionDate, cancellationToken);
+
+        return rate is null ? TypedResults.NotFound() : TypedResults.Ok(rate);
+    }
+}

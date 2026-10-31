@@ -9,11 +9,9 @@ public sealed class GetStrategyHandler(IStrategyRepository strategies)
         if (strategyId == Guid.Empty || await strategies.FindAsync(StrategyId.Of(strategyId), cancellationToken) is not { } strategy)
             return StrategyErrors.NotFound(strategyId);
 
-        return strategy.Version(version) is { } shown
-            ? strategy.ToDto(shown)
-            : StrategyErrors.VersionNotFound(strategyId, version!.Value);
-    }
+        if (strategy.Version(version) is not { } shown)
+            return StrategyErrors.VersionNotFound(strategyId, version!.Value);
 
-    public async Task<IReadOnlyList<StrategyDto>> List(CancellationToken cancellationToken) =>
-        [.. (await strategies.ListAsync(cancellationToken)).Select(strategy => strategy.ToDto())];
+        return strategy.ToDto(shown);
+    }
 }

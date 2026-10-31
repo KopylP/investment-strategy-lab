@@ -3,6 +3,7 @@ using System.Text;
 using InvestmentLab.MarketData.Contracts.FxRates;
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.Portfolio.Accounts.Domain;
+using InvestmentLab.Portfolio.Transactions.Application.ReverseRecordedTransaction;
 using InvestmentLab.Portfolio.Transactions.Application.ReverseTransaction;
 using InvestmentLab.Portfolio.Transactions.Domain;
 using InvestmentLab.Strategies.Contracts;
@@ -15,6 +16,7 @@ public sealed class StatementImportService(
     IStatementParser parser,
     TransactionRecorder recorder,
     ReverseTransactionHandler reversals,
+    ReverseRecordedTransactionHandler recordedReversals,
     IInstrumentCatalog catalog,
     IInstrumentRegistry registry,
     IStrategyDirectory strategies,
@@ -200,7 +202,7 @@ public sealed class StatementImportService(
 
         foreach (var reference in Enumerable.Reverse(statement.RecordedReferences))
         {
-            var result = await reversals.HandleBySource(account.Id.Value, reference, $"скасовано імпорт {statement.FileName}", cancellationToken);
+            var result = await recordedReversals.Handle(account.Id.Value, reference, $"скасовано імпорт {statement.FileName}", cancellationToken);
             if (result.IsFailure && result.Error.Code != "transaction.already_reversed")
                 statement.Warnings.Add($"{reference}: {result.Error.Message}");
         }

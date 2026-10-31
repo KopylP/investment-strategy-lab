@@ -1,9 +1,11 @@
 using InvestmentLab.BuildingBlocks.Http;
+using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.MarketData.Instruments.Application.AssignProviderSymbol;
 using InvestmentLab.MarketData.Instruments.Application.GetInstruments;
 using InvestmentLab.MarketData.Instruments.Application.RegisterInstrument;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 
 namespace InvestmentLab.MarketData.Instruments.Api;
@@ -16,18 +18,36 @@ internal static class InstrumentEndpoints
     {
         var instruments = group.MapGroup("/instruments").WithTags("Instruments");
 
-        instruments.MapGet("/", async (GetInstrumentsHandler handler, CancellationToken ct) => TypedResults.Ok(await handler.Handle(ct)))
-            .WithName("GetInstruments");
-
-        instruments.MapPost("/", async (RegisterInstrumentCommand command, RegisterInstrumentHandler handler, CancellationToken ct) =>
-                (await handler.Handle(command, ct)).ToHttpResult())
-            .WithName("RegisterInstrument");
-
-        instruments.MapPost("/{instrumentId:guid}/provider-symbols", async (
-                Guid instrumentId, AssignProviderSymbolRequest body, AssignProviderSymbolHandler handler, CancellationToken ct) =>
-                (await handler.Handle(new AssignProviderSymbolCommand(instrumentId, body.ProviderSymbol), ct)).ToHttpResult())
-            .WithName("AssignProviderSymbol");
+        instruments.MapGet("/", GetInstruments).WithName("GetInstruments");
+        instruments.MapPost("/", RegisterInstrument).WithName("RegisterInstrument");
+        instruments.MapPost("/{instrumentId:guid}/provider-symbols", AssignProviderSymbol).WithName("AssignProviderSymbol");
 
         return group;
+    }
+
+    private static async Task<Ok<IReadOnlyList<InstrumentDto>>> GetInstruments(
+        GetInstrumentsHandler handler, CancellationToken cancellationToken)
+    {
+        var instruments = await handler.Handle(cancellationToken);
+
+        return TypedResults.Ok(instruments);
+    }
+
+    private static async Task<IResult> RegisterInstrument(
+        RegisterInstrumentCommand command, RegisterInstrumentHandler handler, CancellationToken cancellationToken)
+    {
+        var registered = await handler.Handle(command, cancellationToken);
+
+        return registered.ToHttpResult();
+    }
+
+    private static async Task<IResult> AssignProviderSymbol(
+        Guid instrumentId, AssignProviderSymbolRequest body, AssignProviderSymbolHandler handler, CancellationToken cancellationToken)
+    {
+        var command = new AssignProviderSymbolCommand(instrumentId, body.ProviderSymbol);
+
+        var assigned = await handler.Handle(command, cancellationToken);
+
+        return assigned.ToHttpResult();
     }
 }

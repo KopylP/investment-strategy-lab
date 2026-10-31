@@ -5,9 +5,11 @@ using InvestmentLab.Strategies.Definitions.Application.ArchiveStrategy;
 using InvestmentLab.Strategies.Definitions.Application.CreateDefaultStrategies;
 using InvestmentLab.Strategies.Definitions.Application.CreateStrategy;
 using InvestmentLab.Strategies.Definitions.Application.GetStrategy;
+using InvestmentLab.Strategies.Definitions.Application.ListStrategies;
 using InvestmentLab.Strategies.Definitions.Application.ReconfigureStrategy;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 
 namespace InvestmentLab.Strategies.Definitions.Api;
@@ -18,29 +20,60 @@ internal static class StrategyEndpoints
     {
         var strategies = group.MapGroup("").WithTags("Strategies");
 
-        strategies.MapGet("", async (GetStrategyHandler handler, CancellationToken ct) => TypedResults.Ok(await handler.List(ct)))
-            .WithName("ListStrategies");
-
-        strategies.MapPost("", async (CreateStrategyCommand body, CreateStrategyHandler handler, ICurrentUser user, CancellationToken ct) =>
-                (await handler.Handle(user.RequiredId, body, ct)).ToHttpResult())
-            .WithName("CreateStrategy");
-
-        strategies.MapPost("/defaults", async (CreateDefaultStrategiesHandler handler, ICurrentUser user, CancellationToken ct) =>
-                (await handler.Handle(user.RequiredId, ct)).ToHttpResult())
-            .WithName("CreateDefaultStrategies");
-
-        strategies.MapGet("/{strategyId:guid}", async (Guid strategyId, int? version, GetStrategyHandler handler, CancellationToken ct) =>
-                (await handler.Handle(strategyId, version, ct)).ToHttpResult())
-            .WithName("GetStrategy");
-
-        strategies.MapPut("/{strategyId:guid}", async (Guid strategyId, StrategySetupInput body, ReconfigureStrategyHandler handler, CancellationToken ct) =>
-                (await handler.Handle(strategyId, body, ct)).ToHttpResult())
-            .WithName("ReconfigureStrategy");
-
-        strategies.MapPost("/{strategyId:guid}/archive", async (Guid strategyId, ArchiveStrategyHandler handler, CancellationToken ct) =>
-                (await handler.Handle(strategyId, ct)).ToHttpResult())
-            .WithName("ArchiveStrategy");
+        strategies.MapGet("", ListStrategies).WithName("ListStrategies");
+        strategies.MapPost("", CreateStrategy).WithName("CreateStrategy");
+        strategies.MapPost("/defaults", CreateDefaultStrategies).WithName("CreateDefaultStrategies");
+        strategies.MapGet("/{strategyId:guid}", GetStrategy).WithName("GetStrategy");
+        strategies.MapPut("/{strategyId:guid}", ReconfigureStrategy).WithName("ReconfigureStrategy");
+        strategies.MapPost("/{strategyId:guid}/archive", ArchiveStrategy).WithName("ArchiveStrategy");
 
         return group;
+    }
+
+    private static async Task<Ok<IReadOnlyList<StrategyDto>>> ListStrategies(
+        ListStrategiesHandler handler, CancellationToken cancellationToken)
+    {
+        var strategies = await handler.Handle(cancellationToken);
+
+        return TypedResults.Ok(strategies);
+    }
+
+    private static async Task<IResult> CreateStrategy(
+        CreateStrategyCommand body, CreateStrategyHandler handler, ICurrentUser user, CancellationToken cancellationToken)
+    {
+        var created = await handler.Handle(user.RequiredId, body, cancellationToken);
+
+        return created.ToHttpResult();
+    }
+
+    private static async Task<IResult> CreateDefaultStrategies(
+        CreateDefaultStrategiesHandler handler, ICurrentUser user, CancellationToken cancellationToken)
+    {
+        var created = await handler.Handle(user.RequiredId, cancellationToken);
+
+        return created.ToHttpResult();
+    }
+
+    private static async Task<IResult> GetStrategy(
+        Guid strategyId, int? version, GetStrategyHandler handler, CancellationToken cancellationToken)
+    {
+        var strategy = await handler.Handle(strategyId, version, cancellationToken);
+
+        return strategy.ToHttpResult();
+    }
+
+    private static async Task<IResult> ReconfigureStrategy(
+        Guid strategyId, StrategySetupInput body, ReconfigureStrategyHandler handler, CancellationToken cancellationToken)
+    {
+        var reconfigured = await handler.Handle(strategyId, body, cancellationToken);
+
+        return reconfigured.ToHttpResult();
+    }
+
+    private static async Task<IResult> ArchiveStrategy(Guid strategyId, ArchiveStrategyHandler handler, CancellationToken cancellationToken)
+    {
+        var archived = await handler.Handle(strategyId, cancellationToken);
+
+        return archived.ToHttpResult();
     }
 }

@@ -12,12 +12,20 @@ using InvestmentLab.Strategies.Definitions.Application.ArchiveStrategy;
 using InvestmentLab.Strategies.Definitions.Application.CreateDefaultStrategies;
 using InvestmentLab.Strategies.Definitions.Application.CreateStrategy;
 using InvestmentLab.Strategies.Definitions.Application.GetStrategy;
+using InvestmentLab.Strategies.Definitions.Application.ListStrategies;
 using InvestmentLab.Strategies.Definitions.Application.ReconfigureStrategy;
 using InvestmentLab.Strategies.Definitions.Infrastructure;
 using InvestmentLab.Strategies.Evaluation.Api;
 using InvestmentLab.Strategies.Evaluation.Application;
+using InvestmentLab.Strategies.Evaluation.Application.AssessStrategyRisk;
+using InvestmentLab.Strategies.Evaluation.Application.AssessSubPortfolioRisk;
+using InvestmentLab.Strategies.Evaluation.Application.DecideStrategy;
+using InvestmentLab.Strategies.Evaluation.Application.DecideSubPortfolio;
 using InvestmentLab.Strategies.Evaluation.Application.EvaluateStrategy;
 using InvestmentLab.Strategies.Evaluation.Application.EvaluateSubPortfolio;
+using InvestmentLab.Strategies.Evaluation.Application.PollStrategyDecision;
+using InvestmentLab.Strategies.Evaluation.Application.PollStrategyRisk;
+using InvestmentLab.Strategies.Evaluation.Application.SubmitStrategyJob;
 using InvestmentLab.Strategies.Evaluation.Infrastructure;
 using InvestmentLab.Strategies.Shared.Infrastructure;
 using InvestmentLab.Strategies.Shared.Infrastructure.Engine;
@@ -60,13 +68,21 @@ public sealed class StrategiesModule : IModule
         services.AddScoped<ReconfigureStrategyHandler>();
         services.AddScoped<ArchiveStrategyHandler>();
         services.AddScoped<GetStrategyHandler>();
+        services.AddScoped<ListStrategiesHandler>();
         services.AddScoped<CreateDefaultStrategiesHandler>();
         services.AddIntegrationEventHandler<UserRegisteredV1, DefaultStrategiesForNewUser>();
 
         services.AddScoped<IStrategyEngine, PythonStrategyEngine>();
         services.AddScoped<IStrategyReader, StrategyReader>();
-        services.AddScoped<EvaluateStrategyHandler>();
-        services.AddScoped<EvaluateSubPortfolioHandler>();
+        services.AddScoped<EvaluationPreparer>();
+        services.AddScoped<DecideStrategyHandler>();
+        services.AddScoped<AssessStrategyRiskHandler>();
+        services.AddScoped<SubmitStrategyJobHandler>();
+        services.AddScoped<PollStrategyDecisionHandler>();
+        services.AddScoped<PollStrategyRiskHandler>();
+        services.AddScoped<SubPortfolioEvaluationRequests>();
+        services.AddScoped<DecideSubPortfolioHandler>();
+        services.AddScoped<AssessSubPortfolioRiskHandler>();
         services.AddScoped<IStrategyEvaluation, StrategyEvaluation>();
     }
 
