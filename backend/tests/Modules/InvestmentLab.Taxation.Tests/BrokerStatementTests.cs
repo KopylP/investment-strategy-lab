@@ -14,6 +14,22 @@ public sealed class BrokerStatementTests
     private static IReadOnlyList<IReadOnlyList<string>> Lines(params string[] lines) =>
         [.. lines.Select(line => (IReadOnlyList<string>)(line.Length == 0 ? [] : line.Split(' ')))];
 
+    [Theory]
+    [InlineData("\u00A0")]
+    [InlineData("\u202F")]
+    public void Amounts_grouped_with_a_no_break_space_are_read_as_one_number(string space)
+    {
+        var amount = $"\u20AC1{space}234,56";
+
+        var statement = PnlStatementReader.Read("Revolut", Lines(
+            $"2025-05-06 ASME ASML NL0010273215 NL {amount} \u20AC0,00 {amount}",
+            $"1{space}234,56 PLN 0,00 PLN"));
+
+        var dividend = statement.Dividends.ShouldHaveSingleItem();
+        dividend.Gross.ShouldBe(1234.56m);
+        dividend.GrossPln.ShouldBe(1234.56m);
+    }
+
     [Fact]
     public void Rows_are_read_by_their_shape_whatever_the_headings_say()
     {

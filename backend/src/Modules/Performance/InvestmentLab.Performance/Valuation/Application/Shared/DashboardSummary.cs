@@ -97,7 +97,7 @@ public sealed record DashboardSummary(DashboardDto Dashboard, DateOnly Start, Sn
                 Date: snapshot.Date,
                 Value: snapshot.Value,
                 NetContributions: snapshot.NetContributions,
-                TwrIndex: snapshot.TwrIndex / baseIndex,
+                TwrIndex: baseIndex > 0m ? snapshot.TwrIndex / baseIndex : snapshot.TwrIndex,
                 PlanValue: planned?.Value,
                 PlanNetContributions: planned?.NetContributions,
                 Drawdown: peak > 0m ? decimal.Round(snapshot.TwrIndex / peak - 1m, 6) : 0m,

@@ -227,7 +227,7 @@ public static partial class PnlStatementReader
 
     private static decimal? Number(string text)
     {
-        var body = text.Replace(" ", "").Replace('−', '-');
+        var body = WithoutSpaces(text).Replace('−', '-');
         if (body.Length == 0 || !NumberShape().IsMatch(body))
             return null;
 
@@ -236,6 +236,8 @@ public static partial class PnlStatementReader
 
         return decimal.TryParse(normalized, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var value) ? value : null;
     }
+
+    private static string WithoutSpaces(string text) => string.Concat(text.Where(character => !char.IsWhiteSpace(character)));
 
     private static char GroupMarkOf(string body)
     {

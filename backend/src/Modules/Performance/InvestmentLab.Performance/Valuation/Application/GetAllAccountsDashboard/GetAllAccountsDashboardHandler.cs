@@ -27,7 +27,8 @@ public sealed class GetAllAccountsDashboardHandler(AccountHistoryLoader historie
 
         var days = withHistory.SelectMany(entry => entry.History.Series.Select(snapshot => snapshot.Date)).Distinct().Order().ToList();
         string[] currencies = [.. withHistory.Select(entry => entry.Account.BaseCurrency)];
-        var fx = await prices.LoadFxAsync(currencies, target, days[0], days[^1], cancellationToken);
+        var knownRates = await prices.LoadFxAsync(currencies, target, days[0], days[^1], cancellationToken);
+        var fx = CarriedFx.Over(knownRates, currencies, days);
 
         var (series, plan) = CombinedAccountHistory.Of(withHistory, days, fx);
         var summary = DashboardSummary.Of(series, plan, key);

@@ -10,7 +10,13 @@ using InvestmentLab.Strategies.Contracts;
 namespace InvestmentLab.Rebalancing.Planning.Application.Shared;
 
 public sealed class PlanningInputs(
-    IAccountSetupQueries accounts, IHoldingsQueries holdings, IInstrumentCatalog instruments, IQuoteHistory quotes, IFxRates fxRates, IStrategyDirectory strategies)
+    IAccountSetupQueries accounts,
+    IHoldingsQueries holdings,
+    IInstrumentCatalog instruments,
+    IQuoteHistory quotes,
+    IFxRates fxRates,
+    IStrategyDirectory strategies,
+    TimeProvider clock)
 {
     private const string YahooPrefix = "yfinance:";
 
@@ -23,7 +29,7 @@ public sealed class PlanningInputs(
     public async Task<AccountHoldingsDto> HoldingsAsync(AccountSetupDto account, CancellationToken cancellationToken)
     {
         var current = await holdings.GetHoldings(account.Id, null, cancellationToken) ?? new AccountHoldingsDto(account.Id, account.BaseCurrency, null, []);
-        var today = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1);
+        var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime).AddDays(1);
         var rates = new Dictionary<string, decimal?>();
         var subs = new List<SubPortfolioHoldingsDto>();
 
