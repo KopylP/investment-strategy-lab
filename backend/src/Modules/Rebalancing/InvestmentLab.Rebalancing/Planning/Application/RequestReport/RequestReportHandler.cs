@@ -5,7 +5,8 @@ using InvestmentLab.Rebalancing.Reports.Domain;
 namespace InvestmentLab.Rebalancing.Planning.Application.RequestReport;
 
 public sealed record RequestReportCommand(
-    Guid AccountId, string? Code = null, decimal? Contribution = null, DateOnly? AsOf = null, IReadOnlySet<Guid>? SubPortfolioIds = null, ReportCause? Cause = null);
+    Guid AccountId, string? Code =
+        null, decimal? Contribution = null, DateOnly? AsOf = null, IReadOnlySet<Guid>? SubPortfolioIds = null, ReportCause? Cause = null);
 
 public sealed class RequestReportHandler(PlanningInputs inputs, IReportRequestRepository requests, TimeProvider clock)
 {

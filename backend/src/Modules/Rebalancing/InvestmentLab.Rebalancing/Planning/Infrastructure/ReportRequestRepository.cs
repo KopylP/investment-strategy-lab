@@ -23,7 +23,9 @@ internal sealed class ReportRequestRepository(RebalancingDbContext db) : IReport
             .FirstOrDefaultAsync(cancellationToken);
 
     public Task<bool> AnsweredSignalAsync(Guid signalTriggerId, Guid accountId, string code, CancellationToken cancellationToken) =>
-        db.ReportRequests.AnyAsync(request => request.SignalTriggerId == signalTriggerId && request.AccountId == accountId && request.Code == code, cancellationToken);
+        db.ReportRequests.AnyAsync(
+            request => request.SignalTriggerId == signalTriggerId && request.AccountId == accountId && request.Code == code,
+            cancellationToken);
 
     public async Task<DateTimeOffset?> LastScheduledAsync(Guid accountId, string code, CancellationToken cancellationToken) =>
         await db.ReportRequests

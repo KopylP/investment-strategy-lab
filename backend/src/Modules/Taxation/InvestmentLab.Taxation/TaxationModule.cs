@@ -49,9 +49,23 @@ public sealed class TaxationModule : IModule
     public void AddServices(IHostApplicationBuilder builder)
     {
         builder.AddModuleDbContext<TaxationDbContext>(Schema);
-
         builder.Services.AddDomainEventMapper<TaxAssessmentRecomputed, TaxAssessmentUpdatedV2, TaxAssessmentRecomputedMapper>();
 
+        var services = builder.Services;
+        AddAssessments(builder);
+        AddDeclarations(services);
+        AddBrokerStatements(services);
+    }
+
+    private static decimal? AlertShareOf(IHostApplicationBuilder builder)
+    {
+        var configured = decimal.TryParse(builder.Configuration["Taxation:AlertShare"], CultureInfo.InvariantCulture, out var share);
+
+        return configured && share is > 0m and <= 1m ? share : null;
+    }
+
+    private static void AddAssessments(IHostApplicationBuilder builder)
+    {
         var services = builder.Services;
         services.AddScoped<ITaxLedgerRepository, TaxLedgerRepository>();
         services.AddScoped<IAssessmentRepository, AssessmentRepository>();
@@ -64,8 +78,12 @@ public sealed class TaxationModule : IModule
         services.AddScoped<ListLossCarryforwardsHandler>();
         services.AddScoped<RecordLossCarryforwardHandler>();
         services.AddScoped<RemoveLossCarryforwardHandler>();
-        services.AddSingleton(new TaxAlertOptions(
-            decimal.TryParse(builder.Configuration["Taxation:AlertShare"], CultureInfo.InvariantCulture, out var share) && share is > 0m and <= 1m ? share : null));
+        services.AddSingleton(new TaxAlertOptions(AlertShareOf(builder)));
+
+    }
+
+    private static void AddDeclarations(IServiceCollection services)
+    {
         services.AddScoped<DeclarationAccounts>();
         services.AddScoped<ListDeclarationFormsHandler>();
         services.AddScoped<GetDeclarationHandler>();
@@ -79,6 +97,11 @@ public sealed class TaxationModule : IModule
         services.AddSingleton<IDeclarationPrinter, Pit38PdfPrinter>();
         services.AddScoped<IPit8CRepository, Pit8CRepository>();
         services.AddScoped<ITaxEstimator, TaxEstimator>();
+
+    }
+
+    private static void AddBrokerStatements(IServiceCollection services)
+    {
         services.AddScoped<IBrokerStatementRepository, BrokerStatementRepository>();
         services.AddSingleton<IBrokerStatementParser, RevolutPnlPdfParser>();
         services.AddScoped<ListBrokerStatementsHandler>();

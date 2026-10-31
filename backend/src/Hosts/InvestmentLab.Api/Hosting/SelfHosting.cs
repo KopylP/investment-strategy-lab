@@ -46,7 +46,8 @@ public static class SelfHosting
 
         app.Use((context, next) =>
         {
-            if (context.Request.Headers[HomeAssistantIngress.PathHeader].ToString() is { Length: > 1 } ingress && context.IsFromHomeAssistantIngress())
+            if (context.Request.Headers[HomeAssistantIngress.PathHeader].ToString() is { Length: > 1 } ingress
+                && context.IsFromHomeAssistantIngress())
                 context.Request.PathBase = new PathString(ingress.TrimEnd('/')) + context.Request.PathBase;
 
             return next(context);
@@ -74,7 +75,9 @@ public static class SelfHosting
                 var html = await File.ReadAllTextAsync(indexPath, context.RequestAborted);
                 context.Response.ContentType = "text/html; charset=utf-8";
                 context.Response.Headers.CacheControl = "no-cache";
-                await context.Response.WriteAsync(html.Replace("<base href=\"/\">", $"<base href=\"{context.Request.PathBase}/\">"), context.RequestAborted);
+                await context.Response.WriteAsync(
+                    html.Replace("<base href=\"/\">", $"<base href=\"{context.Request.PathBase}/\">"),
+                    context.RequestAborted);
             })
             .AllowAnonymous();
     }

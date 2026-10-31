@@ -9,6 +9,9 @@ public sealed class ListDeclarationFormsHandler(IEnumerable<ITaxDeclarationForm>
     {
         var (declared, _) = await accounts.LoadAsync(year, cancellationToken);
 
-        return [.. forms.Where(form => DeclarationAccounts.HasTaxableYear(declared, form)).Select(form => new DeclarationFormDto(form.Code, form.Title))];
+        return [.. forms.Where(form => DeclarationAccounts.HasTaxableYear(
+            declared,
+            form)).Select(form => new DeclarationFormDto(form.Code,
+            form.Title))];
     }
 }

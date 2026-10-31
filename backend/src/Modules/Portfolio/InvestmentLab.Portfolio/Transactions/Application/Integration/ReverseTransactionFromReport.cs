@@ -4,7 +4,9 @@ using InvestmentLab.Portfolio.Transactions.Application.ReverseRecordedTransactio
 
 namespace InvestmentLab.Portfolio.Transactions.Application.Integration;
 
-internal sealed class ReverseTransactionFromReport(ReverseRecordedTransactionHandler reversals, CommandRejection rejection) : IIntegrationEventHandler<ReverseTransactionV1>
+internal sealed class ReverseTransactionFromReport(
+    ReverseRecordedTransactionHandler reversals,
+    CommandRejection rejection) : IIntegrationEventHandler<ReverseTransactionV1>
 {
     public async Task Handle(ReverseTransactionV1 command, CancellationToken cancellationToken)
     {

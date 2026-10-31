@@ -16,43 +16,43 @@ public sealed class IngestDailyQuotesHandler(IQuoteStore store, IQuoteProvider p
         var instruments = await store.InstrumentsQuotedBy(provider.Provider, cancellationToken);
         var lastDates = await store.LastTradingDatesAsync(cancellationToken);
 
-        var (added, updated, missing) = (0, 0, new List<string>());
-        var ingested = new List<Guid>();
-        var firstDate = DateOnly.MaxValue;
+        var tally = new IngestTally();
 
-        var batches = instruments
+        foreach (var (from, chunk) in BatchesOf(instruments, lastDates, today))
+            await FetchBatchAsync(from, chunk, tally, now, cancellationToken);
+
+        if (tally.Ingested.Count > 0)
+            store.Record(new DailyQuotesIngested(tally.Ingested, tally.FirstDate, now));
+
+        await store.SaveChangesAsync(cancellationToken);
+
+        return new IngestReport(instruments.Count, tally.Added, tally.Updated, tally.Missing);
+    }
+
+    private static IEnumerable<(DateOnly From, QuotedInstrument[] Instruments)> BatchesOf(
+        IReadOnlyList<QuotedInstrument> instruments, IReadOnlyDictionary<InstrumentId, DateOnly> lastDates, DateOnly today) =>
+        instruments
             .GroupBy(instrument => lastDates.TryGetValue(instrument.Id, out var last) ? last : today.AddYears(-InitialHistoryYears))
             .Where(group => group.Key <= today)
             .SelectMany(group => group.Chunk(SymbolsPerRequest).Select(chunk => (From: group.Key, Instruments: chunk)));
 
-        foreach (var (from, chunk) in batches)
+    private async Task FetchBatchAsync(
+        DateOnly from, QuotedInstrument[] chunk, IngestTally tally, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var bySymbol = chunk.ToDictionary(instrument => instrument.Symbol.Symbol);
+        var fetched = await provider.FetchAsync([.. bySymbol.Keys], from, cancellationToken);
+
+        tally.Missing.AddRange(fetched.Missing);
+
+        foreach (var series in fetched.Series)
         {
-            var bySymbol = chunk.ToDictionary(instrument => instrument.Symbol.Symbol);
-            var fetched = await provider.FetchAsync([.. bySymbol.Keys], from, cancellationToken);
-            missing.AddRange(fetched.Missing);
+            if (!bySymbol.TryGetValue(series.Symbol, out var instrument))
+                continue;
 
-            foreach (var series in fetched.Series)
-            {
-                if (!bySymbol.TryGetValue(series.Symbol, out var instrument))
-                    continue;
+            var (added, updated) = await StoreSeriesAsync(instrument.Id, from, series, now, cancellationToken);
 
-                var (seriesAdded, seriesUpdated) = await StoreSeriesAsync(instrument.Id, from, series, now, cancellationToken);
-
-                if (seriesAdded + seriesUpdated == 0)
-                    continue;
-
-                (added, updated) = (added + seriesAdded, updated + seriesUpdated);
-                ingested.Add(instrument.Id.Value);
-                firstDate = firstDate < from ? firstDate : from;
-            }
+            tally.Count(instrument, from, added, updated);
         }
-
-        if (ingested.Count > 0)
-            store.Record(new DailyQuotesIngested(ingested, firstDate, now));
-
-        await store.SaveChangesAsync(cancellationToken);
-
-        return new IngestReport(instruments.Count, added, updated, missing);
     }
 
     private async Task<(int Added, int Updated)> StoreSeriesAsync(
@@ -84,5 +84,25 @@ public sealed class IngestDailyQuotesHandler(IQuoteStore store, IQuoteProvider p
             QuoteQualityInspector.Inspect(fresh, await store.QuoteBeforeAsync(instrumentId, fresh[0].TradingDate, cancellationToken));
 
         return (fresh.Count, updated);
+    }
+
+    private sealed class IngestTally
+    {
+        public int Added { get; private set; }
+        public int Updated { get; private set; }
+        public List<string> Missing { get; } = [];
+        public List<Guid> Ingested { get; } = [];
+        public DateOnly FirstDate { get; private set; } = DateOnly.MaxValue;
+
+        public void Count(QuotedInstrument instrument, DateOnly from, int added, int updated)
+        {
+            if (added + updated == 0)
+                return;
+
+            Added += added;
+            Updated += updated;
+            Ingested.Add(instrument.Id.Value);
+            FirstDate = FirstDate < from ? FirstDate : from;
+        }
     }
 }

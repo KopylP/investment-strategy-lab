@@ -108,7 +108,11 @@ internal sealed class RevolutStatementParser : IStatementParser
     }
 
     private static decimal? Number(string text) =>
-        decimal.TryParse(text.Replace(",", "").Replace(" ", ""), NumberStyles.Number | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out var value) ? value : null;
+        decimal.TryParse(
+            text.Replace(",", "").Replace(" ", ""),
+            NumberStyles.Number | NumberStyles.AllowExponent,
+            CultureInfo.InvariantCulture,
+            out var value) ? value : null;
 
     private static List<string> Fields(string line)
     {

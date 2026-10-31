@@ -15,8 +15,12 @@ internal sealed class SignalConfiguration(SignalsDbContext context) : IEntityTyp
 
         signal.Property(s => s.Name).HasMaxLength(Signal.MaxNameLength);
         signal.Property(s => s.BuiltInKey).HasMaxLength(100);
-        signal.Property(s => s.Target).HasColumnType("jsonb").HasConversion(JsonbValue.Converter<SignalTarget>(), JsonbValue.Comparer<SignalTarget>());
-        signal.Property(s => s.Condition).HasColumnType("jsonb").HasConversion(JsonbValue.Converter<SignalCondition>(), JsonbValue.Comparer<SignalCondition>());
+        signal.Property(
+            s => s.Target).HasColumnType("jsonb").HasConversion(JsonbValue.Converter<SignalTarget>(),
+            JsonbValue.Comparer<SignalTarget>());
+        signal.Property(
+            s => s.Condition).HasColumnType("jsonb").HasConversion(JsonbValue.Converter<SignalCondition>(),
+            JsonbValue.Comparer<SignalCondition>());
         signal.Property(s => s.Schedule).HasColumnType("jsonb").HasConversion(JsonbValue.Converter<Cadence>(), JsonbValue.Comparer<Cadence>());
 
         signal.Ignore(s => s.IsBuiltIn);

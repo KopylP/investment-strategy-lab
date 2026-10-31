@@ -8,13 +8,18 @@ public sealed record Cadence(CadenceFrequency Frequency, int Day, DayOfWeek Week
 
     public static Cadence Of(string frequency, int day, string weekday, string time, int minute)
     {
-        var parsed = Enum.TryParse<CadenceFrequency>(frequency, ignoreCase: true, out var known) && Enum.IsDefined(known) ? known : CadenceFrequency.Off;
+        var parsed = Enum.TryParse<CadenceFrequency>(frequency, ignoreCase: true, out var known) && Enum.IsDefined(known)
+            ? known
+            : CadenceFrequency.Off;
 
         return new Cadence(
             parsed,
             parsed is CadenceFrequency.Monthly or CadenceFrequency.Quarterly && day is >= 1 and <= 31 ? day : Off.Day,
-            parsed == CadenceFrequency.Weekly && Enum.TryParse<DayOfWeek>(weekday, ignoreCase: true, out var on) && Enum.IsDefined(on) ? on : Off.Weekday,
-            parsed is not (CadenceFrequency.Off or CadenceFrequency.Hourly) && TimeOnly.TryParseExact(time, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var at)
+            parsed == CadenceFrequency.Weekly && Enum.TryParse<DayOfWeek>(weekday, ignoreCase: true, out var on) && Enum.IsDefined(on)
+                ? on
+                : Off.Weekday,
+            parsed is not (CadenceFrequency.Off or CadenceFrequency.Hourly)
+            && TimeOnly.TryParseExact(time, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var at)
                 ? at
                 : Off.Time,
             parsed == CadenceFrequency.Hourly && minute is >= 0 and <= 59 ? minute : Off.Minute);
@@ -22,13 +27,16 @@ public sealed record Cadence(CadenceFrequency Frequency, int Day, DayOfWeek Week
 
     public static Result<Cadence> TryOf(string frequency, int? day, string? weekday, string? time, int? minute)
     {
-        if (!Enum.TryParse<CadenceFrequency>(frequency, ignoreCase: true, out var parsed) || !Enum.IsDefined(parsed) || int.TryParse(frequency, out _))
+        if (!Enum.TryParse<CadenceFrequency>(frequency, ignoreCase: true, out var parsed)
+            || !Enum.IsDefined(parsed)
+            || int.TryParse(frequency, out _))
             return Error.Validation("cadence.frequency", $"Unknown frequency '{frequency}': off, hourly, daily, weekly, monthly or quarterly.");
 
         if (parsed is CadenceFrequency.Monthly or CadenceFrequency.Quarterly && day is not (>= 1 and <= 31))
             return Error.Validation("cadence.day", "The day of the month must be 1–31.");
 
-        if (parsed == CadenceFrequency.Weekly && (weekday is null || int.TryParse(weekday, out _) || !Enum.TryParse<DayOfWeek>(weekday, ignoreCase: true, out _)))
+        if (parsed == CadenceFrequency.Weekly
+            && (weekday is null || int.TryParse(weekday, out _) || !Enum.TryParse<DayOfWeek>(weekday, ignoreCase: true, out _)))
             return Error.Validation("cadence.weekday", "The weekday must be monday … sunday.");
 
         if (parsed is not (CadenceFrequency.Off or CadenceFrequency.Hourly)

@@ -28,7 +28,8 @@ public sealed class PlanningInputs(
 
     public async Task<AccountHoldingsDto> HoldingsAsync(AccountSetupDto account, CancellationToken cancellationToken)
     {
-        var current = await holdings.GetHoldings(account.Id, null, cancellationToken) ?? new AccountHoldingsDto(account.Id, account.BaseCurrency, null, []);
+        var current =
+            await holdings.GetHoldings(account.Id, null, cancellationToken) ?? new AccountHoldingsDto(account.Id, account.BaseCurrency, null, []);
         var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime).AddDays(1);
         var rates = new Dictionary<string, decimal?>();
         var subs = new List<SubPortfolioHoldingsDto>();

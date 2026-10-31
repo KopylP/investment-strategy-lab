@@ -22,7 +22,8 @@ public static class StrategyErrors
 
     public static Error UnknownType(string code) => Error.Validation("strategy.type_unknown", $"No engine runs the strategy type '{code}'.");
 
-    public static Error InvalidParameters(string details) => Error.Validation("strategy.parameters_invalid", $"Parameters do not fit the strategy type: {details}");
+    public static Error InvalidParameters(string details) =>
+        Error.Validation("strategy.parameters_invalid", $"Parameters do not fit the strategy type: {details}");
 
     public static Error Archived(Guid strategyId) => Error.Conflict("strategy.archived", $"Strategy {strategyId} is archived.");
 }

@@ -230,7 +230,9 @@ public sealed class RebalancingReport : AggregateRoot<ReportId>
     }
 
     private bool Replaces(RebalancingReport other) =>
-        other.IsOpen && other.Code == Code && (Kind == ReportKind.RiskReview ? other.Kind == ReportKind.RiskReview : other.Kind is ReportKind.Monthly or ReportKind.Recalculation);
+        other.IsOpen
+            && other.Code == Code
+            && (Kind == ReportKind.RiskReview ? other.Kind == ReportKind.RiskReview : other.Kind is ReportKind.Monthly or ReportKind.Recalculation);
 
     public static decimal ContributedIn(IEnumerable<RebalancingReport> reports, string code) =>
         reports.Where(report => report.Code == code).Sum(report => report.ContributedAmount);
@@ -289,9 +291,17 @@ public sealed class RebalancingReport : AggregateRoot<ReportId>
 
         IDomainEvent domainEvent = action.Kind switch
         {
-            ActionKind.Contribute => new ContributionMarked(AccountId, reference, fill.Amount, fill.ExecutedOn, action.AllocateFill(fill.Amount), now),
+            ActionKind.Contribute =>
+                new ContributionMarked(AccountId, reference, fill.Amount, fill.ExecutedOn, action.AllocateFill(fill.Amount), now),
             ActionKind.Transfer => new TransferMarked(
-                AccountId, reference, action.FromSubPortfolioId!.Value, action.ToSubPortfolioId!.Value, fill.ExecutedOn, action.InstrumentId, fill.Quantity, now),
+                AccountId,
+                reference,
+                action.FromSubPortfolioId!.Value,
+                action.ToSubPortfolioId!.Value,
+                fill.ExecutedOn,
+                action.InstrumentId,
+                fill.Quantity,
+                now),
             _ => new TradeMarked(
                 AccountId, reference, action.InstrumentId!.Value, action.Kind is ActionKind.Sell or ActionKind.Unpark,
                 fill.Quantity, fill.Price, fill.Fee, fill.ExecutedOn, action.AllocateFill(fill.Quantity), now),

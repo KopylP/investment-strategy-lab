@@ -40,12 +40,19 @@ public sealed class IdentityModule : IModule
         builder.AddModuleDbContext<IdentityDbContext>(Schema);
 
         var services = builder.Services;
+        AddAuthentication(services);
+        AddUsers(services);
+        AddAuthorization(services);
+        AddHandlers(services);
+    }
 
+    private static void AddAuthentication(IServiceCollection services)
+    {
         services.AddAuthentication(AuthenticationScheme)
-            .AddPolicyScheme(AuthenticationScheme, null, policy => policy.ForwardDefaultSelector = context =>
-                context.HomeAssistantUserId() is null ? IdentityConstants.ApplicationScheme : HomeAssistantAuthenticationHandler.SchemeName)
-            .AddScheme<AuthenticationSchemeOptions, HomeAssistantAuthenticationHandler>(HomeAssistantAuthenticationHandler.SchemeName, null)
-            .AddIdentityCookies();
+                    .AddPolicyScheme(AuthenticationScheme, null, policy => policy.ForwardDefaultSelector = context =>
+                        context.HomeAssistantUserId() is null ? IdentityConstants.ApplicationScheme : HomeAssistantAuthenticationHandler.SchemeName)
+                    .AddScheme<AuthenticationSchemeOptions, HomeAssistantAuthenticationHandler>(HomeAssistantAuthenticationHandler.SchemeName, null)
+                    .AddIdentityCookies();
         services.ConfigureApplicationCookie(cookie =>
         {
             cookie.Cookie.Name = CookieName;
@@ -58,22 +65,37 @@ public sealed class IdentityModule : IModule
             cookie.Events.OnRedirectToAccessDenied = context => Respond(context.Response, StatusCodes.Status403Forbidden);
         });
 
+
+    }
+
+    private static void AddUsers(IServiceCollection services)
+    {
         services.AddIdentityCore<User>(identity =>
-            {
-                identity.User.RequireUniqueEmail = true;
-                identity.Password.RequiredLength = 10;
-                identity.Password.RequireNonAlphanumeric = false;
-                identity.Password.RequireUppercase = false;
-                identity.Password.RequireDigit = false;
-                identity.Lockout.MaxFailedAccessAttempts = 5;
-            })
-            .AddSignInManager();
+                    {
+                        identity.User.RequireUniqueEmail = true;
+                        identity.Password.RequiredLength = 10;
+                        identity.Password.RequireNonAlphanumeric = false;
+                        identity.Password.RequireUppercase = false;
+                        identity.Password.RequireDigit = false;
+                        identity.Lockout.MaxFailedAccessAttempts = 5;
+                    })
+                    .AddSignInManager();
         services.AddScoped<UserStore>();
         services.AddScoped<IUserStore<User>>(provider => provider.GetRequiredService<UserStore>());
 
-        services.AddAuthorizationBuilder()
-            .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
 
+    }
+
+    private static void AddAuthorization(IServiceCollection services)
+    {
+        services.AddAuthorizationBuilder()
+                    .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
+
+
+    }
+
+    private static void AddHandlers(IServiceCollection services)
+    {
         services.AddScoped<IUserAccounts, UserAccounts>();
         services.AddDomainEventMapper<UserRegistered, UserRegisteredV1, UserRegisteredMapper>();
         services.AddScoped<IHomeAssistantUsers, HomeAssistantUsers>();

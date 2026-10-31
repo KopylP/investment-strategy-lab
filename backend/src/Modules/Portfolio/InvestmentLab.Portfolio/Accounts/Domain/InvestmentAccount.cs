@@ -187,7 +187,10 @@ public sealed class InvestmentAccount : AggregateRoot<AccountId>
 
     private Error? CheckNameIsFree(string name) =>
         string.IsNullOrWhiteSpace(name) ? AccountErrors.NameRequired()
-        : ActiveSubPortfolios.Any(sub => string.Equals(sub.Name, name.Trim(), StringComparison.OrdinalIgnoreCase)) ? AccountErrors.SubPortfolioNameTaken(name.Trim())
+        : ActiveSubPortfolios.Any(sub => string.Equals(
+            sub.Name,
+            name.Trim(),
+            StringComparison.OrdinalIgnoreCase)) ? AccountErrors.SubPortfolioNameTaken(name.Trim())
         : null;
 
     private Error? CheckSharesAddUp()

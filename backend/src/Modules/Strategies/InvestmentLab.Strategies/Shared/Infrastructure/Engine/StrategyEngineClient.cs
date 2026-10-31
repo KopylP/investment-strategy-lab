@@ -16,7 +16,8 @@ public sealed class StrategyEngineClient(HttpClient http)
     public async Task<(JsonNode? Answer, int StatusCode, string? Error)> PostContextAsync(
         string typeCode, string action, EngineContext context, CancellationToken cancellationToken)
     {
-        using var response = await http.PostAsJsonAsync($"/v1/strategies/{Uri.EscapeDataString(typeCode)}/{action}", context, Json, cancellationToken);
+        using var response =
+            await http.PostAsJsonAsync($"/v1/strategies/{Uri.EscapeDataString(typeCode)}/{action}", context, Json, cancellationToken);
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
@@ -31,7 +32,8 @@ public sealed class StrategyEngineClient(HttpClient http)
     public async Task<(string? JobId, int StatusCode, string? Error)> SubmitJobAsync(
         string typeCode, string action, EngineContext context, CancellationToken cancellationToken)
     {
-        using var response = await http.PostAsJsonAsync($"/v1/strategies/{Uri.EscapeDataString(typeCode)}/{action}/jobs", context, Json, cancellationToken);
+        using var response =
+            await http.PostAsJsonAsync($"/v1/strategies/{Uri.EscapeDataString(typeCode)}/{action}/jobs", context, Json, cancellationToken);
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
 
         return response.IsSuccessStatusCode
@@ -57,7 +59,11 @@ public sealed class StrategyEngineClient(HttpClient http)
             job["status"]!.GetValue<string>(),
             result,
             error?["statusCode"]?.GetValue<int>(),
-            error?["detail"] is { } detail ? detail.GetValueKind() == JsonValueKind.String ? detail.GetValue<string>() : detail.ToJsonString() : null);
+            error?["detail"] is { } detail
+                ? detail.GetValueKind() == JsonValueKind.String
+                ? detail.GetValue<string>()
+                : detail.ToJsonString()
+                : null);
     }
 
     private static void RenameKeys(JsonNode? node)

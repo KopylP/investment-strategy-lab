@@ -4,7 +4,9 @@ using InvestmentLab.Rebalancing.Contracts;
 
 namespace InvestmentLab.Performance.Valuation.Application.Integration;
 
-internal sealed class SupersedePlanOfReport(IPerformanceRepository store, SnapshotInvalidation snapshots) : IIntegrationEventHandler<ReportSupersededV1>
+internal sealed class SupersedePlanOfReport(
+    IPerformanceRepository store,
+    SnapshotInvalidation snapshots) : IIntegrationEventHandler<ReportSupersededV1>
 {
     public async Task Handle(ReportSupersededV1 superseded, CancellationToken cancellationToken)
     {

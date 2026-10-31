@@ -34,7 +34,9 @@ public sealed class GetDashboardHandler(AccountHistoryLoader histories, IAccount
         var latest = history.SubPortfolios.Where(snapshot => snapshot.Date == last.Date).ToDictionary(snapshot => snapshot.SubPortfolioId!.Value);
         var indexBefore = before is null
             ? []
-            : history.SubPortfolios.Where(snapshot => snapshot.Date == before.Date).ToDictionary(snapshot => snapshot.SubPortfolioId!.Value, snapshot => snapshot.TwrIndex);
+            : history.SubPortfolios.Where(
+                snapshot => snapshot.Date == before.Date).ToDictionary(snapshot => snapshot.SubPortfolioId!.Value,
+                snapshot => snapshot.TwrIndex);
 
         var shown = account.SubPortfolios.Where(sub => sub.Status == "Active" || latest.ContainsKey(sub.Id));
 

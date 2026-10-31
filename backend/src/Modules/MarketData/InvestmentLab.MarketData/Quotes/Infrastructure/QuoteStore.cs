@@ -13,7 +13,10 @@ internal sealed class QuoteStore(MarketDataDbContext db) : IQuoteStore
         var instruments = await db.Instruments.AsNoTracking()
             .Where(instrument => instrument.ProviderSymbols.Any(symbol => symbol.Provider == provider))
             .ToListAsync(cancellationToken);
-        return [.. instruments.Select(instrument => new QuotedInstrument(instrument.Id, instrument.SymbolFor(provider)!, instrument.TradingCurrency))];
+        return [.. instruments.Select(instrument => new QuotedInstrument(
+            instrument.Id,
+            instrument.SymbolFor(provider)!,
+            instrument.TradingCurrency))];
     }
 
     public Task<bool> InstrumentExistsAsync(InstrumentId id, CancellationToken cancellationToken) =>

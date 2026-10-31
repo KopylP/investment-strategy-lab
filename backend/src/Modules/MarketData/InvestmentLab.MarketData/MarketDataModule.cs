@@ -48,11 +48,22 @@ public sealed class MarketDataModule : IModule
     public void AddServices(IHostApplicationBuilder builder)
     {
         builder.AddModuleDbContext<MarketDataDbContext>(Schema);
-
-        builder.Services.AddDomainEventMapper<QuoteCorrected, QuoteCorrectedV1, QuoteCorrectedMapper>();
-        builder.Services.AddDomainEventMapper<DailyQuotesIngested, DailyQuotesIngestedV1, DailyQuotesIngestedMapper>();
+        AddDomainEventMappers(builder.Services);
 
         var services = builder.Services;
+        AddInstruments(services);
+        AddQuotes(builder);
+        AddFxRates(services);
+    }
+
+    private static void AddDomainEventMappers(IServiceCollection services)
+    {
+        services.AddDomainEventMapper<QuoteCorrected, QuoteCorrectedV1, QuoteCorrectedMapper>();
+        services.AddDomainEventMapper<DailyQuotesIngested, DailyQuotesIngestedV1, DailyQuotesIngestedMapper>();
+    }
+
+    private static void AddInstruments(IServiceCollection services)
+    {
         services.AddScoped<IInstrumentRepository, InstrumentRepository>();
         services.AddScoped<RegisterInstrumentHandler>();
         services.AddScoped<AssignProviderSymbolHandler>();
@@ -63,6 +74,12 @@ public sealed class MarketDataModule : IModule
         services.AddScoped<IInstrumentRegistry, InstrumentRegistry>();
         services.AddScoped<IModuleDataSeeder, InstrumentSeeder>();
 
+
+    }
+
+    private static void AddQuotes(IHostApplicationBuilder builder)
+    {
+        var services = builder.Services;
         services.AddScoped<IQuoteStore, QuoteStore>();
         services.AddScoped<IQuoteHistory, QuoteHistory>();
         services.AddScoped<IngestDailyQuotesHandler>();
@@ -70,6 +87,11 @@ public sealed class MarketDataModule : IModule
         services.AddScheduledJob<NightlyQuotesJob>(NightlyQuotesJob.Schedule, runAtStartup: true);
         AddYFinance(builder);
 
+
+    }
+
+    private static void AddFxRates(IServiceCollection services)
+    {
         services.AddScoped<FxRateStore>();
         services.AddScoped<IFxRateStore>(provider => provider.GetRequiredService<FxRateStore>());
         services.AddScoped<IFxRates>(provider => provider.GetRequiredService<FxRateStore>());

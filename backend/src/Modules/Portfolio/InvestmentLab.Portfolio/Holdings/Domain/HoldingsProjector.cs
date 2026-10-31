@@ -8,29 +8,14 @@ public static class HoldingsProjector
 {
     public static Result<ProjectedHoldings> Project(InvestmentAccount account, IEnumerable<Transaction> journal, DateOnly? asOf = null)
     {
-        var entries = journal.ToList();
-        var reversed = entries.Where(entry => entry.ReversalOf is not null).Select(entry => entry.ReversalOf!.Value).ToHashSet();
-        var effective = entries
-            .Where(entry => entry.Kind != TransactionKind.Reversal && !reversed.Contains(entry.Id))
-            .Where(entry => asOf is null || entry.OccurredOn <= asOf)
-            .OrderBy(entry => entry.OccurredOn).ThenBy(entry => entry.RecordedAt).ThenBy(entry => entry.Id.Value)
-            .ToList();
-
+        var effective = EffectiveEntries([.. journal], asOf);
         var state = new Dictionary<SubPortfolioId, Sleeve>();
         Sleeve SleeveOf(SubPortfolioId id) => state.TryGetValue(id, out var sleeve) ? sleeve : state[id] = new Sleeve();
 
         foreach (var entry in effective)
         {
-            var applied = entry.Details switch
-            {
-                TradeDetails trade => ApplyTrade(entry, trade, SleeveOf),
-                CashMovementDetails cash => ApplyCash(cash, SleeveOf),
-                InternalTransferDetails transfer => ApplyTransfer(entry, transfer, SleeveOf),
-                _ => null,
-            };
-
-            if (applied is not null)
-                return applied;
+            if (Apply(entry, SleeveOf) is { } failure)
+                return failure;
         }
 
         var subPortfolios = account.SubPortfolios
@@ -38,15 +23,39 @@ public static class HoldingsProjector
             .Select(sub => SleeveOf(sub.Id).Freeze(sub.Id, account.BaseCurrency))
             .ToList();
 
-        var warnings = account.SubPortfolios
-            .Where(sub => state.TryGetValue(sub.Id, out var sleeve) && sleeve.Cash < 0m)
-            .Select(sub => $"Cash of '{sub.Name}' is {decimal.Round(state[sub.Id].Cash, 2)} {account.BaseCurrency}: record the contribution that paid for it.")
-            .ToList();
-
         var lastDate = effective.Count > 0 ? effective[^1].OccurredOn : (DateOnly?)null;
+        var holdings = new AccountHoldings(account.Id, account.BaseCurrency, asOf ?? lastDate, subPortfolios);
 
-        return new ProjectedHoldings(new AccountHoldings(account.Id, account.BaseCurrency, asOf ?? lastDate, subPortfolios), warnings);
+        return new ProjectedHoldings(holdings, NegativeCashWarnings(account, state));
     }
+
+    private static List<Transaction> EffectiveEntries(List<Transaction> entries, DateOnly? asOf)
+    {
+        var reversed = entries.Where(entry => entry.ReversalOf is not null).Select(entry => entry.ReversalOf!.Value).ToHashSet();
+
+        return [.. entries
+            .Where(entry => entry.Kind != TransactionKind.Reversal && !reversed.Contains(entry.Id))
+            .Where(entry => asOf is null || entry.OccurredOn <= asOf)
+            .OrderBy(entry => entry.OccurredOn).ThenBy(entry => entry.RecordedAt).ThenBy(entry => entry.Id.Value)];
+    }
+
+    private static Error? Apply(Transaction entry, Func<SubPortfolioId, Sleeve> sleeveOf) => entry.Details switch
+    {
+        TradeDetails trade => ApplyTrade(entry, trade, sleeveOf),
+        CashMovementDetails cash => ApplyCash(cash, sleeveOf),
+        InternalTransferDetails transfer => ApplyTransfer(entry, transfer, sleeveOf),
+        _ => null,
+    };
+
+    private static List<string> NegativeCashWarnings(InvestmentAccount account, Dictionary<SubPortfolioId, Sleeve> state)
+    {
+        var overdrawn = account.SubPortfolios.Where(sub => state.TryGetValue(sub.Id, out var sleeve) && sleeve.Cash < 0m);
+
+        return [.. overdrawn.Select(sub => NegativeCashWarning(sub.Name, state[sub.Id].Cash, account.BaseCurrency))];
+    }
+
+    private static string NegativeCashWarning(string name, decimal cash, Currency currency) =>
+        $"Cash of '{name}' is {decimal.Round(cash, 2)} {currency}: record the contribution that paid for it.";
 
     private static Error? ApplyTrade(Transaction entry, TradeDetails trade, Func<SubPortfolioId, Sleeve> sleeveOf)
     {
@@ -57,31 +66,47 @@ public static class HoldingsProjector
 
         for (var i = 0; i < trade.Allocations.Count; i++)
         {
-            var (subPortfolioId, quantity) = (trade.Allocations[i].SubPortfolioId, trade.Allocations[i].Quantity);
-            var sleeve = sleeveOf(subPortfolioId);
-            var gross = trade.Price.TotalFor(quantity).Amount;
+            var allocation = trade.Allocations[i];
+            var sleeve = sleeveOf(allocation.SubPortfolioId);
+            var fee = fees[i].Amount;
             var settled = settlements?[i];
 
             if (trade.Side == TradeSide.Buy)
-            {
-                if (settled is { } paid)
-                    sleeve.AddForeign(trade.Settlement!.Currency, -paid);
-                else
-                    sleeve.Cash -= gross + fees[i].Amount;
-
-                sleeve.LotsOf(trade.InstrumentId).Add(new Lot(entry.Id, entry.OccurredOn, quantity.Value, trade.Price.Amount + fees[i].Amount / quantity.Value));
-            }
-            else
-            {
-                if (sleeve.Take(trade.InstrumentId, quantity.Value) is null)
-                    return TransactionErrors.NotEnoughUnits(subPortfolioId.Value, trade.InstrumentId, sleeve.Units(trade.InstrumentId), quantity.Value, entry.OccurredOn);
-
-                if (settled is { } received)
-                    sleeve.AddForeign(trade.Settlement!.Currency, received);
-                else
-                    sleeve.Cash += gross - fees[i].Amount;
-            }
+                BuyInto(sleeve, entry, trade, allocation.Quantity, fee, settled);
+            else if (SellFrom(sleeve, entry, trade, allocation, fee, settled) is { } failure)
+                return failure;
         }
+
+        return null;
+    }
+
+    private static void BuyInto(Sleeve sleeve, Transaction entry, TradeDetails trade, Quantity quantity, decimal fee, decimal? settled)
+    {
+        if (settled is { } paid)
+            sleeve.AddForeign(trade.Settlement!.Currency, -paid);
+        else
+            sleeve.Cash -= trade.Price.TotalFor(quantity).Amount + fee;
+
+        var unitCost = trade.Price.Amount + fee / quantity.Value;
+
+        sleeve.LotsOf(trade.InstrumentId).Add(new Lot(entry.Id, entry.OccurredOn, quantity.Value, unitCost));
+    }
+
+    private static Error? SellFrom(Sleeve sleeve, Transaction entry, TradeDetails trade, Allocation allocation, decimal fee, decimal? settled)
+    {
+        var quantity = allocation.Quantity;
+
+        if (sleeve.Take(trade.InstrumentId, quantity.Value) is null)
+        {
+            var held = sleeve.Units(trade.InstrumentId);
+
+            return TransactionErrors.NotEnoughUnits(allocation.SubPortfolioId.Value, trade.InstrumentId, held, quantity.Value, entry.OccurredOn);
+        }
+
+        if (settled is { } received)
+            sleeve.AddForeign(trade.Settlement!.Currency, received);
+        else
+            sleeve.Cash += trade.Price.TotalFor(quantity).Amount - fee;
 
         return null;
     }
@@ -178,13 +203,24 @@ public static class HoldingsProjector
             return taken;
         }
 
-        public SubPortfolioHoldings Freeze(SubPortfolioId id, Currency currency) => new(
-            id,
-            Money.Of(Cash, currency),
-            [.. Foreign.Where(pair => decimal.Round(pair.Value, 2) != 0m).OrderBy(pair => pair.Key.Code).Select(pair => Money.Of(decimal.Round(pair.Value, 8), pair.Key))],
-            [.. _lots.Where(pair => pair.Value.Count > 0).OrderBy(pair => pair.Key).Select(pair => new HoldingLine(
-                pair.Key,
-                [.. pair.Value.Select(lot => new VirtualLot(lot.OpenedBy, lot.OpenedOn, Quantity.Of(lot.Quantity), lot.UnitCost))]))]);
+        public SubPortfolioHoldings Freeze(SubPortfolioId id, Currency currency)
+        {
+            var foreign = Foreign.Where(pair => decimal.Round(pair.Value, 2) != 0m).OrderBy(pair => pair.Key.Code);
+            var held = _lots.Where(pair => pair.Value.Count > 0).OrderBy(pair => pair.Key);
+
+            return new SubPortfolioHoldings(
+                id,
+                Money.Of(Cash, currency),
+                [.. foreign.Select(pair => Money.Of(decimal.Round(pair.Value, 8), pair.Key))],
+                [.. held.Select(pair => HoldingLineOf(pair.Key, pair.Value))]);
+        }
+
+        private static HoldingLine HoldingLineOf(Guid instrumentId, List<Lot> lots)
+        {
+            var virtualLots = lots.Select(lot => new VirtualLot(lot.OpenedBy, lot.OpenedOn, Quantity.Of(lot.Quantity), lot.UnitCost));
+
+            return new HoldingLine(instrumentId, [.. virtualLots]);
+        }
     }
 
     private sealed record Lot(TransactionId OpenedBy, DateOnly OpenedOn, decimal Quantity, decimal UnitCost);

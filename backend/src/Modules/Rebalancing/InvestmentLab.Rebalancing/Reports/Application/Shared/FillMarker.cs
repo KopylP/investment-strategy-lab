@@ -5,7 +5,10 @@ namespace InvestmentLab.Rebalancing.Reports.Application.Shared;
 public sealed class FillMarker(IReportRepository reports, TimeProvider clock)
 {
     public async Task<Result> MarkAsync(
-        Guid reportId, Guid actionId, Func<RebalancingReport, ReportAction, DateTimeOffset, Result<MarkedFill>> mark, CancellationToken cancellationToken)
+        Guid reportId,
+        Guid actionId,
+        Func<RebalancingReport, ReportAction, DateTimeOffset, Result<MarkedFill>> mark,
+        CancellationToken cancellationToken)
     {
         if (await reports.FindAsync(ReportId.Of(reportId), cancellationToken) is not { } report)
             return ReportErrors.NotFound(reportId);

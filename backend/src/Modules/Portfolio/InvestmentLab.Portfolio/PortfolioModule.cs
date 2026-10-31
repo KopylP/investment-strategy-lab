@@ -50,14 +50,27 @@ public sealed class PortfolioModule : IModule
     public void AddServices(IHostApplicationBuilder builder)
     {
         builder.AddModuleDbContext<PortfolioDbContext>(Schema);
-
-        builder.Services.AddDomainEventMapper<SubPortfolioAdded, SubPortfolioAddedV1, SubPortfolioAddedMapper>();
-        builder.Services.AddDomainEventMapper<TargetSharesChanged, TargetSharesChangedV1, TargetSharesChangedMapper>();
-        builder.Services.AddDomainEventMapper<TransactionRecorded, TransactionRecordedV1, TransactionRecordedMapper>();
-        builder.Services.AddDomainEventMapper<TransactionReversed, TransactionReversedV1, TransactionReversedMapper>();
-        builder.Services.AddDomainEventMapper<TransactionRejected, TransactionRejectedV1, TransactionRejectedMapper>();
+        AddDomainEventMappers(builder.Services);
 
         var services = builder.Services;
+        AddAccounts(services);
+        AddTransactions(services);
+        AddImports(services);
+        AddReactionsToReports(services);
+        AddHoldings(services);
+    }
+
+    private static void AddDomainEventMappers(IServiceCollection services)
+    {
+        services.AddDomainEventMapper<SubPortfolioAdded, SubPortfolioAddedV1, SubPortfolioAddedMapper>();
+        services.AddDomainEventMapper<TargetSharesChanged, TargetSharesChangedV1, TargetSharesChangedMapper>();
+        services.AddDomainEventMapper<TransactionRecorded, TransactionRecordedV1, TransactionRecordedMapper>();
+        services.AddDomainEventMapper<TransactionReversed, TransactionReversedV1, TransactionReversedMapper>();
+        services.AddDomainEventMapper<TransactionRejected, TransactionRejectedV1, TransactionRejectedMapper>();
+    }
+
+    private static void AddAccounts(IServiceCollection services)
+    {
         services.AddScoped<IAccountRepository, AccountRepository>();
         services.AddScoped<OpenAccountHandler>();
         services.AddScoped<AddSubPortfolioHandler>();
@@ -69,6 +82,11 @@ public sealed class PortfolioModule : IModule
         services.AddScoped<ListAccountsHandler>();
         services.AddScoped<IAccountSetupQueries, AccountSetupQueries>();
 
+
+    }
+
+    private static void AddTransactions(IServiceCollection services)
+    {
         services.AddScoped<ITransactionJournal, TransactionJournal>();
         services.AddScoped<TransactionRecorder>();
         services.AddScoped<RecordTradeHandler>();
@@ -79,16 +97,31 @@ public sealed class PortfolioModule : IModule
         services.AddScoped<ReverseRecordedTransactionHandler>();
         services.AddScoped<GetTransactionsHandler>();
         services.AddScoped<IJournalQueries, JournalQueries>();
+
+    }
+
+    private static void AddImports(IServiceCollection services)
+    {
         services.AddScoped<IStatementParser, RevolutStatementParser>();
         services.AddScoped<IStatementImportRepository, StatementImportRepository>();
         services.AddScoped<StatementImportService>();
         services.AddScoped<ImportPositionsHandler>();
+
+    }
+
+    private static void AddReactionsToReports(IServiceCollection services)
+    {
         services.AddScoped<CommandRejection>();
         services.AddIntegrationEventHandler<RecordTradeV1, RecordTradeFromReport>();
         services.AddIntegrationEventHandler<RecordContributionV1, RecordContributionFromReport>();
         services.AddIntegrationEventHandler<RecordInternalTransferV1, RecordTransferFromReport>();
         services.AddIntegrationEventHandler<ReverseTransactionV1, ReverseTransactionFromReport>();
 
+
+    }
+
+    private static void AddHoldings(IServiceCollection services)
+    {
         services.AddScoped<IHoldingsReader, HoldingsReader>();
         services.AddScoped<GetHoldingsHandler>();
         services.AddScoped<IHoldingsQueries, HoldingsQueries>();

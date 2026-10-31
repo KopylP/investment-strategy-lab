@@ -15,7 +15,9 @@ public static class GuardrailEnforcer
                 if (target.Weight <= cap.Value)
                     return target;
 
-                warnings.Add($"Ціль {label(target.InstrumentId)} {PlanText.Percent(target.Weight)} обрізано до максимуму позиції {PlanText.Percent(cap.Value)}.");
+                warnings.Add(
+                    $"Ціль {label(target.InstrumentId)} {PlanText.Percent(target.Weight)} " +
+                    $"обрізано до максимуму позиції {PlanText.Percent(cap.Value)}.");
 
                 return target with { Weight = cap.Value };
             })];
@@ -41,7 +43,8 @@ public static class GuardrailEnforcer
         var turnover = Math.Max(0m, traded - newMoney) / plan.TotalBefore;
 
         return turnover > max.Value
-            ? $"Оборот плану {PlanText.Percent(turnover)} перевищує ліміт {PlanText.Percent(max.Value)} на місяць: перегляньте продажі перед виконанням."
+            ? $"Оборот плану {PlanText.Percent(turnover)} перевищує ліміт {PlanText.Percent(max.Value)} на місяць: " +
+              "перегляньте продажі перед виконанням."
             : null;
     }
 }

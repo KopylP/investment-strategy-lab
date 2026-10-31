@@ -54,7 +54,9 @@ public static class ContributionAllocator
             return null;
 
         var drift = subPortfolios
-            .Select(sub => (Sub: sub, Excess: sub.Value + shares.First(share => share.SubPortfolioId == sub.SubPortfolioId).Amount - sub.TargetShare.Value * totalAfter))
+            .Select(sub => (
+                Sub: sub,
+                Excess: sub.Value + shares.First(share => share.SubPortfolioId == sub.SubPortfolioId).Amount - sub.TargetShare.Value * totalAfter))
             .ToList();
         var (over, overExcess) = drift.MaxBy(entry => entry.Excess);
         var (under, underExcess) = drift.MinBy(entry => entry.Excess);

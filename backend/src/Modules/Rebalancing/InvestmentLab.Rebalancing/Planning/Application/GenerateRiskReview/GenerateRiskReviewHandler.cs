@@ -27,36 +27,12 @@ public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepo
             return ReportErrors.NoActiveSubPortfolios(account.Id);
 
         var holdings = await inputs.HoldingsAsync(account, cancellationToken);
-        var labels = await inputs.LabelsAsync(cancellationToken);
+        var review = await ReviewInputsAsync(account, holdings, planned, asOf, request, cancellationToken);
         var snapshots = holdings.SubPortfolios.ToDictionary(sub => sub.SubPortfolioId);
-
-        var heldIds = HeldInstruments(holdings, planned);
-        var warnings = new List<string>();
-        var prices = await inputs.PricesAsync(heldIds, asOf, account.BaseCurrency, warnings, cancellationToken);
-        warnings.InsertRange(0, PlanningInputs.PriceWarnings(heldIds, prices, labels));
-
-        if (request.Cause is { } cause)
-            warnings.Insert(0, cause);
-
-        var review = new RiskReviewInputs(labels, prices, warnings);
         var outcomes = Outcomes(planned, snapshots, assessments, review);
 
-        var code = command.Scope?.Code ?? ReportDefaults.CodeOf(ReportKind.RiskReview);
-        var title = command.Scope?.Title ?? ReportDefaults.TitleOf(ReportKind.RiskReview);
-        var marketAsOf = ReportHeader.MarketDateOf([.. prices.Values.Select(price => price.Date)], asOf);
-        var header = new ReportHeader(
-            AccountId: account.Id,
-            OwnerId: UserId.Of(account.OwnerId),
-            AccountName: account.Name,
-            Currency: Currency.Of(account.BaseCurrency),
-            Period: YearMonth.Containing(asOf),
-            Kind: ReportKind.RiskReview,
-            Trigger: request.Trigger,
-            MarketAsOf: marketAsOf,
-            Code: code,
-            Title: title);
-
-        var draft = ReportComposer.Compose(header, null, outcomes, warnings);
+        var header = HeaderOf(account, command, asOf, request, review);
+        var draft = ReportComposer.Compose(header, null, outcomes, review.Warnings);
         var report = RebalancingReport.Generate(draft, now);
 
         var open = await reports.OpenAsync(account.Id, cancellationToken);
@@ -64,6 +40,40 @@ public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepo
 
         return report.Id;
     }
+
+    private async Task<RiskReviewInputs> ReviewInputsAsync(
+        AccountSetupDto account,
+        AccountHoldingsDto holdings,
+        List<SubPortfolioSetupDto> planned,
+        DateOnly asOf,
+        ReportRequest request,
+        CancellationToken cancellationToken)
+    {
+        var labels = await inputs.LabelsAsync(cancellationToken);
+        var heldIds = HeldInstruments(holdings, planned);
+
+        var warnings = new List<string>();
+        var prices = await inputs.PricesAsync(heldIds, asOf, account.BaseCurrency, warnings, cancellationToken);
+        warnings.InsertRange(0, PlanningInputs.PriceWarnings(heldIds, prices, labels));
+
+        if (request.Cause is { } cause)
+            warnings.Insert(0, cause);
+
+        return new RiskReviewInputs(labels, prices, warnings);
+    }
+
+    private static ReportHeader HeaderOf(
+        AccountSetupDto account, GenerateRiskReviewCommand command, DateOnly asOf, ReportRequest request, RiskReviewInputs review) => new(
+        AccountId: account.Id,
+        OwnerId: UserId.Of(account.OwnerId),
+        AccountName: account.Name,
+        Currency: Currency.Of(account.BaseCurrency),
+        Period: YearMonth.Containing(asOf),
+        Kind: ReportKind.RiskReview,
+        Trigger: request.Trigger,
+        MarketAsOf: ReportHeader.MarketDateOf([.. review.Prices.Values.Select(price => price.Date)], asOf),
+        Code: command.Scope?.Code ?? ReportDefaults.CodeOf(ReportKind.RiskReview),
+        Title: command.Scope?.Title ?? ReportDefaults.TitleOf(ReportKind.RiskReview));
 
     private static List<Guid> HeldInstruments(AccountHoldingsDto holdings, List<SubPortfolioSetupDto> planned) =>
         [.. holdings.SubPortfolios

@@ -4,7 +4,9 @@ using InvestmentLab.Portfolio.Transactions.Application.RecordContribution;
 
 namespace InvestmentLab.Portfolio.Transactions.Application.Integration;
 
-internal sealed class RecordContributionFromReport(RecordContributionHandler contributions, CommandRejection rejection) : IIntegrationEventHandler<RecordContributionV1>
+internal sealed class RecordContributionFromReport(
+    RecordContributionHandler contributions,
+    CommandRejection rejection) : IIntegrationEventHandler<RecordContributionV1>
 {
     public async Task Handle(RecordContributionV1 command, CancellationToken cancellationToken)
     {

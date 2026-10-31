@@ -11,5 +11,6 @@ public static class ProfileErrors
 
     public static Error UnknownLocale(string locale) => Error.Validation("profile.locale_unknown", $"'{locale}' is not a known locale.");
 
-    public static Error UnknownTimeZone(string timeZone) => Error.Validation("profile.time_zone_unknown", $"'{timeZone}' is not a known IANA time zone.");
+    public static Error UnknownTimeZone(string timeZone) =>
+        Error.Validation("profile.time_zone_unknown", $"'{timeZone}' is not a known IANA time zone.");
 }

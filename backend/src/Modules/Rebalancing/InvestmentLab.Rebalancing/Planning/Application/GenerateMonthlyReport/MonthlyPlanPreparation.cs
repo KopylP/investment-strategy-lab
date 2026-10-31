@@ -36,7 +36,7 @@ public sealed class MonthlyPlanPreparation(
             return Error.NotFound("account.not_found", $"Account {command.AccountId} does not exist.");
 
         var all = PlanningInputs.Planned(account).ToList();
-        var planned = command.Scope is { } scope ? [.. all.Where(sub => scope.SubPortfolioIds.Contains(sub.Id))] : all;
+        var planned = PlannedWithin(all, command.Scope);
         if (planned.Count == 0)
             return ReportErrors.NoActiveSubPortfolios(account.Id);
 
@@ -46,7 +46,7 @@ public sealed class MonthlyPlanPreparation(
         var code = command.Scope?.Code ?? ReportDefaults.CodeOf(ReportKind.Monthly);
         var title = command.Scope?.Title ?? ReportDefaults.TitleOf(ReportKind.Monthly);
 
-        var planSettings = await settings.FindAsync(account.Id, cancellationToken) ?? PlanSettings.DefaultFor(account.Id, UserId.Of(account.OwnerId));
+        var planSettings = await SettingsOfAsync(account, cancellationToken);
         var periodReports = await reports.ForPeriodAsync(account.Id, period, cancellationToken);
         var contribution = command.Contribution ?? RemainingContribution(planSettings, periodReports, code, all, planned);
 
@@ -76,6 +76,12 @@ public sealed class MonthlyPlanPreparation(
             Warnings: warnings,
             Allocation: allocation);
     }
+
+    private static List<SubPortfolioSetupDto> PlannedWithin(List<SubPortfolioSetupDto> all, ReportScope? scope) =>
+        scope is null ? all : [.. all.Where(sub => scope.SubPortfolioIds.Contains(sub.Id))];
+
+    private async Task<PlanSettings> SettingsOfAsync(AccountSetupDto account, CancellationToken cancellationToken) =>
+        await settings.FindAsync(account.Id, cancellationToken) ?? PlanSettings.DefaultFor(account.Id, UserId.Of(account.OwnerId));
 
     private static decimal RemainingContribution(
         PlanSettings planSettings,

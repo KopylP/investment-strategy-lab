@@ -18,7 +18,9 @@ public sealed record QuoteProvider
     }
 
     public static QuoteProvider Of(string code) =>
-        TryOf(code) is { IsSuccess: true } result ? result.Value : throw new ArgumentException($"'{code}' is not a quote provider code.", nameof(code));
+        TryOf(
+            code) is { IsSuccess: true } result ? result.Value : throw new ArgumentException($"'{code}' is not a quote provider code.",
+            nameof(code));
 
     public override string ToString() => Code;
 }

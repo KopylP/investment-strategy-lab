@@ -23,7 +23,8 @@ public sealed class PlannedReport
         DateOnly marketAsOf,
         DateTimeOffset generatedAt,
         IReadOnlyList<PlannedAction> actions) =>
-        (ReportId, AccountId, OwnerId, Kind, Period, MarketAsOf, GeneratedAt, Actions) = (reportId, accountId, ownerId, kind, period, marketAsOf, generatedAt, [.. actions]);
+        (ReportId, AccountId, OwnerId, Kind, Period, MarketAsOf, GeneratedAt, Actions) =
+            (reportId, accountId, ownerId, kind, period, marketAsOf, generatedAt, [.. actions]);
 
     private PlannedReport() => (Kind, Period, Actions) = (null!, null!, null!);
 

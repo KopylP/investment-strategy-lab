@@ -5,7 +5,9 @@ using InvestmentLab.Signals.Contracts;
 
 namespace InvestmentLab.Notifications.Delivery.Application.Integration;
 
-internal sealed class AnnounceFiredSignal(Notifier notifier, INotificationPreferencesRepository preferences) : IIntegrationEventHandler<SignalTriggeredV1>
+internal sealed class AnnounceFiredSignal(
+    Notifier notifier,
+    INotificationPreferencesRepository preferences) : IIntegrationEventHandler<SignalTriggeredV1>
 {
     public async Task Handle(SignalTriggeredV1 triggered, CancellationToken cancellationToken)
     {

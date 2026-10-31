@@ -5,7 +5,9 @@ using InvestmentLab.Rebalancing.Contracts;
 
 namespace InvestmentLab.Performance.Valuation.Application.Integration;
 
-internal sealed class KeepPlanOfGeneratedReport(IPerformanceRepository store, SnapshotInvalidation snapshots) : IIntegrationEventHandler<ReportGeneratedV1>
+internal sealed class KeepPlanOfGeneratedReport(
+    IPerformanceRepository store,
+    SnapshotInvalidation snapshots) : IIntegrationEventHandler<ReportGeneratedV1>
 {
     public async Task Handle(ReportGeneratedV1 generated, CancellationToken cancellationToken)
     {

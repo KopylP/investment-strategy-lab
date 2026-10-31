@@ -49,7 +49,9 @@ public sealed class TaxRecalculator(TaxInputs inputs, IAssessmentRepository asse
         List<string> warnings = [.. computation.Warnings];
 
         if (missing.Count > 0)
-            warnings.Insert(0, $"Немає курсу NBP для {missing.Count} операцій ({string.Join(", ", missing.Take(5))}…): вони не враховані. Оновіть курси NBP.");
+            warnings.Insert(
+                0,
+                $"Немає курсу NBP для {missing.Count} операцій ({string.Join(", ", missing.Take(5))}…): вони не враховані. Оновіть курси NBP.");
 
         return new RecomputeOutcome(changed, warnings, warnings, taxpayer, computation, events, losses);
     }

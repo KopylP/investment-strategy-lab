@@ -1,6 +1,15 @@
 namespace InvestmentLab.Taxation.Assessments.Domain;
 
-public sealed class OpenLot(Guid buyTransactionId, DateOnly acquiredOn, int sequence, Guid instrumentId, decimal quantity, decimal cost, decimal fxRate, decimal gross = 0m,
+public sealed class OpenLot(
+    Guid buyTransactionId,
+    DateOnly acquiredOn,
+    int sequence,
+    Guid instrumentId,
+    decimal quantity,
+    decimal cost,
+    decimal fxRate,
+    decimal gross = 0m,
+
     Guid accountId = default)
 {
     public Guid AccountId { get; } = accountId;

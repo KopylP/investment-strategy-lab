@@ -15,7 +15,11 @@ public sealed class StrategySetupFactory(IStrategyTypes types, IInstrumentCatalo
             return StrategyErrors.UnknownType(typeCode);
 
         var known = (await instruments.GetInstruments(cancellationToken)).Select(instrument => instrument.Id).ToHashSet();
-        Guid?[] referenced = [.. (input.Universe ?? []).Select(id => (Guid?)id), input.BenchmarkInstrumentId, input.VolatilityIndexInstrumentId, input.CashInstrumentId];
+        Guid?[
+] referenced = [.. (input.Universe ?? []).Select(id => (Guid?)id),
+            input.BenchmarkInstrumentId,
+            input.VolatilityIndexInstrumentId,
+            input.CashInstrumentId];
         var unknown = referenced.OfType<Guid>().Where(id => !known.Contains(id)).Distinct().ToList();
         if (unknown.Count > 0)
             return StrategyErrors.UnknownInstruments(unknown.Select(id => id.ToString()));

@@ -87,7 +87,9 @@ public sealed class ReportRequestProcessor(
             if (submitted.IsSuccess)
             {
                 var ticket = submitted.Value!;
-                request.Submitted(run.SubPortfolioId, new StrategyJob(ticket.JobId, ticket.Task.ToString(), ticket.StrategyId, ticket.StrategyVersion, ticket.CashInstrumentId));
+                request.Submitted(
+                    run.SubPortfolioId,
+                    new StrategyJob(ticket.JobId, ticket.Task.ToString(), ticket.StrategyId, ticket.StrategyVersion, ticket.CashInstrumentId));
             }
             else if (submitted.ErrorCode != StrategyErrorCodes.EngineUnavailable)
                 request.RunFailed(run.SubPortfolioId, submitted.ErrorCode!, submitted.ErrorMessage ?? submitted.ErrorCode!);
@@ -99,7 +101,8 @@ public sealed class ReportRequestProcessor(
         foreach (var run in request.Runs.Where(run => run is { IsDone: false, Job: not null }).ToList())
         {
             var job = run.Job!;
-            var ticket = new StrategyJobTicket(job.JobId, Enum.Parse<StrategyTask>(job.Task), job.StrategyId, job.StrategyVersion, job.CashInstrumentId);
+            var ticket =
+                new StrategyJobTicket(job.JobId, Enum.Parse<StrategyTask>(job.Task), job.StrategyId, job.StrategyVersion, job.CashInstrumentId);
             var (state, answer, errorCode, errorMessage) = ticket.Task == StrategyTask.AssessRisk
                 ? Read(await strategies.PollRiskAsync(ticket, cancellationToken))
                 : Read(await strategies.PollDecisionAsync(ticket, cancellationToken));
@@ -119,7 +122,11 @@ public sealed class ReportRequestProcessor(
         }
     }
 
-    private static (StrategyJobState State, string? Answer, string? ErrorCode, string? ErrorMessage) Read<T>(StrategyJobPoll<T> poll) where T : class =>
+    private static (
+        StrategyJobState State,
+        string? Answer,
+        string? ErrorCode,
+        string? ErrorMessage) Read<T>(StrategyJobPoll<T> poll) where T : class =>
         poll.Result switch
         {
             { IsSuccess: true, Value: { } value } => (poll.State, JsonSerializer.Serialize(value, Json), null, null),
@@ -149,11 +156,13 @@ public sealed class ReportRequestProcessor(
                 ? new StrategyEvaluationResult<T>(JsonSerializer.Deserialize<T>(answer, Json))
                 : new StrategyEvaluationResult<T>(null, run.ErrorCode ?? "strategy.no_answer", run.ErrorMessage ?? "стратегія не відповіла"));
 
-    private static StrategyTask TaskOf(ReportRequest request) => request.Kind == ReportKind.RiskReview ? StrategyTask.AssessRisk : StrategyTask.Decide;
+    private static StrategyTask TaskOf(ReportRequest request) =>
+        request.Kind == ReportKind.RiskReview ? StrategyTask.AssessRisk : StrategyTask.Decide;
 
     private static ReportScope ScopeOf(ReportRequest request) => new(request.Code, request.Title, request.SubPortfolioIds.ToHashSet());
 
-    private static GenerateMonthlyReportCommand RebalanceOf(ReportRequest request) => new(request.AccountId, request.Contribution, request.AsOf, ScopeOf(request));
+    private static GenerateMonthlyReportCommand RebalanceOf(ReportRequest request) =>
+        new(request.AccountId, request.Contribution, request.AsOf, ScopeOf(request));
 
     private static GenerateRiskReviewCommand RiskReviewOf(ReportRequest request) => new(request.AccountId, request.AsOf, ScopeOf(request));
 }

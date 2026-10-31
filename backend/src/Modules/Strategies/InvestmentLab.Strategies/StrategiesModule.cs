@@ -47,17 +47,35 @@ public sealed class StrategiesModule : IModule
     public void AddServices(IHostApplicationBuilder builder)
     {
         builder.AddModuleDbContext<StrategiesDbContext>(Schema);
-
         builder.Services.AddDomainEventMapper<StrategyReconfigured, StrategyReconfiguredV1, StrategyReconfiguredMapper>();
 
+        var services = builder.Services;
+        AddEngineClient(builder);
+        AddCatalog(services);
+        AddDefinitions(services);
+        AddEvaluation(services);
+    }
+
+    private static void AddEngineClient(IHostApplicationBuilder builder)
+    {
         var services = builder.Services;
         var engineUrl = builder.Configuration["Strategies:StrategyEngineUrl"] ?? StrategyEngineClient.DefaultBaseAddress;
         services.AddHttpClient<StrategyEngineClient>(http => http.BaseAddress = new Uri(engineUrl));
         services.AddScoped<CatalogSynchronizer>();
 
+
+    }
+
+    private static void AddCatalog(IServiceCollection services)
+    {
         services.AddScoped<IStrategyCatalog, StrategyCatalog>();
         services.AddScoped<GetStrategyCatalogHandler>();
 
+
+    }
+
+    private static void AddDefinitions(IServiceCollection services)
+    {
         services.AddScoped<IStrategyRepository, StrategyRepository>();
         services.AddScoped<IStrategyDirectory, StrategyDirectory>();
         services.AddScoped<IStrategyTypes, StrategyTypes>();
@@ -71,6 +89,11 @@ public sealed class StrategiesModule : IModule
         services.AddScoped<CreateDefaultStrategiesHandler>();
         services.AddIntegrationEventHandler<UserRegisteredV1, DefaultStrategiesForNewUser>();
 
+
+    }
+
+    private static void AddEvaluation(IServiceCollection services)
+    {
         services.AddScoped<IStrategyEngine, PythonStrategyEngine>();
         services.AddScoped<IStrategyReader, StrategyReader>();
         services.AddScoped<EvaluationPreparer>();

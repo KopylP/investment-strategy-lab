@@ -36,7 +36,15 @@ public sealed class OpenAccountHandler(IAccountRepository accounts, TimeProvider
         }
 
         var now = clock.GetUtcNow();
-        var opened = InvestmentAccount.Open(ownerId, command.Name ?? "", command.Broker ?? "", currency.Value, command.TaxPolicyCode, policy.Value, drafts, now);
+        var opened = InvestmentAccount.Open(
+            ownerId,
+            command.Name ?? "",
+            command.Broker ?? "",
+            currency.Value,
+            command.TaxPolicyCode,
+            policy.Value,
+            drafts,
+            now);
         if (opened.IsFailure)
             return opened.Error;
 

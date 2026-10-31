@@ -32,6 +32,9 @@ public sealed class GetNotificationSettingsHandler(Notifier notifier)
                 new DestinationDto(destination.Id, channel.Name, destination.Label, destination.Suggested, targets.Contains(destination.Id))));
         }
 
-        return new NotificationSettingsDto([.. notifier.Channels.Select(channel => channel.Name)], recipient.ChosenDestinations is null, destinations);
+        return new NotificationSettingsDto(
+            [.. notifier.Channels.Select(channel => channel.Name)],
+            recipient.ChosenDestinations is null,
+            destinations);
     }
 }

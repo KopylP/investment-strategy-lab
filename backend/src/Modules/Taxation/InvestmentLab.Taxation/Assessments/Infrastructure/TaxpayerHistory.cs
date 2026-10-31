@@ -17,7 +17,12 @@ internal sealed class TaxpayerHistory(TaxRecalculator recalculator, ICurrentUser
         {
             var setup = outcome.Taxpayer.Setups.GetValueOrDefault(account.AccountId);
 
-            return new TaxpayerAccountHistory(account.AccountId, setup?.Name ?? "", setup?.Broker ?? "", TaxPolicies.For(account.PolicyCode), [.. byAccount[account.AccountId]]);
+            return new TaxpayerAccountHistory(
+                account.AccountId,
+                setup?.Name ?? "",
+                setup?.Broker ?? "",
+                TaxPolicies.For(account.PolicyCode),
+                [.. byAccount[account.AccountId]]);
         });
 
         return new TaxpayerHistoryDto([.. accounts], outcome.Losses, outcome.Warnings, outcome.Incomplete);
