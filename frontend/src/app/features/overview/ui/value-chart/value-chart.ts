@@ -27,7 +27,7 @@ const showHeldKey = 'overview.valueChart.showHeld';
         </label>
       }
       <label class="flex items-center gap-2">
-        <p-toggleswitch [ngModel]="showHeld()" (ngModelChange)="setShowHeld($event)" /> активи й скільки за них заплачено
+        <p-toggleswitch [ngModel]="showHeld()" (ngModelChange)="setShowHeld($event)" /> прибуток на активах
       </label>
     </div>
     <app-live-chart [data]="data()" [options]="options()" [height]="viewport.phone() ? '15rem' : '22rem'" />`,
