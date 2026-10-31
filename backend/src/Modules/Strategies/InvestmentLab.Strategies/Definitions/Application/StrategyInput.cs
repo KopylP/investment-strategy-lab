@@ -7,15 +7,6 @@ using InvestmentLab.Strategies.Definitions.Domain;
 
 namespace InvestmentLab.Strategies.Definitions.Application;
 
-/// <param name="Parameters">Only what differs from the type's defaults; null keeps all defaults (how often reports come is a parameter too).</param>
-public sealed record StrategySetupInput(
-    IReadOnlyList<Guid> Universe,
-    Guid BenchmarkInstrumentId,
-    Guid? VolatilityIndexInstrumentId = null,
-    Guid? CashInstrumentId = null,
-    JsonElement? Parameters = null);
-
-/// <summary>Turns user input into a valid <see cref="StrategySetup"/>: known instruments, parameters merged over defaults and checked against the type's JSON Schema.</summary>
 public sealed class StrategySetupFactory(IStrategyTypes types, IInstrumentCatalog instruments)
 {
     public async Task<Result<StrategySetup>> CreateAsync(string typeCode, StrategySetupInput input, CancellationToken cancellationToken)
@@ -30,23 +21,24 @@ public sealed class StrategySetupFactory(IStrategyTypes types, IInstrumentCatalo
             return StrategyErrors.UnknownInstruments(unknown.Select(id => id.ToString()));
 
         var parameters = Parameters(type, input.Parameters);
+
         return parameters.IsFailure
             ? parameters.Error
             : new StrategySetup(parameters.Value, input.Universe ?? [], input.CashInstrumentId,
                 new MarketSeriesRefs(input.BenchmarkInstrumentId, input.VolatilityIndexInstrumentId));
     }
 
-    /// <summary>Defaults of the type with the given values laid over them, valid against the type's schema.</summary>
     public static Result<string> Parameters(StrategyTypeDescriptor type, JsonElement? given)
     {
         var merged = JsonNode.Parse(type.DefaultParameters)!.AsObject();
+
         if (given is { ValueKind: JsonValueKind.Object } overrides)
             Merge(merged, JsonNode.Parse(overrides.GetRawText())!.AsObject());
         else if (given is { ValueKind: not (JsonValueKind.Null or JsonValueKind.Undefined) })
             return StrategyErrors.InvalidParameters("expected a JSON object.");
 
         var json = merged.ToJsonString();
-        // Engines publish Pydantic schemas (draft 2020-12, no "$schema") with UI hints such as "x-enumLabels".
+
         var evaluation = JsonSchema.FromText(type.ParametersSchema, new BuildOptions { Dialect = Dialect.Draft202012 })
             .Evaluate(JsonDocument.Parse(json).RootElement, new EvaluationOptions { OutputFormat = OutputFormat.List });
         if (evaluation.IsValid)
@@ -67,51 +59,6 @@ public sealed class StrategySetupFactory(IStrategyTypes types, IInstrumentCatalo
                 Merge(existing, nested);
             else
                 target[name] = value?.DeepClone();
-        }
-    }
-}
-
-public sealed record StrategyVersionDto(
-    int Number,
-    JsonElement Parameters,
-    IReadOnlyList<Guid> Universe,
-    Guid? CashInstrumentId,
-    Guid BenchmarkInstrumentId,
-    Guid? VolatilityIndexInstrumentId,
-    DateTimeOffset CreatedAt);
-
-/// <param name="Version">The requested version (the latest by default).</param>
-public sealed record StrategyDto(
-    Guid Id,
-    string Name,
-    string TypeCode,
-    string Status,
-    DateTimeOffset CreatedAt,
-    int LatestVersion,
-    StrategyVersionDto Version);
-
-internal static class StrategyMapping
-{
-    extension(Strategy strategy)
-    {
-        public StrategyDto ToDto(StrategyVersion? version = null)
-        {
-            var shown = version ?? strategy.Latest;
-            return new StrategyDto(
-                strategy.Id.Value,
-                strategy.Name,
-                strategy.TypeCode,
-                strategy.Status.ToString(),
-                strategy.CreatedAt,
-                strategy.Latest.Number,
-                new StrategyVersionDto(
-                    shown.Number,
-                    JsonDocument.Parse(shown.Parameters).RootElement,
-                    shown.Universe,
-                    shown.CashInstrumentId,
-                    shown.BenchmarkInstrumentId,
-                    shown.VolatilityIndexInstrumentId,
-                    shown.CreatedAt));
         }
     }
 }

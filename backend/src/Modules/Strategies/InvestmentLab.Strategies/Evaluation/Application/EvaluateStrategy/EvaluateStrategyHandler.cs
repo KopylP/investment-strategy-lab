@@ -5,13 +5,8 @@ using InvestmentLab.Strategies.Definitions.Domain;
 
 namespace InvestmentLab.Strategies.Evaluation.Application.EvaluateStrategy;
 
-/// <summary>
-/// Builds the evaluation context (strategy version, quotes up to <c>asOf</c>, sub-portfolio state) and asks the engine
-/// for a decision or a risk assessment. Strategies keep no state between runs yet (no engine supports it).
-/// </summary>
 public sealed class EvaluateStrategyHandler(IStrategyReader strategies, IStrategyEngine engine, IQuoteHistory quotes, IInstrumentCatalog instruments)
 {
-    /// <summary>Two years: a 200-day average and twelve-month returns with room for holidays.</summary>
     private const int HistoryDays = 2 * 365 + 14;
 
     public async Task<Result<StrategyDecisionDto>> Decide(EvaluateStrategyRequest request, CancellationToken cancellationToken)
@@ -22,6 +17,7 @@ public sealed class EvaluateStrategyHandler(IStrategyReader strategies, IStrateg
 
         var (strategy, version, context) = prepared.Value;
         var decision = await engine.DecideAsync(strategy.TypeCode, context, cancellationToken);
+
         return decision.IsSuccess
             ? decision.Value with { StrategyId = strategy.Id.Value, StrategyVersion = version.Number, CashInstrumentId = context.CashInstrumentId }
             : decision.Error;
@@ -35,10 +31,10 @@ public sealed class EvaluateStrategyHandler(IStrategyReader strategies, IStrateg
 
         var (strategy, version, context) = prepared.Value;
         var assessment = await engine.AssessRiskAsync(strategy.TypeCode, context, cancellationToken);
+
         return assessment.IsSuccess ? assessment.Value with { StrategyId = strategy.Id.Value, StrategyVersion = version.Number } : assessment.Error;
     }
 
-    /// <summary>Starts the decision or risk assessment as a background job of the engine.</summary>
     public async Task<Result<StrategyJobTicket>> Submit(StrategyTask task, EvaluateStrategyRequest request, CancellationToken cancellationToken)
     {
         var prepared = await PrepareAsync(request, cancellationToken);
@@ -47,6 +43,7 @@ public sealed class EvaluateStrategyHandler(IStrategyReader strategies, IStrateg
 
         var (strategy, version, context) = prepared.Value;
         var jobId = await engine.SubmitAsync(strategy.TypeCode, task, context, cancellationToken);
+
         return jobId.IsSuccess
             ? new StrategyJobTicket(jobId.Value, task, strategy.Id.Value, version.Number, context.CashInstrumentId)
             : jobId.Error;
@@ -55,6 +52,7 @@ public sealed class EvaluateStrategyHandler(IStrategyReader strategies, IStrateg
     public async Task<EngineJobPoll<StrategyDecisionDto>> PollDecision(StrategyJobTicket ticket, CancellationToken cancellationToken)
     {
         var poll = await engine.PollAsync<StrategyDecisionDto>(ticket.JobId, cancellationToken);
+
         return poll.Result is { IsSuccess: true } result
             ? poll with { Result = result.Value with { StrategyId = ticket.StrategyId, StrategyVersion = ticket.StrategyVersion, CashInstrumentId = ticket.CashInstrumentId } }
             : poll;
@@ -63,6 +61,7 @@ public sealed class EvaluateStrategyHandler(IStrategyReader strategies, IStrateg
     public async Task<EngineJobPoll<RiskAssessmentDto>> PollRisk(StrategyJobTicket ticket, CancellationToken cancellationToken)
     {
         var poll = await engine.PollAsync<RiskAssessmentDto>(ticket.JobId, cancellationToken);
+
         return poll.Result is { IsSuccess: true } result
             ? poll with { Result = result.Value with { StrategyId = ticket.StrategyId, StrategyVersion = ticket.StrategyVersion } }
             : poll;
@@ -73,6 +72,7 @@ public sealed class EvaluateStrategyHandler(IStrategyReader strategies, IStrateg
     {
         if (request.StrategyId == Guid.Empty || await strategies.FindAsync(StrategyId.Of(request.StrategyId), cancellationToken) is not { } strategy)
             return StrategyErrors.NotFound(request.StrategyId);
+
         if (strategy.Version(request.Version) is not { } version)
             return StrategyErrors.VersionNotFound(request.StrategyId, request.Version!.Value);
 

@@ -1,26 +1,12 @@
 using InvestmentLab.Portfolio.Contracts.Accounts;
-using InvestmentLab.Rebalancing.Contracts;
 using InvestmentLab.Rebalancing.Planning.Domain;
 using InvestmentLab.Rebalancing.Reports.Domain;
-using InvestmentLab.Rebalancing.Reviews.Domain;
 using InvestmentLab.Strategies.Contracts;
-using InvestmentLab.Taxation.Contracts;
 
 namespace InvestmentLab.Rebalancing.Planning.Application.GenerateMonthlyReport;
 
-/// <param name="Contribution">Null: the monthly contribution from the plan settings, minus what was already paid in this period.</param>
-/// <param name="AsOf">Null: today. Quotes up to this date are used.</param>
-/// <param name="Scope">Null: every planned sub-portfolio, as the "rebalance" report.</param>
 public sealed record GenerateMonthlyReportCommand(Guid AccountId, decimal? Contribution = null, DateOnly? AsOf = null, ReportScope? Scope = null);
 
-/// <summary>
-/// A rebalance report (§7.1) — a strategy's report in "rebalance" mode — on schedule or on demand (D14): contribution
-/// split → strategy per sub-portfolio → guardrails → rebalancer → netting → report. It covers the sub-portfolios of its
-/// scope and their share of the monthly contribution. An open report of the same code and period is superseded by the
-/// new one; marks already made stay in the journal, so the new plan starts from what is really held.
-/// The strategies think in the background (<see cref="ReportRequest"/>): <see cref="StrategyRequestsAsync"/> says what
-/// to ask them, <see cref="Handle"/> makes the report from their answers, from what is held when they have answered.
-/// </summary>
 public sealed class GenerateMonthlyReportHandler(
     PlanningInputs inputs,
     IPlanSettingsRepository settings,
@@ -29,7 +15,6 @@ public sealed class GenerateMonthlyReportHandler(
     SaleTaxes taxes,
     TimeProvider clock)
 {
-    /// <summary>What each sub-portfolio's strategy is asked: its holdings and its share of the contribution.</summary>
     public async Task<Result<IReadOnlyDictionary<Guid, EvaluateStrategyRequest>>> StrategyRequestsAsync(
         GenerateMonthlyReportCommand command, CancellationToken cancellationToken)
     {
@@ -38,11 +23,10 @@ public sealed class GenerateMonthlyReportHandler(
             return prepared.Error;
 
         var plan = prepared.Value;
+
         return plan.Planned.ToDictionary(sub => sub.Id, plan.RequestOf);
     }
 
-    /// <param name="decisions">The strategies' answers by sub-portfolio; one missing is a strategy that did not answer.</param>
-    /// <param name="request">Completed with the report, in the same save.</param>
     public async Task<Result<ReportId>> Handle(
         GenerateMonthlyReportCommand command, IReadOnlyDictionary<Guid, StrategyEvaluationResult<StrategyDecisionDto>> decisions,
         ReportRequest request, CancellationToken cancellationToken)
@@ -61,8 +45,8 @@ public sealed class GenerateMonthlyReportHandler(
         foreach (var (id, price) in await inputs.PricesAsync(targetIds, asOf, account.BaseCurrency, warnings, cancellationToken))
             prices[id] = price;
 
-        // 3. Guardrails, then the rebalancer per sub-portfolio.
         var outcomes = new List<SubPortfolioOutcome>();
+
         foreach (var sub in planned)
         {
             var snapshot = snapshots.GetValueOrDefault(sub.Id);
@@ -89,8 +73,10 @@ public sealed class GenerateMonthlyReportHandler(
                 labels));
 
             List<string> notes = [.. clipped];
+
             if (GuardrailEnforcer.CheckTurnover(plan, PlanningInputs.LimitsOf(sub)) is { } turnover)
                 notes.Add(turnover);
+
             warnings.AddRange(notes.Select(note => $"«{sub.Name}»: {note}"));
 
             outcomes.Add(new SubPortfolioOutcome(
@@ -108,6 +94,10 @@ public sealed class GenerateMonthlyReportHandler(
         var needed = outcomes.SelectMany(outcome => outcome.Orders.Select(order => order.InstrumentId))
             .Concat(holdings.SubPortfolios.SelectMany(sub => sub.Positions.Select(position => position.InstrumentId)));
         warnings.InsertRange(0, PlanningInputs.PriceWarnings(needed, prices, labels));
+
+        if (request.Cause is { } cause)
+            warnings.Insert(0, cause);
+
         if (allocation.Transfer is { } transfer)
             warnings.Add($"Під-портфелі відхилилися від цільових часток більше ніж на {Percentage.Of(account.DriftBand)}: " +
                          $"варто перенести {transfer.Amount:0.00} {currency} з «{NameOf(account, transfer.FromSubPortfolioId)}» до «{NameOf(account, transfer.ToSubPortfolioId)}».");
@@ -121,18 +111,17 @@ public sealed class GenerateMonthlyReportHandler(
         var report = RebalancingReport.Generate(draft, now);
         await taxes.EstimateAsync(report, asOf, cancellationToken);
         reports.Add(report);
+
         foreach (var open in periodReports.Where(each => each.IsOpen && each.Code == code && each.Kind is ReportKind.Monthly or ReportKind.Recalculation))
-        {
             open.SupersedeBy(report.Id, now);
-            reports.Publish(new ReportSupersededV1(open.Id.Value, open.AccountId, report.Id.Value, now), now);
-        }
-        reports.Publish(report.ToGeneratedEvent(request.RequestedAt), now);
+
+        report.Generated(request.RequestedAt, now);
         request.Complete(report.Id, now);
         await reports.SaveChangesAsync(cancellationToken);
+
         return report.Id;
     }
 
-    /// <summary>Steps before the strategies: the account, its holdings and prices, and the contribution split (1).</summary>
     private async Task<Result<PreparedPlan>> PrepareAsync(GenerateMonthlyReportCommand command, CancellationToken cancellationToken)
     {
         var now = clock.GetUtcNow();
@@ -141,16 +130,18 @@ public sealed class GenerateMonthlyReportHandler(
 
         if (await inputs.AccountAsync(command.AccountId, cancellationToken) is not { } account)
             return Error.NotFound("account.not_found", $"Account {command.AccountId} does not exist.");
+
         var all = PlanningInputs.Planned(account).ToList();
         var planned = command.Scope is { } scope ? [.. all.Where(sub => scope.SubPortfolioIds.Contains(sub.Id))] : all;
         if (planned.Count == 0)
             return ReportErrors.NoActiveSubPortfolios(account.Id);
+
         if (command.Contribution is < 0m)
             return ReportErrors.ContributionNegative();
+
         var code = command.Scope?.Code ?? ReportDefaults.CodeOf(ReportKind.Monthly);
         var title = command.Scope?.Title ?? ReportDefaults.TitleOf(ReportKind.Monthly);
 
-        // The scope's part of the monthly contribution (by target shares), less what reports of this code already paid in.
         var planSettings = await settings.FindAsync(account.Id, cancellationToken) ?? PlanSettings.DefaultFor(account.Id, UserId.Of(account.OwnerId));
         var periodReports = await reports.ForPeriodAsync(account.Id, period, cancellationToken);
         var contributed = periodReports.Where(report => report.Code == code).Sum(report => report.ContributedAmount);
@@ -169,7 +160,6 @@ public sealed class GenerateMonthlyReportHandler(
         var prices = new Dictionary<Guid, MarketData.Contracts.Quotes.LatestPriceDto>(
             await inputs.PricesAsync(heldIds.Concat(cashIds), asOf, account.BaseCurrency, warnings, cancellationToken));
 
-        // 1. Contribution split by how far each sub-portfolio is from its target share.
         var standings = planned.Select(sub => new SubPortfolioStanding(sub.Id, Percentage.Of(sub.TargetShare), ValueOf(snapshots.GetValueOrDefault(sub.Id), prices))).ToList();
         var split = Enum.TryParse<ContributionSplit>(account.ContributionPolicy, out var policy) ? policy : ContributionSplit.FillUnderweight;
         var allocation = ContributionAllocator.Allocate(contribution, standings, split, Percentage.Of(account.DriftBand));
@@ -196,7 +186,6 @@ public sealed class GenerateMonthlyReportHandler(
         List<string> Warnings,
         ContributionAllocation Allocation)
     {
-        /// <summary>2. What the sub-portfolio's strategy decides on.</summary>
         public EvaluateStrategyRequest RequestOf(SubPortfolioSetupDto sub) => new(
             sub.StrategyId!.Value, sub.PinnedStrategyVersion, PlanningInputs.StateOf(Account, Snapshots.GetValueOrDefault(sub.Id)),
             Allocation.For(sub.Id), AsOf, sub.CashInstrumentId);
@@ -210,35 +199,4 @@ public sealed class GenerateMonthlyReportHandler(
 
     private static string NameOf(AccountSetupDto account, Guid subPortfolioId) =>
         account.SubPortfolios.FirstOrDefault(sub => sub.Id == subPortfolioId)?.Name ?? subPortfolioId.ToString();
-}
-
-internal static class ReportEventMapping
-{
-    extension(RebalancingReport report)
-    {
-        /// <param name="requestedAt">When the report was asked for: its strategies thought until it was generated.</param>
-        public ReportGeneratedV1 ToGeneratedEvent(DateTimeOffset requestedAt) => new(
-            report.Id.Value,
-            report.AccountId,
-            report.OwnerId.Value,
-            report.Period.ToString(),
-            report.Kind.ToString(),
-            report.MarketAsOf,
-            report.Currency.Code,
-            report.GeneratedAt,
-            [.. report.Actions.Select(action => new PlannedActionDto(
-                action.Id.Value,
-                action.Kind.ToString(),
-                action.InstrumentId,
-                action.PlannedQuantity,
-                action.PlannedPrice,
-                action.PlannedAmount,
-                [.. action.Allocations.Select(allocation => new PlannedAllocationDto(allocation.SubPortfolioId, allocation.Quantity))],
-                action.FromSubPortfolioId))],
-            report.AccountName,
-            report.Trigger.ToString(),
-            report.Title,
-            requestedAt,
-            report.Code);
-    }
 }

@@ -2,7 +2,10 @@ namespace InvestmentLab.SharedKernel.Tests;
 
 public sealed class AggregateRootTests
 {
-    private sealed record SomethingHappened(Guid Id) : IDomainEvent;
+    private sealed record SomethingHappened(Guid Id) : IDomainEvent
+    {
+        public DateTimeOffset OccurredAt { get; } = DateTimeOffset.UnixEpoch;
+    }
 
     private sealed class Sample(Guid id) : AggregateRoot<Guid>(id)
     {

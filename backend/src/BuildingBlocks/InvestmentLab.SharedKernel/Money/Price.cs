@@ -1,6 +1,5 @@
 namespace InvestmentLab.SharedKernel;
 
-/// <summary>Price of one unit. Keeps quote precision; money totals are rounded to cents.</summary>
 public sealed record Price
 {
     public decimal Amount { get; }

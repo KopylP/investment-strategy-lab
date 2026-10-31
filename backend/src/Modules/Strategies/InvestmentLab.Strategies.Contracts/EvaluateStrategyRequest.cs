@@ -1,0 +1,9 @@
+namespace InvestmentLab.Strategies.Contracts;
+
+public sealed record EvaluateStrategyRequest(
+    Guid StrategyId,
+    int? Version,
+    SubPortfolioStateDto SubPortfolio,
+    decimal Contribution,
+    DateOnly AsOf,
+    Guid? CashInstrumentId = null);

@@ -1,42 +1,33 @@
-using InvestmentLab.Rebalancing.Contracts;
-using InvestmentLab.Rebalancing.Planning.Application.GenerateMonthlyReport;
 using InvestmentLab.Rebalancing.Planning.Domain;
 using InvestmentLab.Rebalancing.Reports.Domain;
 using InvestmentLab.Strategies.Contracts;
-using InvestmentLab.Taxation.Contracts;
 
 namespace InvestmentLab.Rebalancing.Planning.Application.GenerateRiskReview;
 
-/// <param name="Scope">Null: every planned sub-portfolio, as the "risk-review" report.</param>
 public sealed record GenerateRiskReviewCommand(Guid AccountId, DateOnly? AsOf = null, ReportScope? Scope = null);
 
-/// <summary>
-/// Risk check (§7.4) — a strategy's report in "riskReview" mode: each strategy assesses what its sub-portfolio holds;
-/// exit signals become sells of the whole position, warnings are listed. A newer review of the same code supersedes an open older one.
-/// The strategies think in the background (<see cref="ReportRequest"/>): <see cref="StrategyRequestsAsync"/> says what
-/// to ask them (only sub-portfolios that hold something), <see cref="Handle"/> makes the report from their answers.
-/// </summary>
 public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepository reports, SaleTaxes taxes, TimeProvider clock)
 {
     public async Task<Result<IReadOnlyDictionary<Guid, EvaluateStrategyRequest>>> StrategyRequestsAsync(
         GenerateRiskReviewCommand command, CancellationToken cancellationToken)
     {
         var asOf = command.AsOf ?? DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
+
         if (await inputs.AccountAsync(command.AccountId, cancellationToken) is not { } account)
             return Error.NotFound("account.not_found", $"Account {command.AccountId} does not exist.");
+
         var planned = PlannedOf(account, command);
         if (planned.Count == 0)
             return ReportErrors.NoActiveSubPortfolios(account.Id);
 
         var snapshots = (await inputs.HoldingsAsync(account, cancellationToken)).SubPortfolios.ToDictionary(sub => sub.SubPortfolioId);
+
         return planned
             .Where(sub => snapshots.GetValueOrDefault(sub.Id) is { Positions.Count: > 0 })
             .ToDictionary(sub => sub.Id, sub => new EvaluateStrategyRequest(
                 sub.StrategyId!.Value, sub.PinnedStrategyVersion, PlanningInputs.StateOf(account, snapshots[sub.Id]), 0m, asOf, sub.CashInstrumentId));
     }
 
-    /// <param name="assessments">The strategies' answers by sub-portfolio; one missing is a strategy that did not answer.</param>
-    /// <param name="request">Completed with the report, in the same save.</param>
     public async Task<Result<ReportId>> Handle(
         GenerateRiskReviewCommand command, IReadOnlyDictionary<Guid, StrategyEvaluationResult<RiskAssessmentDto>> assessments,
         ReportRequest request, CancellationToken cancellationToken)
@@ -46,9 +37,11 @@ public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepo
 
         if (await inputs.AccountAsync(command.AccountId, cancellationToken) is not { } account)
             return Error.NotFound("account.not_found", $"Account {command.AccountId} does not exist.");
+
         var planned = PlannedOf(account, command);
         if (planned.Count == 0)
             return ReportErrors.NoActiveSubPortfolios(account.Id);
+
         var code = command.Scope?.Code ?? ReportDefaults.CodeOf(ReportKind.RiskReview);
         var title = command.Scope?.Title ?? ReportDefaults.TitleOf(ReportKind.RiskReview);
 
@@ -62,7 +55,12 @@ public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepo
         var warnings = new List<string>();
         var prices = await inputs.PricesAsync(heldIds, asOf, account.BaseCurrency, warnings, cancellationToken);
         warnings.InsertRange(0, PlanningInputs.PriceWarnings(heldIds, prices, labels));
+
+        if (request.Cause is { } cause)
+            warnings.Insert(0, cause);
+
         var outcomes = new List<SubPortfolioOutcome>();
+
         foreach (var sub in planned)
         {
             var snapshot = snapshots.GetValueOrDefault(sub.Id);
@@ -80,6 +78,7 @@ public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepo
             var assessment = result.Value!;
             var orders = new List<PlannedOrder>();
             var notes = new List<string>();
+
             foreach (var signal in assessment.Signals)
             {
                 var position = snapshot.Positions.FirstOrDefault(each => each.InstrumentId == signal.InstrumentId);
@@ -114,14 +113,14 @@ public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepo
         var report = RebalancingReport.Generate(draft, now);
         await taxes.EstimateAsync(report, asOf, cancellationToken);
         reports.Add(report);
+
         foreach (var open in (await reports.OpenAsync(account.Id, cancellationToken)).Where(each => each.Kind == ReportKind.RiskReview && each.Code == code))
-        {
             open.SupersedeBy(report.Id, now);
-            reports.Publish(new ReportSupersededV1(open.Id.Value, open.AccountId, report.Id.Value, now), now);
-        }
-        reports.Publish(report.ToGeneratedEvent(request.RequestedAt), now);
+
+        report.Generated(request.RequestedAt, now);
         request.Complete(report.Id, now);
         await reports.SaveChangesAsync(cancellationToken);
+
         return report.Id;
     }
 

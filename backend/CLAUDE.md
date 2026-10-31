@@ -22,7 +22,7 @@ Tests are xunit v3 on Microsoft.Testing.Platform with Shouldly (`dotnet test --p
 - `src/BuildingBlocks/` — `SharedKernel` (Result/Error, value objects, `YearMonth`…; no frameworks) and `BuildingBlocks`
   (messaging/outbox, persistence, `IScheduledJob` scheduling, `IModule`).
 - `src/Modules/<Module>/` — `InvestmentLab.<Module>` and `InvestmentLab.<Module>.Contracts`. Modules: Identity,
-  Portfolio, MarketData, Strategies, Rebalancing, Performance, Taxation, Notifications.
+  Portfolio, MarketData, Strategies, Rebalancing, Performance, Taxation, Signals, Notifications.
 - Inside a module: feature folders (`Planning/`, `Reports/`…) each with `Domain/`, `Application/`, `Infrastructure/`,
   `Api/`; module-wide pieces in `Shared/`; registration in `<Module>Module.cs`.
 
@@ -32,7 +32,8 @@ Tests are xunit v3 on Microsoft.Testing.Platform with Shouldly (`dotnet test --p
   interfaces implemented inside the owning module. Contracts hold primitives only and reference nothing of ours.
 - `Domain` depends only on `SharedKernel`; no EF Core / ASP.NET there.
 - Each module has its own `DbContext` and schema; integration events go out through the outbox in the same save
-  (`repository.Publish(event, now)` then `SaveChangesAsync`).
+  (ADR-0007): the aggregate raises a domain event, a mapper registered by the module turns it into an integration event
+  (`AddDomainEventMapper`). Repositories do not publish.
 
 ## Conventions
 

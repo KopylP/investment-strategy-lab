@@ -26,6 +26,8 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using InvestmentLab.Strategies.Definitions.Application.Integration;
+using InvestmentLab.Strategies.Definitions.Domain;
 
 namespace InvestmentLab.Strategies;
 
@@ -38,6 +40,8 @@ public sealed class StrategiesModule : IModule
     public void AddServices(IHostApplicationBuilder builder)
     {
         builder.AddModuleDbContext<StrategiesDbContext>(Schema);
+
+        builder.Services.AddDomainEventMapper<StrategyReconfigured, StrategyReconfiguredV1, StrategyReconfiguredMapper>();
 
         var services = builder.Services;
         var engineUrl = builder.Configuration["Strategies:StrategyEngineUrl"] ?? StrategyEngineClient.DefaultBaseAddress;

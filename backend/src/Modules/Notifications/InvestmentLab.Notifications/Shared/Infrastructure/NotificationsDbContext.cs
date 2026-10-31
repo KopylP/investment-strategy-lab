@@ -19,15 +19,3 @@ public sealed class NotificationsDbContext(DbContextOptions<NotificationsDbConte
     protected override void OnModuleModelCreating(ModelBuilder modelBuilder) =>
         modelBuilder.ApplyConfiguration(new NotificationPreferencesConfiguration(this));
 }
-
-internal sealed class NotificationsDesignTimeDbContextFactory : ModuleDesignTimeDbContextFactory<NotificationsDbContext>
-{
-    protected override string Schema => NotificationsDbContext.SchemaName;
-
-    protected override NotificationsDbContext Create(DbContextOptions<NotificationsDbContext> options) => new(options, new NoUser());
-
-    private sealed class NoUser : ICurrentUser
-    {
-        public UserId? Id => null;
-    }
-}

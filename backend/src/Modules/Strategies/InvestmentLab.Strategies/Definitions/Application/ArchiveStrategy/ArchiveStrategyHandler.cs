@@ -11,6 +11,7 @@ public sealed class ArchiveStrategyHandler(IStrategyRepository strategies)
 
         strategy.Archive();
         await strategies.SaveChangesAsync(cancellationToken);
+
         return Result.Success();
     }
 }

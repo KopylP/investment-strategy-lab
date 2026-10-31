@@ -25,7 +25,7 @@ internal sealed class InstrumentConfiguration : IEntityTypeConfiguration<Instrum
             symbols.WithOwner().HasForeignKey("InstrumentId");
             symbols.Property(s => s.Provider).HasConversion(provider => provider.Code, code => QuoteProvider.Of(code)).HasMaxLength(30);
             symbols.Property(s => s.Symbol).HasMaxLength(50);
-            // One symbol per provider and instrument; a symbol names exactly one instrument.
+
             symbols.HasKey("InstrumentId", nameof(ProviderSymbol.Provider));
             symbols.HasIndex(s => new { s.Provider, s.Symbol }).IsUnique();
         });

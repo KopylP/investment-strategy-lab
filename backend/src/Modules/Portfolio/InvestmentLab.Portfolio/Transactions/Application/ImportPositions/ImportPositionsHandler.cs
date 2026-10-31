@@ -4,21 +4,8 @@ using InvestmentLab.Portfolio.Transactions.Domain;
 
 namespace InvestmentLab.Portfolio.Transactions.Application.ImportPositions;
 
-/// <summary>One position of the legacy <c>positions.json</c>.</summary>
-/// <param name="Ticker">Yahoo symbol, e.g. <c>NQSE.DE</c>.</param>
-/// <param name="EntryDate">Null: bought before dates were tracked; the import date is used.</param>
-public sealed record LegacyPosition(string Ticker, decimal EntryPrice, decimal Shares, DateOnly? EntryDate, string Currency);
-
-/// <param name="AsOf">Date for positions without an entry date. Null: today.</param>
 public sealed record ImportPositionsCommand(Guid SubPortfolioId, decimal Cash, IReadOnlyList<LegacyPosition> Positions, DateOnly? AsOf = null);
 
-/// <param name="Skipped">Entries already imported earlier (the import can be run again safely).</param>
-public sealed record ImportReport(int Recorded, int Skipped, IReadOnlyList<string> Warnings);
-
-/// <summary>
-/// One-off migration of a sub-portfolio from <c>positions.json</c>: a contribution paying for everything,
-/// then one buy per position at its entry price. Entries carry <c>import:</c> references, so a repeated import changes nothing.
-/// </summary>
 public sealed class ImportPositionsHandler(TransactionRecorder recorder, IInstrumentCatalog catalog, TimeProvider clock)
 {
     private const string YahooProvider = "yfinance";
@@ -45,6 +32,7 @@ public sealed class ImportPositionsHandler(TransactionRecorder recorder, IInstru
                 var total = buys.Aggregate(Money.Of(command.Cash, currency),
                     (sum, buy) => sum + Price.Of(buy.Position.EntryPrice, currency).TotalFor(Quantity.Of(buy.Position.Shares)));
                 var paidOn = buys.Count > 0 ? buys.Min(buy => buy.Date) : importDate;
+
                 return total.Amount <= 0m
                     ? TransactionErrors.AmountNotPositive()
                     : Transaction.CashMovement(context.Account, CashMovementKind.Contribution, total, [new CashAllocation(subPortfolioId, total)], null,
@@ -60,6 +48,7 @@ public sealed class ImportPositionsHandler(TransactionRecorder recorder, IInstru
                 var currency = Currency.TryOf(position.Currency);
                 if (currency.IsFailure)
                     return currency.Error;
+
                 var price = Price.TryOf(position.EntryPrice, currency.Value);
                 var quantity = Quantity.TryOf(position.Shares);
                 if (price.IsFailure || quantity.IsFailure)
@@ -68,10 +57,12 @@ public sealed class ImportPositionsHandler(TransactionRecorder recorder, IInstru
                 return Transaction.Trade(context.Account, TradeSide.Buy, instruments.Value[position.Ticker], quantity.Value, price.Value,
                     Money.Zero(currency.Value), [new Allocation(subPortfolioId, quantity.Value)], date, source, context.Now);
             }
+
             entries.Add((source.Reference!, Buy));
         }
 
         var (recorded, skipped, warnings) = (0, 0, new List<string>());
+
         foreach (var (_, create) in entries)
         {
             var result = await recorder.RecordAsync(accountId, create, cancellationToken);
@@ -92,6 +83,7 @@ public sealed class ImportPositionsHandler(TransactionRecorder recorder, IInstru
     private async Task<Result<IReadOnlyDictionary<string, Guid>>> ResolveInstrumentsAsync(IReadOnlyList<LegacyPosition> positions, CancellationToken cancellationToken)
     {
         var bySymbol = new Dictionary<string, Guid>(StringComparer.OrdinalIgnoreCase);
+
         foreach (var instrument in await catalog.GetInstruments(cancellationToken))
         {
             foreach (var symbol in instrument.ProviderSymbols.Where(symbol => symbol.StartsWith($"{YahooProvider}:", StringComparison.Ordinal)))
@@ -101,6 +93,7 @@ public sealed class ImportPositionsHandler(TransactionRecorder recorder, IInstru
         var unknown = positions.Select(position => position.Ticker).Where(ticker => !bySymbol.ContainsKey(ticker)).ToList();
         if (unknown.Count > 0)
             return Error.Validation("import.unknown_tickers", $"No instrument has the Yahoo symbol {string.Join(", ", unknown)}.");
+
         if (positions.GroupBy(position => position.Ticker, StringComparer.OrdinalIgnoreCase).Any(group => group.Count() > 1))
             return Error.Validation("import.ticker_repeated", "Each ticker may appear only once.");
 

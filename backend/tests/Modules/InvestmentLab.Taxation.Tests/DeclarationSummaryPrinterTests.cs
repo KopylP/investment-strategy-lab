@@ -21,6 +21,7 @@ public sealed class DeclarationSummaryPrinterTests
     private static string Text(byte[] pdf)
     {
         using var document = PdfDocument.Open(pdf);
+
         return string.Join("\n", document.GetPages().Select(page => ContentOrderTextExtractor.GetText(page)));
     }
 
@@ -29,27 +30,31 @@ public sealed class DeclarationSummaryPrinterTests
     {
         var declaration = Declaration();
         var pdf = new DeclarationSummaryPrinter().Print(declaration);
+
         if (Environment.GetEnvironmentVariable("PIT38_SUMMARY_SAMPLE") is { Length: > 0 } sample)
             File.WriteAllBytes(sample, pdf);
+
         var text = Text(pdf);
 
         text.ShouldContain("PIT-38 за 2025");
-        text.ShouldContain("418 zł");                          // poz. 51: 378 + 40
+        text.ShouldContain("418 zł");
+
         foreach (var (position, value) in new[] { (20, "12000"), (21, "11500,50"), (22, "8385"), (23, "6895,05"), (26, "20385"), (27, "18395,55"), (28, "1989,45"),
                      (31, "1989"), (33, "377,91"), (35, "378"), (47, "190,50"), (48, "150,25"), (49, "40"), (51, "418"), (29, "1489,95") })
         {
             text.ShouldContain($"poz. {position}");
             text.ShouldContain(value);
         }
-        text.ShouldNotContain("poz. 24");                       // zeros stay out: an empty box is 0
+
+        text.ShouldNotContain("poz. 24");
         text.ShouldNotContain("poz. 46");
         text.ShouldContain("рахує форма");
-        text.ShouldContain("Stany Zjednoczone Ameryki");       // PIT/ZG
+        text.ShouldContain("Stany Zjednoczone Ameryki");
         text.ShouldContain("Дивіденди з-за кордону брутто");
         text.ShouldContain("1002,63");
         text.ShouldContain("Перед поданням");
-        text.ShouldContain("PIT-8C");                          // XTB without its PIT-8C amounts yet
-        text.ShouldNotContain("art. 11a");                     // explanations are left for the app
+        text.ShouldContain("PIT-8C");
+        text.ShouldNotContain("art. 11a");
     }
 
     [Fact]

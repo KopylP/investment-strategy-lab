@@ -2,10 +2,6 @@ using InvestmentLab.Portfolio.Accounts.Domain;
 
 namespace InvestmentLab.Portfolio.Transactions.Domain;
 
-/// <summary>
-/// An immutable entry of the account journal. Mistakes are undone with <see cref="Reverse"/>,
-/// which records a new entry; the original stays as it was.
-/// </summary>
 public sealed class Transaction : AggregateRoot<TransactionId>
 {
     public AccountId AccountId { get; private set; }
@@ -31,7 +27,6 @@ public sealed class Transaction : AggregateRoot<TransactionId>
         RecordedAt = recordedAt;
     }
 
-    // EF Core.
     private Transaction(TransactionId id) : base(id) => (Source, Details) = (null!, null!);
 
     public static Result<Transaction> Trade(
@@ -40,14 +35,19 @@ public sealed class Transaction : AggregateRoot<TransactionId>
     {
         if (instrumentId == Guid.Empty)
             return TransactionErrors.InstrumentRequired();
+
         if (quantity.IsNone || allocations.Any(a => a.Quantity.IsNone))
             return TransactionErrors.QuantityNotPositive();
+
         if ((CheckCurrency(account, price.Currency) ?? CheckCurrency(account, fee.Currency)) is { } currency)
             return currency;
+
         if (fee.Amount < 0m)
             return TransactionErrors.FeeNegative();
+
         if (CheckSettlement(account, settlement) is { } settlementError)
             return settlementError;
+
         if (CheckSubPortfolios(account, allocations.Select(a => a.SubPortfolioId)) is { } unknown)
             return unknown;
 
@@ -56,6 +56,7 @@ public sealed class Transaction : AggregateRoot<TransactionId>
             return TransactionErrors.AllocationsDoNotAddUp(allocated, quantity.Value);
 
         var kind = side == TradeSide.Buy ? TransactionKind.Buy : TransactionKind.Sell;
+
         return new Transaction(TransactionId.New(), account, kind, executedOn, source,
             new TradeDetails(instrumentId, side, quantity, price, fee, allocations, settlement), recordedAt);
     }
@@ -66,10 +67,13 @@ public sealed class Transaction : AggregateRoot<TransactionId>
     {
         if (CheckCurrency(account, amount.Currency) is { } currency)
             return currency;
+
         if (CheckSettlement(account, settlement) is { } settlementError)
             return settlementError;
+
         if (amount.Amount <= 0m || allocations.Any(a => a.Amount.Amount <= 0m))
             return TransactionErrors.AmountNotPositive();
+
         if (CheckSubPortfolios(account, allocations.Select(a => a.SubPortfolioId)) is { } unknown)
             return unknown;
 
@@ -87,6 +91,7 @@ public sealed class Transaction : AggregateRoot<TransactionId>
     {
         if (from == to)
             return TransactionErrors.TransferToItself();
+
         if (CheckSubPortfolios(account, [from, to]) is { } unknown)
             return unknown;
 
@@ -94,6 +99,7 @@ public sealed class Transaction : AggregateRoot<TransactionId>
         var movesCash = instrumentId is null && quantity is null && amount is { Amount: > 0m };
         if (!movesUnits && !movesCash)
             return TransactionErrors.TransferNeedsInstrumentOrCash();
+
         if (amount is not null && CheckCurrency(account, amount.Currency) is { } currency)
             return currency;
 
@@ -101,17 +107,23 @@ public sealed class Transaction : AggregateRoot<TransactionId>
             new InternalTransferDetails(from, to, instrumentId, quantity, amount), recordedAt);
     }
 
-    /// <summary>Undoes this entry with a new one; holdings are then computed as if this entry never happened.</summary>
     public Result<Transaction> Reverse(InvestmentAccount account, string reason, DateOnly reversedOn, TransactionSource source, DateTimeOffset recordedAt)
     {
         if (Kind == TransactionKind.Reversal)
             return TransactionErrors.CannotReverseReversal();
+
         if (string.IsNullOrWhiteSpace(reason))
             return TransactionErrors.ReasonRequired();
 
         return new Transaction(TransactionId.New(), account, TransactionKind.Reversal, reversedOn, source,
             new ReversalDetails(Id, reason.Trim()), recordedAt);
     }
+
+    public void Recorded(Currency accountCurrency, DateTimeOffset now) =>
+        Raise(new TransactionRecorded(this, accountCurrency, now));
+
+    public void Reversed(Transaction original, DateTimeOffset now) =>
+        Raise(new TransactionReversed(this, original, now));
 
     private static TransactionKind ToKind(CashMovementKind kind) => kind switch
     {
@@ -126,7 +138,6 @@ public sealed class Transaction : AggregateRoot<TransactionId>
     private static Error? CheckCurrency(InvestmentAccount account, Currency currency) =>
         currency == account.BaseCurrency ? null : TransactionErrors.CurrencyMismatch(account.BaseCurrency, currency);
 
-    /// <summary>A settlement is in a foreign currency (else it is just the amount) and above zero.</summary>
     private static Error? CheckSettlement(InvestmentAccount account, Money? settlement) => settlement switch
     {
         null => null,

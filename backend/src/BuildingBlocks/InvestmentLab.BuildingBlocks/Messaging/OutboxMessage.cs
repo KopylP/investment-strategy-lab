@@ -1,6 +1,5 @@
 namespace InvestmentLab.BuildingBlocks.Messaging;
 
-/// <summary>An integration event saved in the same transaction as the change that raised it.</summary>
 public sealed class OutboxMessage
 {
     public const int MaxAttempts = 10;
@@ -9,7 +8,6 @@ public sealed class OutboxMessage
 
     public Guid Id { get; private set; }
 
-    /// <summary>Full CLR name of the event contract; handlers are found by it.</summary>
     public string Type { get; private set; } = "";
 
     public string Payload { get; private set; } = "";
@@ -25,7 +23,6 @@ public sealed class OutboxMessage
     public static OutboxMessage For(string type, string payload, DateTimeOffset occurredAt) =>
         new() { Id = Guid.CreateVersion7(), Type = type, Payload = payload, OccurredAt = occurredAt.ToUniversalTime() };
 
-    // Npgsql writes timestamptz only from UTC offsets.
     public void MarkProcessed(DateTimeOffset processedAt) => ProcessedAt = processedAt.ToUniversalTime();
 
     public void RecordFailure(string error)

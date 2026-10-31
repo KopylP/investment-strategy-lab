@@ -1,9 +1,5 @@
 namespace InvestmentLab.Rebalancing.Planning.Domain;
 
-/// <summary>
-/// How orders are cut from targets: orders below <see cref="MinTrade"/> are skipped, a winner is trimmed only when it is
-/// more than <see cref="TrimBand"/> of the portfolio over its target, whole shares unless fractional ones are allowed.
-/// </summary>
 public sealed record RebalancingPolicy
 {
     public static readonly decimal DefaultMinTrade = 25m;
@@ -25,8 +21,10 @@ public sealed record RebalancingPolicy
     {
         if (minTrade < 0m)
             return Error.Validation("rebalancing.min_trade_negative", $"Minimum trade {minTrade} cannot be negative.");
+
         if (Percentage.TryOf(trimBand) is not { IsSuccess: true } band)
             return Error.Validation("rebalancing.trim_band_out_of_range", $"Trim band {trimBand} must be between 0 and 1.");
+
         return new RebalancingPolicy(minTrade, band.Value, allowFractionalShares);
     }
 }

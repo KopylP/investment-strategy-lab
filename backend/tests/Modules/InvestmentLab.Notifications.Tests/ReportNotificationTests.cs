@@ -7,7 +7,6 @@ public sealed class ReportNotificationTests
 {
     private static readonly DateTimeOffset Generated = new(2026, 10, 23, 18, 0, 0, TimeSpan.Zero);
 
-    /// <param name="thought">How long the strategies thought; null — the event does not say (stored before it did).</param>
     private static ReportGeneratedV1 Report(string kind = "Monthly", string? trigger = "Scheduled", int actions = 3, TimeSpan? thought = null) =>
         new(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "2026-10", kind, new DateOnly(2026, 10, 23), "PLN", Generated,
             [.. Enumerable.Range(0, actions).Select(_ => new PlannedActionDto(Guid.NewGuid(), "Buy", Guid.NewGuid(), 1m, 10m, 10m, [], null))],
@@ -32,7 +31,7 @@ public sealed class ReportNotificationTests
 
     [Theory]
     [InlineData("OnDemand", "Monthly", 3)]
-    [InlineData(null, "Monthly", 3)]          // stored before the event carried its trigger
+    [InlineData(null, "Monthly", 3)]
     [InlineData("Scheduled", "RiskReview", 0)]
     public void Reports_the_user_asked_for_and_risk_reviews_without_actions_are_not_announced(string? trigger, string kind, int actions) =>
         ReportNotification.For(Report(kind, trigger, actions)).ShouldBeNull();

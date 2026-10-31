@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Hosting;
 
 namespace InvestmentLab.IntegrationTests.Identity;
 
-/// <summary>The add-on as deployed: only the Supervisor, on the ingress port, gets an answer.</summary>
 public sealed class IngressOnlyApiFactory : HomeAssistantApiFactory
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -17,13 +16,14 @@ public sealed class IngressOnlyApiFactory : HomeAssistantApiFactory
 public sealed class IngressOnlyTests(IngressOnlyApiFactory factory) : IClassFixture<IngressOnlyApiFactory>
 {
     [Theory]
-    [InlineData(null)]                // no Supervisor in front at all
-    [InlineData("172.30.32.5:8098")]  // another add-on on the Supervisor's network
-    [InlineData("172.30.32.2:8099")]  // not the ingress port
+    [InlineData(null)]
+    [InlineData("172.30.32.5:8098")]
+    [InlineData("172.30.32.2:8099")]
     public async Task Anyone_but_the_supervisor_gets_nothing_not_even_the_login(string? peer)
     {
         var ct = TestContext.Current.CancellationToken;
         var client = factory.CreateClient();
+
         if (peer is not null)
             client.DefaultRequestHeaders.Add(HomeAssistantApiFactory.PeerHeader, peer);
 

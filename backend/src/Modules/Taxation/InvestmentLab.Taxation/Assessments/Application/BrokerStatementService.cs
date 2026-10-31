@@ -2,16 +2,6 @@ using InvestmentLab.Taxation.BrokerStatements.Domain;
 
 namespace InvestmentLab.Taxation.Assessments.Application;
 
-/// <param name="From">First day with a sale or a dividend in the report.</param>
-public sealed record BrokerStatementDto(Guid Id, string Broker, string FileName, DateTimeOffset UploadedAt, DateOnly From, DateOnly To, int Sales, int Dividends,
-    IReadOnlyList<string> Warnings);
-
-/// <summary>The uploads, and how many of their sales and dividends found their entry in the journal (all uploads together).</summary>
-public sealed record BrokerStatementsDto(IReadOnlyList<BrokerStatementDto> Statements, int Sales, int MatchedSales, int Dividends, int MatchedDividends);
-
-public sealed record UploadBrokerStatementCommand(string FileName, string ContentBase64);
-
-/// <summary>Upload, list and remove broker tax reports; every change recomputes the account's tax.</summary>
 public sealed class BrokerStatementService(
     IBrokerStatementRepository statements, IBrokerStatementParser parser, TaxInputs inputs, TaxRecalculator recalculator, TimeProvider clock)
 {
@@ -23,6 +13,7 @@ public sealed class BrokerStatementService(
         var uploaded = await statements.ForAccountAsync(accountId, cancellationToken);
         var (lots, dividends) = BrokerStatement.Combine(uploaded);
         var events = uploaded.Count > 0 ? (await inputs.EventsAsync(account, cancellationToken)).Events : [];
+
         return new BrokerStatementsDto(
             [.. uploaded.OrderByDescending(statement => statement.UploadedAt).Select(ToDto)],
             lots.Select(lot => (lot.SoldOn, lot.Isin)).Distinct().Count(),
@@ -37,6 +28,7 @@ public sealed class BrokerStatementService(
             return Error.NotFound("account.not_found", $"Account {accountId} does not exist.");
 
         byte[] content;
+
         try
         {
             content = Convert.FromBase64String(command.ContentBase64);
@@ -49,6 +41,7 @@ public sealed class BrokerStatementService(
         var parsed = parser.Parse(content);
         if (parsed.IsFailure)
             return parsed.Error;
+
         var statement = BrokerStatement.Upload(accountId, account.OwnerId, command.FileName, parsed.Value, clock.GetUtcNow());
         if (statement.IsFailure)
             return statement.Error;
@@ -56,6 +49,7 @@ public sealed class BrokerStatementService(
         statements.Add(statement.Value);
         await statements.SaveChangesAsync(cancellationToken);
         await recalculator.RecomputeAsync(accountId, cancellationToken);
+
         return await List(accountId, cancellationToken);
     }
 
@@ -63,9 +57,11 @@ public sealed class BrokerStatementService(
     {
         if ((await statements.ForAccountAsync(accountId, cancellationToken)).FirstOrDefault(statement => statement.Id == statementId) is not { } statement)
             return BrokerStatementErrors.NotFound(statementId);
+
         statements.Remove(statement);
         await statements.SaveChangesAsync(cancellationToken);
         await recalculator.RecomputeAsync(accountId, cancellationToken);
+
         return Result.Success();
     }
 

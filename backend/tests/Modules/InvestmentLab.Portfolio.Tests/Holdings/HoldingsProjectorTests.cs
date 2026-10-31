@@ -117,7 +117,6 @@ public sealed class HoldingsProjectorTests
     [Fact]
     public void Entries_settled_in_dollars_move_the_dollar_balance_and_leave_euro_cash_alone()
     {
-        // The Revolut shape: USD top-up → buy from it → sell into it → withdraw part. Amounts in EUR are that day's rate.
         static Money Usd(decimal amount) => Money.Of(amount, Currency.USD);
         var account = _p.Account;
         _p.Add(Transaction.CashMovement(account, CashMovementKind.Contribution, PortfolioFixture.Eur(69.57m), [new CashAllocation(_p.A, PortfolioFixture.Eur(69.57m))],
@@ -130,7 +129,7 @@ public sealed class HoldingsProjectorTests
             null, PortfolioFixture.Day(25), TransactionSource.Manual, DateTimeOffset.UnixEpoch.AddDays(4), settlement: Usd(79.74m)));
 
         var a = Project().For(_p.A)!;
-        a.Cash.Amount.ShouldBe(0m);                                   // not the 1.47 € a single-currency replay would leave
+        a.Cash.Amount.ShouldBe(0m);
         a.ForeignCash.ShouldHaveSingleItem().ShouldBe(Money.Of(0.30m, Currency.USD));
         a.Lines.ShouldBeEmpty();
     }

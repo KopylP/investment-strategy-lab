@@ -10,6 +10,7 @@ internal sealed class StrategyDirectory(IStrategyRepository strategies, CatalogS
     public async Task<IReadOnlyList<StrategySummaryDto>> GetStrategies(CancellationToken cancellationToken)
     {
         var types = (await catalog.ListAsync(cancellationToken)).ToDictionary(type => type.Code);
+
         return [.. (await strategies.ListAsync(cancellationToken)).Select(strategy => new StrategySummaryDto(
             strategy.Id.Value, strategy.Name, strategy.TypeCode, strategy.Latest.Number, strategy.Latest.Universe, strategy.Latest.CashInstrumentId,
             [.. (types.GetValueOrDefault(strategy.TypeCode)?.Reports ?? []).Select(report => new StrategyReportDto(

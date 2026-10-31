@@ -14,12 +14,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace InvestmentLab.IntegrationTests.Rebalancing;
 
-/// <summary>
-/// Stage 5 end to end (§7.2): monthly report from the real strategies → contribution marked → a buy partly filled →
-/// the journal and holdings follow → undoing the mark takes the entry back → a new report supersedes the open one
-/// and does not plan the contribution again. Reports are asked for (202) and published once the strategies, run as
-/// background jobs of the engine, have answered.
-/// </summary>
 public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactory>
 {
     private readonly StrategiesApiFactory _factory;
@@ -53,29 +47,26 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
         (await client.PutAsJsonAsync($"/api/rebalancing/accounts/{account.Id}/settings",
             new { monthlyContribution = 1000m, minTrade = 25m, trimBand = 0.1m, allowFractionalShares = true }, ct)).EnsureSuccessStatusCode();
 
-        // 1. The monthly report: contribution first, then buys for both sleeves.
         var asOf = SyntheticQuoteProvider.LastDay;
         var report = await ReportAsync(client, await RequestReportAsync(client, account.Id, new { asOf }, ct), ct);
         report.Summary.Status.ShouldBe("New");
         report.Summary.Trigger.ShouldBe("OnDemand");
         (report.Summary.Code, report.Summary.Title).ShouldBe(("rebalance", "Ребаланс"));
 
-        // The reports the strategies declare: the schedule lists them, and each one is made by its code.
         var schedule = (await client.GetFromJsonAsync<ReportScheduleDto>($"/api/rebalancing/accounts/{account.Id}/report-schedule", ct))!;
         schedule.Reports.Select(each => (each.Code, each.Mode, each.Schedule.Frequency, each.Schedule.Day, each.Schedule.Weekday, each.Schedule.Time, each.Own)).Distinct()
             .ShouldBe([("rebalance", "rebalance", "Monthly", 1, "Sunday", "20:00", false), ("risk-review", "riskReview", "Weekly", 1, "Sunday", "19:00", false)]);
 
-        // The user decides when: the rebalance on the 10th (payday) at 09:00 for this account, then back to the strategy's time.
         var payday = await client.PutAsJsonAsync($"/api/rebalancing/accounts/{account.Id}/report-schedule/rebalance", new { frequency = "monthly", day = 10, time = "09:00" }, ct);
         payday.StatusCode.ShouldBe(HttpStatusCode.OK);
         var own = (await payday.Content.ReadFromJsonAsync<ReportScheduleDto>(ct))!.Reports.Single(each => each.Code == "rebalance");
         (own.Own, own.Schedule.Day, own.Schedule.Time, own.StrategySchedule.Day, own.Next![8..]).ShouldBe((true, 10, "09:00", 1, "10T09:00"));
         await using (var scope = _factory.Services.CreateAsyncScope())
         {
-            // What a notification about a rebalance report says comes next.
             var next = await scope.ServiceProvider.GetRequiredService<IReportScheduleQueries>().NextAsync(account.Id, "rebalance", ct);
             (next?.ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture)).ShouldBe(own.Next);
         }
+
         (await client.PutAsJsonAsync($"/api/rebalancing/accounts/{account.Id}/report-schedule/rebalance", new { frequency = "monthly", day = 32, time = "09:00" }, ct))
             .StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         (await client.PutAsJsonAsync($"/api/rebalancing/accounts/{account.Id}/report-schedule/weekly-digest", new { frequency = "off" }, ct))
@@ -96,11 +87,9 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
         var buy = report.Actions.First(action => action.Kind == "Buy");
         report.Actions.Where(action => action.Kind is "Buy" or "Park").Sum(action => action.PlannedAmount).ShouldBe(1000m, 0.05m);
 
-        // 2. Contribution marked as paid in → cash in the journal.
         (await client.PostAsJsonAsync($"/api/rebalancing/reports/{report.Summary.Id}/actions/{contribute.Id}/fills", new { }, ct)).EnsureSuccessStatusCode();
         await EventuallyAsync(async () => (await HoldingsAsync(client, account.Id, ct)).SubPortfolios.Sum(sub => sub.Cash) == 1000m, ct);
 
-        // 3. Half of a buy filled at a slightly better price → a position in the right sleeve.
         var half = decimal.Round(buy.PlannedQuantity / 2m, 4);
         (await client.PostAsJsonAsync($"/api/rebalancing/reports/{report.Summary.Id}/actions/{buy.Id}/partial-fills",
             new { quantity = half, price = buy.PlannedPrice * 0.99m, fee = 1m }, ct)).EnsureSuccessStatusCode();
@@ -113,25 +102,21 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
         var sleeve = buy.Allocations.Single().SubPortfolioId;
         holdings.SubPortfolios.Single(sub => sub.SubPortfolioId == sleeve).Positions.Single(p => p.InstrumentId == buy.InstrumentId).Quantity.ShouldBe(half);
 
-        // 4. Undo the mark → the journal entry is reversed, the action is pending again.
         (await client.PostAsync($"/api/rebalancing/reports/{report.Summary.Id}/actions/{buy.Id}/undo", null, ct)).EnsureSuccessStatusCode();
         await EventuallyAsync(async () => (await HoldingsAsync(client, account.Id, ct)).SubPortfolios.All(sub => sub.Positions.Count == 0), ct);
         (await ReportAsync(client, report.Summary.Id, ct)).Actions.First(action => action.Id == buy.Id).Status.ShouldBe("Pending");
 
-        // 5. "Generate again" supersedes the open report and does not plan the paid contribution twice.
         var again = await RequestReportAsync(client, account.Id, new { asOf }, ct);
         (await ReportAsync(client, report.Summary.Id, ct)).Summary.Status.ShouldBe("Superseded");
         var replacement = await ReportAsync(client, again, ct);
         replacement.Actions.ShouldNotContain(action => action.Kind == "Contribute");
         replacement.Actions.Where(action => action.Kind is "Buy" or "Park").Sum(action => action.PlannedAmount).ShouldBe(1000m, 0.05m);
 
-        // 6. Another user sees nothing of it.
         var stranger = await _factory.CreateSignedInClientAsync(ct);
         (await stranger.GetAsync($"/api/rebalancing/reports/{again}", ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await stranger.GetFromJsonAsync<List<ReportRequestDto>>("/api/rebalancing/report-requests", ct))!.ShouldBeEmpty();
     }
 
-    /// <summary>Asks for a report (202, «Готується»), waits until its strategies have answered and returns the report.</summary>
     private static async Task<Guid> RequestReportAsync(HttpClient client, Guid accountId, object body, CancellationToken ct)
     {
         var response = await client.PostAsJsonAsync($"/api/rebalancing/accounts/{accountId}/reports", body, ct);
@@ -145,10 +130,12 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
         await EventuallyAsync(async () =>
         {
             request = await client.GetFromJsonAsync<ReportRequestDto>($"/api/rebalancing/report-requests/{requested.RequestId}", ct);
+
             return request!.Status != "Pending";
         }, ct);
         request!.Status.ShouldBe("Completed", request.Error);
         request.StrategiesAnswered.ShouldBe(request.Strategies);
+
         return request.ReportId!.Value;
     }
 
@@ -158,14 +145,15 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
     private static async Task<AccountHoldingsDto> HoldingsAsync(HttpClient client, Guid accountId, CancellationToken ct) =>
         (await client.GetFromJsonAsync<AccountHoldingsDto>($"/api/portfolio/accounts/{accountId}/holdings", ct))!;
 
-    /// <summary>Waits for the outbox: commands and their answers travel asynchronously.</summary>
     private static async Task EventuallyAsync(Func<Task<bool>> condition, CancellationToken ct)
     {
         var deadline = DateTime.UtcNow.AddSeconds(30);
+
         while (!await condition())
         {
             if (DateTime.UtcNow > deadline)
                 throw new TimeoutException("The condition did not become true within 30 seconds.");
+
             await Task.Delay(250, ct);
         }
     }
@@ -174,6 +162,7 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
     {
         var response = await client.PostAsJsonAsync(url, body, ct);
         response.StatusCode.ShouldBe(HttpStatusCode.OK, await response.Content.ReadAsStringAsync(ct));
+
         return (await response.Content.ReadFromJsonAsync<T>(ct))!;
     }
 }

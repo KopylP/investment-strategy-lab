@@ -4,7 +4,6 @@ using InvestmentLab.Strategies.Definitions.Domain;
 
 namespace InvestmentLab.Strategies.Definitions.Application.CreateDefaultStrategies;
 
-/// <summary>Gives the user the EU and US momentum strategies of the Python flow; ones they already have (by name) are skipped.</summary>
 public sealed class CreateDefaultStrategiesHandler(
     IDefaultStrategies defaults, IInstrumentCatalog instruments, CreateStrategyHandler create, IStrategyRepository strategies)
 {
@@ -19,6 +18,7 @@ public sealed class CreateDefaultStrategiesHandler(
             .ToDictionary(pair => pair.Symbol, pair => pair.Id);
 
         var created = new List<StrategyDto>();
+
         foreach (var strategy in defaults.Load())
         {
             if (await strategies.NameTakenAsync(ownerId, strategy.Name, cancellationToken))
@@ -37,6 +37,7 @@ public sealed class CreateDefaultStrategiesHandler(
                 strategy.Parameters)), cancellationToken);
             if (result.IsFailure)
                 return result.Error;
+
             created.Add(result.Value);
         }
 

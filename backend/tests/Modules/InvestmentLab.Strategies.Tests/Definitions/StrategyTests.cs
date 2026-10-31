@@ -10,7 +10,6 @@ public sealed class StrategyTests
     private static readonly DateTimeOffset Now = new(2026, 10, 25, 10, 0, 0, TimeSpan.Zero);
     private static readonly Guid Spy = Guid.CreateVersion7();
 
-    // The shape pydantic publishes: nested model behind $ref, extra keys forbidden, bounds on numbers.
     private static readonly StrategyTypeDescriptor Type = StrategyTypeDescriptor.Of("etf-momentum", "ETF momentum", "", "python", "1", false, ["instrument"],
         """
         {"type":"object","additionalProperties":false,

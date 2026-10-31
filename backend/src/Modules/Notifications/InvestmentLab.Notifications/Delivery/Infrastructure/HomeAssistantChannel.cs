@@ -4,23 +4,6 @@ using InvestmentLab.Notifications.Delivery.Domain;
 
 namespace InvestmentLab.Notifications.Delivery.Infrastructure;
 
-/// <param name="PanelPath">The add-on's sidebar panel in Home Assistant's frontend, e.g. <c>/hassio/ingress/local_investlab</c>; null: no link.</param>
-public sealed record HomeAssistantChannelOptions(string? PanelPath)
-{
-    public const string Section = "Notifications:HomeAssistant";
-}
-
-/// <summary>
-/// Home Assistant, through the Supervisor's proxy to its Core API (the add-on's <c>homeassistant_api</c> and its
-/// <c>SUPERVISOR_TOKEN</c>): fires <c>investlab_&lt;topic&gt;</c> on its event bus for automations, shows a persistent
-/// notification in its sidebar and pushes to the recipient's phones, all under the notification's tag, so a dismissal
-/// clears them again.
-/// </summary>
-/// <remarks>
-/// The phones are the Companion app's <c>notify.mobile_app_&lt;device&gt;</c> services. The app also creates
-/// <c>device_tracker.&lt;device&gt;</c>, which Home Assistant's person of that user lists: so a user's own phones are
-/// suggested with nothing to set up, as soon as they opened the panel once (that links their Home Assistant user).
-/// </remarks>
 internal sealed class HomeAssistantChannel(HttpClient http, HomeAssistantChannelOptions options) : INotificationChannel
 {
     public const string SupervisorAddress = "http://supervisor/";
@@ -49,6 +32,7 @@ internal sealed class HomeAssistantChannel(HttpClient http, HomeAssistantChannel
         return [.. phones.Select(service =>
         {
             var tracker = $"device_tracker.{service[MobileApp.Length..]}";
+
             return new Destination(Key + service, names.GetValueOrDefault(tracker) ?? service, own.Contains(tracker));
         })];
     }
@@ -71,7 +55,6 @@ internal sealed class HomeAssistantChannel(HttpClient http, HomeAssistantChannel
 
         foreach (var phone in recipient.Targets(await DestinationsAsync(recipient, cancellationToken)))
         {
-            // url opens the panel on iOS, clickAction on Android.
             await PostAsync($"core/api/services/notify/{phone.Id[Key.Length..]}", new
             {
                 title = notification.Title,
@@ -81,18 +64,18 @@ internal sealed class HomeAssistantChannel(HttpClient http, HomeAssistantChannel
         }
     }
 
-    /// <summary>Every phone, not only the owner's: who got it may have changed since.</summary>
     public async Task DismissAsync(string tag, CancellationToken cancellationToken)
     {
         await PostAsync("core/api/services/persistent_notification/dismiss", new { notification_id = tag }, cancellationToken);
+
         foreach (var phone in await PhonesAsync(cancellationToken))
             await PostAsync($"core/api/services/notify/{phone}", new { message = "clear_notification", data = new { tag } }, cancellationToken);
     }
 
-    /// <summary>The Companion app's notify services, e.g. <c>mobile_app_iphone</c>.</summary>
     private async Task<IReadOnlyList<string>> PhonesAsync(CancellationToken cancellationToken)
     {
         var domains = await http.GetFromJsonAsync<List<ServiceDomain>>("core/api/services", cancellationToken) ?? [];
+
         return [.. domains.Where(domain => domain.Domain == "notify")
             .SelectMany(domain => domain.Services.Keys)
             .Where(service => service.StartsWith(MobileApp, StringComparison.Ordinal))

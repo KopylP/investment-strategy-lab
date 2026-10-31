@@ -10,7 +10,6 @@ public sealed class ContributionAllocatorTests
     [Fact]
     public void Fill_underweight_gives_new_money_to_the_one_that_lags()
     {
-        // 60/40 targets, EU 700 + US 200 = 900, +100 → 1000: EU wants 600 (over), US wants 400 (gap 200).
         var allocation = ContributionAllocator.Allocate(100m,
             [new(Eu, Percentage.FromPercent(60m), 700m), new(Us, Percentage.FromPercent(40m), 200m)], ContributionSplit.FillUnderweight, Band);
 

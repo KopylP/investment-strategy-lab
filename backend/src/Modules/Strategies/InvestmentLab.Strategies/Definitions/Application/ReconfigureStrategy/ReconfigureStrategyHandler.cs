@@ -1,4 +1,3 @@
-using InvestmentLab.Strategies.Contracts;
 using InvestmentLab.Strategies.Definitions.Domain;
 
 namespace InvestmentLab.Strategies.Definitions.Application.ReconfigureStrategy;
@@ -19,8 +18,8 @@ public sealed class ReconfigureStrategyHandler(IStrategyRepository strategies, S
         if (version.IsFailure)
             return version.Error;
 
-        strategies.Publish(new StrategyReconfiguredV1(strategy.Id.Value, strategy.OwnerId.Value, version.Value.Number, now), now);
         await strategies.SaveChangesAsync(cancellationToken);
+
         return strategy.ToDto();
     }
 }

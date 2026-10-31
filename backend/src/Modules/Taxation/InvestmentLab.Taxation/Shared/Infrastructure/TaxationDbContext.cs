@@ -1,4 +1,3 @@
-using System.Text.Json;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Taxation.Assessments.Domain;
@@ -6,9 +5,6 @@ using InvestmentLab.Taxation.BrokerStatements.Domain;
 using InvestmentLab.Taxation.Declarations.Domain;
 using InvestmentLab.Taxation.Ledger.Domain;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace InvestmentLab.Taxation.Shared.Infrastructure;
 
@@ -52,6 +48,7 @@ public sealed class TaxationDbContext(DbContextOptions<TaxationDbContext> option
 
         modelBuilder.Entity<TaxAssessment>(assessment =>
         {
+            assessment.Ignore(a => a.DomainEvents);
             assessment.ToTable("assessments");
             assessment.HasKey(a => a.Id);
             assessment.HasIndex(a => new { a.OwnerId, a.Year }).IsUnique();
@@ -94,33 +91,5 @@ public sealed class TaxationDbContext(DbContextOptions<TaxationDbContext> option
             statement.Ignore(s => s.Amounts);
             HasOwnerFilter(statement, s => s.OwnerId);
         });
-    }
-}
-
-/// <summary>Results and allocations without rules of their own are stored as jsonb.</summary>
-internal static class JsonColumn
-{
-    private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web);
-
-    public static PropertyBuilder<T> HasJsonConversion<T>(this PropertyBuilder<T> property)
-    {
-        var converter = new ValueConverter<T, string>(value => JsonSerializer.Serialize(value, Options), json => JsonSerializer.Deserialize<T>(json, Options)!);
-        var comparer = new ValueComparer<T>(
-            (left, right) => JsonSerializer.Serialize(left, Options) == JsonSerializer.Serialize(right, Options),
-            value => JsonSerializer.Serialize(value, Options).GetHashCode(),
-            value => JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(value, Options), Options)!);
-        return property.HasConversion(converter, comparer).HasColumnType("jsonb");
-    }
-}
-
-internal sealed class TaxationDesignTimeDbContextFactory : ModuleDesignTimeDbContextFactory<TaxationDbContext>
-{
-    protected override string Schema => TaxationDbContext.SchemaName;
-
-    protected override TaxationDbContext Create(DbContextOptions<TaxationDbContext> options) => new(options, new NoUser());
-
-    private sealed class NoUser : ICurrentUser
-    {
-        public UserId? Id => null;
     }
 }

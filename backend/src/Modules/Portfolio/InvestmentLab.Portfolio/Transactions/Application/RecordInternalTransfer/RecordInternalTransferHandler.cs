@@ -3,7 +3,6 @@ using InvestmentLab.Portfolio.Transactions.Domain;
 
 namespace InvestmentLab.Portfolio.Transactions.Application.RecordInternalTransfer;
 
-/// <summary>Either <paramref name="InstrumentId"/> with <paramref name="Quantity"/>, or <paramref name="Amount"/> of cash.</summary>
 public sealed record RecordInternalTransferCommand(
     Guid FromSubPortfolioId,
     Guid ToSubPortfolioId,
@@ -25,6 +24,7 @@ public sealed class RecordInternalTransferHandler(TransactionRecorder recorder)
     {
         if (command.FromSubPortfolioId == Guid.Empty || command.ToSubPortfolioId == Guid.Empty)
             return TransactionErrors.UnknownSubPortfolio(Guid.Empty);
+
         if (command.Quantity is < 0m || command.Amount is < 0m)
             return TransactionErrors.AmountNotPositive();
 

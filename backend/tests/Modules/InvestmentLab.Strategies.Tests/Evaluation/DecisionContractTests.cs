@@ -6,7 +6,6 @@ using InvestmentLab.Strategies.Shared.Infrastructure.Engine;
 
 namespace InvestmentLab.Strategies.Tests.Evaluation;
 
-/// <summary>A decision as the engine sends it (snake_case models published in camelCase) reads into the contract.</summary>
 public sealed class DecisionContractTests
 {
     private static readonly Guid Ko = Guid.CreateVersion7();
@@ -22,6 +21,7 @@ public sealed class DecisionContractTests
         var client = new StrategyEngineClient(new HttpClient(new Answer(body)) { BaseAddress = new Uri("http://engine") });
         var context = new EngineContext(new DateOnly(2026, 10, 28), JsonDocument.Parse("{}").RootElement, [], null, [], new EngineSubPortfolio("EUR", 0m, 0m, []));
         var (answer, _, _) = await client.PostContextAsync("value", "decide", context, CancellationToken.None);
+
         return answer!.Deserialize<StrategyDecisionDto>(StrategyEngineClient.Json)!;
     }
 

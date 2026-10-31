@@ -1,8 +1,5 @@
 namespace InvestmentLab.ArchitectureTests;
 
-/// <summary>
-/// Dependency rules of the migration plan (§9, §10.3). Returns why a dependency is forbidden, or null when it is allowed.
-/// </summary>
 internal static class DependencyRules
 {
     private static readonly string[] Infrastructure = ["Microsoft.EntityFrameworkCore", "Microsoft.AspNetCore", "Npgsql"];
@@ -56,14 +53,17 @@ internal static class DependencyRules
 
         if (from.IsModuleRoot)
             return null;
+
         if (from.IsSharedFeature)
             return to.IsModuleRoot || to.IsSharedFeature || to.Layer is "Domain" or "Infrastructure"
                 ? null
                 : "Shared holds persistence only and may reference feature Domain/Infrastructure";
         if (to.IsModuleRoot)
             return "Features must not depend on the module root (composition)";
+
         if (from.Layer is null)
             return $"Types of feature {from.Feature} must live in Domain, Application, Infrastructure or Api";
+
         if (to.IsSharedFeature)
             return from.Layer == "Infrastructure" ? null : "Only Infrastructure may use the module's Shared infrastructure";
 

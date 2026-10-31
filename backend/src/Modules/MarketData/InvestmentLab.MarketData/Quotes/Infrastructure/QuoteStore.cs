@@ -41,8 +41,7 @@ internal sealed class QuoteStore(MarketDataDbContext db) : IQuoteStore
 
     public void Add(QuoteCorrection correction) => db.QuoteCorrections.Add(correction);
 
-    public void Publish<TEvent>(TEvent integrationEvent, DateTimeOffset occurredAt) where TEvent : class =>
-        db.Publish(integrationEvent, occurredAt);
+    public void Record(IDomainEvent domainEvent) => db.Record(domainEvent);
 
     public Task SaveChangesAsync(CancellationToken cancellationToken) => db.SaveChangesAsync(cancellationToken);
 }

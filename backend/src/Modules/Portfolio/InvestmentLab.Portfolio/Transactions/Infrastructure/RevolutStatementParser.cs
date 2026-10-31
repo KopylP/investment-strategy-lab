@@ -5,10 +5,6 @@ using InvestmentLab.Portfolio.Transactions.Domain;
 
 namespace InvestmentLab.Portfolio.Transactions.Infrastructure;
 
-/// <summary>
-/// Anti-corruption layer for the Revolut trading statement (CSV): <c>Date,Ticker,Type,Quantity,Price per share,Total Amount,Currency,FX Rate</c>,
-/// amounts written as "USD 525.83". Unknown row types are kept as unsupported rather than dropped.
-/// </summary>
 internal sealed class RevolutStatementParser : IStatementParser
 {
     private static readonly string[] Required = ["Date", "Ticker", "Type", "Quantity", "Price per share", "Total Amount", "Currency"];
@@ -25,11 +21,13 @@ internal sealed class RevolutStatementParser : IStatementParser
         var missing = Required.Where(column => !header.Contains(column, StringComparer.OrdinalIgnoreCase)).ToList();
         if (missing.Count > 0)
             return StatementImportErrors.UnknownFormat($"columns missing: {string.Join(", ", missing)}");
+
         int Column(string name) => header.FindIndex(column => string.Equals(column, name, StringComparison.OrdinalIgnoreCase));
 
         var rows = new List<StatementRow>();
         var warnings = new List<string>();
         var seen = new Dictionary<string, int>();
+
         for (var index = 1; index < lines.Count; index++)
         {
             var fields = Fields(lines[index]);
@@ -57,12 +55,13 @@ internal sealed class RevolutStatementParser : IStatementParser
                 "DIVIDEND" => StatementRowKind.Dividend,
                 _ => StatementRowKind.Unsupported,
             };
+
             if (kind is StatementRowKind.Buy or StatementRowKind.Sell && (quantity is not > 0m || ticker is null))
                 kind = StatementRowKind.Unsupported;
+
             if (kind is StatementRowKind.Buy or StatementRowKind.Sell && price is not > 0m)
                 price = Math.Abs(amount ?? 0m) / quantity!.Value;
 
-            // The exact time is unique per line; a repeat within the file still gets its own identity.
             var key = $"{Field("Date")}|{type}|{ticker}";
             var occurrence = seen[key] = seen.GetValueOrDefault(key) + 1;
             var identity = StatementMatcher.ReferencePrefix + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{key}|{occurrence}")))[..20].ToLowerInvariant();
@@ -73,12 +72,13 @@ internal sealed class RevolutStatementParser : IStatementParser
         return new ParsedStatement(Broker, rows, warnings);
     }
 
-    /// <summary>"USD 1,234.56" → (USD, 1234.56); "EUR -15.77" → (EUR, -15.77).</summary>
     private static (string? Currency, decimal? Amount) Money(string text)
     {
         if (string.IsNullOrWhiteSpace(text))
             return (null, null);
+
         var parts = text.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+
         return parts.Length == 2 && parts[0].Length == 3 && parts[0].All(char.IsLetter)
             ? (parts[0].ToUpperInvariant(), Number(parts[1]))
             : (null, Number(text));
@@ -87,12 +87,12 @@ internal sealed class RevolutStatementParser : IStatementParser
     private static decimal? Number(string text) =>
         decimal.TryParse(text.Replace(",", "").Replace(" ", ""), NumberStyles.Number | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out var value) ? value : null;
 
-    /// <summary>CSV fields with quoted values ("1,234.56").</summary>
     private static List<string> Fields(string line)
     {
         var fields = new List<string>();
         var current = new StringBuilder();
         var quoted = false;
+
         for (var i = 0; i < line.Length; i++)
         {
             var ch = line[i];
@@ -114,7 +114,9 @@ internal sealed class RevolutStatementParser : IStatementParser
             else
                 current.Append(ch);
         }
+
         fields.Add(current.ToString());
+
         return fields;
     }
 }

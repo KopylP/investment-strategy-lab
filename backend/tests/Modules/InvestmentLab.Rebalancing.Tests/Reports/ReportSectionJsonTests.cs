@@ -3,7 +3,6 @@ using InvestmentLab.Rebalancing.Reports.Domain;
 
 namespace InvestmentLab.Rebalancing.Tests.Reports;
 
-/// <summary>Sections are stored as jsonb (web defaults): reports made before strategies named their columns still read.</summary>
 public sealed class ReportSectionJsonTests
 {
     private static readonly JsonSerializerOptions Web = new(JsonSerializerDefaults.Web);

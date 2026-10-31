@@ -3,7 +3,6 @@ using System.Net.Http.Json;
 
 namespace InvestmentLab.IntegrationTests.Identity;
 
-/// <summary>The Home Assistant panel signs its user in: once linked to an account, no password is asked for again.</summary>
 public sealed class HomeAssistantSignInTests(HomeAssistantApiFactory factory) : IClassFixture<HomeAssistantApiFactory>
 {
     private sealed record Me(Guid Id, string Email, bool ViaHomeAssistant);
@@ -23,26 +22,23 @@ public sealed class HomeAssistantSignInTests(HomeAssistantApiFactory factory) : 
         var homeAssistantUser = NewHomeAssistantUser();
         var email = $"investor-{Guid.NewGuid():N}@example.com";
 
-        // An account from before, signed in once through the panel (its cookie, Home Assistant's headers).
         var signedIn = await factory.CreateSignedInClientAsync(ct, email);
         FromPanel(signedIn, homeAssistantUser);
         var linked = await signedIn.GetFromJsonAsync<Me>("/api/identity/me", ct);
         linked!.Email.ShouldBe(email);
         linked.ViaHomeAssistant.ShouldBeTrue();
 
-        // Another browser, no cookie: Home Assistant alone signs them in, as the same account.
         var me = await Panel(homeAssistantUser).GetFromJsonAsync<Me>("/api/identity/me", ct);
         me.ShouldBe(linked);
         (await Panel(homeAssistantUser).GetAsync("/api/portfolio/accounts", ct)).StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        // Signed in with the password, the account itself is still a cookie session.
         (await signedIn.GetAsync("/api/identity/me", ct)).StatusCode.ShouldBe(HttpStatusCode.OK);
         (await factory.CreateClient().GetAsync("/api/identity/me", ct)).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
     [Theory]
-    [InlineData("172.30.32.2:8099")]  // not the ingress port
-    [InlineData("172.30.32.5:8098")]  // another add-on on the Supervisor's network
+    [InlineData("172.30.32.2:8099")]
+    [InlineData("172.30.32.5:8098")]
     public async Task Home_assistant_headers_count_only_from_the_supervisor_on_the_ingress_port(string peer)
     {
         var ct = TestContext.Current.CancellationToken;
@@ -76,6 +72,7 @@ public sealed class HomeAssistantSignInTests(HomeAssistantApiFactory factory) : 
     {
         var client = factory.CreateClient();
         FromPanel(client, homeAssistantUser);
+
         return client;
     }
 

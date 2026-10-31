@@ -7,18 +7,6 @@ using Microsoft.AspNetCore.Routing;
 
 namespace InvestmentLab.Portfolio.Transactions.Api;
 
-/// <summary>The legacy <c>positions.json</c> exactly as the Python flow writes it.</summary>
-public sealed record PositionsFile(
-    [property: JsonPropertyName("cash")] decimal Cash,
-    [property: JsonPropertyName("positions")] IReadOnlyList<PositionsFileEntry> Positions);
-
-public sealed record PositionsFileEntry(
-    [property: JsonPropertyName("ticker")] string Ticker,
-    [property: JsonPropertyName("entry_price")] decimal EntryPrice,
-    [property: JsonPropertyName("shares")] decimal Shares,
-    [property: JsonPropertyName("entry_date")] DateOnly? EntryDate,
-    [property: JsonPropertyName("currency")] string Currency);
-
 internal static class ImportEndpoints
 {
     public static RouteGroupBuilder MapImport(this RouteGroupBuilder group)

@@ -9,31 +9,6 @@ using InvestmentLab.Strategies.Contracts;
 
 namespace InvestmentLab.Rebalancing.Planning.Application;
 
-public interface IPlanSettingsRepository
-{
-    Task<PlanSettings?> FindAsync(Guid accountId, CancellationToken cancellationToken);
-
-    void Add(PlanSettings settings);
-
-    Task SaveChangesAsync(CancellationToken cancellationToken);
-}
-
-/// <summary>One report an account gets: what the strategies of some of its sub-portfolios declare under one code.</summary>
-/// <param name="Mode">"rebalance" or "riskReview" (<see cref="StrategyReportDto"/>).</param>
-/// <param name="SubPortfolios">Those whose strategy makes it, each with its strategy's default cadence.</param>
-/// <param name="Own">The user's own schedule for the account (<see cref="PlanSettings.ScheduleOf"/>); null — each strategy's default.</param>
-public sealed record AccountReport(string Code, string Name, string Description, string Mode, IReadOnlyList<SubPortfolioReport> SubPortfolios, OwnReportSchedule? Own = null)
-{
-    public ReportKind Kind => Mode == StrategyReportDto.RiskReview ? ReportKind.RiskReview : ReportKind.Monthly;
-
-    /// <summary>When the report comes for this sub-portfolio: the user's time if set, else its strategy's.</summary>
-    public Cadence CadenceOf(SubPortfolioReport sub) => Own?.Cadence ?? sub.Default;
-}
-
-/// <param name="Default">When its strategy's type says the report comes.</param>
-public sealed record SubPortfolioReport(Guid SubPortfolioId, string SubPortfolioName, string StrategyName, Cadence Default);
-
-/// <summary>What planning reads from other modules for one account: setup, holdings, instrument labels and prices.</summary>
 public sealed class PlanningInputs(
     IAccountSetupQueries accounts, IHoldingsQueries holdings, IInstrumentCatalog instruments, IQuoteHistory quotes, IFxRates fxRates, IStrategyDirectory strategies)
 {
@@ -43,31 +18,31 @@ public sealed class PlanningInputs(
 
     public Task<IReadOnlyList<AccountSetupDto>> AccountsAsync(CancellationToken cancellationToken) => accounts.GetAccountSetups(cancellationToken);
 
-    /// <summary>
-    /// Current holdings with every sub-portfolio's cash in the account currency: balances the broker keeps in other
-    /// currencies (USD after selling a US stock) are money to invest too, counted at the latest NBP cross rate.
-    /// </summary>
     public async Task<AccountHoldingsDto> HoldingsAsync(AccountSetupDto account, CancellationToken cancellationToken)
     {
         var current = await holdings.GetHoldings(account.Id, null, cancellationToken) ?? new AccountHoldingsDto(account.Id, account.BaseCurrency, null, []);
         var today = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1);
         var rates = new Dictionary<string, decimal?>();
         var subs = new List<SubPortfolioHoldingsDto>();
+
         foreach (var sub in current.SubPortfolios)
         {
             var cash = sub.Cash;
+
             foreach (var foreign in sub.ForeignCash ?? [])
             {
                 if (!rates.TryGetValue(foreign.Currency, out var rate))
                     rate = rates[foreign.Currency] = await CrossRateAsync(foreign.Currency, account.BaseCurrency, today, cancellationToken);
+
                 cash += rate is { } factor ? decimal.Round(foreign.Amount * factor, 2) : 0m;
             }
+
             subs.Add(sub with { Cash = cash });
         }
+
         return current with { SubPortfolios = subs };
     }
 
-    /// <summary>Ticker per instrument (the Yahoo symbol, as in the Python reports), else the name.</summary>
     public async Task<IReadOnlyDictionary<Guid, string>> LabelsAsync(CancellationToken cancellationToken) =>
         (await instruments.GetInstruments(cancellationToken)).ToDictionary(
             instrument => instrument.Id,
@@ -75,20 +50,17 @@ public sealed class PlanningInputs(
                 ? symbol[YahooPrefix.Length..]
                 : instrument.Name);
 
-    /// <summary>
-    /// Latest close per instrument in the account currency. A quote in another currency is converted at the NBP cross
-    /// rate (both legs against PLN, last tables up to <paramref name="asOf"/>); without a rate the instrument has no price
-    /// and a warning says why.
-    /// </summary>
     public async Task<IReadOnlyDictionary<Guid, LatestPriceDto>> PricesAsync(
         IEnumerable<Guid> instrumentIds, DateOnly asOf, string accountCurrency, ICollection<string> warnings, CancellationToken cancellationToken)
     {
         var ids = instrumentIds.Distinct().ToList();
         var prices = new Dictionary<Guid, LatestPriceDto>();
+
         if (ids.Count == 0)
             return prices;
 
         var rates = new Dictionary<string, decimal?>();
+
         foreach (var price in await quotes.GetLatestPrices(ids, asOf, cancellationToken))
         {
             if (string.Equals(price.Currency, accountCurrency, StringComparison.OrdinalIgnoreCase))
@@ -104,13 +76,14 @@ public sealed class PlanningInputs(
                     ? $"Ціни в {price.Currency} перераховано в {accountCurrency} за курсом NBP {known:0.####}: у брокера сума буде у валюті ETF."
                     : $"Немає курсу NBP {price.Currency}/{accountCurrency}: ETF у {price.Currency} цього разу не торгуються. Оновіть курси NBP.");
             }
+
             if (rate is { } factor)
                 prices[price.InstrumentId] = price with { Close = price.Close * factor, AdjustedClose = price.AdjustedClose * factor, Currency = accountCurrency };
         }
+
         return prices;
     }
 
-    /// <summary>Units of <paramref name="to"/> for one unit of <paramref name="from"/>; NBP publishes both against PLN.</summary>
     private async Task<decimal?> CrossRateAsync(string from, string to, DateOnly asOf, CancellationToken cancellationToken)
     {
         async Task<decimal?> InPln(string currency) => currency == "PLN"
@@ -120,11 +93,6 @@ public sealed class PlanningInputs(
         return await InPln(from) is { } fromPln && await InPln(to) is { } toPln && toPln > 0m ? fromPln / toPln : null;
     }
 
-    /// <summary>
-    /// The reports the account gets: whatever the strategies of its planned sub-portfolios declare, one per code (in the
-    /// order the strategies declare them), with every sub-portfolio whose strategy makes it and the user's own time
-    /// from <paramref name="settings"/>.
-    /// </summary>
     public async Task<IReadOnlyList<AccountReport>> ReportsAsync(AccountSetupDto account, PlanSettings? settings, CancellationToken cancellationToken)
     {
         var directory = (await strategies.GetStrategies(cancellationToken)).ToDictionary(strategy => strategy.Id);
@@ -136,6 +104,7 @@ public sealed class PlanningInputs(
         return [.. declared.GroupBy(each => each.Report.Code).Select(group =>
         {
             var first = group.First().Report;
+
             return new AccountReport(first.Code, first.Name, first.Description, first.Mode, [.. group.Select(each => new SubPortfolioReport(
                 each.Sub.Id, each.Sub.Name, each.Strategy.Name, CadenceOf(each.Report.Schedule)))], settings?.ScheduleOf(first.Code));
         })];
@@ -158,10 +127,10 @@ public sealed class PlanningInputs(
         sub.MaxPositionWeight is { } weight ? Percentage.Of(weight) : null,
         sub.MaxMonthlyTurnover is { } turnover ? Percentage.Of(turnover) : null);
 
-    /// <summary>Stale or missing prices make a plan unreliable: the report says so (D14).</summary>
     public static IEnumerable<string> PriceWarnings(IEnumerable<Guid> needed, IReadOnlyDictionary<Guid, LatestPriceDto> prices, IReadOnlyDictionary<Guid, string> labels)
     {
         string Label(Guid id) => labels.TryGetValue(id, out var label) ? label : id.ToString();
+
         foreach (var id in needed.Distinct())
         {
             if (!prices.TryGetValue(id, out var price))

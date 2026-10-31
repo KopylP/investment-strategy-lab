@@ -1,4 +1,3 @@
-using InvestmentLab.Identity.Contracts;
 using InvestmentLab.Identity.Profiles.Domain;
 using InvestmentLab.Identity.Shared.Infrastructure;
 using InvestmentLab.Identity.Users.Application;
@@ -11,14 +10,13 @@ internal sealed class UserAccounts(
     IdentityDbContext db,
     UserStore store,
     UserManager<User> users,
-    SignInManager<User> signIn,
-    TimeProvider clock) : IUserAccounts
+    SignInManager<User> signIn) : IUserAccounts
 {
     public async Task<Result> RegisterAsync(
-        UserId userId, string email, string password, UserProfile profile, UserRegisteredV1 registered, CancellationToken cancellationToken)
+        UserId userId, string email, string password, UserProfile profile, CancellationToken cancellationToken)
     {
-        // UserManager validates and hashes; the store only stages the user so profile and event commit with it.
         store.AutoSaveChanges = false;
+
         try
         {
             var created = await users.CreateAsync(new User { Id = userId.Value, UserName = email, Email = email }, password);
@@ -26,8 +24,8 @@ internal sealed class UserAccounts(
                 return UserErrors.Rejected(ToSnakeCase(created.Errors.First().Code), string.Join(" ", created.Errors.Select(e => e.Description)));
 
             db.UserProfiles.Add(profile);
-            db.Publish(registered, clock.GetUtcNow());
             await db.SaveChangesAsync(cancellationToken);
+
             return Result.Success();
         }
         finally
@@ -39,6 +37,7 @@ internal sealed class UserAccounts(
     public async Task<Result> SignInAsync(string email, string password, bool remember, CancellationToken cancellationToken)
     {
         var result = await signIn.PasswordSignInAsync(email, password, remember, lockoutOnFailure: true);
+
         return result switch
         {
             { Succeeded: true } => Result.Success(),

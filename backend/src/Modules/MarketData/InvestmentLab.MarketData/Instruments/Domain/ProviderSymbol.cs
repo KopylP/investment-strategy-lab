@@ -1,6 +1,5 @@
 namespace InvestmentLab.MarketData.Instruments.Domain;
 
-/// <summary>How a provider names an instrument: <c>yfinance:SXR8.DE</c>.</summary>
 public sealed record ProviderSymbol
 {
     public QuoteProvider Provider { get; }
@@ -18,6 +17,7 @@ public sealed record ProviderSymbol
             return InstrumentErrors.InvalidProviderSymbol(text);
 
         var parsedProvider = QuoteProvider.TryOf(provider);
+
         return parsedProvider.IsSuccess ? Of(parsedProvider.Value, symbol) : InstrumentErrors.InvalidProviderSymbol(text);
     }
 

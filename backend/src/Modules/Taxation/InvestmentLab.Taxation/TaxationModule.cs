@@ -21,6 +21,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using InvestmentLab.Taxation.Assessments.Domain;
 
 namespace InvestmentLab.Taxation;
 
@@ -34,6 +35,8 @@ public sealed class TaxationModule : IModule
     {
         builder.AddModuleDbContext<TaxationDbContext>(Schema);
 
+        builder.Services.AddDomainEventMapper<TaxAssessmentRecomputed, TaxAssessmentUpdatedV2, TaxAssessmentRecomputedMapper>();
+
         var services = builder.Services;
         services.AddScoped<ITaxLedgerRepository, TaxLedgerRepository>();
         services.AddScoped<IAssessmentRepository, AssessmentRepository>();
@@ -43,7 +46,7 @@ public sealed class TaxationModule : IModule
         services.AddSingleton(new TaxAlertOptions(
             decimal.TryParse(builder.Configuration["Taxation:AlertShare"], CultureInfo.InvariantCulture, out var share) && share is > 0m and <= 1m ? share : null));
         services.AddScoped<DeclarationQueries>();
-        // Optional returns, one per form; another country's form is one more line here.
+
         services.AddSingleton<ITaxDeclarationForm, Pit38Form>();
         services.AddScoped<ITaxpayerHistory, TaxpayerHistory>();
         services.AddSingleton<IDeclarationPrinter, DeclarationSummaryPrinter>();
@@ -53,8 +56,8 @@ public sealed class TaxationModule : IModule
         services.AddScoped<IBrokerStatementRepository, BrokerStatementRepository>();
         services.AddSingleton<IBrokerStatementParser, RevolutPnlPdfParser>();
         services.AddScoped<BrokerStatementService>();
-        services.AddIntegrationEventHandler<TransactionRecordedV1, WhenJournalChanges>();
-        services.AddIntegrationEventHandler<TransactionReversedV1, WhenJournalChanges>();
+        services.AddIntegrationEventHandler<TransactionRecordedV1, RecomputeOnTransactionRecorded>();
+        services.AddIntegrationEventHandler<TransactionReversedV1, RecomputeOnTransactionReversed>();
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>

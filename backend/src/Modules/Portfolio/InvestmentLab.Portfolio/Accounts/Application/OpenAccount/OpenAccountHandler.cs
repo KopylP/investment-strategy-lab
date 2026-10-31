@@ -24,11 +24,13 @@ public sealed class OpenAccountHandler(IAccountRepository accounts, TimeProvider
             return policy.Error;
 
         var drafts = new List<SubPortfolioDraft>();
+
         foreach (var input in command.SubPortfolios ?? [])
         {
             var draft = AccountInput.ToDraft(input);
             if (draft.IsFailure)
                 return draft.Error;
+
             drafts.Add(draft.Value);
         }
 
@@ -39,10 +41,8 @@ public sealed class OpenAccountHandler(IAccountRepository accounts, TimeProvider
 
         var account = opened.Value;
         accounts.Add(account);
-        foreach (var sub in account.SubPortfolios)
-            accounts.Publish(new SubPortfolioAddedV1(account.Id.Value, sub.Id.Value, sub.Name), now);
-        accounts.Publish(account.ToSharesChanged(now), now);
         await accounts.SaveChangesAsync(cancellationToken);
+
         return account.ToSetupDto();
     }
 }

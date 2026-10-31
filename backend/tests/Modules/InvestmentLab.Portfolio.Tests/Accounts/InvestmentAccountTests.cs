@@ -46,7 +46,7 @@ public sealed class InvestmentAccountTests
         var account = Open(Draft("EU", 100)).Value;
         var eu = account.SubPortfolios[0].Id;
 
-        var added = account.AddSubPortfolio(Draft("US", 30), new Dictionary<SubPortfolioId, TargetShare> { [eu] = TargetShare.TryFromPercent(70).Value });
+        var added = account.AddSubPortfolio(Draft("US", 30), new Dictionary<SubPortfolioId, TargetShare> { [eu] = TargetShare.TryFromPercent(70).Value }, Now);
 
         added.IsSuccess.ShouldBeTrue();
         account.FindActive(eu)!.TargetShare.Value.Value.ShouldBe(0.7m);
@@ -59,7 +59,7 @@ public sealed class InvestmentAccountTests
         var account = Open(Draft("EU", 100)).Value;
         var eu = account.SubPortfolios[0].Id;
 
-        var added = account.AddSubPortfolio(Draft("US", 30), new Dictionary<SubPortfolioId, TargetShare> { [eu] = TargetShare.TryFromPercent(100).Value });
+        var added = account.AddSubPortfolio(Draft("US", 30), new Dictionary<SubPortfolioId, TargetShare> { [eu] = TargetShare.TryFromPercent(100).Value }, Now);
 
         added.Error.Code.ShouldBe("account.target_shares_not_100");
         account.SubPortfolios.Count.ShouldBe(1);
@@ -71,7 +71,7 @@ public sealed class InvestmentAccountTests
     {
         var account = Open(Draft("A", 50), Draft("B", 50)).Value;
 
-        account.ChangeTargetShares(new Dictionary<SubPortfolioId, TargetShare> { [account.SubPortfolios[0].Id] = TargetShare.TryFromPercent(100).Value })
+        account.ChangeTargetShares(new Dictionary<SubPortfolioId, TargetShare> { [account.SubPortfolios[0].Id] = TargetShare.TryFromPercent(100).Value }, Now)
             .Error.Code.ShouldBe("account.target_shares_incomplete");
     }
 
@@ -81,10 +81,10 @@ public sealed class InvestmentAccountTests
         var account = Open(Draft("A", 50), Draft("B", 50)).Value;
         var (a, b) = (account.SubPortfolios[0].Id, account.SubPortfolios[1].Id);
 
-        account.RetireSubPortfolio(a, new Dictionary<SubPortfolioId, TargetShare> { [b] = TargetShare.TryFromPercent(100).Value }).IsSuccess.ShouldBeTrue();
+        account.RetireSubPortfolio(a, new Dictionary<SubPortfolioId, TargetShare> { [b] = TargetShare.TryFromPercent(100).Value }, Now).IsSuccess.ShouldBeTrue();
 
         account.FindActive(a).ShouldBeNull();
         account.ActiveSubPortfolios.ShouldHaveSingleItem().TargetShare.Value.Value.ShouldBe(1m);
-        account.RetireSubPortfolio(b, new Dictionary<SubPortfolioId, TargetShare>()).Error.Code.ShouldBe("account.last_sub_portfolio");
+        account.RetireSubPortfolio(b, new Dictionary<SubPortfolioId, TargetShare>(), Now).Error.Code.ShouldBe("account.last_sub_portfolio");
     }
 }

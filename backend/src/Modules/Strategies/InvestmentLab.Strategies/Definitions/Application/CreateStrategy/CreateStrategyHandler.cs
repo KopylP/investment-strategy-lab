@@ -21,6 +21,7 @@ public sealed class CreateStrategyHandler(IStrategyRepository strategies, Strate
 
         strategies.Add(created.Value);
         await strategies.SaveChangesAsync(cancellationToken);
+
         return created.Value.ToDto();
     }
 }

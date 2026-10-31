@@ -3,18 +3,9 @@ using InvestmentLab.Rebalancing.Reports.Domain;
 
 namespace InvestmentLab.Rebalancing.Planning.Application.RequestReport;
 
-/// <param name="Code">One of the account's reports (<see cref="PlanningInputs.ReportsAsync"/>); null — its first rebalance report.</param>
-/// <param name="Contribution">Rebalance reports only; null — the scope's part of the plan's monthly contribution.</param>
-/// <param name="SubPortfolioIds">Null: every sub-portfolio whose strategy makes the report.</param>
 public sealed record RequestReportCommand(
-    Guid AccountId, string? Code = null, decimal? Contribution = null, DateOnly? AsOf = null, IReadOnlySet<Guid>? SubPortfolioIds = null);
+    Guid AccountId, string? Code = null, decimal? Contribution = null, DateOnly? AsOf = null, IReadOnlySet<Guid>? SubPortfolioIds = null, ReportCause? Cause = null);
 
-/// <summary>
-/// Asks for one of the reports the account's strategies declare, on demand and on schedule alike. The strategies may
-/// think for minutes or hours, so the report is made in the background (<see cref="ReportRequestProcessor"/>) and
-/// published when they have answered; until then the user sees it as «Готується». While a request of the same code
-/// is pending, asking again returns that request.
-/// </summary>
 public sealed class RequestReportHandler(PlanningInputs inputs, IReportRequestRepository requests, TimeProvider clock)
 {
     public async Task<Result<ReportRequestId>> Handle(RequestReportCommand command, ReportTrigger trigger, CancellationToken cancellationToken)
@@ -38,6 +29,7 @@ public sealed class RequestReportHandler(PlanningInputs inputs, IReportRequestRe
             .ToList();
         if (subPortfolios.Count == 0)
             return ReportErrors.NoActiveSubPortfolios(account.Id);
+
         if (await requests.PendingAsync(account.Id, report.Code, cancellationToken) is { } pending)
             return pending.Id;
 
@@ -45,9 +37,10 @@ public sealed class RequestReportHandler(PlanningInputs inputs, IReportRequestRe
         var request = ReportRequest.Create(
             account.Id, UserId.Of(account.OwnerId), report.Code, report.Name, report.Kind, trigger,
             report.Kind == ReportKind.Monthly ? command.Contribution : null,
-            command.AsOf ?? DateOnly.FromDateTime(now.UtcDateTime), subPortfolios, now);
+            command.AsOf ?? DateOnly.FromDateTime(now.UtcDateTime), subPortfolios, now, command.Cause);
         requests.Add(request);
         await requests.SaveChangesAsync(cancellationToken);
+
         return request.Id;
     }
 }

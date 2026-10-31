@@ -20,7 +20,7 @@ public sealed class ValuationTests
         var account = snapshots.Where(snapshot => snapshot.SubPortfolioId is null).ToList();
         account.Select(snapshot => snapshot.Value).ShouldBe([1000m, 1100m, 2310m]);
         account[1].TwrIndex.ShouldBe(1.1m);
-        account[2].TwrIndex.ShouldBe(1.155m);          // 2310 / (1100 + 1100) = 1.05
+        account[2].TwrIndex.ShouldBe(1.155m);
         account[2].NetContributions.ShouldBe(2100m);
     }
 
@@ -29,14 +29,14 @@ public sealed class ValuationTests
     {
         var snapshots = ValuationCalculator.Build([
             new Movement(D1, 1, Sleeve, null, 0m, 5000m, 5000m),
-            new Movement(D1, 2, Sleeve, Etf, 10m, -1010m, 0m, TradePrice: 100m, UnitCost: 101m),   // 10 € fee
+            new Movement(D1, 2, Sleeve, Etf, 10m, -1010m, 0m, TradePrice: 100m, UnitCost: 101m),
             new Movement(D2, 3, Sleeve, Etf, 10m, -1200m, 0m, TradePrice: 120m),
-            new Movement(D3, 4, Sleeve, Etf, -15m, 2100m, 0m, TradePrice: 140m),                  // all of the first lot, half of the second
+            new Movement(D3, 4, Sleeve, Etf, -15m, 2100m, 0m, TradePrice: 140m),
         ], [D1, D2, D3], (_, _) => 140m);
 
         var account = snapshots.Where(snapshot => snapshot.SubPortfolioId is null).ToList();
         account.Select(snapshot => snapshot.CostBasis).ShouldBe([1010m, 2210m, 600m]);
-        (account[2].Value - account[2].Cash).ShouldBe(700m);   // the gain on what is held: 700 - 600, the sale is not in it
+        (account[2].Value - account[2].Cash).ShouldBe(700m);
     }
 
     [Fact]
@@ -60,14 +60,14 @@ public sealed class ValuationTests
     {
         var rates = new Dictionary<DateOnly, decimal> { [D1] = 0.90m, [D2] = 0.90m, [D3] = 0.85m };
         var snapshots = ValuationCalculator.Build([
-            new Movement(D1, 1, Sleeve, null, 0m, 100m, 90m, CashCurrency: "USD"),   // $100 top-up worth 90 € that day
+            new Movement(D1, 1, Sleeve, null, 0m, 100m, 90m, CashCurrency: "USD"),
         ], [D1, D2, D3], (_, _) => null, (currency, day) => currency == "USD" ? rates[day] : null);
 
         var account = snapshots.Where(snapshot => snapshot.SubPortfolioId is null).ToList();
         account.Select(snapshot => snapshot.Value).ShouldBe([90m, 90m, 85m]);
         account.Select(snapshot => snapshot.Cash).ShouldBe([90m, 90m, 85m]);
         account[2].NetContributions.ShouldBe(90m);
-        account[2].TwrIndex.ShouldBe(0.94444444m);                                // the dollar fell, the money did not leave
+        account[2].TwrIndex.ShouldBe(0.94444444m);
     }
 
     [Fact]

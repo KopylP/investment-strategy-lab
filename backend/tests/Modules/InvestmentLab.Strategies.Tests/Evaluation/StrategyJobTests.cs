@@ -8,7 +8,6 @@ using InvestmentLab.Strategies.Shared.Infrastructure.Engine;
 
 namespace InvestmentLab.Strategies.Tests.Evaluation;
 
-/// <summary>A background job of the engine, as polled: still running, done (with the answer or why not), or lost.</summary>
 public sealed class StrategyJobTests
 {
     private static readonly Guid Ko = Guid.CreateVersion7();
@@ -20,6 +19,7 @@ public sealed class StrategyJobTests
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             Path = request.RequestUri!.AbsolutePath;
+
             return Task.FromResult(new HttpResponseMessage(status) { Content = new StringContent(body, Encoding.UTF8, "application/json") });
         }
     }

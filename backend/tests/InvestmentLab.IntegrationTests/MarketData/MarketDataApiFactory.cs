@@ -18,7 +18,6 @@ using Testcontainers.PostgreSql;
 
 namespace InvestmentLab.IntegrationTests.MarketData;
 
-/// <summary>The API on a throwaway Postgres, with Yahoo and NBP replaced by in-memory providers.</summary>
 public sealed class MarketDataApiFactory : WebApplicationFactory<api::Program>, IAsyncLifetime
 {
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17").Build();
@@ -32,7 +31,7 @@ public sealed class MarketDataApiFactory : WebApplicationFactory<api::Program>, 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseSetting("ConnectionStrings:investmentlab", _postgres.GetConnectionString());
-        builder.UseSetting("Scheduling:RunAtStartup", "false");                 // tests run the jobs themselves
+        builder.UseSetting("Scheduling:RunAtStartup", "false");
         builder.ConfigureTestServices(services =>
         {
             services.AddSingleton<IQuoteProvider>(Quotes);
@@ -54,12 +53,12 @@ public sealed class MarketDataApiFactory : WebApplicationFactory<api::Program>, 
         public Task Handle(QuoteCorrectedV1 integrationEvent, CancellationToken cancellationToken)
         {
             factory.CorrectedQuotes.Enqueue(integrationEvent);
+
             return Task.CompletedTask;
         }
     }
 }
 
-/// <summary>Knows only SXR8.DE: a close of 100 + n on the n-th of the last 15 business days; the newest close can be changed.</summary>
 public sealed class FakeQuoteProvider : IQuoteProvider
 {
     public const string Symbol = "SXR8.DE";
@@ -71,6 +70,7 @@ public sealed class FakeQuoteProvider : IQuoteProvider
     public static IReadOnlyList<DateOnly> TradingDays()
     {
         var days = new List<DateOnly>();
+
         for (var day = DateOnly.FromDateTime(DateTime.UtcNow); days.Count < 15; day = day.AddDays(-1))
         {
             if (BusinessDays.IsBusinessDay(day))
@@ -94,7 +94,6 @@ public sealed class FakeQuoteProvider : IQuoteProvider
     }
 }
 
-/// <summary>A table for every business day: EUR 4.30, USD 3.90.</summary>
 public sealed class FakeNbpProvider : IFxRateProvider
 {
     public FxRateSource Source => FxRateSource.Nbp;
@@ -102,6 +101,7 @@ public sealed class FakeNbpProvider : IFxRateProvider
     public Task<IReadOnlyList<FxRate>> FetchAsync(Currency @base, DateOnly from, DateOnly to, CancellationToken cancellationToken)
     {
         var rates = new List<FxRate>();
+
         for (var day = from; day <= to; day = day.AddDays(1))
         {
             if (BusinessDays.IsBusinessDay(day))
@@ -112,7 +112,6 @@ public sealed class FakeNbpProvider : IFxRateProvider
     }
 }
 
-/// <summary>Yahoo knows only Rheinmetall, and only on Xetra.</summary>
 public sealed class FakeSymbolLookup : ISymbolLookup
 {
     private static readonly SymbolMatch Rheinmetall = new("RHM.DE", "Rheinmetall AG", "EUR", "EQUITY");

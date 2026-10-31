@@ -3,22 +3,22 @@ namespace InvestmentLab.ArchitectureTests;
 public sealed class DependencyRulesTests
 {
     [Theory]
-    // inside a feature
+
     [InlineData("InvestmentLab.Rebalancing.Reports.Application.GetReport", "InvestmentLab.Rebalancing.Reports.Domain")]
     [InlineData("InvestmentLab.Rebalancing.Reports.Infrastructure", "InvestmentLab.Rebalancing.Reports.Application.GetReport")]
     [InlineData("InvestmentLab.Rebalancing.Reports.Infrastructure", "InvestmentLab.Rebalancing.Reports.Domain")]
     [InlineData("InvestmentLab.Rebalancing.Reports.Api", "InvestmentLab.Rebalancing.Reports.Application.GetReport")]
-    // between features of one module: only through Domain
+
     [InlineData("InvestmentLab.Rebalancing.Planning.Domain", "InvestmentLab.Rebalancing.Reports.Domain")]
     [InlineData("InvestmentLab.Rebalancing.Planning.Application.GenerateMonthlyReport", "InvestmentLab.Rebalancing.Reports.Domain")]
-    // module-wide shared infrastructure and the module root
+
     [InlineData("InvestmentLab.Rebalancing.Reports.Infrastructure", "InvestmentLab.Rebalancing.Shared.Infrastructure")]
     [InlineData("InvestmentLab.Rebalancing.Shared.Infrastructure", "InvestmentLab.Rebalancing.Reports.Domain")]
     [InlineData("InvestmentLab.Rebalancing", "InvestmentLab.Rebalancing.Reports.Api")]
-    // other modules only through Contracts
+
     [InlineData("InvestmentLab.Rebalancing.Planning.Application.GenerateMonthlyReport", "InvestmentLab.Portfolio.Contracts")]
     [InlineData("InvestmentLab.Rebalancing.Reports.Infrastructure", "InvestmentLab.Portfolio.Contracts.Holdings")]
-    // building blocks
+
     [InlineData("InvestmentLab.Rebalancing.Reports.Domain", "InvestmentLab.SharedKernel")]
     [InlineData("InvestmentLab.Rebalancing.Reports.Api", "InvestmentLab.BuildingBlocks.Http")]
     [InlineData("InvestmentLab.Rebalancing.Reports.Infrastructure", "Microsoft.EntityFrameworkCore")]

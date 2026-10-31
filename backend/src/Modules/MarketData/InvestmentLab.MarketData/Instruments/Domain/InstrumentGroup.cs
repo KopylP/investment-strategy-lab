@@ -1,6 +1,5 @@
 namespace InvestmentLab.MarketData.Instruments.Domain;
 
-/// <summary>Instruments of one group move together (e.g. "Акції США: S&amp;P 500"); a strategy picks few from each.</summary>
 public sealed record InstrumentGroup
 {
     public string Name { get; }

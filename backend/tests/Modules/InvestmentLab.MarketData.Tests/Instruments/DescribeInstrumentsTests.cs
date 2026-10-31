@@ -13,7 +13,6 @@ public sealed class DescribeInstrumentsTests
         public override DateTimeOffset GetUtcNow() => now;
     }
 
-    /// <summary>Yahoo knows Broadcom with a description and the Japan ETF without one; anything else is unknown.</summary>
     private sealed class FakeLookup : ISymbolLookup
     {
         public List<string> Asked { get; } = [];
@@ -21,6 +20,7 @@ public sealed class DescribeInstrumentsTests
         public Task<IReadOnlyList<SymbolMatch?>> LookupAsync(IReadOnlyList<SymbolQuery> queries, CancellationToken cancellationToken)
         {
             Asked.AddRange(queries.SelectMany(query => query.Candidates));
+
             return Task.FromResult<IReadOnlyList<SymbolMatch?>>([.. queries.Select(query => query.Candidates[0] switch
             {
                 "AVGO" => new SymbolMatch("AVGO", "Broadcom Inc.", "USD", "EQUITY", "Broadcom Inc. designs semiconductors."),
@@ -33,8 +33,10 @@ public sealed class DescribeInstrumentsTests
     private static Instrument Stock(string name, string? yahooSymbol)
     {
         var instrument = Instrument.Register(InstrumentKind.Stock, null, name, "US", Currency.USD, group: null, isAccumulating: null).Value;
+
         if (yahooSymbol is not null)
             instrument.AssignProviderSymbol(ProviderSymbol.TryParse($"yfinance:{yahooSymbol}").Value);
+
         return instrument;
     }
 

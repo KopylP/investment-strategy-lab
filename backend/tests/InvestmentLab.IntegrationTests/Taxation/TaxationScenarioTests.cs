@@ -9,10 +9,6 @@ using InvestmentLab.Taxation.Declarations.Domain;
 
 namespace InvestmentLab.IntegrationTests.Taxation;
 
-/// <summary>
-/// Stage 7 end to end: trades in EUR → Taxation copies them from Portfolio's events → FIFO realisation in PLN at the
-/// NBP rate of the business day before → Belka of the year; reversing the sale takes the tax back.
-/// </summary>
 public sealed class TaxationScenarioTests(MarketDataApiFactory factory) : IClassFixture<MarketDataApiFactory>
 {
     [Fact]
@@ -31,8 +27,6 @@ public sealed class TaxationScenarioTests(MarketDataApiFactory factory) : IClass
         await TradeAsync(client, account, etf, "Buy", 10m, 120m, 1m, new DateOnly(year, 3, 11), sleeve, ct);
         var sale = await TradeAsync(client, account, etf, "Sell", 15m, 130m, 2m, new DateOnly(year, 6, 10), sleeve, ct);
 
-        // The fake NBP table A has EUR at 4.30 every business day.
-        // Proceeds 1950 × 4.30 = 8385.00; cost 4304.30 + half of 5164.30 + fee 2 × 4.30 = 6895.05; gain 1489.95 → base 1490 → 19% = 283.10 → 283.
         var assessed = await EventuallyAsync(client, year, details => details.Summary.TaxDue == 283m, ct);
         var realization = assessed.Realizations.ShouldHaveSingleItem();
         realization.ProceedsPln.ShouldBe(8385.00m);
@@ -42,13 +36,13 @@ public sealed class TaxationScenarioTests(MarketDataApiFactory factory) : IClass
         assessed.Summary.TaxBase.ShouldBe(1490m);
         realization.Attributions.ShouldHaveSingleItem().SubPortfolioId.ShouldBe(sleeve);
 
-        // PIT-38 of the person: an XTB account goes to row 1 (PIT-8C).
         (await client.GetFromJsonAsync<List<DeclarationFormDto>>($"/api/taxation/declarations/{year}", ct))!.ShouldHaveSingleItem().Code.ShouldBe("PIT-38");
         var pit38 = (await client.GetFromJsonAsync<DeclarationRow>($"/api/taxation/declarations/{year}/pit-38", ct))!.Declaration;
         var fields = pit38.Sections.SelectMany(section => section.Fields).ToDictionary(field => field.Position, field => field.Amount);
         (fields[20], fields[21], fields[22]).ShouldBe((8385.00m, 6895.05m, 0m));
         (fields[31], fields[35], fields[51]).ShouldBe((1490m, 283m, 283m));
         (await client.GetAsync($"/api/taxation/declarations/{year - 5}/pit-38", ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+
         foreach (var kind in new[] { "summary", "form" })
         {
             var pdf = await client.GetAsync($"/api/taxation/declarations/{year}/pit-38/pdf?kind={kind}", ct);
@@ -57,8 +51,6 @@ public sealed class TaxationScenarioTests(MarketDataApiFactory factory) : IClass
             (await pdf.Content.ReadAsByteArrayAsync(ct)).Take(4).ShouldBe("%PDF"u8.ToArray());
         }
 
-        // The person's tax as of each taxable day (the dashboard): a second account's later loss nets against the first
-        // account's gain (1489.95 − 430 = 1059.95 → base 1060 → 201); FIFO does not take its cheaper February lot.
         var other = await PortfolioScenarioTests.OpenTwoSleeveAccountAsync(client, ct);
         await TradeAsync(client, other, etf, "Buy", 10m, 100m, 0m, new DateOnly(year, 2, 10), other.SubPortfolios[0].Id, ct);
         await TradeAsync(client, other, etf, "Sell", 10m, 90m, 0m, new DateOnly(year, 7, 10), other.SubPortfolios[0].Id, ct);
@@ -71,11 +63,10 @@ public sealed class TaxationScenarioTests(MarketDataApiFactory factory) : IClass
         var netted = (await client.GetFromJsonAsync<DeclarationRow>($"/api/taxation/declarations/{year}/pit-38", ct))!.Declaration;
         netted.TaxDue.ShouldBe(201m);
 
-        // The warning threshold is the same for everyone, from appsettings.json.
         progress.AlertShare.ShouldBe(0.01m);
 
         (await client.PostAsJsonAsync($"/api/portfolio/accounts/{account.Id}/transactions/{sale}/reverse", new { reason = "помилка" }, ct)).EnsureSuccessStatusCode();
-        // Only the second account's loss is left in the year.
+
         var reversed = await EventuallyAsync(client, year, details => details.Realizations.All(r => r.AccountId == other.Id), ct);
         reversed.Summary.TaxDue.ShouldBe(0m);
         reversed.Summary.LossToCarry.ShouldBe(430m);
@@ -101,19 +92,23 @@ public sealed class TaxationScenarioTests(MarketDataApiFactory factory) : IClass
             allocations = new[] { new { subPortfolioId = sleeve, quantity } },
         }, ct);
         response.StatusCode.ShouldBe(HttpStatusCode.OK, await response.Content.ReadAsStringAsync(ct));
+
         return (await response.Content.ReadFromJsonAsync<RecordedRow>(ct))!.TransactionId;
     }
 
     private static async Task<TaxYearDetailsDto> EventuallyAsync(HttpClient client, int year, Func<TaxYearDetailsDto, bool> condition, CancellationToken ct)
     {
         var deadline = DateTime.UtcNow.AddSeconds(30);
+
         while (true)
         {
             var response = await client.GetAsync($"/api/taxation/years/{year}", ct);
             if (response.IsSuccessStatusCode && await response.Content.ReadFromJsonAsync<TaxYearDetailsDto>(ct) is { } details && condition(details))
                 return details;
+
             if (DateTime.UtcNow > deadline)
                 throw new TimeoutException($"Tax year {year} did not reach the expected state: {await response.Content.ReadAsStringAsync(ct)}");
+
             await Task.Delay(300, ct);
         }
     }

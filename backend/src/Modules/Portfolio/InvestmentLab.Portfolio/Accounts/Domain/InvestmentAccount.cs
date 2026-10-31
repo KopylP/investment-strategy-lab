@@ -1,9 +1,5 @@
 namespace InvestmentLab.Portfolio.Accounts.Domain;
 
-/// <summary>
-/// A brokerage account split into virtual sub-portfolios.
-/// Invariant: target shares of the active sub-portfolios add up to exactly 100%.
-/// </summary>
 public sealed class InvestmentAccount : AggregateRoot<AccountId>
 {
     public const string DefaultTaxPolicy = "PL-BELKA";
@@ -36,7 +32,6 @@ public sealed class InvestmentAccount : AggregateRoot<AccountId>
         OpenedAt = openedAt;
     }
 
-    // EF Core: complex properties cannot be bound to constructor parameters.
     private InvestmentAccount(AccountId id) : base(id) =>
         (Name, Broker, BaseCurrency, TaxPolicyCode, ContributionPolicy) = (null!, null!, null!, null!, null!);
 
@@ -46,10 +41,13 @@ public sealed class InvestmentAccount : AggregateRoot<AccountId>
     {
         if (string.IsNullOrWhiteSpace(name))
             return AccountErrors.NameRequired();
+
         if (string.IsNullOrWhiteSpace(broker))
             return AccountErrors.BrokerRequired();
+
         if (!BaseCurrencies.Contains(baseCurrency))
             return AccountErrors.UnsupportedBaseCurrency(baseCurrency);
+
         if (subPortfolios.Count == 0)
             return AccountErrors.NoSubPortfolios();
 
@@ -61,14 +59,19 @@ public sealed class InvestmentAccount : AggregateRoot<AccountId>
         {
             if (account.CheckNameIsFree(draft.Name) is { } taken)
                 return taken;
+
             account._subPortfolios.Add(SubPortfolio.Create(draft, account._subPortfolios.Count));
         }
 
-        return account.CheckSharesAddUp() is { } error ? error : account;
+        if (account.CheckSharesAddUp() is { } error)
+            return error;
+
+        account.RaiseOpened(openedAt);
+
+        return account;
     }
 
-    /// <summary>Adds a sub-portfolio; the others get new shares in the same step so the total stays 100%.</summary>
-    public Result<SubPortfolioId> AddSubPortfolio(SubPortfolioDraft draft, IReadOnlyDictionary<SubPortfolioId, TargetShare> sharesOfOthers)
+    public Result<SubPortfolioId> AddSubPortfolio(SubPortfolioDraft draft, IReadOnlyDictionary<SubPortfolioId, TargetShare> sharesOfOthers, DateTimeOffset now)
     {
         if (CheckNameIsFree(draft.Name) is { } taken)
             return taken;
@@ -77,18 +80,32 @@ public sealed class InvestmentAccount : AggregateRoot<AccountId>
         var shares = new Dictionary<SubPortfolioId, TargetShare>(sharesOfOthers) { [added.Id] = draft.TargetShare };
         _subPortfolios.Add(added);
 
-        var changed = ChangeTargetShares(shares);
+        var changed = ApplyTargetShares(shares);
         if (changed.IsFailure)
         {
             _subPortfolios.Remove(added);
+
             return changed.Error;
         }
+
+        Raise(new SubPortfolioAdded(Id, added.Id, draft.Name.Trim(), now));
+        RaiseSharesChanged(now);
 
         return added.Id;
     }
 
-    /// <summary>Sets the target shares of all active sub-portfolios at once.</summary>
-    public Result ChangeTargetShares(IReadOnlyDictionary<SubPortfolioId, TargetShare> shares)
+    public Result ChangeTargetShares(IReadOnlyDictionary<SubPortfolioId, TargetShare> shares, DateTimeOffset now)
+    {
+        var changed = ApplyTargetShares(shares);
+        if (changed.IsFailure)
+            return changed;
+
+        RaiseSharesChanged(now);
+
+        return Result.Success();
+    }
+
+    private Result ApplyTargetShares(IReadOnlyDictionary<SubPortfolioId, TargetShare> shares)
     {
         var active = ActiveSubPortfolios.ToList();
         if (shares.Count != active.Count || active.Any(sub => !shares.ContainsKey(sub.Id)))
@@ -110,14 +127,15 @@ public sealed class InvestmentAccount : AggregateRoot<AccountId>
             return AccountErrors.SubPortfolioNotFound(subPortfolioId.Value);
 
         sub.AssignStrategy(strategy);
+
         return Result.Success();
     }
 
-    /// <summary>Stops a sub-portfolio; the remaining ones take over its share.</summary>
-    public Result RetireSubPortfolio(SubPortfolioId subPortfolioId, IReadOnlyDictionary<SubPortfolioId, TargetShare> sharesOfRemaining)
+    public Result RetireSubPortfolio(SubPortfolioId subPortfolioId, IReadOnlyDictionary<SubPortfolioId, TargetShare> sharesOfRemaining, DateTimeOffset now)
     {
         if (FindActive(subPortfolioId) is not { } sub)
             return AccountErrors.SubPortfolioNotFound(subPortfolioId.Value);
+
         if (ActiveSubPortfolios.Count() == 1)
             return AccountErrors.LastSubPortfolio();
 
@@ -130,8 +148,11 @@ public sealed class InvestmentAccount : AggregateRoot<AccountId>
             return AccountErrors.TargetSharesDoNotAddUp(total * 100m);
 
         sub.Retire();
+
         foreach (var other in remaining)
             other.ChangeTargetShare(sharesOfRemaining[other.Id]);
+
+        RaiseSharesChanged(now);
 
         return Result.Success();
     }
@@ -143,6 +164,21 @@ public sealed class InvestmentAccount : AggregateRoot<AccountId>
 
     public bool Has(SubPortfolioId subPortfolioId) => _subPortfolios.Any(sub => sub.Id == subPortfolioId);
 
+    private void RaiseOpened(DateTimeOffset openedAt)
+    {
+        foreach (var sub in SubPortfolios)
+            Raise(new SubPortfolioAdded(Id, sub.Id, sub.Name, openedAt));
+
+        RaiseSharesChanged(openedAt);
+    }
+
+    private void RaiseSharesChanged(DateTimeOffset now)
+    {
+        var shares = ActiveSubPortfolios.ToDictionary(sub => sub.Id.Value, sub => sub.TargetShare.Value.Value);
+
+        Raise(new TargetSharesChanged(Id, shares, now));
+    }
+
     private Error? CheckNameIsFree(string name) =>
         string.IsNullOrWhiteSpace(name) ? AccountErrors.NameRequired()
         : ActiveSubPortfolios.Any(sub => string.Equals(sub.Name, name.Trim(), StringComparison.OrdinalIgnoreCase)) ? AccountErrors.SubPortfolioNameTaken(name.Trim())
@@ -151,6 +187,7 @@ public sealed class InvestmentAccount : AggregateRoot<AccountId>
     private Error? CheckSharesAddUp()
     {
         var total = ActiveSubPortfolios.Sum(sub => sub.TargetShare.Value.Value);
+
         return total == 1m ? null : AccountErrors.TargetSharesDoNotAddUp(total * 100m);
     }
 }

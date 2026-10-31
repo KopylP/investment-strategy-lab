@@ -29,6 +29,7 @@ internal sealed class InMemoryInstruments : IInstrumentRepository
     public Task SaveChangesAsync(CancellationToken cancellationToken)
     {
         Saves++;
+
         return Task.CompletedTask;
     }
 }

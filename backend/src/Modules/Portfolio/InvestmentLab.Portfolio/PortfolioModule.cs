@@ -34,6 +34,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using InvestmentLab.Portfolio.Accounts.Application.Integration;
+using InvestmentLab.Portfolio.Accounts.Domain;
 
 namespace InvestmentLab.Portfolio;
 
@@ -46,6 +48,12 @@ public sealed class PortfolioModule : IModule
     public void AddServices(IHostApplicationBuilder builder)
     {
         builder.AddModuleDbContext<PortfolioDbContext>(Schema);
+
+        builder.Services.AddDomainEventMapper<SubPortfolioAdded, SubPortfolioAddedV1, SubPortfolioAddedMapper>();
+        builder.Services.AddDomainEventMapper<TargetSharesChanged, TargetSharesChangedV1, TargetSharesChangedMapper>();
+        builder.Services.AddDomainEventMapper<TransactionRecorded, TransactionRecordedV1, TransactionRecordedMapper>();
+        builder.Services.AddDomainEventMapper<TransactionReversed, TransactionReversedV1, TransactionReversedMapper>();
+        builder.Services.AddDomainEventMapper<TransactionRejected, TransactionRejectedV1, TransactionRejectedMapper>();
 
         var services = builder.Services;
         services.AddScoped<IAccountRepository, AccountRepository>();
@@ -70,10 +78,11 @@ public sealed class PortfolioModule : IModule
         services.AddScoped<IStatementImportRepository, StatementImportRepository>();
         services.AddScoped<StatementImportService>();
         services.AddScoped<ImportPositionsHandler>();
-        services.AddIntegrationEventHandler<RecordTradeV1, PortfolioCommandHandlers>();
-        services.AddIntegrationEventHandler<RecordContributionV1, PortfolioCommandHandlers>();
-        services.AddIntegrationEventHandler<RecordInternalTransferV1, PortfolioCommandHandlers>();
-        services.AddIntegrationEventHandler<ReverseTransactionV1, PortfolioCommandHandlers>();
+        services.AddScoped<CommandRejection>();
+        services.AddIntegrationEventHandler<RecordTradeV1, RecordTradeFromReport>();
+        services.AddIntegrationEventHandler<RecordContributionV1, RecordContributionFromReport>();
+        services.AddIntegrationEventHandler<RecordInternalTransferV1, RecordTransferFromReport>();
+        services.AddIntegrationEventHandler<ReverseTransactionV1, ReverseTransactionFromReport>();
 
         services.AddScoped<IHoldingsReader, HoldingsReader>();
         services.AddScoped<GetHoldingsHandler>();

@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http;
 
 namespace InvestmentLab.BuildingBlocks.Http;
 
-/// <summary>Maps domain results to HTTP: success → 200/204, error → RFC 9457 problem details.</summary>
 public static class ResultHttpExtensions
 {
     extension(Result result)

@@ -1,6 +1,8 @@
 using InvestmentLab.BuildingBlocks.Http;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Notifications.Delivery.Application;
+using InvestmentLab.Notifications.Delivery.Application.GetMutedSignals;
+using InvestmentLab.Notifications.Delivery.Application.HearSignal;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -13,18 +15,36 @@ internal static class NotificationEndpoints
     {
         group.WithTags("Notifications");
 
-        group.MapGet("/settings", async (NotificationSettingsHandler handler, ICurrentUser user, CancellationToken ct) =>
-                (await handler.Get(user.RequiredId, ct)).ToHttpResult())
+        group.MapGet("/settings", async (GetNotificationSettingsHandler handler, ICurrentUser user, CancellationToken ct) =>
+                (await handler.Handle(user.RequiredId, ct)).ToHttpResult())
             .WithName("GetNotificationSettings");
 
-        group.MapPut("/settings", async (ChangeNotificationSettingsCommand body, NotificationSettingsHandler handler, ICurrentUser user, CancellationToken ct) =>
-                (await handler.Change(user.RequiredId, body, ct)).ToHttpResult())
+        group.MapPut("/settings", async (ChangeNotificationSettingsCommand body, ChangeNotificationSettingsHandler handler, ICurrentUser user, CancellationToken ct) =>
+                (await handler.Handle(user.RequiredId, body, ct)).ToHttpResult())
             .WithName("ChangeNotificationSettings");
 
-        group.MapPost("/test", async (NotificationSettingsHandler handler, ICurrentUser user, CancellationToken ct) =>
-                (await handler.SendTest(user.RequiredId, ct)).ToHttpResult())
+        group.MapGet("/muted-signals", GetMutedSignals).WithName("GetMutedSignals");
+        group.MapPut("/signals/{signalId:guid}", HearSignal).WithName("HearSignal");
+
+        group.MapPost("/test", async (SendTestNotificationHandler handler, ICurrentUser user, CancellationToken ct) =>
+                (await handler.Handle(user.RequiredId, ct)).ToHttpResult())
             .WithName("SendTestNotification");
 
         return group;
+    }
+
+    private static async Task<IResult> GetMutedSignals(GetMutedSignalsHandler handler, ICurrentUser user, CancellationToken cancellationToken)
+    {
+        var muted = await handler.Handle(user.RequiredId, cancellationToken);
+
+        return muted.ToHttpResult();
+    }
+
+    private static async Task<IResult> HearSignal(
+        Guid signalId, HearSignalCommand body, HearSignalHandler handler, ICurrentUser user, CancellationToken cancellationToken)
+    {
+        var heard = await handler.Handle(user.RequiredId, signalId, body, cancellationToken);
+
+        return heard.ToHttpResult();
     }
 }

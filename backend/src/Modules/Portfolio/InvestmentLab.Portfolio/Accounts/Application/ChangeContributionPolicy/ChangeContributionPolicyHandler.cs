@@ -16,6 +16,7 @@ public sealed class ChangeContributionPolicyHandler(IAccountRepository accounts)
 
         account.ChangeContributionPolicy(policy.Value);
         await accounts.SaveChangesAsync(cancellationToken);
+
         return account.ToSetupDto();
     }
 }

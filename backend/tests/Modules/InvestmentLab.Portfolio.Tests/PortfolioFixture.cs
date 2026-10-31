@@ -3,7 +3,6 @@ using InvestmentLab.Portfolio.Transactions.Domain;
 
 namespace InvestmentLab.Portfolio.Tests;
 
-/// <summary>An EUR account with sleeves A (70%) and B (30%) and helpers to journal entries on it.</summary>
 internal sealed class PortfolioFixture
 {
     public static readonly Guid Etf = Guid.CreateVersion7();
@@ -46,6 +45,7 @@ internal sealed class PortfolioFixture
     public Transaction Add(Result<Transaction> transaction)
     {
         Journal.Add(transaction.Value);
+
         return transaction.Value;
     }
 

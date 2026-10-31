@@ -6,11 +6,6 @@ using UglyToad.PdfPig.Writer;
 
 namespace InvestmentLab.Taxation.Declarations.Infrastructure;
 
-/// <summary>
-/// A cheat sheet for filing online: every amount of the return in the form's order with its "poz." number, ready to
-/// type (comma decimals, no grouping), the ones the online form works out itself marked; the tax due on top, the
-/// figures behind part G, and only what has to be done before filing. Reads the filled fields only, so any form prints.
-/// </summary>
 public sealed class DeclarationSummaryPrinter : IDeclarationPrinter
 {
     public string Kind => "summary";
@@ -29,12 +24,14 @@ public sealed class DeclarationSummaryPrinter : IDeclarationPrinter
 
         foreach (var section in declaration.Sections)
             sheet.Section($"{section.Code}. {section.Title}", Shown(section.Fields));
+
         foreach (var attachment in declaration.Attachments)
             sheet.Section($"Załącznik {attachment.Title}", attachment.Fields);
 
         if (declaration.Facts is { Count: > 0 } facts)
         {
             sheet.Heading("Довідково");
+
             foreach (var fact in facts)
                 sheet.Row(null, fact.Label, $"{Amount(fact.Amount)} zł", computed: false);
         }
@@ -43,13 +40,14 @@ public sealed class DeclarationSummaryPrinter : IDeclarationPrinter
         if (actions.Count > 0)
         {
             sheet.Heading("Перед поданням");
+
             foreach (var action in actions)
                 sheet.Bullet(action);
         }
+
         return builder.Build();
     }
 
-    /// <summary>What there is to type or to check: zeros stay out (an empty box is 0), the attachments' count stays in.</summary>
     private static IReadOnlyList<DeclarationField> Shown(IReadOnlyList<DeclarationField> fields) =>
         [.. fields.Where(field => field.Amount is null || field.Amount != 0m)];
 
@@ -59,7 +57,6 @@ public sealed class DeclarationSummaryPrinter : IDeclarationPrinter
 
     private static string Value(DeclarationField field) => field.Amount is { } amount ? Amount(amount) : field.Text ?? "";
 
-    /// <summary>Writes top to bottom on A4 pages, starting a new page when the next block does not fit.</summary>
     private sealed class Sheet(PdfDocumentBuilder builder, PdfDocumentBuilder.AddedFont regular, PdfDocumentBuilder.AddedFont bold)
     {
         private const double Width = 595.28, Height = 841.89, Margin = 48, PositionX = Margin, LabelX = Margin + 48, ValueRight = Width - Margin;
@@ -85,6 +82,7 @@ public sealed class DeclarationSummaryPrinter : IDeclarationPrinter
                 Text(line, Margin, 9, regular, Grey);
                 _y -= 13;
             }
+
             _y -= 6;
         }
 
@@ -112,12 +110,13 @@ public sealed class DeclarationSummaryPrinter : IDeclarationPrinter
         {
             if (fields.Count == 0)
                 return;
+
             Heading(title);
+
             foreach (var field in fields)
                 Row($"poz. {field.Position}", field.Label, Value(field), field.Computed);
         }
 
-        /// <summary>A position, its name (wrapped) and its value right-aligned; a computed one says so after its name, in grey.</summary>
         public void Row(string? position, string label, string value, bool computed)
         {
             const string Mark = "рахує форма — звірте";
@@ -128,15 +127,20 @@ public sealed class DeclarationSummaryPrinter : IDeclarationPrinter
             var height = (lines.Count + (computed && !markInline ? 1 : 0)) * 13;
             Space(8 + height);
             _y -= 13;
+
             if (position is not null)
                 Text(position, PositionX, 9, regular, Grey);
+
             Text(value, ValueRight - valueWidth, 11, bold, computed ? Grey : Ink);
+
             for (var index = 0; index < lines.Count; index++)
             {
                 Text(lines[index], LabelX, 10, regular, Ink);
+
                 if (index < lines.Count - 1)
                     _y -= 13;
             }
+
             if (computed && markInline)
                 Text(Mark, LabelX + Measure(lines[^1], regular, 10) + 8, 8, regular, Grey);
             else if (computed)
@@ -144,6 +148,7 @@ public sealed class DeclarationSummaryPrinter : IDeclarationPrinter
                 _y -= 13;
                 Text(Mark, LabelX, 8, regular, Grey);
             }
+
             _y -= 6;
             Line();
         }
@@ -154,12 +159,15 @@ public sealed class DeclarationSummaryPrinter : IDeclarationPrinter
             Space(6 + lines.Count * 13);
             _y -= 13;
             Text("•", Margin + 4, 10, bold, Accent);
+
             foreach (var (line, index) in lines.Select((line, index) => (line, index)))
             {
                 Text(line, Margin + 16, 10, regular, Ink);
+
                 if (index < lines.Count - 1)
                     _y -= 13;
             }
+
             _y -= 4;
         }
 
@@ -172,6 +180,7 @@ public sealed class DeclarationSummaryPrinter : IDeclarationPrinter
         private PdfPageBuilder NewPage()
         {
             _y = Height - Margin;
+
             return _page = builder.AddPage(Width, Height);
         }
 
@@ -194,6 +203,7 @@ public sealed class DeclarationSummaryPrinter : IDeclarationPrinter
         {
             var lines = new List<string>();
             var line = "";
+
             foreach (var word in text.Split(' ', StringSplitOptions.RemoveEmptyEntries))
             {
                 var candidate = line.Length == 0 ? word : $"{line} {word}";
@@ -207,8 +217,10 @@ public sealed class DeclarationSummaryPrinter : IDeclarationPrinter
                     line = candidate;
                 }
             }
+
             if (line.Length > 0)
                 lines.Add(line);
+
             return lines;
         }
     }

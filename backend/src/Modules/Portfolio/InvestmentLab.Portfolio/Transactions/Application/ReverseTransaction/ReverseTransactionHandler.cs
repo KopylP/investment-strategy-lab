@@ -2,7 +2,6 @@ using InvestmentLab.Portfolio.Transactions.Domain;
 
 namespace InvestmentLab.Portfolio.Transactions.Application.ReverseTransaction;
 
-/// <param name="ReversedOn">Null: today.</param>
 public sealed record ReverseTransactionCommand(string Reason, DateOnly? ReversedOn = null);
 
 public sealed class ReverseTransactionHandler(TransactionRecorder recorder)
@@ -13,7 +12,6 @@ public sealed class ReverseTransactionHandler(TransactionRecorder recorder)
                 ? Reverse(context, original, command, TransactionSource.Manual)
                 : TransactionErrors.NotFound(transactionId), cancellationToken);
 
-    /// <summary>Undoes the entry recorded from another module's reference; idempotent through the reversal's own reference.</summary>
     public Task<Result<RecordedTransaction>> HandleBySource(Guid accountId, string sourceReference, string reason, CancellationToken cancellationToken) =>
         recorder.RecordAsync(accountId, context =>
             context.Journal.FirstOrDefault(entry => entry.Source.Reference == sourceReference) is { } original
@@ -27,6 +25,7 @@ public sealed class ReverseTransactionHandler(TransactionRecorder recorder)
             return TransactionErrors.AlreadyReversed(original.Id.Value);
 
         var reversedOn = command.ReversedOn ?? DateOnly.FromDateTime(context.Now.UtcDateTime);
+
         return original.Reverse(context.Account, command.Reason ?? "", reversedOn, source, context.Now);
     }
 }

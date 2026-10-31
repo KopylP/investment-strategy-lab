@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InvestmentLab.Identity.Users.Infrastructure;
 
-/// <summary>The user-only part of the ASP.NET Core Identity schema (no roles), with snake_case tables.</summary>
 internal static class UserConfiguration
 {
     public static void Configure(ModelBuilder modelBuilder)

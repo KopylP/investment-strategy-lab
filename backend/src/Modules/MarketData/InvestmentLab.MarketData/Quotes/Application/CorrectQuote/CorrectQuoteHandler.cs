@@ -1,10 +1,8 @@
-using InvestmentLab.MarketData.Contracts.Quotes;
 using InvestmentLab.MarketData.Instruments.Domain;
 using InvestmentLab.MarketData.Quotes.Domain;
 
 namespace InvestmentLab.MarketData.Quotes.Application.CorrectQuote;
 
-/// <param name="AdjustedClose">Defaults to <paramref name="Close"/> when the day had no dividend or split.</param>
 public sealed record CorrectQuoteCommand(Guid InstrumentId, DateOnly TradingDate, decimal Close, decimal? AdjustedClose, string Reason);
 
 public sealed class CorrectQuoteHandler(IQuoteStore store, TimeProvider clock)
@@ -32,8 +30,8 @@ public sealed class CorrectQuoteHandler(IQuoteStore store, TimeProvider clock)
 
         existing.ApplyCorrection(command.Close, adjustedClose);
         store.Add(correction.Value);
-        store.Publish(new QuoteCorrectedV1(instrumentId.Value, command.TradingDate), now);
         await store.SaveChangesAsync(cancellationToken);
+
         return Result.Success();
     }
 }

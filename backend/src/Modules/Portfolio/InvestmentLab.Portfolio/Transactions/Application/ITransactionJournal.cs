@@ -4,7 +4,6 @@ using InvestmentLab.Portfolio.Transactions.Domain;
 
 namespace InvestmentLab.Portfolio.Transactions.Application;
 
-/// <summary>The account journal and its holdings read model, changed together in one save.</summary>
 public interface ITransactionJournal
 {
     Task<InvestmentAccount?> FindAccountAsync(AccountId accountId, CancellationToken cancellationToken);
@@ -17,7 +16,7 @@ public interface ITransactionJournal
 
     Task ReplaceHoldingsAsync(AccountHoldings holdings, UserId ownerId, CancellationToken cancellationToken);
 
-    void Publish<TEvent>(TEvent integrationEvent, DateTimeOffset occurredAt) where TEvent : class;
+    void Record(IDomainEvent domainEvent);
 
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }

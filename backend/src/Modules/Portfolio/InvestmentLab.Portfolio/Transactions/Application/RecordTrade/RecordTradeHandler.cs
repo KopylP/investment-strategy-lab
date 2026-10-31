@@ -3,7 +3,6 @@ using InvestmentLab.Portfolio.Transactions.Domain;
 
 namespace InvestmentLab.Portfolio.Transactions.Application.RecordTrade;
 
-/// <param name="Allocations">Null: split by target shares (buy) or by held units (sell).</param>
 public sealed record RecordTradeCommand(
     Guid InstrumentId,
     string Side,
@@ -24,9 +23,11 @@ public sealed class RecordTradeHandler(TransactionRecorder recorder)
         var side = TransactionInput.ParseEnum<TradeSide>(command.Side, "transaction.side_unknown");
         if (side.IsFailure)
             return side.Error;
+
         var quantity = Quantity.TryOf(command.Quantity);
         if (quantity.IsFailure)
             return quantity.Error;
+
         var price = Price.TryOf(command.Price, currency);
         if (price.IsFailure)
             return price.Error;
@@ -38,6 +39,7 @@ public sealed class RecordTradeHandler(TransactionRecorder recorder)
                 : TransactionInput.HeldWeights(context.Holdings, command.InstrumentId)));
         if (allocations.IsFailure)
             return allocations.Error;
+
         if (allocations.Value.Count == 0 && !quantity.Value.IsNone)
             return TransactionErrors.NothingToAllocateTo(command.InstrumentId);
 

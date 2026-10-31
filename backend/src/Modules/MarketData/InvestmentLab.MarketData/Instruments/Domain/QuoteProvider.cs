@@ -1,6 +1,5 @@
 namespace InvestmentLab.MarketData.Instruments.Domain;
 
-/// <summary>Source of quotes that knows instruments by its own symbols.</summary>
 public sealed record QuoteProvider
 {
     public static readonly QuoteProvider YFinance = new("yfinance");
@@ -12,6 +11,7 @@ public sealed record QuoteProvider
     public static Result<QuoteProvider> TryOf(string? code)
     {
         var normalized = code?.Trim().ToLowerInvariant();
+
         return string.IsNullOrEmpty(normalized) || !normalized.All(char.IsAsciiLetterOrDigit)
             ? Error.Validation("quote_provider.invalid", $"'{code}' is not a quote provider code.")
             : new QuoteProvider(normalized);

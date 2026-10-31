@@ -2,7 +2,6 @@ using System.Globalization;
 
 namespace InvestmentLab.SharedKernel;
 
-/// <summary>An amount of one currency, rounded to cents. Arithmetic only within the same currency.</summary>
 public sealed record Money
 {
     public decimal Amount { get; }
@@ -30,12 +29,4 @@ public sealed record Money
 
     private Money EnsureSameCurrency(Money other) =>
         other.Currency == Currency ? other : throw new CurrencyMismatchException(Currency, other.Currency);
-}
-
-public static class MoneyExtensions
-{
-    extension(IEnumerable<Money> amounts)
-    {
-        public Money Total(Currency currency) => amounts.Aggregate(Money.Zero(currency), (total, amount) => total + amount);
-    }
 }

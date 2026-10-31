@@ -20,6 +20,7 @@ public sealed class AssignProviderSymbolHandler(IInstrumentRepository instrument
 
         instrument.AssignProviderSymbol(symbol.Value);
         await instruments.SaveChangesAsync(cancellationToken);
+
         return Result.Success();
     }
 }

@@ -78,14 +78,17 @@ public sealed class HomeAssistantChannelTests
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var path = request.RequestUri!.AbsolutePath.TrimStart('/');
+
             if (request.Method == HttpMethod.Post)
                 Posts.Add(path);
+
             var body = path switch
             {
                 "core/api/services" when request.Method == HttpMethod.Get => Services,
                 "core/api/states" => States,
                 _ => "[]",
             };
+
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(body, Encoding.UTF8, "application/json") });
         }
     }

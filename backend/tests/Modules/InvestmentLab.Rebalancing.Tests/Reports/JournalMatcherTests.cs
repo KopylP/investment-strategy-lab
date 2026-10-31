@@ -28,12 +28,12 @@ public sealed class JournalMatcherTests
             Draft(ActionKind.Park, Cash, 1m, 140m));
         var operations = new[]
         {
-            Operation(JournalOperationKind.Buy, Nasdaq, 4m, Monday.AddDays(-5)),   // before the report: the plan already knew it
+            Operation(JournalOperationKind.Buy, Nasdaq, 4m, Monday.AddDays(-5)),
             Operation(JournalOperationKind.Contribution, null, 227m, Monday, 1m),
             Operation(JournalOperationKind.Sell, Value, 3m, Monday),
             Operation(JournalOperationKind.Buy, Nasdaq, 6m, Monday),
             Operation(JournalOperationKind.Buy, Nasdaq, 4m, Monday.AddDays(1)),
-            Operation(JournalOperationKind.Buy, Value, 1m, Monday),               // off-plan: no buy of Value planned
+            Operation(JournalOperationKind.Buy, Value, 1m, Monday),
         };
 
         var matches = JournalMatcher.Match(report, operations);
@@ -55,7 +55,6 @@ public sealed class JournalMatcherTests
         (buy.Status, report.Status).ShouldBe((ActionStatus.PartiallyExecuted, ReportStatus.InProgress));
         buy.Fills.ShouldHaveSingleItem().ShouldBe(new Fill(1, 6m, 16.4m, 0m, Monday, "з журналу", bought.TransactionId, Linked: true));
 
-        // Already linked entries are not offered again; a later trade completes the rest.
         var rest = Operation(JournalOperationKind.Buy, Nasdaq, 4m, Monday.AddDays(2));
         JournalMatcher.Match(report, [rest]).ShouldHaveSingleItem().Completes.ShouldBeTrue();
 

@@ -22,34 +22,34 @@ internal static class ReportsEndpoints
                 (await handler.Get(reportId, ct)).ToHttpResult())
             .WithName("GetReport");
 
-        reports.MapPost("/{reportId:guid}/close", async (Guid reportId, MarkingHandler handler, CancellationToken ct) =>
-                (await handler.Close(reportId, ct)).ToHttpResult())
+        reports.MapPost("/{reportId:guid}/close", async (Guid reportId, CloseReportHandler handler, CancellationToken ct) =>
+                (await handler.Handle(reportId, ct)).ToHttpResult())
             .WithName("CloseReport");
 
-        reports.MapGet("/{reportId:guid}/journal-matches", async (Guid reportId, LoadOperationsHandler handler, CancellationToken ct) =>
-                (await handler.Preview(reportId, ct)).ToHttpResult())
+        reports.MapGet("/{reportId:guid}/journal-matches", async (Guid reportId, PreviewJournalMatchesHandler handler, CancellationToken ct) =>
+                (await handler.Handle(reportId, ct)).ToHttpResult())
             .WithName("PreviewJournalMatches");
 
-        reports.MapPost("/{reportId:guid}/journal-matches", async (Guid reportId, LoadOperationsHandler handler, CancellationToken ct) =>
-                (await handler.Apply(reportId, ct)).ToHttpResult())
+        reports.MapPost("/{reportId:guid}/journal-matches", async (Guid reportId, ApplyJournalMatchesHandler handler, CancellationToken ct) =>
+                (await handler.Handle(reportId, ct)).ToHttpResult())
             .WithName("ApplyJournalMatches");
 
         var action = reports.MapGroup("/{reportId:guid}/actions/{actionId:guid}");
 
-        action.MapPost("/fills", async (Guid reportId, Guid actionId, MarkActionExecutedCommand body, MarkingHandler handler, CancellationToken ct) =>
-                (await handler.MarkExecuted(reportId, actionId, body, ct)).ToHttpResult())
+        action.MapPost("/fills", async (Guid reportId, Guid actionId, MarkActionExecutedCommand body, MarkActionExecutedHandler handler, CancellationToken ct) =>
+                (await handler.Handle(reportId, actionId, body, ct)).ToHttpResult())
             .WithName("MarkActionExecuted");
 
-        action.MapPost("/partial-fills", async (Guid reportId, Guid actionId, RecordPartialFillCommand body, MarkingHandler handler, CancellationToken ct) =>
-                (await handler.RecordPartialFill(reportId, actionId, body, ct)).ToHttpResult())
+        action.MapPost("/partial-fills", async (Guid reportId, Guid actionId, RecordPartialFillCommand body, RecordPartialFillHandler handler, CancellationToken ct) =>
+                (await handler.Handle(reportId, actionId, body, ct)).ToHttpResult())
             .WithName("RecordPartialFill");
 
-        action.MapPost("/skip", async (Guid reportId, Guid actionId, SkipActionCommand body, MarkingHandler handler, CancellationToken ct) =>
-                (await handler.Skip(reportId, actionId, body, ct)).ToHttpResult())
+        action.MapPost("/skip", async (Guid reportId, Guid actionId, SkipActionCommand body, SkipActionHandler handler, CancellationToken ct) =>
+                (await handler.Handle(reportId, actionId, body, ct)).ToHttpResult())
             .WithName("SkipAction");
 
-        action.MapPost("/undo", async (Guid reportId, Guid actionId, MarkingHandler handler, CancellationToken ct) =>
-                (await handler.Undo(reportId, actionId, ct)).ToHttpResult())
+        action.MapPost("/undo", async (Guid reportId, Guid actionId, UndoMarkHandler handler, CancellationToken ct) =>
+                (await handler.Handle(reportId, actionId, ct)).ToHttpResult())
             .WithName("UndoActionMark");
 
         return group;

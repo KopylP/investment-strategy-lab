@@ -10,7 +10,6 @@ builder.AddNpgsqlDataSource(ResourceNames.Database);
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>
 {
-    // In development the cause of a 500 is shown, so a failing screen or test says what broke.
     if (context.HttpContext.RequestServices.GetRequiredService<IHostEnvironment>().IsDevelopment()
         && context.HttpContext.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error is { } error)
         context.ProblemDetails.Detail = $"{error.GetType().Name}: {error.Message} {error.InnerException?.Message}";
@@ -21,7 +20,7 @@ builder.AddSelfHosting();
 var app = builder.Build();
 
 app.UseSelfHosting();
-// After the path base: routes are matched on the path without "/investlab".
+
 app.UseRouting();
 
 app.UseExceptionHandler();

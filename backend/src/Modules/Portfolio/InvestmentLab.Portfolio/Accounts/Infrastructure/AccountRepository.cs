@@ -15,8 +15,5 @@ internal sealed class AccountRepository(PortfolioDbContext db) : IAccountReposit
 
     public void Add(InvestmentAccount account) => db.Accounts.Add(account);
 
-    public void Publish<TEvent>(TEvent integrationEvent, DateTimeOffset occurredAt) where TEvent : class =>
-        db.Publish(integrationEvent, occurredAt);
-
     public Task SaveChangesAsync(CancellationToken cancellationToken) => db.SaveChangesAsync(cancellationToken);
 }
