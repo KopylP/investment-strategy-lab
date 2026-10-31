@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { defaultStrategies } from './default-strategies';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -13,7 +14,7 @@ test('the dashboard shows value, returns, drawdown and allocation over time', as
   await expect(page.getByRole('heading', { name: 'Огляд' })).toBeVisible();
 
   const api = page.request;
-  const strategies = await (await api.post('/api/strategies/defaults', { data: {} })).json();
+  const strategies = await defaultStrategies(page);
   const account = await (await api.post('/api/portfolio/accounts', {
     data: {
       name: 'XTB EUR', broker: 'XTB', baseCurrency: 'EUR',
@@ -32,7 +33,7 @@ test('the dashboard shows value, returns, drawdown and allocation over time', as
   expect(imported.ok()).toBeTruthy();
 
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Вартість у часі' })).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByText('Вартість портфеля')).toBeVisible({ timeout: 60_000 });
   await expect(page.locator('app-value-chart canvas')).toBeVisible();
   await page.waitForTimeout(1500);
   await page.screenshot({ path: 'e2e/screenshots/16-dashboard.png', fullPage: true });
