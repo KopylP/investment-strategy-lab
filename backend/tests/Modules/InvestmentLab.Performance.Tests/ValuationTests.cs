@@ -25,6 +25,37 @@ public sealed class ValuationTests
     }
 
     [Fact]
+    public void Cost_basis_is_what_was_paid_for_the_units_still_held_first_in_first_out_with_fees()
+    {
+        var snapshots = ValuationCalculator.Build([
+            new Movement(D1, 1, Sleeve, null, 0m, 5000m, 5000m),
+            new Movement(D1, 2, Sleeve, Etf, 10m, -1010m, 0m, TradePrice: 100m, UnitCost: 101m),   // 10 € fee
+            new Movement(D2, 3, Sleeve, Etf, 10m, -1200m, 0m, TradePrice: 120m),
+            new Movement(D3, 4, Sleeve, Etf, -15m, 2100m, 0m, TradePrice: 140m),                  // all of the first lot, half of the second
+        ], [D1, D2, D3], (_, _) => 140m);
+
+        var account = snapshots.Where(snapshot => snapshot.SubPortfolioId is null).ToList();
+        account.Select(snapshot => snapshot.CostBasis).ShouldBe([1010m, 2210m, 600m]);
+        (account[2].Value - account[2].Cash).ShouldBe(700m);   // the gain on what is held: 700 - 600, the sale is not in it
+    }
+
+    [Fact]
+    public void A_transfer_moves_the_cost_between_sleeves_and_leaves_the_account_cost_alone()
+    {
+        var snapshots = ValuationCalculator.Build([
+            new Movement(D1, 1, Sleeve, Etf, 10m, -1000m, 0m, TradePrice: 100m),
+            new Movement(D1, 2, Sleeve, Etf, 10m, -2000m, 0m, TradePrice: 200m),
+            new Movement(D2, 3, Sleeve, Etf, -15m, 0m, 0m, TransferQuantity: -15m),
+            new Movement(D2, 4, Other, Etf, 15m, 0m, 0m, TransferQuantity: 15m),
+        ], [D1, D2], (_, _) => 200m);
+
+        var last = snapshots.Where(snapshot => snapshot.Date == D2).ToList();
+        last.Single(snapshot => snapshot.SubPortfolioId == Sleeve).CostBasis.ShouldBe(1000m);
+        last.Single(snapshot => snapshot.SubPortfolioId == Other).CostBasis.ShouldBe(2000m);
+        last.Single(snapshot => snapshot.SubPortfolioId is null).CostBasis.ShouldBe(3000m);
+    }
+
+    [Fact]
     public void A_dollar_balance_is_valued_at_each_day_rate_so_the_rate_moves_value_but_is_not_a_flow()
     {
         var rates = new Dictionary<DateOnly, decimal> { [D1] = 0.90m, [D2] = 0.90m, [D3] = 0.85m };

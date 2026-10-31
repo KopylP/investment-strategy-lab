@@ -9,17 +9,27 @@ import { Viewport } from '../../../../shared/ui/viewport';
 import { DashboardDto } from '../../data-access/dashboard-api';
 
 const showPlanKey = 'overview.valueChart.showPlan';
+const showHeldKey = 'overview.valueChart.showHeld';
 
-/** Value over time against the money paid in, with the same two lines "everything as planned" and report markers. */
+/**
+ * Value over time against the money paid in, with the same two lines "everything as planned" and report markers.
+ * The held-assets switch swaps the pair for the positions without cash against what was paid for them: the gap between
+ * the lines is then the gain on what is held. The plan has no such pair, so its lines step aside meanwhile.
+ */
 @Component({
   selector: 'app-value-chart',
   imports: [FormsModule, LiveChart, ToggleSwitch],
   template: `
-    @if (hasPlan()) {
-      <label class="flex items-center justify-end gap-2 mb-2 text-sm text-muted-color">
-        <p-toggleswitch [ngModel]="showPlan()" (ngModelChange)="setShowPlan($event)" /> якби все за планом
+    <div class="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 mb-2 text-sm text-muted-color">
+      @if (hasPlan() && !showHeld()) {
+        <label class="flex items-center gap-2">
+          <p-toggleswitch [ngModel]="showPlan()" (ngModelChange)="setShowPlan($event)" /> якби все за планом
+        </label>
+      }
+      <label class="flex items-center gap-2">
+        <p-toggleswitch [ngModel]="showHeld()" (ngModelChange)="setShowHeld($event)" /> активи й скільки за них заплачено
       </label>
-    }
+    </div>
     <app-live-chart [data]="data()" [options]="options()" [height]="viewport.phone() ? '15rem' : '22rem'" />`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -40,15 +50,18 @@ export class ValueChart {
 
   protected readonly hasPlan = computed(() => this.dashboard().series.some((point) => point.planValue !== null));
   /** The plan lines are on unless switched off here; the choice is remembered on this device. */
-  protected readonly showPlan = signal(readShowPlan());
+  protected readonly showPlan = signal(readChoice(showPlanKey, true));
+  /** Off unless switched on here; the choice is remembered on this device. */
+  protected readonly showHeld = signal(readChoice(showHeldKey, false));
 
   protected setShowPlan(show: boolean): void {
     this.showPlan.set(show);
-    try {
-      localStorage.setItem(showPlanKey, String(show));
-    } catch {
-      /* private mode: the choice is just not remembered */
-    }
+    remember(showPlanKey, show);
+  }
+
+  protected setShowHeld(show: boolean): void {
+    this.showHeld.set(show);
+    remember(showHeldKey, show);
   }
 
   protected readonly data = computed(() => {
@@ -58,12 +71,13 @@ export class ValueChart {
     const palette = this.theme.palette();
     const reportDays = new Map(reports.map((report) => [report.date, report]));
     const plan = palette.series[1];
+    const held = this.showHeld();
     return {
       labels: series.map((point) => formatDate(point.date)),
       datasets: [
         {
-          label: 'Вартість',
-          data: series.map((point) => scaled(point.value)),
+          label: held ? 'Вартість активів' : 'Вартість',
+          data: series.map((point) => scaled(held ? point.positionsValue : point.value)),
           borderColor: palette.primary,
           backgroundColor: palette.primarySoft,
           fill: false,
@@ -74,8 +88,8 @@ export class ValueChart {
           pointHoverRadius: 6,
         },
         {
-          label: 'Внесено',
-          data: series.map((point) => scaled(point.netContributions)),
+          label: held ? 'Заплачено за активи' : 'Внесено',
+          data: series.map((point) => scaled(held ? point.costBasis : point.netContributions)),
           borderColor: palette.neutral,
           borderDash: [6, 4],
           stepped: true,
@@ -84,7 +98,7 @@ export class ValueChart {
           fill: false,
         },
         // The plan drawn like the real pair, in its own colour: its value solid, the money it would have paid in dashed.
-        ...(this.hasPlan() && this.showPlan()
+        ...(this.hasPlan() && this.showPlan() && !held
           ? [
               {
                 label: 'Вартість за планом',
@@ -115,6 +129,7 @@ export class ValueChart {
     const palette = this.theme.palette();
     const { series, reports } = this.dashboard();
     const { currency } = this.scale();
+    const held = this.showHeld();
     const reportDays = new Map(reports.map((report) => [formatDate(report.date), report]));
     // A phone keeps the lines and drops the ink: a one-row legend, four unrotated dates, amounts without the currency.
     const phone = this.viewport.phone();
@@ -131,9 +146,13 @@ export class ValueChart {
         tooltip: {
           callbacks: {
             label: (context: { dataset: { label: string }; parsed: { y: number } }) => `${context.dataset.label}: ${formatMoney(context.parsed.y, currency, 0)}`,
-            afterBody: (items: { label: string }[]) => {
+            afterBody: (items: { label: string; parsed: { y: number } }[]) => {
               const report = reportDays.get(items[0]?.label);
-              return report ? [`Рапорт: ${report.kind === 'RiskReview' ? 'ризик-рев’ю' : formatPeriod(report.period)}`] : [];
+              const gain = held && items.length >= 2 ? items[0].parsed.y - items[1].parsed.y : null;
+              return [
+                ...(gain === null ? [] : [`Прибуток на активах: ${gain >= 0 ? '+' : ''}${formatMoney(gain, currency, 0)}`]),
+                ...(report ? [`Рапорт: ${report.kind === 'RiskReview' ? 'ризик-рев’ю' : formatPeriod(report.period)}`] : []),
+              ];
             },
           },
         },
@@ -157,10 +176,19 @@ export class ValueChart {
   });
 }
 
-function readShowPlan(): boolean {
+function readChoice(key: string, fallback: boolean): boolean {
   try {
-    return localStorage.getItem(showPlanKey) !== 'false';
+    const stored = localStorage.getItem(key);
+    return stored === null ? fallback : stored !== 'false';
   } catch {
-    return true;
+    return fallback;
+  }
+}
+
+function remember(key: string, choice: boolean): void {
+  try {
+    localStorage.setItem(key, String(choice));
+  } catch {
+    /* private mode: the choice is just not remembered */
   }
 }

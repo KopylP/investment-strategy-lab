@@ -5,7 +5,9 @@ namespace InvestmentLab.Performance.Valuation.Application;
 
 /// <param name="PlanValue">Value of the "everything as planned" portfolio; null without a plan.</param>
 /// <param name="PlanNetContributions">Money paid into that portfolio: what the reports said to contribute.</param>
-public sealed record SeriesPointDto(DateOnly Date, decimal Value, decimal NetContributions, decimal TwrIndex, decimal? PlanValue, decimal? PlanNetContributions, decimal Drawdown);
+/// <param name="PositionsValue">What the held units are worth that day, without cash.</param>
+/// <param name="CostBasis">What was paid for those units, fees included.</param>
+public sealed record SeriesPointDto(DateOnly Date, decimal Value, decimal NetContributions, decimal TwrIndex, decimal? PlanValue, decimal? PlanNetContributions, decimal Drawdown, decimal PositionsValue, decimal CostBasis);
 
 /// <summary>One day of the "everything as planned" portfolio.</summary>
 public sealed record PlanPoint(decimal Value, decimal Flow, decimal NetContributions);
@@ -18,6 +20,8 @@ public sealed record AccountPerformanceDto(Guid Id, string Name, string Broker, 
 public sealed record ReportMarkerDto(Guid ReportId, DateOnly Date, string Kind, string Period, Guid AccountId);
 
 /// <param name="AccountId">Null for the dashboard of all accounts together.</param>
+/// <param name="PositionsValue">What the held units are worth now, without cash.</param>
+/// <param name="CostBasis">What was paid for those units, fees included: the gain on them is the difference.</param>
 public sealed record DashboardDto(
     Guid? AccountId,
     string Currency,
@@ -35,7 +39,9 @@ public sealed record DashboardDto(
     IReadOnlyList<SeriesPointDto> Series,
     IReadOnlyList<SubPortfolioPerformanceDto> SubPortfolios,
     IReadOnlyList<AccountPerformanceDto> Accounts,
-    IReadOnlyList<ReportMarkerDto> Reports);
+    IReadOnlyList<ReportMarkerDto> Reports,
+    decimal PositionsValue,
+    decimal CostBasis);
 
 /// <summary>The dashboard (§6.8 GetDashboard): value over time, returns, drawdown, plan vs actual, allocation — of one account or of all.</summary>
 public sealed class DashboardQueries(SnapshotBuilder builder, IPerformanceRepository store, IAccountSetupQueries accounts, PriceBook prices)
@@ -134,11 +140,12 @@ public sealed class DashboardQueries(SnapshotBuilder builder, IPerformanceReposi
             reports);
     }
 
-    private static Snapshot ToSnapshot(ValuationSnapshot s) => new(s.Date, s.SubPortfolioId, s.Value, s.Cash, s.Flow, s.NetContributions, s.TwrIndex);
+    private static Snapshot ToSnapshot(ValuationSnapshot s) => new(s.Date, s.SubPortfolioId, s.Value, s.Cash, s.Flow, s.NetContributions, s.TwrIndex, s.CostBasis);
 
     /// <summary>
     /// Sums the accounts day by day in the target currency: an account without a snapshot that day keeps its last value,
-    /// its flow counts only on its own day; the time-weighted index is chained on the sum.
+    /// its flow counts only on its own day; the time-weighted index is chained on the sum. Cost basis takes the day's
+    /// rate like the value, so the gain on held units is each account's own gain in the target currency.
     /// </summary>
     private static (IReadOnlyList<Snapshot> Series, IReadOnlyDictionary<DateOnly, PlanPoint>? Plan) Combine(
         IReadOnlyList<(AccountSetupDto Account, AccountHistory History)> histories, IReadOnlyList<DateOnly> days, FxOn fx)
@@ -151,7 +158,7 @@ public sealed class DashboardQueries(SnapshotBuilder builder, IPerformanceReposi
         decimal previous = 0m, index = 1m, contributions = 0m, planContributions = 0m;
         foreach (var day in days)
         {
-            decimal value = 0m, flow = 0m, planned = 0m, planFlow = 0m;
+            decimal value = 0m, cash = 0m, costBasis = 0m, flow = 0m, planned = 0m, planFlow = 0m;
             for (var i = 0; i < histories.Count; i++)
             {
                 var (account, history) = histories[i];
@@ -162,6 +169,8 @@ public sealed class DashboardQueries(SnapshotBuilder builder, IPerformanceReposi
                 var snapshot = history.Series[cursors[i]];
                 var rate = fx(account.BaseCurrency, day) ?? 0m;
                 value += snapshot.Value * rate;
+                cash += snapshot.Cash * rate;
+                costBasis += snapshot.CostBasis * rate;
                 if (snapshot.Date == day)
                     flow += snapshot.Flow * rate;
                 if (history.Plan?.TryGetValue(snapshot.Date, out var shadow) == true)
@@ -181,7 +190,7 @@ public sealed class DashboardQueries(SnapshotBuilder builder, IPerformanceReposi
             contributions += flow;
             planContributions += planFlow;
             previous = value;
-            series.Add(new Snapshot(day, null, decimal.Round(value, 2), 0m, decimal.Round(flow, 2), decimal.Round(contributions, 2), decimal.Round(index, 8)));
+            series.Add(new Snapshot(day, null, decimal.Round(value, 2), decimal.Round(cash, 2), decimal.Round(flow, 2), decimal.Round(contributions, 2), decimal.Round(index, 8), decimal.Round(costBasis, 2)));
             if (anyPlan)
                 plan[day] = new PlanPoint(decimal.Round(planned, 2), decimal.Round(planFlow, 2), decimal.Round(planContributions, 2));
         }
@@ -207,7 +216,7 @@ public sealed class DashboardQueries(SnapshotBuilder builder, IPerformanceReposi
             peak = Math.Max(peak, s.TwrIndex);
             var planned = plan?.GetValueOrDefault(s.Date);
             return new SeriesPointDto(s.Date, s.Value, s.NetContributions, s.TwrIndex / baseIndex, planned?.Value, planned?.NetContributions,
-                peak > 0m ? decimal.Round(s.TwrIndex / peak - 1m, 6) : 0m);
+                peak > 0m ? decimal.Round(s.TwrIndex / peak - 1m, 6) : 0m, s.Value - s.Cash, s.CostBasis);
         }).ToList();
 
         var flows = window.Where(s => s.Flow != 0m).Select(s => (s.Date, -s.Flow)).ToList();
@@ -219,12 +228,12 @@ public sealed class DashboardQueries(SnapshotBuilder builder, IPerformanceReposi
         var summary = new DashboardDto(
             null, "", last.Date, key, last.Value, last.NetContributions, last.Value - last.NetContributions,
             periodTwr, annualized, xirr, drawdown.Max, drawdown.Current, plan?.GetValueOrDefault(last.Date)?.Value,
-            series, [], [], []);
+            series, [], [], [], last.Value - last.Cash, last.CostBasis);
         return (summary, start, before);
     }
 
     private static DashboardDto Empty(Guid? accountId, string currency, string key, IReadOnlyList<ReportMarkerDto> reports) =>
-        new(accountId, currency, null, key, 0m, 0m, 0m, null, null, null, 0m, 0m, null, [], [], [], reports);
+        new(accountId, currency, null, key, 0m, 0m, 0m, null, null, null, 0m, 0m, null, [], [], [], reports, 0m, 0m);
 
     private static string PeriodKey(string? period) => string.IsNullOrWhiteSpace(period) ? "ALL" : period.ToUpperInvariant();
 

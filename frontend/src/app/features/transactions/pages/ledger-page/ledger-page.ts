@@ -49,6 +49,8 @@ export class LedgerPage {
   protected readonly kindOptions = [
     { label: 'Угоди', value: 'trade' },
     { label: 'Рух коштів', value: 'cash' },
+    { label: 'Внески', value: 'Contribution' },
+    { label: 'Виводи', value: 'Withdrawal' },
     { label: 'Перекази', value: 'InternalTransfer' },
     { label: 'Сторно', value: 'Reversal' },
   ];

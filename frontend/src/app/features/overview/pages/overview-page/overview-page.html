@@ -74,6 +74,20 @@
               </span>
               <span class="text-sm text-muted-color">прибуток понад внесене · внесено <app-money [amount]="d.netContributions" [currency]="d.currency" [digits]="0" [hideOriginal]="true" /></span>
             </div>
+            @if (store.heldGain(); as held) {
+              <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
+                <span class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-semibold"
+                  [style.background]="held.amount >= 0 ? 'color-mix(in srgb, var(--p-finance-gain) 14%, transparent)' : 'color-mix(in srgb, var(--p-finance-loss) 14%, transparent)'"
+                  [appSignedValue]="held.amount">
+                  <i class="pi text-xs" [class.pi-arrow-up-right]="held.amount >= 0" [class.pi-arrow-down-right]="held.amount < 0"></i>
+                  {{ held.amount >= 0 ? '+' : '' }}<app-money [amount]="held.amount" [currency]="d.currency" [digits]="0" [hideOriginal]="true" />
+                  · {{ held.pct | signedPercent }}
+                </span>
+                <span class="text-sm text-muted-color">прибуток на активах · заплачено за них <app-money [amount]="held.costBasis" [currency]="d.currency" [digits]="0" [hideOriginal]="true" />
+                  <i class="pi pi-info-circle text-xs ml-1" pTooltip="Скільки зараз коштують активи, які ви тримаєте, понад те, що за них заплачено з комісіями. Вільний кеш і вже продане сюди не входять — це той самий результат, що на сторінці «Позиції»."></i>
+                </span>
+              </div>
+            }
           </div>
           <p-selectbutton [options]="periods()" optionLabel="label" optionValue="value" [ngModel]="store.period()" (ngModelChange)="$event && store.period.set($event)" [allowEmpty]="false" size="small" />
         </div>

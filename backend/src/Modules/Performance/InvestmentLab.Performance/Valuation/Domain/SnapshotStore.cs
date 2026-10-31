@@ -22,6 +22,7 @@ public sealed class ValuationSnapshot
     public decimal Flow { get; private set; }
     public decimal NetContributions { get; private set; }
     public decimal TwrIndex { get; private set; }
+    public decimal CostBasis { get; private set; }
 
     private ValuationSnapshot() { }
 
@@ -37,6 +38,7 @@ public sealed class ValuationSnapshot
         Flow = snapshot.Flow,
         NetContributions = snapshot.NetContributions,
         TwrIndex = snapshot.TwrIndex,
+        CostBasis = snapshot.CostBasis,
     };
 }
 
