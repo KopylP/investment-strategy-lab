@@ -14,6 +14,7 @@
     <ProjectReference Include="../../Modules/Portfolio/InvestmentLab.Portfolio/InvestmentLab.Portfolio.csproj" />
     <ProjectReference Include="../../Modules/Rebalancing/InvestmentLab.Rebalancing/InvestmentLab.Rebalancing.csproj" />
     <ProjectReference Include="../../Modules/Taxation/InvestmentLab.Taxation/InvestmentLab.Taxation.csproj" />
+    <ProjectReference Include="../../Modules/Backtesting/InvestmentLab.Backtesting/InvestmentLab.Backtesting.csproj" />
     <ProjectReference Include="../../Modules/Performance/InvestmentLab.Performance/InvestmentLab.Performance.csproj" />
     <ProjectReference Include="../../Modules/Signals/InvestmentLab.Signals/InvestmentLab.Signals.csproj" />
     <ProjectReference Include="../../Modules/Notifications/InvestmentLab.Notifications/InvestmentLab.Notifications.csproj" />

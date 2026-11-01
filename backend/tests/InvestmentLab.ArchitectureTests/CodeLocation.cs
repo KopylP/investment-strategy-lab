@@ -14,7 +14,7 @@ internal sealed record CodeLocation(LocationKind Kind, string Namespace, string?
 {
     public const string SharedFeature = "Shared";
 
-    public static readonly string[] Modules = ["Identity", "MarketData", "Strategies", "Portfolio", "Rebalancing", "Taxation", "Performance", "Signals", "Notifications"];
+    public static readonly string[] Modules = ["Identity", "MarketData", "Strategies", "Portfolio", "Rebalancing", "Taxation", "Performance", "Signals", "Notifications", "Backtesting"];
     public static readonly string[] Layers = ["Domain", "Application", "Infrastructure", "Api"];
     private static readonly string[] Hosts = ["Api", "AppHost", "ServiceDefaults"];
 

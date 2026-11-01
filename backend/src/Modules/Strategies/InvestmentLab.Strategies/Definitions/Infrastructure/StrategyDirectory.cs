@@ -17,6 +17,32 @@ internal sealed class StrategyDirectory(IStrategyRepository strategies, CatalogS
                 report.Code, report.Name, report.Description, report.Mode, ToDto(report.Schedule ?? ReportSchedule.Off), report.SignalKinds))]))];
     }
 
+    public async Task<StrategyReplaySetupDto?> GetReplaySetup(Guid strategyId, int? version, CancellationToken cancellationToken)
+    {
+        if (strategyId == Guid.Empty || await strategies.FindAsync(StrategyId.Of(strategyId), cancellationToken) is not { } strategy)
+            return null;
+
+        if (strategy.Version(version) is not { } chosen)
+            return null;
+
+        var types = await catalog.ListAsync(cancellationToken);
+        var type = types.FirstOrDefault(candidate => candidate.Code == strategy.TypeCode);
+
+        return new StrategyReplaySetupDto(
+            StrategyId: strategy.Id.Value,
+            OwnerId: strategy.OwnerId.Value,
+            Version: chosen.Number,
+            SupportsBacktest: type?.SupportsBacktest ?? false,
+            Universe: chosen.Universe,
+            CashInstrumentId: chosen.CashInstrumentId,
+            BenchmarkInstrumentId: chosen.BenchmarkInstrumentId,
+            Reports: ReportsOf(type));
+    }
+
+    private static List<StrategyReportDto> ReportsOf(StrategyTypeDescriptor? type) =>
+        [.. (type?.Reports ?? []).Select(report => new StrategyReportDto(
+            report.Code, report.Name, report.Description, report.Mode, ToDto(report.Schedule ?? ReportSchedule.Off), report.SignalKinds))];
+
     public async Task<IReadOnlyDictionary<string, string>> GetMessages(CancellationToken cancellationToken)
     {
         var types = await catalog.ListFromEngineAsync(cancellationToken);

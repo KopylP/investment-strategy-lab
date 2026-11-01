@@ -1,4 +1,9 @@
 {
+  "backtest.strategy_not_found": "Стратегію або її версію не знайдено.",
+  "backtest.not_ready": "Результат бектесту ще не готовий.",
+  "backtest.not_enough_history": "Замало історії цін, щоб перевірити цю стратегію.",
+  "backtest.invalid_money_plan": "Суми не можуть бути від'ємними, а період має бути щонайменше рік.",
+  "backtest.strategy_failed": "Стратегія не змогла відповісти під час бектесту.",
   "user.invalid_credentials": "Невірний email або пароль.",
   "user.locked_out": "Забагато невдалих спроб. Спробуйте за кілька хвилин.",
   "user.not_found": "Користувача не знайдено.",

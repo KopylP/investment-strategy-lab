@@ -14,4 +14,5 @@ public sealed record EngineStrategyType(
     JsonElement ParametersSchema,
     JsonElement DefaultParameters,
     IReadOnlyList<ReportDefinition>? Reports = null,
-    IReadOnlyDictionary<string, string>? Messages = null);
+    IReadOnlyDictionary<string, string>? Messages = null,
+    bool SupportsBacktest = true);

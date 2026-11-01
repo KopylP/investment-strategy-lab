@@ -321,6 +321,7 @@ class StrategyTypeDescriptor(ApiModel):
     parameters_schema: dict[str, Any]
     default_parameters: dict[str, Any]
     reports: list[ReportDefinition]
+    supports_backtest: bool = Field(default=True, description="False for a strategy that cannot answer thousands of times in a row, such as an AI agent.")
     messages: dict[str, str] = Field(default_factory=dict, description="The texts of this type's message codes, in Ukrainian.")
 
 
