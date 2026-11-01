@@ -1,13 +1,13 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { ProgressBar } from 'primeng/progressbar';
-import { MoneyPipe } from '../../../../shared/pipes/format-pipes';
 import { ReportProgressVm, ReportVm } from '../../models/report-vm';
 
 import { Money } from '../../../../shared/ui/money/money';
 import { Viewport } from '../../../../shared/ui/viewport';
 @Component({
   selector: 'app-report-progress',
-  imports: [Money, ProgressBar, MoneyPipe],
+  imports: [Money, NgTemplateOutlet, ProgressBar],
   templateUrl: './report-progress.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

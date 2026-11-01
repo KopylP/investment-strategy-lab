@@ -1,3 +1,13 @@
 namespace InvestmentLab.Rebalancing.Reports.Domain;
 
-public sealed record TaxEstimate(string PolicyCode, bool IsTaxed, decimal GainPln, decimal TaxPln, decimal? FxRate, IReadOnlyList<string> Notes);
+public sealed record TaxEstimate(
+    string PolicyCode,
+    bool IsTaxed,
+    decimal GainPln,
+    decimal TaxPln,
+    decimal? FxRate,
+    IReadOnlyList<string> Notes,
+    decimal? YearTaxBeforePln = null,
+    decimal CarriedLossPln = 0m,
+    int? Year = null,
+    string? TaxCurrency = null);

@@ -45,13 +45,13 @@
             [hideOriginal]="true"
           />
         </div>
-        @if (report().taxEstimate?.isTaxed && report().totals.sells > 0) {
-          <div class="text-xs" style="color: var(--p-finance-tax)">
-            ≈ податок {{ report().taxEstimate!.taxPln | money: 'PLN' : 0 }}
-          </div>
-        }
       </div>
     </div>
+    @if (report().totals.sells > 0 && report().taxImpact; as tax) {
+      <div class="mt-3 text-xs">
+        <ng-container *ngTemplateOutlet="taxImpact; context: { $implicit: tax }" />
+      </div>
+    }
   </div>
 } @else {
   <div class="grid gap-4 grid-cols-2 lg:grid-cols-4">
@@ -82,9 +82,9 @@
       <div class="text-2xl font-semibold">
         <app-money [amount]="report().totals.sells" [currency]="report().summary.currency" />
       </div>
-      @if (report().taxEstimate?.isTaxed && report().totals.sells > 0) {
-        <div class="text-sm mt-2" style="color: var(--p-finance-tax)">
-          ≈ податок {{ report().taxEstimate!.taxPln | money: 'PLN' : 0 }}
+      @if (report().totals.sells > 0 && report().taxImpact; as tax) {
+        <div class="text-sm mt-2">
+          <ng-container *ngTemplateOutlet="taxImpact; context: { $implicit: tax }" />
         </div>
       } @else {
         <div class="text-sm text-muted-color mt-2">виходи, зменшення, розпаркування</div>
@@ -92,3 +92,19 @@
     </div>
   </div>
 }
+
+<ng-template #taxImpact let-tax>
+  <div style="color: var(--p-finance-tax)">{{ tax.change }}</div>
+  @if (tax.yearChange) {
+    <div class="text-muted-color mt-1">{{ tax.yearChange }}</div>
+  }
+  @if (tax.carriedLoss) {
+    <div class="text-muted-color mt-1">{{ tax.carriedLoss }}</div>
+  }
+  @if (tax.rowsNote) {
+    <div class="text-muted-color text-xs mt-1">{{ tax.rowsNote }}</div>
+  }
+  @for (note of tax.notes; track note) {
+    <div class="text-muted-color text-xs mt-1">{{ note }}</div>
+  }
+</ng-template>

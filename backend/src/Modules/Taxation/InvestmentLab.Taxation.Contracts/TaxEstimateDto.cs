@@ -7,4 +7,8 @@ public sealed record TaxEstimateDto(
     decimal TaxPln,
     decimal? FxRate,
     IReadOnlyList<SaleEstimateDto> Sales,
-    IReadOnlyList<string> Notes);
+    IReadOnlyList<string> Notes,
+    decimal? YearTaxBeforePln = null,
+    decimal CarriedLossPln = 0m,
+    int? Year = null,
+    string? TaxCurrency = null);

@@ -70,13 +70,13 @@ public sealed class RebalancingReport : AggregateRoot<ReportId>
 
     public void Generated(DateTimeOffset requestedAt, DateTimeOffset now) => Raise(new ReportGenerated(this, requestedAt, now));
 
-    public void AttachTaxEstimate(TaxEstimate estimate, IReadOnlyDictionary<ReportActionId, (decimal Gain, decimal Tax)> perSale)
+    public void AttachTaxEstimate(TaxEstimate estimate, IReadOnlyDictionary<ReportActionId, SaleTaxImpact> perSale)
     {
         TaxEstimate = estimate;
 
         foreach (var action in Sales)
             if (perSale.TryGetValue(action.Id, out var sale))
-                action.AttachTaxEstimate(sale.Gain, sale.Tax);
+                action.AttachTaxEstimate(sale);
     }
 
     public bool IsOpen => Status is ReportStatus.New or ReportStatus.InProgress;

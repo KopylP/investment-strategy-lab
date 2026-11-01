@@ -392,6 +392,11 @@ namespace InvestmentLab.Rebalancing.Shared.Infrastructure.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("allocations");
 
+                    b.Property<decimal?>("EstimatedCarriedLossPln")
+                        .HasPrecision(20, 8)
+                        .HasColumnType("numeric(20,8)")
+                        .HasColumnName("estimated_carried_loss_pln");
+
                     b.Property<decimal?>("EstimatedGainPln")
                         .HasPrecision(20, 8)
                         .HasColumnType("numeric(20,8)")
