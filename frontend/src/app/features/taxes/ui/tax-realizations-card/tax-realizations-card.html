@@ -19,7 +19,7 @@
           <th class="text-right hidden sm:table-cell">Виручка</th>
           <th class="text-right hidden sm:table-cell">Витрати</th>
           <th class="text-right">Зиск</th>
-          <th class="hidden sm:table-cell">Курс NBP</th>
+          <th class="hidden sm:table-cell">Курс</th>
         </tr>
       </ng-template>
       <ng-template #body let-r let-expanded="expanded">
@@ -50,10 +50,10 @@
             <td class="text-sm hidden sm:table-cell">{{ store.accountName(r.accountId) }}</td>
           }
           <td class="text-right hidden sm:table-cell">{{ r.quantity | quantity }}</td>
-          <td class="text-right hidden sm:table-cell">{{ r.proceedsPln | money: 'PLN' }}</td>
-          <td class="text-right hidden sm:table-cell">{{ r.costPln | money: 'PLN' }}</td>
+          <td class="text-right hidden sm:table-cell">{{ r.proceedsPln | taxMoney }}</td>
+          <td class="text-right hidden sm:table-cell">{{ r.costPln | taxMoney }}</td>
           <td class="text-right font-medium whitespace-nowrap" [appSignedValue]="r.gainPln">
-            {{ r.gainPln | money: 'PLN' }}
+            {{ r.gainPln | taxMoney }}
             @if (r.brokerGainPln !== null) {
               @let off = brokerDifference(r);
               <i
@@ -63,7 +63,7 @@
                 [style.color]="off ? 'var(--p-finance-tax)' : 'var(--p-text-muted-color)'"
                 [pTooltip]="
                   off
-                    ? 'Revolut рахує ' + (r.brokerGainPln | money: 'PLN')
+                    ? 'Revolut рахує ' + (r.brokerGainPln | taxMoney)
                     : 'Збігається зі звітом Revolut'
                 "
               ></i>
@@ -83,10 +83,10 @@
                 <span class="text-muted-color">Штук</span
                 ><span class="text-right">{{ r.quantity | quantity }}</span>
                 <span class="text-muted-color">Виручка</span
-                ><span class="text-right">{{ r.proceedsPln | money: 'PLN' }}</span>
+                ><span class="text-right">{{ r.proceedsPln | taxMoney }}</span>
                 <span class="text-muted-color">Витрати</span
-                ><span class="text-right">{{ r.costPln | money: 'PLN' }}</span>
-                <span class="text-muted-color">Курс NBP</span
+                ><span class="text-right">{{ r.costPln | taxMoney }}</span>
+                <span class="text-muted-color">Курс</span
                 ><span class="text-right">{{ r.fxRate }} · {{ r.fxRateDate | date }}</span>
               </div>
               <div class="font-medium text-sm mb-2">Закриті лоти (FIFO)</div>
@@ -100,15 +100,15 @@
                   </span>
                   <span class="text-right ml-auto"
                     >{{ lot.quantity | quantity }} шт. · витрати
-                    {{ lot.costPln | money: 'PLN' }}</span
+                    {{ lot.costPln | taxMoney }}</span
                   >
                 </div>
               }
               @if (r.brokerGainPln !== null && brokerDifference(r)) {
                 <div class="text-sm mt-2 max-w-xl" style="color: var(--p-finance-tax)">
-                  Revolut рахує зиск {{ r.brokerGainPln | money: 'PLN' }} (різниця
-                  {{ r.gainPln - r.brokerGainPln | money: 'PLN' }}): у нього свій курс і округлення,
-                  у нас — курс NBP дня перед угодою.
+                  Revolut рахує зиск {{ r.brokerGainPln | taxMoney }} (різниця
+                  {{ r.gainPln - r.brokerGainPln | taxMoney }}): у нього свій курс і округлення,
+                  у нас — офіційний курс дня перед угодою.
                 </div>
               }
               @if (r.unmatchedQuantity > 0) {

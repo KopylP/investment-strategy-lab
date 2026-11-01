@@ -1,3 +1,5 @@
+import { TaxRegime } from '../../../../core/context/tax-regime';
+import { TaxMoneyPipe } from '../../../../core/context/tax-money-pipe';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Button } from 'primeng/button';
@@ -10,13 +12,14 @@ import { TaxesStore } from '../../data-access/taxes-store';
 
 @Component({
   selector: 'app-loss-carryforwards-card',
-  imports: [FormsModule, Button, InputNumber, TableModule, MoneyPipe],
+  imports: [TaxMoneyPipe, FormsModule, Button, InputNumber, TableModule, MoneyPipe],
   templateUrl: './loss-carryforwards-card.html',
   host: { class: 'contents' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LossCarryforwardsCard {
   protected readonly store = inject(TaxesStore);
+  protected readonly regime = inject(TaxRegime);
 
   private readonly confirm = inject(ConfirmationService);
 

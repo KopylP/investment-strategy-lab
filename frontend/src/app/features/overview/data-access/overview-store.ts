@@ -1,3 +1,4 @@
+import { TaxRegime } from '../../../core/context/tax-regime';
 import { computed, inject, Injectable, linkedSignal, resource, signal } from '@angular/core';
 import { ApiClient, toProblemMessage } from '../../../core/api/api-client';
 import { AccountContext } from '../../../core/context/account-context';
@@ -31,6 +32,7 @@ export type DashboardPeriod = '1M' | '3M' | '6M' | '1Y' | 'YTD' | 'ALL';
 @Injectable()
 export class OverviewStore {
   private readonly api = inject(ApiClient);
+  private readonly regime = inject(TaxRegime);
   private readonly accounts = inject(AccountContext);
   private readonly display = inject(DisplayCurrency);
 
@@ -84,9 +86,9 @@ export class OverviewStore {
   });
 
   private readonly totalResource = resource({
-    params: () => (this.tax()?.alertShare != null ? true : undefined),
-    loader: () =>
-      this.api.get<DashboardDto>('/api/performance/dashboard', { currency: 'PLN', period: '1M' }),
+    params: () => (this.tax()?.alertShare != null ? (this.regime.currency() ?? undefined) : undefined),
+    loader: ({ params: currency }) =>
+      this.api.get<DashboardDto>('/api/performance/dashboard', { currency, period: '1M' }),
   });
 
   readonly accountsLoaded = this.accounts.hasLoaded;

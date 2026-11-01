@@ -1,3 +1,4 @@
+import { TaxMoneyPipe } from '../../../../core/context/tax-money-pipe';
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { Button } from 'primeng/button';
 import { Message } from 'primeng/message';
@@ -12,6 +13,7 @@ import { TaxesStore } from '../../data-access/taxes-store';
 @Component({
   selector: 'app-tax-realizations-card',
   imports: [
+    TaxMoneyPipe,
     Button,
     Message,
     TableModule,

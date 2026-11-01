@@ -1,3 +1,4 @@
+import { TaxMoneyPipe } from '../../../../core/context/tax-money-pipe';
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -21,6 +22,7 @@ import { TapTooltip } from '../../../../shared/ui/tap-tooltip';
 @Component({
   selector: 'app-declaration-dialog',
   imports: [
+    TaxMoneyPipe,
     NgTemplateOutlet,
     FormsModule,
     InputNumber,

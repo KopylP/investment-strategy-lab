@@ -22,7 +22,7 @@
       @if (totals().hasForeignCash) {
         <div
           class="text-xs text-muted-color"
-          pTooltip="Брокер тримає кеш окремо в кожній валюті; інші валюти тут — за поточним курсом NBP"
+          pTooltip="Брокер тримає кеш окремо в кожній валюті; інші валюти тут — за поточним офіційним курсом"
         >
           @for (part of totals().cashParts; track part.currency; let last = $last) {
             {{ part.amount | money: part.currency }}{{ last ? '' : ' · ' }}

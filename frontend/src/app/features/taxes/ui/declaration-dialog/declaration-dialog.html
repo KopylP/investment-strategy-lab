@@ -75,7 +75,7 @@
                 </div>
               } @else if (a.pit8C) {
                 <div class="text-xs mt-1">
-                  PIT-8C: {{ a.pit8C.revenue | money: 'PLN' }} / {{ a.pit8C.costs | money: 'PLN' }}
+                  PIT-8C: {{ a.pit8C.revenue | taxMoney }} / {{ a.pit8C.costs | taxMoney }}
                   <button
                     type="button"
                     class="p-0 ml-1 border-0 bg-transparent text-primary cursor-pointer"
@@ -104,14 +104,14 @@
           </div>
           <div class="text-right text-sm tabular-nums whitespace-nowrap">
             <div>
-              {{ a.revenue | money: 'PLN' }} <span class="text-muted-color text-xs">виручка</span>
+              {{ a.revenue | taxMoney }} <span class="text-muted-color text-xs">виручка</span>
             </div>
             <div>
-              {{ a.costs | money: 'PLN' }} <span class="text-muted-color text-xs">витрати</span>
+              {{ a.costs | taxMoney }} <span class="text-muted-color text-xs">витрати</span>
             </div>
             @if (a.dividendsGross) {
               <div>
-                {{ a.dividendsGross | money: 'PLN' }}
+                {{ a.dividendsGross | taxMoney }}
                 <span class="text-muted-color text-xs">дивіденди</span>
               </div>
             }
@@ -186,7 +186,7 @@
       @for (fact of d.facts; track fact.label) {
         <div class="flex justify-between gap-3 text-sm py-1">
           <span>{{ fact.label }}</span
-          ><span class="tabular-nums whitespace-nowrap">{{ fact.amount | money: 'PLN' }}</span>
+          ><span class="tabular-nums whitespace-nowrap">{{ fact.amount | taxMoney }}</span>
         </div>
       }
     }

@@ -1,3 +1,4 @@
+import { TaxMoneyPipe } from '../../../../core/context/tax-money-pipe';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Button } from 'primeng/button';
@@ -18,6 +19,7 @@ import { OverviewDetailsGrid } from '../../ui/overview-details-grid/overview-det
 @Component({
   selector: 'app-overview-page',
   imports: [
+    TaxMoneyPipe,
     OverviewDetailsGrid,
     OverviewTaxProgress,
     OverviewMetrics,

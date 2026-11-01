@@ -26,6 +26,7 @@ public sealed class TaxPolicyBlocksTests
         public string Jurisdiction => "XX";
         public bool IsTaxed => true;
         public string EstimateDisclaimer => "";
+        public TaxPolicyTexts Texts => _belka.Texts;
         public IFxRule FxRule => _belka.FxRule;
         public ILotMatcher LotMatcher => _belka.LotMatcher;
         public ITaxRateSchedule RateSchedule { get; } = new AllowanceSchedule();

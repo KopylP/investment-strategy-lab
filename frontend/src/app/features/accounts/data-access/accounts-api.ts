@@ -4,6 +4,14 @@ import { AccountSetup } from '../../../shared/models/api';
 import { ReportTiming } from '../../reports/models/report-schedule';
 import { Strategy } from '../../strategies/models/strategy';
 
+export interface TaxPolicyOption {
+  code: string;
+  name: string;
+  hint: string;
+  isTaxed: boolean;
+  isDefault: boolean;
+}
+
 export interface SubPortfolioInput {
   name: string;
   targetSharePercent: number;
@@ -40,6 +48,10 @@ export class AccountsApi {
 
   get(id: string): Promise<AccountSetup> {
     return this.api.get<AccountSetup>(`/api/portfolio/accounts/${id}`);
+  }
+
+  taxPolicies(): Promise<TaxPolicyOption[]> {
+    return this.api.get<TaxPolicyOption[]>('/api/taxation/policies');
   }
 
   open(input: OpenAccountInput): Promise<AccountSetup> {

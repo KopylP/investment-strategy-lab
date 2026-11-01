@@ -1,3 +1,4 @@
+import { TaxRegime } from '../../../../core/context/tax-regime';
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ConfirmationService } from 'primeng/api';
@@ -51,6 +52,7 @@ import { LossCarryforwardsCard } from '../../ui/loss-carryforwards-card/loss-car
 })
 export class TaxYearPage {
   protected readonly store = inject(TaxesStore);
+  protected readonly regime = inject(TaxRegime);
   private readonly confirm = inject(ConfirmationService);
 
   protected readonly yearOptions = computed(() =>

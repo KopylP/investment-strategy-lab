@@ -21,7 +21,8 @@ public sealed class OpenAccountHandler(IAccountRepository accounts, ITaxPolicyDi
         if (currency.IsFailure)
             return currency.Error;
 
-        if (command.TaxPolicyCode is { } taxPolicy && !string.IsNullOrWhiteSpace(taxPolicy) && !taxPolicies.IsKnown(taxPolicy))
+        var taxPolicy = string.IsNullOrWhiteSpace(command.TaxPolicyCode) ? taxPolicies.DefaultCode : command.TaxPolicyCode;
+        if (!taxPolicies.IsKnown(taxPolicy))
             return AccountErrors.UnknownTaxPolicy(taxPolicy);
 
         var policy = AccountInput.ToPolicy(command.ContributionPolicy);
@@ -45,7 +46,7 @@ public sealed class OpenAccountHandler(IAccountRepository accounts, ITaxPolicyDi
             command.Name ?? "",
             command.Broker ?? "",
             currency.Value,
-            command.TaxPolicyCode,
+            taxPolicy,
             policy.Value,
             drafts,
             now);

@@ -1,3 +1,4 @@
+import { TaxRegime } from '../../../../core/context/tax-regime';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { ChartTheme, withAlpha } from '../../../../shared/charts/chart-theme';
 import { LiveChart } from '../../../../shared/charts/live-chart';
@@ -11,6 +12,8 @@ import { toIsoDate } from '../../../../shared/models/api';
 import { Viewport } from '../../../../shared/ui/viewport';
 import { TaxProgress } from '../../data-access/overview-store';
 
+const NO_CURRENCY = 'XXX';
+
 @Component({
   selector: 'app-tax-progress-chart',
   imports: [LiveChart],
@@ -23,6 +26,7 @@ import { TaxProgress } from '../../data-access/overview-store';
 })
 export class TaxProgressChart {
   private readonly theme = inject(ChartTheme);
+  private readonly regime = inject(TaxRegime);
   protected readonly viewport = inject(Viewport);
 
   readonly progress = input.required<TaxProgress>();
@@ -75,6 +79,7 @@ export class TaxProgressChart {
 
   protected readonly options = computed(() => {
     const palette = this.theme.palette();
+    const currency = this.regime.currency() ?? NO_CURRENCY;
     const phone = this.viewport.phone();
 
     return {
@@ -86,7 +91,7 @@ export class TaxProgressChart {
         tooltip: {
           callbacks: {
             label: (context: { dataset: { label: string }; parsed: { y: number } }) =>
-              `${context.dataset.label}: ${formatMoney(context.parsed.y, 'PLN', 0)}`,
+              `${context.dataset.label}: ${formatMoney(context.parsed.y, currency, 0)}`,
           },
         },
       },
@@ -109,7 +114,7 @@ export class TaxProgressChart {
             color: palette.muted,
             maxTicksLimit: 5,
             callback: (value: number) =>
-              phone ? formatAxisNumber(value) : formatMoney(value, 'PLN', 0),
+              phone ? formatAxisNumber(value) : formatMoney(value, currency, 0),
           },
           grid: { color: palette.grid },
         },

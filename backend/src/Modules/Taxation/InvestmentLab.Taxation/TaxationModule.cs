@@ -6,7 +6,9 @@ using InvestmentLab.Portfolio.Contracts.Transactions;
 using InvestmentLab.Taxation.Assessments.Api;
 using InvestmentLab.Taxation.Assessments.Application.GetTaxProgress;
 using InvestmentLab.Taxation.Assessments.Application.GetTaxYear;
+using InvestmentLab.Taxation.Assessments.Application.GetTaxRegime;
 using InvestmentLab.Taxation.Assessments.Application.GetTaxYears;
+using InvestmentLab.Taxation.Assessments.Application.ListTaxPolicies;
 using InvestmentLab.Taxation.Assessments.Application.Integration;
 using InvestmentLab.Taxation.Assessments.Application.ListBrokerStatements;
 using InvestmentLab.Taxation.Assessments.Application.ListLossCarryforwards;
@@ -73,6 +75,8 @@ public sealed class TaxationModule : IModule
         services.AddScoped<TaxRecalculator>();
         services.AddScoped<RefreshTaxAssessmentsHandler>();
         services.AddScoped<GetTaxYearsHandler>();
+        services.AddScoped<GetTaxRegimeHandler>();
+        services.AddSingleton<ListTaxPoliciesHandler>();
         services.AddScoped<GetTaxYearHandler>();
         services.AddScoped<GetTaxProgressHandler>();
         services.AddScoped<ListLossCarryforwardsHandler>();

@@ -2,8 +2,6 @@ namespace InvestmentLab.Portfolio.Accounts.Domain;
 
 public sealed class InvestmentAccount : AggregateRoot<AccountId>
 {
-    public const string DefaultTaxPolicy = "PL-BELKA";
-
     private static readonly Currency[] BaseCurrencies = [Currency.EUR, Currency.USD];
 
     private readonly List<SubPortfolio> _subPortfolios = [];
@@ -36,7 +34,7 @@ public sealed class InvestmentAccount : AggregateRoot<AccountId>
         (Name, Broker, BaseCurrency, TaxPolicyCode, ContributionPolicy) = (null!, null!, null!, null!, null!);
 
     public static Result<InvestmentAccount> Open(
-        UserId ownerId, string name, string broker, Currency baseCurrency, string? taxPolicyCode,
+        UserId ownerId, string name, string broker, Currency baseCurrency, string taxPolicyCode,
         ContributionPolicy contributionPolicy, IReadOnlyList<SubPortfolioDraft> subPortfolios, DateTimeOffset openedAt)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -53,7 +51,7 @@ public sealed class InvestmentAccount : AggregateRoot<AccountId>
 
         var account = new InvestmentAccount(
             AccountId.New(), ownerId, name.Trim(), broker.Trim(), baseCurrency,
-            string.IsNullOrWhiteSpace(taxPolicyCode) ? DefaultTaxPolicy : taxPolicyCode.Trim(), contributionPolicy, openedAt);
+            taxPolicyCode.Trim(), contributionPolicy, openedAt);
 
         foreach (var draft in subPortfolios)
         {

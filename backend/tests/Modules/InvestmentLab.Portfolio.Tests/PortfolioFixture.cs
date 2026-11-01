@@ -13,7 +13,7 @@ internal sealed class PortfolioFixture
 
     public PortfolioFixture()
     {
-        Account = InvestmentAccount.Open(UserId.New(), "XTB", "XTB", Currency.EUR, null, ContributionPolicy.Default,
+        Account = InvestmentAccount.Open(UserId.New(), "XTB", "XTB", Currency.EUR, "TEST-POLICY", ContributionPolicy.Default,
             [Draft("A", 70), Draft("B", 30)], Now).Value;
     }
 
