@@ -70,6 +70,8 @@ public sealed class Instrument : AggregateRoot<InstrumentId>
 
     public string? Ticker => SymbolFor(QuoteProvider.Primary)?.Symbol;
 
+    public bool IsVolatilityIndex => Ticker == YFinanceSymbolConvention.VolatilityIndexSymbol;
+
     public ProviderSymbol? SymbolFor(QuoteProvider provider) =>
         _providerSymbols.FirstOrDefault(symbol => symbol.Provider == provider);
 }
