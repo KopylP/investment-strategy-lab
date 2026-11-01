@@ -9,7 +9,7 @@ public sealed class Pit38PdfPrinterTests
 {
     private static readonly Guid Apple = Guid.NewGuid(), Asml = Guid.NewGuid();
 
-    private static TaxDeclaration Declaration() => new Pit38Form().Fill(new DeclarationInput(2025, [
+    private static TaxDeclaration Declaration() => new Pit38Form().Fill(new DeclarationFacts(2025, [
         new DeclarationAccount("Revolut EUR", "Revolut", new BelkaTaxPolicy(),
             [new TaxYearSummary(2025, 8385.00m, 6895.05m, 1489.95m, 0m, 0m, 0m, 1002.63m, 0m, 0m, 0m, 150.25m)],
             [Sale(Apple, 1200m), Sale(Asml, 289.95m)],

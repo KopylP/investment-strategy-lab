@@ -3,7 +3,7 @@ using InvestmentLab.Strategies.Definitions.Domain;
 
 namespace InvestmentLab.Strategies.Definitions.Application.CreateStrategy;
 
-public sealed record CreateStrategyCommand(string Name, string TypeCode, StrategySetupInput Setup);
+public sealed record CreateStrategyCommand(string Name, string TypeCode, StrategySetupDraft Setup);
 
 public sealed class CreateStrategyHandler(IStrategyRepository strategies, StrategySetupFactory setups, TimeProvider clock)
 {

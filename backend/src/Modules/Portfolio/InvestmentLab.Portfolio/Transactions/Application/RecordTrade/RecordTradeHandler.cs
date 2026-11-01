@@ -25,7 +25,7 @@ public sealed class RecordTradeHandler(TransactionRecorder recorder)
     private static Result<Transaction> Create(RecordingContext context, RecordTradeCommand command, TransactionSource source)
     {
         var currency = context.Account.BaseCurrency;
-        var side = TransactionInput.ParseEnum<TradeSide>(command.Side, "transaction.side_unknown");
+        var side = EnumText.TryParse<TradeSide>(command.Side, "transaction.side_unknown");
         if (side.IsFailure)
             return side.Error;
 
@@ -37,11 +37,7 @@ public sealed class RecordTradeHandler(TransactionRecorder recorder)
         if (price.IsFailure)
             return price.Error;
 
-        var allocations = command.Allocations is { Count: > 0 } given
-            ? TransactionInput.Quantities(given)
-            : Result<IReadOnlyList<Allocation>>.Success(TradeAllocator.Split(quantity.Value, side.Value == TradeSide.Buy
-                ? TransactionInput.TargetWeights(context.Account)
-                : TransactionInput.HeldWeights(context.Holdings, command.InstrumentId)));
+        var allocations = AllocationsOf(context, command, side.Value, quantity.Value);
         if (allocations.IsFailure)
             return allocations.Error;
 
@@ -50,5 +46,17 @@ public sealed class RecordTradeHandler(TransactionRecorder recorder)
 
         return Transaction.Trade(context.Account, side.Value, command.InstrumentId, quantity.Value, price.Value, Money.Of(command.Fee, currency),
             allocations.Value, command.ExecutedOn, source, context.Now);
+    }
+
+    private static Result<IReadOnlyList<Allocation>> AllocationsOf(RecordingContext context, RecordTradeCommand command, TradeSide side, Quantity quantity)
+    {
+        if (command.Allocations is { Count: > 0 } given)
+            return Allocation.TryAll(given.Select(allocation => (allocation.SubPortfolioId, allocation.Quantity)));
+
+        var weights = side == TradeSide.Buy
+            ? context.Account.TargetWeights()
+            : context.Holdings.WeightsOf(command.InstrumentId);
+
+        return Result<IReadOnlyList<Allocation>>.Success(TradeAllocator.Split(quantity, weights));
     }
 }

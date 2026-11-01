@@ -17,9 +17,9 @@ public sealed record Pit38CapitalGains(
     decimal P34,
     decimal P35)
 {
-    public static Pit38CapitalGains Of(DeclarationInput input, Pit38BrokerRows rows, List<DeclarationAccount> taxed, ITaxPolicy policy)
+    public static Pit38CapitalGains Of(DeclarationFacts facts, Pit38BrokerRows rows, List<DeclarationAccount> taxed, ITaxPolicy policy)
     {
-        var year = input.Year;
+        var year = facts.Year;
         var rate = BelkaTaxPolicy.Rate.Value;
         var row2 = rows.WithoutPit8CForm;
 
@@ -33,7 +33,7 @@ public sealed record Pit38CapitalGains(
         var gains = GainsByYear(rows, taxed);
         gains[year] = p26 - p27;
 
-        var p30 = CarryforwardUsed(year, gains, input.EarlierLosses, policy.LossCarryforward);
+        var p30 = CarryforwardUsed(year, gains, facts.EarlierLosses, policy.LossCarryforward);
         var p31 = policy.Rounding.Base(p28 - p30);
         var p33 = Pit38Amounts.Grosze(p31 * rate);
         const decimal p34 = 0m;

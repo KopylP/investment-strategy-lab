@@ -3,7 +3,7 @@ import { MessageService } from 'primeng/api';
 import { toProblemMessage } from '../../../core/api/api-client';
 import { AccountContext } from '../../../core/context/account-context';
 import { OpenActionsBadge } from '../../../core/notifications/open-actions-badge';
-import { FillInput, ReportActionVm } from '../models/report-vm';
+import { EnteredFill, ReportActionVm } from '../models/report-vm';
 import { ReportsApi } from './reports-api';
 import { summarizeProgress, toReportVm } from './report-mapper';
 
@@ -48,7 +48,7 @@ export class ReportDetailStore {
     this.reportId.set(reportId);
   }
 
-  markExecuted(action: ReportActionVm, fill: FillInput): Promise<void> {
+  markExecuted(action: ReportActionVm, fill: EnteredFill): Promise<void> {
     return this.runCommand(
       action,
       () => this.api.markExecuted(this.requireId(), action.id, fill),
@@ -56,7 +56,7 @@ export class ReportDetailStore {
     );
   }
 
-  recordPartialFill(action: ReportActionVm, fill: FillInput): Promise<void> {
+  recordPartialFill(action: ReportActionVm, fill: EnteredFill): Promise<void> {
     return this.runCommand(
       action,
       () => this.api.recordPartialFill(this.requireId(), action.id, fill),

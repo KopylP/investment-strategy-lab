@@ -21,6 +21,16 @@ public sealed record Percentage : IComparable<Percentage>
 
     public static Percentage FromPercent(decimal percent) => Of(percent / 100m);
 
+    public static Result<Percentage?> TryFromOptionalPercent(decimal? percent)
+    {
+        if (percent is not { } value)
+            return Result<Percentage?>.Success(null);
+
+        var fraction = TryOf(value / 100m);
+
+        return fraction.IsFailure ? fraction.Error : fraction.Value;
+    }
+
     public Money Of(Money amount) => amount.Multiply(Value);
 
     public int CompareTo(Percentage? other) => other is null ? 1 : Value.CompareTo(other.Value);

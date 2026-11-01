@@ -8,34 +8,34 @@ public sealed class Pit38Form : ITaxDeclarationForm
     public string Title => "PIT-38 · Podatek Belki";
     public string Jurisdiction => TaxPolicies.Poland;
 
-    public TaxDeclaration Fill(DeclarationInput input)
+    public TaxDeclaration Fill(DeclarationFacts facts)
     {
         ITaxPolicy policy = new BelkaTaxPolicy();
-        var taxed = input.Accounts.Where(account => account.Policy.IsTaxed).ToList();
-        var rows = new Pit38BrokerRows(input.Year, taxed);
+        var taxed = facts.Accounts.Where(account => account.Policy.IsTaxed).ToList();
+        var rows = new Pit38BrokerRows(facts.Year, taxed);
 
-        var gains = Pit38CapitalGains.Of(input, rows, taxed, policy);
-        var dividends = Pit38Dividends.Of(input, taxed, policy);
-        var sales = new Pit38ForeignSales(rows.WithoutPit8CForm, input.CountryOf);
+        var gains = Pit38CapitalGains.Of(facts, rows, taxed, policy);
+        var dividends = Pit38Dividends.Of(facts, taxed, policy);
+        var sales = new Pit38ForeignSales(rows.WithoutPit8CForm, facts.CountryOf);
         var attachments = sales.AttachmentsWhen(gains.P28);
 
-        var figures = new Pit38Figures(input, rows, gains, dividends, BelkaTaxPolicy.Rate.Value, attachments, sales.WithUnknownCountry);
+        var figures = new Pit38Figures(facts, rows, gains, dividends, BelkaTaxPolicy.Rate.Value, attachments, sales.WithUnknownCountry);
 
         return new TaxDeclaration(
             Code,
             Title,
-            input.Year,
-            Deadline(input.Year),
+            facts.Year,
+            Deadline(facts.Year),
             Pit38Sections.Of(figures),
             attachments,
-            AccountLinesOf(input, rows),
+            AccountLinesOf(facts, rows),
             Pit38Notes.Of(figures),
             dividends.P49 + gains.P35,
             FactsOf(dividends.Foreign));
     }
 
-    private static List<DeclarationAccountLine> AccountLinesOf(DeclarationInput input, Pit38BrokerRows rows) =>
-        [.. input.Accounts.Select(account => AccountLineOf(account, input.Year, rows))];
+    private static List<DeclarationAccountLine> AccountLinesOf(DeclarationFacts facts, Pit38BrokerRows rows) =>
+        [.. facts.Accounts.Select(account => AccountLineOf(account, facts.Year, rows))];
 
     private static DeclarationAccountLine AccountLineOf(DeclarationAccount account, int year, Pit38BrokerRows rows)
     {

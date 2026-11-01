@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { ApiClient } from '../../../core/api/api-client';
-import { FillInput } from '../models/report-vm';
+import { EnteredFill } from '../models/report-vm';
 import {
   LoadOperationsPreviewDto,
   PlanSettingsDto,
@@ -42,11 +42,11 @@ export class ReportsApi {
     return this.api.get<PlanSettingsDto>(`/api/rebalancing/accounts/${accountId}/settings`);
   }
 
-  markExecuted(reportId: string, actionId: string, fill: FillInput): Promise<void> {
+  markExecuted(reportId: string, actionId: string, fill: EnteredFill): Promise<void> {
     return this.api.post(`/api/rebalancing/reports/${reportId}/actions/${actionId}/fills`, fill);
   }
 
-  recordPartialFill(reportId: string, actionId: string, fill: FillInput): Promise<void> {
+  recordPartialFill(reportId: string, actionId: string, fill: EnteredFill): Promise<void> {
     return this.api.post(
       `/api/rebalancing/reports/${reportId}/actions/${actionId}/partial-fills`,
       fill,

@@ -4,7 +4,7 @@ import { toProblemMessage } from '../../../core/api/api-client';
 import { AccountContext } from '../../../core/context/account-context';
 import { AccountSetup } from '../../../shared/models/api';
 import { PlanSettingsVm } from '../ui/plan-settings-form/plan-settings-form';
-import { AccountsApi, normalizeToHundred, SubPortfolioInput } from './accounts-api';
+import { AccountsApi, normalizeToHundred, NewSubPortfolio } from './accounts-api';
 
 @Injectable()
 export class AccountDetailStore {
@@ -85,7 +85,7 @@ export class AccountDetailStore {
     );
   }
 
-  addSubPortfolio(input: SubPortfolioInput): Promise<boolean> {
+  addSubPortfolio(input: NewSubPortfolio): Promise<boolean> {
     const remaining = 100 - input.targetSharePercent;
     const others: Record<string, number> = Object.fromEntries(
       this.active().map((sub) => [sub.id, Math.round(sub.targetShare * remaining * 100) / 100]),

@@ -42,7 +42,7 @@ export interface ReportDefinition {
   schedule: ReportTiming | null;
 }
 
-export interface StrategySetupInput {
+export interface StrategySetupDraft {
   universe: string[];
   benchmarkInstrumentId: string;
   volatilityIndexInstrumentId: string | null;

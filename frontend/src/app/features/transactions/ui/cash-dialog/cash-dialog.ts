@@ -14,7 +14,7 @@ import { Dialog } from 'primeng/dialog';
 import { InputNumber } from 'primeng/inputnumber';
 import { Select } from 'primeng/select';
 import { toIsoDate } from '../../../../shared/models/api';
-import { CashInput } from '../../data-access/transactions-store';
+import { NewCashMovement } from '../../data-access/transactions-store';
 import { Option } from '../trade-dialog/trade-dialog';
 
 @Component({
@@ -29,16 +29,16 @@ export class CashDialog {
   readonly subPortfolios = input.required<Option[]>();
   readonly currency = input.required<string>();
   readonly busy = input(false);
-  readonly save = output<CashInput>();
+  readonly save = output<NewCashMovement>();
 
-  protected readonly kinds: { label: string; value: CashInput['kind'] }[] = [
+  protected readonly kinds: { label: string; value: NewCashMovement['kind'] }[] = [
     { label: 'Внесок', value: 'Contribution' },
     { label: 'Вивід', value: 'Withdrawal' },
     { label: 'Дивіденд', value: 'Dividend' },
     { label: 'Комісія брокера', value: 'Fee' },
     { label: 'Сплата податку', value: 'TaxPayment' },
   ];
-  protected readonly kind = signal<CashInput['kind']>('Contribution');
+  protected readonly kind = signal<NewCashMovement['kind']>('Contribution');
   protected readonly amount = signal<number | null>(null);
   protected readonly occurredOn = signal<Date>(new Date());
   protected readonly subPortfolioId = signal<string | null>(null);

@@ -1,7 +1,7 @@
 namespace InvestmentLab.Taxation.Declarations.Domain;
 
 public sealed record Pit38Figures(
-    DeclarationInput Input,
+    DeclarationFacts Input,
     Pit38BrokerRows Rows,
     Pit38CapitalGains Gains,
     Pit38Dividends Dividends,

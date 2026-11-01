@@ -1,6 +1,6 @@
-namespace InvestmentLab.Portfolio.Accounts.Application.Shared;
+namespace InvestmentLab.Portfolio.Accounts.Domain;
 
-public sealed record SubPortfolioInput(
+public sealed record NewSubPortfolio(
     string Name,
     decimal TargetSharePercent,
     Guid? StrategyId = null,

@@ -196,7 +196,7 @@ export interface ReportProgressVm {
   percent: number;
 }
 
-export interface FillInput {
+export interface EnteredFill {
   quantity: number;
   price: number;
   fee: number;

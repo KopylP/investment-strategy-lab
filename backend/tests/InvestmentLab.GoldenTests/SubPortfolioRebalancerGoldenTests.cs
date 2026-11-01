@@ -76,7 +76,7 @@ public sealed class SubPortfolioRebalancerGoldenTests
         plan.Notes.Select(note => MessageLocalizer.Default.Render(note)).ShouldBe(notes);
     }
 
-    private static SubPortfolioPlanInput InputOf(JsonElement root)
+    private static SubPortfolioSituation InputOf(JsonElement root)
     {
         var decision = root.GetProperty("decision");
         var portfolio = root.GetProperty("portfolio");
@@ -110,7 +110,7 @@ public sealed class SubPortfolioRebalancerGoldenTests
             .Distinct()
             .ToDictionary(IdOf, ticker => ticker);
 
-        return new SubPortfolioPlanInput(
+        return new SubPortfolioSituation(
             strategy,
             positions,
             portfolio.GetProperty("cash").GetDecimal(),

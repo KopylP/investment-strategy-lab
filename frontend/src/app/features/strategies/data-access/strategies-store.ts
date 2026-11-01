@@ -2,7 +2,7 @@ import { computed, inject, Injectable, resource, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { toProblemMessage } from '../../../core/api/api-client';
 import { InstrumentCatalog } from '../../../core/context/instrument-catalog';
-import { StrategySetupInput } from '../models/strategy';
+import { StrategySetupDraft } from '../models/strategy';
 import { StrategiesApi } from './strategies-api';
 
 @Injectable()
@@ -86,7 +86,7 @@ export class StrategyDetailStore {
     this.versionNumber.set(version);
   }
 
-  async save(setup: StrategySetupInput): Promise<boolean> {
+  async save(setup: StrategySetupDraft): Promise<boolean> {
     const id = this.id();
     if (!id) return false;
 

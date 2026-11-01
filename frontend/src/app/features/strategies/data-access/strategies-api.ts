@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { ApiClient } from '../../../core/api/api-client';
-import { Strategy, StrategySetupInput, StrategyType } from '../models/strategy';
+import { Strategy, StrategySetupDraft, StrategyType } from '../models/strategy';
 
 @Injectable({ providedIn: 'root' })
 export class StrategiesApi {
@@ -22,7 +22,7 @@ export class StrategiesApi {
     return this.api.post<Strategy[]>('/api/strategies/defaults', {});
   }
 
-  reconfigure(id: string, setup: StrategySetupInput): Promise<Strategy> {
+  reconfigure(id: string, setup: StrategySetupDraft): Promise<Strategy> {
     return this.api.put<Strategy>(`/api/strategies/${id}`, setup);
   }
 

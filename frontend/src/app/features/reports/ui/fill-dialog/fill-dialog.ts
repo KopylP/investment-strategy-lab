@@ -9,7 +9,7 @@ import { Message } from 'primeng/message';
 import { Textarea } from 'primeng/textarea';
 import { toIsoDate } from '../../../../shared/models/api';
 import { MoneyPipe, QuantityPipe } from '../../../../shared/pipes/format-pipes';
-import { FillInput, ReportActionVm } from '../../models/report-vm';
+import { EnteredFill, ReportActionVm } from '../../models/report-vm';
 
 export interface FillDialogData {
   action: ReportActionVm;
@@ -73,7 +73,7 @@ export class FillDialog {
     }
 
     const value = this.form.getRawValue();
-    const fill: FillInput = {
+    const fill: EnteredFill = {
       quantity: value.quantity,
       price: this.action.isMoney ? 1 : value.price,
       fee: value.fee,

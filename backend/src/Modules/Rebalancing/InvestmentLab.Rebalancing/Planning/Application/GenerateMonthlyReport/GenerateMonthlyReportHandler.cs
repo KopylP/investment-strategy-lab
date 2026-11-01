@@ -71,7 +71,7 @@ public sealed class GenerateMonthlyReportHandler(
     {
         var limits = GuardrailLimits.Of(sub);
         var (targets, clipped) = GuardrailEnforcer.Clip(decision.Targets, limits, plan.LabelOf);
-        var rebalanced = SubPortfolioRebalancer.Plan(PlanInputOf(sub, plan, share, targets, decision));
+        var rebalanced = SubPortfolioRebalancer.Plan(SituationOf(sub, plan, share, targets, decision));
 
         List<string> notes = [.. clipped];
 
@@ -92,14 +92,14 @@ public sealed class GenerateMonthlyReportHandler(
             Notes: notes);
     }
 
-    private static SubPortfolioPlanInput PlanInputOf(
+    private static SubPortfolioSituation SituationOf(
         IPlanningSubPortfolio sub, MonthlyPlan plan, decimal share, StrategyTargets targets, StrategyDecision decision)
     {
         var snapshot = plan.Snapshots.GetValueOrDefault(sub.Id);
         var positions = (snapshot?.Positions ?? [])
             .Select(position => new SubPortfolioPosition(position.InstrumentId, Quantity.Of(position.Quantity), position.AverageCost));
 
-        return new SubPortfolioPlanInput(
+        return new SubPortfolioSituation(
             Strategy: targets,
             Positions: [.. positions],
             Cash: snapshot?.Cash ?? 0m,

@@ -9,8 +9,8 @@ public sealed record OpenAccountCommand(
     string Name,
     string Broker,
     string BaseCurrency,
-    IReadOnlyList<SubPortfolioInput> SubPortfolios,
-    ContributionPolicyInput? ContributionPolicy = null,
+    IReadOnlyList<NewSubPortfolio> SubPortfolios,
+    ContributionPolicyChoice? ContributionPolicy = null,
     string? TaxPolicyCode = null);
 
 public sealed class OpenAccountHandler(IAccountRepository accounts, ITaxPolicyDirectory taxPolicies, TimeProvider clock)
@@ -25,15 +25,15 @@ public sealed class OpenAccountHandler(IAccountRepository accounts, ITaxPolicyDi
         if (!taxPolicies.IsKnown(taxPolicy))
             return AccountErrors.UnknownTaxPolicy(taxPolicy);
 
-        var policy = AccountInput.ToPolicy(command.ContributionPolicy);
+        var policy = PolicyOf(command.ContributionPolicy);
         if (policy.IsFailure)
             return policy.Error;
 
         var drafts = new List<SubPortfolioDraft>();
 
-        foreach (var input in command.SubPortfolios ?? [])
+        foreach (var asked in command.SubPortfolios ?? [])
         {
-            var draft = AccountInput.ToDraft(input);
+            var draft = SubPortfolioDraft.TryOf(asked);
             if (draft.IsFailure)
                 return draft.Error;
 
@@ -59,4 +59,7 @@ public sealed class OpenAccountHandler(IAccountRepository accounts, ITaxPolicyDi
 
         return account.ToSetupDto();
     }
+
+    private static Result<ContributionPolicy> PolicyOf(ContributionPolicyChoice? choice) =>
+        choice is null ? ContributionPolicy.Default : ContributionPolicy.TryOf(choice.Kind, choice.DriftBandPercent);
 }

@@ -19,8 +19,8 @@ import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { SignedValue } from '../../../../shared/ui/signed-value';
 import { Viewport } from '../../../../shared/ui/viewport';
 import {
-  CashInput,
-  TradeInput,
+  NewCashMovement,
+  NewTrade,
   TransactionsStore,
   TransactionVm,
 } from '../../data-access/transactions-store';
@@ -110,12 +110,12 @@ export class LedgerPage {
     });
   });
 
-  protected async recordTrade(input: TradeInput): Promise<void> {
-    if (await this.store.recordTrade(input)) this.tradeVisible.set(false);
+  protected async recordTrade(trade: NewTrade): Promise<void> {
+    if (await this.store.recordTrade(trade)) this.tradeVisible.set(false);
   }
 
-  protected async recordCash(input: CashInput): Promise<void> {
-    if (await this.store.recordCash(input)) this.cashVisible.set(false);
+  protected async recordCash(movement: NewCashMovement): Promise<void> {
+    if (await this.store.recordCash(movement)) this.cashVisible.set(false);
   }
 
   protected confirmReverse(transaction: TransactionVm): void {
