@@ -97,6 +97,8 @@ requirement for every change, also a small one, and it wins over the shortest wa
 | Strategies and their reports | The strategy type in the engine | Reads what the type declares; nothing about one report is hard-coded |
 | Any other outside service or standard | An interface in the owning module with its adapter in `Infrastructure` | Depends on the interface or the `.Contracts` query |
 
+- **A DTO of another module never leaves the class that reads it,** and no class gathers other modules' data for handlers. When to read a
+  contract directly and when to use a port with an adapter: see Data from other modules in `backend/CLAUDE.md`.
 - **Never spread knowledge of a provider or a country:** no prefixes, suffixes, form names, rates or provider names outside
   the owner. When a second place needs that knowledge, add it to the owner's contract instead of copying it.
 - **An unknown value fails loudly.** A missing policy or provider gives an error, never a silent default that produces

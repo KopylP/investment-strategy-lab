@@ -12,6 +12,28 @@ public sealed record AccountReport(
     OwnReportSchedule? Own = null,
     IReadOnlyList<string>? SignalKinds = null)
 {
+    public static IReadOnlyList<AccountReport> AllOf(IEnumerable<DeclaredReport> declared, PlanSettings? settings)
+    {
+        var sameReport = declared.GroupBy(each => each.Code);
+
+        return [.. sameReport.Select(group => Of([.. group], settings))];
+    }
+
+    private static AccountReport Of(List<DeclaredReport> declared, PlanSettings? settings)
+    {
+        var first = declared[0];
+
+        return new AccountReport(
+            Code: first.Code,
+            Name: first.Name,
+            Description: first.Description,
+            Mode: first.Mode,
+            Kind: first.Kind,
+            SubPortfolios: [.. declared.Select(each => each.SubPortfolio)],
+            Own: settings?.ScheduleOf(first.Code),
+            SignalKinds: [.. declared.SelectMany(each => each.SignalKinds).Distinct()]);
+    }
+
     public static AccountReport? Choose(IReadOnlyList<AccountReport> reports, string? code) =>
         code is null
             ? reports.FirstOrDefault(report => report.Kind == ReportKind.Monthly)

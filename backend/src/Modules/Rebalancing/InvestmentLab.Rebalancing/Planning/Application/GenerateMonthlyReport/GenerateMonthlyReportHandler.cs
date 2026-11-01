@@ -1,20 +1,18 @@
-using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Rebalancing.Planning.Application.Shared;
 using InvestmentLab.Rebalancing.Planning.Domain;
 using InvestmentLab.Rebalancing.Reports.Domain;
-using InvestmentLab.Strategies.Contracts;
 
 namespace InvestmentLab.Rebalancing.Planning.Application.GenerateMonthlyReport;
 
 public sealed class GenerateMonthlyReportHandler(
     MonthlyPlanPreparation preparation,
-    PlanningInputs inputs,
+    IInstrumentPrices instrumentPrices,
     IPlanReviewer reviewer,
     GeneratedReportSaver saver)
 {
     public async Task<Result<ReportId>> Handle(
         GenerateMonthlyReportCommand command,
-        IReadOnlyDictionary<Guid, StrategyEvaluationResult<StrategyDecisionDto>> decisions,
+        IReadOnlyDictionary<Guid, StrategyAnswer<StrategyDecision>> decisions,
         ReportRequest request,
         CancellationToken cancellationToken)
     {
@@ -39,31 +37,25 @@ public sealed class GenerateMonthlyReportHandler(
     }
 
     private async Task AddTargetPricesAsync(
-        MonthlyPlan plan, IReadOnlyDictionary<Guid, StrategyEvaluationResult<StrategyDecisionDto>> decisions, CancellationToken cancellationToken)
+        MonthlyPlan plan, IReadOnlyDictionary<Guid, StrategyAnswer<StrategyDecision>> decisions, CancellationToken cancellationToken)
     {
         var missingIds = decisions.Values
             .Where(result => result.IsSuccess)
-            .SelectMany(result => InstrumentsWanted(result.Value!))
+            .SelectMany(result => result.Value!.WantedInstruments)
             .Where(id => !plan.Prices.ContainsKey(id));
 
-        var fetched = await inputs.PricesAsync(missingIds, plan.AsOf, plan.Account.BaseCurrency, plan.Warnings, cancellationToken);
+        var fetched = await instrumentPrices.InCurrencyAsync(missingIds, plan.AsOf, plan.Account.BaseCurrency, cancellationToken);
+        plan.Warnings.AddRange(fetched.Warnings);
 
-        foreach (var (id, price) in fetched)
+        foreach (var (id, price) in fetched.Prices)
             plan.Prices[id] = price;
     }
 
-    private static IEnumerable<Guid> InstrumentsWanted(StrategyDecisionDto decision)
-    {
-        var targets = decision.Targets.Select(target => target.InstrumentId);
-
-        return decision.CashInstrumentId is { } cash ? targets.Append(cash) : targets;
-    }
-
     private static SubPortfolioOutcome OutcomeOf(
-        SubPortfolioSetupDto sub, MonthlyPlan plan, IReadOnlyDictionary<Guid, StrategyEvaluationResult<StrategyDecisionDto>> decisions)
+        IPlanningSubPortfolio sub, MonthlyPlan plan, IReadOnlyDictionary<Guid, StrategyAnswer<StrategyDecision>> decisions)
     {
         var share = plan.Allocation.For(sub.Id);
-        var result = decisions.GetValueOrDefault(sub.Id) ?? new(null, "strategy.no_answer", Message.Of("report.run.no_answer"));
+        var result = decisions.GetValueOrDefault(sub.Id) ?? StrategyAnswer<StrategyDecision>.Failed(Message.Of("report.run.no_answer"));
 
         if (!result.IsSuccess)
         {
@@ -75,10 +67,10 @@ public sealed class GenerateMonthlyReportHandler(
         return RebalancedOutcome(sub, plan, share, result.Value!);
     }
 
-    private static SubPortfolioOutcome RebalancedOutcome(SubPortfolioSetupDto sub, MonthlyPlan plan, decimal share, StrategyDecisionDto decision)
+    private static SubPortfolioOutcome RebalancedOutcome(IPlanningSubPortfolio sub, MonthlyPlan plan, decimal share, StrategyDecision decision)
     {
-        var limits = PlanningInputs.LimitsOf(sub);
-        var (targets, clipped) = GuardrailEnforcer.Clip(PlanningInputs.TargetsOf(decision), limits, plan.LabelOf);
+        var limits = GuardrailLimits.Of(sub);
+        var (targets, clipped) = GuardrailEnforcer.Clip(decision.Targets, limits, plan.LabelOf);
         var rebalanced = SubPortfolioRebalancer.Plan(PlanInputOf(sub, plan, share, targets, decision));
 
         List<string> notes = [.. clipped];
@@ -93,15 +85,15 @@ public sealed class GenerateMonthlyReportHandler(
             Name: sub.Name,
             TargetShare: sub.TargetShare,
             Contribution: share,
-            Strategy: new StrategyInfo(decision.StrategyId, decision.StrategyVersion, decision.StrategyCode, decision.EngineVersion),
-            Decision: PlanningInputs.DecisionOf(decision, []),
+            Strategy: decision.Strategy,
+            Decision: decision.Section,
             Plan: rebalanced,
             Orders: rebalanced.Orders,
             Notes: notes);
     }
 
     private static SubPortfolioPlanInput PlanInputOf(
-        SubPortfolioSetupDto sub, MonthlyPlan plan, decimal share, StrategyTargets targets, StrategyDecisionDto decision)
+        IPlanningSubPortfolio sub, MonthlyPlan plan, decimal share, StrategyTargets targets, StrategyDecision decision)
     {
         var snapshot = plan.Snapshots.GetValueOrDefault(sub.Id);
         var positions = (snapshot?.Positions ?? [])
@@ -122,9 +114,9 @@ public sealed class GenerateMonthlyReportHandler(
     private static void AddReportWarnings(MonthlyPlan plan, List<SubPortfolioOutcome> outcomes, ReportRequest request)
     {
         var needed = outcomes.SelectMany(outcome => outcome.Orders.Select(order => order.InstrumentId))
-            .Concat(plan.Holdings.SubPortfolios.SelectMany(sub => sub.Positions.Select(position => position.InstrumentId)));
+            .Concat(plan.Holdings.SelectMany(sub => sub.Positions.Select(position => position.InstrumentId)));
 
-        plan.Warnings.InsertRange(0, PlanningInputs.PriceWarnings(needed, plan.Prices, plan.Labels));
+        plan.Warnings.InsertRange(0, PriceWarnings.For(needed, plan.Prices, plan.Labels));
 
         if (request.Cause is { } cause)
             plan.Warnings.Insert(0, cause);
@@ -141,7 +133,7 @@ public sealed class GenerateMonthlyReportHandler(
         return transfer.WarningFor(from, to, Percentage.Of(plan.Account.DriftBand), plan.Currency);
     }
 
-    private static string NameOf(AccountSetupDto account, Guid subPortfolioId) =>
+    private static string NameOf(IPlanningAccount account, Guid subPortfolioId) =>
         account.SubPortfolios.FirstOrDefault(sub => sub.Id == subPortfolioId)?.Name ?? subPortfolioId.ToString();
 
     private async Task<RebalancingReport> ComposeAsync(
@@ -150,7 +142,7 @@ public sealed class GenerateMonthlyReportHandler(
         var marketAsOf = ReportHeader.MarketDateOf([.. plan.Prices.Values.Select(price => price.Date)], plan.AsOf);
         var header = new ReportHeader(
             AccountId: plan.Account.Id,
-            OwnerId: UserId.Of(plan.Account.OwnerId),
+            OwnerId: plan.Account.OwnerId,
             AccountName: plan.Account.Name,
             Currency: plan.Currency,
             Period: plan.Period,

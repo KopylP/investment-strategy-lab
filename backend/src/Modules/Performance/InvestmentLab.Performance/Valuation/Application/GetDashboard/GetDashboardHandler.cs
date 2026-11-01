@@ -11,7 +11,7 @@ public sealed class GetDashboardHandler(AccountHistoryLoader histories, IAccount
         if (await accounts.GetAccountSetup(accountId, cancellationToken) is not { } account)
             return Error.NotFound("account.not_found", $"Account {accountId} does not exist.");
 
-        var history = await histories.LoadAsync(account, cancellationToken);
+        var history = await histories.LoadAsync(accountId, cancellationToken);
         var key = DashboardPeriod.KeyOf(period);
 
         if (history.Series.Count == 0)

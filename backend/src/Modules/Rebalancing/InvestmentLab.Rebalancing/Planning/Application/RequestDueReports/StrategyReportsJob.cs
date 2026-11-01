@@ -9,14 +9,20 @@ using Microsoft.Extensions.Logging;
 namespace InvestmentLab.Rebalancing.Planning.Application.RequestDueReports;
 
 public sealed class StrategyReportsJob(
-    PlanningInputs inputs, IPlanSettingsRepository settings, IReportRepository reports, IReportRequestRepository requests,
-    RequestReportHandler request, TimeProvider clock, ILogger<StrategyReportsJob> logger) : IScheduledJob
+    IAccountSetupQueries accounts,
+    IAccountReports accountReports,
+    IPlanSettingsRepository settings,
+    IReportRepository reports,
+    IReportRequestRepository requests,
+    RequestReportHandler request,
+    TimeProvider clock,
+    ILogger<StrategyReportsJob> logger) : IScheduledJob
 {
     public async Task RunAsync(CancellationToken cancellationToken)
     {
         var now = ReportSchedules.Local(clock.GetUtcNow()).DateTime;
 
-        foreach (var account in await inputs.AccountsAsync(cancellationToken))
+        foreach (var account in await accounts.GetAccountSetups(cancellationToken))
             await AskForDueReportsAsync(account, now, cancellationToken);
     }
 
@@ -26,7 +32,7 @@ public sealed class StrategyReportsJob(
         if (plan is { GenerateOnSchedule: false })
             return;
 
-        foreach (var report in await inputs.ReportsAsync(account, plan, cancellationToken))
+        foreach (var report in await accountReports.OfAsync(account.Id, plan, cancellationToken))
             await AskIfDueAsync(account.Id, report, now, cancellationToken);
     }
 

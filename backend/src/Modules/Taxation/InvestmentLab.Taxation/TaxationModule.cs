@@ -71,7 +71,13 @@ public sealed class TaxationModule : IModule
         var services = builder.Services;
         services.AddScoped<ITaxLedgerRepository, TaxLedgerRepository>();
         services.AddScoped<IAssessmentRepository, AssessmentRepository>();
-        services.AddScoped<TaxInputs>();
+        services.AddScoped<TaxAccountSync>();
+        services.AddScoped<TaxpayerReader>();
+        services.AddScoped<TaxEventReader>();
+        services.AddScoped<ITaxRates, TaxRates>();
+        services.AddScoped<ITaxpayerAccounts, TaxpayerAccounts>();
+        services.AddScoped<ITaxJournals, TaxJournals>();
+        services.AddScoped<IInstrumentKeys, InstrumentKeys>();
         services.AddScoped<TaxRecalculator>();
         services.AddScoped<RefreshTaxAssessmentsHandler>();
         services.AddScoped<GetTaxYearsHandler>();

@@ -6,6 +6,12 @@ public sealed record StrategyTargets(
     IReadOnlyList<TargetWeight> Targets,
     IReadOnlyList<InstrumentScore> Scores)
 {
+    public static StrategyTargets Of(bool marketIsFavorable, decimal investFraction, IReadOnlyList<TargetWeight> targets, IReadOnlyList<InstrumentScore> scores) => new(
+        MarketIsFavorable: marketIsFavorable,
+        InvestFraction: Percentage.Of(Math.Clamp(investFraction, 0m, 1m)),
+        Targets: targets,
+        Scores: scores);
+
     public decimal TotalWeight => Targets.Sum(target => target.Weight);
 
     public bool Selects(Guid instrumentId) => Targets.Any(target => target.InstrumentId == instrumentId);

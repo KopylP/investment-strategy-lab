@@ -1,4 +1,5 @@
 using InvestmentLab.BuildingBlocks.Messaging;
+using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Rebalancing.Planning.Application.RequestReport;
 using InvestmentLab.Rebalancing.Planning.Application.Shared;
 using InvestmentLab.Rebalancing.Planning.Domain;
@@ -12,7 +13,8 @@ internal sealed class RequestReportsOnSignal(
     ISignalReportRuleRepository rules,
     IReportRepository reports,
     IReportRequestRepository requests,
-    PlanningInputs inputs,
+    IAccountSetupQueries accounts,
+    IAccountReports accountReports,
     RequestReportHandler requestReport,
     ILogger<RequestReportsOnSignal> logger) : IIntegrationEventHandler<SignalTriggeredV1>
 {
@@ -39,7 +41,7 @@ internal sealed class RequestReportsOnSignal(
 
     private async Task ActAsync(SignalReportRule rule, SignalTriggeredV1 triggered, CancellationToken cancellationToken)
     {
-        var account = await inputs.AccountAsync(rule.AccountId, cancellationToken);
+        var account = await accounts.GetAccountSetup(rule.AccountId, cancellationToken);
         if (account is null)
         {
             rule.CouldNotAct(Message.Of("signal_rule.account_gone"));
@@ -47,7 +49,7 @@ internal sealed class RequestReportsOnSignal(
             return;
         }
 
-        var declared = await inputs.ReportsAsync(account, settings: null, cancellationToken);
+        var declared = await accountReports.OfAsync(account.Id, settings: null, cancellationToken);
         var report = declared.FirstOrDefault(each => each.Code == rule.ReportCode);
         if (report is null)
         {

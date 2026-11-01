@@ -32,8 +32,8 @@ this rule?" If yes, it belongs in `Domain`, whatever the shape of the code that 
 | Layer | Holds | Must not hold | Tested by |
 |---|---|---|---|
 | `Domain` | Every business rule and calculation: aggregates, value objects, domain services and pure calculators (`TaxCalculator`, `SalesTaxImpactCalculator`, `BrokerTickerMatcher`), domain events, errors, repository and policy interfaces | EF Core, ASP.NET, HTTP, the clock, reading or saving data, other modules' contracts | **Unit tests, required**: each rule, its edge cases and each way it can fail, without Docker or mocks of infrastructure |
-| `Application` | The order of steps of one use case: load, call the domain, save, return. Mapping to DTOs. Translating other modules' contracts into domain inputs | Business rules, calculations, thresholds, `if`s that decide a business outcome | Only when it has real branching of its own; most is covered through the domain and the integration scenario |
-| `Infrastructure` | How the outside world is reached: EF configurations, repositories, HTTP adapters, parsers of external formats | Business decisions; an adapter only translates | Adapter tests where the format is tricky; integration tests otherwise |
+| `Application` | The order of steps of one use case: load, call the domain, save, return. Mapping to its own DTOs. A plain read of another module's `.Contracts` query (see Data from other modules) | Business rules, calculations, thresholds, `if`s that decide a business outcome | Only when it has real branching of its own; most is covered through the domain and the integration scenario |
+| `Infrastructure` | How the outside world is reached: EF configurations, repositories, HTTP adapters, parsers of external formats, adapters over other modules' contracts | Business decisions; an adapter only translates | Adapter tests where the format is tricky; integration tests otherwise |
 | `Api` | Routes, binding, calling one handler, `ToHttpResult()` | Anything else, including validation rules beyond binding | Integration scenario |
 | `Contracts` | What other modules may see: integration events and query interfaces, primitives only | Rules or logic beyond trivial derived values; references to anything of ours | — |
 
@@ -117,6 +117,73 @@ public sealed class RetireSubPortfolioHandler(IAccountRepository accounts, TimeP
   for what it does (`RequestReportsOnSignal`).
 - **A job** only decides what is due and calls a handler per item, each in its own scope, so one failure does not stop
   the others.
+
+### Data from other modules
+
+**A DTO of another module never leaves the class that reads it.** It may be a local variable, a private member or the
+argument of a private method of the class that calls the contract, and nothing else: it is not in a public or internal
+signature, not in a property of a record or command, and not passed to another class. `ForeignContractIsolationTests`
+checks signatures, fields and base types; it cannot see a DTO passed as `object` or a generic `T`, so never hide one that way.
+
+**When what is used.** Ask the questions in this order and take the first that fits:
+
+| The situation | Use | Where |
+|---|---|---|
+| A use case only checks that something exists, or copies a few values out of it (owner of an account, a name) | The `.Contracts` query injected into the handler; the DTO stays inside the handler | The handler in `Application/<ActionName>/` |
+| The data becomes a business concept here, domain logic works on it, several actions need it, or it is combined from several contracts | A port returning domain types, with an adapter | Port in `Domain/`, adapter in `Infrastructure/` |
+| Another module's event arrives or is sent | The event record stays in `Application/Integration/`: its handlers, mappers and their helpers. They pass on primitives or domain types. A `…V1` that comes inside a query result (journal entries) follows the DTO rule above | `Application/Integration/` only |
+| A use case sends a request to another module or receives its answer as an argument flowing through several classes | A port that takes and returns domain types; the adapter builds the request and reads the answer | Port in `Domain/`, adapter in `Infrastructure/` |
+
+**Never write a class that gathers other modules' data for handlers** (`PlanningInputs`, `TaxInputs` and the like, whatever
+the name). Such a class grows into a grab bag: every handler depends on everything it holds and foreign DTOs spread through
+the use cases. A record that carries the fields of a request (`AccountInput`) is a different thing and stays.
+
+**How a port and its adapter look:**
+
+- **The domain states what it needs:** a port in `Domain/` (`IPlanningAccounts`) that returns a domain interface
+  (`IPlanningAccount`) or a domain record, holding only the members this module uses, named in this module's language.
+- **The adapter lives in `Infrastructure/`** and implements the port over the other module's `.Contracts` query. It wraps
+  each DTO in a private nested class that implements the domain interface and only forwards: `=> _dto.Property`. A domain
+  record fits instead when the result is an answer copied once and kept (`StrategyDecision`) or a value in this module's terms
+  built from several sources (`DeclaredReport`).
+- **Rules stay in the domain.** The wrapper forwards and at most converts a primitive to a value object or a flag; a decision
+  on top of the data (rounding, conversion, grouping, signs of money) is a method or a pure function in `Domain`, with its unit
+  tests, and the adapter calls it.
+- **Ports are small and named for what they give.** A second need that is not cohesive with a port is a second port.
+
+```csharp
+// Planning/Domain/IPlanningAccount.cs
+public interface IPlanningAccount
+{
+    Guid Id { get; }
+    string BaseCurrency { get; }
+}
+
+// Planning/Domain/IPlanningAccounts.cs
+public interface IPlanningAccounts
+{
+    Task<IPlanningAccount?> FindAsync(Guid accountId, CancellationToken cancellationToken);
+}
+
+// Planning/Infrastructure/PlanningAccounts.cs
+internal sealed class PlanningAccounts(IAccountSetupQueries accounts) : IPlanningAccounts
+{
+    public async Task<IPlanningAccount?> FindAsync(Guid accountId, CancellationToken cancellationToken)
+    {
+        var setup = await accounts.GetAccountSetup(accountId, cancellationToken);
+
+        return setup is null ? null : new Account(setup);
+    }
+
+    private sealed class Account(AccountSetupDto dto) : IPlanningAccount
+    {
+        private readonly AccountSetupDto _dto = dto;
+
+        public Guid Id => _dto.Id;
+        public string BaseCurrency => _dto.BaseCurrency;
+    }
+}
+```
 
 ## Rules (enforced by `InvestmentLab.ArchitectureTests`)
 

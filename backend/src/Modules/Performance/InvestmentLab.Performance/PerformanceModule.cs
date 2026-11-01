@@ -38,6 +38,7 @@ public sealed class PerformanceModule : IModule
         services.AddScoped<SnapshotBuilder>();
         services.AddScoped<RefreshSnapshotsHandler>();
         services.AddScoped<AccountHistoryLoader>();
+        services.AddScoped<IAccountJournals, AccountJournals>();
         services.AddScoped<GetDashboardHandler>();
         services.AddScoped<GetAllAccountsDashboardHandler>();
         services.AddScoped<IValuationHistory, ValuationHistory>();

@@ -104,7 +104,12 @@ public sealed class RebalancingModule : IModule
     private static void AddPlanSettings(IServiceCollection services)
     {
         services.AddScoped<IPlanSettingsRepository, PlanSettingsRepository>();
-        services.AddScoped<PlanningInputs>();
+        services.AddScoped<IPlanningAccounts, PlanningAccounts>();
+        services.AddScoped<IAccountReports, AccountReports>();
+        services.AddScoped<IAccountHoldings, AccountHoldings>();
+        services.AddScoped<IInstrumentPrices, InstrumentPrices>();
+        services.AddScoped<IInstrumentLabels, InstrumentLabels>();
+        services.AddScoped<IStrategyRuns, StrategyRuns>();
         services.AddScoped<SaleTaxes>();
         services.AddScoped<GeneratedReportSaver>();
         services.AddScoped<EnsureDeclaredSignalRulesHandler>();

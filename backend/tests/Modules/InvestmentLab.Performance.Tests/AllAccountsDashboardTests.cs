@@ -1,7 +1,6 @@
 using InvestmentLab.Performance.Valuation.Application.GetAllAccountsDashboard;
 using InvestmentLab.Performance.Valuation.Application.Shared;
 using InvestmentLab.Performance.Valuation.Domain;
-using InvestmentLab.Portfolio.Contracts.Accounts;
 
 namespace InvestmentLab.Performance.Tests;
 
@@ -14,9 +13,9 @@ public sealed class AllAccountsDashboardTests
 
     private static AccountWithHistory Account(string currency, params Snapshot[] series)
     {
-        var setup = new AccountSetupDto(Guid.NewGuid(), Guid.NewGuid(), currency, "Broker", currency, "none", "none", 0m, []);
+        var account = new DashboardAccount(Guid.NewGuid(), currency, "Broker", currency);
 
-        return new AccountWithHistory(setup, new AccountHistory(series, [], null, []));
+        return new AccountWithHistory(account, new AccountHistory(series, [], null, []));
     }
 
     private static IReadOnlyList<Snapshot> Combined(FxOn fx, params AccountWithHistory[] accounts)

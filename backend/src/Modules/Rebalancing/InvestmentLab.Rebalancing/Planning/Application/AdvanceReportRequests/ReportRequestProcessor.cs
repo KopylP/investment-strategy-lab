@@ -1,17 +1,15 @@
-using System.Text.Json;
 using InvestmentLab.Rebalancing.Planning.Application.GenerateMonthlyReport;
 using InvestmentLab.Rebalancing.Planning.Application.GenerateRiskReview;
 using InvestmentLab.Rebalancing.Planning.Application.RequestReport;
 using InvestmentLab.Rebalancing.Planning.Application.Shared;
 using InvestmentLab.Rebalancing.Planning.Domain;
 using InvestmentLab.Rebalancing.Reports.Domain;
-using InvestmentLab.Strategies.Contracts;
 
 namespace InvestmentLab.Rebalancing.Planning.Application.AdvanceReportRequests;
 
 public sealed class ReportRequestProcessor(
     IReportRequestRepository requests,
-    IStrategyEvaluation strategies,
+    IStrategyRuns strategies,
     GenerateMonthlyReportHandler rebalance,
     MonthlyPlanPreparation rebalancePreparation,
     GenerateRiskReviewHandler riskReview,
@@ -19,8 +17,6 @@ public sealed class ReportRequestProcessor(
     TimeProvider clock)
 {
     public const int MaxSubmissions = 5;
-
-    private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
     public async Task AdvanceAsync(ReportRequest request, CancellationToken cancellationToken)
     {
@@ -64,11 +60,9 @@ public sealed class ReportRequestProcessor(
 
     private async Task SubmitAsync(
         ReportRequest request,
-        IReadOnlyDictionary<Guid, EvaluateStrategyRequest> asked,
+        IReadOnlyDictionary<Guid, StrategyAsk> asked,
         CancellationToken cancellationToken)
     {
-        var task = TaskOf(request);
-
         foreach (var run in request.Runs.Where(run => run is { IsDone: false, Job: null }).ToList())
         {
             if (!asked.TryGetValue(run.SubPortfolioId, out var ask))
@@ -83,16 +77,11 @@ public sealed class ReportRequestProcessor(
                 continue;
             }
 
-            var submitted = await strategies.SubmitAsync(task, ask, cancellationToken);
-            if (submitted.IsSuccess)
-            {
-                var ticket = submitted.Value!;
-                request.Submitted(
-                    run.SubPortfolioId,
-                    new StrategyJob(ticket.JobId, ticket.Task.ToString(), ticket.StrategyId, ticket.StrategyVersion, ticket.CashInstrumentId));
-            }
-            else if (submitted.ErrorCode != StrategyErrorCodes.EngineUnavailable)
-                request.RunFailed(run.SubPortfolioId, submitted.ErrorCode!, submitted.ErrorMessage ?? submitted.ErrorCode!);
+            var submitted = await strategies.SubmitAsync(request.Kind, ask, cancellationToken);
+            if (submitted.Job is { } job)
+                request.Submitted(run.SubPortfolioId, job);
+            else if (!submitted.EngineUnavailable)
+                request.RunFailed(run.SubPortfolioId, submitted.ErrorCode!, submitted.ErrorMessage!);
         }
     }
 
@@ -100,41 +89,24 @@ public sealed class ReportRequestProcessor(
     {
         foreach (var run in request.Runs.Where(run => run is { IsDone: false, Job: not null }).ToList())
         {
-            var job = run.Job!;
-            var ticket =
-                new StrategyJobTicket(job.JobId, Enum.Parse<StrategyTask>(job.Task), job.StrategyId, job.StrategyVersion, job.CashInstrumentId);
-            var (state, answer, errorCode, errorMessage) = ticket.Task == StrategyTask.AssessRisk
-                ? Read(await strategies.PollRiskAsync(ticket, cancellationToken))
-                : Read(await strategies.PollDecisionAsync(ticket, cancellationToken));
+            var polled = await strategies.PollAsync(run.Job!, cancellationToken);
 
-            switch (state)
+            switch (polled.State)
             {
-                case StrategyJobState.Lost:
+                case StrategyRunState.Lost:
                     request.JobLost(run.SubPortfolioId);
                     break;
-                case StrategyJobState.Finished when answer is not null:
-                    request.Answered(run.SubPortfolioId, answer);
+                case StrategyRunState.Finished when polled.Answer is not null:
+                    request.Answered(run.SubPortfolioId, polled.Answer);
                     break;
-                case StrategyJobState.Finished:
-                    request.RunFailed(run.SubPortfolioId, errorCode ?? "strategy.failed", errorMessage ?? Message.Of("report.run.no_answer"));
+                case StrategyRunState.Finished:
+                    request.RunFailed(run.SubPortfolioId, polled.ErrorCode ?? "strategy.failed", polled.ErrorMessage ?? Message.Of("report.run.no_answer"));
                     break;
             }
         }
     }
 
-    private static (
-        StrategyJobState State,
-        string? Answer,
-        string? ErrorCode,
-        string? ErrorMessage) Read<T>(StrategyJobPoll<T> poll) where T : class =>
-        poll.Result switch
-        {
-            { IsSuccess: true, Value: { } value } => (poll.State, JsonSerializer.Serialize(value, Json), null, null),
-            { } failed => (poll.State, null, failed.ErrorCode, failed.ErrorMessage),
-            null => (poll.State, null, null, null),
-        };
-
-    private Task<Result<IReadOnlyDictionary<Guid, EvaluateStrategyRequest>>> StrategyRequestsAsync(
+    private Task<Result<IReadOnlyDictionary<Guid, StrategyAsk>>> StrategyRequestsAsync(
         ReportRequest request,
         CancellationToken cancellationToken) =>
         request.Kind == ReportKind.RiskReview
@@ -144,20 +116,19 @@ public sealed class ReportRequestProcessor(
     private async Task<Result<ReportId>> GenerateAsync(ReportRequest request, CancellationToken cancellationToken)
     {
         var made = request.Kind == ReportKind.RiskReview
-            ? await riskReview.Handle(RiskReviewOf(request), AnswersOf<RiskAssessmentDto>(request), request, cancellationToken)
-            : await rebalance.Handle(RebalanceOf(request), AnswersOf<StrategyDecisionDto>(request), request, cancellationToken);
+            ? await riskReview.Handle(RiskReviewOf(request), AnswersOf(request, strategies.RiskIn), request, cancellationToken)
+            : await rebalance.Handle(RebalanceOf(request), AnswersOf(request, strategies.DecisionIn), request, cancellationToken);
+
         return made;
     }
 
-    private static Dictionary<Guid, StrategyEvaluationResult<T>> AnswersOf<T>(ReportRequest request) where T : class =>
-        request.Runs.ToDictionary(
-            run => run.SubPortfolioId,
-            run => run.Answer is { } answer
-                ? new StrategyEvaluationResult<T>(JsonSerializer.Deserialize<T>(answer, Json))
-                : new StrategyEvaluationResult<T>(null, run.ErrorCode ?? "strategy.no_answer", run.ErrorMessage ?? Message.Of("report.run.no_answer")));
+    private static Dictionary<Guid, StrategyAnswer<T>> AnswersOf<T>(ReportRequest request, Func<string, T> read) where T : class =>
+        request.Runs.ToDictionary(run => run.SubPortfolioId, run => AnswerOf(run, read));
 
-    private static StrategyTask TaskOf(ReportRequest request) =>
-        request.Kind == ReportKind.RiskReview ? StrategyTask.AssessRisk : StrategyTask.Decide;
+    private static StrategyAnswer<T> AnswerOf<T>(StrategyRun run, Func<string, T> read) where T : class =>
+        run.Answer is { } answer
+            ? StrategyAnswer<T>.Given(read(answer))
+            : StrategyAnswer<T>.Failed(run.ErrorMessage ?? Message.Of("report.run.no_answer"));
 
     private static ReportScope ScopeOf(ReportRequest request) => new(request.Code, request.Title, request.SubPortfolioIds.ToHashSet());
 

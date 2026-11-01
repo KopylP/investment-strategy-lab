@@ -1,19 +1,18 @@
 using InvestmentLab.Performance.Valuation.Domain;
-using InvestmentLab.Portfolio.Contracts.Accounts;
 
 namespace InvestmentLab.Performance.Valuation.Application.Shared;
 
 public sealed class AccountHistoryLoader(IPerformanceRepository store)
 {
-    public async Task<AccountHistory> LoadAsync(AccountSetupDto account, CancellationToken cancellationToken)
+    public async Task<AccountHistory> LoadAsync(Guid accountId, CancellationToken cancellationToken)
     {
-        var snapshots = await store.SnapshotsAsync(account.Id, SnapshotScenario.Actual, DateOnly.MinValue, cancellationToken);
-        var planned = await store.PlannedReportsAsync(account.Id, cancellationToken);
-        var plan = planned.Any(report => report.CountsForPlan) ? await PlanAsync(account.Id, cancellationToken) : null;
+        var snapshots = await store.SnapshotsAsync(accountId, SnapshotScenario.Actual, DateOnly.MinValue, cancellationToken);
+        var planned = await store.PlannedReportsAsync(accountId, cancellationToken);
+        var plan = planned.Any(report => report.CountsForPlan) ? await PlanAsync(accountId, cancellationToken) : null;
 
         var reports = planned.Where(report => !report.IsSuperseded)
             .OrderBy(report => report.MarketAsOf)
-            .Select(report => new ReportMarkerDto(report.ReportId, report.MarketAsOf, report.Kind, report.Period, account.Id))
+            .Select(report => new ReportMarkerDto(report.ReportId, report.MarketAsOf, report.Kind, report.Period, accountId))
             .ToList();
 
         return new AccountHistory(

@@ -15,12 +15,12 @@ internal sealed class TaxpayerHistory(TaxRecalculator recalculator, ICurrentUser
         var byAccount = outcome.Events.ToLookup(e => e.AccountId);
         var accounts = outcome.Taxpayer.Taxed.Select(account =>
         {
-            var setup = outcome.Taxpayer.Setups.GetValueOrDefault(account.AccountId);
+            var identity = outcome.Taxpayer.Identities.GetValueOrDefault(account.AccountId);
 
             return new TaxpayerAccountHistory(
                 account.AccountId,
-                setup?.Name ?? "",
-                setup?.Broker ?? "",
+                identity?.Name ?? "",
+                identity?.Broker ?? "",
                 TaxPolicies.For(account.PolicyCode),
                 [.. byAccount[account.AccountId]]);
         });

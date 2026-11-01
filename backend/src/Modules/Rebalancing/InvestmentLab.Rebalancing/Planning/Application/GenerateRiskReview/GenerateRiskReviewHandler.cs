@@ -1,34 +1,37 @@
-using InvestmentLab.MarketData.Contracts.Quotes;
-using InvestmentLab.Portfolio.Contracts.Accounts;
-using InvestmentLab.Portfolio.Contracts.Holdings;
 using InvestmentLab.Rebalancing.Planning.Application.Shared;
 using InvestmentLab.Rebalancing.Planning.Domain;
 using InvestmentLab.Rebalancing.Reports.Domain;
-using InvestmentLab.Strategies.Contracts;
 
 namespace InvestmentLab.Rebalancing.Planning.Application.GenerateRiskReview;
 
-public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepository reports, GeneratedReportSaver saver, TimeProvider clock)
+public sealed class GenerateRiskReviewHandler(
+    IPlanningAccounts accounts,
+    IAccountHoldings accountHoldings,
+    IInstrumentPrices instrumentPrices,
+    IInstrumentLabels instrumentLabels,
+    IReportRepository reports,
+    GeneratedReportSaver saver,
+    TimeProvider clock)
 {
     public async Task<Result<ReportId>> Handle(
         GenerateRiskReviewCommand command,
-        IReadOnlyDictionary<Guid, StrategyEvaluationResult<RiskAssessmentDto>> assessments,
+        IReadOnlyDictionary<Guid, StrategyAnswer<StrategyRiskAssessment>> assessments,
         ReportRequest request,
         CancellationToken cancellationToken)
     {
         var now = clock.GetUtcNow();
         var asOf = command.AsOf ?? DateOnly.FromDateTime(now.UtcDateTime);
 
-        if (await inputs.AccountAsync(command.AccountId, cancellationToken) is not { } account)
+        if (await accounts.FindAsync(command.AccountId, cancellationToken) is not { } account)
             return Error.NotFound("account.not_found", $"Account {command.AccountId} does not exist.");
 
         var planned = RiskReviewStrategyRequests.PlannedOf(account, command);
         if (planned.Count == 0)
             return ReportErrors.NoActiveSubPortfolios(account.Id);
 
-        var holdings = await inputs.HoldingsAsync(account, cancellationToken);
-        var review = await ReviewInputsAsync(account, holdings, planned, asOf, request, cancellationToken);
-        var snapshots = holdings.SubPortfolios.ToDictionary(sub => sub.SubPortfolioId);
+        var holdings = await accountHoldings.OfAsync(account.Id, account.BaseCurrency, cancellationToken);
+        var review = await ReviewedMarketAsync(account, holdings, planned, asOf, request, cancellationToken);
+        var snapshots = holdings.ToDictionary(sub => sub.Id);
         var outcomes = Outcomes(planned, snapshots, assessments, review);
 
         var header = HeaderOf(account, command, asOf, request, review);
@@ -41,31 +44,32 @@ public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepo
         return report.Id;
     }
 
-    private async Task<RiskReviewInputs> ReviewInputsAsync(
-        AccountSetupDto account,
-        AccountHoldingsDto holdings,
-        List<SubPortfolioSetupDto> planned,
+    private async Task<ReviewedMarket> ReviewedMarketAsync(
+        IPlanningAccount account,
+        IReadOnlyList<IHeldSubPortfolio> holdings,
+        List<IPlanningSubPortfolio> planned,
         DateOnly asOf,
         ReportRequest request,
         CancellationToken cancellationToken)
     {
-        var labels = await inputs.LabelsAsync(cancellationToken);
+        var labels = await instrumentLabels.AllAsync(cancellationToken);
         var heldIds = HeldInstruments(holdings, planned);
 
-        var warnings = new List<string>();
-        var prices = await inputs.PricesAsync(heldIds, asOf, account.BaseCurrency, warnings, cancellationToken);
-        warnings.InsertRange(0, PlanningInputs.PriceWarnings(heldIds, prices, labels));
+        var found = await instrumentPrices.InCurrencyAsync(heldIds, asOf, account.BaseCurrency, cancellationToken);
+        var prices = found.Prices;
+
+        List<string> warnings = [.. PriceWarnings.For(heldIds, prices, labels), .. found.Warnings];
 
         if (request.Cause is { } cause)
             warnings.Insert(0, cause);
 
-        return new RiskReviewInputs(labels, prices, warnings);
+        return new ReviewedMarket(labels, prices, warnings);
     }
 
     private static ReportHeader HeaderOf(
-        AccountSetupDto account, GenerateRiskReviewCommand command, DateOnly asOf, ReportRequest request, RiskReviewInputs review) => new(
+        IPlanningAccount account, GenerateRiskReviewCommand command, DateOnly asOf, ReportRequest request, ReviewedMarket review) => new(
         AccountId: account.Id,
-        OwnerId: UserId.Of(account.OwnerId),
+        OwnerId: account.OwnerId,
         AccountName: account.Name,
         Currency: Currency.Of(account.BaseCurrency),
         Period: YearMonth.Containing(asOf),
@@ -75,16 +79,16 @@ public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepo
         Code: command.Scope.Code,
         Title: command.Scope.Title);
 
-    private static List<Guid> HeldInstruments(AccountHoldingsDto holdings, List<SubPortfolioSetupDto> planned) =>
-        [.. holdings.SubPortfolios
-            .Where(sub => planned.Any(each => each.Id == sub.SubPortfolioId))
+    private static List<Guid> HeldInstruments(IReadOnlyList<IHeldSubPortfolio> holdings, List<IPlanningSubPortfolio> planned) =>
+        [.. holdings
+            .Where(sub => planned.Any(each => each.Id == sub.Id))
             .SelectMany(sub => sub.Positions.Select(position => position.InstrumentId))];
 
     private static List<SubPortfolioOutcome> Outcomes(
-        List<SubPortfolioSetupDto> planned,
-        Dictionary<Guid, SubPortfolioHoldingsDto> snapshots,
-        IReadOnlyDictionary<Guid, StrategyEvaluationResult<RiskAssessmentDto>> assessments,
-        RiskReviewInputs review)
+        List<IPlanningSubPortfolio> planned,
+        Dictionary<Guid, IHeldSubPortfolio> snapshots,
+        IReadOnlyDictionary<Guid, StrategyAnswer<StrategyRiskAssessment>> assessments,
+        ReviewedMarket review)
     {
         var outcomes = new List<SubPortfolioOutcome>();
 
@@ -94,7 +98,7 @@ public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepo
             if (snapshot is null || snapshot.Positions.Count == 0)
                 continue;
 
-            var result = assessments.GetValueOrDefault(sub.Id) ?? new(null, "strategy.no_answer", Message.Of("report.run.no_answer"));
+            var result = assessments.GetValueOrDefault(sub.Id) ?? StrategyAnswer<StrategyRiskAssessment>.Failed(Message.Of("report.run.no_answer"));
 
             outcomes.Add(result.IsSuccess
                 ? AssessedOutcome(sub, snapshot, result.Value!, review)
@@ -104,7 +108,7 @@ public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepo
         return outcomes;
     }
 
-    private static SubPortfolioOutcome FailedOutcome(SubPortfolioSetupDto sub, string? error, RiskReviewInputs review)
+    private static SubPortfolioOutcome FailedOutcome(IPlanningSubPortfolio sub, string? error, ReviewedMarket review)
     {
         review.Warnings.Add(Message.Of("report.warning.risk_failed", new { sub = sub.Name, error }));
 
@@ -112,25 +116,24 @@ public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepo
     }
 
     private static SubPortfolioOutcome AssessedOutcome(
-        SubPortfolioSetupDto sub, SubPortfolioHoldingsDto snapshot, RiskAssessmentDto assessment, RiskReviewInputs review)
+        IPlanningSubPortfolio sub, IHeldSubPortfolio snapshot, StrategyRiskAssessment assessment, ReviewedMarket review)
     {
-        var signals = assessment.Signals.Select(signal => new RiskSignal(signal.InstrumentId, signal.Kind, signal.Reason));
-        var exits = ExitPlan.Of(signals, HeldQuantities(snapshot), Closes(review), review.LabelOf);
+        var exits = ExitPlan.Of(assessment.Signals, HeldQuantities(snapshot), Closes(review), review.LabelOf);
 
         return new SubPortfolioOutcome(
             SubPortfolioId: sub.Id,
             Name: sub.Name,
             TargetShare: sub.TargetShare,
             Contribution: 0m,
-            Strategy: new StrategyInfo(assessment.StrategyId, assessment.StrategyVersion, assessment.StrategyCode, assessment.EngineVersion),
+            Strategy: assessment.Strategy,
             Decision: null,
             Plan: null,
             Orders: exits.Orders,
             Notes: exits.Notes,
-            Risk: SectionRiskOf(assessment));
+            Risk: assessment.Section);
     }
 
-    private static Dictionary<Guid, decimal> HeldQuantities(SubPortfolioHoldingsDto snapshot)
+    private static Dictionary<Guid, decimal> HeldQuantities(IHeldSubPortfolio snapshot)
     {
         var quantities = new Dictionary<Guid, decimal>();
 
@@ -140,33 +143,11 @@ public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepo
         return quantities;
     }
 
-    private static Dictionary<Guid, decimal> Closes(RiskReviewInputs review) =>
+    private static Dictionary<Guid, decimal> Closes(ReviewedMarket review) =>
         review.Prices.ToDictionary(price => price.Key, price => price.Value.Close);
 
-    private static SectionRisk SectionRiskOf(RiskAssessmentDto assessment) => new(
-        assessment.Status,
-        assessment.MarketAlerts,
-        [.. assessment.Positions.Select(SectionRiskPositionOf)],
-        assessment.Portfolio.Alerts,
-        assessment.Actions);
-
-    private static SectionRiskPosition SectionRiskPositionOf(PositionRiskDto position) => new(
-        InstrumentId: position.InstrumentId,
-        Status: position.Status,
-        Quantity: position.Quantity,
-        AverageCost: position.AverageCost,
-        CurrentPrice: position.CurrentPrice,
-        Value: position.Value,
-        PnlPct: position.PnlPct,
-        DrawdownFromHigh: position.DrawdownFromHigh,
-        ExitPrice: position.ExitPrice,
-        ExitRule: position.ExitRule,
-        ExitDistance: position.ExitDistance,
-        Alerts: position.Alerts,
-        Sell: position.Sell);
-
-    private sealed record RiskReviewInputs(
-        IReadOnlyDictionary<Guid, string> Labels, IReadOnlyDictionary<Guid, LatestPriceDto> Prices, List<string> Warnings)
+    private sealed record ReviewedMarket(
+        IReadOnlyDictionary<Guid, string> Labels, IReadOnlyDictionary<Guid, IInstrumentPrice> Prices, List<string> Warnings)
     {
         public string LabelOf(Guid instrumentId) => Labels.TryGetValue(instrumentId, out var label) ? label : instrumentId.ToString();
     }
