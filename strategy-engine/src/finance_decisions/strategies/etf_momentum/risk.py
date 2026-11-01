@@ -14,6 +14,7 @@ from finance_decisions.helpers import (
     money,
     safe_division,
 )
+from finance_decisions.market_data import BENCHMARK_SYMBOL, VOLATILITY_INDEX_SYMBOL
 from finance_decisions.models import Position, aggregate_positions
 from finance_decisions.messages import msg, render, t
 from .config import RiskSettings
@@ -117,7 +118,7 @@ def analyze_portfolio_risk(
     as_of = prices.index[-1]
 
     spy_price, spy_ma, spy_above_ma = _spy_trend(prices, as_of, settings.ma_period)
-    vix = _latest_fresh(prices, "^VIX", as_of)
+    vix = _latest_fresh(prices, VOLATILITY_INDEX_SYMBOL, as_of)
 
     market_alerts: list[str] = []
     actions: list[str] = []
@@ -378,13 +379,13 @@ def _entry_timestamp(entry_date: str | None, index: pd.Index) -> pd.Timestamp | 
 
 
 def _spy_trend(prices: pd.DataFrame, as_of: pd.Timestamp, ma_period: int) -> tuple[float | None, float | None, bool]:
-    if "SPY" not in prices.columns:
+    if BENCHMARK_SYMBOL not in prices.columns:
         return None, None, False
-    last = last_valid_date(prices["SPY"])
+    last = last_valid_date(prices[BENCHMARK_SYMBOL])
     if last is None or (as_of - last).days > MAX_STALE_DAYS:
         return None, None, False
-    price = latest_value(prices["SPY"])
-    ma = latest_moving_average(prices["SPY"], ma_period)
+    price = latest_value(prices[BENCHMARK_SYMBOL])
+    ma = latest_moving_average(prices[BENCHMARK_SYMBOL], ma_period)
     return price, ma, bool(price is not None and ma is not None and price > ma)
 
 

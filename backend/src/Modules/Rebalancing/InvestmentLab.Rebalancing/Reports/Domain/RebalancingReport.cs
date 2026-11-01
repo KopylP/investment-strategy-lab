@@ -38,8 +38,8 @@ public sealed class RebalancingReport : AggregateRoot<ReportId>
         Currency = draft.Currency;
         Period = draft.Period;
         Kind = draft.Kind;
-        Code = draft.Code ?? ReportDefaults.CodeOf(draft.Kind);
-        Title = draft.Title ?? ReportDefaults.TitleOf(draft.Kind);
+        Code = draft.Code;
+        Title = draft.Title;
         Trigger = draft.Trigger;
         Status = ReportStatus.New;
         MarketAsOf = draft.MarketAsOf;

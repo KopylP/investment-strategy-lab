@@ -20,7 +20,7 @@ from typing import Callable
 import numpy as np
 import pandas as pd
 
-from finance_decisions.market_data import download_close_prices
+from finance_decisions.market_data import BENCHMARK_SYMBOL, MARKET_SYMBOLS, download_close_prices
 from finance_decisions.models import Position, aggregate_positions
 from .config import StrategyConfig, load_strategy_config
 from .plan import MonthlyPlan, build_plan
@@ -132,10 +132,12 @@ def run_backtest(
     contribution = config.plan.monthly_contribution if contribution is None else contribution
     years = years or config.backtest.years
     benchmark = config.backtest.benchmark
+    if not benchmark:
+        raise ValueError("the strategy config names no backtest benchmark")
     prices = prices.sort_index().dropna(how="all")
     valuation = prices.ffill()
 
-    spy_obs = prices["SPY"].notna().cumsum() if "SPY" in prices.columns else pd.Series(0, index=prices.index)
+    spy_obs = prices[BENCHMARK_SYMBOL].notna().cumsum() if BENCHMARK_SYMBOL in prices.columns else pd.Series(0, index=prices.index)
     earliest = prices.index[-1] - pd.DateOffset(years=years)
     days = prices.index[(spy_obs >= WARMUP_DAYS) & (prices.index >= earliest)]
     if len(days) < 40:
@@ -304,7 +306,7 @@ def main() -> int:
 
     config = load_strategy_config(args.config)
     years = args.years or config.backtest.years
-    tickers = set(config.etfs) | {"SPY", "^VIX", config.backtest.benchmark}
+    tickers = set(config.etfs) | {*MARKET_SYMBOLS, config.backtest.benchmark}
     if config.cash_etf:
         tickers.add(config.cash_etf)
     prices = download_close_prices(sorted(tickers), period=f"{years + 2}y")

@@ -41,7 +41,13 @@ public static partial class PnlStatementReader
             return;
         }
 
-        var currency = money.FirstOrDefault()?.Currency ?? "PLN";
+        if (money.Count == 0)
+        {
+            parsed.Warnings.Add(UnreadableRow(dates, label));
+            return;
+        }
+
+        var currency = money[0].Currency!;
         var pln = PlnAmounts(tokens, money, currency);
         var row = new RecordRow(dates, symbol, isin, currency, label, money, pln);
 
@@ -50,6 +56,9 @@ public static partial class PnlStatementReader
         else
             ReadDividend(row, parsed);
     }
+
+    private static string UnreadableRow(List<DateOnly> dates, string label) =>
+        Message.Of(dates.Count >= 2 ? "tax.broker.unreadable_sale" : "tax.broker.unreadable_dividend", new { label });
 
     private static List<decimal> PlnAmounts(List<Token> tokens, List<Token> money, string currency)
     {

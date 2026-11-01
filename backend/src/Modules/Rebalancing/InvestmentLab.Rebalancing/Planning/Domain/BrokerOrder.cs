@@ -6,5 +6,13 @@ public sealed record BrokerOrder(OrderKind Kind, Guid InstrumentId, decimal Quan
 
     public decimal Amount => Quantity * Price;
 
-    public string Reason => string.Join("; ", Allocations.Select(allocation => allocation.Reason).Distinct());
+    public string Reason
+    {
+        get
+        {
+            var reasons = Allocations.Select(allocation => allocation.Reason).Distinct().ToList();
+
+            return reasons.Count == 1 ? reasons[0] : Message.Of("report.reason.several", new { reasons });
+        }
+    }
 }

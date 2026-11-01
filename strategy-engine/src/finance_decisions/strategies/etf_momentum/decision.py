@@ -38,7 +38,8 @@ from finance_decisions.models import Position
 from finance_decisions.strategies.errors import ContextError
 from .parameters import EtfMomentumParameters
 from .risk import analyze_portfolio_risk
-from .scanner import MARKET_TICKERS, STATUS_FAILED, scan_etfs
+from finance_decisions.market_data import BENCHMARK_SYMBOL, MARKET_SYMBOLS, VOLATILITY_INDEX_SYMBOL
+from .scanner import STATUS_FAILED, scan_etfs
 
 STRATEGY_CODE = "etf-momentum"
 MESSAGES = catalog_of(Path(__file__).resolve().parent)
@@ -62,7 +63,7 @@ REPORTS = (
 )
 
 # The scanner and risk monitor read the market regime from these fixed columns.
-_ROLE_COLUMNS = {SeriesRole.BENCHMARK: "SPY", SeriesRole.VOLATILITY_INDEX: "^VIX"}
+_ROLE_COLUMNS = {SeriesRole.BENCHMARK: BENCHMARK_SYMBOL, SeriesRole.VOLATILITY_INDEX: VOLATILITY_INDEX_SYMBOL}
 
 
 def engine_version() -> str:
@@ -73,7 +74,7 @@ def price_frame(context: EvaluationContext) -> pd.DataFrame:
     """Adjusted closes up to ``asOf``; benchmark and VIX under the columns the scanner expects."""
     columns: dict[str, pd.Series] = {}
     for series in context.market_series:
-        if series.role == SeriesRole.INSTRUMENT and series.key in MARKET_TICKERS:
+        if series.role == SeriesRole.INSTRUMENT and series.key in MARKET_SYMBOLS:
             raise ContextError(f"instrument key '{series.key}' is reserved; use the benchmark/volatilityIndex roles")
         column = _ROLE_COLUMNS.get(series.role, series.key)
         if column in columns:

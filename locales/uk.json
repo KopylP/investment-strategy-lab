@@ -177,6 +177,7 @@
   "report.action.mark_undone": "відмітку в рапорті скасовано",
   "report.parking.cash": "кеш на рахунку",
 
+  "report.reason.several": "{reasons:join:; }",
   "report.reason.contribution": "щомісячний внесок на рахунок",
   "report.reason.exit_signal": "сигнал виходу: {reason}",
   "report.reason.transfer": "переказ між під-портфелями замість продажу й купівлі: {reason}",

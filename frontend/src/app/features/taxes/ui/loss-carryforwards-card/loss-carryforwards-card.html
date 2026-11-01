@@ -33,53 +33,55 @@
       </ng-template>
     </p-table>
   }
-  <div class="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end">
-    <div class="flex flex-col gap-2">
-      <label for="loss-year" class="font-medium text-sm">Рік</label>
-      <p-inputnumber
-        inputId="loss-year"
-        [ngModel]="lossYear()"
-        (ngModelChange)="lossYear.set($event)"
-        [useGrouping]="false"
-        [min]="2000"
-        [max]="2100"
-        fluid
+  @if (regime.currency(); as currency) {
+    <div class="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end">
+      <div class="flex flex-col gap-2">
+        <label for="loss-year" class="font-medium text-sm">Рік</label>
+        <p-inputnumber
+          inputId="loss-year"
+          [ngModel]="lossYear()"
+          (ngModelChange)="lossYear.set($event)"
+          [useGrouping]="false"
+          [min]="2000"
+          [max]="2100"
+          fluid
+        />
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="loss-amount" class="font-medium text-sm">Збиток</label>
+        <p-inputnumber
+          inputId="loss-amount"
+          [ngModel]="lossAmount()"
+          (ngModelChange)="lossAmount.set($event)"
+          mode="currency"
+          [currency]="currency"
+          locale="uk-UA"
+          [min]="0"
+          fluid
+        />
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="loss-used" class="font-medium text-sm">Уже використано</label>
+        <p-inputnumber
+          inputId="loss-used"
+          [ngModel]="lossUsed()"
+          (ngModelChange)="lossUsed.set($event)"
+          mode="currency"
+          [currency]="currency"
+          locale="uk-UA"
+          [min]="0"
+          fluid
+        />
+      </div>
+      <p-button
+        label="Додати"
+        icon="pi pi-plus"
+        [disabled]="!lossYear() || !lossAmount()"
+        [loading]="store.saving()"
+        (onClick)="addLoss()"
+        class="self-end"
+        styleClass="w-full sm:w-auto"
       />
     </div>
-    <div class="flex flex-col gap-2">
-      <label for="loss-amount" class="font-medium text-sm">Збиток</label>
-      <p-inputnumber
-        inputId="loss-amount"
-        [ngModel]="lossAmount()"
-        (ngModelChange)="lossAmount.set($event)"
-        mode="currency"
-        currency="PLN"
-        locale="uk-UA"
-        [min]="0"
-        fluid
-      />
-    </div>
-    <div class="flex flex-col gap-2">
-      <label for="loss-used" class="font-medium text-sm">Уже використано</label>
-      <p-inputnumber
-        inputId="loss-used"
-        [ngModel]="lossUsed()"
-        (ngModelChange)="lossUsed.set($event)"
-        mode="currency"
-        currency="PLN"
-        locale="uk-UA"
-        [min]="0"
-        fluid
-      />
-    </div>
-    <p-button
-      label="Додати"
-      icon="pi pi-plus"
-      [disabled]="!lossYear() || !lossAmount()"
-      [loading]="store.saving()"
-      (onClick)="addLoss()"
-      class="self-end"
-      styleClass="w-full sm:w-auto"
-    />
-  </div>
+  }
 </div>

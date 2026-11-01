@@ -43,7 +43,10 @@ export function translate(text: string): string {
   const template = templateOf(token[1]);
   if (template === undefined) return text;
 
-  return fill(template, parametersOf(token[2]));
+  const parameters = parametersOf(token[2]);
+  if (parameters === null) return text;
+
+  return fill(template, parameters);
 }
 
 export function translateDeep<T>(value: T): T {
@@ -64,8 +67,14 @@ function templateOf(code: string): string | undefined {
   return strategyMessages[code] ?? globalMessages[code];
 }
 
-function parametersOf(json: string | undefined): Parameters {
-  return json ? (JSON.parse(json) as Parameters) : {};
+function parametersOf(json: string | undefined): Parameters | null {
+  if (!json) return {};
+
+  try {
+    return JSON.parse(json) as Parameters;
+  } catch {
+    return null;
+  }
 }
 
 function fill(template: string, parameters: Parameters): string {

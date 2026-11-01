@@ -5,6 +5,25 @@ from datetime import date, timedelta
 import pandas as pd
 import yfinance as yf
 
+BENCHMARK_SYMBOL = "SPY"
+VOLATILITY_INDEX_SYMBOL = "^VIX"
+MARKET_SYMBOLS = (BENCHMARK_SYMBOL, VOLATILITY_INDEX_SYMBOL)
+
+
+def ticker_currency(ticker: str) -> str:
+    """Determine the default trading currency based on the ticker suffix."""
+    ticker_upper = ticker.upper()
+    if "." in ticker_upper:
+        suffix = ticker_upper.split(".")[-1]
+        # Common European exchange suffixes trading in EUR
+        if suffix in {"DE", "PA", "MI", "AS", "MC", "AT", "BR", "LI"}:
+            return "EUR"
+        elif suffix == "L":
+            return "GBP"
+        elif suffix == "SW":
+            return "CHF"
+    return "USD"
+
 
 def download_close_prices(tickers: list[str], period: str) -> pd.DataFrame:
     if not tickers:

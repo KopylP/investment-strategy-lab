@@ -10,7 +10,8 @@ from typing import Any
 import pandas as pd
 from jinja2 import Environment, FileSystemLoader
 
-from finance_decisions.helpers import is_na, money, ticker_currency
+from finance_decisions.helpers import is_na, money
+from finance_decisions.market_data import ticker_currency
 
 
 @lru_cache(maxsize=16)

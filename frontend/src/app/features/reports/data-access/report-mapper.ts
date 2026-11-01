@@ -22,7 +22,6 @@ import {
   TaxImpactVm,
 } from '../models/report-vm';
 
-const LEGACY_TAX_CURRENCY = 'PLN';
 
 const kindLabels: Record<ReportSummaryDto['kind'], string> = {
   Monthly: 'внесок, купівлі й продажі',
@@ -131,10 +130,6 @@ export function toReportVm(report: ReportDetailsDto): ReportVm {
   };
 }
 
-function taxCurrencyOf(estimate: TaxEstimateDto): string {
-  return estimate.taxCurrency ?? LEGACY_TAX_CURRENCY;
-}
-
 function signedTax(change: number, currency: string): string {
   if (change === 0) return 'без змін';
 
@@ -144,9 +139,9 @@ function signedTax(change: number, currency: string): string {
 }
 
 function toTaxImpactVm(estimate: TaxEstimateDto | null, actions: ReportActionVm[]): TaxImpactVm | null {
-  if (!estimate?.isTaxed) return null;
+  if (!estimate?.isTaxed || !estimate.taxCurrency) return null;
 
-  const currency = taxCurrencyOf(estimate);
+  const currency = estimate.taxCurrency;
   const notes = estimate.notes.filter((note) => note.length > 0);
 
   if (estimate.yearTaxBefore === null || estimate.yearTaxBefore === undefined) {
@@ -177,9 +172,9 @@ function carriedLossLabel(carriedLoss: number | null, currency: string): string 
 }
 
 function saleTaxLabel(action: ReportActionDto, estimate: TaxEstimateDto | null): string | null {
-  if (action.estimatedTaxChange === null || !estimate?.isTaxed) return null;
+  if (action.estimatedTaxChange === null || !estimate?.isTaxed || !estimate.taxCurrency) return null;
 
-  const currency = taxCurrencyOf(estimate);
+  const currency = estimate.taxCurrency;
   const gain = action.estimatedGain ?? 0;
 
   if (estimate.yearTaxBefore === null || estimate.yearTaxBefore === undefined) {

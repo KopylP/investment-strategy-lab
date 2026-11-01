@@ -30,7 +30,7 @@ class Position:
         ticker = str(data["ticker"]).upper()
         currency_val = data.get("currency")
         if currency_val is None or str(currency_val).strip() == "":
-            from finance_decisions.helpers import ticker_currency
+            from finance_decisions.market_data import ticker_currency
             currency = ticker_currency(ticker)
         else:
             currency = str(currency_val).upper()

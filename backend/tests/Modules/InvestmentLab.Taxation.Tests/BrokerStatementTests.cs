@@ -31,6 +31,17 @@ public sealed class BrokerStatementTests
     }
 
     [Fact]
+    public void A_row_with_no_amount_in_its_own_currency_is_reported_as_unreadable()
+    {
+        var statement = PnlStatementReader.Read("Revolut", Lines(
+            "2025-05-06 ASME ASML NL0010273215 NL",
+            "1,50 PLN 0,00 PLN"));
+
+        statement.Dividends.ShouldBeEmpty();
+        statement.Warnings.ShouldHaveSingleItem().ShouldContain("tax.broker.unreadable_dividend");
+    }
+
+    [Fact]
     public void Rows_are_read_by_their_shape_whatever_the_headings_say()
     {
         var statement = PnlStatementReader.Read("Revolut", Lines(

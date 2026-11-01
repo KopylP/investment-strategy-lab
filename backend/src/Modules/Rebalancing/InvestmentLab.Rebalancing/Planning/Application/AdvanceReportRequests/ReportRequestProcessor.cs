@@ -162,7 +162,7 @@ public sealed class ReportRequestProcessor(
     private static ReportScope ScopeOf(ReportRequest request) => new(request.Code, request.Title, request.SubPortfolioIds.ToHashSet());
 
     private static GenerateMonthlyReportCommand RebalanceOf(ReportRequest request) =>
-        new(request.AccountId, request.Contribution, request.AsOf, ScopeOf(request));
+        new(request.AccountId, ScopeOf(request), request.Contribution, request.AsOf);
 
-    private static GenerateRiskReviewCommand RiskReviewOf(ReportRequest request) => new(request.AccountId, request.AsOf, ScopeOf(request));
+    private static GenerateRiskReviewCommand RiskReviewOf(ReportRequest request) => new(request.AccountId, ScopeOf(request), request.AsOf);
 }
