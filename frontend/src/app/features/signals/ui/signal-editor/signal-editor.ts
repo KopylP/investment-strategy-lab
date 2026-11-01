@@ -18,7 +18,6 @@ import { InputText } from 'primeng/inputtext';
 import { Message } from 'primeng/message';
 import { Select } from 'primeng/select';
 import { ToggleSwitch } from 'primeng/toggleswitch';
-import { symbolOf } from '../../../../shared/models/api';
 import { ReportTiming } from '../../../reports/models/report-schedule';
 import { ReportTimingEditor } from '../../../reports/ui/report-timing-editor/report-timing-editor';
 import { SignalsStore } from '../../data-access/signals-store';
@@ -91,7 +90,7 @@ export class SignalEditor {
   );
   protected readonly instruments = computed(() =>
     this.store.instruments().map((instrument) => ({
-      label: `${symbolOf(instrument)} · ${instrument.name}`,
+      label: `${instrument.label} · ${instrument.name}`,
       value: instrument.id,
     })),
   );

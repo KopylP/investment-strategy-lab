@@ -1,3 +1,3 @@
 namespace InvestmentLab.MarketData.Contracts.Instruments;
 
-public sealed record ListedSymbolDto(string YahooSymbol, string Name);
+public sealed record ListedSymbolDto(string Symbol, string Name);

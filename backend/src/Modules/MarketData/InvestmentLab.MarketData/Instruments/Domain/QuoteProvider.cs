@@ -3,6 +3,7 @@ namespace InvestmentLab.MarketData.Instruments.Domain;
 public sealed record QuoteProvider
 {
     public static readonly QuoteProvider YFinance = new("yfinance");
+    public static readonly QuoteProvider Primary = YFinance;
 
     public string Code { get; }
 

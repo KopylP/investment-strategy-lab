@@ -7,48 +7,53 @@ using InvestmentLab.MarketData.Instruments.Domain;
 namespace InvestmentLab.MarketData.Instruments.Infrastructure;
 
 internal sealed class InstrumentRegistry(
-    IInstrumentRepository instruments, RegisterInstrumentHandler register, ISymbolLookup lookup, DescribeInstrumentsHandler describe)
+    IInstrumentRepository instruments,
+    RegisterInstrumentHandler register,
+    ISymbolLookup lookup,
+    DescribeInstrumentsHandler describe,
+    ISymbolConvention convention)
         : IInstrumentRegistry
 {
+    public async Task<IReadOnlyList<BrokerTickerMatchDto>> MatchAsync(IReadOnlyList<BrokerTickerDto> tickers, CancellationToken cancellationToken)
+    {
+        var known = await instruments.ListAsync(cancellationToken);
+        var matcher = new BrokerTickerMatcher(known, convention);
+
+        return [.. tickers.Select(ticker => MatchOf(ticker, matcher))];
+    }
+
+    private BrokerTickerMatchDto MatchOf(BrokerTickerDto ticker, BrokerTickerMatcher matcher)
+    {
+        var instrument = matcher.Find(ticker.Ticker, ticker.Currency);
+        var suggested = convention.CandidatesFor(ticker.Ticker, ticker.Currency)[0];
+
+        return new BrokerTickerMatchDto(instrument?.ToDto(), suggested);
+    }
+
     public async Task<IReadOnlyList<ListedSymbolDto?>> ResolveAsync(IReadOnlyList<BrokerTickerDto> tickers, CancellationToken cancellationToken)
     {
-        var matches = await lookup.LookupAsync([.. tickers.Select(ticker => ticker.IsYahooSymbol
-            ? new SymbolQuery([ticker.Ticker.Trim().ToUpperInvariant()], null)
-            : new SymbolQuery(Candidates(ticker.Ticker, ticker.Currency), ticker.Currency))], cancellationToken);
+        var queries = tickers.Select(QueryOf).ToList();
+        var matches = await lookup.LookupAsync(queries, cancellationToken);
+
         return [.. matches.Select(match => match is null ? null : new ListedSymbolDto(match.Symbol, match.Name))];
     }
 
+    private SymbolQuery QueryOf(BrokerTickerDto ticker) => ticker.IsExactSymbol
+        ? new SymbolQuery([ticker.Ticker.Trim().ToUpperInvariant()], null)
+        : new SymbolQuery(convention.CandidatesFor(ticker.Ticker, ticker.Currency), ticker.Currency);
+
     public async Task<RegisteredInstrumentDto> RegisterAsync(NewInstrumentDto instrument, CancellationToken cancellationToken)
     {
-        var symbol = ProviderSymbol.TryParse($"yfinance:{instrument.YahooSymbol.Trim().ToUpperInvariant()}");
+        var symbol = ProviderSymbol.TryParse($"{QuoteProvider.Primary}:{instrument.Symbol.Trim().ToUpperInvariant()}");
         if (symbol.IsFailure)
             return new RegisteredInstrumentDto(null, symbol.Error.Message);
 
         if (await instruments.FindOwnerAsync(symbol.Value, cancellationToken) is { } owner)
             return new RegisteredInstrumentDto(owner.Value, null);
 
-        var kind = Enum.TryParse<InstrumentKind>(instrument.Kind, ignoreCase: true, out var parsed) ? parsed : InstrumentKind.Stock;
-        var exchange =
-            instrument.YahooSymbol.Contains('.') ? instrument.YahooSymbol[(instrument.YahooSymbol.LastIndexOf('.') + 1)..].ToUpperInvariant() switch
-            {
-                "DE" => "XETRA",
-                "L" => "LSE",
-                "AS" => "Euronext Amsterdam",
-                "PA" => "Euronext Paris",
-                "MI" => "Borsa Italiana",
-                "MC" => "BME",
-                "BR" => "Euronext Brussels",
-                "F" => "Frankfurt",
-                "SW" => "SIX",
-                "WA" => "GPW",
-                var other => other,
-            } : "US";
+        var command = RegisterCommandOf(instrument, symbol.Value);
 
-        var result = await register.Handle(new RegisterInstrumentCommand(
-            kind, null, string.IsNullOrWhiteSpace(instrument.Name)
-                ? instrument.YahooSymbol
-                : instrument.Name.Trim(), exchange, instrument.TradingCurrency, null, null,
-            [symbol.Value.ToString()]), cancellationToken);
+        var result = await register.Handle(command, cancellationToken);
         if (result.IsFailure)
             return new RegisteredInstrumentDto(null, result.Error.Message);
 
@@ -57,18 +62,19 @@ internal sealed class InstrumentRegistry(
         return new RegisteredInstrumentDto(result.Value, null);
     }
 
-    private static IReadOnlyList<string> Candidates(string ticker, string currency)
+    private RegisterInstrumentCommand RegisterCommandOf(NewInstrumentDto instrument, ProviderSymbol symbol)
     {
-        var symbol = ticker.Trim().ToUpperInvariant();
-        string[] suffixes = currency.ToUpperInvariant() switch
-        {
-            "EUR" => [".DE", ".AS", ".PA", ".MI", ".MC", ".BR", ".F"],
-            "GBP" or "GBX" => [".L"],
-            "CHF" => [".SW"],
-            "PLN" => [".WA"],
-            _ => [""],
-        };
+        var kind = Enum.TryParse<InstrumentKind>(instrument.Kind, ignoreCase: true, out var parsed) ? parsed : InstrumentKind.Stock;
+        var name = string.IsNullOrWhiteSpace(instrument.Name) ? instrument.Symbol : instrument.Name.Trim();
 
-        return [.. suffixes.Select(suffix => suffix.Length == 0 ? symbol.Replace('.', '-') : symbol + suffix)];
+        return new RegisterInstrumentCommand(
+            kind,
+            null,
+            name,
+            convention.ExchangeOf(instrument.Symbol),
+            instrument.TradingCurrency,
+            null,
+            null,
+            [symbol.ToString()]);
     }
 }

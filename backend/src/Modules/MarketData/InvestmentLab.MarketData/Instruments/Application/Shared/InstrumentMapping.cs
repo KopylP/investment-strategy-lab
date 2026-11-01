@@ -10,6 +10,6 @@ internal static class InstrumentMapping
         public InstrumentDto ToDto() =>
             new(instrument.Id.Value, instrument.Kind.ToString(), instrument.Isin?.Value, instrument.Name, instrument.Exchange,
                 instrument.TradingCurrency.Code, instrument.Group?.Name, instrument.IsAccumulating,
-                [.. instrument.ProviderSymbols.Select(symbol => symbol.ToString())], instrument.Description);
+                [.. instrument.ProviderSymbols.Select(symbol => symbol.ToString())], instrument.Description, instrument.Ticker);
     }
 }

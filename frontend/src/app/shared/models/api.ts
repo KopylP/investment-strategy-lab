@@ -31,7 +31,8 @@ export interface Instrument {
   tradingCurrency: string;
   group: string | null;
   isAccumulating: boolean | null;
-  providerSymbols: string[];
+  ticker: string | null;
+  label: string;
   description: string | null;
 }
 
@@ -73,12 +74,6 @@ export interface LatestPrice {
   adjustedClose: number;
   currency: string;
   isStale: boolean;
-}
-
-export function symbolOf(instrument: Pick<Instrument, 'providerSymbols' | 'name'>): string {
-  const yahoo = instrument.providerSymbols.find((symbol) => symbol.startsWith('yfinance:'));
-
-  return yahoo ? yahoo.slice('yfinance:'.length) : instrument.name;
 }
 
 export function today(): string {

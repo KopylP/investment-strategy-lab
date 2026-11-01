@@ -11,6 +11,6 @@ public sealed class InstrumentDescriptionsJob(DescribeInstrumentsHandler describ
     public async Task RunAsync(CancellationToken cancellationToken)
     {
         var described = await describe.Handle(null, cancellationToken);
-        logger.LogInformation("Instrument descriptions: {Described} answered by Yahoo", described);
+        logger.LogInformation("Instrument descriptions: {Described} answered by the quote provider", described);
     }
 }

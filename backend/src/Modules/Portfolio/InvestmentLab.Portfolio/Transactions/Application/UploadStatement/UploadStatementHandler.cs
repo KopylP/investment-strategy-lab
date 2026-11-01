@@ -18,10 +18,6 @@ public sealed class UploadStatementHandler(
     IFxRateBackfill fxBackfill,
     TimeProvider clock)
 {
-    private const string YahooPrefix = "yfinance:";
-    private const string EuroCurrency = "EUR";
-    private const string XetraSuffix = ".DE";
-
     public async Task<Result<StatementImportDto>> Handle(Guid accountId, string fileName, string content, CancellationToken cancellationToken)
     {
         if (accountId == Guid.Empty || await journal.FindAccountAsync(AccountId.Of(accountId), cancellationToken) is not { } account)
@@ -53,43 +49,24 @@ public sealed class UploadStatementHandler(
     private async Task<List<TickerMapping>> SuggestMappingsAsync(
         InvestmentAccount account, IReadOnlyList<StatementRow> rows, CancellationToken cancellationToken)
     {
-        var symbols = await YahooSymbolsAsync(cancellationToken);
+        var instruments = await catalog.GetInstruments(cancellationToken);
         var strategiesKnown = await strategies.GetStrategies(cancellationToken);
         var universes = strategiesKnown.ToDictionary(strategy => strategy.Id, strategy => strategy.Universe);
 
-        var tickers = TickersOf(rows, symbols);
+        var tickers = await TickersOfAsync(rows, cancellationToken);
         var listed = await ListedElsewhereAsync(tickers, cancellationToken);
 
-        return [.. tickers.Select(ticker => MappingOf(ticker, listed.GetValueOrDefault(ticker.Ticker), symbols, account, universes))];
+        return [.. tickers.Select(ticker => MappingOf(ticker, listed.GetValueOrDefault(ticker.Ticker), instruments, account, universes))];
     }
 
-    private async Task<List<YahooSymbol>> YahooSymbolsAsync(CancellationToken cancellationToken)
-    {
-        var instruments = await catalog.GetInstruments(cancellationToken);
-
-        return [.. instruments.SelectMany(instrument => instrument.ProviderSymbols
-            .Where(symbol => symbol.StartsWith(YahooPrefix, StringComparison.OrdinalIgnoreCase))
-            .Select(symbol => new YahooSymbol(symbol[YahooPrefix.Length..].ToUpperInvariant(), instrument)))];
-    }
-
-    private static List<StatementTicker> TickersOf(IReadOnlyList<StatementRow> rows, List<YahooSymbol> symbols)
+    private async Task<List<StatementTicker>> TickersOfAsync(IReadOnlyList<StatementRow> rows, CancellationToken cancellationToken)
     {
         var groups = rows.Where(row => row.NeedsInstrument && row.Ticker is not null).GroupBy(row => row.Ticker!, StringComparer.OrdinalIgnoreCase);
+        var tickers = groups.Select(group => new BrokerTickerDto(group.Key.ToUpperInvariant(), group.First().Currency)).ToList();
 
-        return [.. groups.Select(group => TickerOf(group.Key.ToUpperInvariant(), group.First().Currency, symbols))];
-    }
+        var matches = await registry.MatchAsync(tickers, cancellationToken);
 
-    private static StatementTicker TickerOf(string ticker, string currency, List<YahooSymbol> symbols)
-    {
-        bool isListing(YahooSymbol symbol) => symbol.Symbol.StartsWith(ticker + ".", StringComparison.Ordinal);
-        bool isExact(YahooSymbol symbol) => symbol.Symbol == ticker;
-        bool inCurrency(YahooSymbol symbol) => symbol.Instrument.TradingCurrency == currency;
-
-        var match = symbols.FirstOrDefault(symbol => isExact(symbol) && inCurrency(symbol))
-            ?? symbols.FirstOrDefault(symbol => isListing(symbol) && inCurrency(symbol))
-            ?? symbols.FirstOrDefault(symbol => isExact(symbol) || isListing(symbol));
-
-        return new StatementTicker(ticker, currency, match?.Instrument);
+        return [.. tickers.Zip(matches, (ticker, match) => new StatementTicker(ticker.Ticker, ticker.Currency, match.Instrument, match.SuggestedSymbol))];
     }
 
     private async Task<Dictionary<string, ListedSymbolDto?>> ListedElsewhereAsync(List<StatementTicker> tickers, CancellationToken cancellationToken)
@@ -104,25 +81,25 @@ public sealed class UploadStatementHandler(
     private static TickerMapping MappingOf(
         StatementTicker ticker,
         ListedSymbolDto? listing,
-        List<YahooSymbol> symbols,
+        IReadOnlyList<InstrumentDto> instruments,
         InvestmentAccount account,
         Dictionary<Guid, IReadOnlyList<Guid>> universes)
     {
-        var match = ticker.Match ?? InstrumentOfListing(listing, symbols);
+        var match = ticker.Match ?? InstrumentOfListing(listing, instruments);
         var sub = SubPortfolioFor(match, account, universes);
 
         if (match is not null)
             return new TickerMapping(ticker.Ticker, ticker.Currency, match.Id, null, sub);
 
         return listing is null
-            ? new TickerMapping(ticker.Ticker, ticker.Currency, null, GuessedSymbol(ticker), sub)
-            : new TickerMapping(ticker.Ticker, ticker.Currency, null, listing.YahooSymbol, sub, listing.Name);
+            ? new TickerMapping(ticker.Ticker, ticker.Currency, null, ticker.SuggestedSymbol, sub)
+            : new TickerMapping(ticker.Ticker, ticker.Currency, null, listing.Symbol, sub, listing.Name);
     }
 
-    private static InstrumentDto? InstrumentOfListing(ListedSymbolDto? listing, List<YahooSymbol> symbols) =>
+    private static InstrumentDto? InstrumentOfListing(ListedSymbolDto? listing, IReadOnlyList<InstrumentDto> instruments) =>
         listing is null
             ? null
-            : symbols.FirstOrDefault(symbol => symbol.Symbol.Equals(listing.YahooSymbol, StringComparison.OrdinalIgnoreCase))?.Instrument;
+            : instruments.FirstOrDefault(instrument => string.Equals(instrument.Ticker, listing.Symbol, StringComparison.OrdinalIgnoreCase));
 
     private static Guid? SubPortfolioFor(InstrumentDto? match, InvestmentAccount account, Dictionary<Guid, IReadOnlyList<Guid>> universes)
     {
@@ -137,9 +114,6 @@ public sealed class UploadStatementHandler(
 
         return holder?.Id.Value;
     }
-
-    private static string GuessedSymbol(StatementTicker ticker) =>
-        ticker.Currency == EuroCurrency ? $"{ticker.Ticker}{XetraSuffix}" : ticker.Ticker;
 
     private static Guid? SuggestCashSubPortfolio(InvestmentAccount account, IReadOnlyList<StatementRow> rows, IReadOnlyList<TickerMapping> mappings)
     {
@@ -159,7 +133,5 @@ public sealed class UploadStatementHandler(
         return mostSpentOn ?? account.ActiveSubPortfolios.FirstOrDefault()?.Id.Value;
     }
 
-    private sealed record YahooSymbol(string Symbol, InstrumentDto Instrument);
-
-    private sealed record StatementTicker(string Ticker, string Currency, InstrumentDto? Match);
+    private sealed record StatementTicker(string Ticker, string Currency, InstrumentDto? Match, string SuggestedSymbol);
 }

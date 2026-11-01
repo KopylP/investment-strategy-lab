@@ -13,7 +13,6 @@ import { TableModule } from 'primeng/table';
 import { Tag } from 'primeng/tag';
 import { Tooltip } from 'primeng/tooltip';
 import { InstrumentCatalog } from '../../../../core/context/instrument-catalog';
-import { symbolOf } from '../../../../shared/models/api';
 import { DatePipe } from '../../../../shared/pipes/format-pipes';
 import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
@@ -78,7 +77,7 @@ export class LedgerPage {
     { label: 'Сторно', value: 'Reversal' },
   ];
   protected readonly instrumentOptions = computed(() =>
-    this.catalog.etfs().map((etf) => ({ label: `${symbolOf(etf)} · ${etf.name}`, value: etf.id })),
+    this.catalog.etfs().map((etf) => ({ label: `${etf.label} · ${etf.name}`, value: etf.id })),
   );
   protected readonly subOptions = computed(() =>
     (this.store.account()?.subPortfolios ?? [])

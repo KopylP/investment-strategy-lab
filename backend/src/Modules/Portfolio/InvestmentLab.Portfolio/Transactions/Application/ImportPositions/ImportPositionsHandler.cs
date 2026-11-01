@@ -9,7 +9,6 @@ public sealed record ImportPositionsCommand(Guid SubPortfolioId, decimal Cash, I
 
 public sealed class ImportPositionsHandler(TransactionRecorder recorder, IInstrumentCatalog catalog, TimeProvider clock)
 {
-    private const string YahooProvider = "yfinance";
     private const string DuplicateSourceCode = "transaction.duplicate_source";
 
     public async Task<Result<ImportReport>> Handle(Guid accountId, ImportPositionsCommand command, CancellationToken cancellationToken)
@@ -68,11 +67,11 @@ public sealed class ImportPositionsHandler(TransactionRecorder recorder, IInstru
         IReadOnlyList<LegacyPosition> positions,
         CancellationToken cancellationToken)
     {
-        var bySymbol = await InstrumentsByYahooSymbolAsync(cancellationToken);
+        var bySymbol = await InstrumentsByTickerAsync(cancellationToken);
 
         var unknown = positions.Select(position => position.Ticker).Where(ticker => !bySymbol.ContainsKey(ticker)).ToList();
         if (unknown.Count > 0)
-            return Error.Validation("import.unknown_tickers", $"No instrument has the Yahoo symbol {string.Join(", ", unknown)}.");
+            return Error.Validation("import.unknown_tickers", $"No instrument has the ticker {string.Join(", ", unknown)}.");
 
         if (PositionImport.TickersRepeat(positions.Select(position => position.Ticker)))
             return Error.Validation("import.ticker_repeated", "Each ticker may appear only once.");
@@ -80,17 +79,14 @@ public sealed class ImportPositionsHandler(TransactionRecorder recorder, IInstru
         return bySymbol;
     }
 
-    private async Task<Dictionary<string, Guid>> InstrumentsByYahooSymbolAsync(CancellationToken cancellationToken)
+    private async Task<Dictionary<string, Guid>> InstrumentsByTickerAsync(CancellationToken cancellationToken)
     {
-        var prefix = $"{YahooProvider}:";
         var bySymbol = new Dictionary<string, Guid>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var instrument in await catalog.GetInstruments(cancellationToken))
         {
-            var yahooSymbols = instrument.ProviderSymbols.Where(symbol => symbol.StartsWith(prefix, StringComparison.Ordinal));
-
-            foreach (var symbol in yahooSymbols)
-                bySymbol[symbol[prefix.Length..]] = instrument.Id;
+            if (instrument.Ticker is { } ticker)
+                bySymbol[ticker] = instrument.Id;
         }
 
         return bySymbol;

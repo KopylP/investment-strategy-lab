@@ -10,4 +10,8 @@ public sealed record InstrumentDto(
     string? Group,
     bool? IsAccumulating,
     IReadOnlyList<string> ProviderSymbols,
-    string? Description = null);
+    string? Description = null,
+    string? Ticker = null)
+{
+    public string Label => Ticker ?? Name;
+}

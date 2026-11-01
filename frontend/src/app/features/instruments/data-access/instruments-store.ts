@@ -3,7 +3,7 @@ import { MessageService } from 'primeng/api';
 import { ApiClient, toProblemMessage } from '../../../core/api/api-client';
 import { AccountContext } from '../../../core/context/account-context';
 import { InstrumentCatalog } from '../../../core/context/instrument-catalog';
-import { AccountHoldings, LatestPrice, symbolOf, toIsoDate } from '../../../shared/models/api';
+import { AccountHoldings, LatestPrice, toIsoDate } from '../../../shared/models/api';
 
 export interface QuotePoint {
   date: string;
@@ -148,7 +148,7 @@ export class InstrumentsStore {
 
         return {
           id: instrument.id,
-          symbol: symbolOf(instrument),
+          symbol: instrument.label,
           name: instrument.name,
           isin: instrument.isin,
           description: instrument.description ?? null,
