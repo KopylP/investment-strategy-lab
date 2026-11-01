@@ -187,8 +187,10 @@ function saleTaxLabel(action: ReportActionDto, estimate: TaxEstimateDto | null):
   }
 
   const outcome = gain < 0 ? `збиток ${formatMoney(-gain, currency, 0)}` : `зиск ${formatMoney(gain, currency, 0)}`;
-  const carried = carriedLossLabel(action.estimatedCarriedLossPln, currency);
-  const details = carried ? `${outcome}; ${carried}` : outcome;
+  const carriedLoss = action.estimatedCarriedLossPln;
+  const details = carriedLoss
+    ? `${outcome}, з них ${formatMoney(carriedLoss, currency, 0)} перейде на наступні роки`
+    : outcome;
 
   return `≈ податок ${signedTax(action.estimatedTaxPln, currency)} (${details})`;
 }
