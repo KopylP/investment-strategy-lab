@@ -1,5 +1,5 @@
 name: Investment Lab
-version: "1.0.84"
+version: "1.0.85"
 slug: investlab
 description: Інвестиційні стратегії, щомісячні рапорти й облік портфеля (Revolut, податок Белка).
 url: https://github.com/KopylP/investment-strategy-lab
