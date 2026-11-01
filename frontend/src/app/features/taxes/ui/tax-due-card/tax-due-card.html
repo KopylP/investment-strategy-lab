@@ -7,9 +7,9 @@
         {{ s.taxDue | money: 'PLN' : 0 }}
       </div>
       <div class="text-sm text-muted-color mt-2">
-        @if (details().policyCode === 'PL-BELKA') {
+        @if (details().isTaxed) {
           з продажів {{ s.capitalTax | money: 'PLN' : 0 }} · з дивідендів
-          {{ s.dividendTax | money: 'PLN' : 0 }} · 19%
+          {{ s.dividendTax | money: 'PLN' : 0 }} · {{ details().rateLabel }}
           @if (store.showAccount()) {
             · {{ store.taxedAccounts().length }} рахунки разом
           }

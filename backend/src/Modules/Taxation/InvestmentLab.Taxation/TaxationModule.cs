@@ -97,6 +97,7 @@ public sealed class TaxationModule : IModule
         services.AddSingleton<IDeclarationPrinter, Pit38PdfPrinter>();
         services.AddScoped<IPit8CRepository, Pit8CRepository>();
         services.AddScoped<ITaxEstimator, TaxEstimator>();
+        services.AddSingleton<ITaxPolicyDirectory, TaxPolicyDirectory>();
 
     }
 

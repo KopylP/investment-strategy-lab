@@ -1,6 +1,7 @@
 using InvestmentLab.Portfolio.Accounts.Application.Shared;
 using InvestmentLab.Portfolio.Accounts.Domain;
 using InvestmentLab.Portfolio.Contracts.Accounts;
+using InvestmentLab.Taxation.Contracts;
 
 namespace InvestmentLab.Portfolio.Accounts.Application.OpenAccount;
 
@@ -12,13 +13,16 @@ public sealed record OpenAccountCommand(
     ContributionPolicyInput? ContributionPolicy = null,
     string? TaxPolicyCode = null);
 
-public sealed class OpenAccountHandler(IAccountRepository accounts, TimeProvider clock)
+public sealed class OpenAccountHandler(IAccountRepository accounts, ITaxPolicyDirectory taxPolicies, TimeProvider clock)
 {
     public async Task<Result<AccountSetupDto>> Handle(UserId ownerId, OpenAccountCommand command, CancellationToken cancellationToken)
     {
         var currency = Currency.TryOf(command.BaseCurrency);
         if (currency.IsFailure)
             return currency.Error;
+
+        if (command.TaxPolicyCode is { } taxPolicy && !string.IsNullOrWhiteSpace(taxPolicy) && !taxPolicies.IsKnown(taxPolicy))
+            return AccountErrors.UnknownTaxPolicy(taxPolicy);
 
         var policy = AccountInput.ToPolicy(command.ContributionPolicy);
         if (policy.IsFailure)

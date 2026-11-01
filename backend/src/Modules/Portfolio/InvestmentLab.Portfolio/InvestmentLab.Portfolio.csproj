@@ -6,5 +6,6 @@
   <ItemGroup>
     <ProjectReference Include="../../MarketData/InvestmentLab.MarketData.Contracts/InvestmentLab.MarketData.Contracts.csproj" />
     <ProjectReference Include="../../Strategies/InvestmentLab.Strategies.Contracts/InvestmentLab.Strategies.Contracts.csproj" />
+    <ProjectReference Include="../../Taxation/InvestmentLab.Taxation.Contracts/InvestmentLab.Taxation.Contracts.csproj" />
   </ItemGroup>
 </Project>

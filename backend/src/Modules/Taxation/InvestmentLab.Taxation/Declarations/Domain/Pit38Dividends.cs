@@ -22,7 +22,7 @@ public sealed record Pit38Dividends(
     public static Pit38Dividends Of(DeclarationInput input, List<DeclarationAccount> taxed, ITaxPolicy policy)
     {
         var countryOf = input.CountryOf;
-        var rate = policy.RateSchedule.Rate.Value;
+        var rate = BelkaTaxPolicy.Rate.Value;
         var rounding = policy.Rounding;
 
         var foreign = taxed.SelectMany(account => account.Dividends).Where(dividend => countryOf(dividend.InstrumentId) != PolandCode).ToList();

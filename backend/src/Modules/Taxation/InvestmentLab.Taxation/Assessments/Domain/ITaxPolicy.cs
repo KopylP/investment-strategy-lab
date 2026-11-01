@@ -7,9 +7,11 @@ public interface ITaxPolicy
 
     string Jurisdiction { get; }
     bool IsTaxed { get; }
-    string FxRule { get; }
+    string EstimateDisclaimer { get; }
+    IFxRule FxRule { get; }
     ILotMatcher LotMatcher { get; }
     ITaxRateSchedule RateSchedule { get; }
+    Percentage DividendRate { get; }
     ILossCarryforwardRule LossCarryforward { get; }
     IRoundingRule Rounding { get; }
 }

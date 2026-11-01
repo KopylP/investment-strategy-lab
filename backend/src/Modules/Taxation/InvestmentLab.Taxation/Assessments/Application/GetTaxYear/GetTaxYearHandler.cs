@@ -17,11 +17,12 @@ public sealed class GetTaxYearHandler(IAssessmentRepository assessments, IInstru
 
         var openLots = year == clock.GetUtcNow().Year ? refreshed.Computation.OpenLots : [];
         var labels = await LabelsAsync(assessment, openLots, cancellationToken);
+        var policy = TaxPolicies.For(assessment.PolicyCode);
 
         return new TaxYearDetailsDto(
             year,
             assessment.PolicyCode,
-            refreshed.Taxpayer.Policy.FxRule,
+            policy.FxRule.Description,
             assessment.ComputedAt,
             assessment.Summary,
             assessment.Realizations,
@@ -30,7 +31,9 @@ public sealed class GetTaxYearHandler(IAssessmentRepository assessments, IInstru
             openLots,
             labels,
             TaxAccountMapping.AccountsOf(refreshed.Taxpayer),
-            refreshed.Warnings);
+            refreshed.Warnings,
+            policy.IsTaxed,
+            policy.RateSchedule.Label);
     }
 
     private async Task<Dictionary<Guid, string>> LabelsAsync(

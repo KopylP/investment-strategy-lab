@@ -22,8 +22,8 @@ public sealed class TaxEstimator(TaxInputs inputs, IAssessmentRepository assessm
 
         var (events, missing) = await inputs.EventsAsync(taxpayer.Taxed, cancellationToken);
         var losses = await inputs.LossesAsync(account.OwnerId, cancellationToken);
-        var (rate, rateDate) = await inputs.RateAsync(account.Currency, asOf.AddDays(1), cancellationToken);
-        var notes = NotesOf(missing);
+        var (rate, rateDate) = await inputs.LatestRateAsync(account.Currency, asOf, policy.FxRule, cancellationToken);
+        var notes = NotesOf(policy, missing);
 
         if (rate is not { } fx || sales.Count == 0)
             return WithoutEstimate(policy, rate, sales, notes);
@@ -44,19 +44,19 @@ public sealed class TaxEstimator(TaxInputs inputs, IAssessmentRepository assessm
     private static List<SaleEstimateDto> NothingFor(IReadOnlyList<ProposedSaleDto> sales) =>
         [.. sales.Select(sale => new SaleEstimateDto(sale.Key, 0m, 0m))];
 
-    private static List<string> NotesOf(IReadOnlyList<string> missing)
+    private static List<string> NotesOf(ITaxPolicy policy, IReadOnlyList<string> missing)
     {
-        var notes = new List<string> { "Оцінка: остаточний податок — за PIT-8C брокера." };
+        var notes = new List<string> { policy.EstimateDisclaimer };
 
         if (missing.Count > 0)
-            notes.Add("Частина операцій без курсу NBP не врахована.");
+            notes.Add($"Частина операцій без курсу {policy.FxRule.SourceName} не врахована.");
 
         return notes;
     }
 
     private static TaxEstimateDto WithoutEstimate(ITaxPolicy policy, decimal? rate, IReadOnlyList<ProposedSaleDto> sales, List<string> notes)
     {
-        var shown = rate is null ? [.. notes, "Немає курсу NBP на сьогодні — податок не оцінено."] : notes;
+        var shown = rate is null ? [.. notes, $"Немає курсу {policy.FxRule.SourceName} на сьогодні — податок не оцінено."] : notes;
 
         return new TaxEstimateDto(policy.Code, policy.IsTaxed, 0m, 0m, rate, NothingFor(sales), shown);
     }
