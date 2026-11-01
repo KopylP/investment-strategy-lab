@@ -135,4 +135,5 @@ public sealed class RetireSubPortfolioHandler(IAccountRepository accounts, TimeP
   stored events lack them; never change or remove existing ones.
 - Formatting and analyzers follow `.editorconfig`; EF migrations count as generated code. Primary constructors,
   collection expressions, file-scoped namespaces.
-- Text the user reads (notifications, report warnings, error messages shown in the UI) is Ukrainian.
+- Text the user reads never appears in code: warnings, reasons and notes are `Message.Of(code, parameters)`, errors carry a
+  code and parameters, and the words are in `../locales/uk.json` (see Language in `../CLAUDE.md`).

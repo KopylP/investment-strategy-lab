@@ -1,3 +1,4 @@
+using InvestmentLab.BuildingBlocks.Localization;
 using InvestmentLab.Notifications.Delivery.Application.Integration;
 using InvestmentLab.Rebalancing.Contracts;
 
@@ -6,6 +7,8 @@ namespace InvestmentLab.Notifications.Tests;
 public sealed class ReportNotificationTests
 {
     private static readonly DateTimeOffset Generated = new(2026, 10, 23, 18, 0, 0, TimeSpan.Zero);
+
+    private static string Rendered(string text) => MessageLocalizer.Default.Render(text);
 
     private static ReportGeneratedV1 Report(string kind = "Monthly", string? trigger = "Scheduled", int actions = 3, TimeSpan? thought = null) =>
         new(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "2026-10", kind, new DateOnly(2026, 10, 23), "PLN", Generated,
@@ -23,8 +26,8 @@ public sealed class ReportNotificationTests
 
         var notification = ReportNotification.For(report).ShouldNotBeNull();
 
-        notification.Title.ShouldBe("Рапорт за жовтень 2026 готовий");
-        notification.Message.ShouldBe("«Revolut»: 3 дії до виконання.");
+        Rendered(notification.Title).ShouldBe("Рапорт за жовтень 2026 готовий");
+        Rendered(notification.Message).ShouldBe("«Revolut»: 3 дії до виконання.");
         notification.Tag.ShouldBe(ReportNotification.TagOf(report.ReportId));
         notification.Data["actions"].ShouldBe(3);
     }
@@ -42,7 +45,7 @@ public sealed class ReportNotificationTests
         ReportNotification.For(Report(trigger: "OnDemand", thought: TimeSpan.FromSeconds(8))).ShouldBeNull();
 
         var notification = ReportNotification.For(Report(trigger: "OnDemand", thought: TimeSpan.FromMinutes(40))).ShouldNotBeNull();
-        notification.Title.ShouldBe("Рапорт за жовтень 2026 готовий");
+        Rendered(notification.Title).ShouldBe("Рапорт за жовтень 2026 готовий");
     }
 
     [Fact]
@@ -53,10 +56,10 @@ public sealed class ReportNotificationTests
         var notification = ReportNotification.For(failed).ShouldNotBeNull();
 
         notification.Topic.ShouldBe(ReportNotification.FailedTopic);
-        notification.Title.ShouldBe("Ребаланс за листопад 2026 не вдалося підготувати");
-        notification.Message.ShouldBe("Причина: No strategy could evaluate the account: strategy.failed");
+        Rendered(notification.Title).ShouldBe("Ребаланс за листопад 2026 не вдалося підготувати");
+        Rendered(notification.Message).ShouldBe("Причина: No strategy could evaluate the account: strategy.failed");
         notification.Tag.ShouldBe(ReportNotification.FailedTagOf(failed.AccountId, "rebalance"));
-        ReportNotification.For(Failed(error: new string('x', 1000)))!.Message.Length.ShouldBeLessThan(320);
+        Rendered(ReportNotification.For(Failed(error: new string('x', 1000)))!.Message).Length.ShouldBeLessThan(320);
     }
 
     [Fact]
@@ -70,16 +73,16 @@ public sealed class ReportNotificationTests
 
         var notification = ReportNotification.For(Report(), next).ShouldNotBeNull();
 
-        notification.Message.ShouldBe("«Revolut»: 3 дії до виконання. Наступний — 01.11.2026 о 20:00.");
+        Rendered(notification.Message).ShouldBe("«Revolut»: 3 дії до виконання. Наступний — 01.11.2026 о 20:00.");
         notification.Data["next"].ShouldBe("2026-11-01T20:00");
-        ReportNotification.For(Failed(error: "boom"), next)!.Message.ShouldBe("Причина: boom Наступний — 01.11.2026 о 20:00.");
+        Rendered(ReportNotification.For(Failed(error: "boom"), next)!.Message).ShouldBe("Причина: boom Наступний — 01.11.2026 о 20:00.");
     }
 
     [Fact]
     public void A_report_that_does_not_come_on_schedule_says_the_next_is_only_on_demand_and_an_old_event_says_nothing()
     {
-        ReportNotification.For(Report(), new NextReport(null))!.Message.ShouldBe("«Revolut»: 3 дії до виконання. Наступний — лише вручну.");
-        ReportNotification.For(Report(), null)!.Message.ShouldBe("«Revolut»: 3 дії до виконання.");
+        Rendered(ReportNotification.For(Report(), new NextReport(null))!.Message).ShouldBe("«Revolut»: 3 дії до виконання. Наступний — лише вручну.");
+        Rendered(ReportNotification.For(Report(), null)!.Message).ShouldBe("«Revolut»: 3 дії до виконання.");
     }
 
     [Theory]
@@ -88,5 +91,5 @@ public sealed class ReportNotificationTests
     [InlineData(11, "11 дій")]
     [InlineData(22, "22 дії")]
     public void Actions_are_counted_in_Ukrainian(int actions, string expected) =>
-        ReportNotification.For(Report(actions: actions))!.Message.ShouldBe($"«Revolut»: {expected} до виконання.");
+        Rendered(ReportNotification.For(Report(actions: actions))!.Message).ShouldBe($"«Revolut»: {expected} до виконання.");
 }

@@ -58,17 +58,17 @@ public sealed class Pit38Form : ITaxDeclarationForm
     private static string TreatmentOf(DeclarationAccount account, Pit38BrokerRows rows)
     {
         if (!account.Policy.IsTaxed)
-            return "Не оподатковується";
+            return Message.Of("pit38.treatment.untaxed");
 
-        return rows.TakesPit8C(account) ? "Рядок 1 (PIT-8C) · дивіденди в G" : "Рядок 2 · дивіденди в G";
+        return Message.Of(rows.TakesPit8C(account) ? "pit38.treatment.row1" : "pit38.treatment.row2");
     }
 
     private static List<DeclarationFact> FactsOf(IReadOnlyList<DividendIncome> foreign)
     {
         List<DeclarationFact> facts =
         [
-            new("Дивіденди з-за кордону брутто", foreign.Sum(dividend => dividend.GrossPln)),
-            new("Утримано за кордоном з них (у poz. 48 — не більше 19% кожного)", foreign.Sum(dividend => dividend.WithheldPln)),
+            new(Message.Of("pit38.fact.foreign_dividends"), foreign.Sum(dividend => dividend.GrossPln)),
+            new(Message.Of("pit38.fact.withheld_abroad"), foreign.Sum(dividend => dividend.WithheldPln)),
         ];
 
         return [.. facts.Where(fact => fact.Amount != 0m)];

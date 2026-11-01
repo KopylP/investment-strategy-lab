@@ -73,7 +73,7 @@ public static class SubPortfolioRebalancer
                 if (PriceOf(position.InstrumentId) is { } latest)
                     values.Add((position.InstrumentId, position.Quantity.Value * latest));
                 else
-                    _notes.Add($"Немає ціни для {Label(position.InstrumentId)}: перевірте цю позицію вручну.");
+                    _notes.Add(Message.Of("report.note.no_price", new { label = Label(position.InstrumentId) }));
             }
 
             return values;
@@ -135,8 +135,7 @@ public static class SubPortfolioRebalancer
                 if (!ShouldTrim(id, excess, investableTotal))
                     continue;
 
-                var reason =
-                    $"вага вище цілі {PlanText.Percent(_weights[id])} більш ніж на {PlanText.Percent(_policy.TrimBand.Value)}: продати надлишок";
+                var reason = Message.Of("report.reason.trim", new { target = _weights[id], band = _policy.TrimBand.Value });
                 var sold = AddOrder(OrderKind.Trim, id, excess, reason);
 
                 kept[id] -= sold;
@@ -184,7 +183,7 @@ public static class SubPortfolioRebalancer
             if (remaining < 0m)
                 Unpark(cashEtf, price, remaining);
             else if (remaining >= _policy.MinTrade)
-                AddOrder(OrderKind.Park, cashEtf, remaining, "парковка: гроші, які цього місяця не інвестуються");
+                AddOrder(OrderKind.Park, cashEtf, remaining, Message.Of("report.reason.park"));
         }
 
         private void Unpark(Guid cashEtf, decimal price, decimal remaining)
@@ -194,7 +193,7 @@ public static class SubPortfolioRebalancer
             var held = _holdings.TryGetValue(cashEtf, out var parked) ? parked.Quantity.Value : 0m;
             var shares = Math.Min(wanted, held);
 
-            AddOrder(OrderKind.Unpark, cashEtf, shares * price, "запарковані кошти повертаються в роботу", shares);
+            AddOrder(OrderKind.Unpark, cashEtf, shares * price, Message.Of("report.reason.unpark"), shares);
         }
 
         private Dictionary<Guid, decimal> ValuesAfter(Dictionary<Guid, decimal> kept, List<PlannedOrder> sorted)
@@ -211,51 +210,54 @@ public static class SubPortfolioRebalancer
     private static string ExitReason(StrategyTargets strategy, Guid id) =>
         strategy.ScoreOf(id) switch
         {
-            null => "не входить до списку ETF стратегії",
-            { Reason: { Length: > 0 } reason } => $"випав із вибірки: {reason}",
-            _ => "випав із вибірки",
+            null => Message.Of("report.reason.exit_not_in_universe"),
+            { Reason: { Length: > 0 } reason } => Message.Of("report.reason.exit_dropped_because", new { reason }),
+            _ => Message.Of("report.reason.exit_dropped"),
         };
 
     private static string BuyReason(StrategyTargets strategy, Guid id, bool held, decimal weight)
     {
         var score = strategy.ScoreOf(id);
-        var rank = score?.Rank is { } r ? $"ранг {r}" : "ранг —";
-        var detail = score?.Momentum is { } momentum ? $"{rank}, моментум {PlanText.SignedPercent(momentum)}" : rank;
-        var action = held ? "докупити до цілі" : "нова позиція, ціль";
+        var rank = score?.Rank is { } known ? Message.Of("report.reason.rank", new { rank = known }) : Message.Of("report.reason.rank_unknown");
+        var detail = score?.Momentum is { } momentum ? Message.Of("report.reason.rank_momentum", new { rank, momentum }) : rank;
+        var code = held ? "report.reason.buy_more" : "report.reason.buy_new";
 
-        return $"{action} {PlanText.Percent(weight)} портфеля ({detail})";
+        return Message.Of(code, new { weight, detail });
     }
 
     private static IEnumerable<string> Notes(
         SubPortfolioPlanInput input, List<Guid> picks, decimal investFraction, decimal parkedBefore, List<Guid> skipped, Func<Guid, string> label)
     {
-        var (contribution, currency, policy) = (input.Contribution, input.Currency, input.Policy);
-        var parking = input.CashInstrumentId is { } cashEtf ? label(cashEtf) : "кеш на рахунку";
+        var (contribution, currency, policy) = (input.Contribution, input.Currency.Code, input.Policy);
+        var parking = input.CashInstrumentId is { } cashEtf ? label(cashEtf) : Message.Of("report.parking.cash");
 
         if (contribution <= 0m)
-            yield return "Внесок цього місяця дорівнює 0.";
+            yield return Message.Of("report.note.zero_contribution");
 
         if (!input.Strategy.MarketIsFavorable)
-            yield return $"Ринок слабкий: інвестуємо {PlanText.Percent(investFraction)} внеску " +
-                         $"({PlanText.Money(contribution * investFraction, currency)}), " +
-                         $"решту ({PlanText.Money(contribution * (1m - investFraction), currency)}) паркуємо в {parking}. " +
-                         "Через стан ринку поточні позиції не продаємо.";
+            yield return Message.Of("report.note.weak_market", new
+            {
+                fraction = investFraction,
+                invested = contribution * investFraction,
+                rest = contribution * (1m - investFraction),
+                currency,
+                parking,
+            });
         else if (parkedBefore >= policy.MinTrade)
-            yield return $"Ринок у нормі: запарковані кошти ({PlanText.Money(parkedBefore, currency)}) повертаються в роботу.";
+            yield return Message.Of("report.note.market_recovered", new { parked = parkedBefore, currency });
 
         if (picks.Count == 0)
-            yield return $"Жоден ETF не пройшов фільтри: усі гроші лишаються в {parking}.";
+            yield return Message.Of("report.note.nothing_picked", new { parking });
         else if (input.Strategy.Slots is { } slots && picks.Count < slots)
         {
             var empty = slots - picks.Count;
-            yield return $"Знайдено {picks.Count} з {slots} кандидатів: {empty} порожн{(empty == 1 ? "ій слот" : "і слоти")} " +
-                         $"({PlanText.Percent((decimal)empty / slots)} портфеля) лишаються в {parking} до наступного місяця.";
+            yield return Message.Of("report.note.empty_slots", new { found = picks.Count, slots, empty, share = (decimal)empty / slots, parking });
         }
         else if (input.Strategy.Slots is null && input.Strategy.TotalWeight < 1m)
-            yield return $"Цілі стратегії займають {PlanText.Percent(input.Strategy.TotalWeight)} портфеля: решта лишається в {parking}.";
+            yield return Message.Of("report.note.partial_targets", new { total = input.Strategy.TotalWeight, parking });
 
         if (skipped.Count > 0)
-            yield return $"Пропущено дрібні покупки (менше {PlanText.Money(policy.MinTrade, currency)}): {string.Join(", ", skipped.Select(label))}.";
+            yield return Message.Of("report.note.small_buys_skipped", new { minimum = policy.MinTrade, currency, labels = string.Join(", ", skipped.Select(label)) });
     }
 
     private static List<AllocationRow> Allocation(

@@ -21,6 +21,7 @@ import { routes } from './app.routes';
 import { basePathInterceptor } from './core/api/base-path-interceptor';
 import { reloadWithNewIngressSession } from './core/auth/ingress-session';
 import { unauthorizedInterceptor } from './core/auth/unauthorized-interceptor';
+import { translationInterceptor } from './core/i18n/translation-interceptor';
 import { NavigationHistory } from './core/layout/navigation-history';
 import { InvestmentLabPreset } from './core/theme/investment-lab.preset';
 import { ukTranslation } from './core/theme/uk-translation';
@@ -39,7 +40,7 @@ export const appConfig: ApplicationConfig = {
     provideEnvironmentInitializer(() => inject(NavigationHistory)),
     provideHttpClient(
       withFetch(),
-      withInterceptors([basePathInterceptor, unauthorizedInterceptor]),
+      withInterceptors([basePathInterceptor, unauthorizedInterceptor, translationInterceptor]),
     ),
     providePrimeNG({
       theme: {

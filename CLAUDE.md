@@ -36,6 +36,7 @@ cd frontend && npx ng build
 
 - Everything the user sees is in **Ukrainian** (UI, report texts, notifications, add-on docs). Code, identifiers and
   code comments are in English. A report is «рапорт» in the UI.
+- **No text in the user's language in backend or engine code.** See Language below.
 - Commit messages and code follow the code rules below; the why of a decision goes in an ADR, not in a comment.
 - Commit messages: one descriptive paragraph of what changed for the user and why (see `git log`), no type prefixes.
 - Do not bump `deploy/home-assistant/investlab/config.yaml` `version` by hand: a workflow bumps it on every push to
@@ -63,6 +64,24 @@ New and changed code follows these rules; they win over the style of older code 
   or in `Domain`, never loose in `Application/`. A file's name says what it holds; a file emptied by a split is deleted.
 - **Small types over long parameter lists.** Group arguments that travel together into a value object.
 - **Intention-revealing names,** no abbreviations; named constants instead of magic numbers.
+
+## Language
+
+The backend and the engine speak in codes; the texts live in catalogs and are chosen where the user reads them.
+
+- **A message is a code with parameters:** `Message.Of("report.warning.turnover", new { turnover, limit })` makes the
+  token `@report.warning.turnover {"turnover":0.4,"limit":0.2}`. It travels and is stored as a plain string. Pass raw values
+  (fractions, amounts, a currency code) and let the template format them; a parameter may itself be a message.
+- **An error is a code too:** `Error.Validation(code, englishDetail, parameters)`. The English detail is for logs and developers.
+- **Texts live in catalogs:** `locales/uk.json` for the service, and a strategy's own catalog in the engine for its texts.
+  Templates use `{name}`, `{x:percent}`, `{x:signedPercent}`, `{x:money:currencyParam}`, `{x:amount}`, `{x:plural:one|few|many}`.
+- **The frontend localizes:** `core/i18n/translation-interceptor.ts` translates every token in every API response, so a screen
+  shows the backend's strings without knowing about codes. A string without a known code is shown as it is, so older
+  stored texts and what the user typed keep working.
+- **The backend renders only what never reaches the frontend:** Home Assistant notifications and generated PDFs go through
+  `MessageLocalizer`, in the adapter or printer, reading the same catalog.
+- **Official names stay:** Polish field names on a PIT form are the form's own words, not translations.
+- Enforced by `LocalizationTests`: no Cyrillic in backend code, and every code the backend sends exists in the catalog.
 
 ## Modularity
 

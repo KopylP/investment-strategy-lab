@@ -55,7 +55,7 @@ public sealed class GuardrailEnforcerTests
 
         clipped.Targets.Select(target => target.Weight).ShouldBe([0.3m, 0.3m]);
         warnings.Count.ShouldBe(2);
-        warnings[0].ShouldContain("A 50%");
+        InvestmentLab.BuildingBlocks.Localization.MessageLocalizer.Default.Render(warnings[0]).ShouldContain("A 50%");
     }
 
     [Fact]

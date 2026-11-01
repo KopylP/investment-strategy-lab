@@ -15,9 +15,7 @@ public static class GuardrailEnforcer
                 if (target.Weight <= cap.Value)
                     return target;
 
-                warnings.Add(
-                    $"Ціль {label(target.InstrumentId)} {PlanText.Percent(target.Weight)} " +
-                    $"обрізано до максимуму позиції {PlanText.Percent(cap.Value)}.");
+                warnings.Add(Message.Of("report.warning.target_capped", new { label = label(target.InstrumentId), target = target.Weight, cap = cap.Value }));
 
                 return target with { Weight = cap.Value };
             })];
@@ -26,7 +24,7 @@ public static class GuardrailEnforcer
         var total = targets.Sum(target => target.Weight);
         if (total > 1m)
         {
-            warnings.Add($"Цілі стратегії разом {PlanText.Percent(total)}: без плеча, тому їх пропорційно зменшено до 100%.");
+            warnings.Add(Message.Of("report.warning.targets_scaled", new { total }));
             targets = [.. targets.Select(target => target with { Weight = target.Weight / total })];
         }
 
@@ -43,8 +41,7 @@ public static class GuardrailEnforcer
         var turnover = Math.Max(0m, traded - newMoney) / plan.TotalBefore;
 
         return turnover > max.Value
-            ? $"Оборот плану {PlanText.Percent(turnover)} перевищує ліміт {PlanText.Percent(max.Value)} на місяць: " +
-              "перегляньте продажі перед виконанням."
+            ? Message.Of("report.warning.turnover", new { turnover, limit = max.Value })
             : null;
     }
 }

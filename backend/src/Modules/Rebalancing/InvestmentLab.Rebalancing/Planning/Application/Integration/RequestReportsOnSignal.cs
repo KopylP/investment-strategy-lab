@@ -42,7 +42,7 @@ internal sealed class RequestReportsOnSignal(
         var account = await inputs.AccountAsync(rule.AccountId, cancellationToken);
         if (account is null)
         {
-            rule.CouldNotAct("Цього рахунку більше немає.");
+            rule.CouldNotAct(Message.Of("signal_rule.account_gone"));
 
             return;
         }
@@ -51,7 +51,7 @@ internal sealed class RequestReportsOnSignal(
         var report = declared.FirstOrDefault(each => each.Code == rule.ReportCode);
         if (report is null)
         {
-            rule.CouldNotAct($"Стратегії рахунку «{account.Name}» більше не складають цього рапорту.");
+            rule.CouldNotAct(Message.Of("signal_rule.report_gone", new { account = account.Name }));
 
             return;
         }
@@ -96,13 +96,13 @@ internal sealed class RequestReportsOnSignal(
         }
 
         logger.LogWarning("Signal {SignalId} could not request report {Code}: {Error}", triggered.SignalId, report.Code, requested.Error.Message);
-        rule.CouldNotAct("Рапорт не вдалося запустити: на рахунку немає під-портфелів, що його складають.");
+        rule.CouldNotAct(Message.Of("signal_rule.no_sub_portfolios"));
     }
 
     private static ReportCause CauseOf(SignalTriggeredV1 triggered)
     {
         var subjects = string.Join(", ", triggered.Subjects.Select(subject => subject.Text));
 
-        return new ReportCause(triggered.TriggerId, $"Рапорт запущено сигналом «{triggered.Name}»: {subjects}.");
+        return new ReportCause(triggered.TriggerId, Message.Of("report.cause.signal", new { signal = triggered.Name, subjects }));
     }
 }

@@ -1,3 +1,4 @@
+using System.Globalization;
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.Portfolio.Accounts.Domain;
 using InvestmentLab.Portfolio.Transactions.Application.ReverseTransaction;
@@ -18,7 +19,7 @@ public sealed class ConfirmStatementImportHandler(
     TimeProvider clock)
 {
     private const string NewInstrumentKind = "Stock";
-    private const string CashTicker = "кеш";
+    private const string CashTicker = "CASH";
 
     public async Task<Result<StatementImportDto>> Handle(Guid accountId, Guid importId, CancellationToken cancellationToken)
     {
@@ -71,7 +72,10 @@ public sealed class ConfirmStatementImportHandler(
             var instrument = new NewInstrumentDto(symbol, mapping.RegisterName ?? mapping.Ticker, mapping.Currency, NewInstrumentKind);
             var registered = await registry.RegisterAsync(instrument, cancellationToken);
             if (registered.InstrumentId is null)
-                return Error.Validation("statement_import.instrument_not_registered", $"{mapping.Ticker}: {registered.Error}");
+                return Error.Validation(
+                    "statement_import.instrument_not_registered",
+                    $"{mapping.Ticker}: {registered.Error}",
+                    new { ticker = mapping.Ticker, error = registered.Error });
 
             mappings.Add(mapping with { InstrumentId = registered.InstrumentId, RegisterAs = null });
         }
@@ -97,7 +101,7 @@ public sealed class ConfirmStatementImportHandler(
         var replaced = StatementMatcher.ToReverse(entries, statement.Mode)
             .OrderByDescending(entry => entry.OccurredOn)
             .ThenByDescending(entry => entry.RecordedAt);
-        var reversal = new ReverseTransactionCommand($"імпорт виписки {statement.FileName}");
+        var reversal = new ReverseTransactionCommand(Message.Of("statement.reversal.import", new { file = statement.FileName }));
 
         foreach (var entry in replaced)
         {
@@ -106,7 +110,7 @@ public sealed class ConfirmStatementImportHandler(
             if (result.IsSuccess)
                 progress.Reversed.Add(entry.Id.Value);
             else
-                progress.Warnings.Add($"Не вдалося сторнувати операцію {entry.OccurredOn:yyyy-MM-dd}: {result.Error.Message}");
+                progress.Warnings.Add(Message.Of("statement.warning.reverse_failed", new { date = entry.OccurredOn.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), error = result.Error.AsMessage() }));
         }
     }
 
@@ -136,10 +140,10 @@ public sealed class ConfirmStatementImportHandler(
         if (outcome is not { WillReverseExisting: true, ExistingTransactionId: { } existing })
             return null;
 
-        var reversal = await reversals.Handle(account.Id.Value, existing, new ReverseTransactionCommand("виправлено за випискою"), cancellationToken);
+        var reversal = await reversals.Handle(account.Id.Value, existing, new ReverseTransactionCommand(Message.Of("statement.reversal.corrected")), cancellationToken);
 
         if (reversal.IsFailure)
-            return $"старий запис не сторновано: {reversal.Error.Message}";
+            return Message.Of("statement.row.old_not_reversed", new { error = reversal.Error.AsMessage() });
 
         progress.Reversed.Add(existing);
 
@@ -161,11 +165,11 @@ public sealed class ConfirmStatementImportHandler(
         }, cancellationToken);
 
         if (recorded.IsFailure)
-            return $"не записано: {recorded.Error.Message}";
+            return Message.Of("statement.row.not_recorded", new { error = recorded.Error.AsMessage() });
 
         progress.References.Add(reference);
 
-        return asIncome ? "записано як дохід: продаж акцій без купівлі (спін-оф)" : "записано";
+        return Message.Of(asIncome ? "statement.row.recorded_as_income" : "statement.row.recorded");
     }
 
     private async Task<string> NextReferenceAsync(string identity, CancellationToken cancellationToken)
@@ -182,11 +186,11 @@ public sealed class ConfirmStatementImportHandler(
 
     private static string Describe(RowDecision decision) => decision switch
     {
-        RowDecision.AlreadyImported => "уже в журналі",
-        RowDecision.MatchesExisting => "збігається з журналом",
-        RowDecision.Differs => "відрізняється — не змінено",
-        RowDecision.OutOfScope => "до дати початку",
-        RowDecision.Unsupported => "не імпортується",
+        RowDecision.AlreadyImported => Message.Of("statement.row.already_imported"),
+        RowDecision.MatchesExisting => Message.Of("statement.row.matches_existing"),
+        RowDecision.Differs => Message.Of("statement.row.differs"),
+        RowDecision.OutOfScope => Message.Of("statement.row.out_of_scope"),
+        RowDecision.Unsupported => Message.Of("statement.row.unsupported"),
         _ => "—",
     };
 

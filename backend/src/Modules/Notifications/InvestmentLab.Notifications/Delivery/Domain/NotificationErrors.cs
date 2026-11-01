@@ -6,7 +6,7 @@ public static class NotificationErrors
         Error.Conflict("notification.no_channel", "No notification channel is configured: the app does not run in Home Assistant.");
 
     public static Error ChannelFailed(string details) =>
-        Error.Conflict("notification.channel_failed", $"The notification was not delivered: {details}");
+        Error.Conflict("notification.channel_failed", $"The notification was not delivered: {details}", new { details });
 
     public static Error ChannelFailed(string channel, string details) => ChannelFailed($"{channel}: {details}");
 }

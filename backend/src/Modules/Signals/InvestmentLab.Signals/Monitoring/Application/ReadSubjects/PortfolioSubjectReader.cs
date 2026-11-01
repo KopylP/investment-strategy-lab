@@ -6,7 +6,7 @@ namespace InvestmentLab.Signals.Monitoring.Application.ReadSubjects;
 
 public sealed class PortfolioSubjectReader(IAccountSetupQueries accounts, IValuationHistory valuation, TimeProvider clock)
 {
-    private const string UnknownSubPortfolioLabel = "Під-портфель";
+    private static readonly string UnknownSubPortfolioLabel = Message.Of("signal.subject.unknown_sub_portfolio");
 
     public async Task<SubjectReadings> ReadAsync(Signal signal, CancellationToken cancellationToken)
     {

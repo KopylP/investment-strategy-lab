@@ -1,4 +1,5 @@
 using System.Globalization;
+using InvestmentLab.BuildingBlocks.Localization;
 using InvestmentLab.Taxation.Declarations.Application.Shared;
 using InvestmentLab.Taxation.Declarations.Domain;
 using UglyToad.PdfPig.Core;
@@ -31,10 +32,9 @@ public sealed class DeclarationSummaryPrinter : IDeclarationPrinter
     {
         var deadline = declaration.Deadline.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture);
 
-        sheet.Title($"{declaration.Form} за {declaration.Year} — що куди вписати");
-        sheet.Note($"Подати з 15.02 до {deadline} · e-Urząd Skarbowy (podatki.gov.pl) → Twój e-PIT → {declaration.Form}. " +
-            "Поля, яких тут немає, — 0 (порожні).");
-        sheet.Total("До сплати", $"{Amount(declaration.TaxDue)} zł");
+        sheet.Title(Text("tax.summary.title", new { form = declaration.Form, year = declaration.Year }));
+        sheet.Note(Text("tax.summary.filing", new { deadline, form = declaration.Form }));
+        sheet.Total(Text("tax.summary.total"), $"{Amount(declaration.TaxDue)} zł");
     }
 
     private static void PrintFields(Sheet sheet, TaxDeclaration declaration)
@@ -51,10 +51,10 @@ public sealed class DeclarationSummaryPrinter : IDeclarationPrinter
         if (declaration.Facts is not { Count: > 0 } facts)
             return;
 
-        sheet.Heading("Довідково");
+        sheet.Heading(Text("tax.summary.facts"));
 
         foreach (var fact in facts)
-            sheet.Row(null, fact.Label, $"{Amount(fact.Amount)} zł", computed: false);
+            sheet.Row(null, MessageLocalizer.Default.Render(fact.Label), $"{Amount(fact.Amount)} zł", computed: false);
     }
 
     private static void PrintActions(Sheet sheet, TaxDeclaration declaration)
@@ -63,11 +63,13 @@ public sealed class DeclarationSummaryPrinter : IDeclarationPrinter
         if (actions.Count == 0)
             return;
 
-        sheet.Heading("Перед поданням");
+        sheet.Heading(Text("tax.summary.before_filing"));
 
         foreach (var action in actions)
-            sheet.Bullet(action);
+            sheet.Bullet(MessageLocalizer.Default.Render(action));
     }
+
+    private static string Text(string code, object? parameters = null) => MessageLocalizer.Default.Render(code, parameters);
 
     private static IReadOnlyList<DeclarationField> Shown(IReadOnlyList<DeclarationField> fields) =>
         [.. fields.Where(field => field.Amount is null || field.Amount != 0m)];
@@ -82,7 +84,7 @@ public sealed class DeclarationSummaryPrinter : IDeclarationPrinter
     {
         private const double Width = 595.28, Height = 841.89, Margin = 48, PositionX = Margin, LabelX = Margin + 48, ValueRight = Width - Margin;
         private const double LineHeight = 13, RowGap = 16, MarkGap = 8;
-        private const string ComputedMark = "рахує форма — звірте";
+        private static readonly string ComputedMark = MessageLocalizer.Default.Render("tax.summary.computed_mark", null);
         private static readonly (byte R, byte G, byte B) Ink = (15, 23, 42), Grey = (100, 116, 139), Rule = (226, 232, 240), Accent = (79, 70, 229);
 
         private PdfPageBuilder? _page;

@@ -19,7 +19,7 @@ public static class OrderNetting
             {
                 var moved = Math.Min(sells[s].Quantity, buys[b].Quantity);
                 transfers.Add(new InternalTransfer(instrument.Key, sells[s].SubPortfolioId, buys[b].SubPortfolioId, moved, price,
-                    $"переказ між під-портфелями замість продажу й купівлі: {buys[b].Reason}"));
+                    Message.Of("report.reason.transfer", new { reason = buys[b].Reason })));
                 sells[s] = sells[s] with { Quantity = sells[s].Quantity - moved };
                 buys[b] = buys[b] with { Quantity = buys[b].Quantity - moved };
 

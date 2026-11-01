@@ -34,8 +34,8 @@ public sealed class Pit38ForeignSales(IReadOnlyList<DeclarationAccount> withoutP
         return new DeclarationAttachment(AttachmentForm, $"PIT/ZG · {name}", [
             new(6, "Państwo uzyskania dochodu", null, name),
             new(7, "Kod kraju", null, code),
-            new(29, "Dochód, o którym mowa w art. 30b ust. 5a i 5b", income, Hint: "Прибуток від продажу паперів цієї країни (за ISIN)"),
-            new(30, "Podatek zapłacony za granicą od dochodów z poz. 29", 0m, Hint: "Брокер податку з продажу не утримує"),
+            new(29, "Dochód, o którym mowa w art. 30b ust. 5a i 5b", income, Hint: Message.Of("pit38.hint.zg_income")),
+            new(30, "Podatek zapłacony za granicą od dochodów z poz. 29", 0m, Hint: Message.Of("pit38.hint.zg_tax")),
         ]);
     }
 

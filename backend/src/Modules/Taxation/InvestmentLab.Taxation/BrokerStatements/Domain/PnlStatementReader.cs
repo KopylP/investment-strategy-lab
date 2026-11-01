@@ -31,13 +31,13 @@ public static partial class PnlStatementReader
 
         if (isin is null)
         {
-            parsed.Warnings.Add($"{label}: рядок без ISIN (не цінний папір) — пропущено.");
+            parsed.Warnings.Add(Message.Of("tax.broker.row_without_isin", new { label }));
             return;
         }
 
         if (money.Select(token => token.Currency).Distinct().Count() > 1)
         {
-            parsed.Warnings.Add($"{label}: суми в різних валютах — пропущено.");
+            parsed.Warnings.Add(Message.Of("tax.broker.mixed_currencies", new { label }));
             return;
         }
 
@@ -66,7 +66,7 @@ public static partial class PnlStatementReader
 
         if (quantity is not > 0m || money.Count < 4 || pln.Count < 4 || Math.Abs(money[1].Value - money[0].Value - money[2].Value) > 2 * Cent)
         {
-            parsed.Warnings.Add($"{row.Label}: продаж не вдалося прочитати — пропущено.");
+            parsed.Warnings.Add(Message.Of("tax.broker.unreadable_sale", new { label = row.Label }));
             return;
         }
 
@@ -91,7 +91,7 @@ public static partial class PnlStatementReader
 
         if (money.Count < 3 || pln.Count < 2 || Math.Abs(money[0].Value - money[1].Value - money[2].Value) > Cent)
         {
-            parsed.Warnings.Add($"{row.Label}: дивіденд не вдалося прочитати — пропущено.");
+            parsed.Warnings.Add(Message.Of("tax.broker.unreadable_dividend", new { label = row.Label }));
             return;
         }
 

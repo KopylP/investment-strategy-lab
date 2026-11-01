@@ -66,13 +66,13 @@ public sealed class EnsureBuiltInSignalsHandler(ISignalRepository signals, IAcco
         var target = SignalTarget.Instrument(vixId);
         var condition = ConditionOf(SignalMetric.Level, VixLevel, windowDays: null);
 
-        return Signal.Create(owner, "Високий VIX", target, condition, Cadence.Off, key).Value;
+        return Signal.Create(owner, Message.Of("signal.builtin.high_vix"), target, condition, Cadence.Off, key).Value;
     }
 
     private static Signal AccountFall(UserId owner, AccountSetupDto account)
     {
         var key = $"account-drawdown:{account.Id:N}";
-        var name = $"Просадка рахунку «{ShortName(account)}»";
+        var name = Message.Of("signal.builtin.account_drawdown", new { account = ShortName(account) });
         var target = SignalTarget.Account(account.Id);
         var condition = ConditionOf(SignalMetric.DrawdownFromPeak, AccountDrawdown, windowDays: null);
 
@@ -82,7 +82,7 @@ public sealed class EnsureBuiltInSignalsHandler(ISignalRepository signals, IAcco
     private static Signal PositionFall(UserId owner, AccountSetupDto account)
     {
         var key = $"position-drawdown:{account.Id:N}";
-        var name = $"Падіння позиції на рахунку «{ShortName(account)}»";
+        var name = Message.Of("signal.builtin.position_drawdown", new { account = ShortName(account) });
         var target = SignalTarget.EachPosition(account.Id);
         var condition = ConditionOf(SignalMetric.DrawdownFromPeak, PositionDrawdown, PositionPeakWindowDays);
 

@@ -73,13 +73,13 @@ public sealed class ReportRequestProcessor(
         {
             if (!asked.TryGetValue(run.SubPortfolioId, out var ask))
             {
-                request.RunFailed(run.SubPortfolioId, "strategy.not_asked", "під-портфель більше не входить у звіт");
+                request.RunFailed(run.SubPortfolioId, "strategy.not_asked", Message.Of("report.run.not_asked"));
                 continue;
             }
 
             if (run.Submissions >= MaxSubmissions)
             {
-                request.RunFailed(run.SubPortfolioId, "strategy.job_lost", "рушій стратегій кілька разів втратив її задачу");
+                request.RunFailed(run.SubPortfolioId, "strategy.job_lost", Message.Of("report.run.job_lost"));
                 continue;
             }
 
@@ -116,7 +116,7 @@ public sealed class ReportRequestProcessor(
                     request.Answered(run.SubPortfolioId, answer);
                     break;
                 case StrategyJobState.Finished:
-                    request.RunFailed(run.SubPortfolioId, errorCode ?? "strategy.failed", errorMessage ?? "стратегія не відповіла");
+                    request.RunFailed(run.SubPortfolioId, errorCode ?? "strategy.failed", errorMessage ?? Message.Of("report.run.no_answer"));
                     break;
             }
         }
@@ -154,7 +154,7 @@ public sealed class ReportRequestProcessor(
             run => run.SubPortfolioId,
             run => run.Answer is { } answer
                 ? new StrategyEvaluationResult<T>(JsonSerializer.Deserialize<T>(answer, Json))
-                : new StrategyEvaluationResult<T>(null, run.ErrorCode ?? "strategy.no_answer", run.ErrorMessage ?? "стратегія не відповіла"));
+                : new StrategyEvaluationResult<T>(null, run.ErrorCode ?? "strategy.no_answer", run.ErrorMessage ?? Message.Of("report.run.no_answer")));
 
     private static StrategyTask TaskOf(ReportRequest request) =>
         request.Kind == ReportKind.RiskReview ? StrategyTask.AssessRisk : StrategyTask.Decide;

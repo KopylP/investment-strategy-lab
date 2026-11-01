@@ -60,6 +60,6 @@ public sealed class TaxRecalculator(TaxInputs inputs, IAssessmentRepository asse
     {
         var shown = string.Join(", ", missing.Take(ShownMissingRates));
 
-        return $"Немає курсу {source} для {missing.Count} операцій ({shown}…): вони не враховані. Оновіть курси {source}.";
+        return Message.Of("tax.warning.rates_missing", new { source, count = missing.Count, shown });
     }
 }

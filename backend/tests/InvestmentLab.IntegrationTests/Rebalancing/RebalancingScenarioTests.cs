@@ -79,7 +79,7 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
         (await client.PostAsJsonAsync($"/api/rebalancing/accounts/{account.Id}/reports", new { code = "weekly-digest" }, ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         report.Sections.Count.ShouldBe(2);
         report.Sections.ShouldAllBe(section => section.Error == null);
-        report.Warnings.ShouldContain(warning => warning.Contains("перераховано в EUR"));
+        report.Warnings.ShouldContain(warning => warning.Contains("report.warning.fx_converted"));
         var contribute = report.Actions[0];
         contribute.Kind.ShouldBe("Contribute");
         contribute.PlannedAmount.ShouldBe(1000m);

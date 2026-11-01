@@ -14,9 +14,6 @@ internal static class ReportNotification
 
     private const int MaxReasonLength = 300;
 
-    private static readonly string[] Months =
-        ["січень", "лютий", "березень", "квітень", "травень", "червень", "липень", "серпень", "вересень", "жовтень", "листопад", "грудень"];
-
     public static string TagOf(Guid reportId) => $"investlab_report_{reportId:N}";
 
     public static string FailedTagOf(Guid accountId, string code) => $"investlab_report_failed_{accountId:N}_{code}";
@@ -31,14 +28,8 @@ internal static class ReportNotification
         if (riskReview && actions == 0)
             return null;
 
-        var title = riskReview
-            ? $"{report.Title ?? "Перевірка ризику"}: є що зробити"
-            : report.Title is { } name ? $"{name} за {PeriodText(report.Period)} готовий" : $"Рапорт за {PeriodText(report.Period)} готовий";
-        var account = string.IsNullOrWhiteSpace(report.AccountName) ? "" : $"«{report.AccountName}»: ";
-        var message = actions == 0
-            ? $"{account}цього разу нічого купувати чи продавати не треба."
-            : $"{account}{actions} {ActionsWord(actions)} до виконання.";
-        message += NextText(next);
+        var title = ReadyTitle(report, riskReview);
+        var message = WithNext(ReadyBody(report.AccountName, actions), next);
 
         return new Notification(report.OwnerId, Topic, TagOf(report.ReportId), title, message, new Dictionary<string, object?>
         {
@@ -57,12 +48,13 @@ internal static class ReportNotification
         if (!UserIsAway(failed.Trigger, failed.RequestedAt, failed.FailedAt))
             return null;
 
-        var reason = failed.Error.Length > MaxReasonLength ? $"{failed.Error[..MaxReasonLength]}…" : failed.Error;
+        var reason = ShortReason(failed.Error);
+        var body = string.IsNullOrWhiteSpace(reason) ? Message.Of("notification.report.failed_no_reason") : Message.Of("notification.report.failed_reason", new { reason });
 
         return new Notification(
             failed.OwnerId, FailedTopic, FailedTagOf(failed.AccountId, failed.Code),
-            $"{failed.Title} за {PeriodText(failed.Period)} не вдалося підготувати",
-            (string.IsNullOrWhiteSpace(reason) ? "Стратегії не відповіли." : $"Причина: {reason}") + NextText(next),
+            Message.Of("notification.report.failed_title", new { title = failed.Title, period = PeriodText(failed.Period) }),
+            WithNext(body, next),
             new Dictionary<string, object?>
             {
                 ["request_id"] = failed.RequestId,
@@ -77,27 +69,56 @@ internal static class ReportNotification
     private static bool UserIsAway(string? trigger, DateTimeOffset? requestedAt, DateTimeOffset doneAt) =>
         trigger is "Scheduled" or "Signal" || (trigger == "OnDemand" && requestedAt is { } asked && doneAt - asked >= LongWait);
 
-    private static string NextText(NextReport? next) => next switch
+    private static string ReadyTitle(ReportGeneratedV1 report, bool riskReview)
     {
-        null => "",
-        { At: { } at } => $" Наступний — {at.ToString("dd.MM.yyyy 'о' HH:mm", CultureInfo.InvariantCulture)}.",
-        _ => " Наступний — лише вручну.",
+        var period = PeriodText(report.Period);
+
+        if (riskReview)
+            return Message.Of("notification.report.risk_title", new { title = report.Title ?? Message.Of("report.title.risk_review") });
+
+        return report.Title is { } title
+            ? Message.Of("notification.report.named_title", new { title, period })
+            : Message.Of("notification.report.unnamed_title", new { period });
+    }
+
+    private static string ReadyBody(string? accountName, int actions)
+    {
+        var account = string.IsNullOrWhiteSpace(accountName) ? "" : Message.Of("notification.report.account_prefix", new { name = accountName });
+
+        return actions == 0
+            ? Message.Of("notification.report.nothing_to_do", new { account })
+            : Message.Of("notification.report.actions", new { account, count = actions });
+    }
+
+    private static string ShortReason(string reason)
+    {
+        if (reason.StartsWith(Message.Prefix) || reason.Length <= MaxReasonLength)
+            return reason;
+
+        return $"{reason[..MaxReasonLength]}…";
+    }
+
+    private static string WithNext(string body, NextReport? next) => next switch
+    {
+        null => body,
+        { At: { } at } => Message.Of("notification.with_next", new { body, next = NextAt(at) }),
+        _ => Message.Of("notification.with_next", new { body, next = Message.Of("notification.next.manual") }),
     };
+
+    private static string NextAt(DateTimeOffset at) => Message.Of("notification.next.at", new
+    {
+        date = at.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture),
+        time = at.ToString("HH:mm", CultureInfo.InvariantCulture),
+    });
 
     private static string? NextValue(NextReport? next) => next?.At?.ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture);
 
     private static string PeriodText(string period)
     {
         var month = YearMonth.TryParse(period);
+        if (month.IsFailure)
+            return period;
 
-        return month.IsSuccess ? $"{Months[month.Value.Month - 1]} {month.Value.Year}" : period;
+        return Message.Of("notification.period", new { month = Message.Of($"month.{month.Value.Month}"), year = month.Value.Year });
     }
-
-    private static string ActionsWord(int count) => (count % 100, count % 10) switch
-    {
-        ( >= 11 and <= 14, _) => "дій",
-        (_, 1) => "дія",
-        (_, >= 2 and <= 4) => "дії",
-        _ => "дій",
-    };
 }

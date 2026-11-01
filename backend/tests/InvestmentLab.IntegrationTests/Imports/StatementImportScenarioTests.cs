@@ -57,9 +57,9 @@ public sealed class StatementImportScenarioTests(MarketDataApiFactory factory) :
 
         var confirmed = await SendAsync(client, HttpMethod.Post, $"{url}/{preview.Id}/confirm", new { }, ct);
         confirmed.Status.ShouldBe("Confirmed");
-        confirmed.Rows.Where(row => row.WillRecord && row.Ticker != "SFGYY").ShouldAllBe(row => row.Result == "записано");
+        confirmed.Rows.Where(row => row.WillRecord && row.Ticker != "SFGYY").ShouldAllBe(row => row.Result == "@statement.row.recorded");
 
-        confirmed.Rows.Single(row => row.Ticker == "SFGYY").Result.ShouldStartWith("записано як дохід");
+        confirmed.Rows.Single(row => row.Ticker == "SFGYY").Result.ShouldBe("@statement.row.recorded_as_income");
 
         var holdings = await client.GetFromJsonAsync<AccountHoldingsDto>($"/api/portfolio/accounts/{account.Id}/holdings", ct);
         var sxr8Position = holdings!.SubPortfolios.Single(sub => sub.SubPortfolioId == eu).Positions.Single();

@@ -236,7 +236,7 @@ public sealed class SignalCheckTests
         var forInstrument = Signal.Create(owner, "VIX", SignalTarget.Instrument(Guid.NewGuid()), loss, Cadence.Off);
         var forPositions = Signal.Create(owner, "Позиції", SignalTarget.EachPosition(Guid.NewGuid()), loss, Cadence.Off);
 
-        forInstrument.Error.Code.ShouldBe("signal.metric");
+        forInstrument.Error.Code.ShouldBe("signal.metric_unfit");
         forPositions.IsSuccess.ShouldBeTrue();
     }
 
