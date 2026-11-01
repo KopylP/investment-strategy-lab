@@ -6,7 +6,6 @@ namespace InvestmentLab.Taxation.Assessments.Application.GetTaxYear;
 
 public sealed class GetTaxYearHandler(IAssessmentRepository assessments, IInstrumentCatalog instruments, TimeProvider clock)
 {
-    private const string YahooPrefix = "yfinance:";
     private const int ShortIdLength = 8;
 
     public async Task<Result<TaxYearDetailsDto>> Handle(int year, RecomputeOutcome refreshed, CancellationToken cancellationToken)
@@ -57,8 +56,6 @@ public sealed class GetTaxYearHandler(IAssessmentRepository assessments, IInstru
         if (!catalog.TryGetValue(id, out var instrument))
             return id.ToString()[..ShortIdLength];
 
-        var yahooSymbol = instrument.ProviderSymbols.FirstOrDefault(symbol => symbol.StartsWith(YahooPrefix, StringComparison.Ordinal));
-
-        return yahooSymbol?[YahooPrefix.Length..] ?? instrument.Name;
+        return instrument.Label;
     }
 }

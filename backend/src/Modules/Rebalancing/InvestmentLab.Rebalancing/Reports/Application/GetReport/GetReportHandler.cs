@@ -6,7 +6,6 @@ namespace InvestmentLab.Rebalancing.Reports.Application.GetReport;
 
 public sealed class GetReportHandler(IReportRepository reports, IInstrumentCatalog instruments)
 {
-    private const string YahooPrefix = "yfinance:";
 
     public async Task<Result<ReportDetailsDto>> Handle(Guid reportId, CancellationToken cancellationToken)
     {
@@ -62,9 +61,7 @@ public sealed class GetReportHandler(IReportRepository reports, IInstrumentCatal
 
     private static string SymbolOf(InstrumentDto instrument)
     {
-        var yahooSymbol = instrument.ProviderSymbols.FirstOrDefault(symbol => symbol.StartsWith(YahooPrefix, StringComparison.Ordinal));
-
-        return yahooSymbol is null ? instrument.Name : yahooSymbol[YahooPrefix.Length..];
+        return instrument.Label;
     }
 
     private static ReportActionDto ToDto(ReportAction action) => new(

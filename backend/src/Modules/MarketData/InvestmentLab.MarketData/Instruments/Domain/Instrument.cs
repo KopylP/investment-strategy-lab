@@ -68,6 +68,8 @@ public sealed class Instrument : AggregateRoot<InstrumentId>
         DescribedAt = at;
     }
 
+    public string? Ticker => SymbolFor(QuoteProvider.Primary)?.Symbol;
+
     public ProviderSymbol? SymbolFor(QuoteProvider provider) =>
         _providerSymbols.FirstOrDefault(symbol => symbol.Provider == provider);
 }

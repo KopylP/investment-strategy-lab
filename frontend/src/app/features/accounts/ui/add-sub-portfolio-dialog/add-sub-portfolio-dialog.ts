@@ -16,7 +16,6 @@ import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { InstrumentCatalog } from '../../../../core/context/instrument-catalog';
-import { symbolOf } from '../../../../shared/models/api';
 import { AccountDetailStore } from '../../data-access/account-detail-store';
 
 interface SubPortfolioDraft {
@@ -49,7 +48,7 @@ export class AddSubPortfolioDialog {
   protected readonly cashOptions = computed(() =>
     this.instruments
       .etfs()
-      .map((etf) => ({ label: `${symbolOf(etf)} · ${etf.name}`, value: etf.id })),
+      .map((etf) => ({ label: `${etf.label} · ${etf.name}`, value: etf.id })),
   );
 
   constructor() {

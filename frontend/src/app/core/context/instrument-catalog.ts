@@ -1,6 +1,6 @@
 import { computed, inject, Injectable, resource } from '@angular/core';
 import { ApiClient } from '../api/api-client';
-import { Instrument, symbolOf } from '../../shared/models/api';
+import { Instrument } from '../../shared/models/api';
 
 @Injectable({ providedIn: 'root' })
 export class InstrumentCatalog {
@@ -23,7 +23,7 @@ export class InstrumentCatalog {
 
     const instrument = this.byId().get(id);
 
-    return instrument ? symbolOf(instrument) : id.slice(0, 8);
+    return instrument ? instrument.label : id.slice(0, 8);
   }
 
   name(id: string | null | undefined): string {

@@ -20,8 +20,6 @@ public sealed class TaxInputs(
 
     IAccountSetupQueries accounts, IJournalQueries journal)
 {
-    private const string YahooPrefix = "yfinance:";
-
     public async Task<TaxAccount?> EnsureAccountAsync(Guid accountId, CancellationToken cancellationToken)
     {
         var setup = await accounts.GetAccountSetup(accountId, cancellationToken);
@@ -231,12 +229,8 @@ public sealed class TaxInputs(
         return known.ToDictionary(instrument => instrument.Id, InstrumentKeyOf);
     }
 
-    private static InstrumentKey InstrumentKeyOf(InstrumentDto instrument)
-    {
-        var yahooSymbols = instrument.ProviderSymbols.Where(symbol => symbol.StartsWith(YahooPrefix, StringComparison.Ordinal));
-
-        return new InstrumentKey(instrument.Isin, [.. yahooSymbols.Select(symbol => symbol[YahooPrefix.Length..])]);
-    }
+    private static InstrumentKey InstrumentKeyOf(InstrumentDto instrument) =>
+        new(instrument.Isin, instrument.Ticker is { } ticker ? [ticker] : []);
 
     public async Task<(decimal? Rate, DateOnly? Date)> LatestRateAsync(string currency, DateOnly asOf, IFxRule fxRule, CancellationToken cancellationToken) =>
         await RateAsync(currency, asOf.AddDays(1), fxRule, [], cancellationToken);

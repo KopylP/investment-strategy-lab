@@ -8,7 +8,7 @@ import { Select } from 'primeng/select';
 import { SelectButton } from 'primeng/selectbutton';
 import { TableModule } from 'primeng/table';
 import { InstrumentCatalog } from '../../../../core/context/instrument-catalog';
-import { fromIsoDate, symbolOf, toIsoDate } from '../../../../shared/models/api';
+import { fromIsoDate, toIsoDate } from '../../../../shared/models/api';
 import {} from '../../../../shared/pipes/format-pipes';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import {
@@ -94,7 +94,7 @@ export class StatementImportPage {
       .instruments()
       .filter((instrument) => instrument.kind !== 'Index' && instrument.kind !== 'FxPair')
       .map((instrument) => ({
-        label: `${symbolOf(instrument)} · ${instrument.name}`,
+        label: `${instrument.label} · ${instrument.name}`,
         value: instrument.id,
       })),
   ]);

@@ -18,8 +18,6 @@ public sealed class PlanningInputs(
     IStrategyDirectory strategies,
     TimeProvider clock)
 {
-    private const string YahooPrefix = "yfinance:";
-
     public Task<AccountSetupDto?> AccountAsync(
         Guid accountId,
         CancellationToken cancellationToken) => accounts.GetAccountSetup(accountId, cancellationToken);
@@ -64,14 +62,7 @@ public sealed class PlanningInputs(
     {
         var known = await instruments.GetInstruments(cancellationToken);
 
-        return known.ToDictionary(instrument => instrument.Id, LabelOf);
-    }
-
-    private static string LabelOf(InstrumentDto instrument)
-    {
-        var yahooSymbol = instrument.ProviderSymbols.FirstOrDefault(symbol => symbol.StartsWith(YahooPrefix, StringComparison.Ordinal));
-
-        return yahooSymbol is null ? instrument.Name : yahooSymbol[YahooPrefix.Length..];
+        return known.ToDictionary(instrument => instrument.Id, instrument => instrument.Label);
     }
 
     public async Task<IReadOnlyDictionary<Guid, LatestPriceDto>> PricesAsync(

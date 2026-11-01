@@ -8,15 +8,10 @@ namespace InvestmentLab.Strategies.Definitions.Application.CreateDefaultStrategi
 public sealed class CreateDefaultStrategiesHandler(
     IDefaultStrategies defaults, IInstrumentCatalog instruments, CreateStrategyHandler create, IStrategyRepository strategies)
 {
-    private const string YahooPrefix = "yfinance:";
-
     public async Task<Result<IReadOnlyList<StrategyDto>>> Handle(UserId ownerId, CancellationToken cancellationToken)
     {
-        var bySymbol = (await instruments.GetInstruments(cancellationToken))
-            .SelectMany(instrument => instrument.ProviderSymbols
-                .Where(symbol => symbol.StartsWith(YahooPrefix, StringComparison.Ordinal))
-                .Select(symbol => (Symbol: symbol[YahooPrefix.Length..], instrument.Id)))
-            .ToDictionary(pair => pair.Symbol, pair => pair.Id);
+        var known = await instruments.GetInstruments(cancellationToken);
+        var bySymbol = known.Where(instrument => instrument.Ticker is not null).ToDictionary(instrument => instrument.Ticker!, instrument => instrument.Id);
 
         var created = new List<StrategyDto>();
 

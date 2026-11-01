@@ -72,6 +72,7 @@ public sealed class MarketDataModule : IModule
         services.AddScheduledJob<InstrumentDescriptionsJob>(InstrumentDescriptionsJob.Schedule, runAtStartup: true);
         services.AddScoped<IInstrumentCatalog, InstrumentCatalog>();
         services.AddScoped<IInstrumentRegistry, InstrumentRegistry>();
+        services.AddSingleton<ISymbolConvention, YFinanceSymbolConvention>();
         services.AddScoped<IModuleDataSeeder, InstrumentSeeder>();
 
 

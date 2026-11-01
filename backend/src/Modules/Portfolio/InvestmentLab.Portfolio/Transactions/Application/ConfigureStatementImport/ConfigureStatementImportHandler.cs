@@ -50,7 +50,7 @@ public sealed class ConfigureStatementImportHandler(StatementImportLoader loader
         var typed = Enumerable.Range(0, mappings.Count)
             .Where(i => mappings[i].RegisterAs is not null && mappings[i].RegisterAs != before[i].RegisterAs)
             .ToList();
-        var tickers = typed.Select(i => new BrokerTickerDto(mappings[i].RegisterAs!, mappings[i].Currency, IsYahooSymbol: true));
+        var tickers = typed.Select(i => new BrokerTickerDto(mappings[i].RegisterAs!, mappings[i].Currency, IsExactSymbol: true));
         var found = await registry.ResolveAsync([.. tickers], cancellationToken);
 
         foreach (var (i, listed) in typed.Zip(found))

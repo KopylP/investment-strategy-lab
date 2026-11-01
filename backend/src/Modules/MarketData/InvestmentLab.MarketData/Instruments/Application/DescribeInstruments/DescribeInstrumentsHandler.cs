@@ -12,7 +12,7 @@ public sealed class DescribeInstrumentsHandler(IInstrumentRepository instruments
         var now = clock.GetUtcNow();
         var due = (await instruments.ListForUpdateAsync(cancellationToken))
             .Where(instrument => only is null ? instrument.NeedsDescription(now) : only.Contains(instrument.Id))
-            .Select(instrument => (Instrument: instrument, instrument.SymbolFor(QuoteProvider.YFinance)?.Symbol))
+            .Select(instrument => (Instrument: instrument, Symbol: instrument.Ticker))
             .Where(item => item.Symbol is not null)
             .ToList();
 

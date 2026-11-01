@@ -4,5 +4,7 @@ public interface IInstrumentRegistry
 {
     Task<RegisteredInstrumentDto> RegisterAsync(NewInstrumentDto instrument, CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<BrokerTickerMatchDto>> MatchAsync(IReadOnlyList<BrokerTickerDto> tickers, CancellationToken cancellationToken);
+
     Task<IReadOnlyList<ListedSymbolDto?>> ResolveAsync(IReadOnlyList<BrokerTickerDto> tickers, CancellationToken cancellationToken);
 }

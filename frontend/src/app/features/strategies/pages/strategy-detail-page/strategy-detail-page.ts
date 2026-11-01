@@ -15,7 +15,6 @@ import { MultiSelect } from 'primeng/multiselect';
 import { Select } from 'primeng/select';
 import { Skeleton } from 'primeng/skeleton';
 import { Tag } from 'primeng/tag';
-import { symbolOf } from '../../../../shared/models/api';
 import { DateTimePipe } from '../../../../shared/pipes/format-pipes';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { JsonObject, SchemaForm } from '../../../../shared/ui/schema-form/schema-form';
@@ -60,7 +59,7 @@ export class StrategyDetailPage {
 
   protected readonly etfOptions = computed(() =>
     this.store.instruments.etfs().map((instrument) => ({
-      label: `${symbolOf(instrument)} · ${instrument.name}`,
+      label: `${instrument.label} · ${instrument.name}`,
       value: instrument.id,
       group: instrument.group ?? '',
     })),
