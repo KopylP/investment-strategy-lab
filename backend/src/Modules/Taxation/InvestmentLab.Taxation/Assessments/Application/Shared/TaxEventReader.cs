@@ -4,7 +4,7 @@ using InvestmentLab.Taxation.Ledger.Domain;
 
 namespace InvestmentLab.Taxation.Assessments.Application.Shared;
 
-public sealed class TaxEventReader(ITaxLedgerRepository ledger, IBrokerStatementRepository statements, ITaxRates taxRates, IInstrumentKeys instrumentKeys)
+public sealed class TaxEventReader(ITaxLedgerRepository ledger, IBrokerStatementRepository statements, ITaxCurrencyRates currencyRates, IInstrumentKeys instrumentKeys)
 {
     public async Task<(IReadOnlyList<TaxEvent> Events, IReadOnlyList<string> Missing)> EventsAsync(
         IReadOnlyList<TaxAccount> taxAccounts,
@@ -29,7 +29,7 @@ public sealed class TaxEventReader(ITaxLedgerRepository ledger, IBrokerStatement
     {
         var all = await ledger.EntriesAsync(account.AccountId, cancellationToken);
         var entries = all.Where(entry => !entry.IsReversed).OrderBy(entry => entry.OccurredOn).ThenBy(entry => entry.RecordedAt).ToList();
-        var rates = new Dictionary<(string, DateOnly), ITaxRate?>();
+        var rates = new Dictionary<(string, DateOnly), ITaxCurrencyRate?>();
 
         var fxRule = TaxPolicies.For(account.PolicyCode).FxRule;
 
@@ -48,7 +48,7 @@ public sealed class TaxEventReader(ITaxLedgerRepository ledger, IBrokerStatement
         TaxAccount account,
         List<TaxLedgerEntry> entries,
         IFxRule fxRule,
-        Dictionary<(string, DateOnly), ITaxRate?> rates,
+        Dictionary<(string, DateOnly), ITaxCurrencyRate?> rates,
         CancellationToken cancellationToken)
     {
         var events = new List<TaxEvent>();
@@ -89,7 +89,7 @@ public sealed class TaxEventReader(ITaxLedgerRepository ledger, IBrokerStatement
         List<TaxLedgerEntry> entries,
         IReadOnlyList<BrokerStatement> uploaded,
         IFxRule fxRule,
-        Dictionary<(string, DateOnly), ITaxRate?> rates,
+        Dictionary<(string, DateOnly), ITaxCurrencyRate?> rates,
         CancellationToken cancellationToken)
     {
         var (lots, dividends) = BrokerStatement.Combine(uploaded);
@@ -98,7 +98,7 @@ public sealed class TaxEventReader(ITaxLedgerRepository ledger, IBrokerStatement
         var sales = new Dictionary<Guid, SaleFacts>();
 
         foreach (var (transactionId, facts) in match.Sales)
-            sales[transactionId] = await AtTaxRatesAsync(facts, currencies.GetValueOrDefault(transactionId), fxRule, rates, cancellationToken);
+            sales[transactionId] = await AtTaxCurrencyRatesAsync(facts, currencies.GetValueOrDefault(transactionId), fxRule, rates, cancellationToken);
 
         return [.. events.Select(each => each with
         {
@@ -107,11 +107,11 @@ public sealed class TaxEventReader(ITaxLedgerRepository ledger, IBrokerStatement
         })];
     }
 
-    private async Task<SaleFacts> AtTaxRatesAsync(
+    private async Task<SaleFacts> AtTaxCurrencyRatesAsync(
         SaleFacts facts,
         string? entryCurrency,
         IFxRule fxRule,
-        Dictionary<(string, DateOnly), ITaxRate?> rates,
+        Dictionary<(string, DateOnly), ITaxCurrencyRate?> rates,
         CancellationToken cancellationToken)
     {
         var lots = new List<BrokerLotFact>();
@@ -119,23 +119,23 @@ public sealed class TaxEventReader(ITaxLedgerRepository ledger, IBrokerStatement
         foreach (var lot in facts.Lots)
         {
             var (rate, _) = await RateAsync(facts.Currency, fxRule.LookupDate(lot.AcquiredOn), fxRule, rates, cancellationToken);
-            lots.Add(rate is { } known ? lot.AtTaxRate(known) : lot);
+            lots.Add(rate is { } known ? lot.AtTaxCurrencyRate(known) : lot);
         }
 
-        return facts.AtTaxRates(lots, entryCurrency);
+        return facts.AtTaxCurrencyRates(lots, entryCurrency);
     }
 
     public async Task<(decimal? Rate, DateOnly? Date)> LatestRateAsync(string currency, DateOnly asOf, IFxRule fxRule, CancellationToken cancellationToken) =>
         await RateAsync(currency, asOf.AddDays(1), fxRule, [], cancellationToken);
 
     private async Task<(decimal? Rate, DateOnly? Date)> RateAsync(
-        string currency, DateOnly lookupDate, IFxRule fxRule, Dictionary<(string, DateOnly), ITaxRate?> cache, CancellationToken cancellationToken)
+        string currency, DateOnly lookupDate, IFxRule fxRule, Dictionary<(string, DateOnly), ITaxCurrencyRate?> cache, CancellationToken cancellationToken)
     {
         if (currency == fxRule.TaxCurrency)
             return (1m, null);
 
         if (!cache.TryGetValue((currency, lookupDate), out var rate))
-            rate = cache[(currency, lookupDate)] = await taxRates.OnAsync(currency, fxRule.TaxCurrency, lookupDate, cancellationToken);
+            rate = cache[(currency, lookupDate)] = await currencyRates.OnAsync(currency, fxRule.TaxCurrency, lookupDate, cancellationToken);
 
         return rate is null ? (null, null) : (rate.Rate, rate.EffectiveDate);
     }

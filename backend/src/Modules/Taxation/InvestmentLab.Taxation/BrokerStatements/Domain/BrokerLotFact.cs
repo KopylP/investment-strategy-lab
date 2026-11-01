@@ -4,6 +4,6 @@ public sealed record BrokerLotFact(DateOnly AcquiredOn, decimal Quantity, decima
 {
     private const int TaxCostDigits = 2;
 
-    public BrokerLotFact AtTaxRate(decimal rate) =>
+    public BrokerLotFact AtTaxCurrencyRate(decimal rate) =>
         this with { CostInTaxCurrency = decimal.Round(Cost * rate, TaxCostDigits, MidpointRounding.AwayFromZero) };
 }

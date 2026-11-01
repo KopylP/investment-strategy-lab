@@ -3,7 +3,7 @@ using InvestmentLab.Signals.Monitoring.Domain;
 
 namespace InvestmentLab.Signals.Monitoring.Infrastructure;
 
-internal sealed class CatalogInstrumentLabels(IInstrumentCatalog instruments) : IInstrumentLabels
+internal sealed class InstrumentLabels(IInstrumentCatalog instruments) : IInstrumentLabels
 {
     public async Task<IReadOnlyDictionary<Guid, string>> AllAsync(CancellationToken cancellationToken)
     {

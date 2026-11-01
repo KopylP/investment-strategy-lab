@@ -74,7 +74,7 @@ public sealed class TaxationModule : IModule
         services.AddScoped<TaxAccountSync>();
         services.AddScoped<TaxpayerReader>();
         services.AddScoped<TaxEventReader>();
-        services.AddScoped<ITaxRates, TaxRates>();
+        services.AddScoped<ITaxCurrencyRates, TaxCurrencyRates>();
         services.AddScoped<ITaxpayerAccounts, TaxpayerAccounts>();
         services.AddScoped<ITaxJournals, TaxJournals>();
         services.AddScoped<IInstrumentKeys, InstrumentKeys>();

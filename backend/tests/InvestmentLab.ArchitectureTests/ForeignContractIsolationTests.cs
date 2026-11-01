@@ -66,7 +66,7 @@ public sealed partial class ForeignContractIsolationTests
 
     private static IEnumerable<Type> MethodTypes(Type type) =>
         type.GetMethods(AllDeclared)
-            .Where(method => !method.IsPrivate && !IsCompilerGenerated(method))
+            .Where(method => !method.IsPrivate)
             .SelectMany(method => method.GetParameters().Select(parameter => parameter.ParameterType).Append(method.ReturnType));
 
     private static IEnumerable<Type> ConstructorTypes(Type type) =>

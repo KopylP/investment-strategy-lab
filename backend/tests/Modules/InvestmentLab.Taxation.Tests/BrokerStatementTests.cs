@@ -134,4 +134,25 @@ public sealed class BrokerStatementTests
         lot.FromBroker.ShouldBeTrue();
         lot.CostInTaxCurrency.ShouldBe(decimal.Round(2.8389621m * 24.28m * 3.7661m, 2) + decimal.Round(1.06m * 3.7661m, 2) + decimal.Round((66.66m - 2.8389621m * 24.28m) * 3.7661m, 2));
     }
+
+    [Theory]
+    [InlineData(1, 1.01)]
+    [InlineData(4, 4.02)]
+    public void A_lot_cost_at_the_rate_of_the_tax_currency_is_rounded_half_away_from_zero(int rate, double expected)
+    {
+        var lot = new BrokerLotFact(new(2025, 1, 2), 1m, 1.005m, 0m);
+
+        lot.AtTaxCurrencyRate(rate).CostInTaxCurrency.ShouldBe((decimal)expected);
+    }
+
+    [Fact]
+    public void A_sale_at_tax_currency_rates_takes_the_new_lots_and_keeps_its_cost_only_when_booked_in_the_currency_of_the_statement()
+    {
+        var facts = new SaleFacts([], 0m, "USD", 5m);
+        BrokerLotFact[] lots = [new BrokerLotFact(new(2025, 1, 2), 1m, 1m, 4m)];
+
+        facts.AtTaxCurrencyRates(lots, "USD").Cost.ShouldBe(5m);
+        facts.AtTaxCurrencyRates(lots, "USD").Lots.ShouldBe(lots);
+        facts.AtTaxCurrencyRates(lots, "EUR").Cost.ShouldBeNull();
+    }
 }

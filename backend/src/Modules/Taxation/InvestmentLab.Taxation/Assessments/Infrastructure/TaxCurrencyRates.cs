@@ -3,16 +3,16 @@ using InvestmentLab.Taxation.Assessments.Domain;
 
 namespace InvestmentLab.Taxation.Assessments.Infrastructure;
 
-internal sealed class TaxRates(IFxRates rates) : ITaxRates
+internal sealed class TaxCurrencyRates(IFxRates rates) : ITaxCurrencyRates
 {
-    public async Task<ITaxRate?> OnAsync(string currency, string taxCurrency, DateOnly lookupDate, CancellationToken cancellationToken)
+    public async Task<ITaxCurrencyRate?> OnAsync(string currency, string taxCurrency, DateOnly lookupDate, CancellationToken cancellationToken)
     {
         var found = await rates.GetFxRate(currency, taxCurrency, lookupDate, cancellationToken);
 
-        return found is null ? null : new TaxRate(found);
+        return found is null ? null : new CurrencyRate(found);
     }
 
-    private sealed class TaxRate(FxRateDto dto) : ITaxRate
+    private sealed class CurrencyRate(FxRateDto dto) : ITaxCurrencyRate
     {
         private readonly FxRateDto _dto = dto;
 
