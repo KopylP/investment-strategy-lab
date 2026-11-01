@@ -7,7 +7,6 @@ import {
   ReportStatus,
   SectionColumnDto,
   SectionRiskDto,
-  TaxEstimateDto,
 } from './report-dto';
 
 export interface ReportSummaryVm {
@@ -167,6 +166,14 @@ export interface ContributionVm {
   transfer: { from: string; to: string; amount: number } | null;
 }
 
+export interface TaxImpactVm {
+  change: string;
+  yearChange: string | null;
+  carriedLoss: string | null;
+  rowsNote: string | null;
+  notes: string[];
+}
+
 export interface ReportVm {
   summary: ReportSummaryVm;
   isOpenForMarking: boolean;
@@ -176,7 +183,7 @@ export interface ReportVm {
   quotesLookStale: boolean;
   contribution: ContributionVm;
   review: PlanReviewDto | null;
-  taxEstimate: TaxEstimateDto | null;
+  taxImpact: TaxImpactVm | null;
   totals: { buys: number; sells: number };
 }
 

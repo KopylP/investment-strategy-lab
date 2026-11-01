@@ -58,34 +58,32 @@ public sealed class TaxEstimator(TaxInputs inputs, IAssessmentRepository assessm
     {
         var shown = rate is null ? [.. notes, $"Немає курсу {policy.FxRule.SourceName} на сьогодні — податок не оцінено."] : notes;
 
-        return new TaxEstimateDto(policy.Code, policy.IsTaxed, 0m, 0m, rate, NothingFor(sales), shown);
+        return new TaxEstimateDto(policy.Code, policy.IsTaxed, 0m, 0m, rate, NothingFor(sales), shown, TaxCurrency: policy.FxRule.TaxCurrency);
     }
 
     private static TaxEstimateDto Estimate(SaleScenario scenario, IReadOnlyList<ProposedSaleDto> sales, List<string> notes)
     {
-        var year = scenario.AsOf.Year;
-        var baseline = YearTax(scenario.Compute([]), year);
-        var all = scenario.Compute(sales);
+        var proposed = sales.Select(scenario.EventOf).ToList();
+        var situation = new TaxSituation(scenario.Events, scenario.Losses, scenario.Policy, scenario.AsOf.Year);
 
-        var perSale = sales.Select(sale => EstimateOf(sale, scenario, baseline)).ToList();
+        var impact = SalesTaxImpactCalculator.Of(situation, proposed);
 
-        var realizations = all.Year(year)?.Realizations.Where(realization => sales.Any(sale => sale.Key == realization.SaleTransactionId));
-        var totalGain = realizations?.Sum(realization => realization.GainPln) ?? 0m;
-        var totalTax = Math.Max(0m, YearTax(all, year) - baseline);
-
-        return new TaxEstimateDto(scenario.Policy.Code, scenario.Policy.IsTaxed, totalGain, totalTax, scenario.Rate, perSale, notes);
+        return new TaxEstimateDto(
+            PolicyCode: scenario.Policy.Code,
+            IsTaxed: scenario.Policy.IsTaxed,
+            GainPln: impact.Total.GainPln,
+            TaxPln: impact.Total.TaxChangePln,
+            FxRate: scenario.Rate,
+            Sales: [.. sales.Select(sale => EstimateOf(sale, impact.PerSale[sale.Key]))],
+            Notes: notes,
+            YearTaxBeforePln: impact.YearTaxBeforePln,
+            CarriedLossPln: impact.Total.CarriedLossPln,
+            Year: situation.Year,
+            TaxCurrency: scenario.Policy.FxRule.TaxCurrency);
     }
 
-    private static SaleEstimateDto EstimateOf(ProposedSaleDto sale, SaleScenario scenario, decimal baseline)
-    {
-        var year = scenario.AsOf.Year;
-        var alone = scenario.Compute([sale]);
-        var realization = alone.Year(year)?.Realizations.FirstOrDefault(each => each.SaleTransactionId == sale.Key);
-
-        return new SaleEstimateDto(sale.Key, realization?.GainPln ?? 0m, Math.Max(0m, YearTax(alone, year) - baseline));
-    }
-
-    private static decimal YearTax(TaxComputation computation, int year) => computation.Year(year)?.Summary.CapitalTax ?? 0m;
+    private static SaleEstimateDto EstimateOf(ProposedSaleDto sale, TaxImpact impact) =>
+        new(sale.Key, impact.GainPln, impact.TaxChangePln, impact.CarriedLossPln);
 
     private sealed record SaleScenario(
         Guid AccountId,
@@ -96,14 +94,7 @@ public sealed class TaxEstimator(TaxInputs inputs, IAssessmentRepository assessm
         decimal Rate,
         DateOnly? RateDate)
     {
-        public TaxComputation Compute(IEnumerable<ProposedSaleDto> sales)
-        {
-            var proposed = sales.Select((sale, index) => EventOf(sale, Events.Count + index));
-
-            return TaxCalculator.Compute([.. Events, .. proposed], Policy, Losses);
-        }
-
-        private TaxEvent EventOf(ProposedSaleDto sale, int sequence)
+        public TaxEvent EventOf(ProposedSaleDto sale, int index)
         {
             var shareOfSub = sale.Quantity / Math.Max(1, sale.SubPortfolioIds.Count);
             var allocations = sale.SubPortfolioIds.Select(id => new EntryAllocation(id, shareOfSub));
@@ -111,7 +102,7 @@ public sealed class TaxEstimator(TaxInputs inputs, IAssessmentRepository assessm
             return new TaxEvent(
                 sale.Key,
                 AsOf,
-                sequence,
+                Events.Count + index,
                 TaxableKind.Sell,
                 sale.InstrumentId,
                 sale.Quantity,

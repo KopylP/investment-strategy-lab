@@ -21,4 +21,5 @@ public sealed record ReportActionDto(
     string? SkipReason,
     string? Rejection,
     decimal? EstimatedGainPln,
-    decimal? EstimatedTaxPln);
+    decimal? EstimatedTaxPln,
+    decimal? EstimatedCarriedLossPln);

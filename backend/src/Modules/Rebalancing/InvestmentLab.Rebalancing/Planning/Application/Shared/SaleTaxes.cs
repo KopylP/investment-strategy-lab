@@ -14,17 +14,38 @@ public sealed class SaleTaxes(ITaxEstimator estimator, ILogger<SaleTaxes> logger
 
         try
         {
-            var estimate = await estimator.EstimateSalesAsync(report.AccountId, [.. sales.Select(action => new ProposedSaleDto(
-                action.Id.Value, action.InstrumentId!.Value, action.PlannedQuantity, action.PlannedPrice,
-                [.. action.Allocations.Select(allocation => allocation.SubPortfolioId)]))], asOf, cancellationToken);
+            var proposed = sales.Select(ProposedSaleOf).ToList();
+            var estimate = await estimator.EstimateSalesAsync(report.AccountId, proposed, asOf, cancellationToken);
 
-            report.AttachTaxEstimate(
-                new TaxEstimate(estimate.PolicyCode, estimate.IsTaxed, estimate.GainPln, estimate.TaxPln, estimate.FxRate, estimate.Notes),
-                estimate.Sales.ToDictionary(sale => ReportActionId.Of(sale.Key), sale => (sale.GainPln, sale.TaxPln)));
+            report.AttachTaxEstimate(ReportEstimateOf(estimate), ImpactPerSale(estimate));
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             logger.LogWarning(exception, "Tax of report {ReportId} was not estimated", report.Id);
         }
     }
+
+    private static ProposedSaleDto ProposedSaleOf(ReportAction action)
+    {
+        var subPortfolios = action.Allocations.Select(allocation => allocation.SubPortfolioId).ToList();
+
+        return new ProposedSaleDto(action.Id.Value, action.InstrumentId!.Value, action.PlannedQuantity, action.PlannedPrice, subPortfolios);
+    }
+
+    private static TaxEstimate ReportEstimateOf(TaxEstimateDto estimate) => new(
+        PolicyCode: estimate.PolicyCode,
+        IsTaxed: estimate.IsTaxed,
+        GainPln: estimate.GainPln,
+        TaxPln: estimate.TaxPln,
+        FxRate: estimate.FxRate,
+        Notes: estimate.Notes,
+        YearTaxBeforePln: estimate.YearTaxBeforePln,
+        CarriedLossPln: estimate.CarriedLossPln,
+        Year: estimate.Year,
+        TaxCurrency: estimate.TaxCurrency);
+
+    private static Dictionary<ReportActionId, SaleTaxImpact> ImpactPerSale(TaxEstimateDto estimate) =>
+        estimate.Sales.ToDictionary(
+            sale => ReportActionId.Of(sale.Key),
+            sale => new SaleTaxImpact(sale.GainPln, sale.TaxPln, sale.CarriedLossPln));
 }

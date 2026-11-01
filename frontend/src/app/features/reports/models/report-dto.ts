@@ -78,6 +78,7 @@ export interface ReportActionDto {
   rejection: string | null;
   estimatedGainPln: number | null;
   estimatedTaxPln: number | null;
+  estimatedCarriedLossPln: number | null;
 }
 
 export interface SectionScoreDto {
@@ -231,6 +232,10 @@ export interface TaxEstimateDto {
   taxPln: number;
   fxRate: number | null;
   notes: string[];
+  yearTaxBeforePln: number | null;
+  carriedLossPln: number;
+  year: number | null;
+  taxCurrency: string | null;
 }
 
 export interface MatchedOperationDto {

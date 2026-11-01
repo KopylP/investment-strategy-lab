@@ -9,6 +9,7 @@ import {
   SectionColumnDto,
   SectionOrderDto,
   SectionScoreDto,
+  TaxEstimateDto,
 } from '../models/report-dto';
 import {
   ReportActionVm,
@@ -18,7 +19,10 @@ import {
   ReportVm,
   ScoreTableVm,
   SectionVm,
+  TaxImpactVm,
 } from '../models/report-vm';
+
+const LEGACY_TAX_CURRENCY = 'PLN';
 
 const kindLabels: Record<ReportSummaryDto['kind'], string> = {
   Monthly: 'внесок, купівлі й продажі',
@@ -122,9 +126,71 @@ export function toReportVm(report: ReportDetailsDto): ReportVm {
     quotesLookStale: report.warnings.some((warning) => warning.includes('котирув')),
     contribution: toContributionVm(report, subName),
     review: report.review,
-    taxEstimate: report.taxEstimate,
+    taxImpact: toTaxImpactVm(report.taxEstimate, actions),
     totals: plannedTotals(actions),
   };
+}
+
+function taxCurrencyOf(estimate: TaxEstimateDto): string {
+  return estimate.taxCurrency ?? LEGACY_TAX_CURRENCY;
+}
+
+function signedTax(change: number, currency: string): string {
+  if (change === 0) return 'без змін';
+
+  const sign = change > 0 ? '+' : '−';
+
+  return `${sign}${formatMoney(Math.abs(change), currency, 0)}`;
+}
+
+function toTaxImpactVm(estimate: TaxEstimateDto | null, actions: ReportActionVm[]): TaxImpactVm | null {
+  if (!estimate?.isTaxed) return null;
+
+  const currency = taxCurrencyOf(estimate);
+  const notes = estimate.notes.filter((note) => note.length > 0);
+
+  if (estimate.yearTaxBeforePln === null || estimate.yearTaxBeforePln === undefined) {
+    return {
+      change: `≈ податок ${formatMoney(estimate.taxPln, currency, 0)}`,
+      yearChange: null,
+      carriedLoss: null,
+      rowsNote: null,
+      notes,
+    };
+  }
+
+  const before = estimate.yearTaxBeforePln;
+  const after = before + estimate.taxPln;
+  const salesCount = actions.filter((action) => action.taxLabel !== null).length;
+
+  return {
+    change: `≈ податок ${signedTax(estimate.taxPln, currency)}`,
+    yearChange: `за ${estimate.year}: ${formatMoney(before, currency, 0)} → ${formatMoney(after, currency, 0)}`,
+    carriedLoss: carriedLossLabel(estimate.carriedLossPln, currency),
+    rowsNote: salesCount > 1 ? 'У рядках — вплив, якщо продати лише цю позицію; разом вони можуть давати іншу суму.' : null,
+    notes,
+  };
+}
+
+function carriedLossLabel(carriedLoss: number | null, currency: string): string | null {
+  return carriedLoss ? `збиток ${formatMoney(carriedLoss, currency, 0)} перейде на наступні роки` : null;
+}
+
+function saleTaxLabel(action: ReportActionDto, estimate: TaxEstimateDto | null): string | null {
+  if (action.estimatedTaxPln === null || !estimate?.isTaxed) return null;
+
+  const currency = taxCurrencyOf(estimate);
+  const gain = action.estimatedGainPln ?? 0;
+
+  if (estimate.yearTaxBeforePln === null || estimate.yearTaxBeforePln === undefined) {
+    return `≈ податок ${formatMoney(action.estimatedTaxPln, currency, 0)} (зиск ${formatMoney(gain, currency, 0)})`;
+  }
+
+  const outcome = gain < 0 ? `збиток ${formatMoney(-gain, currency, 0)}` : `зиск ${formatMoney(gain, currency, 0)}`;
+  const carried = carriedLossLabel(action.estimatedCarriedLossPln, currency);
+  const details = carried ? `${outcome}; ${carried}` : outcome;
+
+  return `≈ податок ${signedTax(action.estimatedTaxPln, currency)} (${details})`;
 }
 
 function plannedTotals(actions: ReportActionVm[]) {
@@ -189,10 +255,7 @@ function toActionVm(
       quantity: allocation.quantity,
       reason: allocation.reason && readable(allocation.reason),
     })),
-    taxLabel:
-      action.estimatedTaxPln !== null && report.taxEstimate?.isTaxed
-        ? `≈ податок ${formatMoney(action.estimatedTaxPln, 'PLN', 0)} (зиск ${formatMoney(action.estimatedGainPln, 'PLN', 0)})`
-        : null,
+    taxLabel: saleTaxLabel(action, report.taxEstimate),
     hasBreakdown: action.allocations.length > 1 || action.fills.length > 0,
     isSell: action.kind === 'Sell' || action.kind === 'Unpark',
   };

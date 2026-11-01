@@ -23,6 +23,7 @@ public sealed class ReportAction : Entity<ReportActionId>
 
     public decimal? EstimatedGainPln { get; private set; }
     public decimal? EstimatedTaxPln { get; private set; }
+    public decimal? EstimatedCarriedLossPln { get; private set; }
 
     public string? Rejection { get; private set; }
 
@@ -141,7 +142,8 @@ public sealed class ReportAction : Entity<ReportActionId>
         return true;
     }
 
-    internal void AttachTaxEstimate(decimal gainPln, decimal taxPln) => (EstimatedGainPln, EstimatedTaxPln) = (gainPln, taxPln);
+    internal void AttachTaxEstimate(SaleTaxImpact impact) =>
+        (EstimatedGainPln, EstimatedTaxPln, EstimatedCarriedLossPln) = (impact.GainPln, impact.TaxChangePln, impact.CarriedLossPln);
 
     internal void CloseUnmarked()
     {
