@@ -6,7 +6,6 @@ namespace InvestmentLab.Signals.Monitoring.Application.EnsureBuiltInSignals;
 
 public sealed class EnsureBuiltInSignalsHandler(ISignalRepository signals, IAccountSetupQueries accounts, IInstrumentCatalog instruments)
 {
-    private const string VixTicker = "^VIX";
     private const decimal VixLevel = 30m;
     private const decimal AccountDrawdown = 0.30m;
     private const decimal PositionDrawdown = 0.20m;
@@ -35,7 +34,7 @@ public sealed class EnsureBuiltInSignalsHandler(ISignalRepository signals, IAcco
     private async Task<Guid?> FindVixAsync(CancellationToken cancellationToken)
     {
         var catalog = await instruments.GetInstruments(cancellationToken);
-        var vix = catalog.FirstOrDefault(instrument => instrument.Ticker == VixTicker);
+        var vix = catalog.FirstOrDefault(instrument => instrument.IsVolatilityIndex);
 
         return vix?.Id;
     }

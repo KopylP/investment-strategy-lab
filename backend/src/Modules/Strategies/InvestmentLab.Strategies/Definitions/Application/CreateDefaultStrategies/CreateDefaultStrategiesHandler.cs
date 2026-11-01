@@ -8,10 +8,13 @@ namespace InvestmentLab.Strategies.Definitions.Application.CreateDefaultStrategi
 public sealed class CreateDefaultStrategiesHandler(
     IDefaultStrategies defaults, IInstrumentCatalog instruments, CreateStrategyHandler create, IStrategyRepository strategies)
 {
+    private const string VolatilityIndexName = "volatility-index";
+
     public async Task<Result<IReadOnlyList<StrategyDto>>> Handle(UserId ownerId, CancellationToken cancellationToken)
     {
         var known = await instruments.GetInstruments(cancellationToken);
-        var bySymbol = known.Where(instrument => instrument.Ticker is not null).ToDictionary(instrument => instrument.Ticker!, instrument => instrument.Id);
+        var byIsin = known.Where(instrument => instrument.Isin is not null).ToDictionary(instrument => instrument.Isin!, instrument => instrument.Id);
+        var volatilityIndex = known.FirstOrDefault(instrument => instrument.IsVolatilityIndex)?.Id;
 
         var created = new List<StrategyDto>();
 
@@ -20,17 +23,11 @@ public sealed class CreateDefaultStrategiesHandler(
             if (await strategies.NameTakenAsync(ownerId, strategy.Name, cancellationToken))
                 continue;
 
-            string?[] symbols = [.. strategy.Universe, strategy.Benchmark, strategy.VolatilityIndex, strategy.CashInstrument];
-            var missing = symbols.OfType<string>().Where(symbol => !bySymbol.ContainsKey(symbol)).ToList();
+            var missing = MissingInstruments(strategy, byIsin, volatilityIndex);
             if (missing.Count > 0)
                 return StrategyErrors.UnknownInstruments(missing);
 
-            var result = await create.Handle(ownerId, new CreateStrategyCommand(strategy.Name, strategy.TypeCode, new StrategySetupInput(
-                [.. strategy.Universe.Select(symbol => bySymbol[symbol])],
-                bySymbol[strategy.Benchmark],
-                strategy.VolatilityIndex is { } vix ? bySymbol[vix] : null,
-                strategy.CashInstrument is { } cash ? bySymbol[cash] : null,
-                strategy.Parameters)), cancellationToken);
+            var result = await create.Handle(ownerId, CommandOf(strategy, byIsin, volatilityIndex), cancellationToken);
             if (result.IsFailure)
                 return result.Error;
 
@@ -38,5 +35,28 @@ public sealed class CreateDefaultStrategiesHandler(
         }
 
         return created;
+    }
+
+    private static List<string> MissingInstruments(DefaultStrategy strategy, Dictionary<string, Guid> byIsin, Guid? volatilityIndex)
+    {
+        string?[] isins = [.. strategy.Universe, strategy.Benchmark, strategy.CashInstrument];
+        var missing = isins.OfType<string>().Where(isin => !byIsin.ContainsKey(isin)).ToList();
+
+        if (strategy.UsesVolatilityIndex && volatilityIndex is null)
+            missing.Add(VolatilityIndexName);
+
+        return missing;
+    }
+
+    private static CreateStrategyCommand CommandOf(DefaultStrategy strategy, Dictionary<string, Guid> byIsin, Guid? volatilityIndex)
+    {
+        var setup = new StrategySetupInput(
+            [.. strategy.Universe.Select(isin => byIsin[isin])],
+            byIsin[strategy.Benchmark],
+            strategy.UsesVolatilityIndex ? volatilityIndex : null,
+            strategy.CashInstrument is { } cash ? byIsin[cash] : null,
+            strategy.Parameters);
+
+        return new CreateStrategyCommand(strategy.Name, strategy.TypeCode, setup);
     }
 }

@@ -2,6 +2,8 @@ namespace InvestmentLab.MarketData.Instruments.Domain;
 
 public sealed class YFinanceSymbolConvention : ISymbolConvention
 {
+    public const string VolatilityIndexSymbol = "^VIX";
+
     private const char ListingSeparator = '.';
     private const char ClassSeparator = '-';
     private const string UnitedStates = "US";

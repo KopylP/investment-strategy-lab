@@ -9,5 +9,5 @@ public sealed record DefaultStrategy(
     IReadOnlyList<string> Universe,
     string? CashInstrument,
     string Benchmark,
-    string? VolatilityIndex,
+    bool UsesVolatilityIndex,
     JsonElement Parameters);

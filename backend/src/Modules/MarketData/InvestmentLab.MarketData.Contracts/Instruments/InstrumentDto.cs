@@ -11,7 +11,8 @@ public sealed record InstrumentDto(
     bool? IsAccumulating,
     IReadOnlyList<string> ProviderSymbols,
     string? Description = null,
-    string? Ticker = null)
+    string? Ticker = null,
+    bool IsVolatilityIndex = false)
 {
     public string Label => Ticker ?? Name;
 }
