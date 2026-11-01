@@ -84,7 +84,7 @@ class RiskReport:
     @property
     def status(self) -> str:
         """'act' when something must be sold, 'watch' for warnings, 'ok' otherwise."""
-        if any(r.status == "red" for r in self.position_risks) or self.portfolio_exit_hit:
+        if any(r.sell for r in self.position_risks) or self.portfolio_exit_hit:
             return "act"
         if self.alerts:
             return "watch"
@@ -150,11 +150,11 @@ def analyze_portfolio_risk(
         if risk.status != "unknown":
             total_value += risk.value
             total_cost += position.entry_price * position.shares
-        if risk.status == "red" or (high_stress and risk.status == "yellow"):
+        if _must_sell(risk, high_stress, settings):
             reason = risk.alerts[0] if risk.alerts else ""
             action = msg("etf_momentum.risk.action_sell", ticker=position.ticker, value=money(risk.value, position.currency), parking=parking, reason=reason)
             risk = _replace_actions(risk, [action], sell=True)
-        elif risk.status == "yellow" and risk.exit_price is not None:
+        elif risk.status in ("red", "yellow") and risk.exit_price is not None:
             risk = _replace_actions(
                 risk,
                 [msg("etf_momentum.risk.action_watch", ticker=position.ticker, price=money(risk.exit_price, position.currency))],
@@ -195,6 +195,13 @@ def analyze_portfolio_risk(
         settings=settings,
         cash_etf=cash_etf,
     )
+
+
+def _must_sell(risk: PositionRisk, high_stress: bool, settings: RiskSettings) -> bool:
+    if not settings.sell_on_position_exit:
+        return False
+
+    return risk.status == "red" or (high_stress and risk.status == "yellow")
 
 
 def portfolio_drawdown(prices: pd.DataFrame, lots: list[Position]) -> tuple[float | None, date | None]:

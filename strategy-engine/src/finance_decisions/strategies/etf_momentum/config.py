@@ -27,6 +27,8 @@ class RiskSettings:
     small_loss_warn: float = -0.04
     # Stops and drawdown limits scale with asset volatility relative to this reference.
     vol_reference: float = 0.15
+    # False: a position that breaks its exit rules only warns; the portfolio exit still sells everything.
+    sell_on_position_exit: bool = True
 
 
 @dataclass(frozen=True)
@@ -42,6 +44,8 @@ class ScannerSettings:
     min_momentum: float = 0.0
     hold_buffer_k: int = 8
     max_per_group: int = 1
+    # A candidate moving more closely than this with an already chosen ETF is skipped; 1.0 turns the check off.
+    max_correlation: float = 1.0
     # Used only when the cash ETF has too little history to measure the real rate.
     risk_free_rate: float = 0.02
     max_stale_days: int = 5
@@ -62,6 +66,8 @@ class BacktestSettings:
     cost_pct: float = 0.001
     fee_per_trade: float = 1.0
     benchmark: str = ""
+    # The bond side of the 60/40 portfolio the report compares with; empty leaves that comparison out.
+    bond_benchmark: str = ""
 
 
 @dataclass(frozen=True)
@@ -86,7 +92,7 @@ class StrategyConfig:
 # Environment variable names that differ from the upper-cased field name.
 _RISK_ENV = {"ma_period": "RISK_MA_PERIOD"}
 _SCANNER_ENV = {"ma_period": "SCANNER_MA_PERIOD"}
-_BACKTEST_ENV = {"years": "BACKTEST_YEARS", "cost_pct": "BACKTEST_COST_PCT", "fee_per_trade": "BACKTEST_FEE", "benchmark": "BACKTEST_BENCHMARK"}
+_BACKTEST_ENV = {"years": "BACKTEST_YEARS", "cost_pct": "BACKTEST_COST_PCT", "fee_per_trade": "BACKTEST_FEE", "benchmark": "BACKTEST_BENCHMARK", "bond_benchmark": "BACKTEST_BOND_BENCHMARK"}
 
 
 def load_strategy_config(path: Path | None = None) -> StrategyConfig:

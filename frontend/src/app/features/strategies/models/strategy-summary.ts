@@ -33,6 +33,8 @@ export function describeStrategy(
       : '';
   const topN = read(version.parameters, 'scanner', 'topN');
   const weak = read(version.parameters, 'weakMarketInvestPct');
+  const sellsPositions = read(version.parameters, 'risk', 'sellOnPositionExit') !== false;
+  const maxCorrelation = read(version.parameters, 'scanner', 'maxCorrelation');
 
   const headline =
     typeof topN === 'number'
@@ -41,8 +43,12 @@ export function describeStrategy(
 
   const points = [
     'Рапорт з купівлями й продажами — коли вам зручно: розклад задаєте в рахунку',
-    'Між ребалансами перевіряє ризик: продає лише за сигналом виходу',
+    sellsPositions
+      ? 'Між ребалансами перевіряє ризик: продає лише за сигналом виходу'
+      : 'Між ребалансами перевіряє ризик: окремі позиції лише попереджають, а продаж усього портфеля лишається',
   ];
+  if (typeof maxCorrelation === 'number' && maxCorrelation < 1)
+    points.push(`Не бере фонд, що рухається надто схоже на вже обраний (кореляція понад ${maxCorrelation})`);
   if (typeof weak === 'number')
     points.push(
       `Слабкий ринок: інвестує ${Math.round(weak * 100)}% внеску${version.cashInstrumentId ? `, решта — в ${symbol(version.cashInstrumentId)}` : ''}`,

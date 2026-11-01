@@ -33,6 +33,7 @@ portfolio_warn = -0.10
 portfolio_exit = -0.20
 ma_exit_band = 0.02
 small_loss_warn = -0.04
+sell_on_position_exit = false
 
 [scanner]
 top_n = 4
@@ -45,6 +46,7 @@ min_sharpe = 0.20
 min_momentum = 0.0
 hold_buffer_k = 8
 max_per_group = 1
+max_correlation = 0.70
 risk_free_rate = 0.02
 max_stale_days = 5
 
@@ -61,6 +63,7 @@ years = 10
 cost_pct = 0.001
 fee_per_trade = 1.0
 benchmark = "SXR8.DE"
+bond_benchmark = "IS04.DE"
 
 # ETFs in the same group move together; the scanner picks at most max_per_group from each.
 [groups]

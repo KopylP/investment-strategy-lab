@@ -154,3 +154,19 @@ def test_larger_holding_wins_within_a_group() -> None:
 
     assert "NDX" in result.eligible.index
     assert result.table.loc["TECH", "Status"] == "group_blocked"
+
+
+def test_correlation_limit_skips_a_twin_of_a_chosen_etf() -> None:
+    days = 320
+    noise = np.random.default_rng(1).normal(0, 0.01, (3, days))
+    drift = 1.002
+    lead = 100 * np.cumprod(drift + noise[0])
+    twin = 100 * np.cumprod(drift - 0.0002 + noise[0] + noise[1] * 0.05)
+    other = 100 * np.cumprod(drift - 0.0004 + noise[2])
+    prices = _prices({"LEAD": list(lead), "TWIN": list(twin), "OTHER": list(other)})
+    settings = ScannerSettings(top_n=2, lookback_months=3, ma_period=20, max_volatility=2.0, max_drawdown=-1.0, min_sharpe=-99.0, max_correlation=0.7)
+
+    result = scan_etfs(prices, settings, current_positions=["LEAD"])
+
+    assert set(result.eligible.index) == {"LEAD", "OTHER"}
+    assert result.table.loc["TWIN", "Status"] == "correlated"

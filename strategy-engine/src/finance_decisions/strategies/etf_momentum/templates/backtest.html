@@ -83,6 +83,18 @@
       </tbody>
     </table>
   </div>
+  {% if comparisons %}
+  <h3>З чим ще порівняти</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th></th><th class="num">Дохідність на рік</th><th class="num">Sharpe</th><th class="num">Найбільша просадка</th></tr></thead>
+      <tbody>
+        {% if comparisons.equal_weight %}<tr><td>Порівну в усі фонди</td><td class="num">{{ comparisons.equal_weight.cagr | pct }}</td><td class="num">{{ comparisons.equal_weight.sharpe | number }}</td><td class="num">{{ comparisons.equal_weight.max_drawdown | pct }}</td></tr>{% endif %}
+        {% if comparisons.balanced %}<tr><td>60% акції, 40% облігації</td><td class="num">{{ comparisons.balanced.cagr | pct }}</td><td class="num">{{ comparisons.balanced.sharpe | number }}</td><td class="num">{{ comparisons.balanced.max_drawdown | pct }}</td></tr>{% endif %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
   <p class="muted small" style="margin-top:10px">Угод: {{ trades }}, витрати на угоди {{ costs | money("EUR", 0) }}. Продажів за тижневим ризик-монітором: {{ risk_exits }}. Ринок був у нормі {{ months_market_ok }} з {{ months }} місяців.</p>
 </section>
 
