@@ -10,7 +10,10 @@ public sealed record RegisterInstrumentCommand(
     string TradingCurrency,
     string? Group,
     bool? IsAccumulating,
-    IReadOnlyList<string> ProviderSymbols);
+    IReadOnlyList<string> ProviderSymbols,
+    AssetClass? AssetClass = null,
+    InvestmentRegion? Region = null,
+    string? AssetCurrency = null);
 
 public sealed class RegisterInstrumentHandler(IInstrumentRepository instruments)
 {
@@ -28,10 +31,17 @@ public sealed class RegisterInstrumentHandler(IInstrumentRepository instruments)
         if (group.IsFailure)
             return group.Error;
 
+        var exposure = InstrumentExposure.TryOf(command.AssetClass, command.Region, command.AssetCurrency);
+        if (exposure.IsFailure)
+            return exposure.Error;
+
         var registered =
             Instrument.Register(command.Kind, isin.Value, command.Name, command.Exchange, currency.Value, group.Value, command.IsAccumulating);
         if (registered.IsFailure)
             return registered.Error;
+
+        if (exposure.Value is { } known)
+            registered.Value.AssignExposure(known);
 
         var assigned = await AssignSymbolsAsync(registered.Value, command.ProviderSymbols, cancellationToken);
         if (assigned.IsFailure)

@@ -12,7 +12,10 @@ public sealed record InstrumentDto(
     IReadOnlyList<string> ProviderSymbols,
     string? Description = null,
     string? Ticker = null,
-    bool IsVolatilityIndex = false)
+    bool IsVolatilityIndex = false,
+    string? AssetClass = null,
+    string? Region = null,
+    string? AssetCurrency = null)
 {
     public string Label => Ticker ?? Name;
 }

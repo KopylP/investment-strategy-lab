@@ -27,12 +27,28 @@ internal sealed class InstrumentSeeder(
     {
         foreach (var command in Load())
         {
-            if (await instruments.FindOwnerAsync(ProviderSymbol.TryParse(command.ProviderSymbols[0]).Value, cancellationToken) is not null)
+            if (await instruments.FindOwnerAsync(ProviderSymbol.TryParse(command.ProviderSymbols[0]).Value, cancellationToken) is { } owner)
+            {
+                await FillMissingExposureAsync(owner, command, cancellationToken);
                 continue;
+            }
 
             var result = await register.Handle(command, cancellationToken);
             if (result.IsFailure)
                 logger.LogWarning("Seed instrument {Symbol} skipped: {Error}", command.ProviderSymbols[0], result.Error.Message);
         }
+    }
+
+    private async Task FillMissingExposureAsync(InstrumentId owner, RegisterInstrumentCommand command, CancellationToken cancellationToken)
+    {
+        var instrument = await instruments.FindAsync(owner, cancellationToken);
+        if (instrument is null || instrument.AssetClass is not null)
+            return;
+
+        if (InstrumentExposure.TryOf(command.AssetClass, command.Region, command.AssetCurrency).Value is not { } exposure)
+            return;
+
+        instrument.AssignExposure(exposure);
+        await instruments.SaveChangesAsync(cancellationToken);
     }
 }

@@ -20,6 +20,12 @@ public sealed class Instrument : AggregateRoot<InstrumentId>
 
     public bool? IsAccumulating { get; private set; }
 
+    public AssetClass? AssetClass { get; private set; }
+
+    public InvestmentRegion? Region { get; private set; }
+
+    public Currency? AssetCurrency { get; private set; }
+
     public IReadOnlyList<ProviderSymbol> ProviderSymbols => _providerSymbols;
 
     public string? Description { get; private set; }
@@ -50,6 +56,13 @@ public sealed class Instrument : AggregateRoot<InstrumentId>
             Group = group,
             IsAccumulating = isAccumulating,
         };
+    }
+
+    public void AssignExposure(InstrumentExposure exposure)
+    {
+        AssetClass = exposure.AssetClass;
+        Region = exposure.Region;
+        AssetCurrency = exposure.AssetCurrency;
     }
 
     public void AssignProviderSymbol(ProviderSymbol symbol)

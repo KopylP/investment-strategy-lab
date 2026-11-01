@@ -16,6 +16,8 @@ import { HoldingsSummaryCard } from '../../ui/holdings-summary-card/holdings-sum
 
 import { HoldingsTiles } from '../../ui/holdings-tiles/holdings-tiles';
 
+import { HoldingsExposureCard } from '../../ui/holdings-exposure-card/holdings-exposure-card';
+
 import { HoldingsSleeveCard } from '../../ui/holdings-sleeve-card/holdings-sleeve-card';
 
 @Component({
@@ -23,6 +25,7 @@ import { HoldingsSleeveCard } from '../../ui/holdings-sleeve-card/holdings-sleev
   imports: [
     HoldingsSleeveCard,
     HoldingsTiles,
+    HoldingsExposureCard,
     HoldingsSummaryCard,
     FormsModule,
     RouterLink,

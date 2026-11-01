@@ -33,6 +33,10 @@
 
   <app-holdings-tiles [totals]="totals" />
 
+  @if (store.exposure().length) {
+    <app-holdings-exposure-card [breakdowns]="store.exposure()" />
+  }
+
   @if (store.staleQuotes()) {
     <p-message
       severity="warn"

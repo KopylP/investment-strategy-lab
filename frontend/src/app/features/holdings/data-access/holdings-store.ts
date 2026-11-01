@@ -5,6 +5,7 @@ import { DisplayCurrency } from '../../../core/context/display-currency';
 import { ChartTheme } from '../../../shared/charts/chart-theme';
 import { InstrumentCatalog } from '../../../core/context/instrument-catalog';
 import { AccountHoldings, LatestPrice, Lot, toIsoDate } from '../../../shared/models/api';
+import { exposureBreakdownsOf } from '../models/exposure-vm';
 
 export interface PositionVm {
   instrumentId: string;
@@ -253,6 +254,29 @@ export class HoldingsStore {
     return cash > 0
       ? [...slices, { label: 'Кеш', name: '', weight: cash / total, color: palette.neutral }]
       : slices;
+  });
+
+  readonly exposure = computed(() => {
+    const catalog = this.instruments.byId();
+    const currency = this.currency();
+    const holdings = this.sleeves()
+      .flatMap((sleeve) => sleeve.positions)
+      .map((position) => {
+        const instrument = catalog.get(position.instrumentId);
+
+        return {
+          value: position.value,
+          assetClass: instrument?.assetClass ?? null,
+          region: instrument?.region ?? null,
+          assetCurrency: instrument?.assetCurrency ?? null,
+        };
+      });
+    const cash = this.totals().cashParts.map((part) => ({
+      currency: part.currency,
+      value: part.amount * (this.fx.rate(part.currency, currency) ?? 0),
+    }));
+
+    return exposureBreakdownsOf(holdings, cash);
   });
 
   readonly staleQuotes = computed(() =>
