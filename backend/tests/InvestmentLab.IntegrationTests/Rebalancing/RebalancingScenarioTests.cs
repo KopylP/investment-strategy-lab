@@ -137,8 +137,9 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
                 new { name = "Index", targetSharePercent = 100m, strategyId = hold.Id },
             },
         }, ct);
-        (await client.PutAsJsonAsync($"/api/rebalancing/accounts/{account.Id}/settings",
-            new { monthlyContribution = 1000m, minTrade = 25m, trimBand = 0.1m, allowFractionalShares = true }, ct)).EnsureSuccessStatusCode();
+        var saved = await client.PutAsJsonAsync($"/api/rebalancing/accounts/{account.Id}/settings",
+            new { monthlyContribution = 1000m, minTrade = 25m, trimBand = 0.1m, allowFractionalShares = true, levelByPurchasesOnly = true }, ct);
+        (await saved.Content.ReadFromJsonAsync<PlanSettingsDto>(ct))!.LevelByPurchasesOnly.ShouldBeTrue();
 
         var report = await ReportAsync(client, await RequestReportAsync(client, account.Id, new { asOf = SyntheticQuoteProvider.LastDay }, ct), ct);
 

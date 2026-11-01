@@ -54,6 +54,7 @@ export class AccountDetailStore {
       minTrade: settings.minTrade,
       trimBandPercent: Math.round(settings.trimBand * 10000) / 100,
       allowFractionalShares: settings.allowFractionalShares,
+      levelByPurchasesOnly: settings.levelByPurchasesOnly,
       generateOnSchedule: settings.generateOnSchedule,
       contributionPolicy: account.contributionPolicy,
       driftBandPercent: Math.round(account.driftBand * 10000) / 100,
@@ -146,6 +147,7 @@ export class AccountDetailStore {
       minTrade: settings.minTrade,
       trimBand: settings.trimBandPercent / 100,
       allowFractionalShares: settings.allowFractionalShares,
+      levelByPurchasesOnly: settings.levelByPurchasesOnly,
       generateOnSchedule: settings.generateOnSchedule,
     });
 

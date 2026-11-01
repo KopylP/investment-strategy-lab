@@ -100,6 +100,17 @@
     <label class="flex items-center gap-3">
       <p-toggleswitch
         class="shrink-0"
+        [ngModel]="settings().levelByPurchasesOnly"
+        (ngModelChange)="set('levelByPurchasesOnly', $event)"
+      />
+      <span
+        >Вирівнювати лише докупками: без продажу надлишку й переказів між під-портфелями. Фонди, що
+        випали зі стратегії, продаються й далі</span
+      >
+    </label>
+    <label class="flex items-center gap-3">
+      <p-toggleswitch
+        class="shrink-0"
         [ngModel]="settings().generateOnSchedule"
         (ngModelChange)="set('generateOnSchedule', $event)"
       />

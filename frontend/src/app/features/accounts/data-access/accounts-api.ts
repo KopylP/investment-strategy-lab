@@ -37,6 +37,7 @@ export interface PlanSettings {
   minTrade: number;
   trimBand: number;
   allowFractionalShares: boolean;
+  levelByPurchasesOnly: boolean;
   generateOnSchedule: boolean;
 }
 

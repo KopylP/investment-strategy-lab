@@ -11,6 +11,7 @@ export interface PlanSettingsVm {
   minTrade: number;
   trimBandPercent: number;
   allowFractionalShares: boolean;
+  levelByPurchasesOnly: boolean;
   generateOnSchedule: boolean;
   contributionPolicy: 'FillUnderweight' | 'FixedSplit';
   driftBandPercent: number;
