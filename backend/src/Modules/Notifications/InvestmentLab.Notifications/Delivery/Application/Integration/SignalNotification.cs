@@ -23,8 +23,7 @@ internal static class SignalNotification
 
     private static string MessageOf(IReadOnlyList<TriggeredSubjectDto> subjects)
     {
-        var shown = subjects.Take(MaxSubjectsShown).Select(subject => subject.Text);
-        var list = string.Join(", ", shown);
+        var list = subjects.Take(MaxSubjectsShown).Select(subject => subject.Text).ToList();
         var hidden = subjects.Count - MaxSubjectsShown;
 
         return hidden > 0

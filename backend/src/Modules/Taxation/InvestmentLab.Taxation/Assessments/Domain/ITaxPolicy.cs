@@ -11,6 +11,7 @@ public interface ITaxPolicy
     TaxPolicyTexts Texts { get; }
     IFxRule FxRule { get; }
     ILotMatcher LotMatcher { get; }
+    ITaxableGainRule TaxableGain { get; }
     ITaxRateSchedule RateSchedule { get; }
     Percentage DividendRate { get; }
     ILossCarryforwardRule LossCarryforward { get; }

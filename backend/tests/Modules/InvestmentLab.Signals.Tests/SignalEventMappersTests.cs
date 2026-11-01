@@ -21,7 +21,7 @@ public sealed class SignalEventMappersTests
 
         var triggered = new SignalFiredMapper().Map(Fired(condition, older, newer));
 
-        triggered.Subjects[0].Text.ShouldBe("SXR8: −16,2%");
+        InvestmentLab.BuildingBlocks.Localization.MessageLocalizer.Default.Render(triggered.Subjects[0].Text).ShouldBe("SXR8: −16,2%");
         triggered.DataDate.ShouldBe(new DateOnly(2026, 10, 30));
         triggered.OwnerId.ShouldBe(Owner.Value);
     }
@@ -34,7 +34,7 @@ public sealed class SignalEventMappersTests
 
         var triggered = new SignalFiredMapper().Map(Fired(condition, vix));
 
-        triggered.Subjects[0].Text.ShouldBe("^VIX: 31,4");
+        InvestmentLab.BuildingBlocks.Localization.MessageLocalizer.Default.Render(triggered.Subjects[0].Text).ShouldBe("^VIX: 31,4");
     }
 
     [Fact]
