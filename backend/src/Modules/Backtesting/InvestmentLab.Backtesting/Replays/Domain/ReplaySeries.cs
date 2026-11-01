@@ -17,11 +17,12 @@ public sealed record ReplaySeries(ReplaySeriesKind Kind, ReplaySummary Summary, 
 
     private static ReplaySummary SummaryOf(IReadOnlyList<GrowthDay> days, double riskFreeRate)
     {
+        var totalReturn = days[^1].Growth / days[0].Growth - 1d;
         var annualReturn = AnnualReturnOf(days);
         var volatility = VolatilityOf(days);
         var sharpe = volatility > 0d ? (annualReturn - riskFreeRate) / volatility : 0d;
 
-        return new ReplaySummary(annualReturn, volatility, sharpe, DrawdownsOf(days).Min());
+        return new ReplaySummary(totalReturn, annualReturn, volatility, sharpe, DrawdownsOf(days).Min());
     }
 
     private static double VolatilityOf(IReadOnlyList<GrowthDay> days)

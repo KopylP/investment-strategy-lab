@@ -21,6 +21,7 @@ public sealed class ReplaySeriesTests
         series.Points[0].Growth.ShouldBe(1.00);
         series.Points[0].WorstDrawdown.ShouldBe(-0.30, 0.0001);
         series.Summary.MaxDrawdown.ShouldBe(-0.30, 0.0001);
+        series.Summary.TotalReturn.ShouldBe(0.10, 0.0001);
     }
 
     [Fact]

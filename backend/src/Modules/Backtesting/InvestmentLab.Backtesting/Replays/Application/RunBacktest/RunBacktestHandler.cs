@@ -12,7 +12,7 @@ public sealed class RunBacktestHandler(IBacktestRepository backtests, IReplayedS
         var setup = await strategies.FindAsync(backtest.StrategyId, backtest.StrategyVersion, cancellationToken);
 
         if (setup is null)
-            backtest.Fail(BacktestErrors.StrategyNotFound(backtest.StrategyId).Code, clock.GetUtcNow());
+            backtest.Fail(Message.Of(BacktestErrors.StrategyNotFound(backtest.StrategyId).Code), clock.GetUtcNow());
         else if (!setup.CanBeReplayed)
             backtest.MarkNotSupported(clock.GetUtcNow());
         else
@@ -31,6 +31,6 @@ public sealed class RunBacktestHandler(IBacktestRepository backtests, IReplayedS
         if (replayed.IsSuccess)
             backtest.Complete(replayed.Value, clock.GetUtcNow());
         else
-            backtest.Fail(replayed.Error.Code, clock.GetUtcNow());
+            backtest.Fail(Message.Of(replayed.Error.Code), clock.GetUtcNow());
     }
 }
