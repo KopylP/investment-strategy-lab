@@ -23,7 +23,7 @@ public sealed class MoneyOutcomesTests
         var growth = new double[37];
         growth[0] = 1d;
         for (var month = 1; month < growth.Length; month++)
-            growth[month] = growth[month - 1] * (month <= 12 ? 0.99 : 1.02);
+            growth[month] = growth[month - 1] * (month <= 12 ? 0.99 : 1d + month * 0.001);
 
         var outcomes = MoneyOutcomes.Of(PointsOf(growth), MoneyPlan.TryOf(1000m, 0m, 1).Value);
 
