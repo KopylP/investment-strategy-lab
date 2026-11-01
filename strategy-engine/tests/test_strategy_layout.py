@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import re
 
 import pytest
 
-from finance_decisions.helpers import money, ticker_currency
+import finance_decisions
+from finance_decisions.helpers import money
+from finance_decisions.market_data import ticker_currency
 from finance_decisions.models import load_portfolio
 from finance_decisions.strategies.etf_momentum import backtest, monthly_scanner, weekly_risk_monitor
 from finance_decisions.strategies.etf_momentum.config import load_strategy_config
@@ -104,3 +107,16 @@ def test_etf_momentum_module_entrypoints_are_available() -> None:
     assert monthly_scanner.main.__name__ == "main"
     assert weekly_risk_monitor.main.__name__ == "main"
     assert backtest.main.__name__ == "main"
+
+
+def test_quote_symbols_of_the_provider_stay_in_market_data() -> None:
+    source_root = Path(finance_decisions.__file__).parent
+    provider_knowledge = re.compile(r'yfinance|"SPY"|\^VIX|"[A-Z0-9]+\.(DE|WA|L|PA|MI|AS|SW)"')
+
+    leaking = [
+        path.relative_to(source_root).as_posix()
+        for path in source_root.rglob("*.py")
+        if path.name != "market_data.py" and provider_knowledge.search(path.read_text(encoding="utf-8"))
+    ]
+
+    assert leaking == []

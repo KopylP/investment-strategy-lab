@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 from finance_decisions.helpers import holdings_by_value, latest_value
-from finance_decisions.market_data import download_close_prices
+from finance_decisions.market_data import MARKET_SYMBOLS, download_close_prices
 from finance_decisions.models import Portfolio, load_portfolio
 from finance_decisions.notifications import send_telegram
 
@@ -43,7 +43,7 @@ def run_weekly_risk_monitor(
     config = load_strategy_config(config_path)
     portfolio = load_portfolio(positions_path)
 
-    tickers = sorted(set(portfolio.tickers) | {"SPY", "^VIX"})
+    tickers = sorted(set(portfolio.tickers) | {*MARKET_SYMBOLS})
     prices = download_close_prices(tickers, period="2y")
     report = analyze_portfolio_risk(
         prices,
@@ -72,7 +72,7 @@ def run_monthly_scanner(
     portfolio = load_portfolio(positions_path) if positions_path.exists() else Portfolio()
     holdings = {position.ticker: position.shares for position in portfolio.positions}
 
-    tickers = set(config.etfs) | set(holdings) | {"SPY", "^VIX"}
+    tickers = set(config.etfs) | set(holdings) | {*MARKET_SYMBOLS}
     if config.cash_etf:
         tickers.add(config.cash_etf)
     prices = download_close_prices(sorted(tickers), period="3y")

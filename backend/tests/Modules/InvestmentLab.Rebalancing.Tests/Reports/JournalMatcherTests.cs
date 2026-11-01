@@ -10,7 +10,7 @@ public sealed class JournalMatcherTests
 
     private static RebalancingReport Report(params ActionDraft[] actions) => RebalancingReport.Generate(new ReportDraft(
         Guid.NewGuid(), UserId.Of(Guid.NewGuid()), "Revolut", Currency.EUR, YearMonth.Of(2026, 11), ReportKind.Monthly, ReportTrigger.Scheduled,
-        new DateOnly(2026, 10, 30), ContributionPlan.None, [], actions, [], null), Generated);
+        new DateOnly(2026, 10, 30), ContributionPlan.None, [], actions, [], null, "rebalance", "Rebalance"), Generated);
 
     private static ActionDraft Draft(ActionKind kind, Guid? instrument, decimal quantity, decimal price) =>
         new(kind, instrument, quantity, price, [new ActionAllocation(Eu, quantity, null)], kind.ToString());

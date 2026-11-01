@@ -12,48 +12,6 @@ except ModuleNotFoundError:  # pragma: no cover - Python < 3.11 compatibility.
     import tomli as tomllib
 
 
-DEFAULT_ETFS_US = [
-    "SPY",
-    "QQQ",
-    "IWM",
-    "EFA",
-    "EEM",
-    "GLD",
-    "SLV",
-    "TLT",
-    "IEF",
-    "LQD",
-    "VNQ",
-    "USO",
-    "DBA",
-    "XLE",
-    "XLK",
-    "XLV",
-    "XLF",
-    "XLU",
-]
-
-DEFAULT_ETFS_EU = [
-    "SXR8.DE",
-    "SXRV.DE",
-    "IUSN.DE",
-    "EUN2.DE",
-    "IS3N.DE",
-    "4GLD.DE",
-    "SXRS.DE",
-    "IS04.DE",
-    "IUS7.DE",
-    "IBCI.DE",
-    "IQQA.DE",
-    "XDJE.DE",
-    "QDVE.DE",
-    "QDVF.DE",
-    "QDVG.DE",
-    "QDVI.DE",
-    "NQSE.DE",
-]
-
-
 @dataclass(frozen=True)
 class RiskSettings:
     ma_period: int = 200
@@ -103,7 +61,7 @@ class BacktestSettings:
     years: int = 10
     cost_pct: float = 0.001
     fee_per_trade: float = 1.0
-    benchmark: str = "SXR8.DE"
+    benchmark: str = ""
 
 
 @dataclass(frozen=True)
@@ -136,9 +94,10 @@ def load_strategy_config(path: Path | None = None) -> StrategyConfig:
     payload = _load_toml(path)
 
     market = _market()
-    default_etfs = DEFAULT_ETFS_US if market == "US" else DEFAULT_ETFS_EU
     strategy = payload.get("strategy", {})
-    etfs = _env_list("ETF_LIST") or strategy.get("etfs", default_etfs)
+    etfs = _env_list("ETF_LIST") or strategy.get("etfs")
+    if not etfs:
+        raise ValueError(f"{path} names no etfs and ETF_LIST is empty")
     cash_etf = os.environ.get("CASH_ETF") or strategy.get("cash_etf")
 
     return StrategyConfig(

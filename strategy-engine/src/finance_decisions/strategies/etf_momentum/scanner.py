@@ -12,6 +12,7 @@ from finance_decisions.helpers import (
     latest_moving_average,
     latest_value,
 )
+from finance_decisions.market_data import BENCHMARK_SYMBOL, MARKET_SYMBOLS, VOLATILITY_INDEX_SYMBOL
 from finance_decisions.messages import msg
 from .config import ScannerSettings
 
@@ -39,8 +40,6 @@ TABLE_COLUMNS = [
     "Reason",
     "Weight",
 ]
-
-MARKET_TICKERS = ("SPY", "^VIX")
 
 
 @dataclass(frozen=True)
@@ -84,7 +83,7 @@ def scan_etfs(
     market_ok = spy_above_ma and vix is not None and vix < settings.max_vix
     risk_free = _risk_free_rate(prices, cash_etf, settings.risk_free_rate)
 
-    excluded = set(MARKET_TICKERS) | ({cash_etf} if cash_etf else set())
+    excluded = set(MARKET_SYMBOLS) | ({cash_etf} if cash_etf else set())
     scan_tickers = etfs if etfs is not None else [c for c in prices.columns if c not in excluded]
 
     rows = [
@@ -120,9 +119,9 @@ def _market_check(
 
     spy_price = spy_ma = None
     spy_above_ma = False
-    if "SPY" in prices.columns and not _is_stale(prices["SPY"], as_of, settings.max_stale_days):
-        spy_price = latest_value(prices["SPY"])
-        spy_ma = latest_moving_average(prices["SPY"], settings.ma_period)
+    if BENCHMARK_SYMBOL in prices.columns and not _is_stale(prices[BENCHMARK_SYMBOL], as_of, settings.max_stale_days):
+        spy_price = latest_value(prices[BENCHMARK_SYMBOL])
+        spy_ma = latest_moving_average(prices[BENCHMARK_SYMBOL], settings.ma_period)
     if spy_price is not None and spy_ma is not None:
         spy_above_ma = spy_price > spy_ma
         if spy_above_ma:
@@ -135,8 +134,8 @@ def _market_check(
     # The last row can belong to a day when only European exchanges traded, so read the
     # last valid VIX close instead of the last row. Missing VIX fails the check.
     vix = None
-    if "^VIX" in prices.columns and not _is_stale(prices["^VIX"], as_of, settings.max_stale_days):
-        vix = latest_value(prices["^VIX"])
+    if VOLATILITY_INDEX_SYMBOL in prices.columns and not _is_stale(prices[VOLATILITY_INDEX_SYMBOL], as_of, settings.max_stale_days):
+        vix = latest_value(prices[VOLATILITY_INDEX_SYMBOL])
     if vix is None:
         reasons.append(msg("etf_momentum.market.vix_missing"))
     elif vix < settings.max_vix:

@@ -16,5 +16,5 @@ public sealed record ReportDraft(
     IReadOnlyList<ActionDraft> Actions,
     IReadOnlyList<string> Warnings,
     PlanReview? Review,
-    string? Code = null,
-    string? Title = null);
+    string Code,
+    string Title);

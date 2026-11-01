@@ -72,8 +72,8 @@ public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepo
         Kind: ReportKind.RiskReview,
         Trigger: request.Trigger,
         MarketAsOf: ReportHeader.MarketDateOf([.. review.Prices.Values.Select(price => price.Date)], asOf),
-        Code: command.Scope?.Code ?? ReportDefaults.CodeOf(ReportKind.RiskReview),
-        Title: command.Scope?.Title ?? ReportDefaults.TitleOf(ReportKind.RiskReview));
+        Code: command.Scope.Code,
+        Title: command.Scope.Title);
 
     private static List<Guid> HeldInstruments(AccountHoldingsDto holdings, List<SubPortfolioSetupDto> planned) =>
         [.. holdings.SubPortfolios

@@ -43,8 +43,8 @@ public sealed class MonthlyPlanPreparation(
         if (command.Contribution is < 0m)
             return ReportErrors.ContributionNegative();
 
-        var code = command.Scope?.Code ?? ReportDefaults.CodeOf(ReportKind.Monthly);
-        var title = command.Scope?.Title ?? ReportDefaults.TitleOf(ReportKind.Monthly);
+        var code = command.Scope.Code;
+        var title = command.Scope.Title;
 
         var planSettings = await SettingsOfAsync(account, cancellationToken);
         var periodReports = await reports.ForPeriodAsync(account.Id, period, cancellationToken);
@@ -77,8 +77,8 @@ public sealed class MonthlyPlanPreparation(
             Allocation: allocation);
     }
 
-    private static List<SubPortfolioSetupDto> PlannedWithin(List<SubPortfolioSetupDto> all, ReportScope? scope) =>
-        scope is null ? all : [.. all.Where(sub => scope.SubPortfolioIds.Contains(sub.Id))];
+    private static List<SubPortfolioSetupDto> PlannedWithin(List<SubPortfolioSetupDto> all, ReportScope scope) =>
+        [.. all.Where(sub => scope.SubPortfolioIds.Contains(sub.Id))];
 
     private async Task<PlanSettings> SettingsOfAsync(AccountSetupDto account, CancellationToken cancellationToken) =>
         await settings.FindAsync(account.Id, cancellationToken) ?? PlanSettings.DefaultFor(account.Id, UserId.Of(account.OwnerId));

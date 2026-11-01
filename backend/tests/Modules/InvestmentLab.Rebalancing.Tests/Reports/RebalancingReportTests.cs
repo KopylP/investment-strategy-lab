@@ -10,7 +10,7 @@ public sealed class RebalancingReportTests
 
     private static RebalancingReport Report(params ActionDraft[] actions) => RebalancingReport.Generate(new ReportDraft(
         Guid.NewGuid(), UserId.Of(Guid.NewGuid()), "XTB", Currency.EUR, YearMonth.Of(2026, 11), ReportKind.Monthly, ReportTrigger.OnDemand,
-        Monday, ContributionPlan.None, [], actions, [], null), Now);
+        Monday, ContributionPlan.None, [], actions, [], null, "rebalance", "Rebalance"), Now);
 
     private static ActionDraft Buy(decimal quantity = 10m) =>
         new(ActionKind.Buy, Etf, quantity, 50m, [new ActionAllocation(Eu, quantity * 0.6m, null), new ActionAllocation(Us, quantity * 0.4m, null)], "buy");

@@ -34,5 +34,5 @@ public sealed class RiskReviewStrategyRequests(PlanningInputs inputs, TimeProvid
     }
 
     public static List<SubPortfolioSetupDto> PlannedOf(AccountSetupDto account, GenerateRiskReviewCommand command) =>
-        [.. PlanningInputs.Planned(account).Where(sub => command.Scope?.SubPortfolioIds.Contains(sub.Id) ?? true)];
+        [.. PlanningInputs.Planned(account).Where(sub => command.Scope.SubPortfolioIds.Contains(sub.Id))];
 }
