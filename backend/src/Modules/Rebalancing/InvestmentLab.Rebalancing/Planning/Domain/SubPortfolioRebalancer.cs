@@ -146,7 +146,8 @@ public static class SubPortfolioRebalancer
         }
 
         private bool ShouldTrim(Guid id, decimal excess, decimal investableTotal) =>
-            PriceOf(id) > _holdings[id].AverageCost
+            !_policy.LevelByPurchasesOnly
+            && PriceOf(id) > _holdings[id].AverageCost
             && excess > _policy.TrimBand.Value * investableTotal
             && excess >= _policy.MinTrade;
 

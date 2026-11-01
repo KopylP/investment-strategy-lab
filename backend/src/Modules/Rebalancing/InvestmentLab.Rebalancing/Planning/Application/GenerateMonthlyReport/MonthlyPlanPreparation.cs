@@ -56,6 +56,8 @@ public sealed class MonthlyPlanPreparation(
         var warnings = new List<string>();
         var prices = await HeldAndCashPricesAsync(account, holdings, planned, asOf, warnings, cancellationToken);
         var allocation = Allocate(account, planned, contribution, snapshots, prices);
+        if (planSettings.Policy.LevelByPurchasesOnly)
+            allocation = allocation.WithoutTransfer();
 
         return new MonthlyPlan(
             Account: account,

@@ -66,6 +66,7 @@ export class NewAccountDraft {
     minTrade: 25,
     trimBandPercent: 10,
     allowFractionalShares: true,
+    levelByPurchasesOnly: false,
     generateOnSchedule: true,
     contributionPolicy: 'FillUnderweight',
     driftBandPercent: 5,
@@ -317,6 +318,7 @@ export class NewAccountDraft {
       minTrade: plan.minTrade,
       trimBand: plan.trimBandPercent / 100,
       allowFractionalShares: plan.allowFractionalShares,
+      levelByPurchasesOnly: plan.levelByPurchasesOnly,
       generateOnSchedule: plan.generateOnSchedule,
     });
   }

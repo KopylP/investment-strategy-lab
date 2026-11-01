@@ -5,7 +5,7 @@ using InvestmentLab.Rebalancing.Planning.Domain;
 namespace InvestmentLab.Rebalancing.Planning.Application.ChangePlanSettings;
 
 public sealed record ChangePlanSettingsCommand(
-    decimal MonthlyContribution, decimal MinTrade, decimal TrimBand, bool AllowFractionalShares, bool GenerateOnSchedule = true);
+    decimal MonthlyContribution, decimal MinTrade, decimal TrimBand, bool AllowFractionalShares, bool GenerateOnSchedule = true, bool LevelByPurchasesOnly = false);
 
 public sealed class ChangePlanSettingsHandler(IAccountSetupQueries accounts, IPlanSettingsRepository settings, TimeProvider clock)
 {
@@ -14,7 +14,7 @@ public sealed class ChangePlanSettingsHandler(IAccountSetupQueries accounts, IPl
         if (await accounts.GetAccountSetup(accountId, cancellationToken) is not { } account)
             return Error.NotFound("account.not_found", $"Account {accountId} does not exist.");
 
-        var policy = RebalancingPolicy.TryOf(command.MinTrade, command.TrimBand, command.AllowFractionalShares);
+        var policy = RebalancingPolicy.TryOf(command.MinTrade, command.TrimBand, command.AllowFractionalShares, command.LevelByPurchasesOnly);
         if (policy.IsFailure)
             return policy.Error;
 

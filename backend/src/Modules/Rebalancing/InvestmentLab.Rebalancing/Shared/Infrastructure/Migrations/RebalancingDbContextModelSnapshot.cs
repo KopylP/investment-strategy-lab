@@ -81,6 +81,10 @@ namespace InvestmentLab.Rebalancing.Shared.Infrastructure.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("generate_on_schedule");
 
+                    b.Property<bool>("LevelByPurchasesOnly")
+                        .HasColumnType("boolean")
+                        .HasColumnName("level_by_purchases_only");
+
                     b.Property<decimal>("MinTrade")
                         .HasPrecision(20, 8)
                         .HasColumnType("numeric(20,8)")

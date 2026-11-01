@@ -9,6 +9,7 @@ public sealed class PlanSettings : AggregateRoot<Guid>
     public decimal MinTrade { get; private set; }
     public Percentage TrimBand { get; private set; }
     public bool AllowFractionalShares { get; private set; }
+    public bool LevelByPurchasesOnly { get; private set; }
 
     public bool GenerateOnSchedule { get; private set; }
 
@@ -31,7 +32,7 @@ public sealed class PlanSettings : AggregateRoot<Guid>
 
     public Guid AccountId => Id;
 
-    public RebalancingPolicy Policy => RebalancingPolicy.Of(MinTrade, TrimBand, AllowFractionalShares);
+    public RebalancingPolicy Policy => RebalancingPolicy.Of(MinTrade, TrimBand, AllowFractionalShares, LevelByPurchasesOnly);
 
     public Result Change(decimal monthlyContribution, RebalancingPolicy policy, bool generateOnSchedule, DateTimeOffset now)
     {
@@ -42,6 +43,7 @@ public sealed class PlanSettings : AggregateRoot<Guid>
         MinTrade = policy.MinTrade;
         TrimBand = policy.TrimBand;
         AllowFractionalShares = policy.AllowFractionalShares;
+        LevelByPurchasesOnly = policy.LevelByPurchasesOnly;
         GenerateOnSchedule = generateOnSchedule;
         UpdatedAt = now;
 
