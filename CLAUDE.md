@@ -63,3 +63,24 @@ New and changed code follows these rules; they win over the style of older code 
   or in `Domain`, never loose in `Application/`. A file's name says what it holds; a file emptied by a split is deleted.
 - **Small types over long parameter lists.** Group arguments that travel together into a value object.
 - **Intention-revealing names,** no abbreviations; named constants instead of magic numbers.
+
+## Modularity
+
+Whatever can change from the outside stays replaceable: changing it touches its one owner and nothing else. This is a
+requirement for every change, also a small one, and it wins over the shortest way to finish.
+
+| What can change | Its only owner | Everyone else |
+|---|---|---|
+| Source of quotes and symbols (today Yahoo) | `MarketData` domain and adapter (`QuoteProvider`, `ISymbolConvention`) and the engine's `market_data.py` | Uses the neutral `InstrumentDto.Ticker` and `Label`; never parses or names a provider |
+| Tax rules of a country or account type | A policy in `Taxation` (`ITaxPolicy` and its blocks: rates, currency and FX rule, losses, lots, rounding, notes) | Asks the policy; never has a rate, a form name or a currency of its own |
+| Strategies and their reports | The strategy type in the engine | Reads what the type declares; nothing about one report is hard-coded |
+| Any other outside service or standard | An interface in the owning module with its adapter in `Infrastructure` | Depends on the interface or the `.Contracts` query |
+
+- **Never spread knowledge of a provider or a country:** no prefixes, suffixes, form names, rates or provider names outside
+  the owner. When a second place needs that knowledge, add it to the owner's contract instead of copying it.
+- **An unknown value fails loudly.** A missing policy or provider gives an error, never a silent default that produces
+  believable but wrong numbers.
+- **A new variant is a new block:** adding one is a new class and its registration, without `if`s around the code that uses it.
+- **Keep it enforced:** when a boundary can be checked, add a check to `InvestmentLab.ArchitectureTests`
+  (`ProviderNeutralityTests` is the example).
+- Do not build for a variant nobody needs yet: keep the seam, leave the unused implementation out.
