@@ -12,6 +12,15 @@ public sealed class BelkaTaxPolicy : ITaxPolicy
     public int Version => 4;
     public bool IsTaxed => true;
     public string EstimateDisclaimer => Message.Of("tax.policy.pl_belka.disclaimer");
+    public TaxPolicyTexts Texts { get; } = new(
+        Name: Message.Of("tax.policy.pl_belka.name"),
+        Hint: Message.Of("tax.policy.pl_belka.hint"),
+        Summary: Message.Of("tax.policy.pl_belka.summary"),
+        EstimateNote: Message.Of("tax.policy.pl_belka.estimate_note"),
+        TaxedAccountsLabel: Message.Of("tax.policy.pl_belka.taxed_accounts"),
+        OverviewHint: Message.Of("tax.policy.pl_belka.overview_hint"),
+        ProgressNote: Message.Of("tax.policy.pl_belka.progress_note"),
+        LossesNote: Message.Of("tax.policy.pl_belka.losses_note"));
     public IFxRule FxRule { get; } = new NbpPreviousBusinessDay();
     public ILotMatcher LotMatcher { get; } = new FifoLotMatcher();
     public ITaxRateSchedule RateSchedule { get; } = new FlatRate(Rate);

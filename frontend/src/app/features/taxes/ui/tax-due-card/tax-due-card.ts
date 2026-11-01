@@ -1,3 +1,4 @@
+import { TaxMoneyPipe } from '../../../../core/context/tax-money-pipe';
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { Button } from 'primeng/button';
 import { Tooltip } from 'primeng/tooltip';
@@ -8,7 +9,7 @@ import { TaxesStore } from '../../data-access/taxes-store';
 
 @Component({
   selector: 'app-tax-due-card',
-  imports: [Button, Tooltip, TapTooltip, MoneyPipe],
+  imports: [TaxMoneyPipe, Button, Tooltip, TapTooltip, MoneyPipe],
   templateUrl: './tax-due-card.html',
   host: { class: 'contents' },
   changeDetection: ChangeDetectionStrategy.OnPush,

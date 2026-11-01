@@ -4,10 +4,10 @@
       <div class="mb-3">
         <h2 class="text-lg font-semibold m-0">Податок</h2>
         <div class="text-sm text-muted-color mt-1">
-          зараз {{ tax.taxDue | money: 'PLN' : 0 }} · за 30 днів
+          зараз {{ tax.taxDue | taxMoney: 0 }} · за 30 днів
           <span [appSignedValue]="-store.taxLast30Days()"
             >{{ store.taxLast30Days() >= 0 ? '+' : ''
-            }}{{ store.taxLast30Days() | money: 'PLN' : 0 }}</span
+            }}{{ store.taxLast30Days() | taxMoney: 0 }}</span
           >
           @if (store.taxAlert(); as alert) {
             · {{ alert.ratio | percent }} вартості рахунків
@@ -28,8 +28,7 @@
         <p-skeleton height="15rem" />
       }
       <div class="text-xs text-muted-color mt-2">
-        PIT-38 за всіма рахунками на кожен день: зиски й збитки сальдуються, дивіденди — з
-        урахуванням податку за кордоном.
+        {{ regime.regime()?.progressNote }}
         @if (tax.alertShare !== null) {
           Червоним — понад поріг: {{ tax.alertShare | percent }} поточної вартості всіх рахунків.
         }

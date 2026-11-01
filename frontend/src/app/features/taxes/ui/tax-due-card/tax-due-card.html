@@ -4,12 +4,12 @@
     <div>
       <div class="text-muted-color text-sm">Податок до сплати · {{ details().year }}</div>
       <div class="text-4xl sm:text-5xl font-bold tracking-tight mt-1 leading-tight">
-        {{ s.taxDue | money: 'PLN' : 0 }}
+        {{ s.taxDue | taxMoney: 0 }}
       </div>
       <div class="text-sm text-muted-color mt-2">
         @if (details().isTaxed) {
-          з продажів {{ s.capitalTax | money: 'PLN' : 0 }} · з дивідендів
-          {{ s.dividendTax | money: 'PLN' : 0 }} · {{ details().rateLabel }}
+          з продажів {{ s.capitalTax | taxMoney: 0 }} · з дивідендів
+          {{ s.dividendTax | taxMoney: 0 }} · {{ details().rateLabel }}
           @if (store.showAccount()) {
             · {{ store.taxedAccounts().length }} рахунки разом
           }

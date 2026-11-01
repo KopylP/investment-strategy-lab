@@ -35,8 +35,8 @@ test('a new user goes from registration to a partly executed monthly report', as
   await shot('04-account-detail');
 
   await page.goto('/instruments');
-  await page.getByRole('button', { name: 'Курси NBP' }).click();
-  await expectToast(page, 'Курси NBP оновлено');
+  await page.getByRole('button', { name: 'Курси валют' }).click();
+  await expectToast(page, 'Курси валют оновлено');
   await shot('05-instruments');
 
   await page.goto('/reports');

@@ -32,7 +32,7 @@
             <td class="text-sm hidden sm:table-cell">{{ store.accountName(lot.accountId) }}</td>
           }
           <td class="text-right hidden sm:table-cell">{{ lot.quantity | quantity }}</td>
-          <td class="text-right whitespace-nowrap">{{ lot.costPln | money: 'PLN' }}</td>
+          <td class="text-right whitespace-nowrap">{{ lot.costPln | taxMoney }}</td>
           <td class="hidden sm:table-cell">{{ lot.fxRate }}</td>
         </tr>
       </ng-template>

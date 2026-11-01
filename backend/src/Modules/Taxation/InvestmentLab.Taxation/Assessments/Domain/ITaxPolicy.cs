@@ -8,6 +8,7 @@ public interface ITaxPolicy
     string Jurisdiction { get; }
     bool IsTaxed { get; }
     string EstimateDisclaimer { get; }
+    TaxPolicyTexts Texts { get; }
     IFxRule FxRule { get; }
     ILotMatcher LotMatcher { get; }
     ITaxRateSchedule RateSchedule { get; }

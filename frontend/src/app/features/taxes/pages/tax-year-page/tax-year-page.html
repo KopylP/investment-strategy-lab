@@ -1,6 +1,6 @@
 <app-page-header
   title="Податки"
-  subtitle="Белка, один PIT-38 на всі рахунки: FIFO в межах рахунку, курс NBP останнього робочого дня перед угодою, 19%, річне сальдо всіх брокерів"
+  [subtitle]="regime.regime()?.summary ?? ''"
 >
   @if (yearOptions().length > 1) {
     <p-selectbutton
@@ -31,15 +31,12 @@
 <p-message
   severity="secondary"
   styleClass="mb-4"
-  [text]="
-    'Це оцінка. Авторитетні — PIT-8C брокерів і ваш податковий консультант. Прибутки й збитки всіх ' +
-    'рахунків сальдуються в одному PIT-38, як у декларації.'
-  "
+  [text]="regime.regime()?.estimateNote ?? ''"
 />
 
 @if (store.taxAccounts().length > 1) {
   <div class="flex flex-wrap items-center gap-2 mb-4 text-sm">
-    <span class="text-muted-color">У PIT-38:</span>
+    <span class="text-muted-color">{{ regime.regime()?.taxedAccountsLabel }}</span>
     @for (account of store.taxedAccounts(); track account.id) {
       <p-tag [value]="account.name" severity="secondary" />
     } @empty {

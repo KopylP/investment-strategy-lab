@@ -293,7 +293,7 @@ export class InstrumentsStore {
     await this.run('fx', async () => {
       await this.api.post('/api/market-data/fx-rates/ingest');
 
-      return 'Курси NBP оновлено';
+      return 'Курси валют оновлено';
     });
   }
 

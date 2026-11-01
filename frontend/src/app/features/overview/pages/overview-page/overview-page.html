@@ -70,9 +70,9 @@
       <p-message severity="warn" styleClass="mb-4">
         <div class="flex flex-wrap items-center justify-between gap-3 w-full">
           <span
-            >Податок {{ store.taxYear }} — {{ store.tax()!.taxDue | money: 'PLN' : 0 }}, це
+            >Податок {{ store.taxYear }} — {{ store.tax()!.taxDue | taxMoney: 0 }}, це
             {{ alert.ratio | percent }} вартості всіх рахунків: понад поріг
-            {{ alert.share | percent }} ({{ alert.limit | money: 'PLN' : 0 }}).</span
+            {{ alert.share | percent }} ({{ alert.limit | taxMoney: 0 }}).</span
           >
           <p-button label="Податки" size="small" [text]="true" routerLink="/taxes" />
         </div>

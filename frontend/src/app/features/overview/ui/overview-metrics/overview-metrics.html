@@ -52,10 +52,7 @@
         Податок {{ store.taxYear }}
         <i
           class="pi pi-info-circle text-xs"
-          [pTooltip]="
-            'Белка за цей рік на сьогодні: реалізовані зиски й збитки та дивіденди всіх оподатковуваних ' +
-            'рахунків разом (один PIT-38). Нереалізований результат сюди не входить.'
-          "
+          [pTooltip]="regime.regime()?.overviewHint ?? ''"
         ></i>
       </div>
       @if (store.tax(); as tax) {
@@ -64,7 +61,7 @@
           <div class="text-xs text-muted-color">рахунки не оподатковуються (IKE/IKZE)</div>
         } @else {
           <div class="text-xl font-semibold mt-1 flex items-center gap-1">
-            {{ tax.taxDue | money: 'PLN' : 0 }}
+            {{ tax.taxDue | taxMoney: 0 }}
             @if (store.taxAlert()?.exceeded) {
               <i
                 class="pi pi-exclamation-triangle text-sm"
@@ -75,9 +72,9 @@
           </div>
           <div class="text-xs text-muted-color">
             @if (tax.points.length) {
-              зиск <span [appSignedValue]="tax.gain">{{ tax.gain | money: 'PLN' : 0 }}</span>
+              зиск <span [appSignedValue]="tax.gain">{{ tax.gain | taxMoney: 0 }}</span>
               @if (tax.dividends) {
-                · дивіденди {{ tax.dividends | money: 'PLN' : 0 }}
+                · дивіденди {{ tax.dividends | taxMoney: 0 }}
               }
             } @else {
               продажів і дивідендів ще не було

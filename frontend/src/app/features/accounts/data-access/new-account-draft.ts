@@ -55,7 +55,10 @@ export class NewAccountDraft {
   readonly name = signal('Брокерський рахунок');
   readonly broker = signal('Revolut');
   readonly currency = signal<'EUR' | 'PLN' | 'USD'>('EUR');
-  readonly taxPolicy = signal('PL-BELKA');
+  private readonly chosenTaxPolicy = signal<string | null>(null);
+  readonly taxPolicy = computed(
+    () => this.chosenTaxPolicy() ?? this.taxPolicies().find((policy) => policy.isDefault)?.value ?? '',
+  );
   readonly preset = signal<Preset>('simple');
   readonly sleeves = signal<SleeveDraft[]>([]);
   readonly plan = signal<PlanSettingsVm>({
@@ -75,30 +78,27 @@ export class NewAccountDraft {
     (value) => ({ label: value, value }),
   );
   readonly currencies = ['EUR', 'PLN', 'USD'].map((value) => ({ label: value, value }));
-  readonly taxPolicies = [
-    {
-      label: 'Звичайний (Белка 19%)',
-      value: 'PL-BELKA',
-      hint: 'Податок 19% з прибутку від продажів і дивідендів, рахується за FIFO в злотих.',
-    },
-    {
-      label: 'IKE',
-      value: 'PL-IKE',
-      hint: 'Пенсійний рахунок: без податку з прибутку, якщо не виводити до пенсії.',
-    },
-    {
-      label: 'IKZE',
-      value: 'PL-IKZE',
-      hint: 'Пенсійний рахунок з податковою знижкою на внески; податок лише при виході.',
-    },
-  ];
+  private readonly taxPoliciesResource = resource({ loader: () => this.api.taxPolicies() });
+
+  readonly taxPolicies = computed(() =>
+    (this.taxPoliciesResource.value() ?? []).map((policy) => ({
+      label: policy.name,
+      value: policy.code,
+      hint: policy.hint,
+      isDefault: policy.isDefault,
+    })),
+  );
 
   readonly strategies = computed(() =>
     (this.strategiesResource.value() ?? []).filter((strategy) => strategy.status === 'Active'),
   );
+  chooseTaxPolicy(code: string): void {
+    this.chosenTaxPolicy.set(code);
+  }
+
   readonly strategiesLoading = this.strategiesResource.isLoading;
   readonly taxHint = computed(
-    () => this.taxPolicies.find((policy) => policy.value === this.taxPolicy())?.hint ?? '',
+    () => this.taxPolicies().find((policy) => policy.value === this.taxPolicy())?.hint ?? '',
   );
   readonly total = computed(
     () =>

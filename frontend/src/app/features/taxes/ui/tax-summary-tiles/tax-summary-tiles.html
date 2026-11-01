@@ -3,35 +3,35 @@
     <div class="px-1 sm:px-4 lg:border-r border-surface">
       <div class="text-muted-color text-xs uppercase tracking-wide">Дохід (зиск)</div>
       <div class="text-xl font-semibold mt-1" [appSignedValue]="summary().gain">
-        {{ summary().gain | money: 'PLN' }}
+        {{ summary().gain | taxMoney }}
       </div>
       <div class="text-xs text-muted-color">
-        виручка {{ summary().revenue | money: 'PLN' : 0 }} − витрати
-        {{ summary().costs | money: 'PLN' : 0 }}
+        виручка {{ summary().revenue | taxMoney: 0 }} − витрати
+        {{ summary().costs | taxMoney: 0 }}
       </div>
     </div>
     <div class="px-1 sm:px-4 lg:border-r border-surface">
       <div class="text-muted-color text-xs uppercase tracking-wide">Податкова база</div>
-      <div class="text-xl font-semibold mt-1">{{ summary().taxBase | money: 'PLN' : 0 }}</div>
+      <div class="text-xl font-semibold mt-1">{{ summary().taxBase | taxMoney: 0 }}</div>
       <div class="text-xs text-muted-color">
         {{
           summary().carryforwardUsed
-            ? 'мінус збитки минулих років ' + (summary().carryforwardUsed | money: 'PLN' : 0)
+            ? 'мінус збитки минулих років ' + (summary().carryforwardUsed | taxMoney: 0)
             : 'без збитків минулих років'
         }}
       </div>
     </div>
     <div class="px-1 sm:px-4 lg:border-r border-surface">
       <div class="text-muted-color text-xs uppercase tracking-wide">Дивіденди брутто</div>
-      <div class="text-xl font-semibold mt-1">{{ summary().dividendIncome | money: 'PLN' }}</div>
+      <div class="text-xl font-semibold mt-1">{{ summary().dividendIncome | taxMoney }}</div>
       <div class="text-xs text-muted-color">
-        утримано за кордоном {{ summary().dividendTaxCredit | money: 'PLN' }}
+        утримано за кордоном {{ summary().dividendTaxCredit | taxMoney }}
       </div>
     </div>
     <div class="px-1 sm:px-4">
       <div class="text-muted-color text-xs uppercase tracking-wide">Збиток до перенесення</div>
       <div class="text-xl font-semibold mt-1">
-        {{ summary().lossToCarry ? (summary().lossToCarry | money: 'PLN') : '—' }}
+        {{ summary().lossToCarry ? (summary().lossToCarry | taxMoney) : '—' }}
       </div>
       <div class="text-xs text-muted-color">5 років, до 50% на рік</div>
     </div>

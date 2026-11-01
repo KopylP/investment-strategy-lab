@@ -10,7 +10,7 @@ public sealed class InvestmentAccountTests
         new(name, TargetShare.TryFromPercent(percent).Value, null, null, Guardrails.None);
 
     private static Result<InvestmentAccount> Open(params SubPortfolioDraft[] drafts) =>
-        InvestmentAccount.Open(UserId.New(), "XTB", "XTB", Currency.EUR, null, ContributionPolicy.Default, drafts, Now);
+        InvestmentAccount.Open(UserId.New(), "XTB", "XTB", Currency.EUR, "TEST-POLICY", ContributionPolicy.Default, drafts, Now);
 
     [Fact]
     public void Opens_when_target_shares_add_up_to_100_percent()
@@ -18,7 +18,7 @@ public sealed class InvestmentAccountTests
         var account = Open(Draft("EU momentum", 60), Draft("US momentum", 40)).Value;
 
         account.ActiveSubPortfolios.Select(sub => sub.TargetShare.Value.Value).ShouldBe([0.6m, 0.4m]);
-        account.TaxPolicyCode.ShouldBe(InvestmentAccount.DefaultTaxPolicy);
+        account.TaxPolicyCode.ShouldBe("TEST-POLICY");
     }
 
     [Theory]
@@ -37,7 +37,7 @@ public sealed class InvestmentAccountTests
 
     [Fact]
     public void Refuses_a_base_currency_other_than_eur_or_usd() =>
-        InvestmentAccount.Open(UserId.New(), "A", "XTB", Currency.PLN, null, ContributionPolicy.Default, [Draft("A", 100)], Now)
+        InvestmentAccount.Open(UserId.New(), "A", "XTB", Currency.PLN, "TEST-POLICY", ContributionPolicy.Default, [Draft("A", 100)], Now)
             .Error.Code.ShouldBe("account.base_currency_unsupported");
 
     [Fact]

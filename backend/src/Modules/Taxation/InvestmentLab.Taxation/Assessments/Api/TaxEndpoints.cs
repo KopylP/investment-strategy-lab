@@ -1,8 +1,10 @@
 using InvestmentLab.BuildingBlocks.Http;
 using InvestmentLab.Taxation.Assessments.Application.GetTaxProgress;
+using InvestmentLab.Taxation.Assessments.Application.GetTaxRegime;
 using InvestmentLab.Taxation.Assessments.Application.GetTaxYear;
 using InvestmentLab.Taxation.Assessments.Application.GetTaxYears;
 using InvestmentLab.Taxation.Assessments.Application.ListLossCarryforwards;
+using InvestmentLab.Taxation.Assessments.Application.ListTaxPolicies;
 using InvestmentLab.Taxation.Assessments.Application.RecordLossCarryforward;
 using InvestmentLab.Taxation.Assessments.Application.RefreshTaxAssessments;
 using InvestmentLab.Taxation.Assessments.Application.RemoveLossCarryforward;
@@ -20,6 +22,8 @@ internal static class TaxEndpoints
     {
         var taxes = group.MapGroup("").WithTags("Taxes");
 
+        taxes.MapGet("/policies", ListTaxPolicies).WithName("ListTaxPolicies");
+        taxes.MapGet("/regime", GetTaxRegime).WithName("GetTaxRegime");
         taxes.MapGet("/years", RefreshAndGetTaxYears).WithName("GetTaxYears");
         taxes.MapGet("/years/{year:int}", RefreshAndGetTaxYear).WithName("GetTaxYear");
         taxes.MapGet("/progress/{year:int}", RefreshAndGetTaxProgress).WithName("GetTaxProgress");
@@ -29,6 +33,11 @@ internal static class TaxEndpoints
 
         return group;
     }
+
+    private static Ok<IReadOnlyList<TaxPolicyDto>> ListTaxPolicies(ListTaxPoliciesHandler handler) => TypedResults.Ok(handler.Handle());
+
+    private static async Task<Ok<TaxRegimeDto>> GetTaxRegime(GetTaxRegimeHandler handler, CancellationToken cancellationToken) =>
+        TypedResults.Ok(await handler.Handle(cancellationToken));
 
     private static async Task<Ok<TaxOverviewDto>> RefreshAndGetTaxYears(
         RefreshTaxAssessmentsHandler refresh, GetTaxYearsHandler query, CancellationToken cancellationToken)

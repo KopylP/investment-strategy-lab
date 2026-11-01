@@ -4,9 +4,7 @@
     Ваші, а не рахунку: один запис на рік для всіх брокерів.
   </p>
   <p class="text-sm sm:text-base text-muted-color mt-0 mb-4">
-    Збиток з поданого PIT-38: зменшує зиск наступних 5 років, щонайбільше на 50% збитку за рік. Один
-    збиток на рік — для декларації він ваш, не рахунку, і стоїть замість порахованого з журналу.
-    «Уже використано» — відраховане в деклараціях за роки, яких немає в журналі.
+    {{ regime.regime()?.lossesNote }}
   </p>
   @if (store.losses().length) {
     <p-table [value]="store.losses()" size="small" styleClass="mb-4">
@@ -20,8 +18,8 @@
       <ng-template #body let-loss>
         <tr>
           <td>{{ loss.year }}</td>
-          <td class="text-right">{{ loss.amount | money: 'PLN' }}</td>
-          <td class="text-right">{{ loss.alreadyUsed | money: 'PLN' }}</td>
+          <td class="text-right">{{ loss.amount | taxMoney }}</td>
+          <td class="text-right">{{ loss.alreadyUsed | taxMoney }}</td>
           <td>
             <p-button
               icon="pi pi-trash"
