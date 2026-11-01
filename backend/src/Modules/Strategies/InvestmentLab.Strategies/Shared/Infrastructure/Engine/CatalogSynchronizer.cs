@@ -14,6 +14,20 @@ public sealed class CatalogSynchronizer(StrategiesDbContext db, StrategyEngineCl
         if (stored.Count > 0 && stored.All(type => clock.GetUtcNow() - type.SyncedAt < MaxAge))
             return stored;
 
+        return await SyncedOrStoredAsync(stored, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<StrategyTypeDescriptor>> ListFromEngineAsync(CancellationToken cancellationToken)
+    {
+        var stored = await db.StrategyTypes.OrderBy(type => type.Code).ToListAsync(cancellationToken);
+
+        return await SyncedOrStoredAsync(stored, cancellationToken);
+    }
+
+    private async Task<IReadOnlyList<StrategyTypeDescriptor>> SyncedOrStoredAsync(
+        List<StrategyTypeDescriptor> stored,
+        CancellationToken cancellationToken)
+    {
         try
         {
             await SyncAsync(cancellationToken);

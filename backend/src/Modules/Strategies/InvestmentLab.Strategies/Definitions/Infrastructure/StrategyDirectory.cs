@@ -19,7 +19,7 @@ internal sealed class StrategyDirectory(IStrategyRepository strategies, CatalogS
 
     public async Task<IReadOnlyDictionary<string, string>> GetMessages(CancellationToken cancellationToken)
     {
-        var types = await catalog.ListAsync(cancellationToken);
+        var types = await catalog.ListFromEngineAsync(cancellationToken);
 
         return types.SelectMany(type => type.Messages).DistinctBy(message => message.Key).ToDictionary();
     }

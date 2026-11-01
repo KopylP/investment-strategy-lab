@@ -4,8 +4,10 @@ import { catchError, map, Observable, of, shareReplay, switchMap, tap } from 'rx
 import { hasUnknownMessage, translateDeep, useStrategyMessages } from './translate';
 
 const strategyMessagesUrl = '/api/strategies/catalog/messages';
+const pauseBetweenLoadsMs = 60_000;
 
 let loading: Observable<unknown> | null = null;
+let loadStartedAt = 0;
 
 export const translationInterceptor: HttpInterceptorFn = (request, next) => {
   const http = inject(HttpClient);
@@ -22,7 +24,10 @@ export const translationInterceptor: HttpInterceptorFn = (request, next) => {
 };
 
 function strategyMessages(http: HttpClient): Observable<unknown> {
-  loading ??= http.get<Record<string, string>>(strategyMessagesUrl).pipe(
+  if (loading && Date.now() - loadStartedAt < pauseBetweenLoadsMs) return loading;
+
+  loadStartedAt = Date.now();
+  loading = http.get<Record<string, string>>(strategyMessagesUrl).pipe(
     tap((messages) => useStrategyMessages(messages)),
     catchError(() => {
       loading = null;
