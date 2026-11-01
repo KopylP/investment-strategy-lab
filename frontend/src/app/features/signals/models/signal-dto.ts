@@ -1,6 +1,11 @@
 import { ReportTiming } from '../../reports/models/report-schedule';
 
-export type SignalTargetKind = 'Instrument' | 'EachPosition' | 'SubPortfolio' | 'Account';
+export type SignalTargetKind =
+  | 'Instrument'
+  | 'InstrumentGroup'
+  | 'EachPosition'
+  | 'SubPortfolio'
+  | 'Account';
 export type SignalMetric = 'DrawdownFromPeak' | 'DayFall' | 'LossFromCost' | 'Level';
 export type SignalDirection = 'Above' | 'Below';
 
@@ -19,6 +24,7 @@ export interface SignalDto {
   accountId: string | null;
   subPortfolioId: string | null;
   instrumentId: string | null;
+  groupName: string | null;
   condition: SignalConditionDto;
   schedule: ReportTiming;
   enabled: boolean;
@@ -54,6 +60,7 @@ export interface CreateSignalBody {
   accountId: string | null;
   subPortfolioId: string | null;
   instrumentId: string | null;
+  groupName: string | null;
   condition: SignalConditionDto;
   schedule: ReportTiming;
 }

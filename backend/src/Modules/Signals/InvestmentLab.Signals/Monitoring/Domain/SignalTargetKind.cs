@@ -6,4 +6,5 @@ public enum SignalTargetKind
     EachPosition,
     SubPortfolio,
     Account,
+    InstrumentGroup,
 }

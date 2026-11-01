@@ -38,6 +38,9 @@ public static class SignalErrors
     public static Error InstrumentNotFound() =>
         Error.NotFound("signal.instrument", "The instrument does not exist.");
 
+    public static Error InstrumentGroupNotFound() =>
+        Error.NotFound("signal.instrument_group", "No instrument belongs to this group.");
+
     public static Error BuiltInCannotBeDeleted() =>
         Error.Conflict("signal.built_in", "A built-in signal cannot be deleted, only turned off.");
 }

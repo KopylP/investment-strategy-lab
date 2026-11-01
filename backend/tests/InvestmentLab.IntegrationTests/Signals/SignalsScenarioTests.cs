@@ -66,6 +66,40 @@ public sealed class SignalsScenarioTests(MarketDataApiFactory factory) : IClassF
         (await OverviewAsync(client, ct)).Signals.ShouldBeEmpty();
     }
 
+    [Fact]
+    public async Task A_signal_on_a_group_of_instruments_is_stored_and_checked_and_an_unknown_group_is_refused()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var client = await factory.CreateSignedInClientAsync(ct);
+        var instruments = await client.GetFromJsonAsync<List<InstrumentDto>>("/api/market-data/instruments", ct);
+        var groupName = instruments!.First(instrument => instrument.Group is not null).Group!;
+
+        var refused = await PostGroupSignalAsync(client, "No such group", ct);
+        refused.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+
+        var response = await PostGroupSignalAsync(client, groupName, ct);
+        response.EnsureSuccessStatusCode();
+        var created = (await response.Content.ReadFromJsonAsync<SignalCreatedDto>(ct))!;
+
+        await CheckAsync(client, created.Id, ct);
+
+        var stored = await SignalAsync(client, created.Id, ct);
+        stored.Target.ShouldBe("InstrumentGroup");
+        stored.GroupName.ShouldBe(groupName);
+        stored.InstrumentId.ShouldBeNull();
+        stored.LastCheckedAt.ShouldNotBeNull();
+    }
+
+    private static Task<HttpResponseMessage> PostGroupSignalAsync(HttpClient client, string groupName, CancellationToken ct) =>
+        client.PostAsJsonAsync("/api/signals", new
+        {
+            name = "Падіння групи",
+            target = "InstrumentGroup",
+            groupName,
+            condition = new { metric = "DrawdownFromPeak", direction = "Above", threshold = 0.2m },
+            schedule = new { frequency = "Off" },
+        }, ct);
+
     private static async Task<Guid> Sp500IdAsync(HttpClient client, CancellationToken ct)
     {
         var instruments = await client.GetFromJsonAsync<List<InstrumentDto>>("/api/market-data/instruments", ct);

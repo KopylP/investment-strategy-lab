@@ -25,27 +25,27 @@
           [options]="targets"
           optionLabel="label"
           optionValue="value"
-          [ngModel]="form().target"
+          [ngModel]="targetChoice()"
           (ngModelChange)="changeTarget($event)"
           [disabled]="isEditing()"
           fluid
         />
       </div>
 
-      @if (form().target === 'Instrument') {
+      @if (watchesMarket()) {
         <div class="flex flex-col gap-1">
-          <label class="text-sm font-medium" for="signal-instrument">Інструмент</label>
-          <p-select
-            inputId="signal-instrument"
-            [options]="instruments()"
-            optionLabel="label"
-            optionValue="value"
-            [filter]="true"
-            [ngModel]="form().instrumentId"
-            (ngModelChange)="patch({ instrumentId: $event })"
+          <label class="text-sm font-medium" for="signal-watched-subject">
+            {{ form().target === 'InstrumentGroup' ? 'Група' : 'Інструмент' }}
+          </label>
+          <p-button
+            buttonId="signal-watched-subject"
+            [label]="watchedLabel() ?? 'Вибрати'"
+            icon="pi pi-search"
+            severity="secondary"
+            [outlined]="true"
             [disabled]="isEditing()"
-            placeholder="Виберіть"
-            fluid
+            [fluid]="true"
+            (onClick)="pickerVisible.set(true)"
           />
         </div>
       } @else {
@@ -284,3 +284,10 @@
     />
   </ng-template>
 </p-dialog>
+
+<app-watched-subject-picker
+  [(visible)]="pickerVisible"
+  [instruments]="store.instruments()"
+  [chosen]="watchedSubject()"
+  (picked)="pick($event)"
+/>

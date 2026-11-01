@@ -240,6 +240,30 @@ public sealed class SignalCheckTests
         forPositions.IsSuccess.ShouldBeTrue();
     }
 
+    [Theory]
+    [InlineData(SignalMetric.DrawdownFromPeak, true)]
+    [InlineData(SignalMetric.DayFall, true)]
+    [InlineData(SignalMetric.Level, false)]
+    [InlineData(SignalMetric.LossFromCost, false)]
+    public void A_group_of_instruments_is_watched_only_by_falls_comparable_between_its_members(SignalMetric metric, bool fits)
+    {
+        var target = SignalTarget.InstrumentGroup("Японія");
+
+        target.CanBeMeasuredBy(metric).ShouldBe(fits);
+    }
+
+    [Fact]
+    public void Each_member_of_a_group_fires_its_own_alarm_and_the_others_stay_silent()
+    {
+        var condition = SignalCondition.TryOf(SignalMetric.DrawdownFromPeak, SignalDirection.Above, 0.20m, null, null).Value;
+        var target = SignalTarget.InstrumentGroup("Японія");
+        var signal = Signal.Create(UserId.Of(Guid.NewGuid()), "Японія", target, condition, Cadence.Off).Value;
+
+        var outcome = signal.Check([], Readings(("fallen", 0.25m), ("steady", 0.05m)), Now);
+
+        outcome.Fired.ShouldHaveSingleItem().Occurrence.SubjectKey.ShouldBe("fallen");
+    }
+
     [Fact]
     public void A_signal_after_new_data_looks_every_ten_minutes()
     {

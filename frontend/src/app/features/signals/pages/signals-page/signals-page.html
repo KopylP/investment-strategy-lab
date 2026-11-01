@@ -60,7 +60,7 @@
           [icon]="targetIcon(item)"
           [tone]="toneOf(item)"
           [title]="item.name"
-          [subtitle]="conditionLabel(item.condition)"
+          [subtitle]="subtitleOf(item)"
           [detail]="detailOf(item)"
           (pick)="edit(item)"
         >

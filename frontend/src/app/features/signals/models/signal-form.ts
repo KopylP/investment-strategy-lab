@@ -25,6 +25,7 @@ const afterNewData: ReportTiming = {
 
 const metricsOfTarget: Record<SignalTargetKind, SignalMetric[]> = {
   Instrument: ['DrawdownFromPeak', 'DayFall', 'Level'],
+  InstrumentGroup: ['DrawdownFromPeak', 'DayFall'],
   EachPosition: ['DrawdownFromPeak', 'DayFall', 'LossFromCost'],
   SubPortfolio: ['DrawdownFromPeak', 'DayFall'],
   Account: ['DrawdownFromPeak', 'DayFall'],
@@ -36,6 +37,7 @@ export interface SignalForm {
   accountId: string | null;
   subPortfolioId: string | null;
   instrumentId: string | null;
+  groupName: string | null;
   metric: SignalMetric;
   direction: SignalDirection;
   threshold: number | null;
@@ -43,6 +45,10 @@ export interface SignalForm {
   windowDays: number | null;
   schedule: ReportTiming;
   enabled: boolean;
+}
+
+export function watchesMarket(target: SignalTargetKind): boolean {
+  return target === 'Instrument' || target === 'InstrumentGroup';
 }
 
 export function metricsOf(target: SignalTargetKind): SignalMetric[] {
@@ -56,6 +62,7 @@ export function emptyForm(accountId: string | null): SignalForm {
     accountId,
     subPortfolioId: null,
     instrumentId: null,
+    groupName: null,
     metric: 'DrawdownFromPeak',
     direction: 'Above',
     threshold: 20,
@@ -75,6 +82,7 @@ export function formOf(signal: SignalDto): SignalForm {
     accountId: signal.accountId,
     subPortfolioId: signal.subPortfolioId,
     instrumentId: signal.instrumentId,
+    groupName: signal.groupName,
     metric,
     direction,
     threshold: toDisplayed(metric, threshold),
@@ -99,9 +107,10 @@ export function createBodyOf(form: SignalForm): CreateSignalBody {
   return {
     name: form.name,
     target: form.target,
-    accountId: form.target === 'Instrument' ? null : form.accountId,
+    accountId: watchesMarket(form.target) ? null : form.accountId,
     subPortfolioId: form.target === 'SubPortfolio' ? form.subPortfolioId : null,
     instrumentId: form.target === 'Instrument' ? form.instrumentId : null,
+    groupName: form.target === 'InstrumentGroup' ? form.groupName : null,
     condition: conditionOf(form),
     schedule: form.schedule,
   };
@@ -119,6 +128,8 @@ function hasTarget(form: SignalForm): boolean {
   switch (form.target) {
     case 'Instrument':
       return form.instrumentId !== null;
+    case 'InstrumentGroup':
+      return form.groupName !== null;
     case 'SubPortfolio':
       return form.accountId !== null && form.subPortfolioId !== null;
     default:

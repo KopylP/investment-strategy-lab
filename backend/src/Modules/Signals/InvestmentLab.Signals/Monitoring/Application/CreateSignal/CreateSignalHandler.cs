@@ -12,7 +12,8 @@ public sealed record CreateSignalCommand(
     Guid? SubPortfolioId,
     Guid? InstrumentId,
     SignalConditionDto Condition,
-    SignalScheduleDto Schedule);
+    SignalScheduleDto Schedule,
+    string? GroupName = null);
 
 public sealed record SignalCreatedDto(Guid Id);
 
@@ -50,6 +51,7 @@ public sealed class CreateSignalHandler(ISignalRepository signals, IAccountSetup
         return kind switch
         {
             SignalTargetKind.Instrument => await InstrumentTargetAsync(command.InstrumentId, cancellationToken),
+            SignalTargetKind.InstrumentGroup => await InstrumentGroupTargetAsync(command.GroupName, cancellationToken),
             SignalTargetKind.SubPortfolio => await SubPortfolioTargetAsync(command.AccountId, command.SubPortfolioId, cancellationToken),
             SignalTargetKind.EachPosition => await AccountTargetAsync(command.AccountId, SignalTarget.EachPosition, cancellationToken),
             _ => await AccountTargetAsync(command.AccountId, SignalTarget.Account, cancellationToken),
@@ -66,6 +68,18 @@ public sealed class CreateSignalHandler(ISignalRepository signals, IAccountSetup
             return SignalErrors.InstrumentNotFound();
 
         return SignalTarget.Instrument(id);
+    }
+
+    private async Task<Result<SignalTarget>> InstrumentGroupTargetAsync(string? groupName, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(groupName))
+            return SignalErrors.UnknownTarget();
+
+        var catalog = await instruments.GetInstruments(cancellationToken);
+        if (catalog.All(instrument => instrument.Group != groupName))
+            return SignalErrors.InstrumentGroupNotFound();
+
+        return SignalTarget.InstrumentGroup(groupName);
     }
 
     private async Task<Result<SignalTarget>> SubPortfolioTargetAsync(Guid? accountId, Guid? subPortfolioId, CancellationToken cancellationToken)

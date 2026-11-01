@@ -27,8 +27,17 @@ import {
   SignalReportRuleDto,
   SignalTargetKind,
 } from '../../models/signal-dto';
-import { emptyForm, formOf, isFormComplete, metricsOf, SignalForm } from '../../models/signal-form';
-import { metricLabels, targetLabels } from '../../models/signal-labels';
+import {
+  emptyForm,
+  formOf,
+  isFormComplete,
+  metricsOf,
+  SignalForm,
+  watchesMarket,
+} from '../../models/signal-form';
+import { metricLabels, targetChoices } from '../../models/signal-labels';
+import { WatchedSubject, watchedSubjectOf } from '../../models/watched-subject';
+import { WatchedSubjectPicker } from '../watched-subject-picker/watched-subject-picker';
 
 const signalFrequencyOptions = [
   { label: 'Після оновлення даних', value: 'off' },
@@ -49,6 +58,7 @@ const signalFrequencyOptions = [
     Select,
     ToggleSwitch,
     ReportTimingEditor,
+    WatchedSubjectPicker,
   ],
   templateUrl: './signal-editor.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -69,10 +79,8 @@ export class SignalEditor {
     { label: 'Вище порога', value: 'Above' },
     { label: 'Нижче порога', value: 'Below' },
   ];
-  protected readonly targets = Object.entries(targetLabels).map(([value, label]) => ({
-    label,
-    value: value as SignalTargetKind,
-  }));
+  protected readonly targets = targetChoices;
+  protected readonly pickerVisible = signal(false);
 
   protected readonly isEditing = computed(() => this.editedSignal() !== null);
   protected readonly isComplete = computed(() => isFormComplete(this.form()));
@@ -88,12 +96,12 @@ export class SignalEditor {
   protected readonly subPortfolios = computed(() =>
     this.subPortfolioOptions(this.form().accountId),
   );
-  protected readonly instruments = computed(() =>
-    this.store.instruments().map((instrument) => ({
-      label: `${instrument.label} · ${instrument.name}`,
-      value: instrument.id,
-    })),
+  protected readonly watchesMarket = computed(() => watchesMarket(this.form().target));
+  protected readonly targetChoice = computed(() =>
+    this.watchesMarket() ? 'Instrument' : this.form().target,
   );
+  protected readonly watchedSubject = computed(() => watchedSubjectOf(this.form()));
+  protected readonly watchedLabel = computed(() => this.labelOfWatchedSubject());
 
   protected readonly rules = computed(() => this.rulesOfCurrentSignal());
   protected readonly ruleReports = computed(() =>
@@ -115,7 +123,20 @@ export class SignalEditor {
   protected changeTarget(target: SignalTargetKind): void {
     const metric = this.metricFitting(target);
 
-    this.patch({ target, metric });
+    this.patch({ target, metric, groupName: null });
+
+    if (target === 'Instrument') this.pickerVisible.set(true);
+  }
+
+  protected pick(subject: WatchedSubject): void {
+    const metric = this.metricFitting(subject.target);
+
+    this.patch({
+      target: subject.target,
+      metric,
+      instrumentId: subject.target === 'Instrument' ? subject.instrumentId : null,
+      groupName: subject.target === 'InstrumentGroup' ? subject.groupName : null,
+    });
   }
 
   protected changeSchedule(schedule: ReportTiming): void {
@@ -167,6 +188,17 @@ export class SignalEditor {
     this.form.set(current ? formOf(current) : emptyForm(firstAccountId));
     this.ruleAccountId.set(current?.accountId ?? firstAccountId);
     this.ruleReportCode.set(null);
+    this.pickerVisible.set(false);
+  }
+
+  private labelOfWatchedSubject(): string | null {
+    const subject = this.watchedSubject();
+    if (subject?.target === 'InstrumentGroup') return subject.groupName;
+
+    const instrumentId = subject?.instrumentId;
+    const instrument = this.store.instruments().find((each) => each.id === instrumentId);
+
+    return instrument ? `${instrument.label} · ${instrument.name}` : null;
   }
 
   private metricFitting(target: SignalTargetKind): SignalMetric {

@@ -25,6 +25,38 @@ async function registerWithAccount(page: Page): Promise<void> {
   expect(account.ok()).toBeTruthy();
 }
 
+test('a signal watches an instrument or a whole group picked in a dialog', async ({ page }) => {
+  await registerWithAccount(page);
+  await page.goto('/signals');
+
+  await page.getByRole('button', { name: 'Новий сигнал' }).click();
+  await page.locator('#signal-name').fill('Падіння Японії');
+  await page.locator('#signal-target').click();
+  await page.getByRole('option', { name: 'Інструмент або група' }).click();
+
+  const picker = page.getByRole('dialog', { name: 'За чим стежити' });
+  await expect(picker).toBeVisible();
+  await picker.getByRole('searchbox').fill('apple');
+  await expect(picker.getByRole('button', { name: /Apple/ })).toBeVisible();
+  await page.screenshot({ path: `${screenshotsDir}/signal-picker-instrument.png` });
+  await picker.getByRole('button', { name: /Apple/ }).click();
+  await expect(picker).toBeHidden();
+  await expect(page.getByRole('button', { name: /Apple/ })).toBeVisible();
+
+  await page.getByRole('button', { name: /Apple/ }).click();
+  await picker.getByText('Група', { exact: true }).click();
+  await picker.getByRole('searchbox').fill('япон');
+  await page.screenshot({ path: `${screenshotsDir}/signal-picker-group.png` });
+  await picker.getByRole('button', { name: /Японія/ }).click();
+  await expect(picker).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Японія' })).toBeVisible();
+  await page.screenshot({ path: `${screenshotsDir}/signal-group-chosen.png` });
+
+  await page.getByRole('button', { name: 'Зберегти' }).click();
+  await expect(page.getByText('Сигнал створено')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Падіння Японії/ })).toContainText('Японія');
+});
+
 test('built-in signals appear, a new one is created and can start a report', async ({ page }) => {
   await registerWithAccount(page);
 
