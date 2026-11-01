@@ -115,5 +115,29 @@
       "weakMarketInvestPct": 0.5
     },
     "usesVolatilityIndex": true
+  },
+  {
+    "name": "EU index hold",
+    "typeCode": "buy-and-hold",
+    "currency": "EUR",
+    "universe": [
+      "IE00B5BMR087"
+    ],
+    "cashInstrument": null,
+    "benchmark": "IE00B5BMR087",
+    "parameters": {},
+    "usesVolatilityIndex": false
+  },
+  {
+    "name": "US index hold",
+    "typeCode": "buy-and-hold",
+    "currency": "USD",
+    "universe": [
+      "US78462F1030"
+    ],
+    "cashInstrument": null,
+    "benchmark": "US78462F1030",
+    "parameters": {},
+    "usesVolatilityIndex": false
   }
 ]

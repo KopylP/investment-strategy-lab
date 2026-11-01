@@ -43,7 +43,7 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
             subPortfolios = new object[]
             {
                 new { name = "EU momentum", targetSharePercent = 70m, strategyId = strategies[0].Id },
-                new { name = "US momentum", targetSharePercent = 30m, strategyId = strategies[1].Id },
+                new { name = "US momentum", targetSharePercent = 30m, strategyId = strategies.Single(strategy => strategy.Name == "US ETF momentum").Id },
             },
         }, ct);
         (await client.PutAsJsonAsync($"/api/rebalancing/accounts/{account.Id}/settings",
@@ -117,6 +117,34 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
         var stranger = await _factory.CreateSignedInClientAsync(ct);
         (await stranger.GetAsync($"/api/rebalancing/reports/{again}", ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await stranger.GetFromJsonAsync<List<ReportRequestDto>>("/api/rebalancing/report-requests", ct))!.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task An_index_hold_strategy_reports_what_to_buy_with_the_contribution()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var client = await _factory.CreateSignedInClientAsync(ct);
+        (await client.PostAsync("/api/market-data/quotes/ingest", null, ct)).EnsureSuccessStatusCode();
+        var strategies = await client.DefaultStrategiesAsync<StrategyDto>(strategy => strategy.Name, ct);
+        var hold = strategies.Single(strategy => strategy.Name == "EU index hold");
+        var account = await PostAsync<AccountSetupDto>(client, "/api/portfolio/accounts", new
+        {
+            name = "XTB index",
+            broker = "XTB",
+            baseCurrency = "EUR",
+            subPortfolios = new object[]
+            {
+                new { name = "Index", targetSharePercent = 100m, strategyId = hold.Id },
+            },
+        }, ct);
+        (await client.PutAsJsonAsync($"/api/rebalancing/accounts/{account.Id}/settings",
+            new { monthlyContribution = 1000m, minTrade = 25m, trimBand = 0.1m, allowFractionalShares = true }, ct)).EnsureSuccessStatusCode();
+
+        var report = await ReportAsync(client, await RequestReportAsync(client, account.Id, new { asOf = SyntheticQuoteProvider.LastDay }, ct), ct);
+
+        report.Summary.Title.ShouldBe("@buy_and_hold.report.rebalance.name");
+        report.Sections.ShouldAllBe(section => section.Error == null);
+        report.Actions.ShouldContain(action => action.Kind == "Buy");
     }
 
     [Fact]
