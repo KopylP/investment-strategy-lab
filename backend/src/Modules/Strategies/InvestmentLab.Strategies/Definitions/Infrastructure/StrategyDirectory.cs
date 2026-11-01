@@ -17,6 +17,13 @@ internal sealed class StrategyDirectory(IStrategyRepository strategies, CatalogS
                 report.Code, report.Name, report.Description, report.Mode, ToDto(report.Schedule ?? ReportSchedule.Off)))]))];
     }
 
+    public async Task<IReadOnlyDictionary<string, string>> GetMessages(CancellationToken cancellationToken)
+    {
+        var types = await catalog.ListAsync(cancellationToken);
+
+        return types.SelectMany(type => type.Messages).DistinctBy(message => message.Key).ToDictionary();
+    }
+
     private static StrategyReportScheduleDto ToDto(ReportSchedule schedule) =>
         new(schedule.Frequency, schedule.Day, schedule.Weekday, schedule.Time, schedule.Minute);
 }

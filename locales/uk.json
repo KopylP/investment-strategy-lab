@@ -158,6 +158,9 @@
   "tax.pit8c_not_found": "За цей рік немає сум PIT-8C.",
   "tax.pit8c_negative": "Суми PIT-8C не можуть бути від'ємними.",
 
+  "rationale.default_title": "Чому саме ці інструменти",
+  "rationale.default_instrument": "Інструмент",
+  "report.note.signal": "{label}: {reason}",
   "report.title.risk_review": "Перевірка ризику",
   "report.title.rebalance": "Ребаланс",
   "report.failed": "Рапорт не вдалося скласти: {error}",

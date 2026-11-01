@@ -18,6 +18,7 @@ import math
 
 import pandas as pd
 
+from finance_decisions.messages import msg
 from .config import PlanSettings
 from .scanner import ScanResult
 
@@ -112,7 +113,7 @@ def build_plan(
     for ticker, shares in holdings.items():
         latest = price(ticker)
         if latest is None:
-            notes.append(f"Немає ціни для {ticker}: перевірте цю позицію вручну.")
+            notes.append(msg("etf_momentum.plan.no_price", ticker=ticker))
             continue
         values[ticker] = shares * latest
 
@@ -157,7 +158,7 @@ def build_plan(
         excess = value - target_value
         in_profit = price(ticker) > cost_basis.get(ticker, 0.0)
         if in_profit and excess > settings.trim_band * investable_total and excess >= settings.min_trade:
-            sold = add_order("sell", KIND_TRIM, ticker, excess, f"вага вище цілі {target_weight:.0%} більш ніж на {settings.trim_band:.0%}: продати надлишок")
+            sold = add_order("sell", KIND_TRIM, ticker, excess, msg("etf_momentum.plan.trim", target=f"{target_weight:.0%}", band=f"{settings.trim_band:.0%}"))
             kept[ticker] = value - sold
             trims += sold
     deployable += trims
@@ -183,9 +184,9 @@ def build_plan(
         needed = -remaining / price(cash_etf)
         shares = needed if settings.fractional_shares else math.ceil(needed)
         shares = min(shares, holdings.get(cash_etf, 0.0))
-        add_order("sell", KIND_UNPARK, cash_etf, shares * price(cash_etf), "запарковані кошти повертаються в роботу", shares=shares)
+        add_order("sell", KIND_UNPARK, cash_etf, shares * price(cash_etf), msg("etf_momentum.plan.unpark"), shares=shares)
     elif remaining >= settings.min_trade and cash_etf and price(cash_etf) is not None:
-        add_order("buy", KIND_PARK, cash_etf, remaining, "парковка: гроші, які цього місяця не інвестуються")
+        add_order("buy", KIND_PARK, cash_etf, remaining, msg("etf_momentum.plan.park"))
 
     orders.sort(key=lambda order: _ORDER_SEQUENCE[order.kind])
 
@@ -219,17 +220,18 @@ def build_plan(
 
 def _exit_reason(scan: ScanResult, ticker: str) -> str:
     if ticker not in scan.table.index:
-        return "не входить до списку ETF стратегії"
+        return msg("etf_momentum.plan.exit_not_listed")
     reason = scan.table.loc[ticker, "Reason"]
-    return f"випав із вибірки: {reason}" if reason else "випав із вибірки"
+    return msg("etf_momentum.plan.exit_dropped_because", reason=reason) if reason else msg("etf_momentum.plan.exit_dropped")
 
 
 def _buy_reason(scan: ScanResult, ticker: str, held: bool, target_weight: float) -> str:
     row = scan.table.loc[ticker]
     momentum = row["Momentum"]
-    detail = f"ранг {int(row['Rank'])}, моментум {momentum:+.1%}" if pd.notna(momentum) else f"ранг {int(row['Rank'])}"
-    action = "докупити до цілі" if held else "нова позиція, ціль"
-    return f"{action} {target_weight:.0%} портфеля ({detail})"
+    rank = int(row["Rank"])
+    detail = msg("etf_momentum.plan.rank_momentum", rank=rank, momentum=f"{momentum:+.1%}") if pd.notna(momentum) else msg("etf_momentum.plan.rank", rank=rank)
+    code = "etf_momentum.plan.buy_more" if held else "etf_momentum.plan.buy_new"
+    return msg(code, weight=f"{target_weight:.0%}", detail=detail)
 
 
 def _notes(
@@ -246,28 +248,29 @@ def _notes(
 ) -> list[str]:
     from finance_decisions.helpers import money
 
-    parking = cash_etf or "кеш на рахунку"
+    parking = cash_etf or msg("etf_momentum.plan.parking_cash")
     notes = []
     if contribution <= 0:
-        notes.append("Внесок цього місяця дорівнює 0. Вкажіть monthly_contribution у config або передайте --contribution.")
+        notes.append(msg("etf_momentum.plan.zero_contribution"))
     if not scan.market_ok:
         notes.append(
-            f"Ринок слабкий: інвестуємо {invest_pct:.0%} внеску ({money(contribution * invest_pct, currency)}), "
-            f"решту ({money(contribution * (1 - invest_pct), currency)}) паркуємо в {parking}. "
-            "Через стан ринку поточні позиції не продаємо."
+            msg(
+                "etf_momentum.plan.weak_market",
+                share=f"{invest_pct:.0%}",
+                invested=money(contribution * invest_pct, currency),
+                rest=money(contribution * (1 - invest_pct), currency),
+                parking=parking,
+            )
         )
     elif parked_before >= settings.min_trade:
-        notes.append(f"Ринок у нормі: запарковані кошти ({money(parked_before, currency)}) повертаються в роботу.")
+        notes.append(msg("etf_momentum.plan.market_recovered", parked=money(parked_before, currency)))
     if not picks:
-        notes.append(f"Жоден ETF не пройшов фільтри: усі гроші лишаються в {parking}.")
+        notes.append(msg("etf_momentum.plan.nothing_picked", parking=parking))
     elif len(picks) < top_n:
         empty = top_n - len(picks)
-        notes.append(
-            f"Знайдено {len(picks)} з {top_n} кандидатів: {empty} порожн{'ій слот' if empty == 1 else 'і слоти'} "
-            f"({empty / top_n:.0%} портфеля) лишаються в {parking} до наступного місяця."
-        )
+        notes.append(msg("etf_momentum.plan.empty_slots", found=len(picks), slots=top_n, empty=empty, share=f"{empty / top_n:.0%}", parking=parking))
     if skipped:
-        notes.append(f"Пропущено дрібні покупки (менше {money(settings.min_trade, currency)}): {', '.join(skipped)}.")
+        notes.append(msg("etf_momentum.plan.small_buys_skipped", minimum=money(settings.min_trade, currency), tickers=", ".join(skipped)))
     return notes
 
 
@@ -298,7 +301,7 @@ def _allocation(
     rows.append(
         AllocationRow(
             cash_etf or "CASH",
-            name(cash_etf) if cash_etf else "Кеш",
+            name(cash_etf) if cash_etf else msg("etf_momentum.plan.cash_name"),
             "cash",
             parked_before,
             parked_after,

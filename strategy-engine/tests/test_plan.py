@@ -7,6 +7,7 @@ import pytest
 from finance_decisions.strategies.etf_momentum.config import PlanSettings
 from finance_decisions.strategies.etf_momentum.plan import build_plan
 from finance_decisions.strategies.etf_momentum.scanner import ScanResult
+from finance_decisions.messages import render
 
 
 def _scan(picks: list[str], market_ok: bool = True, others: dict[str, str] | None = None) -> ScanResult:
@@ -54,7 +55,7 @@ def test_unfilled_slots_are_parked_not_concentrated() -> None:
 
     assert _amounts(plan, "buy") == {"AAA": 100.0, "BBB": 100.0}
     assert _amounts(plan, "park") == {"CASHX": 200.0}
-    assert any("2 з 4" in note for note in plan.notes)
+    assert any("2 з 4" in render(note) for note in plan.notes)
 
 
 def test_weak_market_invests_half_and_parks_the_rest() -> None:
@@ -103,7 +104,7 @@ def test_orders_below_minimum_are_skipped() -> None:
     plan = _plan(_scan(["AAA", "BBB", "CCC", "DDD"]), contribution=80.0)
 
     assert not _amounts(plan, "buy")
-    assert any("дрібні" in note for note in plan.notes)
+    assert any("дрібні" in render(note) for note in plan.notes)
 
 
 def test_whole_shares_mode_rounds_down() -> None:

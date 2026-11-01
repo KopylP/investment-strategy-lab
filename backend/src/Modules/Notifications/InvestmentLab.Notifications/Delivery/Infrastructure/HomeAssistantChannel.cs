@@ -2,10 +2,11 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using InvestmentLab.BuildingBlocks.Localization;
 using InvestmentLab.Notifications.Delivery.Domain;
+using InvestmentLab.Strategies.Contracts;
 
 namespace InvestmentLab.Notifications.Delivery.Infrastructure;
 
-internal sealed class HomeAssistantChannel(HttpClient http, HomeAssistantChannelOptions options) : INotificationChannel
+internal sealed class HomeAssistantChannel(HttpClient http, HomeAssistantChannelOptions options, IStrategyDirectory strategies) : INotificationChannel
 {
     public const string SupervisorAddress = "http://supervisor/";
     private const string Key = "homeassistant:";
@@ -40,7 +41,7 @@ internal sealed class HomeAssistantChannel(HttpClient http, HomeAssistantChannel
 
     public async Task SendAsync(Notification notification, Recipient recipient, CancellationToken cancellationToken)
     {
-        var localizer = MessageLocalizer.Default;
+        var localizer = new MessageLocalizer(await StrategyMessagesAsync(cancellationToken));
         var title = localizer.Render(notification.Title);
         var message = localizer.Render(notification.Message);
 
@@ -75,6 +76,18 @@ internal sealed class HomeAssistantChannel(HttpClient http, HomeAssistantChannel
 
         foreach (var phone in await PhonesAsync(cancellationToken))
             await PostAsync($"core/api/services/notify/{phone}", new { message = "clear_notification", data = new { tag } }, cancellationToken);
+    }
+
+    private async Task<IReadOnlyDictionary<string, string>?> StrategyMessagesAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await strategies.GetMessages(cancellationToken);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            return null;
+        }
     }
 
     private async Task<IReadOnlyList<string>> PhonesAsync(CancellationToken cancellationToken)

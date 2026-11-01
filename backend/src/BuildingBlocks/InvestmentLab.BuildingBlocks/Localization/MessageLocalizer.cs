@@ -66,6 +66,7 @@ public sealed partial class MessageLocalizer(IReadOnlyDictionary<string, string>
             "money" => Money(value.GetDecimal(), TextOf(parameters.GetValueOrDefault(argument))),
             "amount" => Amount(value.GetDecimal()),
             "plural" => Plural(value.GetDecimal(), argument),
+            "join" => string.Join(argument, value.EnumerateArray().Select(item => Render(TextOf(item)))),
             _ when value.ValueKind == JsonValueKind.Array => string.Join(ListSeparator, value.EnumerateArray().Select(item => Render(TextOf(item)))),
             _ => Render(TextOf(value)),
         };

@@ -1,5 +1,6 @@
 using InvestmentLab.Strategies.Catalog.Application.GetStrategyCatalog;
 using InvestmentLab.Strategies.Catalog.Application.Shared;
+using InvestmentLab.Strategies.Contracts;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -16,6 +17,7 @@ internal static class CatalogEndpoints
         var catalog = group.MapGroup("/catalog").WithTags("Strategy catalog");
 
         catalog.MapGet("", GetStrategyCatalog).WithName("GetStrategyCatalog");
+        catalog.MapGet("/messages", GetStrategyMessages).WithName("GetStrategyMessages");
         catalog.MapPost("/sync", SyncStrategyCatalog).WithName("SyncStrategyCatalog");
 
         return group;
@@ -28,6 +30,10 @@ internal static class CatalogEndpoints
 
         return TypedResults.Ok(strategyTypes);
     }
+
+    private static async Task<Ok<IReadOnlyDictionary<string, string>>> GetStrategyMessages(
+        IStrategyDirectory directory, CancellationToken cancellationToken) =>
+        TypedResults.Ok(await directory.GetMessages(cancellationToken));
 
     private static async Task<Ok<SyncedStrategyCatalogResponse>> SyncStrategyCatalog(
         IStrategyCatalog catalog, CancellationToken cancellationToken)

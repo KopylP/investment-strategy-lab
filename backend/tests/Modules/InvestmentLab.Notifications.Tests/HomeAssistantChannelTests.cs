@@ -22,7 +22,7 @@ public sealed class HomeAssistantChannelTests
     private readonly FakeHomeAssistant _homeAssistant = new();
 
     private HomeAssistantChannel Channel() =>
-        new(new HttpClient(_homeAssistant) { BaseAddress = new Uri(HomeAssistantChannel.SupervisorAddress) }, new HomeAssistantChannelOptions("/hassio/ingress/local_investlab"));
+        new(new HttpClient(_homeAssistant) { BaseAddress = new Uri(HomeAssistantChannel.SupervisorAddress) }, new HomeAssistantChannelOptions("/hassio/ingress/local_investlab"), new NoStrategyMessages());
 
     private static Notification Report(Guid recipient) =>
         new(recipient, "report_ready", "investlab_report_1", "Рапорт готовий", "3 дії", new Dictionary<string, object?>());
@@ -92,4 +92,13 @@ public sealed class HomeAssistantChannelTests
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(body, Encoding.UTF8, "application/json") });
         }
     }
+}
+
+internal sealed class NoStrategyMessages : InvestmentLab.Strategies.Contracts.IStrategyDirectory
+{
+    public Task<IReadOnlyList<InvestmentLab.Strategies.Contracts.StrategySummaryDto>> GetStrategies(CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<InvestmentLab.Strategies.Contracts.StrategySummaryDto>>([]);
+
+    public Task<IReadOnlyDictionary<string, string>> GetMessages(CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyDictionary<string, string>>(new Dictionary<string, string>());
 }

@@ -7,6 +7,7 @@ import pytest
 from finance_decisions.models import Position
 from finance_decisions.strategies.etf_momentum.config import RiskSettings
 from finance_decisions.strategies.etf_momentum.risk import analyze_portfolio_risk, portfolio_drawdown
+from finance_decisions.messages import render
 
 
 def _frame(qqq: list[float], periods: int = 260, vix: float = 18.0) -> pd.DataFrame:
@@ -25,7 +26,7 @@ def test_analyze_portfolio_risk_flags_stop_loss() -> None:
     assert report.portfolio_pnl == pytest.approx(-0.10)
     assert report.position_risks[0].status == "red"
     assert report.position_risks[0].sell is True
-    assert report.actions[0].startswith("Продати QQQ повністю")
+    assert render(report.actions[0]).startswith("Продати QQQ повністю")
     assert report.status == "act"
 
 
@@ -69,7 +70,7 @@ def test_vix_read_from_last_valid_close() -> None:
     report = analyze_portfolio_risk(prices, [Position("QQQ", 100.0, 1)])
 
     assert report.vix == 40.0
-    assert any("VIX" in alert for alert in report.market_alerts)
+    assert any("VIX" in render(alert) for alert in report.market_alerts)
 
 
 def test_lots_are_combined_per_ticker() -> None:
@@ -95,7 +96,7 @@ def test_portfolio_drawdown_measured_from_peak_not_cost() -> None:
     assert drawdown == pytest.approx(-0.30, abs=1e-6)
     assert report.portfolio_pnl == pytest.approx(0.40)
     assert report.portfolio_exit_hit is True
-    assert any("Продати всі позиції" in action for action in report.actions)
+    assert any("Продати всі позиції" in render(action) for action in report.actions)
 
 
 def test_new_contribution_does_not_hide_drawdown() -> None:

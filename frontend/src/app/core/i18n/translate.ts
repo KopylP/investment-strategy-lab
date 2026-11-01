@@ -16,6 +16,20 @@ export function hasMessage(code: string): boolean {
   return templateOf(code) !== undefined;
 }
 
+export function hasUnknownMessage(value: unknown): boolean {
+  if (typeof value === 'string') {
+    const token = tokenPattern.exec(value);
+
+    return token !== null && templateOf(token[1]) === undefined;
+  }
+
+  if (Array.isArray(value)) return value.some(hasUnknownMessage);
+
+  if (value !== null && typeof value === 'object') return Object.values(value).some(hasUnknownMessage);
+
+  return false;
+}
+
 export function translateCode(code: string, parameters: Parameters = {}): string {
   const template = templateOf(code);
 
@@ -76,6 +90,8 @@ function formatted(value: unknown, format: string | undefined, argument: string 
       return Number(value).toFixed(2);
     case 'plural':
       return plural(Number(value), argument ?? '');
+    case 'join':
+      return (value as unknown[]).map(plainText).join(argument ?? ' ');
     default:
       return plainText(value);
   }

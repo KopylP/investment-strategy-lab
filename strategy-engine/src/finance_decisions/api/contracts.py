@@ -13,6 +13,8 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pydantic.alias_generators import to_camel
 
+from finance_decisions.messages import msg
+
 
 # Local wall-clock time, HH:mm.
 TIME_PATTERN = r"^([01][0-9]|2[0-3]):[0-5][0-9]$"
@@ -173,8 +175,8 @@ class Rationale(ApiModel):
     summary: str
     scores: list[InstrumentScore]
     # Heading of the "why" table and of its instrument column.
-    title: str = "Чому саме ці інструменти"
-    instrument_label: str = "Інструмент"
+    title: str = msg("rationale.default_title")
+    instrument_label: str = msg("rationale.default_instrument")
     columns: list[RationaleColumn] = Field(default_factory=list)
     risk_free_rate: float | None = None
 
@@ -307,6 +309,7 @@ class StrategyTypeDescriptor(ApiModel):
     parameters_schema: dict[str, Any]
     default_parameters: dict[str, Any]
     reports: list[ReportDefinition]
+    messages: dict[str, str] = Field(default_factory=dict, description="The texts of this type's message codes, in Ukrainian.")
 
 
 class PricesRequest(ApiModel):

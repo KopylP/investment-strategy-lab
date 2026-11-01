@@ -9,6 +9,7 @@ from fastapi import APIRouter, HTTPException, status
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, ValidationError
 
+from finance_decisions.messages import msg
 from finance_decisions.strategies.etf_momentum import decision as etf_momentum
 from finance_decisions.strategies.etf_momentum.parameters import EtfMomentumParameters
 from .contracts import EvaluationContext, ReportDefinition, RiskAssessment, SeriesRole, StrategyDecision, StrategyTypeDescriptor
@@ -21,6 +22,7 @@ class StrategyType:
     code: str
     name: str
     description: str
+    messages: dict[str, str]
     parameters: type[BaseModel]
     decide: Callable[[EvaluationContext, Any], StrategyDecision]
     assess_risk: Callable[[EvaluationContext, Any], RiskAssessment]
@@ -41,6 +43,7 @@ class StrategyType:
             parameters_schema=self.parameters.model_json_schema(by_alias=True),
             default_parameters=self.parameters().model_dump(by_alias=True, mode="json"),
             reports=list(self.reports),
+            messages=self.messages,
         )
 
     def parse_parameters(self, raw: dict[str, Any]) -> Any:
@@ -55,10 +58,8 @@ STRATEGY_TYPES: dict[str, StrategyType] = {
     etf_momentum.STRATEGY_CODE: StrategyType(
         code=etf_momentum.STRATEGY_CODE,
         name="ETF momentum",
-        description=(
-            "Щомісяця обирає topN ETF з найсильнішим моментумом серед тих, що вище MA200, "
-            "з помірною волатильністю й просадкою; у слабкому ринку інвестує лише частину внеску."
-        ),
+        description=msg("etf_momentum.description"),
+        messages=etf_momentum.MESSAGES,
         parameters=EtfMomentumParameters,
         decide=etf_momentum.decide,
         assess_risk=etf_momentum.assess_risk,

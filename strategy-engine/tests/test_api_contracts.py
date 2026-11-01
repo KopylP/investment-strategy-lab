@@ -19,6 +19,7 @@ from finance_decisions.models import Position
 from finance_decisions.strategies.etf_momentum.config import RiskSettings, ScannerSettings
 from finance_decisions.strategies.etf_momentum.risk import analyze_portfolio_risk
 from finance_decisions.strategies.etf_momentum.scanner import scan_etfs
+from finance_decisions.messages import render
 
 AS_OF = date(2026, 10, 2)
 CONTRACT_PATH = Path(__file__).resolve().parents[1] / "contracts" / "v1" / "openapi.json"
@@ -154,7 +155,7 @@ def test_decide_describes_its_rationale_columns(client: TestClient) -> None:
     response = client.post("/v1/strategies/etf-momentum/decide", json=_context(_frame()))
 
     rationale = response.json()["rationale"]
-    assert rationale["title"] == "Чому саме ці ETF"
+    assert render(rationale["title"]) == "Чому саме ці ETF"
     assert rationale["instrumentLabel"] == "ETF"
     ids = [column["id"] for column in rationale["columns"]]
     assert ids == ["momentum", "return1m", "return3m", "return12m", "volatility", "ma200"]
@@ -179,7 +180,7 @@ def test_weak_market_invests_only_part_of_contribution(client: TestClient) -> No
 
     assert decision["market"]["isFavorable"] is False
     assert decision["investFraction"] == pytest.approx(0.3)
-    assert any("VIX" in reason for reason in decision["market"]["reasons"])
+    assert any("VIX" in render(reason) for reason in decision["market"]["reasons"])
 
 
 def test_held_positions_keep_priority_through_hold_buffer(client: TestClient) -> None:
@@ -280,7 +281,7 @@ def test_risk_matches_risk_monitor_and_emits_exit_signal(client: TestClient) -> 
     # FFF's crash pulls the whole portfolio below its drawdown limit, so every position exits.
     assert assessment["portfolio"]["exitLimitHit"] is direct.portfolio_exit_hit is True
     assert signals["AAA"]["kind"] == "exit"
-    assert "нижче свого піку" in signals["AAA"]["reason"]
+    assert "нижче свого піку" in render(signals["AAA"]["reason"])
 
 
 def test_prices_returns_close_and_adjusted_close(client: TestClient) -> None:

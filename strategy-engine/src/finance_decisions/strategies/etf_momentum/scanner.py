@@ -12,6 +12,7 @@ from finance_decisions.helpers import (
     latest_moving_average,
     latest_value,
 )
+from finance_decisions.messages import msg
 from .config import ScannerSettings
 
 STATUS_SELECTED = "selected"
@@ -125,11 +126,11 @@ def _market_check(
     if spy_price is not None and spy_ma is not None:
         spy_above_ma = spy_price > spy_ma
         if spy_above_ma:
-            reasons.append(f"SPY {spy_price:.2f} вище 200-денної середньої ({spy_ma:.2f}): широкий ринок у висхідному тренді.")
+            reasons.append(msg("etf_momentum.market.spy_above", price=f"{spy_price:.2f}", average=f"{spy_ma:.2f}"))
         else:
-            reasons.append(f"SPY {spy_price:.2f} нижче 200-денної середньої ({spy_ma:.2f}): широкий ринок слабкий.")
+            reasons.append(msg("etf_momentum.market.spy_below", price=f"{spy_price:.2f}", average=f"{spy_ma:.2f}"))
     else:
-        reasons.append("Немає свіжих даних SPY: тренд неможливо перевірити, тому ринок вважається слабким.")
+        reasons.append(msg("etf_momentum.market.spy_missing"))
 
     # The last row can belong to a day when only European exchanges traded, so read the
     # last valid VIX close instead of the last row. Missing VIX fails the check.
@@ -137,11 +138,11 @@ def _market_check(
     if "^VIX" in prices.columns and not _is_stale(prices["^VIX"], as_of, settings.max_stale_days):
         vix = latest_value(prices["^VIX"])
     if vix is None:
-        reasons.append("Немає свіжих даних VIX: рівень стресу неможливо перевірити, тому ринок вважається слабким.")
+        reasons.append(msg("etf_momentum.market.vix_missing"))
     elif vix < settings.max_vix:
-        reasons.append(f"VIX {vix:.1f} нижче порогу {settings.max_vix:.0f}: паніки на ринку немає.")
+        reasons.append(msg("etf_momentum.market.vix_calm", vix=f"{vix:.1f}", limit=f"{settings.max_vix:.0f}"))
     else:
-        reasons.append(f"VIX {vix:.1f} на рівні або вище порогу {settings.max_vix:.0f}: ринок у стресі.")
+        reasons.append(msg("etf_momentum.market.vix_stress", vix=f"{vix:.1f}", limit=f"{settings.max_vix:.0f}"))
 
     return spy_price, spy_ma, spy_above_ma, vix, reasons
 
@@ -174,7 +175,7 @@ def _ticker_row(
 
     series = prices[ticker].dropna() if ticker in prices.columns else pd.Series(dtype=float)
     if series.empty:
-        row["Reason"] = "немає даних"
+        row["Reason"] = msg("etf_momentum.scan.no_data")
         return row
 
     price = float(series.iloc[-1])
@@ -209,25 +210,29 @@ def _ticker_row(
 
     failures = []
     if (as_of - last).days > settings.max_stale_days:
-        failures.append(f"дані застарілі (остання ціна {last:%d.%m.%Y})")
+        failures.append(msg("etf_momentum.scan.stale", date=f"{last:%d.%m.%Y}"))
     if moving_average is None:
-        failures.append("замало історії для MA200")
+        failures.append(msg("etf_momentum.scan.short_history_ma"))
     elif not row["Above MA200"]:
-        failures.append("ціна нижче MA200")
+        failures.append(msg("etf_momentum.scan.below_ma"))
     momentum = row["Momentum"]
     if pd.isna(momentum):
-        failures.append("замало історії для моментуму")
+        failures.append(msg("etf_momentum.scan.short_history_momentum"))
     elif momentum <= settings.min_momentum:
-        failures.append(f"моментум {momentum:+.1%} не вище {settings.min_momentum:+.0%}")
-    if pd.isna(volatility) or volatility >= settings.max_volatility:
-        failures.append(f"волатильність {volatility:.0%} ≥ {settings.max_volatility:.0%}" if pd.notna(volatility) else "замало даних для волатильності")
+        failures.append(msg("etf_momentum.scan.low_momentum", momentum=f"{momentum:+.1%}", limit=f"{settings.min_momentum:+.0%}"))
+    if pd.isna(volatility):
+        failures.append(msg("etf_momentum.scan.short_history_volatility"))
+    elif volatility >= settings.max_volatility:
+        failures.append(msg("etf_momentum.scan.high_volatility", volatility=f"{volatility:.0%}", limit=f"{settings.max_volatility:.0%}"))
     if drawdown <= settings.max_drawdown:
-        failures.append(f"просадка {drawdown:.1%} ≤ {settings.max_drawdown:.0%}")
-    if pd.isna(sharpe) or sharpe < settings.min_sharpe:
-        failures.append(f"Sharpe {sharpe:.2f} < {settings.min_sharpe:.2f}" if pd.notna(sharpe) else "Sharpe недоступний")
+        failures.append(msg("etf_momentum.scan.deep_drawdown", drawdown=f"{drawdown:.1%}", limit=f"{settings.max_drawdown:.0%}"))
+    if pd.isna(sharpe):
+        failures.append(msg("etf_momentum.scan.no_sharpe"))
+    elif sharpe < settings.min_sharpe:
+        failures.append(msg("etf_momentum.scan.low_sharpe", sharpe=f"{sharpe:.2f}", limit=f"{settings.min_sharpe:.2f}"))
 
     if failures:
-        row["Reason"] = "; ".join(failures)
+        row["Reason"] = msg("etf_momentum.scan.failures", items=failures)
     else:
         row["Status"] = STATUS_RESERVE
     return row
@@ -253,10 +258,10 @@ def _select(table: pd.DataFrame, settings: ScannerSettings, current_positions: l
         members = group_members.setdefault(group, [])
         if len(members) >= settings.max_per_group:
             table.loc[ticker, "Status"] = STATUS_GROUP_BLOCKED
-            table.loc[ticker, "Reason"] = f"у групі «{group}» вже обрано {', '.join(members)}"
+            table.loc[ticker, "Reason"] = msg("etf_momentum.scan.group_taken", group=group, members=", ".join(members))
             continue
         if len(selected) >= settings.top_n:
-            table.loc[ticker, "Reason"] = f"проходить фільтри, але є сильніші (ранг {rank})"
+            table.loc[ticker, "Reason"] = msg("etf_momentum.scan.stronger_exist", rank=rank)
             continue
 
         selected.append(ticker)
@@ -264,10 +269,10 @@ def _select(table: pd.DataFrame, settings: ScannerSettings, current_positions: l
         table.loc[ticker, "Weight"] = 1.0 / settings.top_n
         if ticker in buffer and rank > settings.top_n:
             table.loc[ticker, "Status"] = STATUS_BUFFER
-            table.loc[ticker, "Reason"] = f"вже в портфелі, ранг {rank} у межах буфера {settings.hold_buffer_k}"
+            table.loc[ticker, "Reason"] = msg("etf_momentum.scan.held_in_buffer", rank=rank, buffer=settings.hold_buffer_k)
         else:
             table.loc[ticker, "Status"] = STATUS_SELECTED
-            table.loc[ticker, "Reason"] = f"ранг {rank} за моментумом"
+            table.loc[ticker, "Reason"] = msg("etf_momentum.scan.ranked", rank=rank)
     return selected
 
 

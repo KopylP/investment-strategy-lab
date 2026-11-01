@@ -70,6 +70,9 @@ public sealed class NoStrategies : IStrategyDirectory
 {
     public Task<IReadOnlyList<StrategySummaryDto>> GetStrategies(CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<StrategySummaryDto>>([]);
+
+    public Task<IReadOnlyDictionary<string, string>> GetMessages(CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyDictionary<string, string>>(new Dictionary<string, string>());
 }
 
 public sealed class FakeQuoteProvider : IQuoteProvider

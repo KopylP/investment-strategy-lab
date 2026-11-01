@@ -14,6 +14,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from finance_decisions.messages import msg, render, render_deep, t
 from .backtest import PlanCapture, run_backtest
 from .config import PlanSettings, StrategyConfig
 from .plan import MonthlyPlan, build_plan
@@ -68,7 +69,7 @@ def plan_fixture(
                     "rank": _int_or_none(row.get("Rank")),
                     "momentum": _float_or_none(row.get("Momentum")),
                     "status": str(row.get("Status", "")),
-                    "reason": str(row.get("Reason", "")),
+                    "reason": str(render(row.get("Reason", ""))),
                 }
                 for key, row in scan.table.iterrows()
                 if key in scored
@@ -92,7 +93,7 @@ def plan_fixture(
                     "amount": order.amount,
                     "shares": order.shares,
                     "price": order.price,
-                    "reason": order.reason,
+                    "reason": render(order.reason),
                 }
                 for order in plan.orders
             ],
@@ -112,7 +113,7 @@ def plan_fixture(
                 }
                 for row in plan.allocation
             ],
-            "notes": plan.notes,
+            "notes": render_deep(plan.notes),
         },
     }
 
@@ -198,7 +199,7 @@ _AS_OF = date(2026, 10, 5)
 
 def _synthetic_scan(picks: list[str], market_ok: bool = True, others: dict[str, str] | None = None) -> ScanResult:
     rows = [
-        {"ETF": ticker, "Momentum": 0.3 - rank / 100, "Rank": rank, "Status": STATUS_SELECTED, "Reason": f"ранг {rank} за моментумом"}
+        {"ETF": ticker, "Momentum": 0.3 - rank / 100, "Rank": rank, "Status": STATUS_SELECTED, "Reason": msg("etf_momentum.scan.ranked", rank=rank)}
         for rank, ticker in enumerate(picks, 1)
     ]
     rows += [{"ETF": ticker, "Momentum": -0.1, "Rank": np.nan, "Status": STATUS_FAILED, "Reason": reason} for ticker, reason in (others or {}).items()]
@@ -270,7 +271,7 @@ def synthetic_cases() -> list[dict[str, Any]]:
         _synthetic(
             "exit-position-that-dropped-out",
             ["AAA", "BBB"],
-            others={"OLD": "ціна нижче MA200"},
+            others={"OLD": t("etf_momentum.scan.below_ma")},
             holdings={"OLD": 5.0, "AAA": 10.0},
             cost_basis={"OLD": 35.0, "AAA": 9.0},
         ),

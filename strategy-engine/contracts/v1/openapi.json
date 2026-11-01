@@ -1221,12 +1221,12 @@
           "title": {
             "type": "string",
             "title": "Title",
-            "default": "Чому саме ці інструменти"
+            "default": "@rationale.default_title"
           },
           "instrumentLabel": {
             "type": "string",
             "title": "Instrumentlabel",
-            "default": "Інструмент"
+            "default": "@rationale.default_instrument"
           },
           "columns": {
             "items": {
@@ -1699,6 +1699,14 @@
             },
             "type": "array",
             "title": "Reports"
+          },
+          "messages": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Messages",
+            "description": "The texts of this type's message codes, in Ukrainian."
           }
         },
         "additionalProperties": false,
