@@ -99,6 +99,13 @@ export class AccountsApi {
     });
   }
 
+  renameSubPortfolio(id: string, subPortfolioId: string, name: string): Promise<AccountSetup> {
+    return this.api.put<AccountSetup>(
+      `/api/portfolio/accounts/${id}/sub-portfolios/${subPortfolioId}/name`,
+      { name },
+    );
+  }
+
   retire(
     id: string,
     subPortfolioId: string,

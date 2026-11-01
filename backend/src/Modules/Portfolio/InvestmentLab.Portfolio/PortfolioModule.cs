@@ -10,6 +10,7 @@ using InvestmentLab.Portfolio.Accounts.Application.GetAccount;
 using InvestmentLab.Portfolio.Accounts.Application.Integration;
 using InvestmentLab.Portfolio.Accounts.Application.ListAccounts;
 using InvestmentLab.Portfolio.Accounts.Application.OpenAccount;
+using InvestmentLab.Portfolio.Accounts.Application.RenameSubPortfolio;
 using InvestmentLab.Portfolio.Accounts.Application.RetireSubPortfolio;
 using InvestmentLab.Portfolio.Accounts.Domain;
 using InvestmentLab.Portfolio.Accounts.Infrastructure;
@@ -83,6 +84,7 @@ public sealed class PortfolioModule : IModule
         services.AddScoped<AssignStrategyHandler>();
         services.AddScoped<ChangeContributionPolicyHandler>();
         services.AddScoped<RetireSubPortfolioHandler>();
+        services.AddScoped<RenameSubPortfolioHandler>();
         services.AddScoped<GetAccountHandler>();
         services.AddScoped<ListAccountsHandler>();
         services.AddScoped<IAccountSetupQueries, AccountSetupQueries>();

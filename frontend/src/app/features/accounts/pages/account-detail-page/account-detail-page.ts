@@ -32,12 +32,14 @@ import { Viewport } from '../../../../shared/ui/viewport';
 import { AddSubPortfolioDialog } from '../../ui/add-sub-portfolio-dialog/add-sub-portfolio-dialog';
 
 import { ImportPositionsDialog } from '../../ui/import-positions-dialog/import-positions-dialog';
+import { RenameSubPortfolioDialog } from '../../ui/rename-sub-portfolio-dialog/rename-sub-portfolio-dialog';
 
 @Component({
   selector: 'app-account-detail-page',
   imports: [
     ImportPositionsDialog,
     AddSubPortfolioDialog,
+    RenameSubPortfolioDialog,
     ReportScheduleCard,
     StrategyPicker,
     FormsModule,
@@ -80,6 +82,7 @@ export class AccountDetailPage {
   );
 
   protected readonly pickFor = signal<SubPortfolioSetup | null>(null);
+  protected readonly renameFor = signal<SubPortfolioSetup | null>(null);
   constructor() {
     effect(() => this.store.open(this.accountId()));
   }

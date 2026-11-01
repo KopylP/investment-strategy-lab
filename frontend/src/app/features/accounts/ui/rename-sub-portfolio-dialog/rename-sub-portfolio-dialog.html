@@ -1,0 +1,33 @@
+<p-dialog
+  header="Назва під-портфеля"
+  [modal]="true"
+  [visible]="!!subPortfolio()"
+  (visibleChange)="!$event && subPortfolio.set(null)"
+  [style]="{ width: '28rem' }"
+  [breakpoints]="{ '768px': '95vw' }"
+>
+  <form class="flex flex-col gap-4" (ngSubmit)="save()">
+    <input
+      pInputText
+      name="name"
+      aria-label="Назва під-портфеля"
+      maxlength="100"
+      [ngModel]="name()"
+      (ngModelChange)="name.set($event)"
+    />
+    <div class="flex justify-end gap-2">
+      <p-button
+        label="Скасувати"
+        severity="secondary"
+        [text]="true"
+        (onClick)="subPortfolio.set(null)"
+      />
+      <p-button
+        label="Зберегти"
+        type="submit"
+        [disabled]="!canSave()"
+        [loading]="store.busy() === 'rename-' + subPortfolio()?.id"
+      />
+    </div>
+  </form>
+</p-dialog>

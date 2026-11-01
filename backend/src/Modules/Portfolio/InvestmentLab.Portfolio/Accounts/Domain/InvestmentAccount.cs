@@ -135,6 +135,19 @@ public sealed class InvestmentAccount : AggregateRoot<AccountId>
         return Result.Success();
     }
 
+    public Result RenameSubPortfolio(SubPortfolioId subPortfolioId, string name)
+    {
+        if (FindActive(subPortfolioId) is not { } renamed)
+            return AccountErrors.SubPortfolioNotFound(subPortfolioId.Value);
+
+        if (CheckNameIsFree(name, renamed) is { } taken)
+            return taken;
+
+        renamed.Rename(name);
+
+        return Result.Success();
+    }
+
     public Result RetireSubPortfolio(
         SubPortfolioId subPortfolioId,
         IReadOnlyDictionary<SubPortfolioId, TargetShare> sharesOfRemaining,
@@ -186,9 +199,9 @@ public sealed class InvestmentAccount : AggregateRoot<AccountId>
         Raise(new TargetSharesChanged(Id, shares, now));
     }
 
-    private Error? CheckNameIsFree(string name) =>
+    private Error? CheckNameIsFree(string name, SubPortfolio? renamed = null) =>
         string.IsNullOrWhiteSpace(name) ? AccountErrors.NameRequired()
-        : ActiveSubPortfolios.Any(sub => string.Equals(
+        : ActiveSubPortfolios.Any(sub => sub != renamed && string.Equals(
             sub.Name,
             name.Trim(),
             StringComparison.OrdinalIgnoreCase)) ? AccountErrors.SubPortfolioNameTaken(name.Trim())

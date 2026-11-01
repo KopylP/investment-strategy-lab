@@ -107,6 +107,14 @@ export class AccountDetailStore {
     );
   }
 
+  renameSubPortfolio(subPortfolioId: string, name: string): Promise<boolean> {
+    return this.run(
+      `rename-${subPortfolioId}`,
+      () => this.api.renameSubPortfolio(this.requireId(), subPortfolioId, name),
+      'Назву змінено',
+    );
+  }
+
   retire(subPortfolioId: string): Promise<boolean> {
     const remaining = Object.fromEntries(
       this.active()
