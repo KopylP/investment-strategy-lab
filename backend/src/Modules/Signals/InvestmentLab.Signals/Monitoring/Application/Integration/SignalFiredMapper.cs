@@ -28,7 +28,7 @@ internal sealed class SignalFiredMapper : IDomainEventMapper<SignalFired, Signal
 
     private static TriggeredSubjectDto SubjectOf(SignalCondition condition, SubjectReading reading)
     {
-        var text = $"{reading.Label}: {ValueText(condition, reading.Value)}";
+        var text = Message.Of("signal.subject.reading", new { label = reading.Label, value = ValueText(condition, reading.Value) });
 
         return new TriggeredSubjectDto(reading.Key, reading.Label, reading.Value, text);
     }

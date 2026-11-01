@@ -106,17 +106,18 @@ public static class TaxCalculator
         var revenue = sold.Sum(realization => realization.ProceedsInTaxCurrency);
         var costs = sold.Sum(realization => realization.CostInTaxCurrency);
         var gain = revenue - costs;
+        var taxableGain = sold.Sum(policy.TaxableGain.TaxableGainOf);
 
-        var uses = LossPool.UseAgainst(losses, year, gain, policy.LossCarryforward);
+        var uses = LossPool.UseAgainst(losses, year, taxableGain, policy.LossCarryforward);
         var used = uses.Sum(use => use.Amount);
-        var taxBase = policy.IsTaxed ? policy.Rounding.Base(Math.Max(0m, gain - used)) : 0m;
+        var taxBase = policy.IsTaxed ? policy.Rounding.Base(Math.Max(0m, taxableGain - used)) : 0m;
         var capitalTax = policy.Rounding.Tax(policy.RateSchedule.TaxOn(taxBase));
 
         var dividendIncome = received.Sum(dividend => dividend.GrossInTaxCurrency);
         var dividendCredit = received.Sum(dividend => Math.Min(dividend.WithheldInTaxCurrency, dividend.GrossInTaxCurrency * dividendRate));
         var dividendTax = policy.IsTaxed ? policy.Rounding.Tax(Math.Max(0m, dividendIncome * dividendRate - dividendCredit)) : 0m;
 
-        var loss = gain < 0m ? -gain : 0m;
+        var loss = taxableGain < 0m ? -taxableGain : 0m;
         if (loss > 0m && policy.IsTaxed)
             losses.Add(new LossPool(new LossYear(year, loss)));
 

@@ -45,6 +45,7 @@ test('a new user goes from registration to a partly executed monthly report', as
   await page.getByRole('button', { name: 'Ребаланс' }).first().click();
   await page.getByRole('dialog').getByRole('button', { name: 'Згенерувати' }).click();
   await expect(page.getByRole('heading', { name: /Ребаланс ·/ })).toBeVisible({ timeout: 60_000 });
+  await expect(page.locator('body')).not.toContainText(/@(report|statement|signal|tax|pit38|etf_momentum|notification)\./);
   await shot('07-report-new');
 
   const rows = page.locator('p-table tbody tr');

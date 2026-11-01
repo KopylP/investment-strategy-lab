@@ -32,7 +32,7 @@ public sealed class UploadStatementHandler(
         await LoadRatesForForeignRowsAsync(account, statement, cancellationToken);
 
         var mappings = await SuggestMappingsAsync(account, statement.Rows, cancellationToken);
-        statement.Configure(ImportMode.Merge, null, SuggestCashSubPortfolio(account, statement.Rows, mappings), mappings);
+        statement.Configure(ImportMode.Merge, null, StatementSuggestions.CashSubPortfolio(account, statement.Rows, mappings), mappings);
         imports.Add(statement);
 
         return await preview.PlanAndShowAsync(account, statement, cancellationToken);
@@ -86,7 +86,7 @@ public sealed class UploadStatementHandler(
         Dictionary<Guid, IReadOnlyList<Guid>> universes)
     {
         var match = ticker.Match ?? InstrumentOfListing(listing, instruments);
-        var sub = SubPortfolioFor(match, account, universes);
+        var sub = StatementSuggestions.SubPortfolioFor(match?.Id, account, universes);
 
         if (match is not null)
             return new TickerMapping(ticker.Ticker, ticker.Currency, match.Id, null, sub);
@@ -100,38 +100,6 @@ public sealed class UploadStatementHandler(
         listing is null
             ? null
             : instruments.FirstOrDefault(instrument => string.Equals(instrument.Ticker, listing.Symbol, StringComparison.OrdinalIgnoreCase));
-
-    private static Guid? SubPortfolioFor(InstrumentDto? match, InvestmentAccount account, Dictionary<Guid, IReadOnlyList<Guid>> universes)
-    {
-        if (account.ActiveSubPortfolios.ToList() is [var only])
-            return only.Id.Value;
-
-        if (match is null)
-            return null;
-
-        var holder = account.ActiveSubPortfolios.FirstOrDefault(sub =>
-            sub.Strategy is { } strategy && universes.TryGetValue(strategy.StrategyId, out var universe) && universe.Contains(match.Id));
-
-        return holder?.Id.Value;
-    }
-
-    private static Guid? SuggestCashSubPortfolio(InvestmentAccount account, IReadOnlyList<StatementRow> rows, IReadOnlyList<TickerMapping> mappings)
-    {
-        var mostSpentOn = rows.Where(row => row.Kind == StatementRowKind.Buy)
-            .Select(row => (
-                Sub: mappings.FirstOrDefault(mapping => string.Equals(
-                    mapping.Ticker,
-                    row.Ticker,
-                    StringComparison.OrdinalIgnoreCase))?.SubPortfolioId,
-                row.Amount))
-            .Where(entry => entry.Sub is not null)
-            .GroupBy(entry => entry.Sub!.Value)
-            .OrderByDescending(group => group.Sum(entry => entry.Amount))
-            .Select(group => (Guid?)group.Key)
-            .FirstOrDefault();
-
-        return mostSpentOn ?? account.ActiveSubPortfolios.FirstOrDefault()?.Id.Value;
-    }
 
     private sealed record StatementTicker(string Ticker, string Currency, InstrumentDto? Match, string SuggestedSymbol);
 }

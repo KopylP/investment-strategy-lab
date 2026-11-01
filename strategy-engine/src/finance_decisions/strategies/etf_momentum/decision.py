@@ -205,10 +205,10 @@ def _signals(report) -> list[RiskSignal]:
         if risk.status == "cash":
             continue
         if risk.sell or (report.portfolio_exit_hit and risk.status != "unknown"):
-            reason = risk.alerts[0] if risk.sell and risk.alerts else "; ".join(report.portfolio_alerts)
+            reason = risk.alerts[0] if risk.sell and risk.alerts else msg("etf_momentum.scan.failures", items=report.portfolio_alerts)
             signals.append(RiskSignal(key=risk.ticker, kind=RiskSignalKind.EXIT, reason=reason, exit_price=risk.exit_price))
         elif risk.alerts:
-            signals.append(RiskSignal(key=risk.ticker, kind=RiskSignalKind.WARN, reason="; ".join(risk.alerts), exit_price=risk.exit_price))
+            signals.append(RiskSignal(key=risk.ticker, kind=RiskSignalKind.WARN, reason=msg("etf_momentum.scan.failures", items=risk.alerts), exit_price=risk.exit_price))
     return signals
 
 

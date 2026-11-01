@@ -23,6 +23,7 @@ public sealed class BelkaTaxPolicy : ITaxPolicy
         LossesNote: Message.Of("tax.policy.pl_belka.losses_note"));
     public IFxRule FxRule { get; } = new NbpPreviousBusinessDay();
     public ILotMatcher LotMatcher { get; } = new FifoLotMatcher();
+    public ITaxableGainRule TaxableGain { get; } = new WholeGainIsTaxable();
     public ITaxRateSchedule RateSchedule { get; } = new FlatRate(Rate);
     public Percentage DividendRate => Rate;
     public ILossCarryforwardRule LossCarryforward { get; } = new Pl5Years50Percent();

@@ -12,6 +12,7 @@ public sealed class NoTaxPolicy(string code) : ITaxPolicy
         Hint: Message.Of($"tax.policy.{code.Replace('-', '_').ToLowerInvariant()}.hint"));
     public IFxRule FxRule { get; } = new NbpPreviousBusinessDay();
     public ILotMatcher LotMatcher { get; } = new FifoLotMatcher();
+    public ITaxableGainRule TaxableGain { get; } = new WholeGainIsTaxable();
     public ITaxRateSchedule RateSchedule { get; } = new FlatRate(Percentage.Zero);
     public Percentage DividendRate => Percentage.Zero;
     public ILossCarryforwardRule LossCarryforward { get; } = new NoCarryforward();

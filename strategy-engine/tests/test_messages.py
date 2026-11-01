@@ -52,3 +52,11 @@ def test_counted_words_follow_the_language() -> None:
 
 def test_rendering_a_payload_reaches_every_nested_message() -> None:
     assert render_deep({"notes": [msg("etf_momentum.scan.below_ma")], "count": 1}) == {"notes": ["ціна нижче MA200"], "count": 1}
+
+
+def test_no_message_is_glued_into_a_joined_text() -> None:
+    glued = re.compile(r"""["'][;,] ["']\.join\((?:report|risk|plan|result)\.\w*(?:alerts|notes|reasons|actions)""")
+
+    offenders = [str(path) for path in _python_sources() if glued.search(path.read_text(encoding="utf-8"))]
+
+    assert offenders == []

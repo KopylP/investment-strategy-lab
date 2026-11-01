@@ -101,7 +101,7 @@ internal sealed class RequestReportsOnSignal(
 
     private static ReportCause CauseOf(SignalTriggeredV1 triggered)
     {
-        var subjects = string.Join(", ", triggered.Subjects.Select(subject => subject.Text));
+        var subjects = triggered.Subjects.Select(subject => subject.Text).ToList();
 
         return new ReportCause(triggered.TriggerId, Message.Of("report.cause.signal", new { signal = triggered.Name, subjects }));
     }

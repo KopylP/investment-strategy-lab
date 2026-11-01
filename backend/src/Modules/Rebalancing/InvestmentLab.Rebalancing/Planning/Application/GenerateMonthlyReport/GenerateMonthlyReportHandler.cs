@@ -86,7 +86,7 @@ public sealed class GenerateMonthlyReportHandler(
         if (GuardrailEnforcer.CheckTurnover(rebalanced, limits) is { } turnover)
             notes.Add(turnover);
 
-        plan.Warnings.AddRange(notes.Select(note => $"«{sub.Name}»: {note}"));
+        plan.Warnings.AddRange(notes.Select(note => Message.Of("report.warning.of_sub_portfolio", new { sub = sub.Name, note })));
 
         return new SubPortfolioOutcome(
             SubPortfolioId: sub.Id,
