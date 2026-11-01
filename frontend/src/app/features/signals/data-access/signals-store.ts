@@ -68,6 +68,8 @@ export class SignalsStore {
     switch (signal.target) {
       case 'Instrument':
         return this.catalog.symbol(signal.instrumentId);
+      case 'InstrumentGroup':
+        return signal.groupName ?? 'Група';
       case 'SubPortfolio':
         return (
           account?.subPortfolios.find((sub) => sub.id === signal.subPortfolioId)?.name ??

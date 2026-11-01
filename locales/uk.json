@@ -122,6 +122,7 @@
   "signal.account": "Такого рахунку немає.",
   "signal.sub_portfolio": "Такого під-портфеля на рахунку немає.",
   "signal.instrument": "Такого інструмента немає.",
+  "signal.instrument_group": "Такої групи інструментів немає.",
   "signal.built_in": "Вбудований сигнал не можна видалити, але можна вимкнути.",
   "signal.builtin.high_vix": "Високий VIX",
   "signal.builtin.account_drawdown": "Просадка рахунку «{account}»",

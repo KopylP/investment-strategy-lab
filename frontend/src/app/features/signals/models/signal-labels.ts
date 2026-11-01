@@ -9,12 +9,12 @@ export const metricLabels: Record<SignalMetric, string> = {
   Level: 'Рівень значення',
 };
 
-export const targetLabels: Record<SignalTargetKind, string> = {
-  Instrument: 'Інструмент',
-  EachPosition: 'Кожна позиція рахунку',
-  SubPortfolio: 'Під-портфель',
-  Account: 'Рахунок',
-};
+export const targetChoices: { label: string; value: SignalTargetKind }[] = [
+  { label: 'Інструмент або група', value: 'Instrument' },
+  { label: 'Кожна позиція рахунку', value: 'EachPosition' },
+  { label: 'Під-портфель', value: 'SubPortfolio' },
+  { label: 'Рахунок', value: 'Account' },
+];
 
 const clearReasonLabels: Record<string, string> = {
   Recovered: 'відновилось',

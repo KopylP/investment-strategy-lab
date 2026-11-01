@@ -13,6 +13,7 @@ import { SignalRow, SignalRowTone } from '../../ui/signal-row/signal-row';
 
 const targetIcons: Record<SignalTargetKind, string> = {
   Instrument: 'pi pi-chart-line',
+  InstrumentGroup: 'pi pi-objects-column',
   EachPosition: 'pi pi-chart-pie',
   SubPortfolio: 'pi pi-sitemap',
   Account: 'pi pi-wallet',
@@ -31,7 +32,6 @@ export class SignalsPage {
   protected readonly editorVisible = signal(false);
   protected readonly editing = signal<SignalDto | null>(null);
 
-  protected readonly conditionLabel = conditionLabel;
   protected readonly clearReasonLabel = clearReasonLabel;
 
   protected create(): void {
@@ -48,6 +48,10 @@ export class SignalsPage {
     const item = this.store.signals().find((each) => each.id === occurrence.signalId);
 
     if (item) this.edit(item);
+  }
+
+  protected subtitleOf(item: SignalDto): string {
+    return `${this.store.targetLabel(item)} · ${conditionLabel(item.condition)}`;
   }
 
   protected targetIcon(item: SignalDto): string {

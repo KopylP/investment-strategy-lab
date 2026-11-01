@@ -38,6 +38,7 @@ public sealed class SignalsModule : IModule
         services.AddScoped<ISignalRepository, SignalRepository>();
         services.AddScoped<IBuiltInSignalQueries, BuiltInSignalQueries>();
         services.AddScoped<IInstrumentLabels, InstrumentLabels>();
+        services.AddScoped<IInstrumentGroups, InstrumentGroups>();
         services.AddScoped<IOpenPositions, OpenPositions>();
 
         services.AddScoped<GetSignalsHandler>();
@@ -51,6 +52,7 @@ public sealed class SignalsModule : IModule
         services.AddScoped<SignalReader>();
         services.AddScoped<QuoteReader>();
         services.AddScoped<InstrumentSubjectReader>();
+        services.AddScoped<InstrumentGroupSubjectReader>();
         services.AddScoped<PositionSubjectReader>();
         services.AddScoped<PortfolioSubjectReader>();
 

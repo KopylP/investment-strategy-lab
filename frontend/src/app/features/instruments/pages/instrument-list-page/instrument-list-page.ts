@@ -7,6 +7,7 @@ import { InputText } from 'primeng/inputtext';
 import { SelectButton } from 'primeng/selectbutton';
 import { Skeleton } from 'primeng/skeleton';
 import { Tag } from 'primeng/tag';
+import { instrumentKindLabel } from '../../../../shared/models/instrument-kind';
 import {
   DatePipe,
   MoneyPipe,
@@ -26,13 +27,6 @@ import { AccountTrades } from '../../../../shared/data/account-trades';
 import { LayoutService } from '../../../../core/layout/layout-service';
 import { Viewport } from '../../../../shared/ui/viewport';
 import { InstrumentAbout } from '../../../../shared/ui/instrument-about';
-
-const kindLabels: Record<string, string> = {
-  Etf: 'ETF',
-  Stock: 'Акція',
-  Index: 'Індекс',
-  FxPair: 'Валюта',
-};
 
 @Component({
   selector: 'app-instrument-list-page',
@@ -98,6 +92,6 @@ export class InstrumentListPage {
   }
 
   protected kindLabel(kind: string): string {
-    return kindLabels[kind] ?? kind;
+    return instrumentKindLabel(kind);
   }
 }

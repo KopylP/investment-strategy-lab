@@ -1,0 +1,78 @@
+<p-dialog
+  header="За чим стежити"
+  [modal]="true"
+  [(visible)]="visible"
+  [style]="{ width: '32rem' }"
+  [breakpoints]="{ '640px': '95vw' }"
+>
+  <div class="flex flex-col gap-3">
+    <p-selectbutton
+      [options]="tabs"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="tab()"
+      (ngModelChange)="changeTab($event)"
+      [allowEmpty]="false"
+      size="small"
+    />
+
+    <p-iconfield>
+      <p-inputicon styleClass="pi pi-search" />
+      <input
+        pInputText
+        type="search"
+        aria-label="Пошук"
+        [placeholder]="isInstrumentTab() ? 'Тікер, назва або ISIN' : 'Назва групи'"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+        class="w-full"
+      />
+    </p-iconfield>
+
+    <ul class="list-none m-0 p-0 h-96 max-h-[60vh] overflow-y-auto">
+      @if (isInstrumentTab()) {
+        @for (instrument of visibleInstruments(); track instrument.id) {
+          <li>
+            <button
+              type="button"
+              class="w-full text-left px-3 py-2 min-h-11 border-0 border-b border-surface bg-transparent
+                cursor-pointer text-color hover:bg-emphasis transition-colors"
+              [class.bg-emphasis]="chosenInstrumentId() === instrument.id"
+              (click)="pickInstrument(instrument.id)"
+            >
+              <span class="font-semibold">{{ instrument.label }}</span>
+              <span class="text-sm text-muted-color"> · {{ instrument.name }}</span>
+              <span class="block text-xs text-muted-color">
+                {{ kindLabel(instrument.kind) }}
+                @if (instrument.group; as group) {
+                  · {{ group }}
+                }
+              </span>
+            </button>
+          </li>
+        } @empty {
+          <li class="p-3 text-muted-color">Нічого не знайдено.</li>
+        }
+      } @else {
+        @for (group of visibleGroups(); track group.name) {
+          <li>
+            <button
+              type="button"
+              class="w-full text-left px-3 py-2 min-h-11 border-0 border-b border-surface bg-transparent
+                cursor-pointer text-color hover:bg-emphasis transition-colors"
+              [class.bg-emphasis]="chosenGroupName() === group.name"
+              (click)="pickGroup(group.name)"
+            >
+              <span class="font-semibold">{{ group.name }}</span>
+              <span class="block text-xs text-muted-color">
+                Інструментів: {{ group.instrumentCount }}
+              </span>
+            </button>
+          </li>
+        } @empty {
+          <li class="p-3 text-muted-color">Нічого не знайдено.</li>
+        }
+      }
+    </ul>
+  </div>
+</p-dialog>
