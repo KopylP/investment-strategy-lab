@@ -31,7 +31,7 @@ public sealed class StrategiesScenarioTests : IClassFixture<StrategiesApiFactory
         catalog!.ShouldContain(type => type.Code == "etf-momentum");
 
         var defaults = await client.DefaultStrategiesAsync<StrategyDto>(strategy => strategy.Name, ct);
-        defaults.Select(strategy => strategy.Name).ShouldBe(["EU ETF momentum", "US ETF momentum"]);
+        defaults.Select(strategy => strategy.Name).ShouldBe(["EU ETF momentum", "EU index hold", "US ETF momentum", "US index hold"]);
         var eu = defaults[0];
         eu.Version.Universe.Count.ShouldBe(17);
         eu.Version.Parameters.GetProperty("scanner").GetProperty("topN").GetInt32().ShouldBe(4);

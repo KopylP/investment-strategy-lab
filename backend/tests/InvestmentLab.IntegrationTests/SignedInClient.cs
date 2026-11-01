@@ -8,6 +8,7 @@ namespace InvestmentLab.IntegrationTests;
 internal static class SignedInClient
 {
     public const string Password = "correct horse battery";
+    private const int DefaultStrategyCount = 4;
 
     extension(WebApplicationFactory<api::Program> factory)
     {
@@ -30,7 +31,7 @@ internal static class SignedInClient
             for (var attempt = 0; attempt < 60; attempt++)
             {
                 var strategies = await client.GetFromJsonAsync<List<T>>("/api/strategies", cancellationToken) ?? [];
-                if (strategies.Count >= 2)
+                if (strategies.Count >= DefaultStrategyCount)
                     return [.. strategies.OrderBy(name, StringComparer.Ordinal)];
 
                 await Task.Delay(250, cancellationToken);

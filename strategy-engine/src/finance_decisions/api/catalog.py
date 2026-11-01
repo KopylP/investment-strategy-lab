@@ -10,6 +10,8 @@ from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, ValidationError
 
 from finance_decisions.messages import msg
+from finance_decisions.strategies.buy_and_hold import decision as buy_and_hold
+from finance_decisions.strategies.buy_and_hold.parameters import BuyAndHoldParameters
 from finance_decisions.strategies.etf_momentum import decision as etf_momentum
 from finance_decisions.strategies.etf_momentum.parameters import EtfMomentumParameters
 from .contracts import EvaluationContext, ReportDefinition, RiskAssessment, SeriesRole, StrategyDecision, StrategyTypeDescriptor
@@ -66,7 +68,19 @@ STRATEGY_TYPES: dict[str, StrategyType] = {
         required_series_roles=(SeriesRole.INSTRUMENT, SeriesRole.BENCHMARK, SeriesRole.VOLATILITY_INDEX),
         reports=etf_momentum.REPORTS,
         version=etf_momentum.engine_version,
-    )
+    ),
+    buy_and_hold.STRATEGY_CODE: StrategyType(
+        code=buy_and_hold.STRATEGY_CODE,
+        name="Buy and hold",
+        description=msg("buy_and_hold.description"),
+        messages=buy_and_hold.MESSAGES,
+        parameters=BuyAndHoldParameters,
+        decide=buy_and_hold.decide,
+        assess_risk=buy_and_hold.assess_risk,
+        required_series_roles=(SeriesRole.INSTRUMENT, SeriesRole.BENCHMARK),
+        reports=buy_and_hold.REPORTS,
+        version=buy_and_hold.engine_version,
+    ),
 }
 
 

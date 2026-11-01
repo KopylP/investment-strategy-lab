@@ -1,0 +1,9 @@
+{
+  "buy_and_hold.description": "Завжди тримає обрані фонди порівну, без сигналів і виходу в кеш, а внески докуповують те, що відстає. Ризик такий самий, як у ринку: S&P 500 у 2008–2009 роках падав до −54%.",
+  "buy_and_hold.report.rebalance.name": "Щомісячний внесок",
+  "buy_and_hold.report.rebalance.description": "Каже, що докупити за внесок, щоб фонди лишались порівну.",
+  "buy_and_hold.rationale.title": "Що тримаємо",
+  "buy_and_hold.rationale.summary": "Стратегія тримає всі обрані фонди незалежно від ринку.",
+  "buy_and_hold.score.held": "входить до обраних фондів",
+  "buy_and_hold.market.ignored": "Стратегія не зважає на стан ринку."
+}
