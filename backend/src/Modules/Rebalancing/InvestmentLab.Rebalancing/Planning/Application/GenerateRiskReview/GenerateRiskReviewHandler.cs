@@ -94,7 +94,7 @@ public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepo
             if (snapshot is null || snapshot.Positions.Count == 0)
                 continue;
 
-            var result = assessments.GetValueOrDefault(sub.Id) ?? new(null, "strategy.no_answer", "стратегія не відповіла");
+            var result = assessments.GetValueOrDefault(sub.Id) ?? new(null, "strategy.no_answer", Message.Of("report.run.no_answer"));
 
             outcomes.Add(result.IsSuccess
                 ? AssessedOutcome(sub, snapshot, result.Value!, review)
@@ -106,7 +106,7 @@ public sealed class GenerateRiskReviewHandler(PlanningInputs inputs, IReportRepo
 
     private static SubPortfolioOutcome FailedOutcome(SubPortfolioSetupDto sub, string? error, RiskReviewInputs review)
     {
-        review.Warnings.Add($"Оцінка ризику під-портфеля «{sub.Name}» не вдалася: {error}.");
+        review.Warnings.Add(Message.Of("report.warning.risk_failed", new { sub = sub.Name, error }));
 
         return SubPortfolioOutcome.Failed(sub.Id, sub.Name, sub.TargetShare, 0m, error);
     }

@@ -32,5 +32,5 @@ public sealed record ExitPlan(IReadOnlyList<PlannedOrder> Orders, IReadOnlyList<
         quantity,
         close,
         quantity * close,
-        $"сигнал виходу: {signal.Reason}");
+        Message.Of("report.reason.exit_signal", new { reason = signal.Reason }));
 }

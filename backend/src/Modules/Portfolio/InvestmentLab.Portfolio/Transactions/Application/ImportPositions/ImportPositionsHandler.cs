@@ -71,7 +71,7 @@ public sealed class ImportPositionsHandler(TransactionRecorder recorder, IInstru
 
         var unknown = positions.Select(position => position.Ticker).Where(ticker => !bySymbol.ContainsKey(ticker)).ToList();
         if (unknown.Count > 0)
-            return Error.Validation("import.unknown_tickers", $"No instrument has the ticker {string.Join(", ", unknown)}.");
+            return Error.Validation("import.unknown_tickers", $"No instrument has the ticker {string.Join(", ", unknown)}.", new { tickers = string.Join(", ", unknown) });
 
         if (PositionImport.TickersRepeat(positions.Select(position => position.Ticker)))
             return Error.Validation("import.ticker_repeated", "Each ticker may appear only once.");

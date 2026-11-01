@@ -5,7 +5,7 @@ namespace InvestmentLab.Rebalancing.Planning.Domain;
 public static class ReportComposer
 {
     private const int QuantityDecimals = 8;
-    private const string ContributionReason = "щомісячний внесок на рахунок";
+    private static readonly string ContributionReason = Message.Of("report.reason.contribution");
 
     public static ReportDraft Compose(
         ReportHeader header, ContributionAllocation? contribution, IReadOnlyList<SubPortfolioOutcome> outcomes, IReadOnlyList<string> warnings)

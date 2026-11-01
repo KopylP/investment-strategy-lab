@@ -53,7 +53,7 @@ public sealed class JournalMatcherTests
 
         var buy = report.Actions[0];
         (buy.Status, report.Status).ShouldBe((ActionStatus.PartiallyExecuted, ReportStatus.InProgress));
-        buy.Fills.ShouldHaveSingleItem().ShouldBe(new Fill(1, 6m, 16.4m, 0m, Monday, "з журналу", bought.TransactionId, Linked: true));
+        buy.Fills.ShouldHaveSingleItem().ShouldBe(new Fill(1, 6m, 16.4m, 0m, Monday, Message.Of("report.action.from_journal"), bought.TransactionId, Linked: true));
 
         var rest = Operation(JournalOperationKind.Buy, Nasdaq, 4m, Monday.AddDays(2));
         JournalMatcher.Match(report, [rest]).ShouldHaveSingleItem().Completes.ShouldBeTrue();

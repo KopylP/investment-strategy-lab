@@ -102,7 +102,7 @@ public sealed class ReportRequest : AggregateRoot<ReportRequestId>
         PlanRuns([]);
 
         foreach (var run in _runs.Where(run => !run.IsDone).ToList())
-            RunFailed(run.SubPortfolioId, TimedOut, $"стратегія не відповіла за {Patience.TotalHours:0} год");
+            RunFailed(run.SubPortfolioId, TimedOut, Message.Of("report.run.timed_out", new { hours = (int)Patience.TotalHours }));
 
         return true;
     }

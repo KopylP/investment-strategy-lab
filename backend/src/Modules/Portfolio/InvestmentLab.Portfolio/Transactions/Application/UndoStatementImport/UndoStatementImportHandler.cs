@@ -27,9 +27,7 @@ public sealed class UndoStatementImportHandler(
         await ReverseRecordedAsync(account.Id.Value, statement, cancellationToken);
 
         if (statement.ReversedTransactionIds.Count > 0)
-            statement.Warnings.Add(
-                $"{statement.ReversedTransactionIds.Count} операцій, сторнованих під час імпорту, не відновлено: " +
-                "за потреби запишіть їх заново.");
+            statement.Warnings.Add(Message.Of("statement.warning.reversals_not_restored", new { count = statement.ReversedTransactionIds.Count }));
 
         statement.Undo(clock.GetUtcNow());
         await imports.SaveChangesAsync(cancellationToken);
@@ -41,10 +39,10 @@ public sealed class UndoStatementImportHandler(
     {
         foreach (var reference in Enumerable.Reverse(statement.RecordedReferences))
         {
-            var result = await recordedReversals.Handle(accountId, reference, $"скасовано імпорт {statement.FileName}", cancellationToken);
+            var result = await recordedReversals.Handle(accountId, reference, Message.Of("statement.reversal.undo", new { file = statement.FileName }), cancellationToken);
 
             if (result.IsFailure && result.Error.Code != AlreadyReversedCode)
-                statement.Warnings.Add($"{reference}: {result.Error.Message}");
+                statement.Warnings.Add(Message.Of("statement.warning.undo_failed", new { reference, error = result.Error.AsMessage() }));
         }
     }
 }

@@ -28,6 +28,6 @@ public static class ResultHttpExtensions
                     ErrorKind.Forbidden => StatusCodes.Status403Forbidden,
                     _ => StatusCodes.Status500InternalServerError,
                 },
-                extensions: new Dictionary<string, object?> { ["code"] = error.Code });
+                extensions: new Dictionary<string, object?> { ["code"] = error.Code, ["parameters"] = error.Parameters });
     }
 }

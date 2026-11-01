@@ -63,11 +63,11 @@ public sealed class GenerateMonthlyReportHandler(
         SubPortfolioSetupDto sub, MonthlyPlan plan, IReadOnlyDictionary<Guid, StrategyEvaluationResult<StrategyDecisionDto>> decisions)
     {
         var share = plan.Allocation.For(sub.Id);
-        var result = decisions.GetValueOrDefault(sub.Id) ?? new(null, "strategy.no_answer", "стратегія не відповіла");
+        var result = decisions.GetValueOrDefault(sub.Id) ?? new(null, "strategy.no_answer", Message.Of("report.run.no_answer"));
 
         if (!result.IsSuccess)
         {
-            plan.Warnings.Add($"Стратегія під-портфеля «{sub.Name}» не відповіла: {result.ErrorMessage}. Його позиції цього разу не змінюються.");
+            plan.Warnings.Add(Message.Of("report.warning.strategy_no_answer", new { sub = sub.Name, error = result.ErrorMessage }));
 
             return SubPortfolioOutcome.Failed(sub.Id, sub.Name, sub.TargetShare, share, result.ErrorMessage);
         }

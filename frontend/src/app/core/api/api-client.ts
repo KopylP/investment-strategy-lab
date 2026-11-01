@@ -1,6 +1,7 @@
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import { hasMessage, translateCode } from '../i18n/translate';
 
 type Query = Record<string, string | number | boolean | readonly string[] | null | undefined>;
 
@@ -44,38 +45,18 @@ function toParams(query?: Query): HttpParams | undefined {
   return params;
 }
 
-const messages: Record<string, string> = {
-  'user.invalid_credentials': 'Невірний email або пароль.',
-  'user.locked_out': 'Забагато невдалих спроб. Спробуйте за кілька хвилин.',
-  'user.DuplicateUserName': 'Такий email уже зареєстровано.',
-  'user.DuplicateEmail': 'Такий email уже зареєстровано.',
-  'user.PasswordTooShort': 'Пароль має містити щонайменше 10 символів.',
-  'report.no_strategy_answered':
-    'Жодна стратегія не змогла оцінити рахунок. Найчастіше бракує котирувань — оновіть їх на сторінці «Інструменти й котирування».',
-  'report.no_sub_portfolios':
-    'На рахунку немає під-портфеля зі стратегією. Призначте стратегію на сторінці рахунку.',
-  'report.not_open': 'Рапорт уже закрито або замінено — відмічати в ньому не можна.',
-  'report.action_resolved': 'Дію вже відмічено. Спершу скасуйте відмітку.',
-  'report.action_not_pending': 'Пропустити можна лише дію, яку ще не почали виконувати.',
-  'account.target_shares_not_100': 'Цільові частки мають скластися рівно в 100%.',
-  'account.sub_portfolio_name_taken': 'Під-портфель з такою назвою вже є.',
-  'strategy.name_taken': 'Стратегія з такою назвою вже є.',
-  'transaction.not_enough_units': 'У під-портфелі немає стільки штук на цю дату.',
-  'transaction.nothing_to_sell': 'У під-портфелі немає цього ETF.',
-  'transaction.already_reversed': 'Операцію вже сторновано.',
-  'notification.no_channel': 'Сповіщення працюють лише в Home Assistant.',
-};
-
 export function toProblemMessage(error: unknown): string {
   if (error instanceof HttpErrorResponse) {
-    const code = (error.error as { code?: string } | null)?.code;
-    if (code && messages[code]) return messages[code];
-
     const problem = error.error as {
+      code?: string;
+      parameters?: Record<string, unknown> | null;
       detail?: string;
       title?: string;
       errors?: Record<string, string[]>;
     } | null;
+
+    if (problem?.code && hasMessage(problem.code)) return translateCode(problem.code, problem.parameters ?? {});
+
     if (problem?.errors) return Object.values(problem.errors).flat().join(' ');
 
     if (problem?.detail) return problem.detail;

@@ -1,3 +1,4 @@
+using System.Globalization;
 using InvestmentLab.Taxation.BrokerStatements.Domain;
 using InvestmentLab.Taxation.Ledger.Domain;
 
@@ -163,7 +164,7 @@ public static class TaxCalculator
             matches = WithBrokerCost(matches, broker, ref unmatched);
 
         if (unmatched > 0m)
-            warnings.Add($"Продаж {sale.OccurredOn:yyyy-MM-dd}: {unmatched} шт. без купівлі в журналі — їхня собівартість вважається нульовою.");
+            warnings.Add(Message.Of("tax.warning.sale_without_purchase", new { date = sale.OccurredOn.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), quantity = unmatched }));
 
         var proceeds = Pln(sale.Quantity * sale.Price, sale.FxRate);
         var cost = matches.Sum(match => match.CostPln) + Pln(sale.Fee, sale.FxRate);

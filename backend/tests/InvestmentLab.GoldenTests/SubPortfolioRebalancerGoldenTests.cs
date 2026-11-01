@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using InvestmentLab.BuildingBlocks.Localization;
 using InvestmentLab.Rebalancing.Planning.Domain;
 
 namespace InvestmentLab.GoldenTests;
@@ -42,7 +43,7 @@ public sealed class SubPortfolioRebalancerGoldenTests
             actual.Amount.ShouldBe(order.GetProperty("amount").GetDecimal(), Cent, Describe(actual));
             actual.Quantity.ShouldBe(order.GetProperty("shares").GetDecimal(), ShareTolerance, Describe(actual));
             actual.Price.ShouldBe(order.GetProperty("price").GetDecimal());
-            actual.Reason.ShouldBe(order.GetProperty("reason").GetString());
+            MessageLocalizer.Default.Render(actual.Reason).ShouldBe(order.GetProperty("reason").GetString());
         }
 
         plan.TotalBefore.ShouldBe(expected.GetProperty("totalBefore").GetDecimal(), Cent);
@@ -72,7 +73,7 @@ public sealed class SubPortfolioRebalancerGoldenTests
 
         var notes = expected.GetProperty("notes").EnumerateArray()
             .Select(note => note.GetString()!.Replace(" Вкажіть monthly_contribution у config або передайте --contribution.", ""));
-        plan.Notes.ShouldBe(notes);
+        plan.Notes.Select(note => MessageLocalizer.Default.Render(note)).ShouldBe(notes);
     }
 
     private static SubPortfolioPlanInput InputOf(JsonElement root)

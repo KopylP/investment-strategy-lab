@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace InvestmentLab.Portfolio.Transactions.Domain;
 
 public static class StatementMatcher
@@ -68,7 +70,7 @@ public static class StatementMatcher
         var row = priced.Row;
 
         if (row.Kind == StatementRowKind.Unsupported)
-            return NotRecorded(row, RowDecision.Unsupported, $"«{row.RawType}» не імпортується");
+            return NotRecorded(row, RowDecision.Unsupported, Message.Of("statement.row.unsupported_type", new { type = row.RawType }));
 
         if (fromDate is { } start && row.OccurredOn < start)
             return NotRecorded(row, RowDecision.OutOfScope);
@@ -95,7 +97,7 @@ public static class StatementMatcher
             return NotRecorded(row, RowDecision.AlreadyImported, existingId: earlier.Id.Value);
 
         var overwrite = mode != ImportMode.Merge;
-        var note = overwrite ? "буде перезаписано з виписки" : "оберіть «Оновити імпортоване», щоб перезаписати";
+        var note = Message.Of(overwrite ? "statement.row.will_overwrite" : "statement.row.choose_update");
 
         return Replacing(row, RowDecision.Differs, note, earlier.Id.Value, overwrite);
     }
@@ -108,9 +110,7 @@ public static class StatementMatcher
         claimed.Add(existing.Id);
 
         var differs = !SameNumbers(priced, existing);
-        var note = differs
-            ? "та сама угода вже в журналі з іншими цифрами — буде виправлено за випискою"
-            : "та сама угода вже в журналі";
+        var note = Message.Of(differs ? "statement.row.same_trade_differs" : "statement.row.same_trade");
 
         return Replacing(priced.Row, RowDecision.MatchesExisting, note, existing.Id.Value, differs);
     }
@@ -194,9 +194,9 @@ public static class StatementMatcher
 
     private static string WhyUnmapped(PricedRow priced) => priced switch
     {
-        { MissingRate: true } => $"немає курсу NBP {priced.Row.Currency} на {priced.Row.OccurredOn:dd.MM.yyyy}",
-        { Row.NeedsInstrument: true, InstrumentId: null } => $"{priced.Row.Ticker}: не вибрано інструмент",
-        { Row.NeedsInstrument: true } => $"{priced.Row.Ticker}: не вибрано під-портфель",
-        _ => "не вибрано під-портфель для коштів",
+        { MissingRate: true } => Message.Of("statement.row.no_rate", new { currency = priced.Row.Currency, date = priced.Row.OccurredOn.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) }),
+        { Row.NeedsInstrument: true, InstrumentId: null } => Message.Of("statement.row.no_instrument", new { ticker = priced.Row.Ticker }),
+        { Row.NeedsInstrument: true } => Message.Of("statement.row.no_sub_portfolio", new { ticker = priced.Row.Ticker }),
+        _ => Message.Of("statement.row.no_cash_sub_portfolio"),
     };
 }

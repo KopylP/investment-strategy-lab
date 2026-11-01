@@ -14,7 +14,7 @@ internal static class SignalNotification
 
     public static Notification For(SignalTriggeredV1 triggered)
     {
-        var title = $"Сигнал: {triggered.Name}";
+        var title = Message.Of("notification.signal.title", new { name = triggered.Name });
         var message = MessageOf(triggered.Subjects);
         var data = DataOf(triggered);
 
@@ -27,7 +27,9 @@ internal static class SignalNotification
         var list = string.Join(", ", shown);
         var hidden = subjects.Count - MaxSubjectsShown;
 
-        return hidden > 0 ? $"{list} і ще {hidden}." : $"{list}.";
+        return hidden > 0
+            ? Message.Of("notification.signal.more", new { list, hidden })
+            : Message.Of("notification.signal.list", new { list });
     }
 
     private static Dictionary<string, object?> DataOf(SignalTriggeredV1 triggered) => new()

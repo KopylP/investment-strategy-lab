@@ -1,3 +1,4 @@
+using System.Globalization;
 using InvestmentLab.MarketData.Contracts.FxRates;
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.MarketData.Contracts.Quotes;
@@ -18,6 +19,8 @@ public sealed class PlanningInputs(
     IStrategyDirectory strategies,
     TimeProvider clock)
 {
+    private const int RateDigits = 4;
+
     public Task<AccountSetupDto?> AccountAsync(
         Guid accountId,
         CancellationToken cancellationToken) => accounts.GetAccountSetup(accountId, cancellationToken);
@@ -98,8 +101,8 @@ public sealed class PlanningInputs(
     }
 
     private static string ConversionWarning(string currency, string accountCurrency, decimal? rate) => rate is { } known
-        ? $"Ціни в {currency} перераховано в {accountCurrency} за курсом NBP {known:0.####}: у брокера сума буде у валюті ETF."
-        : $"Немає курсу NBP {currency}/{accountCurrency}: ETF у {currency} цього разу не торгуються. Оновіть курси NBP.";
+        ? Message.Of("report.warning.fx_converted", new { currency, accountCurrency, rate = decimal.Round(known, RateDigits).ToString(CultureInfo.InvariantCulture) })
+        : Message.Of("report.warning.fx_missing", new { currency, accountCurrency });
 
     private static LatestPriceDto Converted(LatestPriceDto price, decimal factor, string currency) =>
         price with { Close = price.Close * factor, AdjustedClose = price.AdjustedClose * factor, Currency = currency };
@@ -164,9 +167,9 @@ public sealed class PlanningInputs(
         foreach (var id in needed.Distinct())
         {
             if (!prices.TryGetValue(id, out var price))
-                yield return $"Немає котирувань для {Label(id)}: оновіть котирування перед виконанням.";
+                yield return Message.Of("report.warning.no_quotes", new { label = Label(id) });
             else if (price.IsStale)
-                yield return $"Котирування {Label(id)} застаріле (останнє {price.Date:yyyy-MM-dd}): оновіть котирування перед виконанням.";
+                yield return Message.Of("report.warning.stale_quote", new { label = Label(id), date = price.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) });
         }
     }
 

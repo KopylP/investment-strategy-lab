@@ -18,12 +18,12 @@ public static class StrategyErrors
     public static Error InstrumentRequired() => Error.Validation("strategy.instrument_required", "Instrument ids must not be empty.");
 
     public static Error UnknownInstruments(IEnumerable<string> keys) =>
-        Error.Validation("strategy.instrument_unknown", $"Unknown instruments: {string.Join(", ", keys)}.");
+        Error.Validation("strategy.instrument_unknown", $"Unknown instruments: {string.Join(", ", keys)}.", new { instruments = string.Join(", ", keys) });
 
     public static Error UnknownType(string code) => Error.Validation("strategy.type_unknown", $"No engine runs the strategy type '{code}'.");
 
     public static Error InvalidParameters(string details) =>
-        Error.Validation("strategy.parameters_invalid", $"Parameters do not fit the strategy type: {details}");
+        Error.Validation("strategy.parameters_invalid", $"Parameters do not fit the strategy type: {details}", new { details });
 
     public static Error Archived(Guid strategyId) => Error.Conflict("strategy.archived", $"Strategy {strategyId} is archived.");
 }

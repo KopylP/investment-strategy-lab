@@ -12,6 +12,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="../../../../locales/uk.json" LogicalName="locales.uk.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="../InvestmentLab.SharedKernel/InvestmentLab.SharedKernel.csproj" />
   </ItemGroup>
 </Project>

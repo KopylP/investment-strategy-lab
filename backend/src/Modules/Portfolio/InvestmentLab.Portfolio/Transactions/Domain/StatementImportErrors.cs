@@ -12,8 +12,8 @@ public static class StatementImportErrors
     public static Error NotConfirmed(Guid importId) => Error.Conflict("statement_import.not_confirmed", $"Import {importId} was not confirmed.");
 
     public static Error UnknownFormat(string details) =>
-        Error.Validation("statement_import.unknown_format", $"The file is not a Revolut statement: {details}");
+        Error.Validation("statement_import.unknown_format", $"The file is not a Revolut statement: {details}", new { details });
 
     public static Error Unmapped(IEnumerable<string> tickers) =>
-        Error.Validation("statement_import.unmapped", $"Choose an instrument and a sub-portfolio for: {string.Join(", ", tickers)}.");
+        Error.Validation("statement_import.unmapped", $"Choose an instrument and a sub-portfolio for: {string.Join(", ", tickers)}.", new { tickers = string.Join(", ", tickers) });
 }

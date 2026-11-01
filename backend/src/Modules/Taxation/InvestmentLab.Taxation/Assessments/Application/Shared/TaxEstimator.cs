@@ -14,7 +14,7 @@ public sealed class TaxEstimator(TaxInputs inputs, IAssessmentRepository assessm
     {
         var taxpayer = await TaxpayerOfAsync(accountId, cancellationToken);
         if (taxpayer?.Accounts.FirstOrDefault(candidate => candidate.AccountId == accountId) is not { } account)
-            return new TaxEstimateDto("", false, 0m, 0m, null, [], ["Рахунок не знайдено."]);
+            return new TaxEstimateDto("", false, 0m, 0m, null, [], [Message.Of("tax.estimate.account_missing")]);
 
         var policy = TaxPolicies.For(account.PolicyCode);
         if (!policy.IsTaxed)
@@ -49,14 +49,14 @@ public sealed class TaxEstimator(TaxInputs inputs, IAssessmentRepository assessm
         var notes = new List<string> { policy.EstimateDisclaimer };
 
         if (missing.Count > 0)
-            notes.Add($"Частина операцій без курсу {policy.FxRule.SourceName} не врахована.");
+            notes.Add(Message.Of("tax.estimate.some_rates_missing", new { source = policy.FxRule.SourceName }));
 
         return notes;
     }
 
     private static TaxEstimateDto WithoutEstimate(ITaxPolicy policy, decimal? rate, IReadOnlyList<ProposedSaleDto> sales, List<string> notes)
     {
-        var shown = rate is null ? [.. notes, $"Немає курсу {policy.FxRule.SourceName} на сьогодні — податок не оцінено."] : notes;
+        var shown = rate is null ? [.. notes, Message.Of("tax.estimate.rate_missing", new { source = policy.FxRule.SourceName })] : notes;
 
         return new TaxEstimateDto(policy.Code, policy.IsTaxed, 0m, 0m, rate, NothingFor(sales), shown, TaxCurrency: policy.FxRule.TaxCurrency);
     }

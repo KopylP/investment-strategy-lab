@@ -4,7 +4,7 @@ public sealed class ReportAction : Entity<ReportActionId>
 {
     private const decimal QuantityTolerance = 0.0001m;
 
-    public const string ClosedWithoutMark = "закрито без відмітки";
+    public static readonly string ClosedWithoutMark = Message.Of("report.action.closed_without_mark");
 
     public int Sequence { get; private set; }
     public ActionKind Kind { get; private set; }
@@ -80,7 +80,7 @@ public sealed class ReportAction : Entity<ReportActionId>
 
         foreach (var operation in operations)
         {
-            var fill = Fill.TryOf(NextFillNumber, operation.Quantity, operation.Price, operation.Fee, operation.OccurredOn, "з журналу");
+            var fill = Fill.TryOf(NextFillNumber, operation.Quantity, operation.Price, operation.Fee, operation.OccurredOn, Message.Of("report.action.from_journal"));
             if (fill.IsFailure)
                 return fill.Error;
 
@@ -103,7 +103,7 @@ public sealed class ReportAction : Entity<ReportActionId>
             return ReportErrors.OnlyPendingCanBeSkipped(Id.Value, Status);
 
         Status = ActionStatus.Skipped;
-        SkipReason = string.IsNullOrWhiteSpace(reason) ? "без причини" : reason.Trim();
+        SkipReason = string.IsNullOrWhiteSpace(reason) ? Message.Of("report.action.no_reason") : reason.Trim();
 
         return Result.Success();
     }

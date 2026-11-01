@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using InvestmentLab.BuildingBlocks.Localization;
 using InvestmentLab.Notifications.Delivery.Domain;
 
 namespace InvestmentLab.Notifications.Delivery.Infrastructure;
@@ -39,26 +40,30 @@ internal sealed class HomeAssistantChannel(HttpClient http, HomeAssistantChannel
 
     public async Task SendAsync(Notification notification, Recipient recipient, CancellationToken cancellationToken)
     {
+        var localizer = MessageLocalizer.Default;
+        var title = localizer.Render(notification.Title);
+        var message = localizer.Render(notification.Message);
+
         await PostAsync($"core/api/events/investlab_{notification.Topic}",
             new Dictionary<string, object?>(notification.Data)
             {
                 ["user_id"] = recipient.HomeAssistantUserId,
                 ["tag"] = notification.Tag,
-                ["title"] = notification.Title,
-                ["message"] = notification.Message,
+                ["title"] = title,
+                ["message"] = message,
             },
             cancellationToken);
 
-        var link = options.PanelPath is { Length: > 0 } path ? $"\n\n[Відкрити Investment Lab]({path})" : "";
+        var link = options.PanelPath is { Length: > 0 } path ? $"\n\n[{localizer.Render("notification.open_panel", null)}]({path})" : "";
         await PostAsync("core/api/services/persistent_notification/create",
-            new { title = notification.Title, message = notification.Message + link, notification_id = notification.Tag }, cancellationToken);
+            new { title, message = message + link, notification_id = notification.Tag }, cancellationToken);
 
         foreach (var phone in recipient.Targets(await DestinationsAsync(recipient, cancellationToken)))
         {
             await PostAsync($"core/api/services/notify/{phone.Id[Key.Length..]}", new
             {
-                title = notification.Title,
-                message = notification.Message,
+                title,
+                message,
                 data = new { tag = notification.Tag, group = "investlab", url = options.PanelPath, clickAction = options.PanelPath },
             }, cancellationToken);
         }

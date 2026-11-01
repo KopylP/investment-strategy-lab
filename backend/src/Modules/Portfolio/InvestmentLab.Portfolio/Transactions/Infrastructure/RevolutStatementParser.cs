@@ -37,7 +37,7 @@ internal sealed class RevolutStatementParser : IStatementParser
 
             if (!TryReadDate(line, out var occurredAt))
             {
-                warnings.Add($"Рядок {lineNumber}: не вдалося прочитати дату «{line["Date"]}» — пропущено.");
+                warnings.Add(Message.Of("statement.warning.bad_date", new { line = lineNumber, value = line["Date"] }));
                 continue;
             }
 

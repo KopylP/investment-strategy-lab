@@ -21,7 +21,7 @@ public sealed class GetDeclarationHandler(IEnumerable<ITaxDeclarationForm> forms
         var mine = declared.Where(account => account.Policy.Jurisdiction == form.Jurisdiction).ToList();
 
         if (history.Incomplete.Count > 0)
-            return Error.Validation("tax.declaration_incomplete", $"Дані неповні, декларацію не заповнено: {string.Join(" ", history.Incomplete)}");
+            return Error.Validation("tax.declaration_incomplete", "The data is incomplete, the declaration is not filled.", new { details = history.Incomplete });
 
         var known = await instruments.GetInstruments(cancellationToken);
         var isins = known.ToDictionary(instrument => instrument.Id, instrument => instrument.Isin);
