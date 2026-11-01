@@ -32,6 +32,7 @@ class StrategyType:
     reports: tuple[ReportDefinition, ...]
     # The engine version a decision of this type reports (strategy code / package version).
     version: Callable[[], str]
+    supports_backtest: bool = True
 
     def descriptor(self) -> StrategyTypeDescriptor:
         return StrategyTypeDescriptor(
@@ -45,6 +46,7 @@ class StrategyType:
             parameters_schema=self.parameters.model_json_schema(by_alias=True),
             default_parameters=self.parameters().model_dump(by_alias=True, mode="json"),
             reports=list(self.reports),
+            supports_backtest=self.supports_backtest,
             messages=self.messages,
         )
 

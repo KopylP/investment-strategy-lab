@@ -123,6 +123,10 @@ namespace InvestmentLab.Strategies.Shared.Infrastructure.Migrations
                         .HasColumnType("text[]")
                         .HasColumnName("required_series_roles");
 
+                    b.Property<bool>("SupportsBacktest")
+                        .HasColumnType("boolean")
+                        .HasColumnName("supports_backtest");
+
                     b.Property<bool>("SupportsState")
                         .HasColumnType("boolean")
                         .HasColumnName("supports_state");

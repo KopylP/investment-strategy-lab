@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../src/Modules/Backtesting/InvestmentLab.Backtesting/InvestmentLab.Backtesting.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="InvestmentLab.SharedKernel" />
+  </ItemGroup>
+</Project>

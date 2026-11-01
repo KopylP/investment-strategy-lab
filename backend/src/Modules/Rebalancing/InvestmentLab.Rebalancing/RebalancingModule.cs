@@ -154,6 +154,7 @@ public sealed class RebalancingModule : IModule
         services.AddScheduledJob<StrategyReportsJob>(ReportSchedules.Check);
         services.AddScheduledJob<DeclaredSignalRulesJob>(ReportSchedules.Check);
         services.AddScheduledJob<ReportRequestsJob>(ReportSchedules.Requests);
+        services.AddScoped<IRebalancingRules, RebalancingRules>();
 
         services.AddScoped<IPlanReviewer, NullPlanReviewer>();
     }
