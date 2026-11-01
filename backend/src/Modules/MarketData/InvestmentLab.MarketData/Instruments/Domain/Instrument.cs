@@ -32,6 +32,8 @@ public sealed class Instrument : AggregateRoot<InstrumentId>
 
     public DateTimeOffset? DescribedAt { get; private set; }
 
+    public DateTimeOffset? FullQuoteHistoryFetchedAt { get; private set; }
+
     public static readonly TimeSpan DescriptionLifetime = TimeSpan.FromDays(30);
 
     public static Result<Instrument> Register(
@@ -57,6 +59,8 @@ public sealed class Instrument : AggregateRoot<InstrumentId>
             IsAccumulating = isAccumulating,
         };
     }
+
+    public void MarkFullQuoteHistoryFetched(DateTimeOffset at) => FullQuoteHistoryFetchedAt = at;
 
     public void AssignExposure(InstrumentExposure exposure)
     {
