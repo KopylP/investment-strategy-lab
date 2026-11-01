@@ -35,17 +35,17 @@ public sealed class SaleTaxes(ITaxEstimator estimator, ILogger<SaleTaxes> logger
     private static TaxEstimate ReportEstimateOf(TaxEstimateDto estimate) => new(
         PolicyCode: estimate.PolicyCode,
         IsTaxed: estimate.IsTaxed,
-        GainPln: estimate.GainPln,
-        TaxPln: estimate.TaxPln,
+        GainInTaxCurrency: estimate.GainInTaxCurrency,
+        TaxChange: estimate.TaxChange,
         FxRate: estimate.FxRate,
         Notes: estimate.Notes,
-        YearTaxBeforePln: estimate.YearTaxBeforePln,
-        CarriedLossPln: estimate.CarriedLossPln,
+        YearTaxBefore: estimate.YearTaxBefore,
+        CarriedLoss: estimate.CarriedLoss,
         Year: estimate.Year,
         TaxCurrency: estimate.TaxCurrency);
 
     private static Dictionary<ReportActionId, SaleTaxImpact> ImpactPerSale(TaxEstimateDto estimate) =>
         estimate.Sales.ToDictionary(
             sale => ReportActionId.Of(sale.Key),
-            sale => new SaleTaxImpact(sale.GainPln, sale.TaxPln, sale.CarriedLossPln));
+            sale => new SaleTaxImpact(sale.GainInTaxCurrency, sale.TaxChange, sale.CarriedLoss));
 }

@@ -216,7 +216,7 @@ public sealed class TaxInputs(
         foreach (var lot in facts.Lots)
         {
             var (rate, _) = await RateAsync(facts.Currency, fxRule.LookupDate(lot.AcquiredOn), fxRule, rates, cancellationToken);
-            lots.Add(rate is { } known ? lot with { CostPln = decimal.Round(lot.Cost * known, 2, MidpointRounding.AwayFromZero) } : lot);
+            lots.Add(rate is { } known ? lot with { CostInTaxCurrency = decimal.Round(lot.Cost * known, 2, MidpointRounding.AwayFromZero) } : lot);
         }
 
         return facts with { Lots = lots, Cost = entryCurrency == facts.Currency ? facts.Cost : null };

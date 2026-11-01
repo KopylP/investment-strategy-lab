@@ -27,7 +27,7 @@ public sealed class BrokerStatementTests
 
         var dividend = statement.Dividends.ShouldHaveSingleItem();
         dividend.Gross.ShouldBe(1234.56m);
-        dividend.GrossPln.ShouldBe(1234.56m);
+        dividend.GrossInTaxCurrency.ShouldBe(1234.56m);
     }
 
     [Fact]
@@ -51,7 +51,7 @@ public sealed class BrokerStatementTests
 
         statement.Lots.Count.ShouldBe(2);
         statement.Lots[0].ShouldBe(new BrokerSaleLot(new(2025, 4, 23), new(2025, 7, 7), "TM", "US8923313071", "USD", 0.35583561m, 64.94m, 59.67m, 1.07m, 245.70m, 216m, 4.04m));
-        statement.Lots[1].CostPln.ShouldBe(8.30m);
+        statement.Lots[1].CostInTaxCurrency.ShouldBe(8.30m);
         statement.Dividends.ShouldHaveSingleItem().ShouldBe(
             new BrokerDividend(new(2025, 5, 6), "ASME", "NL0010273215", "EUR", 0.08m, 0.01m, 0.07m, 0.34m, 0.04m));
         statement.Warnings.ShouldHaveSingleItem().ShouldContain("ISIN");
@@ -72,7 +72,7 @@ public sealed class BrokerStatementTests
 
         match.Sales[sale.TransactionId].Lots.ShouldHaveSingleItem().AcquiredOn.ShouldBe(new DateOnly(2025, 10, 8));
         match.Sales[sale.TransactionId].Cost.ShouldBe(2.27m);
-        match.Sales[sale.TransactionId].GainPln.ShouldBe(9.39m - 8.30m - 4m);
+        match.Sales[sale.TransactionId].GainInTaxCurrency.ShouldBe(9.39m - 8.30m - 4m);
         match.Dividends[apple.TransactionId].ShouldBe(new WithholdingFacts(100m / 85m, 15m / 85m));
         match.Dividends[sony.TransactionId].ShouldBe(new WithholdingFacts(50m / 40m, 10m / 40m));
     }
@@ -86,8 +86,8 @@ public sealed class BrokerStatementTests
         ], Belka, []);
 
         var dividend = computation.Year(2025)!.Dividends.ShouldHaveSingleItem();
-        dividend.GrossPln.ShouldBe(400m);
-        dividend.WithheldPln.ShouldBe(60m);
+        dividend.GrossInTaxCurrency.ShouldBe(400m);
+        dividend.WithheldInTaxCurrency.ShouldBe(60m);
         dividend.WithholdingKnown.ShouldBeTrue();
         var year = computation.Year(2025)!.Summary;
         year.DividendIncome.ShouldBe(400m);
@@ -106,8 +106,8 @@ public sealed class BrokerStatementTests
         var sale = computation.Year(2025)!.Realizations.ShouldHaveSingleItem();
         sale.UnmatchedQuantity.ShouldBe(0m);
         sale.Lots.ShouldHaveSingleItem().ShouldBe(new LotMatch(Guid.Empty, new(2025, 10, 8), 0.56779242m, 8.30m, FromBroker: true, Gross: 2.27m));
-        sale.CostPln.ShouldBe(8.30m + 4.00m);
-        sale.BrokerGainPln.ShouldBe(1.09m);
+        sale.CostInTaxCurrency.ShouldBe(8.30m + 4.00m);
+        sale.BrokerGainInTaxCurrency.ShouldBe(1.09m);
         computation.Warnings.ShouldBeEmpty();
     }
 
@@ -134,6 +134,6 @@ public sealed class BrokerStatementTests
 
         var lot = sale.Lots.ShouldHaveSingleItem();
         lot.FromBroker.ShouldBeTrue();
-        lot.CostPln.ShouldBe(decimal.Round(2.8389621m * 24.28m * 3.7661m, 2) + decimal.Round(1.06m * 3.7661m, 2) + decimal.Round((66.66m - 2.8389621m * 24.28m) * 3.7661m, 2));
+        lot.CostInTaxCurrency.ShouldBe(decimal.Round(2.8389621m * 24.28m * 3.7661m, 2) + decimal.Round(1.06m * 3.7661m, 2) + decimal.Round((66.66m - 2.8389621m * 24.28m) * 3.7661m, 2));
     }
 }

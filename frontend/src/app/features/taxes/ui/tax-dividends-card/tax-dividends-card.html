@@ -31,8 +31,8 @@
           <td class="text-right hidden sm:table-cell">
             {{ d.amount | money: d.currency ?? store.account()?.baseCurrency ?? 'EUR' }}
           </td>
-          <td class="text-right">{{ d.grossPln || d.amountPln | taxMoney }}</td>
-          <td class="text-right">{{ d.withheldPln ? (d.withheldPln | taxMoney) : '—' }}</td>
+          <td class="text-right">{{ d.grossInTaxCurrency || d.amountInTaxCurrency | taxMoney }}</td>
+          <td class="text-right">{{ d.withheldInTaxCurrency ? (d.withheldInTaxCurrency | taxMoney) : '—' }}</td>
           <td class="hidden sm:table-cell">{{ d.fxRate }}</td>
         </tr>
       </ng-template>

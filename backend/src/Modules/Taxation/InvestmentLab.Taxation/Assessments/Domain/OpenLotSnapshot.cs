@@ -5,6 +5,6 @@ public sealed record OpenLotSnapshot(
     DateOnly AcquiredOn,
     Guid InstrumentId,
     decimal Quantity,
-    decimal CostPln,
+    decimal CostInTaxCurrency,
     decimal FxRate,
     Guid AccountId = default);

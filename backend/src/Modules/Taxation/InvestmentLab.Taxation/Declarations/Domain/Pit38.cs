@@ -67,8 +67,8 @@ public sealed class Pit38Form : ITaxDeclarationForm
     {
         List<DeclarationFact> facts =
         [
-            new(Message.Of("pit38.fact.foreign_dividends"), foreign.Sum(dividend => dividend.GrossPln)),
-            new(Message.Of("pit38.fact.withheld_abroad"), foreign.Sum(dividend => dividend.WithheldPln)),
+            new(Message.Of("pit38.fact.foreign_dividends"), foreign.Sum(dividend => dividend.GrossInTaxCurrency)),
+            new(Message.Of("pit38.fact.withheld_abroad"), foreign.Sum(dividend => dividend.WithheldInTaxCurrency)),
         ];
 
         return [.. facts.Where(fact => fact.Amount != 0m)];

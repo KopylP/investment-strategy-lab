@@ -30,18 +30,18 @@ public sealed record Pit38Dividends(
             .Where(paid => countryOf(paid.Dividend.InstrumentId) == PolandCode)
             .ToList();
 
-        var p47 = Pit38Amounts.Grosze(foreign.Sum(dividend => dividend.GrossPln) * rate);
-        var creditAtTaxRate = Pit38Amounts.Grosze(foreign.Sum(dividend => Math.Min(dividend.WithheldPln, dividend.GrossPln * rate)));
+        var p47 = Pit38Amounts.Grosze(foreign.Sum(dividend => dividend.GrossInTaxCurrency) * rate);
+        var creditAtTaxRate = Pit38Amounts.Grosze(foreign.Sum(dividend => Math.Min(dividend.WithheldInTaxCurrency, dividend.GrossInTaxCurrency * rate)));
         var p48 = Math.Min(p47, creditAtTaxRate);
         var p49 = rounding.Tax(Math.Max(0m, p47 - p48));
 
         decimal TreatyRate(DividendIncome dividend) => TreatyRateOf(countryOf(dividend.InstrumentId));
 
         var overTreaty = foreign.Where(dividend => IsOverTreaty(dividend, TreatyRate(dividend))).ToList();
-        var creditAtTreatyRate = foreign.Sum(dividend => Math.Min(dividend.WithheldPln, dividend.GrossPln * Math.Min(rate, TreatyRate(dividend))));
+        var creditAtTreatyRate = foreign.Sum(dividend => Math.Min(dividend.WithheldInTaxCurrency, dividend.GrossInTaxCurrency * Math.Min(rate, TreatyRate(dividend))));
         var kisCredit = Math.Min(p47, Pit38Amounts.Grosze(creditAtTreatyRate));
         var kisP49 = rounding.Tax(Math.Max(0m, p47 - kisCredit));
-        var withholdingUnknown = foreign.Where(dividend => !dividend.WithholdingKnown && dividend.GrossPln > 0m).ToList();
+        var withholdingUnknown = foreign.Where(dividend => !dividend.WithholdingKnown && dividend.GrossInTaxCurrency > 0m).ToList();
 
         return new Pit38Dividends(p47, p48, p49, foreign, polish, overTreaty, kisCredit, kisP49, withholdingUnknown);
     }
@@ -50,5 +50,5 @@ public sealed record Pit38Dividends(
         country is { } code && TreatyRates.TryGetValue(code, out var treaty) ? treaty : UsualTreatyRate;
 
     private static bool IsOverTreaty(DividendIncome dividend, decimal treatyRate) =>
-        dividend.GrossPln > 0m && dividend.WithheldPln > Pit38Amounts.Grosze(dividend.GrossPln * treatyRate) + Grosz;
+        dividend.GrossInTaxCurrency > 0m && dividend.WithheldInTaxCurrency > Pit38Amounts.Grosze(dividend.GrossInTaxCurrency * treatyRate) + Grosz;
 }

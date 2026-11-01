@@ -20,6 +20,6 @@ public sealed record ReportActionDto(
     IReadOnlyList<Fill> Fills,
     string? SkipReason,
     string? Rejection,
-    decimal? EstimatedGainPln,
-    decimal? EstimatedTaxPln,
-    decimal? EstimatedCarriedLossPln);
+    decimal? EstimatedGain,
+    decimal? EstimatedTaxChange,
+    decimal? EstimatedCarriedLoss);

@@ -9,7 +9,7 @@ public sealed class BelkaTaxPolicy : ITaxPolicy
     public string Code => PolicyCode;
     public string Jurisdiction => TaxPolicies.Poland;
 
-    public int Version => 4;
+    public int Version => 5;
     public bool IsTaxed => true;
     public string EstimateDisclaimer => Message.Of("tax.policy.pl_belka.disclaimer");
     public TaxPolicyTexts Texts { get; } = new(
