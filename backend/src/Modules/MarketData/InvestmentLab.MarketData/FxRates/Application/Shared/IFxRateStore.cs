@@ -10,7 +10,7 @@ public interface IFxRateStore
 
     Task<IReadOnlyList<FxRate>> RatesBetweenAsync(Currency @base, Currency quote, DateOnly from, DateOnly to, CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<FxRate>> LatestToPlnAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyList<FxRate>> LatestToPivotAsync(CancellationToken cancellationToken);
 
     void Add(FxRate rate);
 

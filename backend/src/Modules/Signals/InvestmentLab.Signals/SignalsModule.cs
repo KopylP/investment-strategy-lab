@@ -47,7 +47,6 @@ public sealed class SignalsModule : IModule
         services.AddScoped<SignalChecker>();
         services.AddScoped<SignalReader>();
         services.AddScoped<QuoteReader>();
-        services.AddScoped<CrossRates>();
         services.AddScoped<InstrumentSubjectReader>();
         services.AddScoped<PositionSubjectReader>();
         services.AddScoped<PortfolioSubjectReader>();

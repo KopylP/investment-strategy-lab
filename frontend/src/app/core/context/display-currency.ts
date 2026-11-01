@@ -4,7 +4,7 @@ import { AuthStore } from '../auth/auth-store';
 
 interface LatestFxRates {
   effectiveDate: string | null;
-  toPln: Record<string, number>;
+  toPivot: Record<string, number>;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -39,11 +39,11 @@ export class DisplayCurrency {
   rate(from: string, to: string): number | null {
     if (from === to) return 1;
 
-    const toPln = this.ratesResource.value()?.toPln;
-    const fromPln = toPln?.[from];
-    const targetPln = toPln?.[to];
+    const toPivot = this.ratesResource.value()?.toPivot;
+    const fromInPivot = toPivot?.[from];
+    const targetInPivot = toPivot?.[to];
 
-    return fromPln && targetPln ? fromPln / targetPln : null;
+    return fromInPivot && targetInPivot ? fromInPivot / targetInPivot : null;
   }
 
   convert(amount: number | null | undefined, from: string): number | null {

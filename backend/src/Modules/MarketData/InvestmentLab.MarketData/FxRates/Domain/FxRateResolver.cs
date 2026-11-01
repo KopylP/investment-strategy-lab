@@ -7,7 +7,7 @@ public static class FxRateResolver
     public static Result<FxRate> Resolve(IEnumerable<FxRate> rates, Currency @base, Currency quote, DateOnly transactionDate)
     {
         if (@base == quote)
-            return FxRate.Of(FxRateSource.Nbp, @base, quote, transactionDate.AddDays(-1), 1m, tableNumber: null);
+            return FxRate.Of(PrimaryFxSource.Source, @base, quote, transactionDate.AddDays(-1), 1m, tableNumber: null);
 
         var candidate = rates
             .Where(rate => rate.Base == @base && rate.Quote == quote && rate.EffectiveDate < transactionDate)

@@ -50,7 +50,7 @@ public sealed class PlanningInputs(
         foreach (var foreign in sub.ForeignCash ?? [])
         {
             if (!rates.TryGetValue(foreign.Currency, out var rate))
-                rate = rates[foreign.Currency] = await CrossRateAsync(foreign.Currency, accountCurrency, asOf, cancellationToken);
+                rate = rates[foreign.Currency] = await fxRates.GetCrossRate(foreign.Currency, accountCurrency, asOf, cancellationToken);
 
             cash += rate is { } factor ? decimal.Round(foreign.Amount * factor, 2) : 0m;
         }
@@ -86,7 +86,7 @@ public sealed class PlanningInputs(
 
             if (!rates.TryGetValue(price.Currency, out var rate))
             {
-                rate = rates[price.Currency] = await CrossRateAsync(price.Currency, accountCurrency, asOf, cancellationToken);
+                rate = rates[price.Currency] = await fxRates.GetCrossRate(price.Currency, accountCurrency, asOf, cancellationToken);
                 warnings.Add(ConversionWarning(price.Currency, accountCurrency, rate));
             }
 
@@ -103,15 +103,6 @@ public sealed class PlanningInputs(
 
     private static LatestPriceDto Converted(LatestPriceDto price, decimal factor, string currency) =>
         price with { Close = price.Close * factor, AdjustedClose = price.AdjustedClose * factor, Currency = currency };
-
-    private async Task<decimal?> CrossRateAsync(string from, string to, DateOnly asOf, CancellationToken cancellationToken)
-    {
-        async Task<decimal?> InPln(string currency) => currency == "PLN"
-            ? 1m
-            : (await fxRates.GetFxRate(currency, "PLN", asOf.AddDays(1), cancellationToken))?.Rate;
-
-        return await InPln(from) is { } fromPln && await InPln(to) is { } toPln && toPln > 0m ? fromPln / toPln : null;
-    }
 
     public async Task<IReadOnlyList<AccountReport>> ReportsAsync(AccountSetupDto account, PlanSettings? settings, CancellationToken cancellationToken)
     {

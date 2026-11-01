@@ -25,14 +25,20 @@ public sealed class PlanningInputsTests
     {
         public List<DateOnly> AskedDates { get; } = [];
 
-        public Task<FxRateDto?> GetFxRate(string baseCurrency, string quoteCurrency, DateOnly transactionDate, CancellationToken cancellationToken)
-        {
-            AskedDates.Add(transactionDate);
-
-            return Task.FromResult<FxRateDto?>(new FxRateDto("NBP", baseCurrency, quoteCurrency, transactionDate, 4m, null));
-        }
+        public Task<FxRateDto?> GetFxRate(string baseCurrency, string quoteCurrency, DateOnly transactionDate, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
 
         public Task<IReadOnlyList<FxRateDto>> GetFxRateHistory(string baseCurrency, string quoteCurrency, DateOnly from, DateOnly to, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<decimal?> GetCrossRate(string fromCurrency, string toCurrency, DateOnly asOf, CancellationToken cancellationToken)
+        {
+            AskedDates.Add(asOf);
+
+            return Task.FromResult<decimal?>(4m);
+        }
+
+        public Task<IReadOnlyList<CrossRateDto>> GetCrossRateHistory(string fromCurrency, string toCurrency, DateOnly from, DateOnly to, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
     }
 
@@ -48,6 +54,6 @@ public sealed class PlanningInputsTests
         var holdings = await inputs.HoldingsAsync(account, TestContext.Current.CancellationToken);
 
         holdings.SubPortfolios[0].Cash.ShouldBe(410m);
-        rates.AskedDates.ShouldBe([new DateOnly(2020, 3, 12)]);
+        rates.AskedDates.ShouldBe([new DateOnly(2020, 3, 11)]);
     }
 }
