@@ -24,6 +24,29 @@ Tests are xunit v3 on Microsoft.Testing.Platform with Shouldly (`dotnet test --p
 - `src/Modules/<Module>/` — `InvestmentLab.<Module>` and `InvestmentLab.<Module>.Contracts`. Modules: Identity,
   Portfolio, MarketData, Strategies, Rebalancing, Performance, Taxation, Signals, Notifications.
 
+### What each layer is responsible for
+
+**Business logic lives in `Domain` and is covered by unit tests.** Ask of any decision: "would a domain expert recognise
+this rule?" If yes, it belongs in `Domain`, whatever the shape of the code that needs it.
+
+| Layer | Holds | Must not hold | Tested by |
+|---|---|---|---|
+| `Domain` | Every business rule and calculation: aggregates, value objects, domain services and pure calculators (`TaxCalculator`, `SalesTaxImpactCalculator`, `BrokerTickerMatcher`), domain events, errors, repository and policy interfaces | EF Core, ASP.NET, HTTP, the clock, reading or saving data, other modules' contracts | **Unit tests, required**: each rule, its edge cases and each way it can fail, without Docker or mocks of infrastructure |
+| `Application` | The order of steps of one use case: load, call the domain, save, return. Mapping to DTOs. Translating other modules' contracts into domain inputs | Business rules, calculations, thresholds, `if`s that decide a business outcome | Only when it has real branching of its own; most is covered through the domain and the integration scenario |
+| `Infrastructure` | How the outside world is reached: EF configurations, repositories, HTTP adapters, parsers of external formats | Business decisions; an adapter only translates | Adapter tests where the format is tricky; integration tests otherwise |
+| `Api` | Routes, binding, calling one handler, `ToHttpResult()` | Anything else, including validation rules beyond binding | Integration scenario |
+| `Contracts` | What other modules may see: integration events and query interfaces, primitives only | Rules or logic beyond trivial derived values; references to anything of ours | — |
+
+- **When a handler grows a rule, move the rule down.** Extract it to the aggregate or to a pure domain function that takes
+  plain inputs and returns a result, and test that function. The handler gathers the inputs and passes them in.
+- **Prefer pure functions for calculations:** no I/O and no injected services, so a test states inputs and the expected
+  numbers. `TaxEstimator` (Application) gathers data; `SalesTaxImpactCalculator` (Domain) decides.
+- **A new or changed business rule comes with its unit tests in the same change,** in
+  `tests/Modules/InvestmentLab.<Module>.Tests`. Plumbing (DTOs, endpoints, configuration, mapping) needs no test of its
+  own; one integration scenario per feature proves the wiring.
+- **Test names state the rule** in plain words, so the test list reads as the rules of the domain.
+- Older handlers that still hold rules are moved down when they are next changed.
+
 ### Inside a module
 
 Every file has one place. Nothing lies loose in `Application/` or in the module's root except `<Module>Module.cs`.

@@ -32,3 +32,5 @@ specs yet; verify UI changes by building and, when a stack is running, in the br
   user came from (`core/layout/navigation-history.ts`), so a programmatic step that should not be returned to uses `replaceUrl`.
 - All user-facing text is Ukrainian; dates as `dd.MM.yyyy`, money through the `money` pipe.
 - When the API changes, update the DTO in `models/*-dto.ts` and the mapper together.
+- No business logic here: the backend decides and calculates, and the frontend formats what it receives in mappers and
+  shows it. No tax rates, policy codes, provider names or symbol formats (see Modularity in `../CLAUDE.md`).
