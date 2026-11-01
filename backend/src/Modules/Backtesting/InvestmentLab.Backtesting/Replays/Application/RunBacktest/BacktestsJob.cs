@@ -33,11 +33,11 @@ public sealed class BacktestsJob(IServiceScopeFactory scopes, TimeProvider clock
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             logger.LogError(exception, "Backtest {BacktestId} failed", backtestId);
-            await FailAsync(backtestId, exception, cancellationToken);
+            await FailAsync(backtestId, cancellationToken);
         }
     }
 
-    private async Task FailAsync(Guid backtestId, Exception exception, CancellationToken cancellationToken)
+    private async Task FailAsync(Guid backtestId, CancellationToken cancellationToken)
     {
         await using var scope = scopes.CreateAsyncScope();
         var backtests = scope.ServiceProvider.GetRequiredService<IBacktestRepository>();
@@ -45,7 +45,7 @@ public sealed class BacktestsJob(IServiceScopeFactory scopes, TimeProvider clock
         if (await backtests.FindAsync(backtestId, cancellationToken) is not { } backtest)
             return;
 
-        backtest.Fail(exception.Message, clock.GetUtcNow());
+        backtest.Fail(Message.Of("backtest.failed"), clock.GetUtcNow());
         await backtests.SaveChangesAsync(cancellationToken);
     }
 }

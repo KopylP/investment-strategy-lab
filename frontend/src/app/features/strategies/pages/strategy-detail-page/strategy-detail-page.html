@@ -93,6 +93,12 @@
         </div>
       </div>
     </div>
+    <app-strategy-backtest
+      [strategyId]="strategy.id"
+      [version]="strategy.version.number"
+      [currency]="backtestCurrency()"
+      [benchmarkLabel]="store.instruments.symbol(strategy.version.benchmarkInstrumentId)"
+    />
     @if (store.type(); as type) {
       <div class="card mt-4">
         <h2 class="text-lg font-semibold mb-3">Параметри</h2>

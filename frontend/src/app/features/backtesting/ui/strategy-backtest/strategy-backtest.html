@@ -1,0 +1,184 @@
+<div class="card mt-4">
+  <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+    <h2 class="text-lg font-semibold m-0">Як стратегія поводилась у минулому</h2>
+    @if (store.isCalculating()) {
+      <span class="flex items-center gap-2 text-sm text-muted-color">
+        <p-progress-spinner styleClass="w-4! h-4!" strokeWidth="6" ariaLabel="Рахується" />
+        Рахується у фоні, це може зайняти кілька хвилин
+      </span>
+    }
+  </div>
+
+  @switch (store.backtest()?.status) {
+    @case ('NotSupported') {
+      <p-message severity="secondary" text="Ця стратегія не підтримує перевірку на історії." />
+    }
+    @case ('Failed') {
+      <p-message
+        severity="warn"
+        [text]="store.backtest()?.failureReason ?? 'Не вдалося порахувати бектест.'"
+      />
+    }
+  }
+
+  @if (store.loadError()) {
+    <p-message severity="error" text="Не вдалося завантажити бектест." />
+  }
+
+  @if (result(); as replay) {
+    <p class="text-sm text-muted-color mt-0 mb-4">
+      За ваших параметрів, {{ replay.start | date }} – {{ replay.end | date }}. Це минулі результати,
+      а не прогноз: без податків і за сьогоднішнім списком фондів, тому реальний результат, імовірно,
+      буде гіршим.
+    </p>
+
+    @if (strategySummary(); as summary) {
+      <div class="flex flex-wrap gap-x-8 gap-y-3 mb-5">
+        <div>
+          <div class="text-sm text-muted-color">Заробила за весь період</div>
+          <div class="text-3xl font-bold">{{ summary.totalReturn | signedPercent: 0 }}</div>
+        </div>
+        <div>
+          <div class="text-sm text-muted-color">У середньому на рік</div>
+          <div class="text-3xl font-bold">{{ summary.annualReturn | signedPercent }}</div>
+        </div>
+        <div>
+          <div class="text-sm text-muted-color">Найбільше падіння</div>
+          <div class="text-3xl font-bold">{{ summary.maxDrawdown | percent }}</div>
+        </div>
+      </div>
+    }
+
+    <h3 class="text-base font-medium mb-2">Зростання 100 одиниць</h3>
+    <app-live-chart
+      [data]="growthData()"
+      [options]="growthOptions()"
+      [height]="viewport.phone() ? '15rem' : '20rem'"
+    />
+
+    <h3 class="text-base font-medium mt-5 mb-2">Найгірше просідання за місяць</h3>
+    <app-live-chart
+      [data]="drawdownData()"
+      [options]="drawdownOptions()"
+      [height]="viewport.phone() ? '10rem' : '12rem'"
+    />
+
+    <div class="overflow-x-auto mt-5">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-muted-color">
+            <th class="font-normal py-1"></th>
+            <th class="font-normal py-1 text-right">За весь період</th>
+            <th class="font-normal py-1 text-right">Дохідність на рік</th>
+            <th class="font-normal py-1 text-right">Волатильність</th>
+            <th class="font-normal py-1 text-right">Sharpe</th>
+            <th class="font-normal py-1 text-right">Найбільше просідання</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.label) {
+            <tr>
+              <td class="py-1">{{ row.label }}</td>
+              <td class="py-1 text-right">{{ row.summary.totalReturn | signedPercent: 0 }}</td>
+              <td class="py-1 text-right">{{ row.summary.annualReturn | percent }}</td>
+              <td class="py-1 text-right">{{ row.summary.volatility | percent }}</td>
+              <td class="py-1 text-right">{{ row.summary.sharpe.toFixed(2) }}</td>
+              <td class="py-1 text-right">{{ row.summary.maxDrawdown | percent }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="text-xs text-muted-color mt-2">Угод за весь період: {{ replay.trades }}</div>
+
+    <h3 class="text-base font-medium mt-6 mb-2">Що було б із вашими грошима</h3>
+    <div class="flex flex-wrap items-end gap-4 mb-4">
+      <div class="flex flex-col gap-1">
+        <label for="backtest-start" class="text-sm">На старті</label>
+        <p-inputnumber
+          inputId="backtest-start"
+          [ngModel]="store.start()"
+          (ngModelChange)="store.start.set($event ?? 0)"
+          [min]="0"
+          [suffix]="' ' + currency()"
+        />
+      </div>
+      <div class="flex flex-col gap-1">
+        <label for="backtest-contribution" class="text-sm">Внесок на місяць</label>
+        <p-inputnumber
+          inputId="backtest-contribution"
+          [ngModel]="store.contribution()"
+          (ngModelChange)="store.contribution.set($event ?? 0)"
+          [min]="0"
+          [suffix]="' ' + currency()"
+        />
+      </div>
+      <p-selectbutton
+        [options]="periodOptions"
+        optionLabel="label"
+        optionValue="value"
+        [ngModel]="store.years()"
+        (ngModelChange)="$event && store.years.set($event)"
+        [allowEmpty]="false"
+        ariaLabel="Тривалість"
+      />
+    </div>
+
+    @if (store.outcomes(); as outcomes) {
+      @if (outcomes.strategy.periods === 0) {
+        <p-message
+          severity="secondary"
+          [text]="'Історії замало для відрізків у ' + outcomes.years + ' років.'"
+        />
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-left text-muted-color">
+                <th class="font-normal py-1"></th>
+                <th class="font-normal py-1 text-right">Гірший відрізок</th>
+                <th class="font-normal py-1 text-right">Типовий</th>
+                <th class="font-normal py-1 text-right">Кращий</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="py-1">Стратегія</td>
+                <td class="py-1 text-right">
+                  {{ outcomes.strategy.worst?.final | money: currency() : 0 }}
+                </td>
+                <td class="py-1 text-right font-medium">
+                  {{ outcomes.strategy.typical?.final | money: currency() : 0 }}
+                </td>
+                <td class="py-1 text-right">
+                  {{ outcomes.strategy.best?.final | money: currency() : 0 }}
+                </td>
+              </tr>
+              @if (outcomes.benchmark.periods > 0) {
+                <tr>
+                  <td class="py-1">{{ benchmarkLabel() }}</td>
+                  <td class="py-1 text-right">
+                    {{ outcomes.benchmark.worst?.final | money: currency() : 0 }}
+                  </td>
+                  <td class="py-1 text-right">
+                    {{ outcomes.benchmark.typical?.final | money: currency() : 0 }}
+                  </td>
+                  <td class="py-1 text-right">
+                    {{ outcomes.benchmark.best?.final | money: currency() : 0 }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="text-xs text-muted-color mt-2">
+          Внесено {{ outcomes.contributed | money: currency() : 0 }}. Порівняно
+          {{ outcomes.strategy.periods }} відрізків, що перекриваються.
+          @if (outcomes.strategy.periods < fewPeriods) {
+            Їх мало, тому діапазон може бути надто вузьким.
+          }
+        </div>
+      }
+    }
+  }
+</div>
