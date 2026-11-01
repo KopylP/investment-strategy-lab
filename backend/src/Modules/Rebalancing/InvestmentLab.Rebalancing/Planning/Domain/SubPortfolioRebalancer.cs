@@ -2,23 +2,23 @@ namespace InvestmentLab.Rebalancing.Planning.Domain;
 
 public static class SubPortfolioRebalancer
 {
-    public static SubPortfolioPlan Plan(SubPortfolioPlanInput input) => new PlanRun(input).Plan();
+    public static SubPortfolioPlan Plan(SubPortfolioSituation situation) => new PlanRun(situation).Plan();
 
-    private sealed class PlanRun(SubPortfolioPlanInput input)
+    private sealed class PlanRun(SubPortfolioSituation situation)
     {
-        private readonly StrategyTargets _strategy = input.Strategy;
-        private readonly RebalancingPolicy _policy = input.Policy;
-        private readonly List<Guid> _picks = [.. input.Strategy.Targets.Select(target => target.InstrumentId)];
+        private readonly StrategyTargets _strategy = situation.Strategy;
+        private readonly RebalancingPolicy _policy = situation.Policy;
+        private readonly List<Guid> _picks = [.. situation.Strategy.Targets.Select(target => target.InstrumentId)];
         private readonly Dictionary<Guid, decimal> _weights =
-            input.Strategy.Targets.ToDictionary(target => target.InstrumentId, target => target.Weight);
-        private readonly Dictionary<Guid, SubPortfolioPosition> _holdings = input.Positions.ToDictionary(position => position.InstrumentId);
+            situation.Strategy.Targets.ToDictionary(target => target.InstrumentId, target => target.Weight);
+        private readonly Dictionary<Guid, SubPortfolioPosition> _holdings = situation.Positions.ToDictionary(position => position.InstrumentId);
         private readonly List<string> _notes = [];
         private readonly List<PlannedOrder> _orders = [];
 
         public SubPortfolioPlan Plan()
         {
             var values = PricedPositions();
-            var parkedBefore = TakeOutParked(values) + input.Cash;
+            var parkedBefore = TakeOutParked(values) + situation.Cash;
             var totalBefore = values.Sum(entry => entry.Value) + parkedBefore;
 
             var proceeds = ExitDropped(values);
@@ -27,7 +27,7 @@ public static class SubPortfolioRebalancer
             var kept = _picks.Where(valueOf.ContainsKey).ToDictionary(id => id, id => valueOf[id]);
 
             var investFraction = _strategy.InvestFraction.Value;
-            var deployable = input.Contribution * investFraction + proceeds + (_strategy.MarketIsFavorable ? parkedBefore : 0m);
+            var deployable = situation.Contribution * investFraction + proceeds + (_strategy.MarketIsFavorable ? parkedBefore : 0m);
             var investableTotal = kept.Values.Sum() + deployable;
 
             var trims = TrimOverweight(kept, investableTotal);
@@ -35,24 +35,24 @@ public static class SubPortfolioRebalancer
 
             var (bought, skipped) = BuyGaps(kept, investableTotal, deployable);
 
-            var remaining = input.Cash + input.Contribution + proceeds + trims - bought;
+            var remaining = situation.Cash + situation.Contribution + proceeds + trims - bought;
             ParkOrUnpark(remaining);
 
             var sorted = _orders.OrderBy(order => order.Kind).ToList();
 
-            var totalAfter = totalBefore + input.Contribution;
+            var totalAfter = totalBefore + situation.Contribution;
             var after = ValuesAfter(kept, sorted);
             var parkedAfter = totalAfter - after.Values.Sum();
 
-            _notes.AddRange(Notes(input, _picks, investFraction, parkedBefore, skipped, Label));
+            _notes.AddRange(Notes(situation, _picks, investFraction, parkedBefore, skipped, Label));
 
             return new SubPortfolioPlan(
                 _strategy.MarketIsFavorable,
                 _strategy.InvestFraction,
-                input.Contribution,
-                input.CashInstrumentId,
+                situation.Contribution,
+                situation.CashInstrumentId,
                 sorted,
-                Allocation(values, after, _weights, _picks, input.CashInstrumentId, parkedBefore, parkedAfter, totalBefore, totalAfter),
+                Allocation(values, after, _weights, _picks, situation.CashInstrumentId, parkedBefore, parkedAfter, totalBefore, totalAfter),
                 totalBefore,
                 totalAfter,
                 parkedBefore,
@@ -60,15 +60,15 @@ public static class SubPortfolioRebalancer
                 _notes);
         }
 
-        private string Label(Guid id) => input.Labels.TryGetValue(id, out var label) ? label : id.ToString();
+        private string Label(Guid id) => situation.Labels.TryGetValue(id, out var label) ? label : id.ToString();
 
-        private decimal? PriceOf(Guid id) => input.Prices.TryGetValue(id, out var price) && price > 0m ? price : null;
+        private decimal? PriceOf(Guid id) => situation.Prices.TryGetValue(id, out var price) && price > 0m ? price : null;
 
         private List<(Guid Id, decimal Value)> PricedPositions()
         {
             var values = new List<(Guid Id, decimal Value)>();
 
-            foreach (var position in input.Positions)
+            foreach (var position in situation.Positions)
             {
                 if (PriceOf(position.InstrumentId) is { } latest)
                     values.Add((position.InstrumentId, position.Quantity.Value * latest));
@@ -81,7 +81,7 @@ public static class SubPortfolioRebalancer
 
         private decimal TakeOutParked(List<(Guid Id, decimal Value)> values)
         {
-            if (input.CashInstrumentId is not { } parkingId || values.FindIndex(entry => entry.Id == parkingId) is not (var parkedAt and >= 0))
+            if (situation.CashInstrumentId is not { } parkingId || values.FindIndex(entry => entry.Id == parkingId) is not (var parkedAt and >= 0))
                 return 0m;
 
             var parked = values[parkedAt].Value;
@@ -177,7 +177,7 @@ public static class SubPortfolioRebalancer
 
         private void ParkOrUnpark(decimal remaining)
         {
-            if (input.CashInstrumentId is not { } cashEtf || PriceOf(cashEtf) is not { } price)
+            if (situation.CashInstrumentId is not { } cashEtf || PriceOf(cashEtf) is not { } price)
                 return;
 
             if (remaining < 0m)
@@ -226,15 +226,15 @@ public static class SubPortfolioRebalancer
     }
 
     private static IEnumerable<string> Notes(
-        SubPortfolioPlanInput input, List<Guid> picks, decimal investFraction, decimal parkedBefore, List<Guid> skipped, Func<Guid, string> label)
+        SubPortfolioSituation situation, List<Guid> picks, decimal investFraction, decimal parkedBefore, List<Guid> skipped, Func<Guid, string> label)
     {
-        var (contribution, currency, policy) = (input.Contribution, input.Currency.Code, input.Policy);
-        var parking = input.CashInstrumentId is { } cashEtf ? label(cashEtf) : Message.Of("report.parking.cash");
+        var (contribution, currency, policy) = (situation.Contribution, situation.Currency.Code, situation.Policy);
+        var parking = situation.CashInstrumentId is { } cashEtf ? label(cashEtf) : Message.Of("report.parking.cash");
 
         if (contribution <= 0m)
             yield return Message.Of("report.note.zero_contribution");
 
-        if (!input.Strategy.MarketIsFavorable)
+        if (!situation.Strategy.MarketIsFavorable)
             yield return Message.Of("report.note.weak_market", new
             {
                 fraction = investFraction,
@@ -248,13 +248,13 @@ public static class SubPortfolioRebalancer
 
         if (picks.Count == 0)
             yield return Message.Of("report.note.nothing_picked", new { parking });
-        else if (input.Strategy.Slots is { } slots && picks.Count < slots)
+        else if (situation.Strategy.Slots is { } slots && picks.Count < slots)
         {
             var empty = slots - picks.Count;
             yield return Message.Of("report.note.empty_slots", new { found = picks.Count, slots, empty, share = (decimal)empty / slots, parking });
         }
-        else if (input.Strategy.Slots is null && input.Strategy.TotalWeight < 1m)
-            yield return Message.Of("report.note.partial_targets", new { total = input.Strategy.TotalWeight, parking });
+        else if (situation.Strategy.Slots is null && situation.Strategy.TotalWeight < 1m)
+            yield return Message.Of("report.note.partial_targets", new { total = situation.Strategy.TotalWeight, parking });
 
         if (skipped.Count > 0)
             yield return Message.Of("report.note.small_buys_skipped", new { minimum = policy.MinTrade, currency, labels = string.Join(", ", skipped.Select(label)) });

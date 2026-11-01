@@ -16,7 +16,7 @@ import { Select } from 'primeng/select';
 import { SelectButton } from 'primeng/selectbutton';
 import { toIsoDate } from '../../../../shared/models/api';
 import { MoneyPipe } from '../../../../shared/pipes/format-pipes';
-import { TradeInput } from '../../data-access/transactions-store';
+import { NewTrade } from '../../data-access/transactions-store';
 
 export interface Option {
   label: string;
@@ -35,7 +35,7 @@ export class TradeDialog {
   readonly subPortfolios = input.required<Option[]>();
   readonly currency = input.required<string>();
   readonly busy = input(false);
-  readonly save = output<TradeInput>();
+  readonly save = output<NewTrade>();
 
   protected readonly sides = [
     { label: 'Купівля', value: 'Buy' },

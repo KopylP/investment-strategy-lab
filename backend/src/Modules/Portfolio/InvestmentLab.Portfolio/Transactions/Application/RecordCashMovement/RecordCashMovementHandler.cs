@@ -19,7 +19,7 @@ public sealed class RecordCashMovementHandler(TransactionRecorder recorder)
 
     private static Result<Transaction> Create(RecordingContext context, RecordCashMovementCommand command, TransactionSource source)
     {
-        var kind = TransactionInput.ParseEnum<CashMovementKind>(command.Kind, "transaction.cash_kind_unknown");
+        var kind = EnumText.TryParse<CashMovementKind>(command.Kind, "transaction.cash_kind_unknown");
         if (kind.IsFailure)
             return kind.Error;
 
@@ -40,11 +40,11 @@ public sealed class RecordCashMovementHandler(TransactionRecorder recorder)
         RecordingContext context, RecordCashMovementCommand command, CashMovementKind kind, Money amount)
     {
         if (command.Allocations is { Count: > 0 } given)
-            return TransactionInput.Amounts(given, context.Account.BaseCurrency);
+            return CashAllocation.TryAll(given.Select(allocation => (allocation.SubPortfolioId, allocation.Amount)), context.Account.BaseCurrency);
 
         var weights = kind == CashMovementKind.Dividend && command.InstrumentId is { } instrumentId
-            ? TransactionInput.HeldWeights(context.Holdings, instrumentId)
-            : TransactionInput.TargetWeights(context.Account);
+            ? context.Holdings.WeightsOf(instrumentId)
+            : context.Account.TargetWeights();
 
         return Result<IReadOnlyList<CashAllocation>>.Success(TradeAllocator.Split(amount, weights));
     }

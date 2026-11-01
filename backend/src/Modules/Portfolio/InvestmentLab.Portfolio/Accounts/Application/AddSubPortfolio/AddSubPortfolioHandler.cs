@@ -1,11 +1,10 @@
 using InvestmentLab.Portfolio.Accounts.Application.Shared;
 using InvestmentLab.Portfolio.Accounts.Domain;
 using InvestmentLab.Portfolio.Contracts.Accounts;
-using InvestmentLab.Portfolio.Transactions.Application.Shared;
 
 namespace InvestmentLab.Portfolio.Accounts.Application.AddSubPortfolio;
 
-public sealed record AddSubPortfolioCommand(SubPortfolioInput SubPortfolio, IReadOnlyDictionary<Guid, decimal> TargetSharesOfOthers);
+public sealed record AddSubPortfolioCommand(NewSubPortfolio SubPortfolio, IReadOnlyDictionary<Guid, decimal> TargetSharesOfOthers);
 
 public sealed class AddSubPortfolioHandler(IAccountRepository accounts, TimeProvider clock)
 {
@@ -14,11 +13,11 @@ public sealed class AddSubPortfolioHandler(IAccountRepository accounts, TimeProv
         if (accountId == Guid.Empty || await accounts.FindAsync(AccountId.Of(accountId), cancellationToken) is not { } account)
             return AccountErrors.NotFound(accountId);
 
-        var draft = AccountInput.ToDraft(command.SubPortfolio);
+        var draft = SubPortfolioDraft.TryOf(command.SubPortfolio);
         if (draft.IsFailure)
             return draft.Error;
 
-        var shares = AccountInput.ToShares(command.TargetSharesOfOthers);
+        var shares = TargetShares.TryFromPercents(command.TargetSharesOfOthers);
         if (shares.IsFailure)
             return shares.Error;
 

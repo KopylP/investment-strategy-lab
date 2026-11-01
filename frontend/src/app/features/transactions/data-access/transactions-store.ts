@@ -66,7 +66,7 @@ export interface TransactionVm {
   reversalReason: string | null;
 }
 
-export interface TradeInput {
+export interface NewTrade {
   instrumentId: string;
   side: 'Buy' | 'Sell';
   quantity: number;
@@ -76,7 +76,7 @@ export interface TradeInput {
   subPortfolioId: string | null;
 }
 
-export interface CashInput {
+export interface NewCashMovement {
   kind: 'Contribution' | 'Withdrawal' | 'Fee' | 'TaxPayment' | 'Dividend';
   amount: number;
   occurredOn: string;
@@ -137,35 +137,35 @@ export class TransactionsStore {
       .map((transaction) => this.toVm(transaction, currency, (id) => names.get(id) ?? '—'));
   });
 
-  async recordTrade(input: TradeInput): Promise<boolean> {
+  async recordTrade(trade: NewTrade): Promise<boolean> {
     return this.command(
       `trades`,
       {
-        instrumentId: input.instrumentId,
-        side: input.side,
-        quantity: input.quantity,
-        price: input.price,
-        fee: input.fee,
-        executedOn: input.executedOn,
-        allocations: input.subPortfolioId
-          ? [{ subPortfolioId: input.subPortfolioId, quantity: input.quantity }]
+        instrumentId: trade.instrumentId,
+        side: trade.side,
+        quantity: trade.quantity,
+        price: trade.price,
+        fee: trade.fee,
+        executedOn: trade.executedOn,
+        allocations: trade.subPortfolioId
+          ? [{ subPortfolioId: trade.subPortfolioId, quantity: trade.quantity }]
           : null,
       },
       'Угоду записано',
     );
   }
 
-  async recordCash(input: CashInput): Promise<boolean> {
+  async recordCash(movement: NewCashMovement): Promise<boolean> {
     return this.command(
       'cash-movements',
       {
-        kind: input.kind,
-        amount: input.amount,
-        occurredOn: input.occurredOn,
-        allocations: input.subPortfolioId
-          ? [{ subPortfolioId: input.subPortfolioId, amount: input.amount }]
+        kind: movement.kind,
+        amount: movement.amount,
+        occurredOn: movement.occurredOn,
+        allocations: movement.subPortfolioId
+          ? [{ subPortfolioId: movement.subPortfolioId, amount: movement.amount }]
           : null,
-        instrumentId: input.instrumentId,
+        instrumentId: movement.instrumentId,
       },
       'Рух коштів записано',
     );

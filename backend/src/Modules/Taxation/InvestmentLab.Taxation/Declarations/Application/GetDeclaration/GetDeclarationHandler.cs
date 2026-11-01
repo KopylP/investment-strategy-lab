@@ -26,9 +26,9 @@ public sealed class GetDeclarationHandler(IEnumerable<ITaxDeclarationForm> forms
         var known = await instruments.GetInstruments(cancellationToken);
         var isins = known.ToDictionary(instrument => instrument.Id, instrument => instrument.Isin);
 
-        var input = new DeclarationInput(year, mine, history.Losses, id => CountryOf(isins.GetValueOrDefault(id)));
+        var facts = new DeclarationFacts(year, mine, history.Losses, id => CountryOf(isins.GetValueOrDefault(id)));
 
-        return new DeclarationDto(form.Fill(input), history.Warnings);
+        return new DeclarationDto(form.Fill(facts), history.Warnings);
     }
 
     private static string? CountryOf(string? isin) =>

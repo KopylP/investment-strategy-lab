@@ -17,6 +17,9 @@ public sealed class InvestmentAccount : AggregateRoot<AccountId>
 
     public IEnumerable<SubPortfolio> ActiveSubPortfolios => SubPortfolios.Where(sub => sub.IsActive);
 
+    public IReadOnlyList<(SubPortfolioId, decimal)> TargetWeights() =>
+        [.. ActiveSubPortfolios.Select(sub => (sub.Id, sub.TargetShare.Value.Value))];
+
     private InvestmentAccount(
         AccountId id, UserId ownerId, string name, string broker, Currency baseCurrency, string taxPolicyCode,
         ContributionPolicy contributionPolicy, DateTimeOffset openedAt) : base(id)

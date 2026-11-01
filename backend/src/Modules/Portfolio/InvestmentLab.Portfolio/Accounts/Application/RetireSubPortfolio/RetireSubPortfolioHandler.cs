@@ -21,7 +21,7 @@ public sealed class RetireSubPortfolioHandler(IAccountRepository accounts, TimeP
         if (subPortfolioId == Guid.Empty)
             return AccountErrors.SubPortfolioNotFound(subPortfolioId);
 
-        var shares = AccountInput.ToShares(command.TargetSharesOfRemaining);
+        var shares = TargetShares.TryFromPercents(command.TargetSharesOfRemaining);
         if (shares.IsFailure)
             return shares.Error;
 

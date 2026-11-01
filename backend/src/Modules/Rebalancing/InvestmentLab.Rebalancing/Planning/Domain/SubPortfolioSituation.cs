@@ -1,6 +1,6 @@
 namespace InvestmentLab.Rebalancing.Planning.Domain;
 
-public sealed record SubPortfolioPlanInput(
+public sealed record SubPortfolioSituation(
     StrategyTargets Strategy,
     IReadOnlyList<SubPortfolioPosition> Positions,
     decimal Cash,

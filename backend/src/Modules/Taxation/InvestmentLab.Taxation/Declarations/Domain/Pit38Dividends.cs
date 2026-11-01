@@ -19,9 +19,9 @@ public sealed record Pit38Dividends(
 
     private static readonly Dictionary<string, decimal> TreatyRates = new() { ["JP"] = 0.10m, ["IT"] = 0.10m };
 
-    public static Pit38Dividends Of(DeclarationInput input, List<DeclarationAccount> taxed, ITaxPolicy policy)
+    public static Pit38Dividends Of(DeclarationFacts facts, List<DeclarationAccount> taxed, ITaxPolicy policy)
     {
-        var countryOf = input.CountryOf;
+        var countryOf = facts.CountryOf;
         var rate = BelkaTaxPolicy.Rate.Value;
         var rounding = policy.Rounding;
 

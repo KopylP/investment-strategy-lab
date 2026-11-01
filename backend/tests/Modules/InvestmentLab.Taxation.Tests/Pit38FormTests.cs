@@ -34,7 +34,7 @@ public sealed class Pit38FormTests
     private static TaxDeclaration Fill(params DeclarationAccount[] accounts) => Fill(2025, [], accounts);
 
     private static TaxDeclaration Fill(int year, IReadOnlyList<LossYear> losses, params DeclarationAccount[] accounts) =>
-        Form.Fill(new DeclarationInput(year, accounts, losses, Country));
+        Form.Fill(new DeclarationFacts(year, accounts, losses, Country));
 
     private static decimal? Poz(TaxDeclaration declaration, int position) =>
         declaration.Sections.SelectMany(section => section.Fields).Single(field => field.Position == position).Amount;

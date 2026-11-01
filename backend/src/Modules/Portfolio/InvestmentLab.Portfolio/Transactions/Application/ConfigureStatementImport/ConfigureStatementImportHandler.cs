@@ -28,7 +28,7 @@ public sealed class ConfigureStatementImportHandler(StatementImportLoader loader
         return await preview.PlanAndShowAsync(account, statement, cancellationToken);
     }
 
-    private static TickerMapping Applied(TickerMapping mapping, IReadOnlyList<TickerMappingInput> inputs)
+    private static TickerMapping Applied(TickerMapping mapping, IReadOnlyList<TickerMappingChoice> inputs)
     {
         var input = inputs.FirstOrDefault(each => string.Equals(each.Ticker, mapping.Ticker, StringComparison.OrdinalIgnoreCase));
         if (input is null)

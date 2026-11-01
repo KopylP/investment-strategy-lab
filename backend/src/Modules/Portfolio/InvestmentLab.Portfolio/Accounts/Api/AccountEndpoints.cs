@@ -75,7 +75,7 @@ internal static class AccountEndpoints
     }
 
     private static async Task<IResult> ChangeContributionPolicy(
-        Guid accountId, ContributionPolicyInput body, ChangeContributionPolicyHandler handler, CancellationToken cancellationToken)
+        Guid accountId, ContributionPolicyChoice body, ChangeContributionPolicyHandler handler, CancellationToken cancellationToken)
     {
         var changed = await handler.Handle(accountId, body, cancellationToken);
 

@@ -63,7 +63,7 @@ internal static class StrategyEndpoints
     }
 
     private static async Task<IResult> ReconfigureStrategy(
-        Guid strategyId, StrategySetupInput body, ReconfigureStrategyHandler handler, CancellationToken cancellationToken)
+        Guid strategyId, StrategySetupDraft body, ReconfigureStrategyHandler handler, CancellationToken cancellationToken)
     {
         var reconfigured = await handler.Handle(strategyId, body, cancellationToken);
 

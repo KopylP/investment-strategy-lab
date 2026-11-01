@@ -24,15 +24,15 @@ public sealed partial class ForeignContractIsolationTests
     }
 
     [Fact]
-    public void No_class_gathers_the_data_of_other_modules_as_inputs()
+    public void No_type_is_named_input_because_the_word_says_nothing_of_what_it_is()
     {
-        var gatherers = CodeLocation.Modules
+        var named = CodeLocation.Modules
             .SelectMany(TypesOf)
-            .Where(type => type.Name.EndsWith("Inputs", StringComparison.Ordinal))
+            .Where(type => InputName().IsMatch(type.Name))
             .Select(type => type.FullName!)
             .ToList();
 
-        gatherers.ShouldBeEmpty();
+        named.ShouldBeEmpty();
     }
 
     private static IEnumerable<string> OffendersIn(string module) =>
@@ -106,6 +106,9 @@ public sealed partial class ForeignContractIsolationTests
 
         return location.Kind == LocationKind.Contracts && location.Module != module;
     }
+
+    [GeneratedRegex("Inputs?$")]
+    private static partial Regex InputName();
 
     [GeneratedRegex(@"V\d+$")]
     private static partial Regex VersionedEvent();

@@ -13,7 +13,7 @@ import { DatePipe, DateTimePipe, MoneyPipe } from '../../../../shared/pipes/form
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { Viewport } from '../../../../shared/ui/viewport';
 import { ReportDetailStore } from '../../data-access/report-detail-store';
-import { FillInput, ReportActionVm } from '../../models/report-vm';
+import { EnteredFill, ReportActionVm } from '../../models/report-vm';
 import { FillDialog } from '../../ui/fill-dialog/fill-dialog';
 import {
   LoadOperationsData,
@@ -200,7 +200,7 @@ export class ReportDetailPage {
   private openFillDialog(
     action: ReportActionVm,
     mode: 'full' | 'partial',
-    save: (fill: FillInput) => Promise<void>,
+    save: (fill: EnteredFill) => Promise<void>,
   ): void {
     this.dialogs
       .open(FillDialog, {
@@ -211,7 +211,7 @@ export class ReportDetailPage {
         data: { action, mode },
         breakpoints: { '640px': '95vw' },
       })
-      ?.onClose.pipe(filter((fill): fill is FillInput => !!fill))
+      ?.onClose.pipe(filter((fill): fill is EnteredFill => !!fill))
       .subscribe((fill) => void save(fill));
   }
 }

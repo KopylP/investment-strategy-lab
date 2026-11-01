@@ -14,7 +14,7 @@ public sealed class ChangeTargetSharesHandler(IAccountRepository accounts, TimeP
         if (accountId == Guid.Empty || await accounts.FindAsync(AccountId.Of(accountId), cancellationToken) is not { } account)
             return AccountErrors.NotFound(accountId);
 
-        var shares = AccountInput.ToShares(command.TargetShares);
+        var shares = TargetShares.TryFromPercents(command.TargetShares);
         if (shares.IsFailure)
             return shares.Error;
 

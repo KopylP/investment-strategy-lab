@@ -64,6 +64,17 @@ New and changed code follows these rules; they win over the style of older code 
   or in `Domain`, never loose in `Application/`. A file's name says what it holds; a file emptied by a split is deleted.
 - **Small types over long parameter lists.** Group arguments that travel together into a value object.
 - **Intention-revealing names,** no abbreviations; named constants instead of magic numbers.
+- **A type is named for what it is in the domain, not for its role in the code.** `Input`, `Inputs` say nothing and are not used:
+  what a user asks to create is `NewSubPortfolio`, what they choose is `ContributionPolicyChoice`, an unfinished thing is
+  `StrategySetupDraft`, what a calculation works from is `SubPortfolioSituation`. A static class that parses and validates a request
+  is split: each rule goes to the domain type it builds (`SubPortfolioDraft.TryOf`). `ForeignContractIsolationTests` keeps the suffix out.
+
+## Tools
+
+- **C# code is navigated through the LSP first.** References, definitions, implementations, call hierarchy and symbol search go
+  through the LSP tool (`csharp-ls`: `dotnet tool install -g csharp-ls`); a rename or a move starts from `findReferences`. Text search is
+  for what the compiler does not see: strings, JSON, Markdown, frontend code. An empty LSP answer while the server is still
+  indexing proves nothing: then fall back to text search and let the build confirm it.
 
 ## Language
 

@@ -68,8 +68,8 @@ Modules/<Module>/
 ```
 
 - `Application/` holds only folders, never a file directly: `<ActionName>/`, `Integration/` and `Shared/`.
-- Repository interfaces (`IAccountRepository`) go in `Domain/`. Input types and mappings that several actions use
-  (`AccountInput`, `AccountMapping`) go in `Application/Shared/`; used by one action, in that action's folder.
+- Repository interfaces (`IAccountRepository`) go in `Domain/`. Request records and mappings that several actions use
+  (`ContributionPolicyChoice`, `AccountMapping`) go in `Application/Shared/`; used by one action, in that action's folder.
 - `<ActionName>` is a verb phrase and the namespace follows the folder: `Accounts/Application/OpenAccount/OpenAccountHandler.cs`.
 - A background job is an action too: `Monitoring/Application/CheckDueSignals/SignalsJob.cs`.
 - A type used by one action stays in that action's folder. It moves to `Application/Shared/` when a second action needs it,
@@ -136,7 +136,7 @@ checks signatures, fields and base types; it cannot see a DTO passed as `object`
 
 **Never write a class that gathers other modules' data for handlers** (`PlanningInputs`, `TaxInputs` and the like, whatever
 the name). Such a class grows into a grab bag: every handler depends on everything it holds and foreign DTOs spread through
-the use cases. A record that carries the fields of a request (`AccountInput`) is a different thing and stays.
+the use cases. A record that carries the fields of a request (`NewSubPortfolio`) is a different thing and stays.
 
 **How a port and its adapter look:**
 

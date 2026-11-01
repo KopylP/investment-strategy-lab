@@ -9,27 +9,27 @@ namespace InvestmentLab.Strategies.Definitions.Application.Shared;
 
 public sealed class StrategySetupFactory(IStrategyTypes types, IInstrumentCatalog instruments)
 {
-    public async Task<Result<StrategySetup>> CreateAsync(string typeCode, StrategySetupInput input, CancellationToken cancellationToken)
+    public async Task<Result<StrategySetup>> CreateAsync(string typeCode, StrategySetupDraft draft, CancellationToken cancellationToken)
     {
         if (await types.FindAsync(typeCode, cancellationToken) is not { } type)
             return StrategyErrors.UnknownType(typeCode);
 
         var known = (await instruments.GetInstruments(cancellationToken)).Select(instrument => instrument.Id).ToHashSet();
         Guid?[
-] referenced = [.. (input.Universe ?? []).Select(id => (Guid?)id),
-            input.BenchmarkInstrumentId,
-            input.VolatilityIndexInstrumentId,
-            input.CashInstrumentId];
+] referenced = [.. (draft.Universe ?? []).Select(id => (Guid?)id),
+            draft.BenchmarkInstrumentId,
+            draft.VolatilityIndexInstrumentId,
+            draft.CashInstrumentId];
         var unknown = referenced.OfType<Guid>().Where(id => !known.Contains(id)).Distinct().ToList();
         if (unknown.Count > 0)
             return StrategyErrors.UnknownInstruments(unknown.Select(id => id.ToString()));
 
-        var parameters = Parameters(type, input.Parameters);
+        var parameters = Parameters(type, draft.Parameters);
 
         return parameters.IsFailure
             ? parameters.Error
-            : new StrategySetup(parameters.Value, input.Universe ?? [], input.CashInstrumentId,
-                new MarketSeriesRefs(input.BenchmarkInstrumentId, input.VolatilityIndexInstrumentId));
+            : new StrategySetup(parameters.Value, draft.Universe ?? [], draft.CashInstrumentId,
+                new MarketSeriesRefs(draft.BenchmarkInstrumentId, draft.VolatilityIndexInstrumentId));
     }
 
     public static Result<string> Parameters(StrategyTypeDescriptor type, JsonElement? given)

@@ -50,7 +50,7 @@ public sealed class CreateDefaultStrategiesHandler(
 
     private static CreateStrategyCommand CommandOf(DefaultStrategy strategy, Dictionary<string, Guid> byIsin, Guid? volatilityIndex)
     {
-        var setup = new StrategySetupInput(
+        var setup = new StrategySetupDraft(
             [.. strategy.Universe.Select(isin => byIsin[isin])],
             byIsin[strategy.Benchmark],
             strategy.UsesVolatilityIndex ? volatilityIndex : null,

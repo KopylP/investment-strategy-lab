@@ -8,5 +8,5 @@ public interface ITaxDeclarationForm
 
     string Jurisdiction { get; }
 
-    TaxDeclaration Fill(DeclarationInput input);
+    TaxDeclaration Fill(DeclarationFacts facts);
 }

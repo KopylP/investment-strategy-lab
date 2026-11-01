@@ -12,7 +12,7 @@ export interface TaxPolicyOption {
   isDefault: boolean;
 }
 
-export interface SubPortfolioInput {
+export interface NewSubPortfolio {
   name: string;
   targetSharePercent: number;
   strategyId: string | null;
@@ -22,12 +22,12 @@ export interface SubPortfolioInput {
   maxMonthlyTurnoverPercent?: number | null;
 }
 
-export interface OpenAccountInput {
+export interface NewAccount {
   name: string;
   broker: string;
   baseCurrency: string;
   taxPolicyCode?: string;
-  subPortfolios: SubPortfolioInput[];
+  subPortfolios: NewSubPortfolio[];
   contributionPolicy: { kind: string; driftBandPercent: number | null };
 }
 
@@ -54,8 +54,8 @@ export class AccountsApi {
     return this.api.get<TaxPolicyOption[]>('/api/taxation/policies');
   }
 
-  open(input: OpenAccountInput): Promise<AccountSetup> {
-    return this.api.post<AccountSetup>('/api/portfolio/accounts', input);
+  open(account: NewAccount): Promise<AccountSetup> {
+    return this.api.post<AccountSetup>('/api/portfolio/accounts', account);
   }
 
   changeTargetShares(id: string, sharesPercent: Record<string, number>): Promise<AccountSetup> {
@@ -89,7 +89,7 @@ export class AccountsApi {
 
   addSubPortfolio(
     id: string,
-    subPortfolio: SubPortfolioInput,
+    subPortfolio: NewSubPortfolio,
     targetSharesOfOthers: Record<string, number>,
   ): Promise<AccountSetup> {
     return this.api.post<AccountSetup>(`/api/portfolio/accounts/${id}/sub-portfolios`, {
