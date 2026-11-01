@@ -2,5 +2,7 @@ namespace InvestmentLab.Taxation.Assessments.Domain;
 
 public interface ITaxRateSchedule
 {
-    Percentage Rate { get; }
+    string Label { get; }
+
+    decimal TaxOn(decimal taxBase);
 }

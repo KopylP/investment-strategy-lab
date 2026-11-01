@@ -19,7 +19,7 @@ public sealed class Pit38Form : ITaxDeclarationForm
         var sales = new Pit38ForeignSales(rows.WithoutPit8CForm, input.CountryOf);
         var attachments = sales.AttachmentsWhen(gains.P28);
 
-        var figures = new Pit38Figures(input, rows, gains, dividends, policy.RateSchedule.Rate.Value, attachments, sales.WithUnknownCountry);
+        var figures = new Pit38Figures(input, rows, gains, dividends, BelkaTaxPolicy.Rate.Value, attachments, sales.WithUnknownCountry);
 
         return new TaxDeclaration(
             Code,

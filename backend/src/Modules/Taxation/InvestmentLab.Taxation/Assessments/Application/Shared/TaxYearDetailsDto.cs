@@ -14,4 +14,6 @@ public sealed record TaxYearDetailsDto(
     IReadOnlyList<OpenLotSnapshot> OpenLots,
     IReadOnlyDictionary<Guid, string> Instruments,
     IReadOnlyList<TaxAccountDto> Accounts,
-    IReadOnlyList<string> Warnings);
+    IReadOnlyList<string> Warnings,
+    bool IsTaxed,
+    string RateLabel);

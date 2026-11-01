@@ -20,7 +20,6 @@ public sealed class TaxInputs(
 
     IAccountSetupQueries accounts, IJournalQueries journal)
 {
-    private const string Pln = "PLN";
     private const string YahooPrefix = "yfinance:";
 
     public async Task<TaxAccount?> EnsureAccountAsync(Guid accountId, CancellationToken cancellationToken)
@@ -131,13 +130,15 @@ public sealed class TaxInputs(
         var entries = all.Where(entry => !entry.IsReversed).OrderBy(entry => entry.OccurredOn).ThenBy(entry => entry.RecordedAt).ToList();
         var rates = new Dictionary<(string, DateOnly), FxRateDto?>();
 
-        var (events, missing) = await PricedEventsAsync(account, entries, rates, cancellationToken);
+        var fxRule = TaxPolicies.For(account.PolicyCode).FxRule;
+
+        var (events, missing) = await PricedEventsAsync(account, entries, fxRule, rates, cancellationToken);
 
         var uploaded = await statements.ForAccountAsync(account.AccountId, cancellationToken);
         if (uploaded.Count == 0)
             return (events, missing);
 
-        var withFacts = await WithBrokerFactsAsync(events, entries, uploaded, rates, cancellationToken);
+        var withFacts = await WithBrokerFactsAsync(events, entries, uploaded, fxRule, rates, cancellationToken);
 
         return (withFacts, missing);
     }
@@ -145,6 +146,7 @@ public sealed class TaxInputs(
     private async Task<(List<TaxEvent> Events, List<string> Missing)> PricedEventsAsync(
         TaxAccount account,
         List<TaxLedgerEntry> entries,
+        IFxRule fxRule,
         Dictionary<(string, DateOnly), FxRateDto?> rates,
         CancellationToken cancellationToken)
     {
@@ -154,7 +156,7 @@ public sealed class TaxInputs(
         for (var index = 0; index < entries.Count; index++)
         {
             var entry = entries[index];
-            var (rate, date) = await RateAsync(entry.Currency, entry.OccurredOn, rates, cancellationToken);
+            var (rate, date) = await RateAsync(entry.Currency, fxRule.LookupDate(entry.OccurredOn), fxRule, rates, cancellationToken);
 
             if (rate is { } known)
                 events.Add(EventOf(entry, index, known, date, account.AccountId));
@@ -185,6 +187,7 @@ public sealed class TaxInputs(
         List<TaxEvent> events,
         List<TaxLedgerEntry> entries,
         IReadOnlyList<BrokerStatement> uploaded,
+        IFxRule fxRule,
         Dictionary<(string, DateOnly), FxRateDto?> rates,
         CancellationToken cancellationToken)
     {
@@ -194,7 +197,7 @@ public sealed class TaxInputs(
         var sales = new Dictionary<Guid, SaleFacts>();
 
         foreach (var (transactionId, facts) in match.Sales)
-            sales[transactionId] = await AtNbpRatesAsync(facts, currencies.GetValueOrDefault(transactionId), rates, cancellationToken);
+            sales[transactionId] = await AtTaxRatesAsync(facts, currencies.GetValueOrDefault(transactionId), fxRule, rates, cancellationToken);
 
         return [.. events.Select(each => each with
         {
@@ -203,9 +206,10 @@ public sealed class TaxInputs(
         })];
     }
 
-    private async Task<SaleFacts> AtNbpRatesAsync(
+    private async Task<SaleFacts> AtTaxRatesAsync(
         SaleFacts facts,
         string? entryCurrency,
+        IFxRule fxRule,
         Dictionary<(string, DateOnly), FxRateDto?> rates,
         CancellationToken cancellationToken)
     {
@@ -213,8 +217,8 @@ public sealed class TaxInputs(
 
         foreach (var lot in facts.Lots)
         {
-            var (rate, _) = await RateAsync(facts.Currency, lot.AcquiredOn, rates, cancellationToken);
-            lots.Add(rate is { } nbp ? lot with { CostPln = decimal.Round(lot.Cost * nbp, 2, MidpointRounding.AwayFromZero) } : lot);
+            var (rate, _) = await RateAsync(facts.Currency, fxRule.LookupDate(lot.AcquiredOn), fxRule, rates, cancellationToken);
+            lots.Add(rate is { } known ? lot with { CostPln = decimal.Round(lot.Cost * known, 2, MidpointRounding.AwayFromZero) } : lot);
         }
 
         return facts with { Lots = lots, Cost = entryCurrency == facts.Currency ? facts.Cost : null };
@@ -234,8 +238,8 @@ public sealed class TaxInputs(
         return new InstrumentKey(instrument.Isin, [.. yahooSymbols.Select(symbol => symbol[YahooPrefix.Length..])]);
     }
 
-    public async Task<(decimal? Rate, DateOnly? Date)> RateAsync(string currency, DateOnly transactionDate, CancellationToken cancellationToken) =>
-        await RateAsync(currency, transactionDate, [], cancellationToken);
+    public async Task<(decimal? Rate, DateOnly? Date)> LatestRateAsync(string currency, DateOnly asOf, IFxRule fxRule, CancellationToken cancellationToken) =>
+        await RateAsync(currency, asOf.AddDays(1), fxRule, [], cancellationToken);
 
     public async Task<IReadOnlyList<LossYear>> LossesAsync(UserId ownerId, CancellationToken cancellationToken) =>
         [.. (await assessments.LossesAsync(ownerId, cancellationToken)).Select(loss => loss.ToLossYear())];
@@ -270,13 +274,13 @@ public sealed class TaxInputs(
     }
 
     private async Task<(decimal? Rate, DateOnly? Date)> RateAsync(
-        string currency, DateOnly transactionDate, Dictionary<(string, DateOnly), FxRateDto?> cache, CancellationToken cancellationToken)
+        string currency, DateOnly lookupDate, IFxRule fxRule, Dictionary<(string, DateOnly), FxRateDto?> cache, CancellationToken cancellationToken)
     {
-        if (currency == Pln)
+        if (currency == fxRule.TaxCurrency)
             return (1m, null);
 
-        if (!cache.TryGetValue((currency, transactionDate), out var rate))
-            rate = cache[(currency, transactionDate)] = await fxRates.GetFxRate(currency, Pln, transactionDate, cancellationToken);
+        if (!cache.TryGetValue((currency, lookupDate), out var rate))
+            rate = cache[(currency, lookupDate)] = await fxRates.GetFxRate(currency, fxRule.TaxCurrency, lookupDate, cancellationToken);
 
         return rate is null ? (null, null) : (rate.Rate, rate.EffectiveDate);
     }

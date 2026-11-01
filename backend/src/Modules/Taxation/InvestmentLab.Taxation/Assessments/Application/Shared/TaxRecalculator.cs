@@ -4,6 +4,8 @@ namespace InvestmentLab.Taxation.Assessments.Application.Shared;
 
 public sealed class TaxRecalculator(TaxInputs inputs, IAssessmentRepository assessments, TimeProvider clock)
 {
+    private const int ShownMissingRates = 5;
+
     public async Task<Result<RecomputeOutcome>> RecomputeAsync(Guid accountId, CancellationToken cancellationToken)
     {
         if (await inputs.OwnerOfAsync(accountId, cancellationToken) is not { } ownerId)
@@ -49,10 +51,15 @@ public sealed class TaxRecalculator(TaxInputs inputs, IAssessmentRepository asse
         List<string> warnings = [.. computation.Warnings];
 
         if (missing.Count > 0)
-            warnings.Insert(
-                0,
-                $"Немає курсу NBP для {missing.Count} операцій ({string.Join(", ", missing.Take(5))}…): вони не враховані. Оновіть курси NBP.");
+            warnings.Insert(0, MissingRatesWarning(taxpayer.Policy.FxRule.SourceName, missing));
 
         return new RecomputeOutcome(changed, warnings, warnings, taxpayer, computation, events, losses);
+    }
+
+    private static string MissingRatesWarning(string source, IReadOnlyList<string> missing)
+    {
+        var shown = string.Join(", ", missing.Take(ShownMissingRates));
+
+        return $"Немає курсу {source} для {missing.Count} операцій ({shown}…): вони не враховані. Оновіть курси {source}.";
     }
 }

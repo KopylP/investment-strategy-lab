@@ -93,6 +93,8 @@ export interface TaxYearDetails {
   year: number;
   policyCode: string;
   fxRule: string;
+  isTaxed: boolean;
+  rateLabel: string;
   computedAt: string;
   summary: TaxYearSummary;
   realizations: Realization[];

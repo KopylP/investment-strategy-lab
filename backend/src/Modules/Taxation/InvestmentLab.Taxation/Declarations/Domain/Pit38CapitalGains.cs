@@ -20,7 +20,7 @@ public sealed record Pit38CapitalGains(
     public static Pit38CapitalGains Of(DeclarationInput input, Pit38BrokerRows rows, List<DeclarationAccount> taxed, ITaxPolicy policy)
     {
         var year = input.Year;
-        var rate = policy.RateSchedule.Rate.Value;
+        var rate = BelkaTaxPolicy.Rate.Value;
         var row2 = rows.WithoutPit8CForm;
 
         var (p20, p21) = rows.Row1Of(year);

@@ -11,6 +11,9 @@ public static class AccountErrors
     public static Error UnsupportedBaseCurrency(Currency currency) =>
         Error.Validation("account.base_currency_unsupported", $"An account is kept in EUR or USD, not {currency}.");
 
+    public static Error UnknownTaxPolicy(string code) =>
+        Error.Validation("account.tax_policy_unknown", $"'{code}' is not a known tax policy.");
+
     public static Error NoSubPortfolios() => Error.Validation("account.no_sub_portfolios", "An account needs at least one sub-portfolio.");
 
     public static Error TargetShareOutOfRange(decimal percent) =>
