@@ -56,7 +56,8 @@ public sealed class StrategyTypeDescriptor
             parametersSchema,
             defaultParameters,
             [.. reports],
-            syncedAt) { Messages = messages is null ? [] : new Dictionary<string, string>(messages) };
+            syncedAt)
+        { Messages = messages is null ? [] : new Dictionary<string, string>(messages) };
 
     public void RefreshFrom(StrategyTypeDescriptor published)
     {
