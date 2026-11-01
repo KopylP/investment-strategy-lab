@@ -36,6 +36,7 @@ public sealed class SignalsModule : IModule
         var services = builder.Services;
 
         services.AddScoped<ISignalRepository, SignalRepository>();
+        services.AddScoped<IBuiltInSignalQueries, BuiltInSignalQueries>();
 
         services.AddScoped<GetSignalsHandler>();
         services.AddScoped<CreateSignalHandler>();

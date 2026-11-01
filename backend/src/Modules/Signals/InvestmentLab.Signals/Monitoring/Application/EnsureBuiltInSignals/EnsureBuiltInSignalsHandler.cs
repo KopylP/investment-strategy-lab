@@ -61,7 +61,7 @@ public sealed class EnsureBuiltInSignalsHandler(ISignalRepository signals, IAcco
 
     private static Signal HighVix(UserId owner, Guid vixId)
     {
-        var key = $"vix:{owner.Value:N}";
+        var key = BuiltInSignalKind.VolatilityIndexKey(owner.Value);
         var target = SignalTarget.Instrument(vixId);
         var condition = ConditionOf(SignalMetric.Level, VixLevel, windowDays: null);
 
@@ -70,7 +70,7 @@ public sealed class EnsureBuiltInSignalsHandler(ISignalRepository signals, IAcco
 
     private static Signal AccountFall(UserId owner, AccountSetupDto account)
     {
-        var key = $"account-drawdown:{account.Id:N}";
+        var key = BuiltInSignalKind.AccountDrawdownKey(account.Id);
         var name = Message.Of("signal.builtin.account_drawdown", new { account = ShortName(account) });
         var target = SignalTarget.Account(account.Id);
         var condition = ConditionOf(SignalMetric.DrawdownFromPeak, AccountDrawdown, windowDays: null);
@@ -80,7 +80,7 @@ public sealed class EnsureBuiltInSignalsHandler(ISignalRepository signals, IAcco
 
     private static Signal PositionFall(UserId owner, AccountSetupDto account)
     {
-        var key = $"position-drawdown:{account.Id:N}";
+        var key = BuiltInSignalKind.PositionDrawdownKey(account.Id);
         var name = Message.Of("signal.builtin.position_drawdown", new { account = ShortName(account) });
         var target = SignalTarget.EachPosition(account.Id);
         var condition = ConditionOf(SignalMetric.DrawdownFromPeak, PositionDrawdown, PositionPeakWindowDays);

@@ -288,6 +288,14 @@ class ReportSchedule(ApiModel):
     minute: int = Field(0, ge=0, le=59, description="Hourly: the minute of every hour.")
 
 
+class SignalKind(str, Enum):
+    """A kind of the service's built-in signals; a report may ask to come when one of them fires."""
+
+    VOLATILITY_INDEX = "volatility-index"
+    ACCOUNT_DRAWDOWN = "account-drawdown"
+    POSITION_DRAWDOWN = "position-drawdown"
+
+
 class ReportDefinition(ApiModel):
     """A report a strategy type makes: the service lists, schedules and generates it from this alone."""
 
@@ -296,6 +304,10 @@ class ReportDefinition(ApiModel):
     description: str
     mode: ReportMode
     schedule: ReportSchedule = Field(description="When it comes unless the user sets their own time for the account.")
+    signal_kinds: list[SignalKind] = Field(
+        default_factory=list,
+        description="Built-in signals that also bring this report, unless the user removes the link.",
+    )
 
 
 class StrategyTypeDescriptor(ApiModel):

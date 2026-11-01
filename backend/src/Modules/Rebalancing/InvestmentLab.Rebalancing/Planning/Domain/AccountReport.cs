@@ -9,12 +9,15 @@ public sealed record AccountReport(
     string Mode,
     ReportKind Kind,
     IReadOnlyList<SubPortfolioReport> SubPortfolios,
-    OwnReportSchedule? Own = null)
+    OwnReportSchedule? Own = null,
+    IReadOnlyList<string>? SignalKinds = null)
 {
     public static AccountReport? Choose(IReadOnlyList<AccountReport> reports, string? code) =>
         code is null
             ? reports.FirstOrDefault(report => report.Kind == ReportKind.Monthly)
             : reports.FirstOrDefault(report => report.Code == code);
+
+    public bool ComesOn(string signalKind) => SignalKinds?.Contains(signalKind) == true;
 
     public Cadence CadenceOf(SubPortfolioReport sub) => Own?.Cadence ?? sub.Default;
 

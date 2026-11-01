@@ -2,7 +2,7 @@ using InvestmentLab.Rebalancing.Planning.Domain;
 
 namespace InvestmentLab.Rebalancing.Planning.Application.RemoveSignalReportRule;
 
-public sealed class RemoveSignalReportRuleHandler(ISignalReportRuleRepository rules)
+public sealed class RemoveSignalReportRuleHandler(ISignalReportRuleRepository rules, TimeProvider clock)
 {
     public async Task<Result> Handle(Guid ruleId, CancellationToken cancellationToken)
     {
@@ -10,7 +10,10 @@ public sealed class RemoveSignalReportRuleHandler(ISignalReportRuleRepository ru
         if (rule is null)
             return SignalReportRuleErrors.NotFound();
 
-        rules.Remove(rule);
+        var dismissed = rule.Dismiss(clock.GetUtcNow());
+        if (dismissed.IsFailure)
+            return dismissed;
+
         await rules.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

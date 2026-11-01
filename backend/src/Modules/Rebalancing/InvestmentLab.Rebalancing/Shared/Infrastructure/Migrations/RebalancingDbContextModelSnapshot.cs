@@ -242,6 +242,14 @@ namespace InvestmentLab.Rebalancing.Shared.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<DateTimeOffset?>("DismissedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("dismissed_at");
+
+                    b.Property<bool>("FromStrategy")
+                        .HasColumnType("boolean")
+                        .HasColumnName("from_strategy");
+
                     b.Property<Guid>("OwnerId")
                         .HasColumnType("uuid")
                         .HasColumnName("owner_id");

@@ -28,6 +28,7 @@ from finance_decisions.api.contracts import (
     RiskSignal,
     RiskSignalKind,
     SeriesRole,
+    SignalKind,
     StrategyDecision,
     TargetWeight,
     Weekday,
@@ -59,6 +60,7 @@ REPORTS = (
         description=msg("etf_momentum.report.risk_review.description"),
         mode=ReportMode.RISK_REVIEW,
         schedule=ReportSchedule(frequency=ReportFrequency.WEEKLY, weekday=Weekday.SUNDAY, time="19:00"),
+        signal_kinds=[SignalKind.VOLATILITY_INDEX, SignalKind.ACCOUNT_DRAWDOWN, SignalKind.POSITION_DRAWDOWN],
     ),
 )
 

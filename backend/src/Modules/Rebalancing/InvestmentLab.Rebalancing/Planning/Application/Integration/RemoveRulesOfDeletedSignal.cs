@@ -8,7 +8,7 @@ internal sealed class RemoveRulesOfDeletedSignal(ISignalReportRuleRepository rul
 {
     public async Task Handle(SignalDeletedV1 deleted, CancellationToken cancellationToken)
     {
-        var attached = await rules.OfOwnedSignalAsync(deleted.SignalId, deleted.OwnerId, cancellationToken);
+        var attached = await rules.OfOwnedSignalWithDismissedAsync(deleted.SignalId, deleted.OwnerId, cancellationToken);
         foreach (var rule in attached)
             rules.Remove(rule);
 
