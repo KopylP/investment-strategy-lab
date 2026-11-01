@@ -128,8 +128,17 @@ public sealed class PlanningInputs(
             each.SubPortfolio.Id, each.SubPortfolio.Name, each.Strategy.Name, CadenceOf(each.Report.Schedule)));
 
         var kind = first.Mode == StrategyReportDto.RiskReview ? ReportKind.RiskReview : ReportKind.Monthly;
+        var signalKinds = declared.SelectMany(each => each.Report.SignalKinds ?? []).Distinct().ToList();
 
-        return new AccountReport(first.Code, first.Name, first.Description, first.Mode, kind, [.. subPortfolios], settings?.ScheduleOf(first.Code));
+        return new AccountReport(
+            Code: first.Code,
+            Name: first.Name,
+            Description: first.Description,
+            Mode: first.Mode,
+            Kind: kind,
+            SubPortfolios: [.. subPortfolios],
+            Own: settings?.ScheduleOf(first.Code),
+            SignalKinds: signalKinds);
     }
 
     private static Cadence CadenceOf(StrategyReportScheduleDto schedule) =>

@@ -17,14 +17,25 @@ public sealed class AddSignalReportRuleHandler(ISignalReportRuleRepository rules
         if (reports.All(report => report.Code != command.ReportCode))
             return SignalReportRuleErrors.ReportNotDeclared();
 
-        if (await rules.ExistsAsync(command.SignalId, command.AccountId, command.ReportCode, cancellationToken))
-            return SignalReportRuleErrors.AlreadyExists();
+        var existing = await rules.FindAsync(command.SignalId, command.AccountId, command.ReportCode, cancellationToken);
 
-        var rule = SignalReportRule.Of(ownerId, command.SignalId, command.AccountId, command.ReportCode, clock.GetUtcNow());
+        var restored = existing?.Restore() ?? Result.Success();
+        if (restored.IsFailure)
+            return restored.Error;
 
-        rules.Add(rule);
+        var rule = existing ?? AddNew(ownerId, command);
+
         await rules.SaveChangesAsync(cancellationToken);
 
         return SignalReportRuleDto.Of(rule);
+    }
+
+    private SignalReportRule AddNew(UserId ownerId, AddSignalReportRuleCommand command)
+    {
+        var rule = SignalReportRule.Of(ownerId, command.SignalId, command.AccountId, command.ReportCode, clock.GetUtcNow());
+
+        rules.Add(rule);
+
+        return rule;
     }
 }

@@ -71,4 +71,5 @@ export interface SignalReportRuleDto {
   accountId: string;
   reportCode: string;
   problem: string | null;
+  fromStrategy: boolean;
 }

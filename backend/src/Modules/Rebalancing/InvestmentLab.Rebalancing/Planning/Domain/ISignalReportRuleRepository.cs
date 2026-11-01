@@ -8,7 +8,11 @@ public interface ISignalReportRuleRepository
 
     Task<IReadOnlyList<SignalReportRule>> OfOwnedSignalAsync(Guid signalId, Guid ownerId, CancellationToken cancellationToken);
 
-    Task<bool> ExistsAsync(Guid signalId, Guid accountId, string reportCode, CancellationToken cancellationToken);
+    Task<IReadOnlyList<SignalReportRule>> OfOwnedSignalWithDismissedAsync(Guid signalId, Guid ownerId, CancellationToken cancellationToken);
+
+    Task<SignalReportRule?> FindAsync(Guid signalId, Guid accountId, string reportCode, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<SignalReportRule>> AllWithDismissedAsync(CancellationToken cancellationToken);
 
     void Add(SignalReportRule rule);
 

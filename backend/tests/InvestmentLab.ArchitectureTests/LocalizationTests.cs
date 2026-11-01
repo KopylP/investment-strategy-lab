@@ -5,7 +5,6 @@ namespace InvestmentLab.ArchitectureTests;
 
 public sealed partial class LocalizationTests
 {
-    private const string SolutionFile = "InvestmentLab.slnx";
     private const string MigrationsFolder = "Migrations";
 
     private static readonly string[] BuildFolders = ["bin", "obj", MigrationsFolder];
@@ -35,7 +34,7 @@ public sealed partial class LocalizationTests
 
     private static HashSet<string> Catalog()
     {
-        var path = Path.Combine(BackendFolder().Parent!.FullName, "locales", "uk.json");
+        var path = Path.Combine(RepositoryFolder.Backend().Parent!.FullName, "locales", "uk.json");
         var entries = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(path))!;
 
         return [.. entries.Keys];
@@ -51,20 +50,10 @@ public sealed partial class LocalizationTests
 
     private static IEnumerable<string> BackendSources()
     {
-        var modules = Path.Combine(BackendFolder().FullName, "src");
+        var modules = Path.Combine(RepositoryFolder.Backend().FullName, "src");
 
         return Directory.EnumerateFiles(modules, "*.cs", SearchOption.AllDirectories)
             .Where(file => !BuildFolders.Any(folder => file.Split(Path.DirectorySeparatorChar).Contains(folder)));
-    }
-
-    private static DirectoryInfo BackendFolder()
-    {
-        var folder = new DirectoryInfo(AppContext.BaseDirectory);
-
-        while (folder is not null && !File.Exists(Path.Combine(folder.FullName, SolutionFile)))
-            folder = folder.Parent;
-
-        return folder ?? throw new InvalidOperationException($"{SolutionFile} was not found above the test run.");
     }
 
     [GeneratedRegex(@"\p{IsCyrillic}")]

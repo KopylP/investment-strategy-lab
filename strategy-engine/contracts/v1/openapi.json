@@ -1338,6 +1338,14 @@
           "schedule": {
             "$ref": "#/components/schemas/ReportSchedule",
             "description": "When it comes unless the user sets their own time for the account."
+          },
+          "signalKinds": {
+            "items": {
+              "$ref": "#/components/schemas/SignalKind"
+            },
+            "type": "array",
+            "title": "Signalkinds",
+            "description": "Built-in signals that also bring this report, unless the user removes the link."
           }
         },
         "additionalProperties": false,
@@ -1532,6 +1540,16 @@
           "volatilityIndex"
         ],
         "title": "SeriesRole"
+      },
+      "SignalKind": {
+        "type": "string",
+        "enum": [
+          "volatility-index",
+          "account-drawdown",
+          "position-drawdown"
+        ],
+        "title": "SignalKind",
+        "description": "A kind of the service's built-in signals; a report may ask to come when one of them fires."
       },
       "StrategyDecision": {
         "properties": {

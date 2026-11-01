@@ -14,7 +14,7 @@ internal sealed class StrategyDirectory(IStrategyRepository strategies, CatalogS
         return [.. (await strategies.ListAsync(cancellationToken)).Select(strategy => new StrategySummaryDto(
             strategy.Id.Value, strategy.Name, strategy.TypeCode, strategy.Latest.Number, strategy.Latest.Universe, strategy.Latest.CashInstrumentId,
             [.. (types.GetValueOrDefault(strategy.TypeCode)?.Reports ?? []).Select(report => new StrategyReportDto(
-                report.Code, report.Name, report.Description, report.Mode, ToDto(report.Schedule ?? ReportSchedule.Off)))]))];
+                report.Code, report.Name, report.Description, report.Mode, ToDto(report.Schedule ?? ReportSchedule.Off), report.SignalKinds))]))];
     }
 
     public async Task<IReadOnlyDictionary<string, string>> GetMessages(CancellationToken cancellationToken)

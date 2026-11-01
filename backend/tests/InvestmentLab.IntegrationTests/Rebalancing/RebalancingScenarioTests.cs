@@ -6,9 +6,11 @@ using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Portfolio.Contracts.Holdings;
 using InvestmentLab.Rebalancing.Contracts;
 using InvestmentLab.Rebalancing.Planning.Api;
+using InvestmentLab.Rebalancing.Planning.Application.EnsureDeclaredSignalRules;
 using InvestmentLab.Rebalancing.Planning.Application.RequestReport;
 using InvestmentLab.Rebalancing.Planning.Application.Shared;
 using InvestmentLab.Rebalancing.Reports.Application.GetReport;
+using InvestmentLab.Signals.Monitoring.Application.EnsureBuiltInSignals;
 using InvestmentLab.Strategies.Definitions.Application.Shared;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -115,6 +117,63 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
         var stranger = await _factory.CreateSignedInClientAsync(ct);
         (await stranger.GetAsync($"/api/rebalancing/reports/{again}", ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await stranger.GetFromJsonAsync<List<ReportRequestDto>>("/api/rebalancing/report-requests", ct))!.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task A_report_declares_its_signals_and_the_choice_of_the_user_lasts()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var client = await _factory.CreateSignedInClientAsync(ct);
+        var strategies = await client.DefaultStrategiesAsync<StrategyDto>(strategy => strategy.Name, ct);
+        var account = await PostAsync<AccountSetupDto>(client, "/api/portfolio/accounts", new
+        {
+            name = "XTB signals",
+            broker = "XTB",
+            baseCurrency = "EUR",
+            subPortfolios = new object[]
+            {
+                new { name = "EU momentum", targetSharePercent = 100m, strategyId = strategies[0].Id },
+            },
+        }, ct);
+
+        await EnsureDeclaredRulesAsync(ct);
+
+        var declared = await RulesOfAccountAsync(client, account.Id, ct);
+        declared.ShouldNotBeEmpty();
+        declared.ShouldAllBe(rule => rule.FromStrategy && rule.ReportCode == "risk-review");
+
+        var chosen = declared[0];
+        (await client.DeleteAsync($"/api/rebalancing/signal-report-rules/{chosen.Id}", ct)).EnsureSuccessStatusCode();
+        (await client.DeleteAsync($"/api/rebalancing/signal-report-rules/{chosen.Id}", ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+
+        await EnsureDeclaredRulesAsync(ct);
+
+        var afterRemoval = await RulesOfAccountAsync(client, account.Id, ct);
+        afterRemoval.ShouldNotContain(rule => rule.Id == chosen.Id);
+
+        var addedAgain = await PostAsync<SignalReportRuleDto>(client, "/api/rebalancing/signal-report-rules", new
+        {
+            signalId = chosen.SignalId,
+            accountId = account.Id,
+            reportCode = chosen.ReportCode,
+        }, ct);
+        addedAgain.Id.ShouldBe(chosen.Id);
+        addedAgain.FromStrategy.ShouldBeFalse();
+    }
+
+    private async Task EnsureDeclaredRulesAsync(CancellationToken ct)
+    {
+        await using var scope = _factory.Services.CreateAsyncScope();
+
+        await scope.ServiceProvider.GetRequiredService<EnsureBuiltInSignalsHandler>().Handle(ct);
+        await scope.ServiceProvider.GetRequiredService<EnsureDeclaredSignalRulesHandler>().Handle(ct);
+    }
+
+    private static async Task<List<SignalReportRuleDto>> RulesOfAccountAsync(HttpClient client, Guid accountId, CancellationToken ct)
+    {
+        var rules = await client.GetFromJsonAsync<List<SignalReportRuleDto>>("/api/rebalancing/signal-report-rules", ct);
+
+        return [.. rules!.Where(rule => rule.AccountId == accountId)];
     }
 
     private static async Task<Guid> RequestReportAsync(HttpClient client, Guid accountId, object body, CancellationToken ct)

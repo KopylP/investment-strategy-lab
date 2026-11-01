@@ -18,6 +18,7 @@ using InvestmentLab.Rebalancing.Planning.Application.GetSignalReportRules;
 using InvestmentLab.Rebalancing.Planning.Application.Integration;
 using InvestmentLab.Rebalancing.Planning.Application.ListReportRequests;
 using InvestmentLab.Rebalancing.Planning.Application.RemoveSignalReportRule;
+using InvestmentLab.Rebalancing.Planning.Application.EnsureDeclaredSignalRules;
 using InvestmentLab.Rebalancing.Planning.Application.RequestDueReports;
 using InvestmentLab.Rebalancing.Planning.Application.RequestReport;
 using InvestmentLab.Rebalancing.Planning.Application.RequestReportOnDemand;
@@ -106,6 +107,7 @@ public sealed class RebalancingModule : IModule
         services.AddScoped<PlanningInputs>();
         services.AddScoped<SaleTaxes>();
         services.AddScoped<GeneratedReportSaver>();
+        services.AddScoped<EnsureDeclaredSignalRulesHandler>();
         services.AddScoped<GetPlanSettingsHandler>();
         services.AddScoped<ChangePlanSettingsHandler>();
         services.AddScoped<GetReportScheduleHandler>();
@@ -145,6 +147,7 @@ public sealed class RebalancingModule : IModule
     private static void AddJobs(IServiceCollection services)
     {
         services.AddScheduledJob<StrategyReportsJob>(ReportSchedules.Check);
+        services.AddScheduledJob<DeclaredSignalRulesJob>(ReportSchedules.Check);
         services.AddScheduledJob<ReportRequestsJob>(ReportSchedules.Requests);
 
         services.AddScoped<IPlanReviewer, NullPlanReviewer>();

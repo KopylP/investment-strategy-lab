@@ -12,6 +12,7 @@ from finance_decisions.market_data import ticker_currency
 from finance_decisions.models import load_portfolio
 from finance_decisions.strategies.etf_momentum import backtest, monthly_scanner, weekly_risk_monitor
 from finance_decisions.strategies.etf_momentum.config import load_strategy_config
+from finance_decisions.strategies.etf_momentum.decision import REPORTS
 from finance_decisions.strategies.etf_momentum.runner import DEFAULT_CONFIG, DEFAULT_POSITIONS
 
 
@@ -120,3 +121,14 @@ def test_quote_symbols_of_the_provider_stay_in_market_data() -> None:
     ]
 
     assert leaking == []
+
+
+def test_only_the_risk_review_comes_on_signals() -> None:
+    kinds_of_reports = {report.code: report.signal_kinds for report in REPORTS}
+
+    assert kinds_of_reports["rebalance"] == []
+    assert {kind.value for kind in kinds_of_reports["risk-review"]} == {
+        "volatility-index",
+        "account-drawdown",
+        "position-drawdown",
+    }

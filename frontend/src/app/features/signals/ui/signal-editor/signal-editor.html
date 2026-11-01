@@ -192,7 +192,12 @@
 
         @for (rule of rules(); track rule.id) {
           <div class="flex items-center justify-between gap-2">
-            <span class="min-w-0"><i class="pi pi-file mr-2"></i>{{ store.ruleLabel(rule) }}</span>
+            <span class="min-w-0">
+              <i class="pi pi-file mr-2"></i>{{ store.ruleLabel(rule) }}
+              @if (rule.fromStrategy) {
+                <span class="text-xs text-muted-color ml-1">· від стратегії</span>
+              }
+            </span>
             <p-button
               icon="pi pi-times"
               severity="secondary"
