@@ -1,24 +1,23 @@
 using InvestmentLab.Performance.Shadow.Domain;
 using InvestmentLab.Performance.Valuation.Domain;
-using InvestmentLab.Portfolio.Contracts.Transactions;
 
 namespace InvestmentLab.Performance.Valuation.Application.Shared;
 
-public sealed class SnapshotBuilder(IJournalQueries journal, PriceBook prices, IPerformanceRepository store, TimeProvider clock)
+public sealed class SnapshotBuilder(IAccountJournals journals, PriceBook prices, IPerformanceRepository store, TimeProvider clock)
 {
     public async Task<RecalculationMarker?> EnsureFreshAsync(Guid accountId, CancellationToken cancellationToken)
     {
-        if (await journal.GetJournal(accountId, cancellationToken) is not { } snapshot)
+        if (await journals.FindAsync(accountId, cancellationToken) is not { } journal)
             return null;
 
-        var marker = await store.MarkerAsync(accountId, UserId.Of(snapshot.OwnerId), cancellationToken);
+        var marker = await store.MarkerAsync(accountId, journal.OwnerId, cancellationToken);
 
         var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
         var through = LastBusinessDay(today);
         if (!marker.IsDirty && marker.BuiltThrough >= through)
             return marker;
 
-        var movements = MovementMapper.From(snapshot);
+        var movements = JournalMovements.Of(journal);
         var planned = await store.PlannedReportsAsync(accountId, cancellationToken);
         var shadow = ShadowPortfolioSimulator.Movements(movements, planned);
         var stored = new List<ValuationSnapshot>();
@@ -28,10 +27,10 @@ public sealed class SnapshotBuilder(IJournalQueries journal, PriceBook prices, I
             var from = movements.Min(movement => movement.Date);
             var days = BusinessDays(from, through);
             var instruments = movements.Concat(shadow).Select(movement => movement.InstrumentId).OfType<Guid>().Distinct().ToList();
-            var priceOn = await prices.LoadAsync(instruments, snapshot.Currency, from, through, cancellationToken);
+            var priceOn = await prices.LoadAsync(instruments, journal.Currency, from, through, cancellationToken);
             var currencies = movements.Select(movement => movement.CashCurrency).OfType<string>().ToList();
-            var fxOn = await prices.LoadFxAsync(currencies, snapshot.Currency, from, through, cancellationToken);
-            var owner = UserId.Of(snapshot.OwnerId);
+            var fxOn = await prices.LoadFxAsync(currencies, journal.Currency, from, through, cancellationToken);
+            var owner = journal.OwnerId;
             stored.AddRange(ValuationCalculator.Build(
                 movements,
                 days,

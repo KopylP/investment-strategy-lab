@@ -1,22 +1,23 @@
 using System.Globalization;
+using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Rebalancing.Planning.Application.Shared;
 using InvestmentLab.Rebalancing.Planning.Domain;
 
 namespace InvestmentLab.Rebalancing.Planning.Application.GetReportSchedule;
 
-public sealed class GetReportScheduleHandler(PlanningInputs inputs, IPlanSettingsRepository settings, TimeProvider clock)
+public sealed class GetReportScheduleHandler(IAccountSetupQueries accounts, IAccountReports accountReports, IPlanSettingsRepository settings, TimeProvider clock)
 {
     private const string LocalMinuteFormat = "yyyy-MM-ddTHH:mm";
 
     public async Task<Result<ReportScheduleDto>> Handle(Guid accountId, CancellationToken cancellationToken)
     {
-        if (await inputs.AccountAsync(accountId, cancellationToken) is not { } account)
+        if (await accounts.GetAccountSetup(accountId, cancellationToken) is not { } account)
             return Error.NotFound("account.not_found", $"Account {accountId} does not exist.");
 
         var current = await settings.FindAsync(accountId, cancellationToken);
         var now = ReportSchedules.Local(clock.GetUtcNow()).DateTime;
 
-        var reports = await inputs.ReportsAsync(account, current, cancellationToken);
+        var reports = await accountReports.OfAsync(account.Id, current, cancellationToken);
         var scheduled = reports.SelectMany(report => ScheduledEntries(report, now)).ToList();
 
         return new ReportScheduleDto(current?.GenerateOnSchedule ?? true, ReportSchedules.TimeZone, scheduled);

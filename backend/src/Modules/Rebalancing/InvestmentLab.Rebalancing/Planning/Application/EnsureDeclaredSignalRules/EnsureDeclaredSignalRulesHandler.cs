@@ -1,12 +1,12 @@
 using InvestmentLab.Portfolio.Contracts.Accounts;
-using InvestmentLab.Rebalancing.Planning.Application.Shared;
 using InvestmentLab.Rebalancing.Planning.Domain;
 using InvestmentLab.Signals.Contracts;
 
 namespace InvestmentLab.Rebalancing.Planning.Application.EnsureDeclaredSignalRules;
 
 public sealed class EnsureDeclaredSignalRulesHandler(
-    PlanningInputs inputs,
+    IAccountSetupQueries accounts,
+    IAccountReports accountReports,
     IPlanSettingsRepository settings,
     IBuiltInSignalQueries builtInSignals,
     ISignalReportRuleRepository rules,
@@ -44,7 +44,7 @@ public sealed class EnsureDeclaredSignalRulesHandler(
     {
         var wanted = new List<DeclaredSignalRule>();
 
-        foreach (var account in await inputs.AccountsAsync(cancellationToken))
+        foreach (var account in await accounts.GetAccountSetups(cancellationToken))
         {
             var declaring = await DeclaringAccountOfAsync(account, cancellationToken);
             wanted.AddRange(DeclaredSignalRules.WantedBy(declaring, signals));
@@ -56,7 +56,7 @@ public sealed class EnsureDeclaredSignalRulesHandler(
     private async Task<DeclaringAccount> DeclaringAccountOfAsync(AccountSetupDto account, CancellationToken cancellationToken)
     {
         var plan = await settings.FindAsync(account.Id, cancellationToken);
-        var reports = await inputs.ReportsAsync(account, plan, cancellationToken);
+        var reports = await accountReports.OfAsync(account.Id, plan, cancellationToken);
 
         return new DeclaringAccount(
             Id: account.Id,

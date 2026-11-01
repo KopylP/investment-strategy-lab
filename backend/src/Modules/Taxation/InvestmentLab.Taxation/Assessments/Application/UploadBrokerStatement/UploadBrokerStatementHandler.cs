@@ -7,14 +7,14 @@ namespace InvestmentLab.Taxation.Assessments.Application.UploadBrokerStatement;
 public sealed class UploadBrokerStatementHandler(
     IBrokerStatementRepository statements,
     IBrokerStatementParser parser,
-    TaxInputs inputs,
+    TaxAccountSync sync,
     TaxRecalculator recalculator,
     ListBrokerStatementsHandler list,
     TimeProvider clock)
 {
     public async Task<Result<BrokerStatementsDto>> Handle(Guid accountId, UploadBrokerStatementCommand command, CancellationToken cancellationToken)
     {
-        if (await inputs.EnsureAccountAsync(accountId, cancellationToken) is not { } account)
+        if (await sync.EnsureAccountAsync(accountId, cancellationToken) is not { } account)
             return Error.NotFound("account.not_found", $"Account {accountId} does not exist.");
 
         var content = Decode(command.ContentBase64);

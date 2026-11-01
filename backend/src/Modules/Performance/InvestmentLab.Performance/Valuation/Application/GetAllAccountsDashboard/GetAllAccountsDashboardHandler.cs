@@ -50,10 +50,16 @@ public sealed class GetAllAccountsDashboardHandler(AccountHistoryLoader historie
         var all = new List<AccountWithHistory>();
 
         foreach (var setup in setups)
-            all.Add(new AccountWithHistory(setup, await histories.LoadAsync(setup, cancellationToken)));
+            all.Add(new AccountWithHistory(AccountOf(setup), await histories.LoadAsync(setup.Id, cancellationToken)));
 
         return all;
     }
+
+    private static DashboardAccount AccountOf(AccountSetupDto setup) => new(
+        Id: setup.Id,
+        Name: setup.Name,
+        Broker: setup.Broker,
+        BaseCurrency: setup.BaseCurrency);
 
     private static AccountPerformanceDto EmptyRowOf(AccountSetupDto setup) =>
         new(setup.Id, setup.Name, setup.Broker, setup.BaseCurrency, Value: 0m, Share: 0m, NetContributions: 0m, Twr: null);

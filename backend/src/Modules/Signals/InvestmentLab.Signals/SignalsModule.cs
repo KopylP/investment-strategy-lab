@@ -37,6 +37,7 @@ public sealed class SignalsModule : IModule
 
         services.AddScoped<ISignalRepository, SignalRepository>();
         services.AddScoped<IBuiltInSignalQueries, BuiltInSignalQueries>();
+        services.AddScoped<IInstrumentLabels, CatalogInstrumentLabels>();
 
         services.AddScoped<GetSignalsHandler>();
         services.AddScoped<CreateSignalHandler>();

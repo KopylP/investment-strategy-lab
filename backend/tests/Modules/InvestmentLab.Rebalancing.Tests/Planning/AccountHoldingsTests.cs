@@ -1,11 +1,11 @@
 using InvestmentLab.MarketData.Contracts.FxRates;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Portfolio.Contracts.Holdings;
-using InvestmentLab.Rebalancing.Planning.Application.Shared;
+using InvestmentLab.Rebalancing.Planning.Infrastructure;
 
 namespace InvestmentLab.Rebalancing.Tests.Planning;
 
-public sealed class PlanningInputsTests
+public sealed class AccountHoldingsTests
 {
     private sealed class FixedClock(DateTimeOffset now) : TimeProvider
     {
@@ -49,11 +49,11 @@ public sealed class PlanningInputsTests
         var sub = new SubPortfolioHoldingsDto(Guid.NewGuid(), "Sub", 10m, [], [new CashBalanceDto("EUR", 100m)]);
         var rates = new RecordingRates();
         var clock = new FixedClock(new DateTimeOffset(2020, 3, 10, 12, 0, 0, TimeSpan.Zero));
-        var inputs = new PlanningInputs(null!, new HoldingForeignCash(new AccountHoldingsDto(account.Id, "PLN", null, [sub])), null!, null!, rates, null!, clock);
+        var adapter = new AccountHoldings(new HoldingForeignCash(new AccountHoldingsDto(account.Id, "PLN", null, [sub])), rates, clock);
 
-        var holdings = await inputs.HoldingsAsync(account, TestContext.Current.CancellationToken);
+        var holdings = await adapter.OfAsync(account.Id, "PLN", TestContext.Current.CancellationToken);
 
-        holdings.SubPortfolios[0].Cash.ShouldBe(410m);
+        holdings[0].Cash.ShouldBe(410m);
         rates.AskedDates.ShouldBe([new DateOnly(2020, 3, 11)]);
     }
 }

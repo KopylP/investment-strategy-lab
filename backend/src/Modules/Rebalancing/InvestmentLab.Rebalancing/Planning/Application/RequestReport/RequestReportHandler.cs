@@ -1,4 +1,4 @@
-using InvestmentLab.Rebalancing.Planning.Application.Shared;
+using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Rebalancing.Planning.Domain;
 using InvestmentLab.Rebalancing.Reports.Domain;
 
@@ -8,14 +8,14 @@ public sealed record RequestReportCommand(
     Guid AccountId, string? Code =
         null, decimal? Contribution = null, DateOnly? AsOf = null, IReadOnlySet<Guid>? SubPortfolioIds = null, ReportCause? Cause = null);
 
-public sealed class RequestReportHandler(PlanningInputs inputs, IReportRequestRepository requests, TimeProvider clock)
+public sealed class RequestReportHandler(IAccountSetupQueries accounts, IAccountReports accountReports, IReportRequestRepository requests, TimeProvider clock)
 {
     public async Task<Result<ReportRequestId>> Handle(RequestReportCommand command, ReportTrigger trigger, CancellationToken cancellationToken)
     {
-        if (await inputs.AccountAsync(command.AccountId, cancellationToken) is not { } account)
+        if (await accounts.GetAccountSetup(command.AccountId, cancellationToken) is not { } account)
             return Error.NotFound("account.not_found", $"Account {command.AccountId} does not exist.");
 
-        var reports = await inputs.ReportsAsync(account, settings: null, cancellationToken);
+        var reports = await accountReports.OfAsync(account.Id, settings: null, cancellationToken);
         if (AccountReport.Choose(reports, command.Code) is not { } report)
             return ReportErrors.NoSuchReport(account.Id, command.Code);
 

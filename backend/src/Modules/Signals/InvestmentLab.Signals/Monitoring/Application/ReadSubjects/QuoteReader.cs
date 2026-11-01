@@ -21,11 +21,13 @@ public sealed class QuoteReader(IQuoteHistory quotes, TimeProvider clock)
         return subject.ReadingOf(Measure(metric, points), points[^1].Date);
     }
 
-    public async Task<LatestPriceDto?> LatestFreshPriceAsync(Guid instrumentId, CancellationToken cancellationToken)
+    public async Task<FreshPrice?> LatestFreshPriceAsync(Guid instrumentId, CancellationToken cancellationToken)
     {
         var prices = await quotes.GetLatestPrices([instrumentId], Today, cancellationToken);
+        if (prices.Count == 0 || prices[0].IsStale)
+            return null;
 
-        return prices.Count > 0 && !prices[0].IsStale ? prices[0] : null;
+        return new FreshPrice(prices[0].Close, prices[0].Currency, prices[0].Date);
     }
 
     public async Task<bool> IsSpikeOnAsync(Guid instrumentId, DateOnly date, CancellationToken cancellationToken)

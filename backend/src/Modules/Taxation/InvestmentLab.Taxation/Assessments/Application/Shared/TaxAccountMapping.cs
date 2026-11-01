@@ -10,9 +10,9 @@ internal static class TaxAccountMapping
 
     private static TaxAccountDto ToDto(TaxAccount account, Taxpayer taxpayer)
     {
-        var setup = taxpayer.Setups.GetValueOrDefault(account.AccountId);
+        var identity = taxpayer.Identities.GetValueOrDefault(account.AccountId);
         var isTaxed = TaxPolicies.For(account.PolicyCode).IsTaxed;
 
-        return new TaxAccountDto(account.AccountId, setup?.Name ?? "", setup?.Broker ?? "", account.Currency, account.PolicyCode, isTaxed);
+        return new TaxAccountDto(account.AccountId, identity?.Name ?? "", identity?.Broker ?? "", account.Currency, account.PolicyCode, isTaxed);
     }
 }

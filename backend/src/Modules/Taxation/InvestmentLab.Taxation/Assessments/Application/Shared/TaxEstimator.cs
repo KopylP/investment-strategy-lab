@@ -1,10 +1,15 @@
+using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Taxation.Assessments.Domain;
 using InvestmentLab.Taxation.Contracts;
 using InvestmentLab.Taxation.Ledger.Domain;
 
 namespace InvestmentLab.Taxation.Assessments.Application.Shared;
 
-public sealed class TaxEstimator(TaxInputs inputs, IAssessmentRepository assessments) : ITaxEstimator
+public sealed class TaxEstimator(
+    IAccountSetupQueries accounts,
+    TaxpayerReader taxpayers,
+    TaxEventReader taxEvents,
+    IAssessmentRepository assessments) : ITaxEstimator
 {
     public async Task<TaxEstimateDto> EstimateSalesAsync(
         Guid accountId,
@@ -20,9 +25,9 @@ public sealed class TaxEstimator(TaxInputs inputs, IAssessmentRepository assessm
         if (!policy.IsTaxed)
             return new TaxEstimateDto(policy.Code, false, 0m, 0m, null, NothingFor(sales), []);
 
-        var (events, missing) = await inputs.EventsAsync(taxpayer.Taxed, cancellationToken);
-        var losses = await inputs.LossesAsync(account.OwnerId, cancellationToken);
-        var (rate, rateDate) = await inputs.LatestRateAsync(account.Currency, asOf, policy.FxRule, cancellationToken);
+        var (events, missing) = await taxEvents.EventsAsync(taxpayer.Taxed, cancellationToken);
+        var losses = await taxpayers.LossesAsync(account.OwnerId, cancellationToken);
+        var (rate, rateDate) = await taxEvents.LatestRateAsync(account.Currency, asOf, policy.FxRule, cancellationToken);
         var notes = NotesOf(policy, missing);
 
         if (rate is not { } fx || sales.Count == 0)
@@ -35,10 +40,12 @@ public sealed class TaxEstimator(TaxInputs inputs, IAssessmentRepository assessm
 
     private async Task<Taxpayer?> TaxpayerOfAsync(Guid accountId, CancellationToken cancellationToken)
     {
-        if (await inputs.OwnerOfAsync(accountId, cancellationToken) is not { } ownerId)
+        if (await accounts.GetAccountSetup(accountId, cancellationToken) is not { } setup)
             return null;
 
-        return await assessments.SerializedAsync(ownerId, () => inputs.TaxpayerAsync(ownerId, cancellationToken), cancellationToken);
+        var ownerId = UserId.Of(setup.OwnerId);
+
+        return await assessments.SerializedAsync(ownerId, () => taxpayers.ReadAsync(ownerId, cancellationToken), cancellationToken);
     }
 
     private static List<SaleEstimateDto> NothingFor(IReadOnlyList<ProposedSaleDto> sales) =>

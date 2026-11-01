@@ -1,4 +1,3 @@
-using InvestmentLab.Portfolio.Contracts.Transactions;
 using InvestmentLab.Taxation.Assessments.Application.Shared;
 using InvestmentLab.Taxation.Assessments.Domain;
 using InvestmentLab.Taxation.BrokerStatements.Domain;
@@ -120,18 +119,6 @@ public sealed class BrokerStatementTests
         sale.CostInTaxCurrency.ShouldBe(8.30m + 4.00m);
         sale.BrokerGainInTaxCurrency.ShouldBe(1.09m);
         computation.Warnings.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void A_usd_trade_on_a_eur_account_is_taxed_in_usd()
-    {
-        var recorded = new TransactionRecordedV1(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "Buy", new(2025, 4, 22), "Import", null, "EUR",
-            new TradeRecordedDto(Apple, "Buy", 0.15214042m, 457.27m, 0m, [new(Eu, 0.15214042m)], SettledAmount: 80m, SettledCurrency: "USD"), null, null);
-
-        var entry = LedgerEntries.From(recorded, DateTimeOffset.UnixEpoch)!;
-
-        entry.Currency.ShouldBe("USD");
-        (entry.Quantity * entry.Price).ShouldBe(80m, 0.0001m);
     }
 
     [Fact]

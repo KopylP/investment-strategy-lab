@@ -8,6 +8,7 @@ using InvestmentLab.Taxation.Assessments.Application.Shared;
 using InvestmentLab.Taxation.Assessments.Domain;
 using InvestmentLab.Taxation.BrokerStatements.Domain;
 using InvestmentLab.Taxation.Ledger.Domain;
+using InvestmentLab.Taxation.Ledger.Infrastructure;
 
 namespace InvestmentLab.Taxation.Tests;
 
@@ -48,6 +49,12 @@ public sealed class GetTaxYearTests
     {
         public Task<IReadOnlyList<InstrumentDto>> GetInstruments(CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<InstrumentDto>>([]);
+    }
+
+    private sealed class NoInstrumentKeys : IInstrumentKeys
+    {
+        public Task<IReadOnlyDictionary<Guid, InstrumentKey>> AllAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, InstrumentKey>>(new Dictionary<Guid, InstrumentKey>());
     }
 
     private sealed class NoStatements : IBrokerStatementRepository
@@ -119,8 +126,11 @@ public sealed class GetTaxYearTests
     {
         var clock = new FixedClock(Now);
         var repository = new InMemoryAssessments();
-        var inputs = new TaxInputs(new BuyAndDividendLedger(), repository, new NoStatements(), null!, new NoInstruments(), new OneAccount(), new EmptyJournal());
-        var recalculator = new TaxRecalculator(inputs, repository, clock);
+        var ledger = new BuyAndDividendLedger();
+        var accounts = new TaxpayerAccounts(new OneAccount());
+        var taxpayers = new TaxpayerReader(accounts, new TaxAccountSync(ledger, accounts, new TaxJournals(new EmptyJournal())), repository);
+        var taxEvents = new TaxEventReader(ledger, new NoStatements(), null!, new NoInstrumentKeys());
+        var recalculator = new TaxRecalculator(new OneAccount(), taxpayers, taxEvents, repository, clock);
         var refreshed = await new RefreshTaxAssessmentsHandler(recalculator, new SignedIn()).Handle(TestContext.Current.CancellationToken);
         var query = new GetTaxYearHandler(repository, new NoInstruments(), clock);
 

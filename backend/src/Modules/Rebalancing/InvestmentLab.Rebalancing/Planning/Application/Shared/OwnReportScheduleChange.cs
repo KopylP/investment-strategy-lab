@@ -1,18 +1,23 @@
+using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Rebalancing.Planning.Application.GetReportSchedule;
 using InvestmentLab.Rebalancing.Planning.Domain;
 
 namespace InvestmentLab.Rebalancing.Planning.Application.Shared;
 
 public sealed class OwnReportScheduleChange(
-    PlanningInputs inputs, IPlanSettingsRepository settings, GetReportScheduleHandler schedule, TimeProvider clock)
+    IAccountSetupQueries accounts,
+    IAccountReports accountReports,
+    IPlanSettingsRepository settings,
+    GetReportScheduleHandler schedule,
+    TimeProvider clock)
 {
     public async Task<Result<ReportScheduleDto>> ApplyAsync(
         Guid accountId, string code, Action<PlanSettings, DateTimeOffset> change, CancellationToken cancellationToken)
     {
-        if (await inputs.AccountAsync(accountId, cancellationToken) is not { } account)
+        if (await accounts.GetAccountSetup(accountId, cancellationToken) is not { } account)
             return Error.NotFound("account.not_found", $"Account {accountId} does not exist.");
 
-        var reports = await inputs.ReportsAsync(account, null, cancellationToken);
+        var reports = await accountReports.OfAsync(account.Id, null, cancellationToken);
         if (reports.All(report => report.Code != code))
             return Error.NotFound("report.unknown_code", $"No strategy of account {accountId} makes report '{code}'.");
 

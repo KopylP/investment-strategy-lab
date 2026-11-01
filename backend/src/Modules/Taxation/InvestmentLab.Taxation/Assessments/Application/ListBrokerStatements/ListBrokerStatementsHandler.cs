@@ -3,16 +3,16 @@ using InvestmentLab.Taxation.BrokerStatements.Domain;
 
 namespace InvestmentLab.Taxation.Assessments.Application.ListBrokerStatements;
 
-public sealed class ListBrokerStatementsHandler(IBrokerStatementRepository statements, TaxInputs inputs)
+public sealed class ListBrokerStatementsHandler(IBrokerStatementRepository statements, TaxAccountSync sync, TaxEventReader taxEvents)
 {
     public async Task<Result<BrokerStatementsDto>> Handle(Guid accountId, CancellationToken cancellationToken)
     {
-        if (await inputs.EnsureAccountAsync(accountId, cancellationToken) is not { } account)
+        if (await sync.EnsureAccountAsync(accountId, cancellationToken) is not { } account)
             return Error.NotFound("account.not_found", $"Account {accountId} does not exist.");
 
         var uploaded = await statements.ForAccountAsync(accountId, cancellationToken);
         var (lots, dividends) = BrokerStatement.Combine(uploaded);
-        var events = uploaded.Count > 0 ? (await inputs.EventsAsync(account, cancellationToken)).Events : [];
+        var events = uploaded.Count > 0 ? (await taxEvents.EventsAsync(account, cancellationToken)).Events : [];
 
         return new BrokerStatementsDto(
             [.. uploaded.OrderByDescending(statement => statement.UploadedAt).Select(ToDto)],

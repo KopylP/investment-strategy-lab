@@ -1,3 +1,4 @@
+using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Rebalancing.Planning.Application.Shared;
 using InvestmentLab.Rebalancing.Planning.Domain;
 
@@ -6,11 +7,11 @@ namespace InvestmentLab.Rebalancing.Planning.Application.ChangePlanSettings;
 public sealed record ChangePlanSettingsCommand(
     decimal MonthlyContribution, decimal MinTrade, decimal TrimBand, bool AllowFractionalShares, bool GenerateOnSchedule = true);
 
-public sealed class ChangePlanSettingsHandler(PlanningInputs inputs, IPlanSettingsRepository settings, TimeProvider clock)
+public sealed class ChangePlanSettingsHandler(IAccountSetupQueries accounts, IPlanSettingsRepository settings, TimeProvider clock)
 {
     public async Task<Result<PlanSettingsDto>> Handle(Guid accountId, ChangePlanSettingsCommand command, CancellationToken cancellationToken)
     {
-        if (await inputs.AccountAsync(accountId, cancellationToken) is not { } account)
+        if (await accounts.GetAccountSetup(accountId, cancellationToken) is not { } account)
             return Error.NotFound("account.not_found", $"Account {accountId} does not exist.");
 
         var policy = RebalancingPolicy.TryOf(command.MinTrade, command.TrimBand, command.AllowFractionalShares);

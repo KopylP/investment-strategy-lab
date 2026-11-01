@@ -1,11 +1,8 @@
-using InvestmentLab.Performance.Valuation.Domain;
-using InvestmentLab.Portfolio.Contracts.Transactions;
+namespace InvestmentLab.Performance.Valuation.Domain;
 
-namespace InvestmentLab.Performance.Valuation.Application.Shared;
-
-public static class MovementMapper
+public static class JournalMovements
 {
-    public static IReadOnlyList<Movement> From(JournalSnapshotDto journal)
+    public static IReadOnlyList<Movement> Of(AccountJournal journal)
     {
         var reversed = journal.ReversedIds.ToHashSet();
         var movements = new List<Movement>();
@@ -16,7 +13,7 @@ public static class MovementMapper
         return movements;
     }
 
-    private static void AddMovementsOf(TransactionRecordedV1 entry, List<Movement> movements)
+    private static void AddMovementsOf(IJournalEntry entry, List<Movement> movements)
     {
         if (entry.Trade is { } trade)
             AddTrade(entry.OccurredOn, trade, movements);
@@ -26,7 +23,7 @@ public static class MovementMapper
             AddTransfer(entry.OccurredOn, transfer, movements);
     }
 
-    private static void AddTrade(DateOnly day, TradeRecordedDto trade, List<Movement> movements)
+    private static void AddTrade(DateOnly day, IJournalTrade trade, List<Movement> movements)
     {
         var sign = trade.Side == "Buy" ? 1m : -1m;
         var total = trade.Allocations.Sum(allocation => allocation.Quantity);
@@ -52,8 +49,8 @@ public static class MovementMapper
     }
 
     private static (decimal CashDelta, string? Currency) TradeCash(
-        TradeRecordedDto trade,
-        QuantityAllocationDto allocation,
+        IJournalTrade trade,
+        IJournalQuantity allocation,
         decimal sign,
         decimal share)
     {
@@ -63,7 +60,7 @@ public static class MovementMapper
         return (-sign * allocation.Quantity * trade.Price - trade.Fee * share, null);
     }
 
-    private static void AddCashMovement(DateOnly day, CashMovementRecordedDto cash, List<Movement> movements)
+    private static void AddCashMovement(DateOnly day, IJournalCash cash, List<Movement> movements)
     {
         var total = cash.Allocations.Sum(allocation => allocation.Amount);
 
@@ -89,7 +86,7 @@ public static class MovementMapper
         _ => (-amount, 0m),
     };
 
-    private static void AddTransfer(DateOnly day, InternalTransferRecordedDto transfer, List<Movement> movements)
+    private static void AddTransfer(DateOnly day, IJournalTransfer transfer, List<Movement> movements)
     {
         var from = transfer.FromSubPortfolioId;
         var to = transfer.ToSubPortfolioId;

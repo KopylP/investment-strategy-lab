@@ -1,17 +1,23 @@
+using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Taxation.Assessments.Domain;
 
 namespace InvestmentLab.Taxation.Assessments.Application.Shared;
 
-public sealed class TaxRecalculator(TaxInputs inputs, IAssessmentRepository assessments, TimeProvider clock)
+public sealed class TaxRecalculator(
+    IAccountSetupQueries accounts,
+    TaxpayerReader taxpayers,
+    TaxEventReader taxEvents,
+    IAssessmentRepository assessments,
+    TimeProvider clock)
 {
     private const int ShownMissingRates = 5;
 
     public async Task<Result<RecomputeOutcome>> RecomputeAsync(Guid accountId, CancellationToken cancellationToken)
     {
-        if (await inputs.OwnerOfAsync(accountId, cancellationToken) is not { } ownerId)
+        if (await accounts.GetAccountSetup(accountId, cancellationToken) is not { } account)
             return Error.NotFound("account.not_found", $"Account {accountId} does not exist.");
 
-        return await RecomputeOwnerAsync(ownerId, cancellationToken);
+        return await RecomputeOwnerAsync(UserId.Of(account.OwnerId), cancellationToken);
     }
 
     public Task<RecomputeOutcome> RecomputeOwnerAsync(UserId ownerId, CancellationToken cancellationToken) =>
@@ -19,10 +25,10 @@ public sealed class TaxRecalculator(TaxInputs inputs, IAssessmentRepository asse
 
     private async Task<RecomputeOutcome> RecomputeLockedAsync(UserId ownerId, CancellationToken cancellationToken)
     {
-        var taxpayer = await inputs.TaxpayerAsync(ownerId, cancellationToken);
+        var taxpayer = await taxpayers.ReadAsync(ownerId, cancellationToken);
         var policy = taxpayer.Policy;
-        var (events, missing) = await inputs.EventsAsync(taxpayer.Taxed, cancellationToken);
-        var losses = await inputs.LossesAsync(ownerId, cancellationToken);
+        var (events, missing) = await taxEvents.EventsAsync(taxpayer.Taxed, cancellationToken);
+        var losses = await taxpayers.LossesAsync(ownerId, cancellationToken);
         var computation = TaxCalculator.Compute(events, policy, losses);
 
         var now = clock.GetUtcNow();
@@ -40,7 +46,7 @@ public sealed class TaxRecalculator(TaxInputs inputs, IAssessmentRepository asse
                 assessments.Add(assessment);
             }
 
-            if (assessment.Recompute(year, policy, TaxInputs.HashFor(number, events, losses, policy), now))
+            if (assessment.Recompute(year, policy, AssessmentHash.For(number, events, losses, policy), now))
             {
                 changed.Add(number);
             }

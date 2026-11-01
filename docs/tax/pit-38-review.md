@@ -39,7 +39,7 @@ Run: `dotnet test --project backend/tests/Modules/InvestmentLab.Taxation.Tests` 
 
 | Rule | Source | Code | Test |
 |------|--------|------|------|
-| Amounts in PLN at the NBP average rate of the last business day before the revenue/cost/payment (art. 11a) | S1 p.1 | `TaxInputs.RateAsync` (unchanged) | integration test (`FxRateDate < trade day`) |
+| Amounts in PLN at the NBP average rate of the last business day before the revenue/cost/payment (art. 11a) | S1 p.1 | `TaxEventReader.RateAsync` (unchanged) | integration test (`FxRateDate < trade day`) |
 | Revenue = price × quantity; costs = purchase price + **both** fees (buy and sell) | S1 p.4 (poz. 23) | `TaxCalculator.Sell` | `Both_fees_are_costs_each_at_the_rate_of_its_own_trade`, `Fifo_takes_the_oldest_lots…` |
 | FIFO, per account | S7 | `FifoLotMatcher`, one `TaxCalculator.Compute` per account | `Fifo_takes_the_oldest_lots…`, `A_partly_sold_lot…`, `Each_instrument_has_its_own_lots` |
 | Row 1 (poz. 20/21) = PIT-8C brokers, row 2 (poz. 22/23) = others incl. foreign | S1 p.4, S2 footnotes 3–4, S8 | `Pit38Form.Fill`, `PolishBrokers` | `Brokers_with_PIT_8C_go_to_row_1…`, `Polish_brokers_are_recognised_by_whole_words` |

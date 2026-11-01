@@ -46,7 +46,7 @@ public sealed class EvaluationPreparer(IStrategyReader strategies, IQuoteHistory
         List<Guid> instrumentIds, StrategyVersion version, DateOnly asOf, CancellationToken cancellationToken)
     {
         var history = await HistoryAsync(instrumentIds, version, asOf, cancellationToken);
-        IReadOnlyList<QuotePointDto> PointsOf(Guid id) => history.TryGetValue(id, out var points) ? points : [];
+        IReadOnlyList<MarketPoint> PointsOf(Guid id) => history.TryGetValue(id, out var points) ? points : [];
 
         var series = instrumentIds.Select(id => new MarketSeries(id, SeriesRole.Instrument, PointsOf(id))).ToList();
         series.Add(new MarketSeries(version.BenchmarkInstrumentId, SeriesRole.Benchmark, PointsOf(version.BenchmarkInstrumentId)));
@@ -57,7 +57,7 @@ public sealed class EvaluationPreparer(IStrategyReader strategies, IQuoteHistory
         return series;
     }
 
-    private async Task<Dictionary<Guid, IReadOnlyList<QuotePointDto>>> HistoryAsync(
+    private async Task<Dictionary<Guid, IReadOnlyList<MarketPoint>>> HistoryAsync(
         List<Guid> instrumentIds, StrategyVersion version, DateOnly asOf, CancellationToken cancellationToken)
     {
         IEnumerable<Guid> volatilityIndex = version.VolatilityIndexInstrumentId is { } id ? [id] : [];
@@ -66,8 +66,11 @@ public sealed class EvaluationPreparer(IStrategyReader strategies, IQuoteHistory
 
         var history = await quotes.GetQuoteHistory(requestedIds, asOf.AddDays(-HistoryDays), asOf, cancellationToken);
 
-        return history.ToDictionary(series => series.InstrumentId, series => series.Points);
+        return history.ToDictionary(series => series.InstrumentId, series => MarketPointsOf(series.Points));
     }
+
+    private static IReadOnlyList<MarketPoint> MarketPointsOf(IReadOnlyList<QuotePointDto> points) =>
+        [.. points.Select(point => new MarketPoint(point.Date, point.Close, point.AdjustedClose))];
 
     private async Task<List<UniverseMember>> UniverseAsync(StrategyVersion version, CancellationToken cancellationToken)
     {
