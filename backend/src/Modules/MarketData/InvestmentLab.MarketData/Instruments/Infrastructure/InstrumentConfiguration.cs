@@ -17,6 +17,8 @@ internal sealed class InstrumentConfiguration : IEntityTypeConfiguration<Instrum
         instrument.Property(i => i.Exchange).HasMaxLength(10);
         instrument.Property(i => i.Description).HasMaxLength(10_000);
         instrument.Property(i => i.Group).HasConversion(group => group!.Name, name => InstrumentGroup.Of(name)).HasMaxLength(100);
+        instrument.Property(i => i.AssetClass).HasConversion<string>().HasMaxLength(20);
+        instrument.Property(i => i.Region).HasConversion<string>().HasMaxLength(30);
         instrument.HasIndex(i => i.Isin).IsUnique().HasFilter("isin IS NOT NULL");
 
         instrument.OwnsMany(i => i.ProviderSymbols, symbols =>

@@ -110,6 +110,16 @@ namespace InvestmentLab.MarketData.Shared.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("AssetClass")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("asset_class");
+
+                    b.Property<string>("AssetCurrency")
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("asset_currency");
+
                     b.Property<DateTimeOffset?>("DescribedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("described_at");
@@ -150,6 +160,11 @@ namespace InvestmentLab.MarketData.Shared.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
                         .HasColumnName("name");
+
+                    b.Property<string>("Region")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("region");
 
                     b.Property<string>("TradingCurrency")
                         .IsRequired()

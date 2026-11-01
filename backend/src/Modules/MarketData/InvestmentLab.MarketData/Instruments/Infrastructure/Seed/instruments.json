@@ -9,7 +9,10 @@
     "isAccumulating": true,
     "providerSymbols": [
       "yfinance:SXR8.DE"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "UnitedStates",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Etf",
@@ -21,7 +24,10 @@
     "isAccumulating": true,
     "providerSymbols": [
       "yfinance:SXRV.DE"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "UnitedStates",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Etf",
@@ -33,7 +39,9 @@
     "isAccumulating": true,
     "providerSymbols": [
       "yfinance:IUSN.DE"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "Global"
   },
   {
     "kind": "Etf",
@@ -45,7 +53,10 @@
     "isAccumulating": false,
     "providerSymbols": [
       "yfinance:EUN2.DE"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "Eurozone",
+    "assetCurrency": "EUR"
   },
   {
     "kind": "Etf",
@@ -57,7 +68,9 @@
     "isAccumulating": true,
     "providerSymbols": [
       "yfinance:IS3N.DE"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "EmergingMarkets"
   },
   {
     "kind": "Etf",
@@ -69,7 +82,10 @@
     "isAccumulating": null,
     "providerSymbols": [
       "yfinance:4GLD.DE"
-    ]
+    ],
+    "assetClass": "Commodity",
+    "region": "Global",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Etf",
@@ -81,7 +97,10 @@
     "isAccumulating": true,
     "providerSymbols": [
       "yfinance:SXRS.DE"
-    ]
+    ],
+    "assetClass": "Commodity",
+    "region": "Global",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Etf",
@@ -93,7 +112,10 @@
     "isAccumulating": false,
     "providerSymbols": [
       "yfinance:IS04.DE"
-    ]
+    ],
+    "assetClass": "Bond",
+    "region": "UnitedStates",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Etf",
@@ -105,7 +127,10 @@
     "isAccumulating": false,
     "providerSymbols": [
       "yfinance:IUS7.DE"
-    ]
+    ],
+    "assetClass": "Bond",
+    "region": "EmergingMarkets",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Etf",
@@ -117,7 +142,10 @@
     "isAccumulating": true,
     "providerSymbols": [
       "yfinance:IBCI.DE"
-    ]
+    ],
+    "assetClass": "Bond",
+    "region": "Eurozone",
+    "assetCurrency": "EUR"
   },
   {
     "kind": "Etf",
@@ -129,7 +157,10 @@
     "isAccumulating": false,
     "providerSymbols": [
       "yfinance:IQQA.DE"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "Eurozone",
+    "assetCurrency": "EUR"
   },
   {
     "kind": "Etf",
@@ -141,7 +172,10 @@
     "isAccumulating": false,
     "providerSymbols": [
       "yfinance:XDJE.DE"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "Japan",
+    "assetCurrency": "EUR"
   },
   {
     "kind": "Etf",
@@ -153,7 +187,10 @@
     "isAccumulating": true,
     "providerSymbols": [
       "yfinance:QDVE.DE"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "UnitedStates",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Etf",
@@ -165,7 +202,10 @@
     "isAccumulating": true,
     "providerSymbols": [
       "yfinance:QDVF.DE"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "UnitedStates",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Etf",
@@ -177,7 +217,10 @@
     "isAccumulating": true,
     "providerSymbols": [
       "yfinance:QDVG.DE"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "UnitedStates",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Etf",
@@ -189,7 +232,10 @@
     "isAccumulating": true,
     "providerSymbols": [
       "yfinance:QDVI.DE"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "UnitedStates",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Etf",
@@ -201,7 +247,10 @@
     "isAccumulating": true,
     "providerSymbols": [
       "yfinance:NQSE.DE"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "UnitedStates",
+    "assetCurrency": "EUR"
   },
   {
     "kind": "Etf",
@@ -213,7 +262,10 @@
     "isAccumulating": true,
     "providerSymbols": [
       "yfinance:XEON.DE"
-    ]
+    ],
+    "assetClass": "Cash",
+    "region": "Eurozone",
+    "assetCurrency": "EUR"
   },
   {
     "kind": "Etf",
@@ -225,7 +277,10 @@
     "isAccumulating": false,
     "providerSymbols": [
       "yfinance:SPY"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "UnitedStates",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Etf",
@@ -237,7 +292,10 @@
     "isAccumulating": false,
     "providerSymbols": [
       "yfinance:QQQ"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "UnitedStates",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Etf",
@@ -249,7 +307,10 @@
     "isAccumulating": false,
     "providerSymbols": [
       "yfinance:IWM"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "UnitedStates",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Etf",
@@ -261,7 +322,9 @@
     "isAccumulating": false,
     "providerSymbols": [
       "yfinance:EFA"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "DevelopedExUnitedStates"
   },
   {
     "kind": "Etf",
@@ -273,7 +336,9 @@
     "isAccumulating": false,
     "providerSymbols": [
       "yfinance:EEM"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "EmergingMarkets"
   },
   {
     "kind": "Etf",
@@ -285,7 +350,10 @@
     "isAccumulating": null,
     "providerSymbols": [
       "yfinance:GLD"
-    ]
+    ],
+    "assetClass": "Commodity",
+    "region": "Global",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Etf",
@@ -297,7 +365,10 @@
     "isAccumulating": null,
     "providerSymbols": [
       "yfinance:SLV"
-    ]
+    ],
+    "assetClass": "Commodity",
+    "region": "Global",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Etf",
@@ -309,7 +380,10 @@
     "isAccumulating": false,
     "providerSymbols": [
       "yfinance:TLT"
-    ]
+    ],
+    "assetClass": "Bond",
+    "region": "UnitedStates",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Etf",
@@ -321,7 +395,10 @@
     "isAccumulating": false,
     "providerSymbols": [
       "yfinance:IEF"
-    ]
+    ],
+    "assetClass": "Bond",
+    "region": "UnitedStates",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Etf",
@@ -333,7 +410,10 @@
     "isAccumulating": false,
     "providerSymbols": [
       "yfinance:LQD"
-    ]
+    ],
+    "assetClass": "Bond",
+    "region": "UnitedStates",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Etf",
@@ -345,7 +425,10 @@
     "isAccumulating": false,
     "providerSymbols": [
       "yfinance:VNQ"
-    ]
+    ],
+    "assetClass": "RealEstate",
+    "region": "UnitedStates",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Etf",
@@ -357,7 +440,10 @@
     "isAccumulating": null,
     "providerSymbols": [
       "yfinance:USO"
-    ]
+    ],
+    "assetClass": "Commodity",
+    "region": "Global",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Etf",
@@ -369,7 +455,10 @@
     "isAccumulating": null,
     "providerSymbols": [
       "yfinance:DBA"
-    ]
+    ],
+    "assetClass": "Commodity",
+    "region": "Global",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Etf",
@@ -381,7 +470,10 @@
     "isAccumulating": false,
     "providerSymbols": [
       "yfinance:XLE"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "UnitedStates",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Etf",
@@ -393,7 +485,10 @@
     "isAccumulating": false,
     "providerSymbols": [
       "yfinance:XLK"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "UnitedStates",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Etf",
@@ -405,7 +500,10 @@
     "isAccumulating": false,
     "providerSymbols": [
       "yfinance:XLV"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "UnitedStates",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Etf",
@@ -417,7 +515,10 @@
     "isAccumulating": false,
     "providerSymbols": [
       "yfinance:XLF"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "UnitedStates",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Etf",
@@ -429,7 +530,10 @@
     "isAccumulating": false,
     "providerSymbols": [
       "yfinance:XLU"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "UnitedStates",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Etf",
@@ -441,7 +545,10 @@
     "isAccumulating": false,
     "providerSymbols": [
       "yfinance:BIL"
-    ]
+    ],
+    "assetClass": "Cash",
+    "region": "UnitedStates",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Stock",
@@ -453,7 +560,10 @@
     "isAccumulating": null,
     "providerSymbols": [
       "yfinance:AAPL"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "UnitedStates",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Stock",
@@ -465,7 +575,10 @@
     "isAccumulating": null,
     "providerSymbols": [
       "yfinance:NVDA"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "UnitedStates",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Stock",
@@ -477,7 +590,10 @@
     "isAccumulating": null,
     "providerSymbols": [
       "yfinance:AVGO"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "UnitedStates",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Stock",
@@ -489,7 +605,10 @@
     "isAccumulating": null,
     "providerSymbols": [
       "yfinance:CYBR"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "UnitedStates",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Stock",
@@ -501,7 +620,10 @@
     "isAccumulating": null,
     "providerSymbols": [
       "yfinance:MA"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "UnitedStates",
+    "assetCurrency": "USD"
   },
   {
     "kind": "Stock",
@@ -513,7 +635,10 @@
     "isAccumulating": null,
     "providerSymbols": [
       "yfinance:SONY"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "Japan",
+    "assetCurrency": "JPY"
   },
   {
     "kind": "Stock",
@@ -525,7 +650,10 @@
     "isAccumulating": null,
     "providerSymbols": [
       "yfinance:TM"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "Japan",
+    "assetCurrency": "JPY"
   },
   {
     "kind": "Stock",
@@ -537,7 +665,10 @@
     "isAccumulating": null,
     "providerSymbols": [
       "yfinance:SFGYY"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "Japan",
+    "assetCurrency": "JPY"
   },
   {
     "kind": "Stock",
@@ -549,7 +680,10 @@
     "isAccumulating": null,
     "providerSymbols": [
       "yfinance:SIE.DE"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "Eurozone",
+    "assetCurrency": "EUR"
   },
   {
     "kind": "Stock",
@@ -561,7 +695,10 @@
     "isAccumulating": null,
     "providerSymbols": [
       "yfinance:ASME.DE"
-    ]
+    ],
+    "assetClass": "Equity",
+    "region": "Eurozone",
+    "assetCurrency": "EUR"
   },
   {
     "kind": "Index",

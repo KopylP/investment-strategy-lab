@@ -34,6 +34,9 @@ export interface Instrument {
   ticker: string | null;
   label: string;
   description: string | null;
+  assetClass: string | null;
+  region: string | null;
+  assetCurrency: string | null;
 }
 
 export interface Lot {

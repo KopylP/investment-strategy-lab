@@ -7,6 +7,8 @@ public static class InstrumentErrors
 
     public static Error NameRequired() => Error.Validation("instrument.name_required", "Instrument name must not be blank.");
 
+    public static Error ExposureIncomplete() => Error.Validation("instrument.exposure_incomplete", "Asset class and region must be given together.");
+
     public static Error ExchangeRequired() => Error.Validation("instrument.exchange_required", "Exchange must not be blank.");
 
     public static Error InvalidProviderSymbol(string? text) =>

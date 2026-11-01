@@ -24,6 +24,7 @@
 
   "fx_rate.not_found": "Немає курсу на цю дату.",
   "instrument.isin_required": "Для такого інструмента потрібен ISIN.",
+  "instrument.exposure_incomplete": "Клас активів і регіон потрібно вказати разом.",
   "instrument.name_required": "Вкажіть назву інструмента.",
   "instrument.exchange_required": "Вкажіть біржу.",
   "instrument.provider_symbol_invalid": "Некоректний символ постачальника котирувань.",
