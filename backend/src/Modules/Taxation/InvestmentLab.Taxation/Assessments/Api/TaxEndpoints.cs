@@ -34,7 +34,7 @@ internal static class TaxEndpoints
         return group;
     }
 
-    private static Ok<IReadOnlyList<TaxPolicyDto>> ListTaxPolicies(ListTaxPoliciesHandler handler) => TypedResults.Ok(handler.Handle());
+    private static Ok<IReadOnlyList<TaxPolicyDto>> ListTaxPolicies(ListTaxPoliciesHandler handler) => TypedResults.Ok(ListTaxPoliciesHandler.Handle());
 
     private static async Task<Ok<TaxRegimeDto>> GetTaxRegime(GetTaxRegimeHandler handler, CancellationToken cancellationToken) =>
         TypedResults.Ok(await handler.Handle(cancellationToken));

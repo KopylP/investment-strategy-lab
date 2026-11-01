@@ -6,7 +6,7 @@ public sealed record TaxPolicyDto(string Code, string Name, string Hint, bool Is
 
 public sealed class ListTaxPoliciesHandler
 {
-    public IReadOnlyList<TaxPolicyDto> Handle() => [.. TaxPolicies.All.Select(ToDto)];
+    public static IReadOnlyList<TaxPolicyDto> Handle() => [.. TaxPolicies.All.Select(ToDto)];
 
     private static TaxPolicyDto ToDto(ITaxPolicy policy) => new(
         Code: policy.Code,
