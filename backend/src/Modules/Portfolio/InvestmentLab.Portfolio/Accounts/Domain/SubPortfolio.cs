@@ -43,5 +43,7 @@ public sealed class SubPortfolio : Entity<SubPortfolioId>
 
     internal void AssignStrategy(StrategyRef? strategy) => Strategy = strategy;
 
+    internal void Rename(string name) => Name = name.Trim();
+
     internal void Retire() => Status = SubPortfolioStatus.Retired;
 }

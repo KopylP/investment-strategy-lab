@@ -13,6 +13,29 @@ public sealed class InvestmentAccountTests
         InvestmentAccount.Open(UserId.New(), "XTB", "XTB", Currency.EUR, "TEST-POLICY", ContributionPolicy.Default, drafts, Now);
 
     [Fact]
+    public void Renames_a_sub_portfolio_and_allows_changing_only_the_case_of_its_own_name()
+    {
+        var account = Open(Draft("EU momentum", 60), Draft("US momentum", 40)).Value;
+        var renamed = account.ActiveSubPortfolios.First();
+
+        account.RenameSubPortfolio(renamed.Id, "  EU MOMENTUM ").IsSuccess.ShouldBeTrue();
+
+        renamed.Name.ShouldBe("EU MOMENTUM");
+    }
+
+    [Theory]
+    [InlineData("US momentum", "account.sub_portfolio_name_taken")]
+    [InlineData("  ", "account.name_required")]
+    public void Refuses_a_name_taken_by_another_sub_portfolio_or_blank(string name, string code)
+    {
+        var account = Open(Draft("EU momentum", 60), Draft("US momentum", 40)).Value;
+
+        var renamed = account.RenameSubPortfolio(account.ActiveSubPortfolios.First().Id, name);
+
+        renamed.Error.Code.ShouldBe(code);
+    }
+
+    [Fact]
     public void Opens_when_target_shares_add_up_to_100_percent()
     {
         var account = Open(Draft("EU momentum", 60), Draft("US momentum", 40)).Value;

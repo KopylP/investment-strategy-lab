@@ -7,6 +7,7 @@ using InvestmentLab.Portfolio.Accounts.Application.ChangeTargetShares;
 using InvestmentLab.Portfolio.Accounts.Application.GetAccount;
 using InvestmentLab.Portfolio.Accounts.Application.ListAccounts;
 using InvestmentLab.Portfolio.Accounts.Application.OpenAccount;
+using InvestmentLab.Portfolio.Accounts.Application.RenameSubPortfolio;
 using InvestmentLab.Portfolio.Accounts.Application.RetireSubPortfolio;
 using InvestmentLab.Portfolio.Accounts.Application.Shared;
 using InvestmentLab.Portfolio.Contracts.Accounts;
@@ -30,6 +31,7 @@ internal static class AccountEndpoints
         accounts.MapPut("/{accountId:guid}/target-shares", ChangeTargetShares).WithName("ChangeTargetShares");
         accounts.MapPut("/{accountId:guid}/contribution-policy", ChangeContributionPolicy).WithName("ChangeContributionPolicy");
         accounts.MapPut("/{accountId:guid}/sub-portfolios/{subPortfolioId:guid}/strategy", AssignStrategy).WithName("AssignStrategy");
+        accounts.MapPut("/{accountId:guid}/sub-portfolios/{subPortfolioId:guid}/name", RenameSubPortfolio).WithName("RenameSubPortfolio");
         accounts.MapPost("/{accountId:guid}/sub-portfolios/{subPortfolioId:guid}/retire", RetireSubPortfolio).WithName("RetireSubPortfolio");
 
         return group;
@@ -88,6 +90,14 @@ internal static class AccountEndpoints
         var assigned = await handler.Handle(accountId, subPortfolioId, body, cancellationToken);
 
         return assigned.ToHttpResult();
+    }
+
+    private static async Task<IResult> RenameSubPortfolio(
+        Guid accountId, Guid subPortfolioId, RenameSubPortfolioCommand body, RenameSubPortfolioHandler handler, CancellationToken cancellationToken)
+    {
+        var renamed = await handler.Handle(accountId, subPortfolioId, body, cancellationToken);
+
+        return renamed.ToHttpResult();
     }
 
     private static async Task<IResult> RetireSubPortfolio(

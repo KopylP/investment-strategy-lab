@@ -73,7 +73,15 @@
       <ng-template #body let-sub>
         <tr>
           <td class="[overflow-wrap:anywhere] sm:[overflow-wrap:normal]">
-            <div class="font-medium">{{ sub.name }}</div>
+            <button
+              type="button"
+              class="p-0 border-0 bg-transparent cursor-pointer text-color text-left font-medium inline-flex items-center gap-2"
+              [attr.aria-label]="'Змінити назву «' + sub.name + '»'"
+              (click)="renameFor.set(sub)"
+            >
+              {{ sub.name }}
+              <i class="pi pi-pencil text-xs text-muted-color"></i>
+            </button>
             <div class="sm:hidden text-xs text-muted-color">
               кеш:
               {{
@@ -225,6 +233,8 @@
   </p-dialog>
 
   <app-add-sub-portfolio-dialog [(visible)]="addVisible" />
+
+  <app-rename-sub-portfolio-dialog [(subPortfolio)]="renameFor" />
 
   <app-import-positions-dialog [(visible)]="importVisible" />
 }
