@@ -118,3 +118,14 @@ def test_cash_etf_position_has_no_exit_rules() -> None:
     assert report.position_risks[0].status == "cash"
     assert report.actions == []
     assert report.portfolio_value == pytest.approx(286.0)
+
+
+def test_broken_position_only_warns_when_position_exits_are_off() -> None:
+    prices = _frame([100.0] * 259 + [90.0])
+    settings = RiskSettings(sell_on_position_exit=False)
+
+    report = analyze_portfolio_risk(prices, [Position(ticker="QQQ", entry_price=100.0, shares=2)], settings)
+
+    assert report.position_risks[0].status == "red"
+    assert report.position_risks[0].sell is False
+    assert report.status == "watch"

@@ -27,6 +27,7 @@ class ScannerParameters(_Parameters):
     min_momentum: float = Field(ScannerSettings.min_momentum, description=msg("etf_momentum.param.min_momentum"))
     hold_buffer_k: int = Field(ScannerSettings.hold_buffer_k, ge=1, le=50, description=msg("etf_momentum.param.hold_buffer_k"))
     max_per_group: int = Field(ScannerSettings.max_per_group, ge=1, le=20, description=msg("etf_momentum.param.max_per_group"))
+    max_correlation: float = Field(ScannerSettings.max_correlation, gt=0, le=1, description=msg("etf_momentum.param.max_correlation"))
     risk_free_rate: float = Field(ScannerSettings.risk_free_rate, ge=-0.1, le=0.5, description=msg("etf_momentum.param.risk_free_rate"))
     max_stale_days: int = Field(ScannerSettings.max_stale_days, ge=1, le=30, description=msg("etf_momentum.param.max_stale_days"))
 
@@ -52,6 +53,7 @@ class RiskParameters(_Parameters):
     ma_exit_band: float = Field(RiskSettings.ma_exit_band, ge=0, le=0.5, description=msg("etf_momentum.param.ma_exit_band"))
     small_loss_warn: float = Field(RiskSettings.small_loss_warn, ge=-1, le=0)
     vol_reference: float = Field(RiskSettings.vol_reference, gt=0, le=2)
+    sell_on_position_exit: bool = Field(RiskSettings.sell_on_position_exit, description=msg("etf_momentum.param.sell_on_position_exit"))
 
     def to_settings(self) -> RiskSettings:
         return RiskSettings(**self.model_dump())

@@ -34,6 +34,7 @@ portfolio_warn = -0.10
 portfolio_exit = -0.20
 ma_exit_band = 0.02
 small_loss_warn = -0.04
+sell_on_position_exit = false
 
 [scanner]
 top_n = 4
@@ -46,6 +47,7 @@ min_sharpe = 0.20
 min_momentum = 0.0
 hold_buffer_k = 8
 max_per_group = 1
+max_correlation = 0.70
 risk_free_rate = 0.035
 max_stale_days = 5
 
@@ -58,10 +60,11 @@ min_trade = 25.0
 fractional_shares = true
 
 [backtest]
-years = 15
+years = 19
 cost_pct = 0.0005
 fee_per_trade = 0.0
 benchmark = "SPY"
+bond_benchmark = "IEF"
 
 # ETFs in the same group move together; the scanner picks at most max_per_group from each.
 [groups]

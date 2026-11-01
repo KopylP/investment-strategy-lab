@@ -19,8 +19,12 @@ from .config import ScannerSettings
 STATUS_SELECTED = "selected"
 STATUS_BUFFER = "buffer"
 STATUS_GROUP_BLOCKED = "group_blocked"
+STATUS_CORRELATED = "correlated"
 STATUS_RESERVE = "reserve"
 STATUS_FAILED = "failed"
+
+CORRELATION_WINDOW_DAYS = 130
+MIN_CORRELATION_DAYS = 60
 
 TABLE_COLUMNS = [
     "Name",
@@ -91,7 +95,7 @@ def scan_etfs(
         for ticker in scan_tickers
     ]
     table = pd.DataFrame(rows, columns=["ETF", *TABLE_COLUMNS]).set_index("ETF")
-    selected = _select(table, settings, current_positions or [])
+    selected = _select(table, prices, settings, current_positions or [])
 
     table = _sort_table(table)
     eligible = table.loc[[t for t in table.index if t in selected]].copy()
@@ -237,8 +241,8 @@ def _ticker_row(
     return row
 
 
-def _select(table: pd.DataFrame, settings: ScannerSettings, current_positions: list[str]) -> list[str]:
-    """Rank qualified ETFs, apply the hold buffer and the per-group cap, and mark every row."""
+def _select(table: pd.DataFrame, prices: pd.DataFrame, settings: ScannerSettings, current_positions: list[str]) -> list[str]:
+    """Rank qualified ETFs, apply the hold buffer, the per-group cap and the correlation limit, and mark every row."""
     qualified = table[table["Status"] == STATUS_RESERVE].sort_values("Momentum", ascending=False)
     ranks = {ticker: index + 1 for index, ticker in enumerate(qualified.index)}
     for ticker, rank in ranks.items():
@@ -259,6 +263,11 @@ def _select(table: pd.DataFrame, settings: ScannerSettings, current_positions: l
             table.loc[ticker, "Status"] = STATUS_GROUP_BLOCKED
             table.loc[ticker, "Reason"] = msg("etf_momentum.scan.group_taken", group=group, members=", ".join(members))
             continue
+        twin = _too_correlated_with(prices, ticker, selected, settings.max_correlation)
+        if twin is not None:
+            table.loc[ticker, "Status"] = STATUS_CORRELATED
+            table.loc[ticker, "Reason"] = msg("etf_momentum.scan.too_correlated", peer=twin, limit=f"{settings.max_correlation:.2f}")
+            continue
         if len(selected) >= settings.top_n:
             table.loc[ticker, "Reason"] = msg("etf_momentum.scan.stronger_exist", rank=rank)
             continue
@@ -273,6 +282,26 @@ def _select(table: pd.DataFrame, settings: ScannerSettings, current_positions: l
             table.loc[ticker, "Status"] = STATUS_SELECTED
             table.loc[ticker, "Reason"] = msg("etf_momentum.scan.ranked", rank=rank)
     return selected
+
+
+def _too_correlated_with(prices: pd.DataFrame, ticker: str, chosen: list[str], limit: float) -> str | None:
+    if limit >= 1.0:
+        return None
+
+    recent = prices.tail(CORRELATION_WINDOW_DAYS)
+    for other in chosen:
+        if _correlation(recent, ticker, other) > limit:
+            return other
+
+    return None
+
+
+def _correlation(prices: pd.DataFrame, first: str, second: str) -> float:
+    returns = prices[[first, second]].dropna().pct_change().dropna()
+    if len(returns) < MIN_CORRELATION_DAYS:
+        return float("-inf")
+
+    return float(returns[first].corr(returns[second]))
 
 
 def _sort_table(table: pd.DataFrame) -> pd.DataFrame:

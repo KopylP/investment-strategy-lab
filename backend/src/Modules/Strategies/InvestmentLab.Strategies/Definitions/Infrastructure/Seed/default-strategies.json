@@ -36,6 +36,7 @@
         "minMomentum": 0.0,
         "holdBufferK": 8,
         "maxPerGroup": 1,
+        "maxCorrelation": 0.7,
         "riskFreeRate": 0.02,
         "maxStaleDays": 5
       },
@@ -49,7 +50,8 @@
         "portfolioWarn": -0.1,
         "portfolioExit": -0.2,
         "maExitBand": 0.02,
-        "smallLossWarn": -0.04
+        "smallLossWarn": -0.04,
+        "sellOnPositionExit": false
       },
       "weakMarketInvestPct": 0.5
     },
@@ -93,6 +95,7 @@
         "minMomentum": 0.0,
         "holdBufferK": 8,
         "maxPerGroup": 1,
+        "maxCorrelation": 0.7,
         "riskFreeRate": 0.035,
         "maxStaleDays": 5
       },
@@ -106,7 +109,8 @@
         "portfolioWarn": -0.1,
         "portfolioExit": -0.2,
         "maExitBand": 0.02,
-        "smallLossWarn": -0.04
+        "smallLossWarn": -0.04,
+        "sellOnPositionExit": false
       },
       "weakMarketInvestPct": 0.5
     },

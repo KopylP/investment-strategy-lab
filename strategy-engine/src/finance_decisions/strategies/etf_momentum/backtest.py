@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 WARMUP_DAYS = 260
 SCAN_WINDOW = 800
 RISK_WINDOW = 300
+STOCK_SHARE = 0.6
 
 
 @dataclass(frozen=True)
@@ -54,6 +55,7 @@ class BacktestResult:
     metrics: dict[str, dict[str, float]]
     yearly: list[dict]
     picks_log: list[dict] = field(default_factory=list)
+    comparisons: dict[str, dict[str, float]] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -245,17 +247,24 @@ def run_backtest(
         },
         yearly=_yearly(growth, bench_growth),
         picks_log=picks_log,
+        comparisons=_comparisons(valuation.loc[days[0]:], config, rf),
     )
 
 
-def _growth_index(values: pd.Series, flows: pd.Series) -> pd.Series:
-    """Time-weighted growth of 1: contributions do not count as returns."""
-    previous = values.shift(1)
-    returns = ((values - flows) / previous - 1).where(previous > 0, 0.0).fillna(0.0)
-    return (1 + returns).cumprod()
+def _comparisons(valuation: pd.DataFrame, config: StrategyConfig, rf: float) -> dict[str, dict[str, float]]:
+    """Simple portfolios a strategy must beat to justify itself, rebalanced daily and without costs."""
+    returns = valuation.pct_change().fillna(0.0)
+    growths = {"equal_weight": (1 + returns[config.etfs].mean(axis=1)).cumprod()}
+
+    if config.backtest.bond_benchmark:
+        stocks = returns[config.backtest.benchmark]
+        bonds = returns[config.backtest.bond_benchmark]
+        growths["balanced"] = (1 + STOCK_SHARE * stocks + (1 - STOCK_SHARE) * bonds).cumprod()
+
+    return {name: _risk_and_return(growth, rf) for name, growth in growths.items()}
 
 
-def _metrics(growth: pd.Series, equity: pd.Series, contributed: float, rf: float) -> dict[str, float]:
+def _risk_and_return(growth: pd.Series, rf: float) -> dict[str, float]:
     years = max((growth.index[-1] - growth.index[0]).days / 365.25, 1e-9)
     daily = growth.pct_change().dropna()
     cagr = float(growth.iloc[-1] ** (1 / years) - 1)
@@ -266,6 +275,19 @@ def _metrics(growth: pd.Series, equity: pd.Series, contributed: float, rf: float
         "volatility": vol,
         "sharpe": (cagr - rf) / vol if vol > 0 else 0.0,
         "max_drawdown": float(drawdown.min()),
+    }
+
+
+def _growth_index(values: pd.Series, flows: pd.Series) -> pd.Series:
+    """Time-weighted growth of 1: contributions do not count as returns."""
+    previous = values.shift(1)
+    returns = ((values - flows) / previous - 1).where(previous > 0, 0.0).fillna(0.0)
+    return (1 + returns).cumprod()
+
+
+def _metrics(growth: pd.Series, equity: pd.Series, contributed: float, rf: float) -> dict[str, float]:
+    return {
+        **_risk_and_return(growth, rf),
         "final_value": float(equity.iloc[-1]),
         "contributed": contributed,
         "profit": float(equity.iloc[-1] - contributed),
@@ -307,6 +329,8 @@ def main() -> int:
     config = load_strategy_config(args.config)
     years = args.years or config.backtest.years
     tickers = set(config.etfs) | {*MARKET_SYMBOLS, config.backtest.benchmark}
+    if config.backtest.bond_benchmark:
+        tickers.add(config.backtest.bond_benchmark)
     if config.cash_etf:
         tickers.add(config.cash_etf)
     prices = download_close_prices(sorted(tickers), period=f"{years + 2}y")

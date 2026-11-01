@@ -272,6 +272,7 @@ def backtest_payload(result) -> dict[str, Any]:
         "months": result.months,
         "months_market_ok": result.months_market_ok,
         "metrics": result.metrics,
+        "comparisons": result.comparisons,
         "yearly": result.yearly,
         "growth_chart": line_chart(growth, money_axis=True),
         "drawdown_chart": line_chart(drawdown, pct_axis=True, floor_zero=True),
@@ -300,8 +301,15 @@ def format_backtest_report(result) -> str:
     lines.extend(
         f"  {row['year']}{'*' if row['partial'] else ' '} {row['strategy']:+7.1%} / {row['benchmark']:+7.1%}" for row in result.yearly
     )
+    lines.extend(["", t("etf_momentum.cli.backtest_comparisons")])
+    lines.extend(_comparison_line(name, metrics) for name, metrics in result.comparisons.items())
     lines.extend(["", t("etf_momentum.cli.backtest_footnote")])
     return "\n".join(lines)
+
+
+def _comparison_line(name: str, metrics: dict[str, float]) -> str:
+    label = t(f"etf_momentum.cli.backtest_comparison.{name}")
+    return f"  {label:<20}{metrics['cagr']:>8.1%}{metrics['sharpe']:>8.2f}{metrics['max_drawdown']:>9.1%}"
 
 
 def write_backtest_outputs(report_dir: Path, result) -> str:
