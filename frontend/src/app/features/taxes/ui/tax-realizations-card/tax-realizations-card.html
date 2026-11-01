@@ -50,11 +50,11 @@
             <td class="text-sm hidden sm:table-cell">{{ store.accountName(r.accountId) }}</td>
           }
           <td class="text-right hidden sm:table-cell">{{ r.quantity | quantity }}</td>
-          <td class="text-right hidden sm:table-cell">{{ r.proceedsPln | taxMoney }}</td>
-          <td class="text-right hidden sm:table-cell">{{ r.costPln | taxMoney }}</td>
-          <td class="text-right font-medium whitespace-nowrap" [appSignedValue]="r.gainPln">
-            {{ r.gainPln | taxMoney }}
-            @if (r.brokerGainPln !== null) {
+          <td class="text-right hidden sm:table-cell">{{ r.proceedsInTaxCurrency | taxMoney }}</td>
+          <td class="text-right hidden sm:table-cell">{{ r.costInTaxCurrency | taxMoney }}</td>
+          <td class="text-right font-medium whitespace-nowrap" [appSignedValue]="r.gainInTaxCurrency">
+            {{ r.gainInTaxCurrency | taxMoney }}
+            @if (r.brokerGainInTaxCurrency !== null) {
               @let off = brokerDifference(r);
               <i
                 class="pi text-xs ml-1"
@@ -63,7 +63,7 @@
                 [style.color]="off ? 'var(--p-finance-tax)' : 'var(--p-text-muted-color)'"
                 [pTooltip]="
                   off
-                    ? 'Revolut рахує ' + (r.brokerGainPln | taxMoney)
+                    ? 'Revolut рахує ' + (r.brokerGainInTaxCurrency | taxMoney)
                     : 'Збігається зі звітом Revolut'
                 "
               ></i>
@@ -83,9 +83,9 @@
                 <span class="text-muted-color">Штук</span
                 ><span class="text-right">{{ r.quantity | quantity }}</span>
                 <span class="text-muted-color">Виручка</span
-                ><span class="text-right">{{ r.proceedsPln | taxMoney }}</span>
+                ><span class="text-right">{{ r.proceedsInTaxCurrency | taxMoney }}</span>
                 <span class="text-muted-color">Витрати</span
-                ><span class="text-right">{{ r.costPln | taxMoney }}</span>
+                ><span class="text-right">{{ r.costInTaxCurrency | taxMoney }}</span>
                 <span class="text-muted-color">Курс</span
                 ><span class="text-right">{{ r.fxRate }} · {{ r.fxRateDate | date }}</span>
               </div>
@@ -100,14 +100,14 @@
                   </span>
                   <span class="text-right ml-auto"
                     >{{ lot.quantity | quantity }} шт. · витрати
-                    {{ lot.costPln | taxMoney }}</span
+                    {{ lot.costInTaxCurrency | taxMoney }}</span
                   >
                 </div>
               }
-              @if (r.brokerGainPln !== null && brokerDifference(r)) {
+              @if (r.brokerGainInTaxCurrency !== null && brokerDifference(r)) {
                 <div class="text-sm mt-2 max-w-xl" style="color: var(--p-finance-tax)">
-                  Revolut рахує зиск {{ r.brokerGainPln | taxMoney }} (різниця
-                  {{ r.gainPln - r.brokerGainPln | taxMoney }}): у нього свій курс і округлення,
+                  Revolut рахує зиск {{ r.brokerGainInTaxCurrency | taxMoney }} (різниця
+                  {{ r.gainInTaxCurrency - r.brokerGainInTaxCurrency | taxMoney }}): у нього свій курс і округлення,
                   у нас — офіційний курс дня перед угодою.
                 </div>
               }

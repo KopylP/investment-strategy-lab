@@ -25,20 +25,20 @@ export interface Realization {
   soldOn: string;
   instrumentId: string;
   quantity: number;
-  proceedsPln: number;
-  costPln: number;
-  gainPln: number;
+  proceedsInTaxCurrency: number;
+  costInTaxCurrency: number;
+  gainInTaxCurrency: number;
   fxRate: number;
   fxRateDate: string | null;
   lots: {
     buyTransactionId: string;
     acquiredOn: string;
     quantity: number;
-    costPln: number;
+    costInTaxCurrency: number;
     fromBroker: boolean;
   }[];
   unmatchedQuantity: number;
-  brokerGainPln: number | null;
+  brokerGainInTaxCurrency: number | null;
   accountId: string;
 }
 
@@ -62,10 +62,10 @@ export interface DividendIncome {
   instrumentId: string;
   amount: number;
   currency: string | null;
-  amountPln: number;
+  amountInTaxCurrency: number;
   fxRate: number;
-  grossPln: number;
-  withheldPln: number;
+  grossInTaxCurrency: number;
+  withheldInTaxCurrency: number;
   accountId: string;
 }
 
@@ -105,7 +105,7 @@ export interface TaxYearDetails {
     acquiredOn: string;
     instrumentId: string;
     quantity: number;
-    costPln: number;
+    costInTaxCurrency: number;
     fxRate: number;
     accountId: string;
   }[];

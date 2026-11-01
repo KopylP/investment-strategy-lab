@@ -71,19 +71,19 @@ public sealed class TaxEstimator(TaxInputs inputs, IAssessmentRepository assessm
         return new TaxEstimateDto(
             PolicyCode: scenario.Policy.Code,
             IsTaxed: scenario.Policy.IsTaxed,
-            GainPln: impact.Total.GainPln,
-            TaxPln: impact.Total.TaxChangePln,
+            GainInTaxCurrency: impact.Total.GainInTaxCurrency,
+            TaxChange: impact.Total.TaxChange,
             FxRate: scenario.Rate,
             Sales: [.. sales.Select(sale => EstimateOf(sale, impact.PerSale[sale.Key]))],
             Notes: notes,
-            YearTaxBeforePln: impact.YearTaxBeforePln,
-            CarriedLossPln: impact.Total.CarriedLossPln,
+            YearTaxBefore: impact.YearTaxBefore,
+            CarriedLoss: impact.Total.CarriedLoss,
             Year: situation.Year,
             TaxCurrency: scenario.Policy.FxRule.TaxCurrency);
     }
 
     private static SaleEstimateDto EstimateOf(ProposedSaleDto sale, TaxImpact impact) =>
-        new(sale.Key, impact.GainPln, impact.TaxChangePln, impact.CarriedLossPln);
+        new(sale.Key, impact.GainInTaxCurrency, impact.TaxChange, impact.CarriedLoss);
 
     private sealed record SaleScenario(
         Guid AccountId,

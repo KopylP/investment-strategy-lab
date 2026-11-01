@@ -48,16 +48,16 @@ public static class TaxCalculator
     private static OpenLot LotOf(TaxEvent buy)
     {
         var gross = buy.Quantity * buy.Price;
-        var cost = Pln(gross, buy.FxRate) + Pln(buy.Fee, buy.FxRate);
+        var cost = InTaxCurrency(gross, buy.FxRate) + InTaxCurrency(buy.Fee, buy.FxRate);
 
         return new OpenLot(buy.TransactionId, buy.OccurredOn, buy.Sequence, buy.InstrumentId, buy.Quantity, cost, buy.FxRate, gross, buy.AccountId);
     }
 
     private static DividendIncome DividendOf(TaxEvent entry)
     {
-        var net = Pln(entry.Amount, entry.FxRate);
-        var gross = entry.Withholding is { } withholding ? Pln(entry.Amount * withholding.GrossPerNet, entry.FxRate) : net;
-        var withheld = entry.Withholding is { } paidAbroad ? Pln(entry.Amount * paidAbroad.WithheldPerNet, entry.FxRate) : 0m;
+        var net = InTaxCurrency(entry.Amount, entry.FxRate);
+        var gross = entry.Withholding is { } withholding ? InTaxCurrency(entry.Amount * withholding.GrossPerNet, entry.FxRate) : net;
+        var withheld = entry.Withholding is { } paidAbroad ? InTaxCurrency(entry.Amount * paidAbroad.WithheldPerNet, entry.FxRate) : 0m;
 
         return new DividendIncome(
             entry.TransactionId,
@@ -103,8 +103,8 @@ public static class TaxCalculator
     private static TaxYearResult YearResult(int year, List<Realization> sold, List<DividendIncome> received, ITaxPolicy policy, List<LossPool> losses)
     {
         var dividendRate = policy.DividendRate.Value;
-        var revenue = sold.Sum(realization => realization.ProceedsPln);
-        var costs = sold.Sum(realization => realization.CostPln);
+        var revenue = sold.Sum(realization => realization.ProceedsInTaxCurrency);
+        var costs = sold.Sum(realization => realization.CostInTaxCurrency);
         var gain = revenue - costs;
 
         var uses = LossPool.UseAgainst(losses, year, gain, policy.LossCarryforward);
@@ -112,8 +112,8 @@ public static class TaxCalculator
         var taxBase = policy.IsTaxed ? policy.Rounding.Base(Math.Max(0m, gain - used)) : 0m;
         var capitalTax = policy.Rounding.Tax(policy.RateSchedule.TaxOn(taxBase));
 
-        var dividendIncome = received.Sum(dividend => dividend.GrossPln);
-        var dividendCredit = received.Sum(dividend => Math.Min(dividend.WithheldPln, dividend.GrossPln * dividendRate));
+        var dividendIncome = received.Sum(dividend => dividend.GrossInTaxCurrency);
+        var dividendCredit = received.Sum(dividend => Math.Min(dividend.WithheldInTaxCurrency, dividend.GrossInTaxCurrency * dividendRate));
         var dividendTax = policy.IsTaxed ? policy.Rounding.Tax(Math.Max(0m, dividendIncome * dividendRate - dividendCredit)) : 0m;
 
         var loss = gain < 0m ? -gain : 0m;
@@ -166,8 +166,8 @@ public static class TaxCalculator
         if (unmatched > 0m)
             warnings.Add(Message.Of("tax.warning.sale_without_purchase", new { date = sale.OccurredOn.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), quantity = unmatched }));
 
-        var proceeds = Pln(sale.Quantity * sale.Price, sale.FxRate);
-        var cost = matches.Sum(match => match.CostPln) + Pln(sale.Fee, sale.FxRate);
+        var proceeds = InTaxCurrency(sale.Quantity * sale.Price, sale.FxRate);
+        var cost = matches.Sum(match => match.CostInTaxCurrency) + InTaxCurrency(sale.Fee, sale.FxRate);
         var gain = proceeds - cost;
 
         return new Realization(
@@ -183,7 +183,7 @@ public static class TaxCalculator
             matches,
             AttributionsOf(sale, gain),
             unmatched,
-            sale.Broker?.GainPln,
+            sale.Broker?.GainInTaxCurrency,
             sale.AccountId);
     }
 
@@ -222,9 +222,9 @@ public static class TaxCalculator
     private static LotMatch BrokerLotMatch(BrokerLotFact lot, decimal taken)
     {
         var share = taken / lot.Quantity;
-        var costPln = decimal.Round(lot.CostPln * share, 2, MidpointRounding.AwayFromZero);
+        var costInTaxCurrency = decimal.Round(lot.CostInTaxCurrency * share, 2, MidpointRounding.AwayFromZero);
 
-        return new LotMatch(Guid.Empty, lot.AcquiredOn, taken, costPln, FromBroker: true, Gross: lot.Cost * share);
+        return new LotMatch(Guid.Empty, lot.AcquiredOn, taken, costInTaxCurrency, FromBroker: true, Gross: lot.Cost * share);
     }
 
     private static List<LotMatch> CorrectedToBrokerCost(List<LotMatch> own, List<LotMatch> added, SaleFacts broker)
@@ -239,17 +239,17 @@ public static class TaxCalculator
 
         return [.. own.Select(match => match with
         {
-            CostPln = match.CostPln + decimal.Round(delta * match.Gross / ownGross * match.FxRate, 2, MidpointRounding.AwayFromZero),
+            CostInTaxCurrency = match.CostInTaxCurrency + decimal.Round(delta * match.Gross / ownGross * match.FxRate, 2, MidpointRounding.AwayFromZero),
             FromBroker = true,
         })];
     }
 
     private static Realization SaleOfIncome(TaxEvent income, SaleFacts sold)
     {
-        var proceeds = Pln(income.Amount, income.FxRate);
-        var cost = sold.Lots.Sum(lot => lot.CostPln);
+        var proceeds = InTaxCurrency(income.Amount, income.FxRate);
+        var cost = sold.Lots.Sum(lot => lot.CostInTaxCurrency);
         var gain = proceeds - cost;
-        var matches = sold.Lots.Select(lot => new LotMatch(Guid.Empty, lot.AcquiredOn, lot.Quantity, lot.CostPln, FromBroker: true, Gross: lot.Cost));
+        var matches = sold.Lots.Select(lot => new LotMatch(Guid.Empty, lot.AcquiredOn, lot.Quantity, lot.CostInTaxCurrency, FromBroker: true, Gross: lot.Cost));
 
         return new Realization(
             income.TransactionId,
@@ -264,12 +264,12 @@ public static class TaxCalculator
             [.. matches],
             AttributionsOf(income, gain),
             0m,
-            sold.GainPln,
+            sold.GainInTaxCurrency,
             income.AccountId);
     }
 
     private static List<OpenLot> Lots(Dictionary<(Guid Account, Guid Instrument), List<OpenLot>> lots, TaxEvent entry) =>
         lots.TryGetValue((entry.AccountId, entry.InstrumentId), out var list) ? list : lots[(entry.AccountId, entry.InstrumentId)] = [];
 
-    private static decimal Pln(decimal amount, decimal rate) => decimal.Round(amount * rate, 2, MidpointRounding.AwayFromZero);
+    private static decimal InTaxCurrency(decimal amount, decimal rate) => decimal.Round(amount * rate, 2, MidpointRounding.AwayFromZero);
 }

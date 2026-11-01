@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace InvestmentLab.Taxation.BrokerStatements.Domain;
 
 public sealed record BrokerSaleLot(
@@ -10,6 +12,6 @@ public sealed record BrokerSaleLot(
     decimal Cost,
     decimal Proceeds,
     decimal Fees,
-    decimal CostPln,
-    decimal ProceedsPln,
-    decimal FeesPln);
+    [property: JsonPropertyName("costPln")] decimal CostInTaxCurrency,
+    [property: JsonPropertyName("proceedsPln")] decimal ProceedsInTaxCurrency,
+    [property: JsonPropertyName("feesPln")] decimal FeesInTaxCurrency);

@@ -27,10 +27,10 @@ public sealed class TaxCalculatorTests
         ], Belka, []);
 
         var sale = computation.Year(2025)!.Realizations.ShouldHaveSingleItem();
-        sale.ProceedsPln.ShouldBe(8287.50m);
+        sale.ProceedsInTaxCurrency.ShouldBe(8287.50m);
         sale.Lots.Select(lot => lot.Quantity).ShouldBe([10m, 5m]);
-        sale.CostPln.ShouldBe(4304.30m + 2642.20m + 8.50m);
-        sale.GainPln.ShouldBe(8287.50m - 6955.00m);
+        sale.CostInTaxCurrency.ShouldBe(4304.30m + 2642.20m + 8.50m);
+        sale.GainInTaxCurrency.ShouldBe(8287.50m - 6955.00m);
 
         var year = computation.Year(2025)!.Summary;
         year.TaxBase.ShouldBe(1333m);
@@ -130,9 +130,9 @@ public sealed class TaxCalculatorTests
         ], Belka, []);
 
         var sale = computation.Year(2025)!.Realizations.Single();
-        sale.ProceedsPln.ShouldBe(1000m);
-        sale.CostPln.ShouldBe(408m + 15m);
-        sale.GainPln.ShouldBe(577m);
+        sale.ProceedsInTaxCurrency.ShouldBe(1000m);
+        sale.CostInTaxCurrency.ShouldBe(408m + 15m);
+        sale.GainInTaxCurrency.ShouldBe(577m);
     }
 
     [Fact]
@@ -144,7 +144,7 @@ public sealed class TaxCalculatorTests
             Sell("2025-03-10", 2m, 20m, 0m, 1m),
         ], Belka, []);
 
-        computation.Year(2025)!.Realizations.Select(sale => sale.CostPln).ShouldBe([10.33m, 20.67m]);
+        computation.Year(2025)!.Realizations.Select(sale => sale.CostInTaxCurrency).ShouldBe([10.33m, 20.67m]);
         computation.OpenLots.ShouldBeEmpty();
     }
 
@@ -157,7 +157,7 @@ public sealed class TaxCalculatorTests
             Trade(TaxableKind.Sell, "2025-06-10", Other, 5m, 60m, 0m, 1m),
         ], Belka, []);
 
-        computation.Year(2025)!.Realizations.Single().CostPln.ShouldBe(250m);
+        computation.Year(2025)!.Realizations.Single().CostInTaxCurrency.ShouldBe(250m);
     }
 
     [Fact]
@@ -169,7 +169,7 @@ public sealed class TaxCalculatorTests
         ], Belka, []);
 
         var year = computation.Year(2025)!;
-        year.Realizations.Single().GainPln.ShouldBe(4000m - 4300m);
+        year.Realizations.Single().GainInTaxCurrency.ShouldBe(4000m - 4300m);
         year.Summary.LossToCarry.ShouldBe(300m);
         year.Summary.TaxDue.ShouldBe(0m);
     }
@@ -248,8 +248,8 @@ public sealed class TaxCalculatorTests
         ], Belka, []);
 
         var year = computation.Year(2025)!;
-        year.Realizations.Single(r => r.AccountId == revolut).CostPln.ShouldBe(4000m);
-        year.Realizations.Single(r => r.AccountId == xtb).GainPln.ShouldBe(-800m);
+        year.Realizations.Single(r => r.AccountId == revolut).CostInTaxCurrency.ShouldBe(4000m);
+        year.Realizations.Single(r => r.AccountId == xtb).GainInTaxCurrency.ShouldBe(-800m);
         year.Summary.Gain.ShouldBe(0m);
         year.Summary.TaxDue.ShouldBe(0m);
         year.Summary.LossToCarry.ShouldBe(0m);

@@ -38,8 +38,8 @@ public sealed class SalesTaxImpactTests
 
         var impact = SalesTaxImpactCalculator.Of(Situation(YearWithGainOf1000()), [sale]);
 
-        impact.YearTaxBeforePln.ShouldBe(190m);
-        impact.Total.ShouldBe(new TaxImpact(GainPln: 500m, TaxChangePln: 95m, CarriedLossPln: 0m));
+        impact.YearTaxBefore.ShouldBe(190m);
+        impact.Total.ShouldBe(new TaxImpact(GainInTaxCurrency: 500m, TaxChange: 95m, CarriedLoss: 0m));
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public sealed class SalesTaxImpactTests
 
         var impact = SalesTaxImpactCalculator.Of(Situation(YearWithGainOf1000()), [sale]);
 
-        impact.Total.ShouldBe(new TaxImpact(GainPln: -500m, TaxChangePln: -95m, CarriedLossPln: 0m));
+        impact.Total.ShouldBe(new TaxImpact(GainInTaxCurrency: -500m, TaxChange: -95m, CarriedLoss: 0m));
     }
 
     [Fact]
@@ -60,7 +60,7 @@ public sealed class SalesTaxImpactTests
 
         var impact = SalesTaxImpactCalculator.Of(Situation(YearWithGainOf1000()), [bigLoss, secondLoss]);
 
-        impact.Total.ShouldBe(new TaxImpact(GainPln: -1500m, TaxChangePln: -190m, CarriedLossPln: 500m));
+        impact.Total.ShouldBe(new TaxImpact(GainInTaxCurrency: -1500m, TaxChange: -190m, CarriedLoss: 500m));
     }
 
     [Fact]
@@ -70,8 +70,8 @@ public sealed class SalesTaxImpactTests
 
         var impact = SalesTaxImpactCalculator.Of(Situation([Buy(Held)]), [sale]);
 
-        impact.YearTaxBeforePln.ShouldBe(0m);
-        impact.Total.ShouldBe(new TaxImpact(GainPln: -500m, TaxChangePln: 0m, CarriedLossPln: 500m));
+        impact.YearTaxBefore.ShouldBe(0m);
+        impact.Total.ShouldBe(new TaxImpact(GainInTaxCurrency: -500m, TaxChange: 0m, CarriedLoss: 500m));
     }
 
     [Fact]
@@ -82,10 +82,10 @@ public sealed class SalesTaxImpactTests
 
         var impact = SalesTaxImpactCalculator.Of(Situation([Buy(Held), Buy(OtherHeld)]), [profit, loss]);
 
-        impact.PerSale[profit.TransactionId].TaxChangePln.ShouldBe(190m);
-        impact.PerSale[loss.TransactionId].TaxChangePln.ShouldBe(0m);
-        impact.PerSale[loss.TransactionId].CarriedLossPln.ShouldBe(1000m);
-        impact.Total.ShouldBe(new TaxImpact(GainPln: 0m, TaxChangePln: 0m, CarriedLossPln: 0m));
+        impact.PerSale[profit.TransactionId].TaxChange.ShouldBe(190m);
+        impact.PerSale[loss.TransactionId].TaxChange.ShouldBe(0m);
+        impact.PerSale[loss.TransactionId].CarriedLoss.ShouldBe(1000m);
+        impact.Total.ShouldBe(new TaxImpact(GainInTaxCurrency: 0m, TaxChange: 0m, CarriedLoss: 0m));
     }
 
     [Fact]
@@ -95,7 +95,7 @@ public sealed class SalesTaxImpactTests
 
         var impact = SalesTaxImpactCalculator.Of(Situation([Buy(Held)], null, new LossYear(Year - 1, 1000m)), [sale]);
 
-        impact.Total.TaxChangePln.ShouldBe(95m);
+        impact.Total.TaxChange.ShouldBe(95m);
     }
 
     [Fact]
@@ -105,7 +105,7 @@ public sealed class SalesTaxImpactTests
 
         var impact = SalesTaxImpactCalculator.Of(Situation([Buy(Held)], new NoTaxPolicy("PL-IKE")), [sale]);
 
-        impact.Total.CarriedLossPln.ShouldBe(0m);
-        impact.Total.TaxChangePln.ShouldBe(0m);
+        impact.Total.CarriedLoss.ShouldBe(0m);
+        impact.Total.TaxChange.ShouldBe(0m);
     }
 }

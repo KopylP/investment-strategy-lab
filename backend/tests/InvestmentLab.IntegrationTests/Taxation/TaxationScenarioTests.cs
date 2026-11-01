@@ -29,8 +29,8 @@ public sealed class TaxationScenarioTests(MarketDataApiFactory factory) : IClass
 
         var assessed = await EventuallyAsync(client, year, details => details.Summary.TaxDue == 283m, ct);
         var realization = assessed.Realizations.ShouldHaveSingleItem();
-        realization.ProceedsPln.ShouldBe(8385.00m);
-        realization.CostPln.ShouldBe(6895.05m);
+        realization.ProceedsInTaxCurrency.ShouldBe(8385.00m);
+        realization.CostInTaxCurrency.ShouldBe(6895.05m);
         realization.FxRate.ShouldBe(4.30m);
         realization.FxRateDate.ShouldNotBeNull().ShouldBeLessThan(new DateOnly(year, 6, 10));
         assessed.Summary.TaxBase.ShouldBe(1490m);
@@ -58,7 +58,7 @@ public sealed class TaxationScenarioTests(MarketDataApiFactory factory) : IClass
         progress.Points.Select(point => (point.Date, point.TaxDue)).ShouldBe([(new DateOnly(year, 6, 10), 283m), (new DateOnly(year, 7, 10), 201m)]);
         (progress.TaxDue, progress.Gain, progress.TaxedAccounts).ShouldBe((201m, 1059.95m, 2));
         var both = await EventuallyAsync(client, year, details => details.Realizations.Count == 2, ct);
-        both.Realizations.Single(r => r.AccountId == account.Id).CostPln.ShouldBe(6895.05m);
+        both.Realizations.Single(r => r.AccountId == account.Id).CostInTaxCurrency.ShouldBe(6895.05m);
         both.Accounts.Select(a => a.Id).ShouldBe([account.Id, other.Id], ignoreOrder: true);
         var netted = (await client.GetFromJsonAsync<DeclarationRow>($"/api/taxation/declarations/{year}/pit-38", ct))!.Declaration;
         netted.TaxDue.ShouldBe(201m);

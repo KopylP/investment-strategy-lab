@@ -21,9 +21,9 @@ public sealed class ReportAction : Entity<ReportActionId>
     public int NextFillNumber { get; private set; }
     public string? SkipReason { get; private set; }
 
-    public decimal? EstimatedGainPln { get; private set; }
-    public decimal? EstimatedTaxPln { get; private set; }
-    public decimal? EstimatedCarriedLossPln { get; private set; }
+    public decimal? EstimatedGain { get; private set; }
+    public decimal? EstimatedTaxChange { get; private set; }
+    public decimal? EstimatedCarriedLoss { get; private set; }
 
     public string? Rejection { get; private set; }
 
@@ -143,7 +143,7 @@ public sealed class ReportAction : Entity<ReportActionId>
     }
 
     internal void AttachTaxEstimate(SaleTaxImpact impact) =>
-        (EstimatedGainPln, EstimatedTaxPln, EstimatedCarriedLossPln) = (impact.GainPln, impact.TaxChangePln, impact.CarriedLossPln);
+        (EstimatedGain, EstimatedTaxChange, EstimatedCarriedLoss) = (impact.GainInTaxCurrency, impact.TaxChange, impact.CarriedLoss);
 
     internal void CloseUnmarked()
     {

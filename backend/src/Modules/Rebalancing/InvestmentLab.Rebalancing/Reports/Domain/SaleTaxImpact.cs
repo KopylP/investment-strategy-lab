@@ -1,3 +1,3 @@
 namespace InvestmentLab.Rebalancing.Reports.Domain;
 
-public sealed record SaleTaxImpact(decimal GainPln, decimal TaxChangePln, decimal CarriedLossPln);
+public sealed record SaleTaxImpact(decimal GainInTaxCurrency, decimal TaxChange, decimal CarriedLoss);

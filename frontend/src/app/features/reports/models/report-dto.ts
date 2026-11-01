@@ -76,9 +76,9 @@ export interface ReportActionDto {
   fills: FillDto[];
   skipReason: string | null;
   rejection: string | null;
-  estimatedGainPln: number | null;
-  estimatedTaxPln: number | null;
-  estimatedCarriedLossPln: number | null;
+  estimatedGain: number | null;
+  estimatedTaxChange: number | null;
+  estimatedCarriedLoss: number | null;
 }
 
 export interface SectionScoreDto {
@@ -228,12 +228,12 @@ export interface PlanSettingsDto {
 export interface TaxEstimateDto {
   policyCode: string;
   isTaxed: boolean;
-  gainPln: number;
-  taxPln: number;
+  gainInTaxCurrency: number;
+  taxChange: number;
   fxRate: number | null;
   notes: string[];
-  yearTaxBeforePln: number | null;
-  carriedLossPln: number;
+  yearTaxBefore: number | null;
+  carriedLoss: number;
   year: number | null;
   taxCurrency: string | null;
 }

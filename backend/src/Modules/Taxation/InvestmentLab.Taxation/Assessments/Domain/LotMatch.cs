@@ -4,7 +4,7 @@ public sealed record LotMatch(
     Guid BuyTransactionId,
     DateOnly AcquiredOn,
     decimal Quantity,
-    decimal CostPln,
+    decimal CostInTaxCurrency,
     bool FromBroker = false,
     decimal Gross = 0m,
     decimal FxRate = 0m);

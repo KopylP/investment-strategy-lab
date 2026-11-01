@@ -110,10 +110,10 @@ public static class BrokerFacts
 
     private static SaleFacts Facts(List<BrokerSaleLot> lots)
     {
-        var lotFacts = lots.OrderBy(lot => lot.AcquiredOn).Select(lot => new BrokerLotFact(lot.AcquiredOn, lot.Quantity, lot.Cost, lot.CostPln));
-        var gainPln = lots.Sum(lot => lot.ProceedsPln - lot.CostPln - lot.FeesPln);
+        var lotFacts = lots.OrderBy(lot => lot.AcquiredOn).Select(lot => new BrokerLotFact(lot.AcquiredOn, lot.Quantity, lot.Cost, lot.CostInTaxCurrency));
+        var gainInTaxCurrency = lots.Sum(lot => lot.ProceedsInTaxCurrency - lot.CostInTaxCurrency - lot.FeesInTaxCurrency);
 
-        return new SaleFacts([.. lotFacts], gainPln, lots[0].Currency, lots.Sum(lot => lot.Cost));
+        return new SaleFacts([.. lotFacts], gainInTaxCurrency, lots[0].Currency, lots.Sum(lot => lot.Cost));
     }
 
     private static bool? Same(string isin, string symbol, Guid instrumentId, IReadOnlyDictionary<Guid, InstrumentKey> instruments)

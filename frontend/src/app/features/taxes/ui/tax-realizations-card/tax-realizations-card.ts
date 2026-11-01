@@ -33,6 +33,6 @@ export class TaxRealizationsCard {
   protected readonly store = inject(TaxesStore);
 
   protected brokerDifference(sale: Realization): boolean {
-    return sale.brokerGainPln !== null && Math.abs(sale.gainPln - sale.brokerGainPln) >= 1;
+    return sale.brokerGainInTaxCurrency !== null && Math.abs(sale.gainInTaxCurrency - sale.brokerGainInTaxCurrency) >= 1;
   }
 }

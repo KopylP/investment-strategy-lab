@@ -1,3 +1,3 @@
 namespace InvestmentLab.Taxation.Contracts;
 
-public sealed record SaleEstimateDto(Guid Key, decimal GainPln, decimal TaxPln, decimal CarriedLossPln = 0m);
+public sealed record SaleEstimateDto(Guid Key, decimal GainInTaxCurrency, decimal TaxChange, decimal CarriedLoss = 0m);

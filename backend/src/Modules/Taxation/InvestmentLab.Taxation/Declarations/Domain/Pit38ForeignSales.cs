@@ -20,7 +20,7 @@ public sealed class Pit38ForeignSales(IReadOnlyList<DeclarationAccount> withoutP
         var byCountry = _sales
             .GroupBy(sale => countryOf(sale.InstrumentId))
             .Where(group => IsCountry(group.Key))
-            .Select(group => (Code: group.Key!, Income: group.Sum(sale => sale.GainPln)))
+            .Select(group => (Code: group.Key!, Income: group.Sum(sale => sale.GainInTaxCurrency)))
             .Where(country => country.Income > 0m)
             .OrderBy(country => country.Code);
 

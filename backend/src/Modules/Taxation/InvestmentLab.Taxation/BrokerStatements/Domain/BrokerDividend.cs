@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace InvestmentLab.Taxation.BrokerStatements.Domain;
 
 public sealed record BrokerDividend(
@@ -8,5 +10,5 @@ public sealed record BrokerDividend(
     decimal Gross,
     decimal Withheld,
     decimal Net,
-    decimal GrossPln,
-    decimal WithheldPln);
+    [property: JsonPropertyName("grossPln")] decimal GrossInTaxCurrency,
+    [property: JsonPropertyName("withheldPln")] decimal WithheldInTaxCurrency);

@@ -20,7 +20,7 @@ public sealed class Pit38FormTests
         new(Guid.NewGuid(), new DateOnly(2025, 6, 1), instrument, 1m, 0m, 0m, gain, 4m, null, [], [], 0m);
 
     private static DividendIncome Paid(decimal gross, decimal withheld, Guid? instrument = null, bool known = true) =>
-        new(Guid.NewGuid(), new DateOnly(2025, 5, 1), instrument ?? Apple, gross - withheld, gross - withheld, 1m, GrossPln: gross, WithheldPln: withheld, WithholdingKnown: known);
+        new(Guid.NewGuid(), new DateOnly(2025, 5, 1), instrument ?? Apple, gross - withheld, gross - withheld, 1m, GrossInTaxCurrency: gross, WithheldInTaxCurrency: withheld, WithholdingKnown: known);
 
     private static DeclarationAccount Account(string broker, IReadOnlyList<TaxYearSummary> years, IReadOnlyList<Realization>? sales = null,
         IReadOnlyList<DividendIncome>? dividends = null, ITaxPolicy? policy = null, Pit8CAmounts? pit8C = null, string? name = null,

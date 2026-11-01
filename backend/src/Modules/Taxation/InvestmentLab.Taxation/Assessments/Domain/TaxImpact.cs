@@ -1,3 +1,3 @@
 namespace InvestmentLab.Taxation.Assessments.Domain;
 
-public sealed record TaxImpact(decimal GainPln, decimal TaxChangePln, decimal CarriedLossPln);
+public sealed record TaxImpact(decimal GainInTaxCurrency, decimal TaxChange, decimal CarriedLoss);

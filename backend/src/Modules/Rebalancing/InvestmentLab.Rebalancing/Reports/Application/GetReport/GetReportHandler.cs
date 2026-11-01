@@ -82,7 +82,7 @@ public sealed class GetReportHandler(IReportRepository reports, IInstrumentCatal
         Fills: action.Fills,
         SkipReason: action.SkipReason,
         Rejection: action.Rejection,
-        EstimatedGainPln: action.EstimatedGainPln,
-        EstimatedTaxPln: action.EstimatedTaxPln,
-        EstimatedCarriedLossPln: action.EstimatedCarriedLossPln);
+        EstimatedGain: action.EstimatedGain,
+        EstimatedTaxChange: action.EstimatedTaxChange,
+        EstimatedCarriedLoss: action.EstimatedCarriedLoss);
 }

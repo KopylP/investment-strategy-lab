@@ -159,12 +159,12 @@ export class OverviewStore {
   readonly taxError = computed(() =>
     this.taxResource.error() ? toProblemMessage(this.taxResource.error()) : null,
   );
-  readonly allAccountsValuePln = computed(() =>
+  readonly allAccountsValueInTaxCurrency = computed(() =>
     this.totalResource.hasValue() ? (this.totalResource.value()?.value ?? null) : null,
   );
   readonly taxAlert = computed(() => {
     const tax = this.tax();
-    const value = this.allAccountsValuePln();
+    const value = this.allAccountsValueInTaxCurrency();
     if (!tax || tax.alertShare === null || !value) return null;
 
     const limit = value * tax.alertShare;

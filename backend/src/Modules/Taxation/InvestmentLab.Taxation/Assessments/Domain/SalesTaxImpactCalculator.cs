@@ -17,9 +17,9 @@ public static class SalesTaxImpactCalculator
         var after = situation.YearWith(sales);
 
         return new TaxImpact(
-            GainPln: GainOf(sales, after),
-            TaxChangePln: TaxOf(after) - TaxOf(before),
-            CarriedLossPln: CarriedLoss(situation.Policy, before, after));
+            GainInTaxCurrency: GainOf(sales, after),
+            TaxChange: TaxOf(after) - TaxOf(before),
+            CarriedLoss: CarriedLoss(situation.Policy, before, after));
     }
 
     private static decimal GainOf(IReadOnlyList<TaxEvent> sales, TaxYearResult? after)
@@ -27,7 +27,7 @@ public static class SalesTaxImpactCalculator
         var saleIds = sales.Select(sale => sale.TransactionId).ToHashSet();
         var realized = after?.Realizations.Where(realization => saleIds.Contains(realization.SaleTransactionId));
 
-        return realized?.Sum(realization => realization.GainPln) ?? 0m;
+        return realized?.Sum(realization => realization.GainInTaxCurrency) ?? 0m;
     }
 
     private static decimal TaxOf(TaxYearResult? year) => year?.Summary.CapitalTax ?? 0m;

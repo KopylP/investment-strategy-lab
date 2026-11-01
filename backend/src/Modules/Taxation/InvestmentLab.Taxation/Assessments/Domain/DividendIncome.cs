@@ -5,8 +5,8 @@ public sealed record DividendIncome(
     DateOnly ReceivedOn,
     Guid InstrumentId,
     decimal Amount,
-    decimal AmountPln,
+    decimal AmountInTaxCurrency,
     decimal FxRate,
-    decimal GrossPln = 0m,
+    decimal GrossInTaxCurrency = 0m,
 
-    decimal WithheldPln = 0m, string? Currency = null, bool WithholdingKnown = false, Guid AccountId = default);
+    decimal WithheldInTaxCurrency = 0m, string? Currency = null, bool WithholdingKnown = false, Guid AccountId = default);

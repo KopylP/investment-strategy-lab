@@ -149,9 +149,9 @@ function toTaxImpactVm(estimate: TaxEstimateDto | null, actions: ReportActionVm[
   const currency = taxCurrencyOf(estimate);
   const notes = estimate.notes.filter((note) => note.length > 0);
 
-  if (estimate.yearTaxBeforePln === null || estimate.yearTaxBeforePln === undefined) {
+  if (estimate.yearTaxBefore === null || estimate.yearTaxBefore === undefined) {
     return {
-      change: `≈ податок ${formatMoney(estimate.taxPln, currency, 0)}`,
+      change: `≈ податок ${formatMoney(estimate.taxChange, currency, 0)}`,
       yearChange: null,
       carriedLoss: null,
       rowsNote: null,
@@ -159,14 +159,14 @@ function toTaxImpactVm(estimate: TaxEstimateDto | null, actions: ReportActionVm[
     };
   }
 
-  const before = estimate.yearTaxBeforePln;
-  const after = before + estimate.taxPln;
+  const before = estimate.yearTaxBefore;
+  const after = before + estimate.taxChange;
   const salesCount = actions.filter((action) => action.taxLabel !== null).length;
 
   return {
-    change: `≈ податок ${signedTax(estimate.taxPln, currency)}`,
+    change: `≈ податок ${signedTax(estimate.taxChange, currency)}`,
     yearChange: `за ${estimate.year}: ${formatMoney(before, currency, 0)} → ${formatMoney(after, currency, 0)}`,
-    carriedLoss: carriedLossLabel(estimate.carriedLossPln, currency),
+    carriedLoss: carriedLossLabel(estimate.carriedLoss, currency),
     rowsNote: salesCount > 1 ? 'У рядках — вплив, якщо продати лише цю позицію; разом вони можуть давати іншу суму.' : null,
     notes,
   };
@@ -177,22 +177,22 @@ function carriedLossLabel(carriedLoss: number | null, currency: string): string 
 }
 
 function saleTaxLabel(action: ReportActionDto, estimate: TaxEstimateDto | null): string | null {
-  if (action.estimatedTaxPln === null || !estimate?.isTaxed) return null;
+  if (action.estimatedTaxChange === null || !estimate?.isTaxed) return null;
 
   const currency = taxCurrencyOf(estimate);
-  const gain = action.estimatedGainPln ?? 0;
+  const gain = action.estimatedGain ?? 0;
 
-  if (estimate.yearTaxBeforePln === null || estimate.yearTaxBeforePln === undefined) {
-    return `≈ податок ${formatMoney(action.estimatedTaxPln, currency, 0)} (зиск ${formatMoney(gain, currency, 0)})`;
+  if (estimate.yearTaxBefore === null || estimate.yearTaxBefore === undefined) {
+    return `≈ податок ${formatMoney(action.estimatedTaxChange, currency, 0)} (зиск ${formatMoney(gain, currency, 0)})`;
   }
 
   const outcome = gain < 0 ? `збиток ${formatMoney(-gain, currency, 0)}` : `зиск ${formatMoney(gain, currency, 0)}`;
-  const carriedLoss = action.estimatedCarriedLossPln;
+  const carriedLoss = action.estimatedCarriedLoss;
   const details = carriedLoss
     ? `${outcome}, з них ${formatMoney(carriedLoss, currency, 0)} перейде на наступні роки`
     : outcome;
 
-  return `≈ податок ${signedTax(action.estimatedTaxPln, currency)} (${details})`;
+  return `≈ податок ${signedTax(action.estimatedTaxChange, currency)} (${details})`;
 }
 
 function plannedTotals(actions: ReportActionVm[]) {
