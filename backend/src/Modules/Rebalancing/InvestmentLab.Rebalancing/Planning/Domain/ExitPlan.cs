@@ -20,7 +20,7 @@ public sealed record ExitPlan(IReadOnlyList<PlannedOrder> Orders, IReadOnlyList<
                 && closes.TryGetValue(signal.InstrumentId, out var close))
                 orders.Add(ExitOrder(signal, quantity, close));
             else
-                notes.Add($"{labelOf(signal.InstrumentId)}: {signal.Reason}");
+                notes.Add(Message.Of("report.note.signal", new { label = labelOf(signal.InstrumentId), reason = signal.Reason }));
         }
 
         return new ExitPlan(orders, notes);

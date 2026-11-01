@@ -7,6 +7,7 @@ import pytest
 from finance_decisions.helpers import completed_month_closes
 from finance_decisions.strategies.etf_momentum.config import ScannerSettings
 from finance_decisions.strategies.etf_momentum.scanner import scan_etfs
+from finance_decisions.messages import render
 
 
 def _prices(columns: dict, periods: int = 320, start: str = "2024-01-01") -> pd.DataFrame:
@@ -62,7 +63,7 @@ def test_scan_etfs_sharpe_filter_and_hold_buffer() -> None:
     no_positions = scan_etfs(prices, settings)
     assert list(no_positions.eligible.index) == ["AAA", "BBB", "CCC"]
     assert no_positions.table.loc["FFF", "Status"] == "failed"
-    assert "волатильність" in no_positions.table.loc["FFF", "Reason"]
+    assert "волатильність" in render(no_positions.table.loc["FFF", "Reason"])
 
     # DDD is held and ranks 4 <= buffer 4, so it keeps its slot and pushes CCC out.
     with_ddd = scan_etfs(prices, settings, current_positions=["DDD"])
@@ -93,7 +94,7 @@ def test_unavailable_vix_fails_market_check() -> None:
 
     assert result.vix is None
     assert result.market_ok is False
-    assert any("VIX" in reason for reason in result.market_reasons)
+    assert any("VIX" in render(reason) for reason in result.market_reasons)
 
 
 def test_negative_momentum_is_rejected_even_above_ma() -> None:
@@ -129,7 +130,7 @@ def test_stale_ticker_is_excluded() -> None:
     result = scan_etfs(prices, ScannerSettings(top_n=2, lookback_months=3, ma_period=20))
 
     assert result.table.loc["OLD", "Status"] == "failed"
-    assert "застарілі" in result.table.loc["OLD", "Reason"]
+    assert "застарілі" in render(result.table.loc["OLD", "Reason"])
     assert list(result.eligible.index) == ["AAA"]
 
 

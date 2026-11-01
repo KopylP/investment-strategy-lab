@@ -16,6 +16,8 @@ public sealed class StrategyTypeDescriptor
 
     public List<ReportDefinition> Reports { get; private set; }
 
+    public Dictionary<string, string> Messages { get; private set; } = [];
+
     public DateTimeOffset SyncedAt { get; private set; }
 
     private StrategyTypeDescriptor(
@@ -41,7 +43,8 @@ public sealed class StrategyTypeDescriptor
         string parametersSchema,
         string defaultParameters,
         IEnumerable<ReportDefinition> reports,
-        DateTimeOffset syncedAt) =>
+        DateTimeOffset syncedAt,
+        IReadOnlyDictionary<string, string>? messages = null) =>
         new(
             code,
             name,
@@ -53,7 +56,7 @@ public sealed class StrategyTypeDescriptor
             parametersSchema,
             defaultParameters,
             [.. reports],
-            syncedAt);
+            syncedAt) { Messages = messages is null ? [] : new Dictionary<string, string>(messages) };
 
     public void RefreshFrom(StrategyTypeDescriptor published)
     {
@@ -66,6 +69,7 @@ public sealed class StrategyTypeDescriptor
         ParametersSchema = published.ParametersSchema;
         DefaultParameters = published.DefaultParameters;
         Reports = [.. published.Reports];
+        Messages = new Dictionary<string, string>(published.Messages);
         SyncedAt = published.SyncedAt;
     }
 }

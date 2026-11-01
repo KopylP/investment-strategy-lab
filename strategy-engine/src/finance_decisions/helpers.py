@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import pandas as pd
 
+from finance_decisions.messages import msg, t
+
 
 def latest_value(series: pd.Series) -> float | None:
     """Return the last non-NaN value in a Series, or None if all NaN/empty."""
@@ -115,20 +117,15 @@ def is_na(value: object) -> bool:
         return False
 
 
-_UA_MONTHS = ["січень", "лютий", "березень", "квітень", "травень", "червень", "липень", "серпень", "вересень", "жовтень", "листопад", "грудень"]
-_UA_MONTHS_GENITIVE = ["січня", "лютого", "березня", "квітня", "травня", "червня", "липня", "серпня", "вересня", "жовтня", "листопада", "грудня"]
-_UA_WEEKDAYS = ["понеділок", "вівторок", "середа", "четвер", "п'ятниця", "субота", "неділя"]
-
-
 def ua_month(value) -> str:
-    """'листопад 2026'"""
-    return f"{_UA_MONTHS[value.month - 1]} {value.year}"
+    return t("engine.month_year", month=msg(f"engine.month.{value.month}"), year=value.year)
 
 
 def ua_day(value, weekday: bool = False) -> str:
-    """'3 листопада' or 'понеділок, 3 листопада'"""
-    text = f"{value.day} {_UA_MONTHS_GENITIVE[value.month - 1]}"
-    return f"{_UA_WEEKDAYS[value.weekday()]}, {text}" if weekday else text
+    month = msg(f"engine.month_of.{value.month}")
+    if weekday:
+        return t("engine.weekday_day", weekday=msg(f"engine.weekday.{value.weekday()}"), day=value.day, month=month)
+    return t("engine.day", day=value.day, month=month)
 
 
 def next_weekday(value):

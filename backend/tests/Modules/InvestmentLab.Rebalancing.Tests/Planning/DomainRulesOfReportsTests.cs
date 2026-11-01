@@ -60,6 +60,6 @@ public sealed class DomainRulesOfReportsTests
         var plan = ExitPlan.Of(signals, held, closes, id => id == Etf ? "ETF" : "OTHER");
 
         plan.Orders.ShouldHaveSingleItem().ShouldBe(new PlannedOrder(OrderKind.Exit, Etf, 2m, 10m, 20m, Message.Of("report.reason.exit_signal", new { reason = "стоп" })));
-        plan.Notes.ShouldBe(["OTHER: немає ціни", "ETF: увага"]);
+        plan.Notes.Select(note => InvestmentLab.BuildingBlocks.Localization.MessageLocalizer.Default.Render(note)).ShouldBe(["OTHER: немає ціни", "ETF: увага"]);
     }
 }

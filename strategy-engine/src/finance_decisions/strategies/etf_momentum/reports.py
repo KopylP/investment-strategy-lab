@@ -8,21 +8,21 @@ from typing import Any
 import pandas as pd
 
 from finance_decisions.helpers import money, next_weekday, ua_day, ua_month
+from finance_decisions.messages import render, render_deep, t
 from finance_decisions.reports import write_html_report, write_json_report, write_text_report
 from .plan import KIND_BUY, KIND_PARK, MonthlyPlan
-from .risk import STATUS_LABELS, RiskReport, format_risk_report
+from .risk import RiskReport, format_risk_report, status_label
 from .scanner import ScanResult
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 
-ACTION_LABELS = {"sell": "Продати", "buy": "Купити"}
-SCAN_STATUS_LABELS = {
-    "selected": "Обрано",
-    "buffer": "Утримуємо",
-    "group_blocked": "Дубль групи",
-    "reserve": "Резерв",
-    "failed": "Не проходить",
-}
+
+def _action_label(action: str) -> str:
+    return t(f"etf_momentum.cli.action.{action}")
+
+
+def _scan_status_label(status: str) -> str:
+    return t(f"etf_momentum.cli.scan_status.{status}")
 
 
 # ---------------------------------------------------------------- monthly scanner
@@ -31,7 +31,7 @@ SCAN_STATUS_LABELS = {
 def scanner_report_payload(result: ScanResult, plan: MonthlyPlan, current_positions: list[str]) -> dict[str, Any]:
     execute_on = next_weekday(result.as_of)
     settings = asdict(result.settings) if result.settings else {}
-    return {
+    return render_deep({
         "type": "monthly_scanner",
         "as_of": result.as_of,
         "plan_month": ua_month(execute_on),
@@ -52,75 +52,92 @@ def scanner_report_payload(result: ScanResult, plan: MonthlyPlan, current_positi
         "plan": asdict(plan),
         "currency": plan.currency,
         "positions_snippet": positions_snippet(plan, execute_on),
-    }
+    })
 
 
 def format_scan_report(result: ScanResult, plan: MonthlyPlan) -> str:
     """Full plain-text plan: the same content as the HTML report, without the ranking details."""
     execute_on = next_weekday(result.as_of)
     lines = [
-        f"План інвестицій на {ua_month(execute_on)}",
-        f"Дані на {result.as_of:%d.%m.%Y}. Виконати: {ua_day(execute_on, weekday=True)}.",
+        t("etf_momentum.cli.plan_title", month=ua_month(execute_on)),
+        t("etf_momentum.cli.data_as_of", date=f"{result.as_of:%d.%m.%Y}", day=ua_day(execute_on, weekday=True)),
         "",
         _market_headline(plan),
     ]
-    lines.extend(f"  - {reason}" for reason in result.market_reasons)
+    lines.extend(f"  - {render(reason)}" for reason in result.market_reasons)
 
-    lines.extend(["", "Що зробити (по черзі):"])
-    lines.extend(_order_lines(plan, detailed=True) or ["  Угод цього місяця немає."])
+    lines.extend(["", t("etf_momentum.cli.what_to_do")])
+    lines.extend(_order_lines(plan, detailed=True) or [t("etf_momentum.cli.no_trades_indented")])
 
-    lines.extend(["", "Портфель після угод:"])
+    lines.extend(["", t("etf_momentum.cli.portfolio_after")])
     for row in plan.allocation:
         if row.value_after <= 0 and row.value_before <= 0:
             continue
-        target = f", ціль {row.target_weight:.0%}" if row.target_weight else ""
+        target = t("etf_momentum.cli.target", weight=f"{row.target_weight:.0%}") if row.target_weight else ""
         lines.append(f"  {row.ticker:<9} {row.weight_before:>4.0%} -> {row.weight_after:>4.0%}{target}  {money(row.value_after, plan.currency)}")
 
     if plan.notes:
-        lines.extend(["", "Примітки:"])
-        lines.extend(f"  - {note}" for note in plan.notes)
+        lines.extend(["", t("etf_momentum.cli.notes")])
+        lines.extend(f"  - {render(note)}" for note in plan.notes)
 
-    lines.extend(["", "Рейтинг (пройшли фільтри):"])
+    lines.extend(["", t("etf_momentum.cli.ranking")])
     ranked = result.table[result.table["Rank"].notna()]
     if ranked.empty:
-        lines.append("  Жоден ETF не пройшов фільтри.")
+        lines.append(t("etf_momentum.cli.nothing_passed"))
     for ticker, row in ranked.iterrows():
         mark = "*" if ticker in result.eligible.index else " "
-        lines.append(f" {mark}{int(row['Rank']):>2}. {ticker:<9} моментум {row['Momentum']:+.1%}  {row['Reason']}")
-    lines.extend(["", "Після угод оновіть positions.json фактичними цінами виконання."])
+        lines.append(
+            t(
+                "etf_momentum.cli.rank_row",
+                mark=mark,
+                rank=f"{int(row['Rank']):>2}",
+                ticker=f"{ticker:<9}",
+                momentum=f"{row['Momentum']:+.1%}",
+                reason=row["Reason"],
+            )
+        )
+    lines.extend(["", t("etf_momentum.cli.update_positions")])
     return "\n".join(lines)
 
 
 def format_monthly_telegram(result: ScanResult, plan: MonthlyPlan) -> str:
     execute_on = next_weekday(result.as_of)
     lines = [
-        f"План на {ua_month(execute_on)} (дані на {result.as_of:%d.%m.%Y})",
+        t("etf_momentum.cli.short_title", month=ua_month(execute_on), date=f"{result.as_of:%d.%m.%Y}"),
         _market_headline(plan),
         "",
-        f"Що зробити, {ua_day(execute_on, weekday=True)}:",
+        t("etf_momentum.cli.what_to_do_on", day=ua_day(execute_on, weekday=True)),
     ]
-    lines.extend(_order_lines(plan, detailed=False) or ["Угод цього місяця немає."])
+    lines.extend(_order_lines(plan, detailed=False) or [t("etf_momentum.cli.no_trades")])
     if plan.notes:
         lines.append("")
-        lines.extend(f"• {note}" for note in plan.notes)
-    lines.extend(["", "Деталі та пояснення: HTML-звіт у GitHub Actions."])
+        lines.extend(f"• {render(note)}" for note in plan.notes)
+    lines.extend(["", t("etf_momentum.cli.details_link")])
     return "\n".join(lines)
 
 
 def _market_headline(plan: MonthlyPlan) -> str:
     invest = money(plan.contribution * plan.invest_pct, plan.currency)
     if plan.market_ok:
-        return f"Ринок у нормі: інвестуємо весь внесок ({invest})."
-    return f"Ринок слабкий: інвестуємо {plan.invest_pct:.0%} внеску ({invest}), решту паркуємо."
+        return t("etf_momentum.cli.market_ok", invested=invest)
+    return t("etf_momentum.cli.market_weak", share=f"{plan.invest_pct:.0%}", invested=invest)
 
 
 def _order_lines(plan: MonthlyPlan, detailed: bool) -> list[str]:
     lines = []
     for index, order in enumerate(plan.orders, 1):
         shares = f"{order.shares:.4f}".rstrip("0").rstrip(".")
-        line = f"{index}. {ACTION_LABELS[order.action]} {order.ticker}: {money(order.amount, plan.currency)} (≈ {shares} шт.)"
+        line = t(
+            "etf_momentum.cli.order",
+            index=index,
+            action=_action_label(order.action),
+            ticker=order.ticker,
+            amount=money(order.amount, plan.currency),
+            shares=shares,
+        )
         if detailed:
-            line += f" по {money(order.price, plan.currency)}. {order.name}. {order.reason[:1].upper()}{order.reason[1:]}."
+            reason = render(order.reason)
+            line += t("etf_momentum.cli.order_detail", price=money(order.price, plan.currency), name=order.name, reason=f"{reason[:1].upper()}{reason[1:]}")
         lines.append(line)
     return lines
 
@@ -148,7 +165,7 @@ def write_scanner_outputs(report_dir: Path, result: ScanResult, plan: MonthlyPla
     write_json_report(report_dir / "report.json", payload)
     write_html_report(
         path=report_dir / "report.html",
-        title=f"План на {payload['plan_month']}",
+        title=t("etf_momentum.cli.plan_html_title", month=payload["plan_month"]),
         body_text=text,
         payload=payload,
         template_name="monthly_scanner.html",
@@ -162,14 +179,14 @@ def write_scanner_outputs(report_dir: Path, result: ScanResult, plan: MonthlyPla
 
 
 def risk_report_payload(report: RiskReport) -> dict[str, Any]:
-    return {
+    return render_deep({
         "type": "weekly_risk_monitor",
         "report": asdict(report),
         "status": report.status,
         "alerts": report.alerts,
         "actions": report.actions,
         "week": report.as_of.isocalendar()[1],
-    }
+    })
 
 
 def format_weekly_telegram(report: RiskReport) -> str:
@@ -183,7 +200,7 @@ def write_risk_outputs(report_dir: Path, report: RiskReport) -> str:
     write_json_report(report_dir / "report.json", payload)
     write_html_report(
         path=report_dir / "report.html",
-        title=f"Перевірка ризиків {report.as_of:%d.%m.%Y}",
+        title=t("etf_momentum.cli.risk_html_title", date=f"{report.as_of:%d.%m.%Y}"),
         body_text=text,
         payload=payload,
         template_name="weekly_risk_monitor.html",
@@ -198,9 +215,9 @@ def write_risk_outputs(report_dir: Path, report: RiskReport) -> str:
 
 def _filters() -> dict[str, Any]:
     return {
-        "status_label": lambda status: STATUS_LABELS.get(str(status), str(status)),
-        "action_label": lambda action: ACTION_LABELS.get(str(action), str(action)),
-        "scan_status": lambda status: SCAN_STATUS_LABELS.get(str(status), str(status)),
+        "status_label": lambda status: status_label(str(status)),
+        "action_label": lambda action: _action_label(str(action)),
+        "scan_status": lambda status: _scan_status_label(str(status)),
         "shares": lambda value: f"{float(value):.4f}".rstrip("0").rstrip("."),
         "pct0": _pct0,
         "sentence": lambda text: f"{str(text)[:1].upper()}{str(text)[1:]}" if text else "",
@@ -264,26 +281,26 @@ def backtest_payload(result) -> dict[str, Any]:
 def format_backtest_report(result) -> str:
     s, b = result.metrics["strategy"], result.metrics["benchmark"]
     lines = [
-        f"Бектест ETF Momentum: {result.start:%d.%m.%Y} - {result.end:%d.%m.%Y}",
-        f"Внесок {money(result.contribution, 'EUR')} щомісяця, порівняння з {result.benchmark} (ті самі внески).",
+        t("etf_momentum.cli.backtest_title", start=f"{result.start:%d.%m.%Y}", end=f"{result.end:%d.%m.%Y}"),
+        t("etf_momentum.cli.backtest_contribution", amount=money(result.contribution, "EUR"), benchmark=result.benchmark),
         "",
-        f"{'':<22}{'Стратегія':>12}{result.benchmark:>12}",
-        f"{'Дохідність на рік':<22}{s['cagr']:>12.1%}{b['cagr']:>12.1%}",
-        f"{'Волатильність':<22}{s['volatility']:>12.1%}{b['volatility']:>12.1%}",
+        f"{'':<22}{t('etf_momentum.cli.backtest_strategy'):>12}{result.benchmark:>12}",
+        f"{t('etf_momentum.cli.backtest_cagr'):<22}{s['cagr']:>12.1%}{b['cagr']:>12.1%}",
+        f"{t('etf_momentum.cli.backtest_volatility'):<22}{s['volatility']:>12.1%}{b['volatility']:>12.1%}",
         f"{'Sharpe':<22}{s['sharpe']:>12.2f}{b['sharpe']:>12.2f}",
-        f"{'Найбільша просадка':<22}{s['max_drawdown']:>12.1%}{b['max_drawdown']:>12.1%}",
-        f"{'Підсумкова сума':<22}{s['final_value']:>12,.0f}{b['final_value']:>12,.0f}",
-        f"{'Вкладено':<22}{s['contributed']:>12,.0f}{b['contributed']:>12,.0f}",
+        f"{t('etf_momentum.cli.backtest_drawdown'):<22}{s['max_drawdown']:>12.1%}{b['max_drawdown']:>12.1%}",
+        f"{t('etf_momentum.cli.backtest_final'):<22}{s['final_value']:>12,.0f}{b['final_value']:>12,.0f}",
+        f"{t('etf_momentum.cli.backtest_contributed'):<22}{s['contributed']:>12,.0f}{b['contributed']:>12,.0f}",
         "",
-        f"Угод: {result.trades}, витрати на угоди: {money(result.costs, 'EUR')}, продажів за ризик-монітором: {result.risk_exits}.",
-        f"Місяців із ринком у нормі: {result.months_market_ok} з {result.months}.",
+        t("etf_momentum.cli.backtest_trades", trades=result.trades, costs=money(result.costs, "EUR"), exits=result.risk_exits),
+        t("etf_momentum.cli.backtest_months", ok=result.months_market_ok, months=result.months),
         "",
-        "По роках (стратегія / бенчмарк):",
+        t("etf_momentum.cli.backtest_by_year"),
     ]
     lines.extend(
         f"  {row['year']}{'*' if row['partial'] else ' '} {row['strategy']:+7.1%} / {row['benchmark']:+7.1%}" for row in result.yearly
     )
-    lines.extend(["", "* неповний рік. Список ETF сьогоднішній, податки не враховано."])
+    lines.extend(["", t("etf_momentum.cli.backtest_footnote")])
     return "\n".join(lines)
 
 
@@ -294,7 +311,7 @@ def write_backtest_outputs(report_dir: Path, result) -> str:
     write_json_report(report_dir / "report.json", {k: v for k, v in payload.items() if not k.endswith("_chart")})
     write_html_report(
         path=report_dir / "report.html",
-        title="Бектест стратегії",
+        title=t("etf_momentum.cli.backtest_html_title"),
         body_text=text,
         payload=payload,
         template_name="backtest.html",

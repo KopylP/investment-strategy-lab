@@ -97,6 +97,11 @@ namespace InvestmentLab.Strategies.Shared.Infrastructure.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("engine_version");
 
+                    b.Property<string>("Messages")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("messages");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)

@@ -7,6 +7,7 @@ invest); turning them into orders is the backend's job (the port of plan.py).
 from __future__ import annotations
 
 from importlib.metadata import version
+from pathlib import Path
 
 import pandas as pd
 
@@ -32,6 +33,7 @@ from finance_decisions.api.contracts import (
     Weekday,
 )
 from finance_decisions.helpers import holdings_by_value, is_na, latest_value
+from finance_decisions.messages import catalog_of, msg
 from finance_decisions.models import Position
 from finance_decisions.strategies.errors import ContextError
 from .parameters import EtfMomentumParameters
@@ -39,20 +41,21 @@ from .risk import analyze_portfolio_risk
 from .scanner import MARKET_TICKERS, STATUS_FAILED, scan_etfs
 
 STRATEGY_CODE = "etf-momentum"
+MESSAGES = catalog_of(Path(__file__).resolve().parent)
 
 # The reports the service makes for a sub-portfolio with this strategy, at these times unless the user sets their own for the account.
 REPORTS = (
     ReportDefinition(
         code="rebalance",
-        name="Ребаланс",
-        description="Внесок, купівлі й продажі за рішенням стратегії.",
+        name=msg("etf_momentum.report.rebalance.name"),
+        description=msg("etf_momentum.report.rebalance.description"),
         mode=ReportMode.REBALANCE,
         schedule=ReportSchedule(frequency=ReportFrequency.MONTHLY, day=1, time="20:00"),
     ),
     ReportDefinition(
         code="risk-review",
-        name="Перевірка ризику",
-        description="Стоп-лоси й сигнали виходу між ребалансами; продаж лише за сигналом.",
+        name=msg("etf_momentum.report.risk_review.name"),
+        description=msg("etf_momentum.report.risk_review.description"),
         mode=ReportMode.RISK_REVIEW,
         schedule=ReportSchedule(frequency=ReportFrequency.WEEKLY, weekday=Weekday.SUNDAY, time="19:00"),
     ),
@@ -124,7 +127,7 @@ def decide(context: EvaluationContext, parameters: EtfMomentumParameters) -> Str
         ),
         rationale=Rationale(
             summary=_summary(scan, targets),
-            title="Чому саме ці ETF",
+            title=msg("etf_momentum.rationale.title"),
             instrument_label="ETF",
             columns=_columns(settings.lookback_months),
             risk_free_rate=scan.risk_free_rate,
@@ -212,14 +215,14 @@ def _signals(report) -> list[RiskSignal]:
 def _columns(lookback_months: int) -> list[RationaleColumn]:
     """The "why" table of the report: the scanner's metrics and filters, in the order a reader checks them."""
     return [
-        RationaleColumn(id="momentum", label="Моментум", format=ColumnFormat.SIGNED_PERCENT, compact=True,
-                        hint=f"Дохідність за {lookback_months} міс: за нею ранжуються ETF."),
-        RationaleColumn(id="return1m", label="1 міс", format=ColumnFormat.SIGNED_PERCENT),
-        RationaleColumn(id="return3m", label="3 міс", format=ColumnFormat.SIGNED_PERCENT),
-        RationaleColumn(id="return12m", label="12 міс", format=ColumnFormat.SIGNED_PERCENT),
-        RationaleColumn(id="volatility", label="Волатильність", format=ColumnFormat.PERCENT),
+        RationaleColumn(id="momentum", label=msg("etf_momentum.column.momentum"), format=ColumnFormat.SIGNED_PERCENT, compact=True,
+                        hint=msg("etf_momentum.column.momentum_hint", months=lookback_months)),
+        RationaleColumn(id="return1m", label=msg("etf_momentum.column.return1m"), format=ColumnFormat.SIGNED_PERCENT),
+        RationaleColumn(id="return3m", label=msg("etf_momentum.column.return3m"), format=ColumnFormat.SIGNED_PERCENT),
+        RationaleColumn(id="return12m", label=msg("etf_momentum.column.return12m"), format=ColumnFormat.SIGNED_PERCENT),
+        RationaleColumn(id="volatility", label=msg("etf_momentum.column.volatility"), format=ColumnFormat.PERCENT),
         RationaleColumn(id="ma200", label="MA200", format=ColumnFormat.TREND, compact=True,
-                        true_hint="Ціна вище MA200", false_hint="Ціна нижче MA200"),
+                        true_hint=msg("etf_momentum.column.ma200_above"), false_hint=msg("etf_momentum.column.ma200_below")),
     ]
 
 
@@ -260,8 +263,8 @@ def _score(key: str, row: pd.Series) -> InstrumentScore:
 
 
 def _summary(scan, targets: list[TargetWeight]) -> str:
-    market = "ринок у нормі" if scan.market_ok else "ринок слабкий"
+    market = msg("etf_momentum.summary.market_ok") if scan.market_ok else msg("etf_momentum.summary.market_weak")
     if not targets:
-        return f"Жоден ETF не пройшов фільтри; {market}."
+        return msg("etf_momentum.summary.nothing", market=market)
     names = ", ".join(scan.table.loc[target.key, "Name"] for target in targets)
-    return f"Обрано {len(targets)}: {names}; {market}."
+    return msg("etf_momentum.summary.picked", count=len(targets), names=names, market=market)

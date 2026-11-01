@@ -15,15 +15,8 @@ from finance_decisions.helpers import (
     safe_division,
 )
 from finance_decisions.models import Position, aggregate_positions
+from finance_decisions.messages import msg, render, t
 from .config import RiskSettings
-
-STATUS_LABELS = {
-    "green": "у нормі",
-    "yellow": "увага",
-    "red": "продати",
-    "unknown": "немає даних",
-    "cash": "кеш",
-}
 
 MAX_STALE_DAYS = 5
 
@@ -130,26 +123,23 @@ def analyze_portfolio_risk(
     actions: list[str] = []
 
     if spy_price is None or spy_ma is None:
-        market_alerts.append("Немає свіжих даних SPY: тренд ринку перевірити неможливо.")
+        market_alerts.append(msg("etf_momentum.risk.spy_missing"))
     elif not spy_above_ma:
-        market_alerts.append(
-            f"SPY нижче 200-денної середньої ({spy_price:.2f} проти {spy_ma:.2f}): ринок слабкий. "
-            "Наступний місячний план інвестує лише частину внеску; примусово нічого не продаємо."
-        )
+        market_alerts.append(msg("etf_momentum.risk.spy_below", price=f"{spy_price:.2f}", average=f"{spy_ma:.2f}"))
 
     high_stress = False
     if vix is None:
-        market_alerts.append("Немає свіжих даних VIX: перевірте рівень стресу ринку вручну.")
+        market_alerts.append(msg("etf_momentum.risk.vix_missing"))
     elif vix > settings.vix_exit:
         high_stress = True
-        market_alerts.append(f"VIX {vix:.1f} вище {settings.vix_exit:.0f}: високий стрес. Позиції з попередженнями продаємо вже зараз.")
+        market_alerts.append(msg("etf_momentum.risk.vix_exit", vix=f"{vix:.1f}", limit=f"{settings.vix_exit:.0f}"))
     elif vix > settings.vix_warn:
-        market_alerts.append(f"VIX {vix:.1f} вище {settings.vix_warn:.0f}: волатильність підвищена, будьте уважні.")
+        market_alerts.append(msg("etf_momentum.risk.vix_warn", vix=f"{vix:.1f}", limit=f"{settings.vix_warn:.0f}"))
 
     aggregated = aggregate_positions(positions)
     currencies = {position.currency for position in aggregated}
     report_currency = currencies.pop() if len(currencies) == 1 else ("USD" if not currencies else "MIXED")
-    parking = cash_etf or "кеш"
+    parking = cash_etf or msg("etf_momentum.risk.parking_cash")
 
     risks: list[PositionRisk] = []
     total_value = cash
@@ -161,12 +151,12 @@ def analyze_portfolio_risk(
             total_cost += position.entry_price * position.shares
         if risk.status == "red" or (high_stress and risk.status == "yellow"):
             reason = risk.alerts[0] if risk.alerts else ""
-            action = f"Продати {position.ticker} повністю (≈ {money(risk.value, position.currency)}), гроші перевести в {parking}. Причина: {reason}"
+            action = msg("etf_momentum.risk.action_sell", ticker=position.ticker, value=money(risk.value, position.currency), parking=parking, reason=reason)
             risk = _replace_actions(risk, [action], sell=True)
         elif risk.status == "yellow" and risk.exit_price is not None:
             risk = _replace_actions(
                 risk,
-                [f"Нічого не продавати. Стежити за {position.ticker}: вихід, якщо ціна закриття опуститься нижче {money(risk.exit_price, position.currency)}."],
+                [msg("etf_momentum.risk.action_watch", ticker=position.ticker, price=money(risk.exit_price, position.currency))],
             )
         actions.extend(risk.actions)
         risks.append(risk)
@@ -177,10 +167,12 @@ def analyze_portfolio_risk(
     portfolio_alerts: list[str] = []
     if drawdown is not None:
         if drawdown <= settings.portfolio_exit:
-            portfolio_alerts.append(f"Портфель на {-drawdown:.1%} нижче свого піку: досягнуто ліміт {settings.portfolio_exit:.0%}.")
-            actions.append(f"Продати всі позиції й перевести гроші в {parking}. Повертатися в ринок за наступним місячним планом.")
+            portfolio_alerts.append(msg("etf_momentum.risk.portfolio_exit", drawdown=f"{-drawdown:.1%}", limit=f"{settings.portfolio_exit:.0%}"))
+            actions.append(msg("etf_momentum.risk.action_sell_all", parking=parking))
         elif drawdown <= settings.portfolio_warn:
-            portfolio_alerts.append(f"Портфель на {-drawdown:.1%} нижче свого піку (попередження при {settings.portfolio_warn:.0%}, вихід при {settings.portfolio_exit:.0%}).")
+            portfolio_alerts.append(
+                msg("etf_momentum.risk.portfolio_warn", drawdown=f"{-drawdown:.1%}", warn=f"{settings.portfolio_warn:.0%}", limit=f"{settings.portfolio_exit:.0%}")
+            )
 
     return RiskReport(
         as_of=as_of.date(),
@@ -252,22 +244,22 @@ def _position_risk(
             drawdown_from_high=0.0,
             above_ma=False,
             currency=position.currency,
-            alerts=[f"{position.ticker}: {message}"],
-            actions=[f"Перевірити {position.ticker} вручну: {message}"],
+            alerts=[msg("etf_momentum.risk.alert", ticker=position.ticker, message=message)],
+            actions=[msg("etf_momentum.risk.action_check", ticker=position.ticker, message=message)],
             name=name,
             shares=position.shares,
             entry_price=position.entry_price,
         )
 
     if position.ticker not in prices.columns:
-        return unknown("ринкові дані недоступні.")
+        return unknown(msg("etf_momentum.risk.no_market_data"))
     series = prices[position.ticker].dropna()
     current_price = latest_value(series)
     if current_price is None:
-        return unknown("ринкові дані недоступні.")
+        return unknown(msg("etf_momentum.risk.no_market_data"))
     last = last_valid_date(series)
     if (as_of - last).days > MAX_STALE_DAYS:
-        return unknown(f"остання ціна від {last:%d.%m.%Y}, дані застарілі.")
+        return unknown(msg("etf_momentum.risk.stale", date=f"{last:%d.%m.%Y}"))
 
     value = current_price * position.shares
     pnl_pct = safe_division(current_price, position.entry_price) - 1
@@ -303,9 +295,9 @@ def _position_risk(
     ma_exit_price = moving_average * (1 - settings.ma_exit_band) if moving_average is not None else None
     trail_exit_price = trail_high * (1 + exit_threshold) if trail_high else None
     levels = {
-        "стоп-лосс від ціни входу": stop_price,
-        f"MA200 мінус {settings.ma_exit_band:.0%}": ma_exit_price,
-        "просадка від максимуму": trail_exit_price,
+        msg("etf_momentum.risk.rule_stop"): stop_price,
+        msg("etf_momentum.risk.rule_ma", band=f"{settings.ma_exit_band:.0%}"): ma_exit_price,
+        msg("etf_momentum.risk.rule_trail"): trail_exit_price,
     }
     exit_rule, exit_price = max(((rule, level) for rule, level in levels.items() if level is not None), key=lambda item: item[1])
 
@@ -313,27 +305,27 @@ def _position_risk(
     status = "green"
     if current_price <= stop_price:
         status = "red"
-        alerts.append(f"{position.ticker}: спрацював стоп-лосс ({pnl_pct:+.1%} при ліміті {stop_threshold:.1%}).")
+        alerts.append(msg("etf_momentum.risk.alert_stop", ticker=position.ticker, pnl=f"{pnl_pct:+.1%}", limit=f"{stop_threshold:.1%}"))
     if ma_exit_price is not None and current_price < ma_exit_price:
         status = "red"
-        alerts.append(f"{position.ticker}: ціна більш ніж на {settings.ma_exit_band:.0%} нижче MA200 ({money(moving_average, position.currency)}).")
+        alerts.append(msg("etf_momentum.risk.alert_ma", ticker=position.ticker, band=f"{settings.ma_exit_band:.0%}", average=money(moving_average, position.currency)))
     if drawdown <= exit_threshold:
         status = "red"
-        alerts.append(f"{position.ticker}: просадка від максимуму {drawdown:.1%} при ліміті {exit_threshold:.1%}.")
+        alerts.append(msg("etf_momentum.risk.alert_trail", ticker=position.ticker, drawdown=f"{drawdown:.1%}", limit=f"{exit_threshold:.1%}"))
 
     if status != "red":
         if moving_average is None:
             status = "yellow"
-            alerts.append(f"{position.ticker}: замало історії для MA200.")
+            alerts.append(msg("etf_momentum.risk.alert_short_history", ticker=position.ticker))
         elif not above_ma:
             status = "yellow"
-            alerts.append(f"{position.ticker}: ціна нижче MA200, але в межах допуску {settings.ma_exit_band:.0%}.")
+            alerts.append(msg("etf_momentum.risk.alert_below_ma", ticker=position.ticker, band=f"{settings.ma_exit_band:.0%}"))
         if drawdown <= warn_threshold:
             status = "yellow"
-            alerts.append(f"{position.ticker}: просадка {drawdown:.1%} (попередження при {warn_threshold:.1%}).")
+            alerts.append(msg("etf_momentum.risk.alert_drawdown", ticker=position.ticker, drawdown=f"{drawdown:.1%}", warn=f"{warn_threshold:.1%}"))
         if pnl_pct < settings.small_loss_warn:
             status = "yellow"
-            alerts.append(f"{position.ticker}: збиток {pnl_pct:+.1%} від ціни входу.")
+            alerts.append(msg("etf_momentum.risk.alert_loss", ticker=position.ticker, pnl=f"{pnl_pct:+.1%}"))
 
     return PositionRisk(
         status=status,
@@ -406,47 +398,53 @@ def _latest_fresh(prices: pd.DataFrame, ticker: str, as_of: pd.Timestamp) -> flo
     return latest_value(prices[ticker])
 
 
+def status_label(status: str) -> str:
+    return render(f"@etf_momentum.status.{status}").removeprefix("@etf_momentum.status.")
+
+
 def format_risk_report(report: RiskReport) -> str:
-    verdict = {
-        "ok": "Дій не потрібно. Усі позиції в межах правил.",
-        "watch": "Продавати нічого не треба, але є попередження.",
-        "act": "Потрібна дія: виконайте кроки нижче.",
-    }[report.status]
-    lines = [f"Тижнева перевірка ризиків | дані на {report.as_of:%d.%m.%Y}", "", verdict]
+    verdict = t(f"etf_momentum.cli.risk.verdict_{report.status}")
+    lines = [t("etf_momentum.cli.risk.title", date=f"{report.as_of:%d.%m.%Y}"), "", verdict]
 
     if report.actions:
-        lines.extend(["", "Що зробити:"])
-        lines.extend(f"{index}. {action}" for index, action in enumerate(report.actions, 1))
+        lines.extend(["", t("etf_momentum.cli.risk.what_to_do")])
+        lines.extend(f"{index}. {render(action)}" for index, action in enumerate(report.actions, 1))
 
-    lines.extend(["", "Позиції:"])
+    lines.extend(["", t("etf_momentum.cli.risk.positions")])
     if not report.position_risks:
-        lines.append("- Позицій немає.")
+        lines.append(t("etf_momentum.cli.risk.no_positions"))
     for risk in report.position_risks:
-        label = STATUS_LABELS.get(risk.status, risk.status)
+        label = status_label(risk.status)
         if risk.status in ("unknown",):
             lines.append(f"- {risk.ticker}: {label}")
             continue
         line = f"- {risk.ticker} [{label}]: {money(risk.current_price, risk.currency)}, P&L {risk.pnl_pct:+.1%}"
         if risk.exit_price is not None:
-            line += f", вихід нижче {money(risk.exit_price, risk.currency)} ({risk.exit_distance:+.1%})"
+            line += t("etf_momentum.cli.risk.exit_below", price=money(risk.exit_price, risk.currency), distance=f"{risk.exit_distance:+.1%}")
         lines.append(line)
 
     if report.portfolio_pnl is not None:
         lines.extend(
             [
                 "",
-                f"Портфель: {money(report.portfolio_value, report.currency, decimals=0)} "
-                f"(вкладено {money(report.portfolio_cost, report.currency, decimals=0)}, P&L {report.portfolio_pnl:+.1%})",
+                t(
+                    "etf_momentum.cli.risk.portfolio",
+                    value=money(report.portfolio_value, report.currency, decimals=0),
+                    cost=money(report.portfolio_cost, report.currency, decimals=0),
+                    pnl=f"{report.portfolio_pnl:+.1%}",
+                ),
             ]
         )
         if report.portfolio_drawdown is not None:
-            lines.append(f"Від піку: {report.portfolio_drawdown:+.1%}")
+            lines.append(t("etf_momentum.cli.risk.from_peak", drawdown=f"{report.portfolio_drawdown:+.1%}"))
 
-    trend = "немає даних" if report.spy_price is None else ("вище MA200" if report.spy_above_ma else "нижче MA200")
-    vix = f"{report.vix:.1f}" if report.vix is not None else "немає даних"
-    lines.extend(["", f"Ринок: SPY {trend}, VIX {vix}"])
+    no_data = t("etf_momentum.cli.risk.no_data")
+    above_or_below = t("etf_momentum.cli.risk.above_ma") if report.spy_above_ma else t("etf_momentum.cli.risk.below_ma")
+    trend = no_data if report.spy_price is None else above_or_below
+    vix = f"{report.vix:.1f}" if report.vix is not None else no_data
+    lines.extend(["", t("etf_momentum.cli.risk.market", trend=trend, vix=vix)])
 
     if report.alerts:
-        lines.extend(["", f"Сигнали ({len(report.alerts)}):"])
-        lines.extend(f"- {alert}" for alert in report.alerts)
+        lines.extend(["", t("etf_momentum.cli.risk.signals", count=len(report.alerts))])
+        lines.extend(f"- {render(alert)}" for alert in report.alerts)
     return "\n".join(lines)

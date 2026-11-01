@@ -51,7 +51,7 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
         var report = await ReportAsync(client, await RequestReportAsync(client, account.Id, new { asOf }, ct), ct);
         report.Summary.Status.ShouldBe("New");
         report.Summary.Trigger.ShouldBe("OnDemand");
-        (report.Summary.Code, report.Summary.Title).ShouldBe(("rebalance", "Ребаланс"));
+        (report.Summary.Code, report.Summary.Title).ShouldBe(("rebalance", "@etf_momentum.report.rebalance.name"));
 
         var schedule = (await client.GetFromJsonAsync<ReportScheduleDto>($"/api/rebalancing/accounts/{account.Id}/report-schedule", ct))!;
         schedule.Reports.Select(each => (each.Code, each.Mode, each.Schedule.Frequency, each.Schedule.Day, each.Schedule.Weekday, each.Schedule.Time, each.Own)).Distinct()
@@ -75,7 +75,7 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
         (await reset.Content.ReadFromJsonAsync<ReportScheduleDto>(ct))!.Reports.Single(each => each.Code == "rebalance").Own.ShouldBeFalse();
         var review = await RequestReportAsync(client, account.Id, new { code = "risk-review", asOf }, ct);
         (await ReportAsync(client, review, ct)).Summary.ShouldSatisfyAllConditions(
-            summary => summary.Kind.ShouldBe("RiskReview"), summary => summary.Title.ShouldBe("Перевірка ризику"));
+            summary => summary.Kind.ShouldBe("RiskReview"), summary => summary.Title.ShouldBe("@etf_momentum.report.risk_review.name"));
         (await client.PostAsJsonAsync($"/api/rebalancing/accounts/{account.Id}/reports", new { code = "weekly-digest" }, ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         report.Sections.Count.ShouldBe(2);
         report.Sections.ShouldAllBe(section => section.Error == null);
