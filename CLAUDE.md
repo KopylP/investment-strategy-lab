@@ -74,7 +74,8 @@ The backend and the engine speak in codes; the texts live in catalogs and are ch
   (fractions, amounts, a currency code) and let the template format them; a parameter may itself be a message.
 - **An error is a code too:** `Error.Validation(code, englishDetail, parameters)`. The English detail is for logs and developers.
 - **Texts live in catalogs:** `locales/uk.json` for the service, and a strategy's own catalog in the engine for its texts.
-  Templates use `{name}`, `{x:percent}`, `{x:signedPercent}`, `{x:money:currencyParam}`, `{x:amount}`, `{x:plural:one|few|many}`.
+  Templates use `{name}`, `{x:percent}`, `{x:signedPercent}`, `{x:money:currencyParam}`, `{x:amount}`, `{x:plural:one|few|many}`,
+  `{x:join:separator}`. Never glue a message into other text (`$"{name}: {note}"`, `"; ".join(...)`): it would show as a raw code. Pass it as a parameter.
 - **The frontend localizes:** `core/i18n/translation-interceptor.ts` translates every token in every API response, so a screen
   shows the backend's strings without knowing about codes. A string without a known code is shown as it is, so older
   stored texts and what the user typed keep working.
@@ -91,7 +92,8 @@ requirement for every change, also a small one, and it wins over the shortest wa
 | What can change | Its only owner | Everyone else |
 |---|---|---|
 | Source of quotes and symbols (today Yahoo) | `MarketData` domain and adapter (`QuoteProvider`, `ISymbolConvention`) and the engine's `market_data.py` | Uses the neutral `InstrumentDto.Ticker` and `Label`; never parses or names a provider |
-| Tax rules of a country or account type | A policy in `Taxation` (`ITaxPolicy` and its blocks: rates, currency and FX rule, losses, lots, rounding, notes) | Asks the policy; never has a rate, a form name or a currency of its own |
+| Exchange rates and their pivot currency (today NBP, PLN) | `MarketData` (`PrimaryFxSource`, `IFxRateProvider`) | Asks `IFxRates.GetCrossRate`; never converts through a currency of its own |
+| Tax rules of a country or account type | A policy in `Taxation` (`ITaxPolicy` and its blocks: rates, taxable gain, currency and FX rule, losses, lots, rounding, texts) | Asks the policy, the frontend through `/api/taxation/regime` and `/policies`; never has a rate, a form name or a currency of its own. A declaration form is Polish by nature and stays with its form |
 | Strategies and their reports | The strategy type in the engine | Reads what the type declares; nothing about one report is hard-coded |
 | Any other outside service or standard | An interface in the owning module with its adapter in `Infrastructure` | Depends on the interface or the `.Contracts` query |
 
