@@ -29,7 +29,7 @@ public sealed class BackfillFxRatesHandler(
         }
         catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
         {
-            logger.LogWarning(exception, "NBP rates since {Since} could not be loaded", since);
+            logger.LogWarning(exception, "FX rates since {Since} could not be loaded", since);
 
             return false;
         }
@@ -37,7 +37,7 @@ public sealed class BackfillFxRatesHandler(
 
     private async Task AddOlderRatesAsync(Currency currency, DateOnly from, CancellationToken cancellationToken)
     {
-        var first = await store.FirstEffectiveDateAsync(provider.Source, currency, Currency.PLN, cancellationToken);
+        var first = await store.FirstEffectiveDateAsync(provider.Source, currency, PrimaryFxSource.Pivot, cancellationToken);
         var until = first?.AddDays(-1) ?? DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
         if (from > until)
             return;

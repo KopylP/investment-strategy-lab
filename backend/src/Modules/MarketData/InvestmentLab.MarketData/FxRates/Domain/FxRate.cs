@@ -6,7 +6,7 @@ public sealed class FxRate
 
     public FxRateSource Source { get; private set; }
     public Currency Base { get; private set; } = Currency.EUR;
-    public Currency Quote { get; private set; } = Currency.PLN;
+    public Currency Quote { get; private set; } = PrimaryFxSource.Pivot;
     public DateOnly EffectiveDate { get; private set; }
     public decimal Rate { get; private set; }
 

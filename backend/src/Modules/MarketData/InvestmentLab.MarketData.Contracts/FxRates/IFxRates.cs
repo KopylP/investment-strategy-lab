@@ -10,4 +10,13 @@ public interface IFxRates
         DateOnly from,
         DateOnly to,
         CancellationToken cancellationToken);
+
+    Task<decimal?> GetCrossRate(string fromCurrency, string toCurrency, DateOnly asOf, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<CrossRateDto>> GetCrossRateHistory(
+        string fromCurrency,
+        string toCurrency,
+        DateOnly from,
+        DateOnly to,
+        CancellationToken cancellationToken);
 }

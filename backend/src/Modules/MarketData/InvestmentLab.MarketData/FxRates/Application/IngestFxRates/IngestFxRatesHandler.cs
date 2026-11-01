@@ -23,7 +23,7 @@ public sealed class IngestFxRatesHandler(IFxRateStore store, IFxRateProvider pro
 
     private async Task<int> AddNewRatesAsync(Currency currency, DateOnly today, CancellationToken cancellationToken)
     {
-        var last = await store.LastEffectiveDateAsync(provider.Source, currency, Currency.PLN, cancellationToken);
+        var last = await store.LastEffectiveDateAsync(provider.Source, currency, PrimaryFxSource.Pivot, cancellationToken);
         var from = last?.AddDays(1) ?? today.AddYears(-InitialHistoryYears);
         if (from > today)
             return 0;

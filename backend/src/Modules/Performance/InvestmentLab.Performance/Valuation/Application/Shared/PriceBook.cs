@@ -11,7 +11,6 @@ public sealed class PriceBook(IQuoteHistory quotes, IInstrumentCatalog instrumen
 {
     private const int QuoteLookbackDays = 10;
     private const int RateLookbackDays = 15;
-    private const string Pln = "PLN";
 
     public async Task<PriceOn> LoadAsync(
         IReadOnlyCollection<Guid> instrumentIds,
@@ -78,38 +77,26 @@ public sealed class PriceBook(IQuoteHistory quotes, IInstrumentCatalog instrumen
 
     private sealed class RateSeries(IFxRates fxRates, DateOnly from, DateOnly to)
     {
-        private readonly Dictionary<string, List<(DateOnly Date, decimal Value)>> _inPln = [];
+        private readonly Dictionary<string, List<(DateOnly Date, decimal Value)>> _series = [];
 
         public async Task<Func<DateOnly, decimal?>> FactorAsync(string source, string target, CancellationToken cancellationToken)
         {
             if (source == target)
                 return _ => 1m;
 
-            var sourceInPln = await InPlnAsync(source, cancellationToken);
-            var targetInPln = await InPlnAsync(target, cancellationToken);
+            var series = await SeriesAsync(source, target, cancellationToken);
 
-            return day => FactorOn(sourceInPln, targetInPln, day);
+            return day => Last(series, day);
         }
 
-        private static decimal? FactorOn(List<(DateOnly Date, decimal Value)>? source, List<(DateOnly Date, decimal Value)>? target, DateOnly day)
+        private async Task<List<(DateOnly Date, decimal Value)>> SeriesAsync(string source, string target, CancellationToken cancellationToken)
         {
-            var sourceRate = source is null ? 1m : Last(source, day);
-            var targetRate = target is null ? 1m : Last(target, day);
-
-            return sourceRate is { } numerator && targetRate is { } denominator && denominator > 0m ? numerator / denominator : null;
-        }
-
-        private async Task<List<(DateOnly Date, decimal Value)>?> InPlnAsync(string currency, CancellationToken cancellationToken)
-        {
-            if (currency == Pln)
-                return null;
-
-            if (_inPln.TryGetValue(currency, out var cached))
+            if (_series.TryGetValue(source, out var cached))
                 return cached;
 
-            var history = await fxRates.GetFxRateHistory(currency, Pln, from.AddDays(-RateLookbackDays), to, cancellationToken);
+            var history = await fxRates.GetCrossRateHistory(source, target, from.AddDays(-RateLookbackDays), to, cancellationToken);
 
-            return _inPln[currency] = [.. history.Select(rate => (rate.EffectiveDate, rate.Rate))];
+            return _series[source] = [.. history.Select(rate => (rate.Date, rate.Rate))];
         }
     }
 }

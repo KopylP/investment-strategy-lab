@@ -8,8 +8,6 @@ namespace InvestmentLab.Portfolio.Transactions.Application.Shared;
 
 public sealed class StatementPricing(IFxRates fxRates)
 {
-    private const string Pln = "PLN";
-
     public async Task<IReadOnlyList<PricedRow>> PriceAsync(InvestmentAccount account, StatementImport statement, CancellationToken cancellationToken)
     {
         var accountCurrency = account.BaseCurrency.Code;
@@ -32,27 +30,12 @@ public sealed class StatementPricing(IFxRates fxRates)
         if (IsInAccountCurrency(row, accountCurrency))
             return 1m;
 
-        var from = await InPlnAsync(row.Currency, row.OccurredOn, rates, cancellationToken);
-        if (from is null)
-            return 0m;
+        var key = (row.Currency, row.OccurredOn);
 
-        var to = await InPlnAsync(accountCurrency, row.OccurredOn, rates, cancellationToken);
+        if (!rates.TryGetValue(key, out var rate))
+            rate = rates[key] = await fxRates.GetCrossRate(row.Currency, accountCurrency, row.OccurredOn, cancellationToken);
 
-        return to > 0m ? from.Value / to.Value : 0m;
-    }
-
-    private async Task<decimal?> InPlnAsync(
-        string currency, DateOnly day, Dictionary<(string, DateOnly), decimal?> rates, CancellationToken cancellationToken)
-    {
-        if (currency == Pln)
-            return 1m;
-
-        if (rates.TryGetValue((currency, day), out var known))
-            return known;
-
-        var rate = await fxRates.GetFxRate(currency, Pln, day.AddDays(1), cancellationToken);
-
-        return rates[(currency, day)] = rate?.Rate;
+        return rate ?? 0m;
     }
 
     private static PricedRow PricedRowOf(StatementRow row, StatementImport statement, string accountCurrency, decimal factor) => new(

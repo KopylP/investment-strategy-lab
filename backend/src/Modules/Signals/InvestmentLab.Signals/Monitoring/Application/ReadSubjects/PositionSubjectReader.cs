@@ -1,3 +1,4 @@
+using InvestmentLab.MarketData.Contracts.FxRates;
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Portfolio.Contracts.Holdings;
@@ -6,7 +7,7 @@ using InvestmentLab.Signals.Monitoring.Domain;
 namespace InvestmentLab.Signals.Monitoring.Application.ReadSubjects;
 
 public sealed class PositionSubjectReader(
-    IHoldingsQueries holdings, IAccountSetupQueries accounts, IInstrumentCatalog instruments, CrossRates crossRates, QuoteReader quotes)
+    IHoldingsQueries holdings, IAccountSetupQueries accounts, IInstrumentCatalog instruments, IFxRates fxRates, QuoteReader quotes)
 {
     public async Task<SubjectReadings> ReadAsync(Signal signal, CancellationToken cancellationToken)
     {
@@ -69,7 +70,7 @@ public sealed class PositionSubjectReader(
         if (latest is null || await quotes.IsSpikeOnAsync(instrumentId, latest.Date, cancellationToken))
             return null;
 
-        var rate = await crossRates.RateAsync(latest.Currency, accountCurrency, latest.Date, cancellationToken);
+        var rate = await fxRates.GetCrossRate(latest.Currency, accountCurrency, latest.Date, cancellationToken);
         if (rate is not { } knownRate)
             return null;
 

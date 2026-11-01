@@ -21,14 +21,14 @@ internal sealed class FxRateStore(MarketDataDbContext db) : IFxRateStore, IFxRat
     public async Task<IReadOnlyList<FxRate>> RatesBetweenAsync(
         Currency @base, Currency quote, DateOnly from, DateOnly to, CancellationToken cancellationToken) =>
         await db.FxRates.AsNoTracking()
-            .Where(rate => rate.Source == FxRateSource.Nbp && rate.Base == @base && rate.Quote == quote
+            .Where(rate => rate.Source == PrimaryFxSource.Source && rate.Base == @base && rate.Quote == quote
                 && rate.EffectiveDate >= from && rate.EffectiveDate <= to)
             .ToListAsync(cancellationToken);
 
-    public async Task<IReadOnlyList<FxRate>> LatestToPlnAsync(CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<FxRate>> LatestToPivotAsync(CancellationToken cancellationToken)
     {
         var rates = await db.FxRates.AsNoTracking()
-            .Where(rate => rate.Source == FxRateSource.Nbp && rate.Quote == Currency.PLN)
+            .Where(rate => rate.Source == PrimaryFxSource.Source && rate.Quote == PrimaryFxSource.Pivot)
             .GroupBy(rate => rate.Base)
             .Select(group => group.OrderByDescending(rate => rate.EffectiveDate).First())
             .ToListAsync(cancellationToken);
@@ -68,4 +68,51 @@ internal sealed class FxRateStore(MarketDataDbContext db) : IFxRateStore, IFxRat
             .OrderBy(rate => rate.EffectiveDate)
             .Select(rate => new FxRateDto(rate.Source.ToString(), rate.Base.Code, rate.Quote.Code, rate.EffectiveDate, rate.Rate, rate.TableNumber))];
     }
+
+    public async Task<decimal?> GetCrossRate(string fromCurrency, string toCurrency, DateOnly asOf, CancellationToken cancellationToken)
+    {
+        if (IsSameCurrency(fromCurrency, toCurrency))
+            return 1m;
+
+        var fromInPivot = await InPivotAsync(fromCurrency, asOf, cancellationToken);
+        var toInPivot = await InPivotAsync(toCurrency, asOf, cancellationToken);
+
+        return CrossRate.Of(fromInPivot, toInPivot);
+    }
+
+    public async Task<IReadOnlyList<CrossRateDto>> GetCrossRateHistory(
+        string fromCurrency,
+        string toCurrency,
+        DateOnly from,
+        DateOnly to,
+        CancellationToken cancellationToken)
+    {
+        var fromLeg = await PivotLegAsync(fromCurrency, from, to, cancellationToken);
+        var toLeg = await PivotLegAsync(toCurrency, from, to, cancellationToken);
+
+        return [.. CrossRate.SeriesOf(fromLeg, toLeg).Select(point => new CrossRateDto(point.Date, point.Rate))];
+    }
+
+    private async Task<decimal?> InPivotAsync(string currency, DateOnly asOf, CancellationToken cancellationToken)
+    {
+        if (IsSameCurrency(currency, PrimaryFxSource.Pivot.Code))
+            return 1m;
+
+        var rate = await GetFxRate(currency, PrimaryFxSource.Pivot.Code, asOf.AddDays(1), cancellationToken);
+
+        return rate?.Rate;
+    }
+
+    private async Task<IReadOnlyList<(DateOnly Date, decimal Rate)>?> PivotLegAsync(
+        string currency, DateOnly from, DateOnly to, CancellationToken cancellationToken)
+    {
+        if (IsSameCurrency(currency, PrimaryFxSource.Pivot.Code))
+            return null;
+
+        var history = await GetFxRateHistory(currency, PrimaryFxSource.Pivot.Code, from, to, cancellationToken);
+
+        return [.. history.Select(rate => (rate.EffectiveDate, rate.Rate))];
+    }
+
+    private static bool IsSameCurrency(string left, string right) => string.Equals(left, right, StringComparison.OrdinalIgnoreCase);
 }
