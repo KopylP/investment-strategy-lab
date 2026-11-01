@@ -100,4 +100,42 @@ public sealed class JournalMovementsTests
 
         JournalMovements.Of(journal).ShouldBeEmpty();
     }
+
+    [Fact]
+    public void A_fee_is_shared_between_allocations_by_quantity_in_cash_and_in_unit_cost()
+    {
+        var movements = MovementsOf(new Entry(new Trade("Buy", 10m, 4m, [new Shares(Sub, 1m), new Shares(Other, 3m)])));
+
+        (movements[0].CashDelta, movements[0].UnitCost).ShouldBe((-11m, 11m));
+        (movements[1].CashDelta, movements[1].UnitCost).ShouldBe((-33m, 11m));
+    }
+
+    [Fact]
+    public void A_sell_settled_in_another_currency_brings_the_settled_amount_in()
+    {
+        var movement = MovementsOf(new Entry(new Trade("Sell", 10m, 0m, [new Shares(Sub, 4m)], SettledAmount: 80m, SettledCurrency: "USD"))).ShouldHaveSingleItem();
+
+        (movement.CashDelta, movement.CashCurrency).ShouldBe((80m, "USD"));
+    }
+
+    [Fact]
+    public void A_dividend_settled_in_another_currency_is_split_by_its_allocations()
+    {
+        var cash = new Cash("Dividend", [new Money(Sub, 30m), new Money(Other, 10m)], SettledAmount: 80m, SettledCurrency: "USD");
+
+        var movements = MovementsOf(new Entry(Cash: cash));
+
+        (movements[0].CashDelta, movements[0].CashCurrency).ShouldBe((60m, "USD"));
+        (movements[1].CashDelta, movements[1].CashCurrency).ShouldBe((20m, "USD"));
+    }
+
+    [Fact]
+    public void A_withdrawal_settled_in_another_currency_takes_the_settled_amount_out_and_the_flow_stays_in_the_account_currency()
+    {
+        var cash = new Cash("Withdrawal", [new Money(Sub, 100m)], SettledAmount: 90m, SettledCurrency: "USD");
+
+        var movement = MovementsOf(new Entry(Cash: cash)).ShouldHaveSingleItem();
+
+        (movement.CashDelta, movement.ExternalFlow, movement.CashCurrency).ShouldBe((-90m, -100m, "USD"));
+    }
 }

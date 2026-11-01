@@ -1,6 +1,6 @@
 namespace InvestmentLab.Taxation.Assessments.Domain;
 
-public interface ITaxRate
+public interface ITaxCurrencyRate
 {
     decimal Rate { get; }
     DateOnly EffectiveDate { get; }

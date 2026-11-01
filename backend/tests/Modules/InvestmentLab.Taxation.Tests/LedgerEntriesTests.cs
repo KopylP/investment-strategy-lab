@@ -1,4 +1,3 @@
-using InvestmentLab.Taxation.BrokerStatements.Domain;
 using InvestmentLab.Taxation.Ledger.Domain;
 
 namespace InvestmentLab.Taxation.Tests;
@@ -40,7 +39,7 @@ public sealed class LedgerEntriesTests
     [Fact]
     public void A_trade_settled_in_the_account_currency_keeps_its_price_and_fee()
     {
-        var recorded = new Entry("EUR", new Trade("Sell", 2m, 50m, 3m, SettledAmount: 97m, SettledCurrency: "EUR"));
+        var recorded = new Entry("EUR", new Trade("Sell", 2m, 50m, 3m, SettledAmount: 90m, SettledCurrency: "EUR"));
 
         var entry = LedgerEntries.From(recorded, DateTimeOffset.UnixEpoch)!;
 
@@ -65,19 +64,20 @@ public sealed class LedgerEntriesTests
     }
 
     [Fact]
-    public void A_lot_cost_at_the_tax_rate_is_rounded_half_away_from_zero()
+    public void A_foreign_sell_converts_price_and_fee_from_what_was_left_after_the_fee()
     {
-        var lot = new BrokerLotFact(new(2025, 1, 2), 1m, 1.005m, 0m);
+        var recorded = new Entry("EUR", new Trade("Sell", 2m, 50m, 10m, SettledAmount: 45m, SettledCurrency: "USD"));
 
-        lot.AtTaxRate(1m).CostInTaxCurrency.ShouldBe(1.01m);
+        var entry = LedgerEntries.From(recorded, DateTimeOffset.UnixEpoch)!;
+
+        (entry.Price, entry.Fee, entry.Currency).ShouldBe((25m, 5m, "USD"));
     }
 
     [Fact]
-    public void A_sale_keeps_its_cost_only_when_booked_in_the_currency_of_the_statement()
+    public void A_dividend_settled_in_the_account_currency_keeps_its_amount()
     {
-        var facts = new SaleFacts([], 0m, "USD", 5m);
+        var recorded = new Entry("EUR", Cash: new Cash("Dividend", 10m, Instrument, SettledAmount: 11m, SettledCurrency: "EUR"));
 
-        facts.AtTaxRates([], "USD").Cost.ShouldBe(5m);
-        facts.AtTaxRates([], "EUR").Cost.ShouldBeNull();
+        LedgerEntries.From(recorded, DateTimeOffset.UnixEpoch)!.Amount.ShouldBe(10m);
     }
 }

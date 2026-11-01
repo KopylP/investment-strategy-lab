@@ -1,8 +1,6 @@
 using InvestmentLab.BuildingBlocks.Security;
-using InvestmentLab.Taxation;
 using InvestmentLab.Taxation.Assessments.Application.Shared;
 using InvestmentLab.Taxation.Assessments.Domain;
-using InvestmentLab.Taxation.Declarations.Application.Shared;
 using InvestmentLab.Taxation.Declarations.Domain;
 
 namespace InvestmentLab.Taxation.Assessments.Infrastructure;

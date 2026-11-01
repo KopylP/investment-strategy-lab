@@ -1,10 +1,12 @@
 using InvestmentLab.Taxation.Assessments.Domain;
+using InvestmentLab.Taxation.BrokerStatements.Domain;
 using InvestmentLab.Taxation.Ledger.Domain;
 
 namespace InvestmentLab.Taxation.Tests;
 
 public sealed class AssessmentHashTests
 {
+    private const string GoldenWithFacts = "77D253BCDAACD1E5CAA4F43A7317C7A6BC31C0ECB42670300EF79041B81689EC";
     private const string Golden = "FB25B5679531085473BB30E7FC471909796558D33AC146FC0C02D51A72B4D845";
 
     private static readonly Guid Id = Guid.Parse("11111111-1111-1111-1111-111111111111");
@@ -31,6 +33,20 @@ public sealed class AssessmentHashTests
     public void The_hash_of_a_year_stays_the_same_so_stored_years_are_not_recomputed_without_need()
     {
         AssessmentHash.For(2025, [EventOn(2025)], NoLosses, TaxPolicies.For(BelkaTaxPolicy.PolicyCode)).ShouldBe(Golden);
+    }
+
+    [Fact]
+    public void The_hash_with_broker_facts_withholding_and_losses_stays_the_same_too()
+    {
+        var withFacts = EventOn(2025) with
+        {
+            Broker = new SaleFacts([new BrokerLotFact(new DateOnly(2025, 1, 2), 1m, 2m, 8m)], 3m, "USD", 2m),
+            Withholding = new WithholdingFacts(1.2m, 0.2m),
+        };
+
+        LossYear[] losses = [new LossYear(2024, 100m, 10m)];
+
+        AssessmentHash.For(2025, [withFacts], losses, TaxPolicies.For(BelkaTaxPolicy.PolicyCode)).ShouldBe(GoldenWithFacts);
     }
 
     [Fact]

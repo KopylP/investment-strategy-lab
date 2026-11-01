@@ -201,10 +201,10 @@ public sealed class PlanningRulesTests
     [Fact]
     public void Foreign_cash_is_added_at_its_rate_rounded_to_cents_and_cash_without_a_rate_counts_as_nothing()
     {
-        IForeignCash[] foreign = [new Foreign("USD", 10.555m), new Foreign("GBP", 100m)];
+        IForeignCash[] foreign = [new Foreign("USD", 10.545m), new Foreign("GBP", 100m)];
         var rates = new Dictionary<string, decimal?> { ["USD"] = 1m, ["GBP"] = null };
 
-        AccountCash.Of(1m, foreign, rates).ShouldBe(1m + decimal.Round(10.555m, 2));
+        AccountCash.Of(1m, foreign, rates).ShouldBe(11.54m);
     }
 
     [Fact]
@@ -216,5 +216,17 @@ public sealed class PlanningRulesTests
         reports[0].Name.ShouldBe("First");
         reports[0].SubPortfolios.Count.ShouldBe(2);
         reports[0].SignalKinds.ShouldBe(["a", "b", "c"]);
+    }
+
+    [Fact]
+    public void A_report_takes_the_own_schedule_of_the_account()
+    {
+        var settings = PlanSettings.DefaultFor(Guid.NewGuid(), UserId.Of(Guid.NewGuid()));
+        settings.Schedule("risk", Cadence.Off, DateTimeOffset.UnixEpoch);
+
+        var report = AccountReport.AllOf([Declared("risk", "Risk")], settings).ShouldHaveSingleItem();
+
+        report.Own.ShouldBe(settings.ScheduleOf("risk"));
+        report.Own.ShouldNotBeNull();
     }
 }

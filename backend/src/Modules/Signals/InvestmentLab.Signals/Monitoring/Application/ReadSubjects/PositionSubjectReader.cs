@@ -1,12 +1,11 @@
 using InvestmentLab.MarketData.Contracts.FxRates;
 using InvestmentLab.Portfolio.Contracts.Accounts;
-using InvestmentLab.Portfolio.Contracts.Holdings;
 using InvestmentLab.Signals.Monitoring.Domain;
 
 namespace InvestmentLab.Signals.Monitoring.Application.ReadSubjects;
 
 public sealed class PositionSubjectReader(
-    IHoldingsQueries holdings,
+    IOpenPositions openPositions,
     IAccountSetupQueries accounts,
     IInstrumentLabels instrumentLabels,
     IFxRates fxRates,
@@ -16,7 +15,7 @@ public sealed class PositionSubjectReader(
     {
         var accountId = signal.Target.AccountId!.Value;
         var account = await accounts.GetAccountSetup(accountId, cancellationToken);
-        var held = await holdings.GetHoldings(accountId, null, cancellationToken);
+        var held = await openPositions.OfAsync(accountId, cancellationToken);
         if (account is null || held is null)
             return SubjectReadings.Nothing;
 
@@ -29,25 +28,19 @@ public sealed class PositionSubjectReader(
         return new SubjectReadings(measured, live);
     }
 
-    private static List<HeldPosition> HeldPositionsOf(AccountHoldingsDto held, IReadOnlyDictionary<Guid, string> labels)
+    private static List<HeldPosition> HeldPositionsOf(IReadOnlyList<IOpenPosition> held, IReadOnlyDictionary<Guid, string> labels)
     {
-        var open = held.SubPortfolios
-            .SelectMany(subPortfolio => subPortfolio.Positions)
-            .Where(position => position.Quantity > 0m);
+        var merged = MergedPosition.AllOf(held);
 
-        return [.. open
-            .GroupBy(position => position.InstrumentId)
-            .Select(parts => Merged(parts, labels))];
+        return [.. merged.Select(position => HeldPositionOf(position, labels))];
     }
 
-    private static HeldPosition Merged(IGrouping<Guid, PositionDto> parts, IReadOnlyDictionary<Guid, string> labels)
+    private static HeldPosition HeldPositionOf(MergedPosition position, IReadOnlyDictionary<Guid, string> labels)
     {
-        var quantity = parts.Sum(part => part.Quantity);
-        var cost = parts.Sum(part => part.CostBasis);
-        var firstOpenedOn = parts.Min(part => part.FirstOpenedOn);
-        var subject = new QuoteSubject(parts.Key, InstrumentSubjects.KeyOf(parts.Key), InstrumentSubjects.LabelOf(labels, parts.Key));
+        var key = InstrumentSubjects.KeyOf(position.InstrumentId);
+        var label = InstrumentSubjects.LabelOf(labels, position.InstrumentId);
 
-        return new HeldPosition(subject, cost / quantity, firstOpenedOn);
+        return new HeldPosition(new QuoteSubject(position.InstrumentId, key, label), position.AverageCost, position.FirstOpenedOn);
     }
 
     private async Task<List<SubjectReading>> MeasureAllAsync(

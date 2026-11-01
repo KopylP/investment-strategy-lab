@@ -2,6 +2,11 @@ namespace InvestmentLab.Performance.Valuation.Domain;
 
 public static class JournalMovements
 {
+    private const string Buy = "Buy";
+    private const string Contribution = "Contribution";
+    private const string Withdrawal = "Withdrawal";
+    private const string Dividend = "Dividend";
+
     public static IReadOnlyList<Movement> Of(AccountJournal journal)
     {
         var reversed = journal.ReversedIds.ToHashSet();
@@ -25,7 +30,7 @@ public static class JournalMovements
 
     private static void AddTrade(DateOnly day, IJournalTrade trade, List<Movement> movements)
     {
-        var sign = trade.Side == "Buy" ? 1m : -1m;
+        var sign = trade.Side == Buy ? 1m : -1m;
         var total = trade.Allocations.Sum(allocation => allocation.Quantity);
 
         foreach (var allocation in trade.Allocations)
@@ -80,9 +85,9 @@ public static class JournalMovements
 
     private static (decimal CashDelta, decimal Flow) CashAndFlow(string kind, decimal amount) => kind switch
     {
-        "Contribution" => (amount, amount),
-        "Withdrawal" => (-amount, -amount),
-        "Dividend" => (amount, 0m),
+        Contribution => (amount, amount),
+        Withdrawal => (-amount, -amount),
+        Dividend => (amount, 0m),
         _ => (-amount, 0m),
     };
 

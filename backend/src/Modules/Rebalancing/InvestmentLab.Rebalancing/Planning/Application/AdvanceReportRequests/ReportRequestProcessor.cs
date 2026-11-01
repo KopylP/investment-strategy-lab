@@ -1,6 +1,5 @@
 using InvestmentLab.Rebalancing.Planning.Application.GenerateMonthlyReport;
 using InvestmentLab.Rebalancing.Planning.Application.GenerateRiskReview;
-using InvestmentLab.Rebalancing.Planning.Application.RequestReport;
 using InvestmentLab.Rebalancing.Planning.Application.Shared;
 using InvestmentLab.Rebalancing.Planning.Domain;
 using InvestmentLab.Rebalancing.Reports.Domain;

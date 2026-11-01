@@ -42,20 +42,23 @@ public static class LedgerEntries
     {
         var total = trade.Side == Buy ? trade.Quantity * trade.Price + trade.Fee : trade.Quantity * trade.Price - trade.Fee;
 
-        if (trade is { SettledAmount: > 0m and var settled, SettledCurrency: { Length: CurrencyCodeLength } own } && own != recorded.Currency && total > 0m)
+        if (IsSettledInAnotherCurrency(trade.SettledAmount, trade.SettledCurrency, recorded.Currency) && total > 0m)
         {
-            var back = settled / total;
+            var back = trade.SettledAmount!.Value / total;
 
-            return (decimal.Round(trade.Price * back, PriceDigits), decimal.Round(trade.Fee * back, FeeDigits), own);
+            return (decimal.Round(trade.Price * back, PriceDigits), decimal.Round(trade.Fee * back, FeeDigits), trade.SettledCurrency!);
         }
 
         return (trade.Price, trade.Fee, recorded.Currency);
     }
 
+    private static bool IsSettledInAnotherCurrency(decimal? settledAmount, string? settledCurrency, string currency) =>
+        settledAmount > 0m && settledCurrency is { Length: CurrencyCodeLength } && settledCurrency != currency;
+
     private static TaxLedgerEntry DividendEntry(ITaxJournalEntry recorded, ITaxJournalCash cash, Guid instrumentId, DateTimeOffset recordedAt)
     {
-        var (amount, currency) = cash is { SettledAmount: > 0m and var settled, SettledCurrency: { Length: CurrencyCodeLength } own } && own != recorded.Currency
-            ? (settled, own)
+        var (amount, currency) = IsSettledInAnotherCurrency(cash.SettledAmount, cash.SettledCurrency, recorded.Currency)
+            ? (cash.SettledAmount!.Value, cash.SettledCurrency!)
             : (cash.Amount, recorded.Currency);
 
         return TaxLedgerEntry.Dividend(
