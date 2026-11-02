@@ -1,12 +1,13 @@
 using InvestmentLab.MarketData.Contracts.Quotes;
 using InvestmentLab.MarketData.Instruments.Domain;
+using InvestmentLab.MarketData.Quotes.Application.IngestDailyQuotes;
 using InvestmentLab.MarketData.Quotes.Domain;
 using InvestmentLab.MarketData.Shared.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 namespace InvestmentLab.MarketData.Quotes.Infrastructure;
 
-internal sealed class QuoteHistory(MarketDataDbContext db) : IQuoteHistory
+internal sealed class QuoteHistory(MarketDataDbContext db, IQuoteArchive archive, TimeProvider clock) : IQuoteHistory
 {
     private static readonly QualityFlags[] StoredFlags = [QualityFlags.Gap, QualityFlags.Spike, QualityFlags.Corrected];
 
@@ -22,6 +23,22 @@ internal sealed class QuoteHistory(MarketDataDbContext db) : IQuoteHistory
         var byInstrument = quotes.ToLookup(quote => quote.InstrumentId);
 
         return [.. ids.Select(id => new QuoteSeriesDto(id.Value, [.. byInstrument[id].Select(ToPoint)]))];
+    }
+
+    public async Task<IReadOnlyList<QuoteSeriesDto>> GetQuoteHistoryWithArchive(
+        IReadOnlyCollection<Guid> instrumentIds, DateOnly from, DateOnly to, CancellationToken cancellationToken)
+    {
+        var stored = await GetQuoteHistory(instrumentIds, from, to, cancellationToken);
+        if (from >= StoredWindowStart())
+            return stored;
+
+        var startingLater = await StoredOnlyAfterAsync(ToIds(instrumentIds), from, cancellationToken);
+        if (startingLater.Count == 0)
+            return stored;
+
+        var older = await archive.OlderThanStoredAsync(startingLater, cancellationToken);
+
+        return [.. stored.Select(series => WithOlder(series, older, from, to))];
     }
 
     public async Task<IReadOnlyList<LatestPriceDto>> GetLatestPrices(
@@ -40,6 +57,33 @@ internal sealed class QuoteHistory(MarketDataDbContext db) : IQuoteHistory
         return [.. latest.Select(quote => new LatestPriceDto(
             quote.InstrumentId.Value, quote.TradingDate, quote.Close, quote.AdjustedClose, currencies[quote.InstrumentId],
             QuoteQualityInspector.IsStale(quote.TradingDate, asOf)))];
+    }
+
+    private DateOnly StoredWindowStart() =>
+        DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime).AddYears(-IngestDailyQuotesHandler.InitialHistoryYears);
+
+    private async Task<List<InstrumentId>> StoredOnlyAfterAsync(List<InstrumentId> ids, DateOnly from, CancellationToken cancellationToken)
+    {
+        var reachingBack = await db.DailyQuotes.AsNoTracking()
+            .Where(quote => ids.Contains(quote.InstrumentId) && quote.TradingDate <= from)
+            .Select(quote => quote.InstrumentId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        return [.. ids.Except(reachingBack)];
+    }
+
+    private static QuoteSeriesDto WithOlder(
+        QuoteSeriesDto stored, IReadOnlyDictionary<InstrumentId, IReadOnlyList<ArchivedPrice>> older, DateOnly from, DateOnly to)
+    {
+        if (!older.TryGetValue(InstrumentId.Of(stored.InstrumentId), out var archived))
+            return stored;
+
+        var firstStored = stored.Points.Count > 0 ? stored.Points[0].Date : DateOnly.MaxValue;
+        var inWindow = archived.Where(price => price.Date >= from && price.Date <= to && price.Date < firstStored);
+        var olderPoints = inWindow.Select(price => new QuotePointDto(price.Date, price.Close, price.AdjustedClose, []));
+
+        return stored with { Points = [.. olderPoints, .. stored.Points] };
     }
 
     private static List<InstrumentId> ToIds(IReadOnlyCollection<Guid> instrumentIds) =>

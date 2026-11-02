@@ -11,7 +11,6 @@ using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.BuildingBlocks.Modules;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.BuildingBlocks.Scheduling;
-using InvestmentLab.MarketData.Contracts.Quotes;
 using InvestmentLab.Strategies.Contracts;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
@@ -36,6 +35,7 @@ public sealed class BacktestingModule : IModule
         services.AddScoped<IStrategyAnswers, StrategyAnswers>();
         services.AddScoped<ITargetTrades, TargetTrades>();
         services.AddScoped<IPriceTables, PriceTables>();
+        services.AddScoped<IReplaySignals, ReplaySignals>();
         services.AddScoped<StrategyReplay>();
         services.AddScoped<RunBacktestHandler>();
         services.AddScoped<EnsureBacktestHandler>();
@@ -43,7 +43,6 @@ public sealed class BacktestingModule : IModule
         services.AddScoped<GetMoneyOutcomesHandler>();
         services.AddScheduledJob<BacktestsJob>(BacktestsJob.Schedule);
         services.AddIntegrationEventHandler<StrategyReconfiguredV1, RequestBacktestOnReconfigured>();
-        services.AddIntegrationEventHandler<QuoteHistoryExtendedV1, RequestBacktestsAgainOnLongerHistory>();
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>

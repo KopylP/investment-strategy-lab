@@ -64,7 +64,7 @@ public sealed class EvaluationPreparer(IStrategyReader strategies, IQuoteHistory
         var marketIds = volatilityIndex.Prepend(version.BenchmarkInstrumentId);
         Guid[] requestedIds = [.. instrumentIds.Concat(marketIds).Distinct()];
 
-        var history = await quotes.GetQuoteHistory(requestedIds, asOf.AddDays(-HistoryDays), asOf, cancellationToken);
+        var history = await quotes.GetQuoteHistoryWithArchive(requestedIds, asOf.AddDays(-HistoryDays), asOf, cancellationToken);
 
         return history.ToDictionary(series => series.InstrumentId, series => MarketPointsOf(series.Points));
     }

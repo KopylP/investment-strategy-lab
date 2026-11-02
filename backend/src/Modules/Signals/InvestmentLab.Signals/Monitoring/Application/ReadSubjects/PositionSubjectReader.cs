@@ -64,19 +64,9 @@ public sealed class PositionSubjectReader(
         if (condition.Metric == SignalMetric.LossFromCost)
             return MeasureLossAsync(position, accountCurrency, cancellationToken);
 
-        var from = WindowStartSincePurchase(position, condition);
+        var from = MeasurementWindow.StartOfHolding(condition, quotes.Today, position.FirstOpenedOn);
 
         return quotes.MeasureAsync(position.Subject, condition.Metric, from, cancellationToken);
-    }
-
-    private DateOnly WindowStartSincePurchase(HeldPosition position, SignalCondition condition)
-    {
-        var windowStart = MeasurementWindow.StartOf(condition, quotes.Today);
-
-        if (condition.Metric != SignalMetric.DrawdownFromPeak)
-            return windowStart;
-
-        return windowStart > position.FirstOpenedOn ? windowStart : position.FirstOpenedOn;
     }
 
     private async Task<SubjectReading?> MeasureLossAsync(HeldPosition position, string accountCurrency, CancellationToken cancellationToken)

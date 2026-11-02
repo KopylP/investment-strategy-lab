@@ -4,8 +4,6 @@ namespace InvestmentLab.Backtesting.Replays.Application.EnsureBacktest;
 
 public sealed class EnsureBacktestHandler(IBacktestRepository backtests, IReplayedStrategies strategies, TimeProvider clock)
 {
-    private static readonly TimeSpan FreshFor = TimeSpan.FromDays(32);
-
     public async Task<Result<int>> Handle(Guid strategyId, int? version, CancellationToken cancellationToken)
     {
         if (await strategies.FindAsync(strategyId, version, cancellationToken) is not { } setup)
@@ -16,7 +14,7 @@ public sealed class EnsureBacktestHandler(IBacktestRepository backtests, IReplay
 
         if (existing is null)
             backtests.Add(Backtest.Request(setup.OwnerId, setup.StrategyId, setup.Version, now));
-        else if (existing.IsOlderThan(FreshFor, now))
+        else if (existing.IsDueAgain(now))
             existing.RequestAgain(now);
 
         await backtests.SaveChangesAsync(cancellationToken);

@@ -26,6 +26,7 @@ export interface ReplayResultDto {
   end: string;
   trades: number;
   riskExits: number;
+  signalReports: number;
   series: ReplaySeriesDto[];
 }
 

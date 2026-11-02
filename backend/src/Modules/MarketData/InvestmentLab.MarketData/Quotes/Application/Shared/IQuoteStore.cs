@@ -7,15 +7,11 @@ public interface IQuoteStore
 {
     Task<IReadOnlyList<QuotedInstrument>> InstrumentsQuotedBy(QuoteProvider provider, CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<QuotedInstrument>> InstrumentsWithoutFullHistory(QuoteProvider provider, CancellationToken cancellationToken);
-
-    Task<DateOnly?> FirstTradingDateAsync(InstrumentId id, CancellationToken cancellationToken);
-
-    Task MarkFullHistoryFetchedAsync(InstrumentId id, DateTimeOffset at, CancellationToken cancellationToken);
-
     Task<bool> InstrumentExistsAsync(InstrumentId id, CancellationToken cancellationToken);
 
     Task<IReadOnlyDictionary<InstrumentId, DateOnly>> LastTradingDatesAsync(CancellationToken cancellationToken);
+
+    Task<IReadOnlyDictionary<InstrumentId, FirstStoredQuote>> FirstQuotesAsync(IReadOnlyCollection<InstrumentId> instrumentIds, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<DailyQuote>> QuotesFromAsync(InstrumentId id, DateOnly from, CancellationToken cancellationToken);
 

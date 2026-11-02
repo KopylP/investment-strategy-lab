@@ -54,6 +54,7 @@ export class StrategyBacktest {
     { label: '5 років', value: 5 },
     { label: '10 років', value: 10 },
     { label: '15 років', value: 15 },
+    { label: '20 років', value: 20 },
   ];
 
   protected readonly result = computed(() => this.store.backtest()?.result ?? null);

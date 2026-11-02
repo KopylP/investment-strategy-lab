@@ -99,8 +99,8 @@ internal sealed class NoStrategyMessages : InvestmentLab.Strategies.Contracts.IS
     public Task<IReadOnlyList<InvestmentLab.Strategies.Contracts.StrategySummaryDto>> GetStrategies(CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<InvestmentLab.Strategies.Contracts.StrategySummaryDto>>([]);
 
-    public static Task<StrategyReplaySetupDto?> GetReplaySetup(Guid strategyId, int? version, CancellationToken cancellationToken) =>
-        Task.FromResult<StrategyReplaySetupDto?>(null);
+    public Task<InvestmentLab.Strategies.Contracts.StrategyReplaySetupDto?> GetReplaySetup(Guid strategyId, int? version, CancellationToken cancellationToken) =>
+        Task.FromResult<InvestmentLab.Strategies.Contracts.StrategyReplaySetupDto?>(null);
 
     public Task<IReadOnlyDictionary<string, string>> GetMessages(CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyDictionary<string, string>>(new Dictionary<string, string>());
