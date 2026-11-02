@@ -2,6 +2,8 @@ namespace InvestmentLab.Backtesting.Replays.Domain;
 
 public sealed class ReplayComparisons(PriceTable prices, int firstDay, ReplaySetup setup)
 {
+    public static readonly Guid EqualWeightBasket = new("5e1f0c3a-7d2b-4b6e-9a51-0e4c8f2d9b17");
+
     public IReadOnlyList<GrowthDay> Benchmark => GrowthOf(setup.BenchmarkInstrumentId);
 
     public double RiskFreeRate =>

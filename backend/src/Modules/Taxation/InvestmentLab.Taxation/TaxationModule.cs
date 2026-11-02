@@ -17,6 +17,7 @@ using InvestmentLab.Taxation.Assessments.Application.RefreshTaxAssessments;
 using InvestmentLab.Taxation.Assessments.Application.RemoveBrokerStatement;
 using InvestmentLab.Taxation.Assessments.Application.RemoveLossCarryforward;
 using InvestmentLab.Taxation.Assessments.Application.Shared;
+using InvestmentLab.Taxation.Assessments.Application.SimulateTax;
 using InvestmentLab.Taxation.Assessments.Application.UploadBrokerStatement;
 using InvestmentLab.Taxation.Assessments.Domain;
 using InvestmentLab.Taxation.Assessments.Infrastructure;
@@ -107,6 +108,7 @@ public sealed class TaxationModule : IModule
         services.AddSingleton<IDeclarationPrinter, Pit38PdfPrinter>();
         services.AddScoped<IPit8CRepository, Pit8CRepository>();
         services.AddScoped<ITaxEstimator, TaxEstimator>();
+        services.AddScoped<ITaxSimulation, TaxSimulation>();
         services.AddSingleton<ITaxPolicyDirectory, TaxPolicyDirectory>();
 
     }

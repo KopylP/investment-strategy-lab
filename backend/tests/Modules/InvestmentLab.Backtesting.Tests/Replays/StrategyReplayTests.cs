@@ -58,7 +58,7 @@ public sealed class StrategyReplayTests
     [Fact]
     public async Task Too_short_a_history_is_refused()
     {
-        var replay = new StrategyReplay(new FakePrices(days: 100, jump: false), new FakeAnswers(), new FakeTrades(), new FakeSignals());
+        var replay = new StrategyReplay(new FakePrices(days: 100, jump: false), new FakeAnswers(), new FakeTrades(), new FakeSignals(), new FakeTaxes());
 
         var replayed = await replay.RunAsync(SetupOf(riskReview: null), TestContext.Current.CancellationToken);
 
@@ -68,7 +68,7 @@ public sealed class StrategyReplayTests
     [Fact]
     public async Task A_failing_strategy_fails_the_replay()
     {
-        var replay = new StrategyReplay(new FakePrices(Days, jump: false), new FakeAnswers { Fails = true }, new FakeTrades(), new FakeSignals());
+        var replay = new StrategyReplay(new FakePrices(Days, jump: false), new FakeAnswers { Fails = true }, new FakeTrades(), new FakeSignals(), new FakeTaxes());
 
         var replayed = await replay.RunAsync(SetupOf(riskReview: null), TestContext.Current.CancellationToken);
 
@@ -100,16 +100,52 @@ public sealed class StrategyReplayTests
         replayed.Value.SignalReports.ShouldBe(0);
     }
 
+    [Fact]
+    public async Task Taxes_due_on_sales_lower_the_return_after_tax_of_the_strategy_and_of_what_it_is_compared_with()
+    {
+        var replayed = await ReplayAsync(new FakeAnswers(), riskReview: null, jumpOnDayAfterStart: true, taxes: new FakeTaxes(shareOfSales: 0.05m));
+
+        var series = replayed.Value.Series;
+
+        series.ShouldAllBe(each => each.Summary.AnnualReturnAfterTax < each.Summary.AnnualReturn);
+    }
+
+    [Fact]
+    public async Task Without_taxes_the_return_after_tax_is_the_return()
+    {
+        var replayed = await ReplayAsync(new FakeAnswers(), riskReview: null, jumpOnDayAfterStart: true);
+
+        var strategy = replayed.Value.SeriesOf(ReplaySeriesKind.Strategy).Summary;
+
+        strategy.AnnualReturnAfterTax!.Value.ShouldBe(strategy.AnnualReturn, 1e-9);
+    }
+
     private const string FallKind = "account-drawdown";
+
+    private sealed class FakeTaxes(decimal shareOfSales = 0m) : IReplayTaxes
+    {
+        public Task<IReadOnlyList<YearTax>> YearlyAsync(IReadOnlyList<BookTrade> trades, string currency, CancellationToken cancellationToken)
+        {
+            var sales = trades.Where(trade => trade.IsSale).ToList();
+            if (shareOfSales == 0m || sales.Count == 0)
+                return Task.FromResult<IReadOnlyList<YearTax>>([]);
+
+            var byYear = sales.GroupBy(trade => trade.On.Year);
+            IReadOnlyList<YearTax> taxes = [.. byYear.Select(year => new YearTax(year.Key, year.Sum(trade => trade.Quantity * trade.Price) * shareOfSales))];
+
+            return Task.FromResult(taxes);
+        }
+    }
 
     private static Task<Result<ReplayResult>> ReplayAsync(
         FakeAnswers answers,
         ReplayCadence? riskReview,
         bool jumpOnDayAfterStart = false,
         FakeSignals? signals = null,
-        ReplaySignalTriggers? triggers = null)
+        ReplaySignalTriggers? triggers = null,
+        FakeTaxes? taxes = null)
     {
-        var replay = new StrategyReplay(new FakePrices(Days, jumpOnDayAfterStart), answers, new FakeTrades(), signals ?? new FakeSignals());
+        var replay = new StrategyReplay(new FakePrices(Days, jumpOnDayAfterStart), answers, new FakeTrades(), signals ?? new FakeSignals(), taxes ?? new FakeTaxes());
 
         return replay.RunAsync(SetupOf(riskReview, triggers), TestContext.Current.CancellationToken);
     }
