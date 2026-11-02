@@ -1,28 +1,37 @@
 <div class="card">
   <h2 class="text-lg font-semibold mt-0 mb-4">Куди вкладено</h2>
   <div class="grid gap-6 md:grid-cols-3">
-    @for (breakdown of breakdowns(); track breakdown.title) {
-      <div>
-        <div class="text-muted-color text-sm mb-2">{{ breakdown.title }}</div>
-        <div class="flex flex-col gap-3">
-          @for (row of breakdown.rows; track row.label) {
-            <div>
-              <div class="flex items-baseline justify-between gap-2 text-sm">
-                <span class="truncate">{{ row.label }}</span>
-                <span class="font-medium">{{ row.share | percent: 0 }}</span>
-              </div>
-              <div
-                class="h-1.5 rounded-full mt-1"
-                style="background: var(--p-content-border-color)"
-              >
+    <div class="flex flex-col gap-6">
+      @for (breakdown of bars(); track breakdown.title) {
+        <div>
+          <div class="text-muted-color text-sm mb-2">{{ breakdown.title }}</div>
+          <div class="flex flex-col gap-3">
+            @for (row of breakdown.rows; track row.key) {
+              <div>
+                <div class="flex items-baseline justify-between gap-2 text-sm">
+                  <span class="truncate">{{ row.label }}</span>
+                  <span class="font-medium">{{ row.share | percent: 0 }}</span>
+                </div>
                 <div
-                  class="h-full rounded-full bg-primary"
-                  [style.width.%]="row.share * 100"
-                ></div>
+                  class="h-1.5 rounded-full mt-1"
+                  style="background: var(--p-content-border-color)"
+                >
+                  <div
+                    class="h-full rounded-full bg-primary"
+                    [style.width.%]="row.share * 100"
+                  ></div>
+                </div>
               </div>
-            </div>
-          }
+            }
+          </div>
         </div>
+      }
+    </div>
+
+    @for (breakdown of maps(); track breakdown.title) {
+      <div class="md:col-span-2">
+        <div class="text-muted-color text-sm mb-2">{{ breakdown.title }}</div>
+        <app-region-map [rows]="breakdown.rows" [currency]="currency()" />
       </div>
     }
   </div>

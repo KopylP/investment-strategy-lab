@@ -34,7 +34,7 @@
   <app-holdings-tiles [totals]="totals" />
 
   @if (store.exposure().length) {
-    <app-holdings-exposure-card [breakdowns]="store.exposure()" />
+    <app-holdings-exposure-card [breakdowns]="store.exposure()" [currency]="store.currency()" />
   }
 
   @if (store.staleQuotes()) {
