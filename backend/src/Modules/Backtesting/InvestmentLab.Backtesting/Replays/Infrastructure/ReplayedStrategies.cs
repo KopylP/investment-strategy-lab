@@ -12,7 +12,7 @@ internal sealed class ReplayedStrategies(IStrategyDirectory strategies, IInstrum
             return null;
 
         var catalog = await instruments.GetInstruments(cancellationToken);
-        var currency = catalog.First(instrument => instrument.Id == setup.Universe[0]).TradingCurrency;
+        var currency = ReplayCurrency.Of(TradingCurrenciesOf(setup.Universe, catalog));
         var rebalance = CadenceOf(setup, StrategyReportDto.Rebalance);
         var signals = SignalTriggersOf(setup, catalog.FirstOrDefault(instrument => instrument.IsVolatilityIndex)?.Id);
 
@@ -20,7 +20,7 @@ internal sealed class ReplayedStrategies(IStrategyDirectory strategies, IInstrum
             StrategyId: setup.StrategyId,
             OwnerId: UserId.Of(setup.OwnerId),
             Version: setup.Version,
-            CanBeReplayed: setup.SupportsBacktest && rebalance is not null,
+            CanBeReplayed: setup.SupportsBacktest,
             Universe: setup.Universe,
             CashInstrumentId: setup.CashInstrumentId,
             BenchmarkInstrumentId: setup.BenchmarkInstrumentId,
@@ -28,6 +28,15 @@ internal sealed class ReplayedStrategies(IStrategyDirectory strategies, IInstrum
             RiskReviewCadence: CadenceOf(setup, StrategyReportDto.RiskReview),
             Signals: signals,
             Currency: currency);
+    }
+
+    private static List<string> TradingCurrenciesOf(IReadOnlyList<Guid> universe, IReadOnlyList<InstrumentDto> catalog)
+    {
+        var byId = catalog.ToDictionary(instrument => instrument.Id);
+
+        return [.. universe.Select(id => byId.TryGetValue(id, out var instrument)
+            ? instrument.TradingCurrency
+            : throw new InvalidOperationException($"Instrument {id} of the strategy is not in the catalog."))];
     }
 
     private static ReplaySignalTriggers SignalTriggersOf(StrategyReplaySetupDto setup, Guid? volatilityIndexId)

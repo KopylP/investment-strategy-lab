@@ -140,6 +140,7 @@ public sealed class StrategyReplay(IPriceTables priceTables, IStrategyAnswers an
             return new ReplayResult(
                 Start: _growth[0].Date,
                 End: _growth[^1].Date,
+                Currency: setup.Currency,
                 Trades: book.Trades,
                 RiskExits: _riskExits,
                 SignalReports: _signalReports,

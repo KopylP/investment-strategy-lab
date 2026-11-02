@@ -24,6 +24,7 @@ export interface ReplaySeriesDto {
 export interface ReplayResultDto {
   start: string;
   end: string;
+  currency: string;
   trades: number;
   riskExits: number;
   signalReports: number;
