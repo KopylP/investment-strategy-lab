@@ -47,7 +47,7 @@ public sealed class InstrumentSeedTests
             (result.IsSuccess ? null : result.Error.Message).ShouldBeNull(command.ProviderSymbols[0]);
         }
 
-        repository.Items.Count.ShouldBe(48);
+        repository.Items.Count.ShouldBe(49);
         repository.Items.Where(i => i.Kind == InstrumentKind.Etf).ShouldAllBe(i => i.Isin != null && i.Group != null);
         repository.Items.ShouldContain(i => i.SymbolFor(QuoteProvider.YFinance)!.Symbol == "^VIX" && i.Kind == InstrumentKind.Index);
     }
