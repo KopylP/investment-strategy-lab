@@ -60,6 +60,21 @@
   },
   {
     "kind": "Etf",
+    "isin": "IE00B53L3W79",
+    "name": "iShares Core EURO STOXX 50 (Acc)",
+    "exchange": "XETR",
+    "tradingCurrency": "EUR",
+    "group": "Акції єврозони",
+    "isAccumulating": true,
+    "providerSymbols": [
+      "yfinance:SXRT.DE"
+    ],
+    "assetClass": "Equity",
+    "region": "Eurozone",
+    "assetCurrency": "EUR"
+  },
+  {
+    "kind": "Etf",
     "isin": "IE00BKM4GZ66",
     "name": "iShares Core MSCI EM IMI",
     "exchange": "XETR",
