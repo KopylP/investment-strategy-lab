@@ -2,6 +2,9 @@ namespace InvestmentLab.Backtesting.Replays.Domain;
 
 public sealed class Backtest : AggregateRoot<Guid>
 {
+    private static readonly TimeSpan SuccessFreshFor = TimeSpan.FromDays(32);
+    private static readonly TimeSpan FailureRetriedAfter = TimeSpan.FromDays(1);
+
     public UserId OwnerId { get; private set; }
     public Guid StrategyId { get; private set; }
     public int StrategyVersion { get; private set; }
@@ -25,8 +28,12 @@ public sealed class Backtest : AggregateRoot<Guid>
 
     public bool IsWaitingOrRunning => Status is BacktestStatus.Queued or BacktestStatus.Running;
 
-    public bool IsOlderThan(TimeSpan age, DateTimeOffset now) =>
-        Status == BacktestStatus.Succeeded && FinishedAt is { } finished && now - finished > age;
+    public bool IsDueAgain(DateTimeOffset now) => Status switch
+    {
+        BacktestStatus.Succeeded => HasFinishedLongerAgoThan(SuccessFreshFor, now),
+        BacktestStatus.Failed => HasFinishedLongerAgoThan(FailureRetriedAfter, now),
+        _ => false,
+    };
 
     public void RequestAgain(DateTimeOffset now)
     {
@@ -59,4 +66,7 @@ public sealed class Backtest : AggregateRoot<Guid>
         Status = BacktestStatus.NotSupported;
         FinishedAt = now;
     }
+
+    private bool HasFinishedLongerAgoThan(TimeSpan age, DateTimeOffset now) =>
+        FinishedAt is { } finished && now - finished > age;
 }

@@ -2,7 +2,7 @@ using InvestmentLab.Backtesting.Replays.Domain;
 
 namespace InvestmentLab.Backtesting.Replays.Application.RunBacktest;
 
-public sealed class StrategyReplay(IPriceTables priceTables, IStrategyAnswers answers, ITargetTrades targetTrades)
+public sealed class StrategyReplay(IPriceTables priceTables, IStrategyAnswers answers, ITargetTrades targetTrades, IReplaySignals signals)
 {
     private const decimal NotionalCapital = 100_000m;
 
@@ -13,7 +13,8 @@ public sealed class StrategyReplay(IPriceTables priceTables, IStrategyAnswers an
         if (prices.FirstDayToReplay(setup) is not { } firstDay)
             return BacktestErrors.NotEnoughHistory();
 
-        var run = new Run(setup, prices, new ReplayBook(NotionalCapital));
+        var alarms = new ReplayAlarms(setup.Signals, signals);
+        var run = new Run(setup, prices, new ReplayBook(NotionalCapital), alarms);
 
         for (var dayIndex = firstDay; dayIndex < prices.Days.Count; dayIndex++)
         {
@@ -33,18 +34,27 @@ public sealed class StrategyReplay(IPriceTables priceTables, IStrategyAnswers an
 
         run.ExecutePending(today, day);
         run.Value(day, today);
+        var fired = run.AlarmsOn(day, today);
 
-        if (ReplayCalendar.OpensPeriod(run.Setup.RebalanceCadence, previous, day))
-            return await RebalanceAsync(run, day, today, cancellationToken);
+        var rebalanceDue = ReplayCalendar.OpensPeriod(run.Setup.RebalanceCadence, previous, day);
+        if (rebalanceDue || fired.Rebalance)
+            return await RebalanceAsync(run, day, today, broughtBySignal: !rebalanceDue, cancellationToken);
 
-        if (run.Setup.RiskReviewCadence is { } review && ReplayCalendar.OpensPeriod(review, previous, day))
-            return await ReviewRiskAsync(run, day, cancellationToken);
+        var riskReviewDue = IsRiskReviewDue(run.Setup, previous, day);
+        if (riskReviewDue || fired.RiskReview)
+            return await ReviewRiskAsync(run, day, broughtBySignal: !riskReviewDue, cancellationToken);
 
         return Result.Success();
     }
 
-    private async Task<Result> RebalanceAsync(Run run, DateOnly day, IReadOnlyDictionary<Guid, decimal> today, CancellationToken cancellationToken)
+    private static bool IsRiskReviewDue(ReplaySetup setup, DateOnly? previous, DateOnly day) =>
+        setup.RiskReviewCadence is { } review && ReplayCalendar.OpensPeriod(review, previous, day);
+
+    private async Task<Result> RebalanceAsync(
+        Run run, DateOnly day, IReadOnlyDictionary<Guid, decimal> today, bool broughtBySignal, CancellationToken cancellationToken)
     {
+        run.NoteReport(broughtBySignal);
+
         var decision = await answers.DecideAsync(run.Setup, run.Book, day, cancellationToken);
         if (decision.IsFailure)
             return decision.Error;
@@ -54,8 +64,10 @@ public sealed class StrategyReplay(IPriceTables priceTables, IStrategyAnswers an
         return Result.Success();
     }
 
-    private async Task<Result> ReviewRiskAsync(Run run, DateOnly day, CancellationToken cancellationToken)
+    private async Task<Result> ReviewRiskAsync(Run run, DateOnly day, bool broughtBySignal, CancellationToken cancellationToken)
     {
+        run.NoteReport(broughtBySignal);
+
         if (run.Book.Positions.Count == 0)
             return Result.Success();
 
@@ -68,16 +80,26 @@ public sealed class StrategyReplay(IPriceTables priceTables, IStrategyAnswers an
         return Result.Success();
     }
 
-    private sealed class Run(ReplaySetup setup, PriceTable prices, ReplayBook book)
+    private sealed class Run(ReplaySetup setup, PriceTable prices, ReplayBook book, ReplayAlarms alarms)
     {
         private readonly List<GrowthDay> _growth = [];
         private List<ReplayTrade> _pending = [];
         private bool _parkAfterwards;
         private int _riskExits;
+        private int _signalReports;
 
         public ReplaySetup Setup => setup;
         public PriceTable Prices => prices;
         public ReplayBook Book => book;
+
+        public FiredReports AlarmsOn(DateOnly day, IReadOnlyDictionary<Guid, decimal> today) =>
+            alarms.FiredOn(new ReplayMoment(day, book, today, _growth[^1].Growth));
+
+        public void NoteReport(bool broughtBySignal)
+        {
+            if (broughtBySignal)
+                _signalReports++;
+        }
 
         public void Order(IReadOnlyList<ReplayTrade> trades) => _pending = [.. trades];
 
@@ -120,6 +142,7 @@ public sealed class StrategyReplay(IPriceTables priceTables, IStrategyAnswers an
                 End: _growth[^1].Date,
                 Trades: book.Trades,
                 RiskExits: _riskExits,
+                SignalReports: _signalReports,
                 Series:
                 [
                     ReplaySeries.Of(ReplaySeriesKind.Strategy, _growth, riskFree),

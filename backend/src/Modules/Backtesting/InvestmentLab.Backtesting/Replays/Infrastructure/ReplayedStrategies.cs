@@ -14,6 +14,7 @@ internal sealed class ReplayedStrategies(IStrategyDirectory strategies, IInstrum
         var catalog = await instruments.GetInstruments(cancellationToken);
         var currency = catalog.First(instrument => instrument.Id == setup.Universe[0]).TradingCurrency;
         var rebalance = CadenceOf(setup, StrategyReportDto.Rebalance);
+        var signals = SignalTriggersOf(setup, catalog.FirstOrDefault(instrument => instrument.IsVolatilityIndex)?.Id);
 
         return new ReplaySetup(
             StrategyId: setup.StrategyId,
@@ -25,8 +26,20 @@ internal sealed class ReplayedStrategies(IStrategyDirectory strategies, IInstrum
             BenchmarkInstrumentId: setup.BenchmarkInstrumentId,
             RebalanceCadence: rebalance ?? ReplayCadence.Monthly,
             RiskReviewCadence: CadenceOf(setup, StrategyReportDto.RiskReview),
+            Signals: signals,
             Currency: currency);
     }
+
+    private static ReplaySignalTriggers SignalTriggersOf(StrategyReplaySetupDto setup, Guid? volatilityIndexId)
+    {
+        var rebalance = SignalKindsOf(setup, StrategyReportDto.Rebalance);
+        var riskReview = SignalKindsOf(setup, StrategyReportDto.RiskReview);
+
+        return new ReplaySignalTriggers(rebalance, riskReview, volatilityIndexId);
+    }
+
+    private static IReadOnlyList<string> SignalKindsOf(StrategyReplaySetupDto setup, string mode) =>
+        setup.Reports.FirstOrDefault(candidate => candidate.Mode == mode)?.SignalKinds ?? [];
 
     private static ReplayCadence? CadenceOf(StrategyReplaySetupDto setup, string mode)
     {

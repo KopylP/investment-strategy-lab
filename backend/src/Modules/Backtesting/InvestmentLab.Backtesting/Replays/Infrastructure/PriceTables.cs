@@ -5,12 +5,12 @@ namespace InvestmentLab.Backtesting.Replays.Infrastructure;
 
 internal sealed class PriceTables(IQuoteHistory quotes, TimeProvider clock) : IPriceTables
 {
-    private const int YearsOfHistory = 21;
+    private const int YearsOfHistory = 25;
 
     public async Task<PriceTable> LoadAsync(ReplaySetup setup, CancellationToken cancellationToken)
     {
         var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
-        var history = await quotes.GetQuoteHistory(setup.PricedInstruments, today.AddYears(-YearsOfHistory), today, cancellationToken);
+        var history = await quotes.GetQuoteHistoryWithArchive(setup.PricedInstruments, today.AddYears(-YearsOfHistory), today, cancellationToken);
 
         var byInstrument = history.ToDictionary(
             series => series.InstrumentId,

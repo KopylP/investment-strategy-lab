@@ -23,7 +23,6 @@ using InvestmentLab.MarketData.Instruments.Infrastructure;
 using InvestmentLab.MarketData.Instruments.Infrastructure.Seed;
 using InvestmentLab.MarketData.Quotes.Api;
 using InvestmentLab.MarketData.Quotes.Application.CorrectQuote;
-using InvestmentLab.MarketData.Quotes.Application.BackfillQuoteHistory;
 using InvestmentLab.MarketData.Quotes.Application.IngestDailyQuotes;
 using InvestmentLab.MarketData.Quotes.Application.Integration;
 using InvestmentLab.MarketData.Quotes.Application.Shared;
@@ -61,7 +60,6 @@ public sealed class MarketDataModule : IModule
     {
         services.AddDomainEventMapper<QuoteCorrected, QuoteCorrectedV1, QuoteCorrectedMapper>();
         services.AddDomainEventMapper<DailyQuotesIngested, DailyQuotesIngestedV1, DailyQuotesIngestedMapper>();
-        services.AddDomainEventMapper<QuoteHistoryExtended, QuoteHistoryExtendedV1, QuoteHistoryExtendedMapper>();
     }
 
     private static void AddInstruments(IServiceCollection services)
@@ -85,14 +83,12 @@ public sealed class MarketDataModule : IModule
         var services = builder.Services;
         services.AddScoped<IQuoteStore, QuoteStore>();
         services.AddScoped<IQuoteHistory, QuoteHistory>();
+        services.AddSingleton<QuoteArchiveCache>();
+        services.AddScoped<IQuoteArchive, QuoteArchive>();
         services.AddScoped<IngestDailyQuotesHandler>();
         services.AddScoped<CorrectQuoteHandler>();
         services.AddScheduledJob<NightlyQuotesJob>(NightlyQuotesJob.Schedule, runAtStartup: true);
-        services.AddScoped<BackfillQuoteHistoryHandler>();
-        services.AddScheduledJob<QuoteHistoryBackfillJob>(QuoteHistoryBackfillJob.Schedule, runAtStartup: true);
         AddYFinance(builder);
-
-
     }
 
     private static void AddFxRates(IServiceCollection services)

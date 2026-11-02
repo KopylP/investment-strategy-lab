@@ -55,6 +55,10 @@ public sealed class InstrumentGroupSubjectReaderTests
             return Task.FromResult(series);
         }
 
+        public Task<IReadOnlyList<QuoteSeriesDto>> GetQuoteHistoryWithArchive(
+            IReadOnlyCollection<Guid> instrumentIds, DateOnly from, DateOnly to, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
         public Task<IReadOnlyList<LatestPriceDto>> GetLatestPrices(
             IReadOnlyCollection<Guid> instrumentIds, DateOnly asOf, CancellationToken cancellationToken)
         {

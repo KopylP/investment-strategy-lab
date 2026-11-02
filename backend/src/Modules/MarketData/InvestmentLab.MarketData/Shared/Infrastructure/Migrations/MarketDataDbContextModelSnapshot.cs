@@ -135,10 +135,6 @@ namespace InvestmentLab.MarketData.Shared.Infrastructure.Migrations
                         .HasColumnType("character varying(10)")
                         .HasColumnName("exchange");
 
-                    b.Property<DateTimeOffset?>("FullQuoteHistoryFetchedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("full_quote_history_fetched_at");
-
                     b.Property<string>("Group")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")

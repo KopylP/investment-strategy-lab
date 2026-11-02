@@ -6,10 +6,6 @@ namespace InvestmentLab.Signals.Monitoring.Application.EnsureBuiltInSignals;
 
 public sealed class EnsureBuiltInSignalsHandler(ISignalRepository signals, IAccountSetupQueries accounts, IInstrumentCatalog instruments)
 {
-    private const decimal VixLevel = 30m;
-    private const decimal AccountDrawdown = 0.30m;
-    private const decimal PositionDrawdown = 0.20m;
-    private const int PositionPeakWindowDays = 365;
     private const int MaxAccountNameLength = 50;
 
     public async Task Handle(CancellationToken cancellationToken)
@@ -63,7 +59,7 @@ public sealed class EnsureBuiltInSignalsHandler(ISignalRepository signals, IAcco
     {
         var key = BuiltInSignalKind.VolatilityIndexKey(owner.Value);
         var target = SignalTarget.Instrument(vixId);
-        var condition = ConditionOf(SignalMetric.Level, VixLevel, windowDays: null);
+        var condition = BuiltInSignalRules.ConditionOf(BuiltInSignalKind.VolatilityIndex);
 
         return Signal.Create(owner, Message.Of("signal.builtin.high_vix"), target, condition, Cadence.Off, key).Value;
     }
@@ -73,7 +69,7 @@ public sealed class EnsureBuiltInSignalsHandler(ISignalRepository signals, IAcco
         var key = BuiltInSignalKind.AccountDrawdownKey(account.Id);
         var name = Message.Of("signal.builtin.account_drawdown", new { account = ShortName(account) });
         var target = SignalTarget.Account(account.Id);
-        var condition = ConditionOf(SignalMetric.DrawdownFromPeak, AccountDrawdown, windowDays: null);
+        var condition = BuiltInSignalRules.ConditionOf(BuiltInSignalKind.AccountDrawdown);
 
         return Signal.Create(owner, name, target, condition, Cadence.Off, key).Value;
     }
@@ -83,13 +79,10 @@ public sealed class EnsureBuiltInSignalsHandler(ISignalRepository signals, IAcco
         var key = BuiltInSignalKind.PositionDrawdownKey(account.Id);
         var name = Message.Of("signal.builtin.position_drawdown", new { account = ShortName(account) });
         var target = SignalTarget.EachPosition(account.Id);
-        var condition = ConditionOf(SignalMetric.DrawdownFromPeak, PositionDrawdown, PositionPeakWindowDays);
+        var condition = BuiltInSignalRules.ConditionOf(BuiltInSignalKind.PositionDrawdown);
 
         return Signal.Create(owner, name, target, condition, Cadence.Off, key).Value;
     }
-
-    private static SignalCondition ConditionOf(SignalMetric metric, decimal threshold, int? windowDays) =>
-        SignalCondition.TryOf(metric, SignalDirection.Above, threshold, rearmAt: null, windowDays).Value;
 
     private static string ShortName(AccountSetupDto account) =>
         account.Name.Length <= MaxAccountNameLength ? account.Name : account.Name[..MaxAccountNameLength];
