@@ -8,7 +8,7 @@ namespace InvestmentLab.IntegrationTests;
 internal static class SignedInClient
 {
     public const string Password = "correct horse battery";
-    private const int DefaultStrategyCount = 4;
+    private const int DefaultStrategyCount = 6;
 
     extension(WebApplicationFactory<api::Program> factory)
     {
