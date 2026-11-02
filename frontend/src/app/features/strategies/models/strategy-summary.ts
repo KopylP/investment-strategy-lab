@@ -35,6 +35,7 @@ export function describeStrategy(
   const weak = read(version.parameters, 'weakMarketInvestPct');
   const sellsPositions = read(version.parameters, 'risk', 'sellOnPositionExit') !== false;
   const maxCorrelation = read(version.parameters, 'scanner', 'maxCorrelation');
+  const targetVolatility = read(version.parameters, 'targetVolatility');
 
   const headline =
     typeof topN === 'number'
@@ -50,6 +51,10 @@ export function describeStrategy(
     );
   if (typeof maxCorrelation === 'number' && maxCorrelation < 1)
     points.push(`Не бере фонд, що рухається надто схоже на вже обраний (кореляція понад ${maxCorrelation})`);
+  if (typeof targetVolatility === 'number' && targetVolatility < 1)
+    points.push(
+      `Коли обрані фонди коливаються сильніше за ${Math.round(targetVolatility * 100)}% на рік, частину грошей тримає${version.cashInstrumentId ? ` в ${symbol(version.cashInstrumentId)}` : ' в кеші'}`,
+    );
   if (typeof weak === 'number')
     points.push(
       `Слабкий ринок: інвестує ${Math.round(weak * 100)}% внеску${version.cashInstrumentId ? `, решта — в ${symbol(version.cashInstrumentId)}` : ''}`,
