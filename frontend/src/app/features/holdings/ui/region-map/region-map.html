@@ -1,0 +1,80 @@
+<div class="relative w-full" [style.aspect-ratio]="aspectRatio">
+  <svg
+    class="absolute inset-0 w-full h-full overflow-visible"
+    [attr.viewBox]="viewBox"
+    role="img"
+    [attr.aria-label]="summary()"
+  >
+    <path
+      [attr.d]="land"
+      fill="none"
+      stroke="var(--p-text-muted-color)"
+      stroke-opacity="0.35"
+      stroke-width="1.4"
+      stroke-linecap="round"
+      [attr.stroke-dasharray]="dotDash"
+    />
+    @for (bubble of bubbles(); track bubble.row.key) {
+      <circle
+        [attr.cx]="bubble.x"
+        [attr.cy]="bubble.y"
+        [attr.r]="bubble.radius"
+        fill="var(--p-primary-500)"
+        [attr.fill-opacity]="hovered() === bubble ? 1 : 0.85"
+        stroke="var(--p-content-background)"
+        stroke-width="2"
+        vector-effect="non-scaling-stroke"
+      />
+      <circle
+        class="cursor-pointer outline-none"
+        [attr.cx]="bubble.x"
+        [attr.cy]="bubble.y"
+        [attr.r]="bubble.hitRadius"
+        fill="transparent"
+        tabindex="0"
+        [attr.aria-label]="bubble.row.label + ' ' + (bubble.row.share | percent: 0)"
+        (mouseenter)="hovered.set(bubble)"
+        (mouseleave)="hovered.set(null)"
+        (focus)="hovered.set(bubble)"
+        (blur)="hovered.set(null)"
+      />
+    }
+  </svg>
+
+  @for (bubble of bubbles(); track bubble.row.key) {
+    <div
+      class="absolute -translate-x-1/2 text-center text-xs leading-tight whitespace-nowrap pointer-events-none"
+      style="text-shadow: 0 0 2px var(--p-content-background), 0 0 4px var(--p-content-background)"
+      [style.left.%]="bubble.leftPercent"
+      [style.top.%]="bubble.labelTopPercent"
+    >
+      <div class="font-semibold">{{ bubble.row.share | percent: 0 }}</div>
+      <div class="text-muted-color">{{ bubble.row.label }}</div>
+    </div>
+  }
+
+  @if (hovered(); as bubble) {
+    <div
+      class="absolute -translate-x-1/2 -translate-y-full -mt-2 z-10 pointer-events-none rounded-border px-3 py-2 text-sm whitespace-nowrap shadow-md"
+      style="background: var(--p-content-background); border: 1px solid var(--p-content-border-color)"
+      [style.left.%]="bubble.leftPercent"
+      [style.top.%]="bubble.topPercent"
+    >
+      <div class="font-medium">{{ bubble.row.label }}</div>
+      <div class="text-muted-color">
+        {{ bubble.row.share | percent: 1 }} · {{ bubble.row.value | money: currency() : 0 }}
+      </div>
+    </div>
+  }
+</div>
+
+@if (unplaced().length) {
+  <div class="flex flex-wrap gap-x-5 gap-y-1 text-sm mt-3">
+    @for (row of unplaced(); track row.key) {
+      <span>
+        <span class="text-muted-color">{{ row.label }}</span>
+        <span class="font-medium ml-1">{{ row.share | percent: 0 }}</span>
+      </span>
+    }
+  </div>
+}
