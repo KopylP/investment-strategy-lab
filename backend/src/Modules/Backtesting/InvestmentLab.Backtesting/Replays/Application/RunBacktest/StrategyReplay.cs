@@ -2,7 +2,12 @@ using InvestmentLab.Backtesting.Replays.Domain;
 
 namespace InvestmentLab.Backtesting.Replays.Application.RunBacktest;
 
-public sealed class StrategyReplay(IPriceTables priceTables, IStrategyAnswers answers, ITargetTrades targetTrades, IReplaySignals signals)
+public sealed class StrategyReplay(
+    IPriceTables priceTables,
+    IStrategyAnswers answers,
+    ITargetTrades targetTrades,
+    IReplaySignals signals,
+    IReplayTaxes taxes)
 {
     private const decimal NotionalCapital = 100_000m;
 
@@ -23,7 +28,40 @@ public sealed class StrategyReplay(IPriceTables priceTables, IStrategyAnswers an
                 return stepped.Error;
         }
 
-        return run.ResultFrom(firstDay);
+        var comparisons = new ReplayComparisons(prices, firstDay, setup);
+        var afterTax = await AfterTaxAsync(run, comparisons, cancellationToken);
+
+        return run.ResultFrom(comparisons, afterTax);
+    }
+
+    private async Task<AfterTaxFinals> AfterTaxAsync(Run run, ReplayComparisons comparisons, CancellationToken cancellationToken)
+    {
+        var currency = run.Setup.Currency;
+
+        var strategy = await StrategyAfterTaxAsync(run, cancellationToken);
+        var benchmark = await HeldAfterTaxAsync(run.Setup.BenchmarkInstrumentId, comparisons.Benchmark, currency, cancellationToken);
+        var equalWeight = await HeldAfterTaxAsync(ReplayComparisons.EqualWeightBasket, comparisons.EqualWeight(), currency, cancellationToken);
+
+        return new AfterTaxFinals(strategy, benchmark, equalWeight);
+    }
+
+    private async Task<double> StrategyAfterTaxAsync(Run run, CancellationToken cancellationToken)
+    {
+        var lastDay = run.Prices.Days.Count - 1;
+        var liquidation = run.Book.LiquidationOn(run.Prices.Days[lastDay], run.Prices.PricesOn(lastDay));
+
+        var yearly = await taxes.YearlyAsync([.. run.Book.TradeLog, .. liquidation], run.Setup.Currency, cancellationToken);
+
+        return AfterTaxGrowth.FinalOf(run.Growth, yearly, NotionalCapital);
+    }
+
+    private async Task<double> HeldAfterTaxAsync(Guid instrumentId, IReadOnlyList<GrowthDay> growth, string currency, CancellationToken cancellationToken)
+    {
+        var trades = BookTrade.HeldThroughout(instrumentId, growth, NotionalCapital);
+
+        var yearly = await taxes.YearlyAsync(trades, currency, cancellationToken);
+
+        return AfterTaxGrowth.FinalOf(growth, yearly, NotionalCapital);
     }
 
     private async Task<Result> StepAsync(Run run, int dayIndex, int firstDay, CancellationToken cancellationToken)
@@ -91,6 +129,7 @@ public sealed class StrategyReplay(IPriceTables priceTables, IStrategyAnswers an
         public ReplaySetup Setup => setup;
         public PriceTable Prices => prices;
         public ReplayBook Book => book;
+        public IReadOnlyList<GrowthDay> Growth => _growth;
 
         public FiredReports AlarmsOn(DateOnly day, IReadOnlyDictionary<Guid, decimal> today) =>
             alarms.FiredOn(new ReplayMoment(day, book, today, _growth[^1].Growth));
@@ -117,7 +156,7 @@ public sealed class StrategyReplay(IPriceTables priceTables, IStrategyAnswers an
             foreach (var trade in _pending.Where(trade => today.ContainsKey(trade.InstrumentId)))
             {
                 if (trade.IsSale)
-                    book.Sell(trade.InstrumentId, trade.Quantity, today[trade.InstrumentId]);
+                    book.Sell(trade.InstrumentId, trade.Quantity, today[trade.InstrumentId], day);
                 else
                     book.Buy(trade.InstrumentId, trade.Amount, today[trade.InstrumentId], day);
             }
@@ -132,9 +171,8 @@ public sealed class StrategyReplay(IPriceTables priceTables, IStrategyAnswers an
         public void Value(DateOnly day, IReadOnlyDictionary<Guid, decimal> today) =>
             _growth.Add(new GrowthDay(day, (double)(book.ValueAt(today) / NotionalCapital)));
 
-        public ReplayResult ResultFrom(int firstDay)
+        public ReplayResult ResultFrom(ReplayComparisons comparisons, AfterTaxFinals afterTax)
         {
-            var comparisons = new ReplayComparisons(prices, firstDay, setup);
             var riskFree = comparisons.RiskFreeRate;
 
             return new ReplayResult(
@@ -146,9 +184,9 @@ public sealed class StrategyReplay(IPriceTables priceTables, IStrategyAnswers an
                 SignalReports: _signalReports,
                 Series:
                 [
-                    ReplaySeries.Of(ReplaySeriesKind.Strategy, _growth, riskFree),
-                    ReplaySeries.Of(ReplaySeriesKind.Benchmark, comparisons.Benchmark, riskFree),
-                    ReplaySeries.Of(ReplaySeriesKind.EqualWeight, comparisons.EqualWeight(), riskFree),
+                    ReplaySeries.Of(ReplaySeriesKind.Strategy, _growth, riskFree, afterTax.Strategy),
+                    ReplaySeries.Of(ReplaySeriesKind.Benchmark, comparisons.Benchmark, riskFree, afterTax.Benchmark),
+                    ReplaySeries.Of(ReplaySeriesKind.EqualWeight, comparisons.EqualWeight(), riskFree, afterTax.EqualWeight),
                 ]);
         }
     }

@@ -13,6 +13,7 @@ export interface ReplaySummaryDto {
   volatility: number;
   sharpe: number;
   maxDrawdown: number;
+  annualReturnAfterTax: number | null;
 }
 
 export interface ReplaySeriesDto {

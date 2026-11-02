@@ -5,24 +5,33 @@ public sealed record ReplaySeries(ReplaySeriesKind Kind, ReplaySummary Summary, 
     private const double DaysInYear = 365.25;
     private const double TradingDaysInYear = 252d;
 
-    public static ReplaySeries Of(ReplaySeriesKind kind, IReadOnlyList<GrowthDay> days, double riskFreeRate) =>
-        new(kind, SummaryOf(days, riskFreeRate), MonthlyPointsOf(days));
+    public static ReplaySeries Of(ReplaySeriesKind kind, IReadOnlyList<GrowthDay> days, double riskFreeRate, double? finalGrowthAfterTax = null) =>
+        new(kind, SummaryOf(days, riskFreeRate, finalGrowthAfterTax), MonthlyPointsOf(days));
 
-    public static double AnnualReturnOf(IReadOnlyList<GrowthDay> days)
+    public static double AnnualReturnOf(IReadOnlyList<GrowthDay> days) => AnnualReturnOf(days, days[^1].Growth);
+
+    private static double AnnualReturnOf(IReadOnlyList<GrowthDay> days, double finalGrowth)
     {
         var years = Math.Max((days[^1].Date.DayNumber - days[0].Date.DayNumber) / DaysInYear, 1e-9);
 
-        return Math.Pow(days[^1].Growth / days[0].Growth, 1d / years) - 1d;
+        return Math.Pow(finalGrowth / days[0].Growth, 1d / years) - 1d;
     }
 
-    private static ReplaySummary SummaryOf(IReadOnlyList<GrowthDay> days, double riskFreeRate)
+    private static ReplaySummary SummaryOf(IReadOnlyList<GrowthDay> days, double riskFreeRate, double? finalGrowthAfterTax)
     {
         var totalReturn = days[^1].Growth / days[0].Growth - 1d;
         var annualReturn = AnnualReturnOf(days);
         var volatility = VolatilityOf(days);
         var sharpe = volatility > 0d ? (annualReturn - riskFreeRate) / volatility : 0d;
+        double? annualReturnAfterTax = finalGrowthAfterTax is { } afterTax ? AnnualReturnOf(days, afterTax) : null;
 
-        return new ReplaySummary(totalReturn, annualReturn, volatility, sharpe, DrawdownsOf(days).Min());
+        return new ReplaySummary(
+            TotalReturn: totalReturn,
+            AnnualReturn: annualReturn,
+            Volatility: volatility,
+            Sharpe: sharpe,
+            MaxDrawdown: DrawdownsOf(days).Min(),
+            AnnualReturnAfterTax: annualReturnAfterTax);
     }
 
     private static double VolatilityOf(IReadOnlyList<GrowthDay> days)

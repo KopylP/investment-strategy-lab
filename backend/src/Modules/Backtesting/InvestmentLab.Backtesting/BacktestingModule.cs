@@ -36,6 +36,7 @@ public sealed class BacktestingModule : IModule
         services.AddScoped<ITargetTrades, TargetTrades>();
         services.AddScoped<IPriceTables, PriceTables>();
         services.AddScoped<IReplaySignals, ReplaySignals>();
+        services.AddScoped<IReplayTaxes, ReplayTaxes>();
         services.AddScoped<StrategyReplay>();
         services.AddScoped<RunBacktestHandler>();
         services.AddScoped<EnsureBacktestHandler>();

@@ -7,10 +7,13 @@ public sealed class ReplayBook(decimal cash)
     private const decimal SmallestKeptShare = 0.000000001m;
 
     private readonly Dictionary<Guid, List<BookLot>> _lots = [];
+    private readonly List<BookTrade> _trades = [];
 
     public decimal Cash { get; private set; } = cash;
 
-    public int Trades { get; private set; }
+    public int Trades => _trades.Count;
+
+    public IReadOnlyList<BookTrade> TradeLog => _trades;
 
     public IReadOnlyList<BookPosition> Positions => [.. _lots.Select(entry => new BookPosition(entry.Key, entry.Value))];
 
@@ -25,15 +28,18 @@ public sealed class ReplayBook(decimal cash)
         if (spent <= 0m || price <= 0m)
             return;
 
-        Cash -= spent + PayCostOf(spent);
+        var cost = CostOf(spent);
+        var quantity = spent / price;
+        Cash -= spent + cost;
+        _trades.Add(new BookTrade(instrumentId, day, IsSale: false, quantity, price, cost));
 
         if (!_lots.TryGetValue(instrumentId, out var lots))
             _lots[instrumentId] = lots = [];
 
-        lots.Add(new BookLot(spent / price, price, day));
+        lots.Add(new BookLot(quantity, price, day));
     }
 
-    public void Sell(Guid instrumentId, decimal quantity, decimal price)
+    public void Sell(Guid instrumentId, decimal quantity, decimal price, DateOnly day)
     {
         var held = _lots.TryGetValue(instrumentId, out var lots) ? lots.Sum(lot => lot.Quantity) : 0m;
         var sold = Math.Min(quantity, held);
@@ -44,15 +50,22 @@ public sealed class ReplayBook(decimal cash)
         Reduce(instrumentId, 1m - sold / held);
 
         var amount = sold * price;
-        Cash += amount - PayCostOf(amount);
+        var cost = CostOf(amount);
+        Cash += amount - cost;
+        _trades.Add(new BookTrade(instrumentId, day, IsSale: true, sold, price, cost));
     }
 
-    private decimal PayCostOf(decimal amount)
+    public IReadOnlyList<BookTrade> LiquidationOn(DateOnly day, IReadOnlyDictionary<Guid, decimal> prices)
     {
-        Trades++;
+        var priced = Positions.Where(position => prices.GetValueOrDefault(position.InstrumentId) > 0m);
 
-        return amount * CostShareOfAmount + FeePerTrade;
+        return [.. priced.Select(position => SaleOf(position, day, prices[position.InstrumentId]))];
     }
+
+    private static BookTrade SaleOf(BookPosition position, DateOnly day, decimal price) =>
+        new(position.InstrumentId, day, IsSale: true, position.Quantity, price, CostOf(position.Quantity * price));
+
+    private static decimal CostOf(decimal amount) => amount * CostShareOfAmount + FeePerTrade;
 
     private void Reduce(Guid instrumentId, decimal shareKept)
     {
