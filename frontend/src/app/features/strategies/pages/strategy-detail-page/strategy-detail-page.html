@@ -96,7 +96,6 @@
     <app-strategy-backtest
       [strategyId]="strategy.id"
       [version]="strategy.version.number"
-      [currency]="backtestCurrency()"
       [benchmarkLabel]="store.instruments.symbol(strategy.version.benchmarkInstrumentId)"
     />
     @if (store.type(); as type) {

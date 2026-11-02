@@ -59,12 +59,6 @@ export class StrategyDetailPage {
     })),
   );
 
-  protected readonly backtestCurrency = computed(() => {
-    const first = this.store.strategy()?.version.universe[0];
-
-    return (first && this.store.instruments.byId().get(first)?.tradingCurrency) || 'EUR';
-  });
-
   protected readonly etfOptions = computed(() =>
     this.store.instruments.etfs().map((instrument) => ({
       label: `${instrument.label} · ${instrument.name}`,

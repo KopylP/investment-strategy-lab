@@ -42,7 +42,6 @@ const FEW_PERIODS = 24;
 export class StrategyBacktest {
   readonly strategyId = input.required<string>();
   readonly version = input.required<number>();
-  readonly currency = input.required<string>();
   readonly benchmarkLabel = input.required<string>();
 
   protected readonly store = inject(BacktestStore);
@@ -58,6 +57,7 @@ export class StrategyBacktest {
   ];
 
   protected readonly result = computed(() => this.store.backtest()?.result ?? null);
+  protected readonly currency = computed(() => this.result()?.currency ?? '');
   protected readonly strategySummary = computed(
     () => this.result()?.series.find((series) => series.kind === 'Strategy')?.summary ?? null,
   );

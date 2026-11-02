@@ -10,6 +10,7 @@ internal sealed class NbpFxRateProvider(HttpClient http) : IFxRateProvider
     public const string BaseAddress = "https://api.nbp.pl";
 
     private const int MaxDaysPerRequest = 93;
+    private static readonly DateOnly FirstPublishedDay = new(2002, 1, 2);
 
     private sealed record NbpRate(string No, DateOnly EffectiveDate, decimal Mid);
 
@@ -21,7 +22,7 @@ internal sealed class NbpFxRateProvider(HttpClient http) : IFxRateProvider
     {
         var rates = new List<FxRate>();
 
-        for (var start = from; start <= to; start = start.AddDays(MaxDaysPerRequest))
+        for (var start = Later(from, FirstPublishedDay); start <= to; start = start.AddDays(MaxDaysPerRequest))
         {
             var end = start.AddDays(MaxDaysPerRequest - 1) < to ? start.AddDays(MaxDaysPerRequest - 1) : to;
             using var response = await http.GetAsync(
@@ -39,4 +40,6 @@ internal sealed class NbpFxRateProvider(HttpClient http) : IFxRateProvider
 
         return rates;
     }
+
+    private static DateOnly Later(DateOnly left, DateOnly right) => left > right ? left : right;
 }

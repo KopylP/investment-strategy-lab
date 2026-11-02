@@ -38,7 +38,7 @@ public sealed class BacktestTests
         backtest.Start();
 
         if (succeeded)
-            backtest.Complete(new ReplayResult(new DateOnly(2008, 1, 2), new DateOnly(2026, 10, 30), 0, 0, 0, []), at);
+            backtest.Complete(new ReplayResult(new DateOnly(2008, 1, 2), new DateOnly(2026, 10, 30), "EUR", 0, 0, 0, []), at);
         else
             backtest.Fail("backtest.failed", at);
 
