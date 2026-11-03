@@ -1,3 +1,4 @@
+using InvestmentLab.Backtesting.Contracts;
 using InvestmentLab.Backtesting.Replays.Api;
 using InvestmentLab.Backtesting.Replays.Application.EnsureBacktest;
 using InvestmentLab.Backtesting.Replays.Application.GetBacktest;
@@ -32,6 +33,7 @@ public sealed class BacktestingModule : IModule
 
         var services = builder.Services;
         services.AddScoped<IBacktestRepository, BacktestRepository>();
+        services.AddScoped<IBacktestStatusQueries, BacktestStatusQueries>();
         services.AddScoped<IReplayedStrategies, ReplayedStrategies>();
         services.AddScoped<IStrategyAnswers, StrategyAnswers>();
         services.AddScoped<ITargetTrades, TargetTrades>();
@@ -49,6 +51,7 @@ public sealed class BacktestingModule : IModule
         services.AddScoped<GetMoneyOutcomesHandler>();
         services.AddScheduledJob<BacktestsJob>(BacktestsJob.Schedule);
         services.AddIntegrationEventHandler<StrategyReconfiguredV1, RequestBacktestOnReconfigured>();
+        services.AddIntegrationEventHandler<StrategyDeletedV1, DeleteBacktestsOfDeletedStrategy>();
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>

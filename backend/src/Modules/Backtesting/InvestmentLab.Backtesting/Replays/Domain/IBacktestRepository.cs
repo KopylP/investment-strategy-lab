@@ -10,7 +10,11 @@ public interface IBacktestRepository
 
     Task<IReadOnlyList<Backtest>> AllAsync(CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<Backtest>> OfStrategyAsync(Guid strategyId, CancellationToken cancellationToken);
+
     void Add(Backtest backtest);
+
+    void Remove(Backtest backtest);
 
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }
