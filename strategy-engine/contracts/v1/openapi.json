@@ -135,6 +135,58 @@
         }
       }
     },
+    "/v1/strategies/{code}/parameters/check": {
+      "post": {
+        "tags": [
+          "strategies"
+        ],
+        "summary": "Check Parameters",
+        "operationId": "check_parameters_v1_strategies__code__parameters_check_post",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Code"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ParametersCheckRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParametersCheck"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/strategies/{code}/decide/jobs": {
       "post": {
         "tags": [
@@ -836,6 +888,81 @@
           "reasons"
         ],
         "title": "MarketRegime"
+      },
+      "ParameterProblem": {
+        "properties": {
+          "path": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Path",
+            "description": "JSON path of the problem inside the parameters."
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "path",
+          "code",
+          "message"
+        ],
+        "title": "ParameterProblem"
+      },
+      "ParametersCheck": {
+        "properties": {
+          "problems": {
+            "items": {
+              "$ref": "#/components/schemas/ParameterProblem"
+            },
+            "type": "array",
+            "title": "Problems"
+          },
+          "signalIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Signalids",
+            "description": "User signals the parameters refer to, when their shape is valid."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "problems"
+        ],
+        "title": "ParametersCheck"
+      },
+      "ParametersCheckRequest": {
+        "properties": {
+          "parameters": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Parameters"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "parameters"
+        ],
+        "title": "ParametersCheckRequest"
       },
       "PortfolioRisk": {
         "properties": {

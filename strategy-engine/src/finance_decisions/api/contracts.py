@@ -342,6 +342,21 @@ class StrategyTypeDescriptor(ApiModel):
     messages: dict[str, str] = Field(default_factory=dict, description="The texts of this type's message codes, in Ukrainian.")
 
 
+class ParametersCheckRequest(ApiModel):
+    parameters: dict[str, Any]
+
+
+class ParameterProblem(ApiModel):
+    path: list[str | int] = Field(description="JSON path of the problem inside the parameters.")
+    code: str
+    message: str
+
+
+class ParametersCheck(ApiModel):
+    problems: list[ParameterProblem]
+    signal_ids: list[str] = Field(default_factory=list, description="User signals the parameters refer to, when their shape is valid.")
+
+
 class PricesRequest(ApiModel):
     symbols: list[str] = Field(min_length=1)
     start: date
