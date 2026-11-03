@@ -1,6 +1,5 @@
 {
   "rule_based.description": "Стратегія, складена з правил у конструкторі: ринковий фільтр, умови виходу і входу, відбір, ваги та обмеження ризику.",
-
   "rule_based.indicator.price.label": "Ціна",
   "rule_based.indicator.price.hint": "Остання ціна закриття ряду з урахуванням дивідендів.",
   "rule_based.indicator.price.phrase": "ціна {of}",
@@ -34,7 +33,6 @@
   "rule_based.indicator.rsi.label": "RSI",
   "rule_based.indicator.rsi.hint": "Індекс відносної сили Вайлдера за N днів, від 0 до 100.",
   "rule_based.indicator.rsi.phrase": "RSI {days} днів для {of}",
-
   "rule_based.condition.compare.label": "Порівняння",
   "rule_based.condition.compare.hint": "Порівнює індикатор з числом або з іншим індикатором.",
   "rule_based.condition.compare.phrase": "{left} {operator} {right}",
@@ -56,7 +54,6 @@
   "rule_based.condition.not.label": "Не (НЕ)",
   "rule_based.condition.not.hint": "Виконано, коли вкладена умова не виконана.",
   "rule_based.condition.not.phrase": "не {condition}",
-
   "rule_based.field.series": "Ряд",
   "rule_based.field.instrumentId": "Інструмент",
   "rule_based.field.of": "Чого",
@@ -100,7 +97,6 @@
   "rule_based.field.selection": "Відбір",
   "rule_based.field.weights": "Ваги",
   "rule_based.field.risk": "Ризик",
-
   "rule_based.choice.series.fund": "цей фонд",
   "rule_based.choice.series.benchmark": "бенчмарк",
   "rule_based.choice.series.volatilityIndex": "індекс волатильності",
@@ -119,7 +115,6 @@
   "rule_based.choice.order.asc": "від меншого",
   "rule_based.choice.method.equal": "порівну",
   "rule_based.choice.method.inverseVolatility": "обернено до волатильності",
-
   "rule_based.check.indicator_unknown": "Немає індикатора «{name}»",
   "rule_based.check.fund_in_market_filter": "Індикатор «{name}» рахує поточний фонд, а ринковий фільтр дивиться лише на ринок",
   "rule_based.check.this_fund_signal_in_market_filter": "Сигнал «для цього фонду» не можна вживати в ринковому фільтрі",
@@ -127,5 +122,16 @@
   "rule_based.check.extra_needs_instrument": "Індикатор «{name}» рахує інший інструмент: оберіть, який саме",
   "rule_based.check.instrument_without_extra": "Індикатор «{name}» не рахує іншого інструмента, тож інструмент для нього зайвий",
   "rule_based.check.signal_id_format": "«{id}» не є ідентифікатором сигналу",
-  "rule_based.check.rank_by_unknown": "Немає індикатора «{name}», за яким ранжувати"
+  "rule_based.check.rank_by_unknown": "Немає індикатора «{name}», за яким ранжувати",
+  "rule_based.value.percent": "{value:percent}",
+  "rule_based.value.signedPercent": "{value:signedPercent}",
+  "rule_based.value.number": "{value:amount}",
+  "rule_based.reason.holds": "так",
+  "rule_based.reason.fails": "ні",
+  "rule_based.reason.compare": "{left} ({leftValue}) {operator} {right}: {verdict}",
+  "rule_based.reason.between": "{left} ({leftValue}) між {low} і {high}: {verdict}",
+  "rule_based.reason.crossed": "{indicator} перетнув {direction} {target} за {withinDays} днів: {verdict}",
+  "rule_based.reason.signal": "ваш сигнал {state} {scope}: {verdict}",
+  "rule_based.reason.not": "заперечення ({items:join:; }): {verdict}",
+  "rule_based.reason.short_history": "{name}: замало історії, потрібно {days} торгових днів"
 }

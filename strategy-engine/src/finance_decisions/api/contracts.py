@@ -83,6 +83,11 @@ class SubPortfolioSnapshot(ApiModel):
     holdings: list[Holding] = Field(default_factory=list)
 
 
+class SignalState(ApiModel):
+    id: str = Field(min_length=1)
+    active_for: list[str] = Field(default_factory=list, description="Keys of the instruments (as in marketSeries) the signal fires for now.")
+
+
 class EvaluationContext(ApiModel):
     """Everything a strategy may look at. Data after ``asOf`` is ignored."""
 
@@ -93,6 +98,7 @@ class EvaluationContext(ApiModel):
     market_series: list[PriceSeries]
     sub_portfolio: SubPortfolioSnapshot
     state: dict[str, Any] | None = None
+    signals: list[SignalState] | None = Field(None, description="States of the user's market signals the parameters refer to.")
 
     @model_validator(mode="after")
     def _unique_keys(self) -> "EvaluationContext":
