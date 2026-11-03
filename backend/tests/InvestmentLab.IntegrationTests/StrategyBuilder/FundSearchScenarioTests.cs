@@ -38,7 +38,7 @@ public sealed class FundSearchScenarioTests(MarketDataApiFactory factory) : ICla
         var repeated = await SearchAsync(client, cancellationToken);
         repeated[1].InstrumentId.ShouldNotBeNull();
         repeated[0].InstrumentId.ShouldBe(found[0].InstrumentId);
-        using var again = await client.PostAsJsonAsync("/api/strategy-builder/funds", new AddFundsCommand(additions.Take(2).ToList(), []), cancellationToken);
+        using var again = await client.PostAsJsonAsync("/api/strategy-builder/funds", new AddFundsCommand([.. additions.Take(2)], []), cancellationToken);
         again.EnsureSuccessStatusCode();
         var reused = (await again.Content.ReadFromJsonAsync<AddedFundsDto>(cancellationToken))!;
         reused.InstrumentIds.ShouldBe(added.InstrumentIds);
@@ -48,7 +48,7 @@ public sealed class FundSearchScenarioTests(MarketDataApiFactory factory) : ICla
         directory!.Single(instrument => instrument.Id == repeated[1].InstrumentId).Name.ShouldBe("Discovered fund");
 
         var fullSelection = Enumerable.Range(0, 60).Select(_ => Guid.NewGuid()).ToList();
-        using var tooMany = await client.PostAsJsonAsync("/api/strategy-builder/funds", new AddFundsCommand(additions.Take(1).ToList(), fullSelection), cancellationToken);
+        using var tooMany = await client.PostAsJsonAsync("/api/strategy-builder/funds", new AddFundsCommand([.. additions.Take(1)], fullSelection), cancellationToken);
         tooMany.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
 
         factory.Funds.Unavailable = true;
