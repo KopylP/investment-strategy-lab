@@ -1,0 +1,195 @@
+<p-dialog
+  header="Знайти фонди"
+  [modal]="true"
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  [closable]="!store.adding()"
+  [closeOnEscape]="!store.adding()"
+  [style]="{ width: '64rem' }"
+  [breakpoints]="{ '760px': '96vw' }"
+>
+  <div class="flex flex-col gap-4">
+    <p class="text-muted-color m-0">
+      Знайдіть ETF і додайте вибрані до фондів стратегії. Пошук перевіряє до 250 найбільших фондів
+      за вибраними умовами та показує до 100 збігів.
+    </p>
+    @if (store.loadingOptions()) {
+      <p class="text-muted-color" role="status">Завантажуємо біржі й регіони…</p>
+    }
+    @if (store.options(); as options) {
+      <form class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" (ngSubmit)="search()">
+        <div class="flex flex-col gap-2">
+          <label for="fund-search-exchange">Біржа</label>
+          <p-select
+            inputId="fund-search-exchange"
+            name="exchange"
+            [options]="options.exchanges"
+            optionLabel="label"
+            optionValue="id"
+            [ngModel]="exchangeId()"
+            (ngModelChange)="exchangeId.set($event)"
+            [showClear]="true"
+            placeholder="Виберіть біржу"
+            appendTo="body"
+            fluid
+          />
+        </div>
+        <div class="flex flex-col gap-2">
+          <label for="fund-search-region">Регіон торгів</label>
+          <p-select
+            inputId="fund-search-region"
+            name="region"
+            [options]="options.regions"
+            optionLabel="label"
+            optionValue="id"
+            [ngModel]="regionId()"
+            (ngModelChange)="regionId.set($event)"
+            [showClear]="true"
+            placeholder="Виберіть регіон"
+            appendTo="body"
+            fluid
+          />
+        </div>
+        <div class="flex flex-col gap-2">
+          <label for="fund-search-family">Сімейство фондів</label>
+          <input
+            pInputText
+            id="fund-search-family"
+            name="family"
+            placeholder="Необов’язково"
+            [ngModel]="family()"
+            (ngModelChange)="family.set($event)"
+          />
+        </div>
+        <div class="flex flex-col gap-2">
+          <label for="fund-search-assets">Мінімальні активи</label>
+          <p-inputnumber
+            inputId="fund-search-assets"
+            name="assets"
+            locale="uk-UA"
+            [ngModel]="minAssets()"
+            (ngModelChange)="minAssets.set($event)"
+            [min]="0"
+            [maxFractionDigits]="0"
+            placeholder="Без обмеження"
+            fluid
+          />
+        </div>
+        <div class="flex flex-col gap-2">
+          <label for="fund-search-fee">Максимальна річна комісія (TER), %</label>
+          <p-inputnumber
+            inputId="fund-search-fee"
+            name="fee"
+            locale="uk-UA"
+            [ngModel]="maxFeePercent()"
+            (ngModelChange)="maxFeePercent.set($event)"
+            [min]="0"
+            [max]="10"
+            [maxFractionDigits]="3"
+            placeholder="Без обмеження"
+            fluid
+          />
+        </div>
+        <div class="flex flex-col gap-2">
+          <label for="fund-search-words">Слова в назві (до п’яти)</label>
+          <input
+            pInputText
+            id="fund-search-words"
+            name="words"
+            placeholder="Наприклад, MSCI World"
+            [ngModel]="words()"
+            (ngModelChange)="words.set($event)"
+          />
+        </div>
+        <div class="sm:col-span-2 lg:col-span-3">
+          <p-button
+            type="submit"
+            label="Шукати"
+            ariaLabel="Шукати"
+            icon="pi pi-search"
+            [loading]="store.searching()"
+            [disabled]="store.adding()"
+          />
+        </div>
+      </form>
+    } @else if (!store.loadingOptions()) {
+      <p-button
+        label="Повторити завантаження"
+        severity="secondary"
+        (onClick)="store.loadOptions()"
+      />
+    }
+    @if (store.error(); as error) {
+      <p-message severity="error">{{ error }}</p-message>
+    }
+    @if (store.failed().length > 0) {
+      <div class="flex flex-col gap-2" role="status">
+        <p-message severity="warn">Деякі фонди не додано. Решту вже додано до вибору.</p-message>
+        @for (failure of store.failed(); track failure.symbol) {
+          <p class="m-0">{{ failure.symbol }}: {{ failure.reason }}</p>
+        }
+      </div>
+    }
+    @if (store.funds(); as funds) {
+      <p class="text-muted-color m-0" role="status">
+        Знайдено: {{ funds.length }} · Вибрано: {{ store.selected().length }}
+      </p>
+      <p-table
+        [value]="funds"
+        dataKey="symbol"
+        [selection]="store.selected()"
+        (selectionChange)="store.selected.set($event)"
+        [scrollable]="true"
+        scrollHeight="24rem"
+        [tableStyle]="{ 'min-width': '40rem' }"
+      >
+        <ng-template #header>
+          <tr>
+            <th style="width: 3rem"><p-tableHeaderCheckbox /></th>
+            <th>Символ</th>
+            <th>Назва</th>
+            <th>Активи</th>
+            <th>TER</th>
+            <th>У сервісі</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-fund>
+          <tr>
+            <td><p-tableCheckbox [value]="fund" /></td>
+            <td class="font-medium">{{ fund.symbol }}</td>
+            <td>{{ fund.name }}</td>
+            <td class="whitespace-nowrap">
+              {{ fund.totalAssets === null ? '—' : (fund.totalAssets | number: '1.0-0') }}
+            </td>
+            <td class="whitespace-nowrap">
+              {{ fund.expenseRatio === null ? '—' : (fund.expenseRatio | percent: '1.0-3') }}
+            </td>
+            <td>{{ fund.instrumentId ? 'Уже є' : 'Новий' }}</td>
+          </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="6">Фондів за цими умовами не знайдено. Спробуйте послабити обмеження.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    }
+  </div>
+  <ng-template #footer>
+    <p-button
+      label="Закрити"
+      severity="secondary"
+      [text]="true"
+      [disabled]="store.adding()"
+      (onClick)="visible.set(false)"
+    />
+    <p-button
+      label="Додати вибрані"
+      ariaLabel="Додати вибрані"
+      icon="pi pi-plus"
+      [loading]="store.adding()"
+      [disabled]="store.selected().length === 0 || store.searching()"
+      (onClick)="add()"
+    />
+  </ng-template>
+</p-dialog>

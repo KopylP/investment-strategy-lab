@@ -17,6 +17,7 @@ using InvestmentLab.MarketData.Instruments.Application.AssignProviderSymbol;
 using InvestmentLab.MarketData.Instruments.Application.DescribeInstruments;
 using InvestmentLab.MarketData.Instruments.Application.GetInstruments;
 using InvestmentLab.MarketData.Instruments.Application.RegisterInstrument;
+using InvestmentLab.MarketData.Instruments.Application.RegisterListedFund;
 using InvestmentLab.MarketData.Instruments.Application.Shared;
 using InvestmentLab.MarketData.Instruments.Domain;
 using InvestmentLab.MarketData.Instruments.Infrastructure;
@@ -66,6 +67,7 @@ public sealed class MarketDataModule : IModule
     {
         services.AddScoped<IInstrumentRepository, InstrumentRepository>();
         services.AddScoped<RegisterInstrumentHandler>();
+        services.AddScoped<RegisterListedFundHandler>();
         services.AddScoped<AssignProviderSymbolHandler>();
         services.AddScoped<GetInstrumentsHandler>();
         services.AddScoped<DescribeInstrumentsHandler>();

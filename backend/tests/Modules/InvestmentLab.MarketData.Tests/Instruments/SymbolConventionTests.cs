@@ -20,6 +20,10 @@ public sealed class SymbolConventionTests
 
     [Theory]
     [InlineData("SXR8.DE", "XETRA")]
+    [InlineData("AAA.AS", "XAMS")]
+    [InlineData("AAA.PA", "XPAR")]
+    [InlineData("AAA.MI", "XMIL")]
+    [InlineData("AAA.BR", "XBRU")]
     [InlineData("VOD.L", "LSE")]
     [InlineData("ABC.XX", "XX")]
     [InlineData("AAPL", "US")]

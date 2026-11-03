@@ -131,6 +131,7 @@
   </div>
 
   <app-builder-setup-dialog
+    (instrumentsChanged)="store.refreshInstruments()"
     [(visible)]="setupVisible"
     [setup]="draft.setup"
     [instruments]="store.instruments()"

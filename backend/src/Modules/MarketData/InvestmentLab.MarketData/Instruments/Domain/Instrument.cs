@@ -40,6 +40,23 @@ public sealed class Instrument : AggregateRoot<InstrumentId>
         if (kind == InstrumentKind.Etf && isin is null)
             return InstrumentErrors.IsinRequired(kind);
 
+        return RegisterCore(kind, isin, name, exchange, tradingCurrency, group, isAccumulating);
+    }
+
+    public static Result<Instrument> FromFundListing(string name, string exchange, Currency tradingCurrency, ProviderSymbol symbol)
+    {
+        var registered = RegisterCore(InstrumentKind.Etf, null, name, exchange, tradingCurrency, null, null);
+        if (registered.IsFailure)
+            return registered.Error;
+
+        registered.Value.AssignProviderSymbol(symbol);
+
+        return registered.Value;
+    }
+
+    private static Result<Instrument> RegisterCore(
+        InstrumentKind kind, Isin? isin, string name, string exchange, Currency tradingCurrency, InstrumentGroup? group, bool? isAccumulating)
+    {
         if (string.IsNullOrWhiteSpace(name))
             return InstrumentErrors.NameRequired();
 

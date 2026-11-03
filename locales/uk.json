@@ -426,5 +426,12 @@
   "market_data.region.france": "Франція",
   "market_data.region.italy": "Італія",
   "market_data.region.switzerland": "Швейцарія",
-  "market_data.region.usa": "США"
+  "market_data.region.usa": "США",
+  "builder.funds.place_required": "Виберіть біржу або регіон для пошуку.",
+  "builder.funds.too_many_words": "Укажіть щонайбільше п’ять слів у назві.",
+  "builder.funds.expense_ratio": "Річна комісія має бути від 0 % до 10 %.",
+  "builder.funds.assets": "Мінімальні активи не можуть бути від’ємними.",
+  "builder.funds.registration_failed": "Не вдалося зареєструвати фонд. Спробуйте ще раз.",
+  "builder.funds.too_many_funds": "У чернетці може бути щонайбільше {max} фондів. Виберіть менше.",
+  "builder.funds.invalid": "Для фонду потрібні символ, назва та валюта торгів."
 }

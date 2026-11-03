@@ -1,3 +1,9 @@
+using InvestmentLab.StrategyBuilder.Funds.Api;
+using InvestmentLab.StrategyBuilder.Funds.Application.AddFunds;
+using InvestmentLab.StrategyBuilder.Funds.Application.GetFundSearchOptions;
+using InvestmentLab.StrategyBuilder.Funds.Application.SearchFunds;
+using InvestmentLab.StrategyBuilder.Funds.Domain;
+using InvestmentLab.StrategyBuilder.Funds.Infrastructure;
 using InvestmentLab.BuildingBlocks.Scheduling;
 using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.Signals.Contracts;
@@ -49,6 +55,10 @@ public sealed class StrategyBuilderModule : IModule
         builder.AddModuleDbContext<StrategyBuilderDbContext>(Schema);
 
         var services = builder.Services;
+        services.AddScoped<IFundSearch, FundSearch>();
+        services.AddScoped<GetFundSearchOptionsHandler>();
+        services.AddScoped<SearchFundsHandler>();
+        services.AddScoped<AddFundsHandler>();
         services.AddSingleton<ITrialRunGate, TrialRunGate>();
         services.AddScoped<ITrialBacktests, TrialBacktests>();
         services.AddScoped<RunTrialHandler>();
@@ -84,5 +94,5 @@ public sealed class StrategyBuilderModule : IModule
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>
-        endpoints.MapGroup("/api/strategy-builder").MapDrafts().MapTrials();
+        endpoints.MapGroup("/api/strategy-builder").MapDrafts().MapTrials().MapFunds();
 }
