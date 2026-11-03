@@ -1,3 +1,4 @@
+using InvestmentLab.Strategies.Definitions.Application.Shared;
 using InvestmentLab.Strategies.Catalog.Domain;
 using InvestmentLab.Strategies.Contracts;
 using InvestmentLab.Strategies.Definitions.Domain;
@@ -13,8 +14,7 @@ internal sealed class StrategyDirectory(IStrategyRepository strategies, CatalogS
 
         return [.. (await strategies.ListAsync(cancellationToken)).Select(strategy => new StrategySummaryDto(
             strategy.Id.Value, strategy.Name, strategy.TypeCode, strategy.Latest.Number, strategy.Latest.Universe, strategy.Latest.CashInstrumentId,
-            [.. (types.GetValueOrDefault(strategy.TypeCode)?.Reports ?? []).Select(report => new StrategyReportDto(
-                report.Code, report.Name, report.Description, report.Mode, ToDto(report.Schedule ?? ReportSchedule.Off), report.SignalKinds))]))];
+            EffectiveReportMapping.ReportsOf(types.GetValueOrDefault(strategy.TypeCode), strategy.Latest)))];
     }
 
     public async Task<StrategyReplaySetupDto?> GetReplaySetup(Guid strategyId, int? version, CancellationToken cancellationToken)
@@ -36,13 +36,9 @@ internal sealed class StrategyDirectory(IStrategyRepository strategies, CatalogS
             Universe: chosen.Universe,
             CashInstrumentId: chosen.CashInstrumentId,
             BenchmarkInstrumentId: chosen.BenchmarkInstrumentId,
-            Reports: ReportsOf(type),
+            Reports: EffectiveReportMapping.ReportsOf(type, chosen),
             Comparisons: type?.BacktestComparisons ?? []);
     }
-
-    private static List<StrategyReportDto> ReportsOf(StrategyTypeDescriptor? type) =>
-        [.. (type?.Reports ?? []).Select(report => new StrategyReportDto(
-            report.Code, report.Name, report.Description, report.Mode, ToDto(report.Schedule ?? ReportSchedule.Off), report.SignalKinds))];
 
     public async Task<IReadOnlyDictionary<string, string>> GetMessages(CancellationToken cancellationToken)
     {
@@ -50,7 +46,4 @@ internal sealed class StrategyDirectory(IStrategyRepository strategies, CatalogS
 
         return types.SelectMany(type => type.Messages).DistinctBy(message => message.Key).ToDictionary();
     }
-
-    private static StrategyReportScheduleDto ToDto(ReportSchedule schedule) =>
-        new(schedule.Frequency, schedule.Day, schedule.Weekday, schedule.Time, schedule.Minute);
 }

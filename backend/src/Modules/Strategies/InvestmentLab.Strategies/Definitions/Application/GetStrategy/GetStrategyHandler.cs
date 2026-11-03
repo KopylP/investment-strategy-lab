@@ -3,7 +3,7 @@ using InvestmentLab.Strategies.Definitions.Domain;
 
 namespace InvestmentLab.Strategies.Definitions.Application.GetStrategy;
 
-public sealed class GetStrategyHandler(IStrategyRepository strategies)
+public sealed class GetStrategyHandler(IStrategyRepository strategies, IStrategyTypes types)
 {
     public async Task<Result<StrategyDto>> Handle(Guid strategyId, int? version, CancellationToken cancellationToken)
     {
@@ -13,6 +13,8 @@ public sealed class GetStrategyHandler(IStrategyRepository strategies)
         if (strategy.Version(version) is not { } shown)
             return StrategyErrors.VersionNotFound(strategyId, version!.Value);
 
-        return strategy.ToDto(shown);
+        var type = await types.FindAsync(strategy.TypeCode, cancellationToken);
+
+        return strategy.ToDto(type, shown);
     }
 }

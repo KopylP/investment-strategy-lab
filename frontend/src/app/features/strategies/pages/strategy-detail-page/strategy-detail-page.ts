@@ -53,7 +53,7 @@ export class StrategyDetailPage {
   protected readonly cashInstrumentId = signal<string | null>(null);
   protected readonly benchmarkInstrumentId = signal<string | null>(null);
   protected readonly reports = computed(() =>
-    (this.store.type()?.reports ?? []).map((report) => ({
+    (this.store.strategy()?.reports ?? []).map((report) => ({
       ...report,
       when: report.schedule ? scheduleLabel(report.schedule) : 'лише вручну',
     })),

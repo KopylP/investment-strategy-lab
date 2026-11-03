@@ -214,6 +214,13 @@ namespace InvestmentLab.Strategies.Shared.Infrastructure.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("parameters");
 
+                    b.Property<string>("Reports")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("reports")
+                        .HasDefaultValueSql("'[]'::jsonb");
+
                     b.Property<Guid?>("StrategyId")
                         .HasColumnType("uuid")
                         .HasColumnName("strategy_id");

@@ -5,7 +5,7 @@ namespace InvestmentLab.Strategies.Definitions.Application.CreateStrategy;
 
 public sealed record CreateStrategyCommand(string Name, string TypeCode, StrategySetupDraft Setup);
 
-public sealed class CreateStrategyHandler(IStrategyRepository strategies, StrategySetupFactory setups, TimeProvider clock)
+public sealed class CreateStrategyHandler(IStrategyRepository strategies, IStrategyTypes types, StrategySetupFactory setups, TimeProvider clock)
 {
     public async Task<Result<StrategyDto>> Handle(UserId ownerId, CreateStrategyCommand command, CancellationToken cancellationToken)
     {
@@ -23,6 +23,8 @@ public sealed class CreateStrategyHandler(IStrategyRepository strategies, Strate
         strategies.Add(created.Value);
         await strategies.SaveChangesAsync(cancellationToken);
 
-        return created.Value.ToDto();
+        var type = await types.FindAsync(created.Value.TypeCode, cancellationToken);
+
+        return created.Value.ToDto(type);
     }
 }

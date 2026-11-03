@@ -1,3 +1,5 @@
+using System.Text.Json;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.Strategies.Definitions.Domain;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +15,15 @@ internal sealed class StrategyVersionConfiguration : IEntityTypeConfiguration<St
         version.HasKey(v => v.Id);
         version.Property(v => v.Id).ValueGeneratedNever();
         version.Property(v => v.Parameters).HasColumnType("jsonb");
+        version.Property(v => v.Reports).HasColumnType("jsonb").HasDefaultValueSql("'[]'::jsonb").HasConversion(
+            reports => JsonSerializer.Serialize(reports, JsonSerializerOptions.Web),
+            json => JsonSerializer.Deserialize<List<VersionReport>>(json, JsonSerializerOptions.Web) ?? new List<VersionReport>(),
+            new ValueComparer<List<VersionReport>>(
+                (a, b) => a!.Count == b!.Count && a.Select(JsonOf).SequenceEqual(b.Select(JsonOf)),
+                reports => reports.Count,
+                reports => reports.ToList()));
         version.HasIndex("StrategyId", nameof(StrategyVersion.Number)).IsUnique();
     }
+
+    private static string JsonOf(VersionReport report) => JsonSerializer.Serialize(report, JsonSerializerOptions.Web);
 }

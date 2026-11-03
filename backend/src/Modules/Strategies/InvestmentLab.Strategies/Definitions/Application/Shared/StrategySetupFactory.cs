@@ -24,12 +24,30 @@ public sealed class StrategySetupFactory(IStrategyTypes types, IInstrumentCatalo
         if (unknown.Count > 0)
             return StrategyErrors.UnknownInstruments(unknown.Select(id => id.ToString()));
 
-        var parameters = Parameters(type, draft.Parameters);
+        var reports = ReportsOf(draft);
+        if (StrategyReports.Check(type.Reports, reports) is { } reportProblem)
+            return reportProblem;
 
-        return parameters.IsFailure
-            ? parameters.Error
-            : new StrategySetup(parameters.Value, draft.Universe ?? [], draft.CashInstrumentId,
-                new MarketSeriesRefs(draft.BenchmarkInstrumentId, draft.VolatilityIndexInstrumentId));
+        var parameters = Parameters(type, draft.Parameters);
+        if (parameters.IsFailure)
+            return parameters.Error;
+
+        return new StrategySetup(
+            Parameters: parameters.Value,
+            Universe: draft.Universe ?? [],
+            CashInstrumentId: draft.CashInstrumentId,
+            Market: new MarketSeriesRefs(draft.BenchmarkInstrumentId, draft.VolatilityIndexInstrumentId),
+            Reports: reports);
+    }
+
+    private static List<VersionReport> ReportsOf(StrategySetupDraft draft) =>
+        [.. (draft.Reports ?? []).Select(ToVersionReport)];
+
+    private static VersionReport ToVersionReport(VersionReportDraft draft)
+    {
+        var schedule = new ReportSchedule(draft.Schedule.Frequency, draft.Schedule.Day, draft.Schedule.Weekday, draft.Schedule.Time, draft.Schedule.Minute);
+
+        return new VersionReport(draft.Code, schedule, draft.SignalKinds ?? [], draft.SignalIds ?? []);
     }
 
     public static Result<string> Parameters(StrategyTypeDescriptor type, JsonElement? given)

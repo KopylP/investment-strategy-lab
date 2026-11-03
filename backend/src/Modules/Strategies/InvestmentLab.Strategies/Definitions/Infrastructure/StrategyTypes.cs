@@ -9,4 +9,7 @@ internal sealed class StrategyTypes(CatalogSynchronizer synchronizer) : IStrateg
 {
     public async Task<StrategyTypeDescriptor?> FindAsync(string code, CancellationToken cancellationToken) =>
         (await synchronizer.ListAsync(cancellationToken)).FirstOrDefault(type => type.Code == code);
+
+    public Task<IReadOnlyList<StrategyTypeDescriptor>> ListAsync(CancellationToken cancellationToken) =>
+        synchronizer.ListAsync(cancellationToken);
 }

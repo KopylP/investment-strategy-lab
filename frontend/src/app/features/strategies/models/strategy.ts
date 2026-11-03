@@ -19,6 +19,7 @@ export interface Strategy {
   createdAt: string;
   latestVersion: number;
   version: StrategyVersion;
+  reports: ReportDefinition[];
 }
 
 export interface StrategyType {
@@ -40,6 +41,7 @@ export interface ReportDefinition {
   description: string;
   mode: 'rebalance' | 'riskReview';
   schedule: ReportTiming | null;
+  signalIds?: string[];
 }
 
 export interface StrategySetupDraft {
