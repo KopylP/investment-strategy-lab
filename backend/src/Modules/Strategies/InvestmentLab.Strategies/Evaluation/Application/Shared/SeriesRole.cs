@@ -5,4 +5,5 @@ public enum SeriesRole
     Instrument,
     Benchmark,
     VolatilityIndex,
+    Extra,
 }

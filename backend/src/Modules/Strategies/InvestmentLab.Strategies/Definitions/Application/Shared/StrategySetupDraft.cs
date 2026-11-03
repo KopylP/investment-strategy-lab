@@ -9,4 +9,5 @@ public sealed record StrategySetupDraft(
     Guid? VolatilityIndexInstrumentId = null,
     Guid? CashInstrumentId = null,
     JsonElement? Parameters = null,
-    IReadOnlyList<VersionReportDraft>? Reports = null);
+    IReadOnlyList<VersionReportDraft>? Reports = null,
+    IReadOnlyList<Guid>? ExtraSeries = null);

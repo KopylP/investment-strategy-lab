@@ -15,6 +15,7 @@ internal sealed class StrategyVersionConfiguration : IEntityTypeConfiguration<St
         version.HasKey(v => v.Id);
         version.Property(v => v.Id).ValueGeneratedNever();
         version.Property(v => v.Parameters).HasColumnType("jsonb");
+        version.Property(v => v.ExtraSeries).HasDefaultValueSql("'{}'::uuid[]");
         version.Property(v => v.Reports).HasColumnType("jsonb").HasDefaultValueSql("'[]'::jsonb").HasConversion(
             reports => JsonSerializer.Serialize(reports, JsonSerializerOptions.Web),
             json => JsonSerializer.Deserialize<List<VersionReport>>(json, JsonSerializerOptions.Web) ?? new List<VersionReport>(),

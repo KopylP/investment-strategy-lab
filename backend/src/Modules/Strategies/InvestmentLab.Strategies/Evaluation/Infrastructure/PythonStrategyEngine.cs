@@ -75,6 +75,7 @@ internal sealed class PythonStrategyEngine(StrategyEngineClient client) : IStrat
             {
                 SeriesRole.Benchmark => "benchmark",
                 SeriesRole.VolatilityIndex => "volatilityIndex",
+                SeriesRole.Extra => "extra",
                 _ => "instrument",
             },
             [.. series.Points.Select(point => point.Date)],

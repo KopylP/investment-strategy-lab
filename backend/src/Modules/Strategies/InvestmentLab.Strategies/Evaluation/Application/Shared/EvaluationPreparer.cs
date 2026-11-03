@@ -54,6 +54,9 @@ public sealed class EvaluationPreparer(IStrategyReader strategies, IQuoteHistory
         if (version.VolatilityIndexInstrumentId is { } volatility)
             series.Add(new MarketSeries(volatility, SeriesRole.VolatilityIndex, PointsOf(volatility)));
 
+        var extraNotPricedAsInstruments = version.ExtraSeries.Where(id => !instrumentIds.Contains(id));
+        series.AddRange(extraNotPricedAsInstruments.Select(id => new MarketSeries(id, SeriesRole.Extra, PointsOf(id))));
+
         return series;
     }
 
@@ -61,7 +64,7 @@ public sealed class EvaluationPreparer(IStrategyReader strategies, IQuoteHistory
         List<Guid> instrumentIds, StrategyVersion version, DateOnly asOf, CancellationToken cancellationToken)
     {
         IEnumerable<Guid> volatilityIndex = version.VolatilityIndexInstrumentId is { } id ? [id] : [];
-        var marketIds = volatilityIndex.Prepend(version.BenchmarkInstrumentId);
+        var marketIds = volatilityIndex.Prepend(version.BenchmarkInstrumentId).Concat(version.ExtraSeries);
         Guid[] requestedIds = [.. instrumentIds.Concat(marketIds).Distinct()];
 
         var history = await quotes.GetQuoteHistoryWithArchive(requestedIds, asOf.AddDays(-HistoryDays), asOf, cancellationToken);
