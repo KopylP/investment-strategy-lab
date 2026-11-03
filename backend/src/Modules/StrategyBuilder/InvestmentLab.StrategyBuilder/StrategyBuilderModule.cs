@@ -1,3 +1,8 @@
+using InvestmentLab.StrategyBuilder.Trials.Api;
+using InvestmentLab.StrategyBuilder.Trials.Application.ListTrials;
+using InvestmentLab.StrategyBuilder.Trials.Application.RunTrial;
+using InvestmentLab.StrategyBuilder.Trials.Domain;
+using InvestmentLab.StrategyBuilder.Trials.Infrastructure;
 using InvestmentLab.BuildingBlocks.Modules;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.StrategyBuilder.Drafts.Api;
@@ -35,6 +40,10 @@ public sealed class StrategyBuilderModule : IModule
         builder.AddModuleDbContext<StrategyBuilderDbContext>(Schema);
 
         var services = builder.Services;
+        services.AddSingleton<ITrialRunGate, TrialRunGate>();
+        services.AddScoped<ITrialBacktests, TrialBacktests>();
+        services.AddScoped<RunTrialHandler>();
+        services.AddScoped<ListTrialsHandler>();
         services.AddScoped<IDraftRepository, DraftRepository>();
         services.AddScoped<IRuleVocabulary, RuleVocabularyFromSchema>();
         services.AddScoped<IInstrumentDirectory, InstrumentDirectory>();
@@ -56,5 +65,5 @@ public sealed class StrategyBuilderModule : IModule
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>
-        endpoints.MapGroup("/api/strategy-builder").MapDrafts();
+        endpoints.MapGroup("/api/strategy-builder").MapDrafts().MapTrials();
 }

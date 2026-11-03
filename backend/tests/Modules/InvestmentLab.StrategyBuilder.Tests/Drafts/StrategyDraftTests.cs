@@ -15,6 +15,35 @@ public sealed class StrategyDraftTests
     private static DraftChange GraphChange(int revision, StrategyGraph graph) => new(revision, null, null, null, graph, null);
 
     [Fact]
+    public void A_repeated_run_returns_the_existing_trial()
+    {
+        var draft = Draft();
+        var strategyId = Guid.CreateVersion7();
+        var first = draft.RecordTrial(strategyId, 1, "fingerprint-one", "First", Now);
+
+        draft.TrialWith("fingerprint-one").ShouldBe(first);
+        draft.TrialWith("fingerprint-two").ShouldBeNull();
+    }
+
+    [Fact]
+    public void Trial_numbers_count_up_and_the_first_run_remembers_the_trial_strategy()
+    {
+        var draft = Draft();
+        var strategyId = Guid.CreateVersion7();
+
+        var first = draft.RecordTrial(strategyId, 1, "fingerprint-one", null, Now);
+        var second = draft.RecordTrial(strategyId, 2, "fingerprint-two", "Second", Now.AddMinutes(1));
+
+        first.Number.ShouldBe(1);
+        second.Number.ShouldBe(2);
+        second.StrategyVersion.ShouldBe(2);
+        second.Label.ShouldBe("Second");
+        draft.TrialStrategyId.ShouldBe(strategyId);
+        draft.Trials.ShouldBe([first, second]);
+        draft.Revision.ShouldBe(1);
+    }
+
+    [Fact]
     public void A_new_draft_starts_at_revision_one_with_an_empty_layout()
     {
         var draft = Draft();

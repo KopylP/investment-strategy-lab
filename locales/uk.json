@@ -405,5 +405,7 @@
   "builder.template.dual-momentum.name": "Подвійний моментум",
   "builder.template.dual-momentum.description": "Фонд, що зростає за рік і сильніший за бенчмарк; коли таких немає, гроші в кеш-фонді.",
   "builder.template.index-hold.name": "Утримання індексу",
-  "builder.template.index-hold.description": "Тримає всі обрані фонди порівну без жодних умов."
+  "builder.template.index-hold.description": "Тримає всі обрані фонди порівну без жодних умов.",
+  "builder.trial.not_supported": "Бектест недоступний для цієї стратегії.",
+  "builder.trial.draft_has_problems": "Спершу виправте проблеми чернетки."
 }
