@@ -3,9 +3,9 @@ import { NodeDto } from '../../../models/draft-dto';
 
 @Component({
   selector: 'app-signal-node',
-  template: `<div class="font-semibold">Сигнал</div>
+  template: `<div class="font-semibold">Мій сигнал</div>
     <div class="mt-2 text-xs">
-      {{ node().parameters['state'] === false ? 'не активний' : 'активний' }}
+      {{ node().parameters['state'] === 'inactive' ? 'не активний' : 'активний' }}
     </div>`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

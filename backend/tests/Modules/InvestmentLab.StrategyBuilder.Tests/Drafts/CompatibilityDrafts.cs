@@ -8,6 +8,12 @@ internal static class CompatibilityDrafts
     private const string FirstSignal = "0199f000-0000-7000-8000-0000000051a1";
     private const string SecondSignal = "0199f000-0000-7000-8000-0000000051a2";
 
+    public static IReadOnlyList<OwnSignal> Signals =>
+    [
+        new OwnSignal(Guid.Parse(FirstSignal), "First signal", true, "Instrument"),
+        new OwnSignal(Guid.Parse(SecondSignal), "Second signal", true, "InstrumentGroup"),
+    ];
+
     public static IReadOnlyDictionary<string, StrategyDraft> All()
     {
         var drafts = DraftTemplates.Codes.ToDictionary(code => code, code => Of(DraftTemplates.GraphOf(code)));

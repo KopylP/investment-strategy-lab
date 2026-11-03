@@ -2,6 +2,8 @@ namespace InvestmentLab.Signals.Monitoring.Domain;
 
 public sealed record SignalTarget(SignalTargetKind Kind, Guid? AccountId, Guid? SubPortfolioId, Guid? InstrumentId, string? GroupName = null)
 {
+    public bool IsMarket => Kind is SignalTargetKind.Instrument or SignalTargetKind.InstrumentGroup;
+
     public static SignalTarget Instrument(Guid instrumentId) =>
         new(SignalTargetKind.Instrument, null, null, instrumentId);
 

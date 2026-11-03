@@ -4,6 +4,7 @@ import { Button } from 'primeng/button';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
+import { OwnSignalDto } from '../../models/own-signal-dto';
 import { GraphDto, JsonValue, NodeDto } from '../../models/draft-dto';
 import { InstrumentChoiceDto } from '../../models/instrument-dto';
 import { VocabularyDto, VocabularyFieldDto } from '../../models/vocabulary-dto';
@@ -29,6 +30,10 @@ export class Inspector {
   readonly graph = input.required<GraphDto>();
   readonly vocabulary = input.required<VocabularyDto>();
   readonly instruments = input.required<InstrumentChoiceDto[]>();
+  readonly signals = input<OwnSignalDto[]>([]);
+  protected readonly marketSignals = computed(() =>
+    this.signals().filter((signal) => signal.isMarket),
+  );
   readonly nodeChange = output<NodeDto>();
   readonly duplicate = output<void>();
   readonly allowDuplicate = input(true);
@@ -45,6 +50,7 @@ export class Inspector {
   });
   protected readonly fields = computed(() => {
     const declared = this.definition()?.fields ?? [];
+    if (this.node().kind === 'Signal') return declared.filter((field) => field.name !== 'signalId');
     if (!this.node().kind.endsWith('Result')) return declared;
 
     return Object.values(this.vocabulary().blockFields).filter(
@@ -69,6 +75,13 @@ export class Inspector {
       value: `extra:${instrument.id}`,
     })),
   ]);
+
+  protected changeSignal(id: string): void {
+    this.nodeChange.emit({
+      ...this.node(),
+      parameters: { ...this.node().parameters, signalId: id },
+    });
+  }
 
   protected fieldValue(field: VocabularyFieldDto): JsonValue | undefined {
     const value = this.node().parameters[field.name];

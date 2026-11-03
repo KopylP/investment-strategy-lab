@@ -44,6 +44,7 @@
         [inline]="true"
         [reports]="draft.reports"
         [declarations]="store.vocabulary()!.reports"
+        [signals]="store.signals()"
         (saved)="store.changeReports($event)"
       />
     }
@@ -60,6 +61,7 @@
           [rows]="condition"
           [graph]="draft.graph"
           [vocabulary]="store.vocabulary()!"
+          [signals]="store.signals()"
           [instruments]="store.instruments()"
           (nodeChange)="updateNode($event)"
           (select)="store.select($event)"
@@ -72,6 +74,7 @@
           [node]="node"
           [graph]="draft.graph"
           [vocabulary]="store.vocabulary()!"
+          [signals]="store.signals()"
           [instruments]="store.instruments()"
           [allowDuplicate]="false"
           (nodeChange)="updateNode($event)"

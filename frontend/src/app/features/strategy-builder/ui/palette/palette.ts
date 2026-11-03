@@ -52,7 +52,7 @@ const conditionKinds: Record<string, NodeKind> = {
       }
       @for (condition of conditions(); track condition.code) {
         <p-button
-          [label]="condition.label"
+          [label]="condition.code === 'signal' ? 'Мій сигнал' : condition.label"
           icon="pi pi-directions-alt"
           size="small"
           severity="secondary"

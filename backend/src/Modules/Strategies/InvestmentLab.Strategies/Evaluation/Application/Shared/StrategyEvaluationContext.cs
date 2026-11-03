@@ -1,3 +1,4 @@
+using InvestmentLab.Strategies.Evaluation.Domain;
 using InvestmentLab.Strategies.Contracts;
 
 namespace InvestmentLab.Strategies.Evaluation.Application.Shared;
@@ -9,4 +10,5 @@ public sealed record StrategyEvaluationContext(
     Guid? CashInstrumentId,
     IReadOnlyList<MarketSeries> MarketSeries,
     SubPortfolioStateDto SubPortfolio,
-    decimal Contribution);
+    decimal Contribution,
+    IReadOnlyList<SignalState>? Signals = null);

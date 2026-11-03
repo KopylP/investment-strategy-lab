@@ -11,6 +11,9 @@ internal sealed class StrategyRepository(StrategiesDbContext db) : IStrategyRepo
     public Task<Strategy?> FindAsync(StrategyId strategyId, CancellationToken cancellationToken) =>
         db.Strategies.SingleOrDefaultAsync(strategy => strategy.Id == strategyId, cancellationToken);
 
+    public async Task<IReadOnlyList<Strategy>> AllAsync(CancellationToken cancellationToken) =>
+        await db.Strategies.ToListAsync(cancellationToken);
+
     public async Task<IReadOnlyList<Strategy>> ListAsync(CancellationToken cancellationToken) =>
         await db.Strategies.Where(strategy => strategy.Status != StrategyStatus.Trial).OrderBy(strategy => strategy.CreatedAt).ToListAsync(cancellationToken);
 

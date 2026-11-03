@@ -2,7 +2,7 @@ namespace InvestmentLab.StrategyBuilder.Drafts.Domain;
 
 public static class GraphCheck
 {
-    public static IReadOnlyList<DraftProblem> Of(StrategyDraft draft, RuleVocabulary vocabulary)
+    public static IReadOnlyList<DraftProblem> Of(StrategyDraft draft, RuleVocabulary vocabulary, IReadOnlyList<OwnSignal>? signals = null)
     {
         var graph = draft.Graph;
 
@@ -14,7 +14,8 @@ public static class GraphCheck
             .. MissingInputs(graph),
             .. graph.Nodes.SelectMany(node => ParameterProblems(node, graph, vocabulary)),
             .. graph.Nodes.SelectMany(node => SeriesProblems(node, draft.Setup)),
-            .. graph.Nodes.SelectMany(SignalProblems),
+            .. graph.Nodes.SelectMany(node => SignalProblems(node, draft.MissingSignalIds, signals ?? [])),
+            .. ReportSignalProblems(draft, signals ?? []),
             .. DanglingNodes(graph),
         ];
     }
@@ -156,8 +157,33 @@ public static class GraphCheck
             yield return DraftProblem.OnNode("builder.problem.extra_series_unknown", node);
     }
 
-    private static IEnumerable<DraftProblem> SignalProblems(GraphNode node)
+    private static IEnumerable<DraftProblem> ReportSignalProblems(StrategyDraft draft, IReadOnlyList<OwnSignal> signals)
     {
+        foreach (var report in draft.Reports)
+        {
+            foreach (var id in report.SignalIds)
+            {
+                var signal = signals.FirstOrDefault(signal => signal.Id == id);
+                if (signal is null || draft.MissingSignalIds.Contains(id))
+                    yield return new DraftProblem("builder.problem.signal_deleted", new { id }, null, null, report.Code, ProblemSeverity.Error);
+                else if (!signal.IsMarket)
+                    yield return new DraftProblem("builder.problem.trigger_differs_in_backtest", new { name = signal.Name }, null, null, report.Code, ProblemSeverity.Warning);
+            }
+        }
+    }
+
+    private static IEnumerable<DraftProblem> SignalProblems(GraphNode node, IReadOnlyList<Guid> missing, IReadOnlyList<OwnSignal> signals)
+    {
+        if (node.Kind != NodeKind.Signal)
+            yield break;
+
+        var id = Guid.TryParse(node.Parameters.Text("signalId"), out var parsed) ? parsed : Guid.Empty;
+        var signal = signals.FirstOrDefault(signal => signal.Id == id);
+        if (signal is null || missing.Contains(id))
+            yield return DraftProblem.OnNode("builder.problem.signal_deleted", node, new { id });
+        else if (!signal.IsMarket)
+            yield return DraftProblem.OnNode("builder.problem.signal_not_market", node);
+
         var isThisFundSignal = node.Kind == NodeKind.Signal && node.Parameters.Text("scope") == "thisFund";
         if (isThisFundSignal && node.Block == BlockKind.MarketFilter)
             yield return DraftProblem.OnNode("builder.problem.this_fund_signal_in_market_filter", node);

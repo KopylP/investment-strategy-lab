@@ -2,7 +2,7 @@ using InvestmentLab.StrategyBuilder.Drafts.Domain;
 
 namespace InvestmentLab.StrategyBuilder.Drafts.Application.Shared;
 
-public sealed class DraftDescriber(IRuleVocabulary vocabularies, IInstrumentDirectory instruments)
+public sealed class DraftDescriber(IRuleVocabulary vocabularies, IInstrumentDirectory instruments, IOwnSignals signals)
 {
     public async Task<Result<DraftDto>> DescribeAsync(StrategyDraft draft, CancellationToken cancellationToken, IReadOnlyList<DraftProblem>? checkedProblems = null)
     {
@@ -11,8 +11,9 @@ public sealed class DraftDescriber(IRuleVocabulary vocabularies, IInstrumentDire
             return vocabulary.Error;
 
         var labels = await LabelsAsync(cancellationToken);
-        var problems = checkedProblems ?? GraphCheck.Of(draft, vocabulary.Value);
-        var words = StrategyInWords.Of(draft, vocabulary.Value, labels);
+        var own = await signals.AllAsync(cancellationToken);
+        var problems = checkedProblems ?? GraphCheck.Of(draft, vocabulary.Value, own);
+        var words = StrategyInWords.Of(draft, vocabulary.Value, labels, own);
 
         return DraftMapping.ToDto(draft, problems, words);
     }

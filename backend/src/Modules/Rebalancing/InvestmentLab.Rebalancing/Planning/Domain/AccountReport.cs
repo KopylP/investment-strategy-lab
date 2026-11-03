@@ -10,7 +10,8 @@ public sealed record AccountReport(
     ReportKind Kind,
     IReadOnlyList<SubPortfolioReport> SubPortfolios,
     OwnReportSchedule? Own = null,
-    IReadOnlyList<string>? SignalKinds = null)
+    IReadOnlyList<string>? SignalKinds = null,
+    IReadOnlyList<Guid>? SignalIds = null)
 {
     public static IReadOnlyList<AccountReport> AllOf(IEnumerable<DeclaredReport> declared, PlanSettings? settings)
     {
@@ -31,7 +32,8 @@ public sealed record AccountReport(
             Kind: first.Kind,
             SubPortfolios: [.. declared.Select(each => each.SubPortfolio)],
             Own: settings?.ScheduleOf(first.Code),
-            SignalKinds: [.. declared.SelectMany(each => each.SignalKinds).Distinct()]);
+            SignalKinds: [.. declared.SelectMany(each => each.SignalKinds).Distinct()],
+            SignalIds: [.. declared.SelectMany(each => each.SignalIds ?? []).Distinct()]);
     }
 
     public static AccountReport? Choose(IReadOnlyList<AccountReport> reports, string? code) =>

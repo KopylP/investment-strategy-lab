@@ -3,6 +3,7 @@ using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.BuildingBlocks.Modules;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.Identity.Contracts;
+using InvestmentLab.Signals.Contracts;
 using InvestmentLab.Strategies.Catalog.Api;
 using InvestmentLab.Strategies.Catalog.Application.GetStrategyCatalog;
 using InvestmentLab.Strategies.Catalog.Application.Shared;
@@ -82,6 +83,7 @@ public sealed class StrategiesModule : IModule
 
     private static void AddDefinitions(IServiceCollection services)
     {
+        services.AddIntegrationEventHandler<SignalDeletedV1, MarkStrategiesOfDeletedSignal>();
         services.AddScoped<IStrategyRepository, StrategyRepository>();
         services.AddScoped<IStrategyDirectory, StrategyDirectory>();
         services.AddScoped<IStrategyTypes, StrategyTypes>();

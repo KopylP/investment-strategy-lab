@@ -5,6 +5,8 @@ public sealed class SignalWatch(SignalCondition condition)
     private readonly Dictionary<string, List<DatedValue>> _history = [];
     private readonly HashSet<string> _alarmed = [];
 
+    public IReadOnlyCollection<string> Alarmed => [.. _alarmed];
+
     public bool FiresOn(DateOnly day, IReadOnlyList<WatchedReading> readings)
     {
         ForgetSubjectsOtherThan(readings);
@@ -41,6 +43,8 @@ public sealed class SignalWatch(SignalCondition condition)
     {
         SignalMetric.Level => reading.Value,
         SignalMetric.DrawdownFromPeak => SignalMetrics.DrawdownFromPeak(ValuesInWindow(reading, day)),
+        SignalMetric.DayFall => SignalMetrics.DayFall(ValuesInWindow(reading, day)),
+        SignalMetric.LossFromCost => reading.UnitCost is { } unitCost ? SignalMetrics.LossFromCost(reading.Value, unitCost) : null,
         _ => throw new NotSupportedException($"A {condition.Metric} signal is not watched over a replayed history."),
     };
 

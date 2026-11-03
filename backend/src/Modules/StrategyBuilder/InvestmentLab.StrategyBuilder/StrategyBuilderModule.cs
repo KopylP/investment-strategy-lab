@@ -1,4 +1,8 @@
 using InvestmentLab.BuildingBlocks.Scheduling;
+using InvestmentLab.BuildingBlocks.Messaging;
+using InvestmentLab.Signals.Contracts;
+using InvestmentLab.StrategyBuilder.Drafts.Application.ListOwnSignals;
+using InvestmentLab.StrategyBuilder.Drafts.Application.Integration;
 using InvestmentLab.StrategyBuilder.Drafts.Application.CleanUpTrials;
 using InvestmentLab.StrategyBuilder.Drafts.Application.PublishDraft;
 using InvestmentLab.StrategyBuilder.Drafts.Application.OpenPublishedStrategy;
@@ -56,6 +60,9 @@ public sealed class StrategyBuilderModule : IModule
         services.AddScoped<OpenPublishedStrategyHandler>();
         services.AddScoped<GetPublishedStrategyHandler>();
         services.AddScheduledJob<TrialCleanupJob>(TrialCleanupJob.Schedule);
+        services.AddIntegrationEventHandler<SignalDeletedV1, MarkDraftsOfDeletedSignal>();
+        services.AddScoped<IOwnSignals, OwnSignals>();
+        services.AddScoped<ListOwnSignalsHandler>();
         services.AddScoped<IDraftRepository, DraftRepository>();
         services.AddScoped<IRuleVocabulary, RuleVocabularyFromSchema>();
         services.AddScoped<IInstrumentDirectory, InstrumentDirectory>();

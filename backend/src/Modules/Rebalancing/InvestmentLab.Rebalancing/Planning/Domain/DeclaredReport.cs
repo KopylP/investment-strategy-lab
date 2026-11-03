@@ -9,4 +9,5 @@ public sealed record DeclaredReport(
     string Mode,
     ReportKind Kind,
     SubPortfolioReport SubPortfolio,
-    IReadOnlyList<string> SignalKinds);
+    IReadOnlyList<string> SignalKinds,
+    IReadOnlyList<Guid>? SignalIds = null);

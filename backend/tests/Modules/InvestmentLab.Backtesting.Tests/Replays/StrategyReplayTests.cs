@@ -201,8 +201,11 @@ public sealed class StrategyReplayTests
 
     private sealed class FakePrices(int days, bool jump) : IPriceTables
     {
+        public ReplaySetup? LoadedSetup { get; private set; }
+
         public Task<PriceTable> LoadAsync(ReplaySetup setup, CancellationToken cancellationToken)
         {
+            LoadedSetup = setup;
             var dates = Enumerable.Range(0, days).Select(offset => FirstDay.AddDays(offset)).ToList();
             var jumpFrom = 260;
 
@@ -224,12 +227,14 @@ public sealed class StrategyReplayTests
     {
         public int Decisions { get; private set; }
         public int Reviews { get; private set; }
+        public List<IReadOnlyList<ReplaySignalState>> SeenStates { get; } = [];
         public bool ExitFund { get; init; }
         public bool Fails { get; init; }
 
-        public Task<Result<ReplayDecision>> DecideAsync(ReplaySetup setup, ReplayBook book, DateOnly day, CancellationToken cancellationToken)
+        public Task<Result<ReplayDecision>> DecideAsync(ReplaySetup setup, ReplayBook book, DateOnly day, IReadOnlyList<ReplaySignalState> states, CancellationToken cancellationToken)
         {
             Decisions++;
+            SeenStates.Add(states);
 
             Result<ReplayDecision> answer = Fails
                 ? Error.Validation("backtest.strategy_failed", "no")
@@ -238,7 +243,7 @@ public sealed class StrategyReplayTests
             return Task.FromResult(answer);
         }
 
-        public Task<Result<IReadOnlyList<Guid>>> ExitsAsync(ReplaySetup setup, ReplayBook book, DateOnly day, CancellationToken cancellationToken)
+        public Task<Result<IReadOnlyList<Guid>>> ExitsAsync(ReplaySetup setup, ReplayBook book, DateOnly day, IReadOnlyList<ReplaySignalState> states, CancellationToken cancellationToken)
         {
             Reviews++;
             IReadOnlyList<Guid> exits = ExitFund ? [Fund] : [];
@@ -257,11 +262,19 @@ public sealed class StrategyReplayTests
     {
         public List<IReadOnlyList<ReplaySignalReading>> Readings { get; } = [];
 
+        public Task<IReplaySignalWatch?> WatchSignalAsync(Guid signalId, CancellationToken cancellationToken) =>
+            Task.FromResult(UserWatch);
+
+        public IReplaySignalWatch? UserWatch { get; init; }
+
         public IReplaySignalWatch Watch(string kind) => new AccountWatch(this, firesEvery);
 
         private sealed class AccountWatch(FakeSignals owner, int firesEvery) : IReplaySignalWatch
         {
             private int _days;
+
+            public IReadOnlyList<Guid> Instruments => [];
+            public IReadOnlyList<Guid> ActiveInstruments => [];
 
             public ReplaySignalSubject Subject => ReplaySignalSubject.Account;
 
@@ -274,4 +287,64 @@ public sealed class StrategyReplayTests
             }
         }
     }
+    [Fact]
+    public async Task A_missing_logic_signal_stops_the_backtest()
+    {
+        var replay = ReplayOf(new FakeAnswers());
+        var setup = SetupOf(null) with { LogicSignalIds = [Guid.NewGuid()] };
+
+        var result = await replay.RunAsync(setup, TestContext.Current.CancellationToken);
+
+        result.Error.Code.ShouldBe("backtest.signal_missing");
+    }
+
+    [Fact]
+    public async Task A_missing_trigger_signal_is_left_out()
+    {
+        var replay = ReplayOf(new FakeAnswers());
+        var triggers = new ReplaySignalTriggers([], [], null, RiskReviewSignalIds: [Guid.NewGuid()]);
+
+        var result = await replay.RunAsync(SetupOf(null, triggers), TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.SignalReports.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task A_strategy_gets_the_replayed_signal_state_with_each_decision()
+    {
+        var id = Guid.NewGuid();
+        var answers = new FakeAnswers();
+        var watch = new UserMarketWatch();
+        var signals = new FakeSignals { UserWatch = watch };
+        var prices = new FakePrices(Days, jump: false);
+        var replay = ReplayOf(answers, prices, signals);
+        var setup = SetupOf(null) with { LogicSignalIds = [id] };
+
+        var result = await replay.RunAsync(setup, TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        answers.SeenStates.Count.ShouldBe(answers.Decisions);
+        answers.SeenStates.ShouldAllBe(states => states.Count == 1 && states[0].SignalId == id);
+        answers.SeenStates.ShouldContain(states => states[0].ActiveFor.Contains(Fund));
+        answers.SeenStates.ShouldContain(states => states[0].ActiveFor.Count == 0);
+        prices.LoadedSetup!.PricedInstruments.ShouldContain(watch.ExtraInstrument);
+    }
+
+    private sealed class UserMarketWatch : IReplaySignalWatch
+    {
+        private int _days;
+        public Guid ExtraInstrument { get; } = Guid.NewGuid();
+        public ReplaySignalSubject Subject => ReplaySignalSubject.Instruments;
+        public IReadOnlyList<Guid> Instruments => [Fund, ExtraInstrument];
+        public IReadOnlyList<Guid> ActiveInstruments => _days > 60 ? [Fund] : [];
+
+        public bool FiresOn(DateOnly day, IReadOnlyList<ReplaySignalReading> readings)
+        {
+            _days++;
+
+            return false;
+        }
+    }
+
 }

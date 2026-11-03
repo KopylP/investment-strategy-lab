@@ -13,6 +13,7 @@ public sealed class PublishDraftHandler(
     IPublishedLayoutRepository layouts,
     ITrialCleanupRepository cleanups,
     IRuleVocabulary vocabularies,
+    IOwnSignals signals,
     IStrategyAuthoring authoring,
     CleanUpTrialHandler cleanTrial,
     TimeProvider clock,
@@ -30,7 +31,7 @@ public sealed class PublishDraftHandler(
         if (vocabulary.IsFailure)
             return vocabulary.Error;
 
-        var problems = GraphCheck.Of(draft, vocabulary.Value);
+        var problems = GraphCheck.Of(draft, vocabulary.Value, await signals.AllAsync(cancellationToken));
         if (DraftCheck.HasErrors(problems))
             return Refused(problems);
 

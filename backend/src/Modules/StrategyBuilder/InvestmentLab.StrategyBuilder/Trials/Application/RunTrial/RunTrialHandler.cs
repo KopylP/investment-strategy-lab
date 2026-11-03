@@ -6,7 +6,7 @@ namespace InvestmentLab.StrategyBuilder.Trials.Application.RunTrial;
 
 public sealed record RunTrialCommand(Guid DraftId, string? Label);
 
-public sealed class RunTrialHandler(IDraftRepository drafts, IRuleVocabulary vocabularies, IStrategyAuthoring authoring, ITrialBacktests backtests, ITrialRunGate gate, TimeProvider clock)
+public sealed class RunTrialHandler(IDraftRepository drafts, IRuleVocabulary vocabularies, IStrategyAuthoring authoring, ITrialBacktests backtests, ITrialRunGate gate, TimeProvider clock, IOwnSignals signals)
 {
     public async Task<Result<TrialRunDto>> Handle(RunTrialCommand command, CancellationToken cancellationToken)
     {
@@ -20,7 +20,7 @@ public sealed class RunTrialHandler(IDraftRepository drafts, IRuleVocabulary voc
         if (vocabulary.IsFailure)
             return vocabulary.Error;
 
-        var problems = GraphCheck.Of(draft, vocabulary.Value);
+        var problems = GraphCheck.Of(draft, vocabulary.Value, await signals.AllAsync(cancellationToken));
         if (DraftCheck.HasErrors(problems))
             return ProblemsOf(problems);
 

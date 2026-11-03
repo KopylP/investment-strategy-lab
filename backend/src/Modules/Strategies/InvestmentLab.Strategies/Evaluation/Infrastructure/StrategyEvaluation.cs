@@ -41,5 +41,5 @@ internal sealed class StrategyEvaluation(
         new(poll.State, poll.Result is { } result ? ToContract(result) : null);
 
     private static StrategyEvaluationResult<T> ToContract<T>(Result<T> result) where T : class =>
-        result.IsSuccess ? new(result.Value) : new(null, result.Error.Code, result.Error.Message);
+        result.IsSuccess ? new(result.Value) : new(null, result.Error.Code, result.Error.AsMessage());
 }

@@ -14,6 +14,7 @@ internal sealed class StrategyConfiguration(StrategiesDbContext context) : IEnti
         strategy.HasKey(s => s.Id);
         strategy.Property(s => s.Id).HasConversion(id => id.Value, value => StrategyId.Of(value)).ValueGeneratedNever();
         strategy.Property(s => s.Name).HasMaxLength(100);
+        strategy.Property(s => s.DeletedSignalIds).HasColumnType("uuid[]");
         strategy.Property(s => s.TypeCode).HasMaxLength(100);
         strategy.Property(s => s.Status).HasConversion<string>().HasMaxLength(20);
         strategy.HasIndex(s => new { s.OwnerId, s.Name }).IsUnique();

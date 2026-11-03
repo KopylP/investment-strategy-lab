@@ -29,7 +29,8 @@ internal sealed class ReplayedStrategies(IStrategyDirectory strategies, IInstrum
             RiskReviewCadence: CadenceOf(setup, StrategyReportDto.RiskReview),
             Signals: signals,
             Currency: currency,
-            Comparisons: setup.Comparisons);
+            Comparisons: setup.Comparisons,
+            LogicSignalIds: setup.LogicSignalIds ?? []);
     }
 
     private static ReplayBenchmark BenchmarkOf(Guid instrumentId, IReadOnlyList<InstrumentDto> catalog)
@@ -54,11 +55,15 @@ internal sealed class ReplayedStrategies(IStrategyDirectory strategies, IInstrum
         var rebalance = SignalKindsOf(setup, StrategyReportDto.Rebalance);
         var riskReview = SignalKindsOf(setup, StrategyReportDto.RiskReview);
 
-        return new ReplaySignalTriggers(rebalance, riskReview, volatilityIndexId);
+        return new ReplaySignalTriggers(rebalance, riskReview, volatilityIndexId,
+            SignalIdsOf(setup, StrategyReportDto.Rebalance), SignalIdsOf(setup, StrategyReportDto.RiskReview));
     }
 
+    private static IReadOnlyList<Guid> SignalIdsOf(StrategyReplaySetupDto setup, string mode) =>
+        [.. setup.Reports.Where(report => report.Mode == mode).SelectMany(report => report.SignalIds ?? []).Distinct()];
+
     private static IReadOnlyList<string> SignalKindsOf(StrategyReplaySetupDto setup, string mode) =>
-        setup.Reports.FirstOrDefault(candidate => candidate.Mode == mode)?.SignalKinds ?? [];
+        [.. setup.Reports.Where(report => report.Mode == mode).SelectMany(report => report.SignalKinds ?? []).Distinct()];
 
     private static ReplayCadence? CadenceOf(StrategyReplaySetupDto setup, string mode)
     {

@@ -57,6 +57,32 @@
             </div>
           </div>
         }
+        <label class="mt-4 flex flex-col gap-2 text-sm font-medium">
+          Мої сигнали
+          <p-multiselect
+            [options]="signals()"
+            optionLabel="name"
+            optionValue="id"
+            [ngModel]="report.signalIds"
+            (ngModelChange)="update({ ...report, signalIds: $event })"
+            [filter]="true"
+            display="chip"
+            placeholder="Оберіть сигнали для рапорту"
+            appendTo="body"
+            fluid
+          >
+            <ng-template #item let-signal>
+              <span>{{ signal.name }}</span>
+              @if (!signal.isMarket) {
+                <i
+                  class="pi pi-exclamation-triangle ml-2 text-orange-500"
+                  pTooltip="У бектесті цей сигнал рахується від портфеля стратегії, а наживо — від рахунку"
+                  aria-label="У бектесті цей сигнал рахується від портфеля стратегії, а наживо — від рахунку"
+                ></i>
+              }
+            </ng-template>
+          </p-multiselect>
+        </label>
       </section>
     }
   </div>

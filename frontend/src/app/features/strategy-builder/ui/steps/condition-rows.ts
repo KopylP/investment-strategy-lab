@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { OwnSignalDto } from '../../models/own-signal-dto';
 import { GraphDto, NodeDto } from '../../models/draft-dto';
 import { InstrumentChoiceDto } from '../../models/instrument-dto';
 import { VocabularyDto } from '../../models/vocabulary-dto';
@@ -21,6 +22,7 @@ import { Inspector } from '../inspector/inspector';
           [graph]="graph()"
           [vocabulary]="vocabulary()"
           [instruments]="instruments()"
+          [signals]="signals()"
           [allowDuplicate]="false"
           (nodeChange)="nodeChange.emit($event)"
         />
@@ -34,6 +36,7 @@ export class ConditionRows {
   readonly graph = input.required<GraphDto>();
   readonly vocabulary = input.required<VocabularyDto>();
   readonly instruments = input.required<InstrumentChoiceDto[]>();
+  readonly signals = input<OwnSignalDto[]>([]);
   readonly nodeChange = output<NodeDto>();
   readonly select = output<string>();
   protected readonly editableNodes = computed(() => {

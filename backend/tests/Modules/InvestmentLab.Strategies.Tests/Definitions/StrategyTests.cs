@@ -140,4 +140,37 @@ public sealed class StrategyTests
 
         Strategy.Create(UserId.New(), "EU", "rule-based", setup, Now).Error.Code.ShouldBe("strategy.extra_series_repeated");
     }
+    [Fact]
+    public void A_strategy_remembers_a_deleted_signal_its_latest_version_names()
+    {
+        var id = Guid.NewGuid();
+        var setup = Setup(Spy) with { SignalIds = [id] };
+        var strategy = Strategy.Create(UserId.New(), "Signal strategy", "rule-based", setup, Now).Value;
+
+        strategy.MarkSignalDeleted(id).ShouldBeTrue();
+        strategy.MarkSignalDeleted(id).ShouldBeFalse();
+        strategy.DeletedSignalIds.ShouldBe([id]);
+    }
+
+    [Fact]
+    public void A_strategy_ignores_a_deleted_signal_it_does_not_name()
+    {
+        var strategy = Regular();
+
+        strategy.MarkSignalDeleted(Guid.NewGuid()).ShouldBeFalse();
+        strategy.DeletedSignalIds.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void A_new_version_without_the_signal_clears_the_warning()
+    {
+        var id = Guid.NewGuid();
+        var setup = Setup(Spy) with { SignalIds = [id] };
+        var strategy = Strategy.Create(UserId.New(), "Signal strategy", "rule-based", setup, Now).Value;
+        strategy.MarkSignalDeleted(id);
+
+        strategy.Reconfigure(Setup(Spy), Now.AddDays(1)).IsSuccess.ShouldBeTrue();
+        strategy.DeletedSignalIds.ShouldBeEmpty();
+    }
+
 }

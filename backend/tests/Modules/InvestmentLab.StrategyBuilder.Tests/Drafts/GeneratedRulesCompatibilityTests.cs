@@ -18,7 +18,7 @@ public sealed class GeneratedRulesCompatibilityTests
     [Theory]
     [MemberData(nameof(Names))]
     public void Every_compatibility_draft_passes_the_local_check(string name) =>
-        GraphCheck.Of(CompatibilityDrafts.All()[name], EngineSchema.Vocabulary).ShouldBeEmpty();
+        GraphCheck.Of(CompatibilityDrafts.All()[name], EngineSchema.Vocabulary, CompatibilityDrafts.Signals).ShouldBeEmpty();
 
     [Theory]
     [MemberData(nameof(Names))]

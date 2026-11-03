@@ -2,6 +2,8 @@ namespace InvestmentLab.Backtesting.Replays.Domain;
 
 public static class BacktestErrors
 {
+    public static Error SignalMissing(Guid id) => Error.Validation("backtest.signal_missing", "A signal referenced by the strategy no longer exists.", new { id });
+
     public static Error StrategyNotFound(Guid strategyId) =>
         Error.NotFound("backtest.strategy_not_found", $"Strategy {strategyId} or its version does not exist.");
 

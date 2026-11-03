@@ -1,3 +1,4 @@
+import { OwnSignalDto } from '../models/own-signal-dto';
 import { PublishedStrategyDto } from '../models/published-strategy-dto';
 import { PublishedVersionDto } from '../models/published-version-dto';
 import { TrialRunDto } from '../models/trial-run-dto';
@@ -22,6 +23,10 @@ export class StrategyBuilderApi {
 
   vocabulary(): Promise<VocabularyDto> {
     return this.api.get<VocabularyDto>(`${base}/vocabulary`);
+  }
+
+  signals(): Promise<OwnSignalDto[]> {
+    return this.api.get<OwnSignalDto[]>(`${base}/signals`);
   }
 
   instruments(): Promise<InstrumentChoiceDto[]> {
