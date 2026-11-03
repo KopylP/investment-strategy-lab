@@ -1,3 +1,4 @@
+import { RouterLink } from '@angular/router';
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { Button } from 'primeng/button';
 import { Message } from 'primeng/message';
@@ -10,7 +11,7 @@ import { StrategyCard } from '../../ui/strategy-card/strategy-card';
 
 @Component({
   selector: 'app-strategy-list-page',
-  imports: [Button, Message, Skeleton, PageHeader, EmptyState, StrategyCard],
+  imports: [RouterLink, Button, Message, Skeleton, PageHeader, EmptyState, StrategyCard],
   providers: [StrategiesStore],
   templateUrl: './strategy-list-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,0 +1,14 @@
+@if (error()) {
+  <p-message severity="error" text="Не вдалося завантажити опис стратегії" />
+}
+@if (published(); as strategy) {
+  @if (strategy.editable) {
+    <div class="my-4"><app-builder-words-panel [words]="strategy.words" /></div>
+    <p-button
+      label="Змінити в конструкторі"
+      icon="pi pi-pencil"
+      [loading]="opening()"
+      (onClick)="open()"
+    />
+  }
+}

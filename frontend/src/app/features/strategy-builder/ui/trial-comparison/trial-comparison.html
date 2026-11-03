@@ -1,0 +1,37 @@
+<section class="card min-w-0" aria-label="Порівняння запусків">
+  <h2 class="mb-4 text-lg font-semibold">Порівняння запусків</h2>
+  <div class="overflow-x-auto">
+    <table class="w-full text-left">
+      <thead>
+        <tr>
+          <th class="p-2">Показник</th>
+          <th class="p-2">Запуск A · №{{ first().number }}</th>
+          <th class="p-2">Запуск B · №{{ second().number }}</th>
+          <th class="p-2">Різниця B - A</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows(); track row.label) {
+          <tr>
+            <th class="p-2 font-medium">{{ row.label }}</th>
+            <td class="p-2">{{ row.first }}</td>
+            <td class="p-2">{{ row.second }}</td>
+            <td class="p-2">{{ row.difference }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <p class="my-3 text-sm text-muted-color">
+    Графік показує зростання 100 одиниць від початку кожного запуску. Періоди запусків можуть
+    відрізнятися; різницю дохідності наведено у відсоткових пунктах.
+  </p>
+  @if (error()) {
+    <p-message severity="error" text="Не вдалося завантажити графік" />
+  } @else {
+    <app-chart-legend [lines]="legend()" (toggled)="hiddenLines.toggle($event)" /><app-live-chart
+      [data]="data()"
+      [options]="options()"
+    />
+  }
+</section>

@@ -7,6 +7,8 @@ import {
   input,
   signal,
 } from '@angular/core';
+import { Router } from '@angular/router';
+import { ConfirmationService } from 'primeng/api';
 import { FormsModule } from '@angular/forms';
 import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
@@ -62,6 +64,8 @@ import { ProblemsPanel } from '../../ui/problems-panel/problems-panel';
 })
 export class DraftEditorPage {
   protected readonly store = inject(DraftStore);
+  private readonly router = inject(Router);
+  private readonly confirmation = inject(ConfirmationService);
   readonly draftId = input.required<string>();
   protected readonly setupVisible = signal(false);
   protected readonly reportsVisible = signal(false);
@@ -86,6 +90,38 @@ export class DraftEditorPage {
 
   constructor() {
     effect(() => void this.store.open(this.draftId()));
+  }
+
+  protected async runTrial(): Promise<void> {
+    const run = await this.store.runTrial();
+    if (run)
+      await this.router.navigate(['/strategy-builder', this.draftId(), 'trials'], {
+        queryParams: { run: run.number },
+      });
+  }
+
+  protected async confirmPublish(): Promise<void> {
+    if (!(await this.store.check())) return;
+    const draft = this.store.draft();
+    if (!draft) return;
+
+    const message = draft.originStrategyId
+      ? `Опублікувати версію ${(draft.originVersion ?? 0) + 1} стратегії «${draft.name}»?`
+      : `Опублікувати як нову стратегію «${draft.name}»?`;
+    this.confirmation.confirm({
+      header: 'Публікація стратегії',
+      message,
+      acceptLabel: 'Опублікувати',
+      rejectLabel: 'Скасувати',
+      rejectButtonProps: { severity: 'secondary', text: true },
+      accept: () => void this.publish(),
+    });
+  }
+
+  private async publish(): Promise<void> {
+    const published = await this.store.publish();
+    if (published)
+      await this.router.navigate(['/strategies', published.strategyId], { replaceUrl: true });
   }
 
   protected async showProblem(problem: DraftProblemDto): Promise<void> {

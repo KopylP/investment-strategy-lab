@@ -2,6 +2,12 @@
   title="Стратегії"
   subtitle="Стратегія вирішує, які ETF тримати в під-портфелі й як часто переглядати; що купити й продати рахує сервіс"
 >
+  <p-button
+    label="Нова власна стратегія"
+    icon="pi pi-plus"
+    routerLink="/strategy-builder"
+    [queryParams]="{ new: 1 }"
+  />
   @if (store.strategies().length) {
     <p-button
       label="Додати стандартні"
