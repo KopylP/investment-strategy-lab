@@ -30,6 +30,12 @@ class SeriesRole(str, Enum):
     VOLATILITY_INDEX = "volatilityIndex"
 
 
+class BacktestComparison(str, Enum):
+    BENCHMARK = "benchmark"
+    BENCHMARK_AT_EQUAL_RISK = "benchmark-at-equal-risk"
+    UNIVERSE_EQUAL_WEIGHT = "universe-equal-weight"
+
+
 class PriceSeries(ApiModel):
     """Daily closes of one series, columnar. ``adjustedClose`` drives the signals."""
 
@@ -322,6 +328,10 @@ class StrategyTypeDescriptor(ApiModel):
     default_parameters: dict[str, Any]
     reports: list[ReportDefinition]
     supports_backtest: bool = Field(default=True, description="False for a strategy that cannot answer thousands of times in a row, such as an AI agent.")
+    backtest_comparisons: list[BacktestComparison] = Field(
+        default_factory=list,
+        description="What a backtest of this type is shown next to, in this order: only the comparisons that answer a question about it.",
+    )
     messages: dict[str, str] = Field(default_factory=dict, description="The texts of this type's message codes, in Ukrainian.")
 
 

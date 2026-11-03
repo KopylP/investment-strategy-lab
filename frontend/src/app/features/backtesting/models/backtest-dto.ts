@@ -1,5 +1,5 @@
 export type BacktestStatus = 'Queued' | 'Running' | 'Succeeded' | 'Failed' | 'NotSupported';
-export type ReplaySeriesKind = 'Strategy' | 'Benchmark' | 'EqualWeight';
+export const STRATEGY_SERIES = 'strategy';
 
 export interface ReplayPointDto {
   date: string;
@@ -17,7 +17,8 @@ export interface ReplaySummaryDto {
 }
 
 export interface ReplaySeriesDto {
-  kind: ReplaySeriesKind;
+  code: string;
+  label: string;
   summary: ReplaySummaryDto;
   points: ReplayPointDto[];
 }
@@ -55,9 +56,14 @@ export interface MoneyOutcomesOfDto {
   best: MoneyOutcomeDto | null;
 }
 
+export interface SeriesMoneyOutcomesDto {
+  code: string;
+  label: string;
+  outcomes: MoneyOutcomesOfDto;
+}
+
 export interface MoneyOutcomesDto {
   contributed: number;
   years: number;
-  strategy: MoneyOutcomesOfDto;
-  benchmark: MoneyOutcomesOfDto;
+  series: SeriesMoneyOutcomesDto[];
 }

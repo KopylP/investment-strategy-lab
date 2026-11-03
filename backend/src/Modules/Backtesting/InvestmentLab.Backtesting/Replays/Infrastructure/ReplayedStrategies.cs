@@ -15,6 +15,7 @@ internal sealed class ReplayedStrategies(IStrategyDirectory strategies, IInstrum
         var currency = ReplayCurrency.Of(TradingCurrenciesOf(setup.Universe, catalog));
         var rebalance = CadenceOf(setup, StrategyReportDto.Rebalance);
         var signals = SignalTriggersOf(setup, catalog.FirstOrDefault(instrument => instrument.IsVolatilityIndex)?.Id);
+        var benchmark = BenchmarkOf(setup.BenchmarkInstrumentId, catalog);
 
         return new ReplaySetup(
             StrategyId: setup.StrategyId,
@@ -23,11 +24,20 @@ internal sealed class ReplayedStrategies(IStrategyDirectory strategies, IInstrum
             CanBeReplayed: setup.SupportsBacktest,
             Universe: setup.Universe,
             CashInstrumentId: setup.CashInstrumentId,
-            BenchmarkInstrumentId: setup.BenchmarkInstrumentId,
+            Benchmark: benchmark,
             RebalanceCadence: rebalance ?? ReplayCadence.Monthly,
             RiskReviewCadence: CadenceOf(setup, StrategyReportDto.RiskReview),
             Signals: signals,
-            Currency: currency);
+            Currency: currency,
+            Comparisons: setup.Comparisons);
+    }
+
+    private static ReplayBenchmark BenchmarkOf(Guid instrumentId, IReadOnlyList<InstrumentDto> catalog)
+    {
+        var instrument = catalog.FirstOrDefault(candidate => candidate.Id == instrumentId)
+            ?? throw new InvalidOperationException($"Benchmark {instrumentId} of the strategy is not in the catalog.");
+
+        return new ReplayBenchmark(instrumentId, instrument.Label);
     }
 
     private static List<string> TradingCurrenciesOf(IReadOnlyList<Guid> universe, IReadOnlyList<InstrumentDto> catalog)

@@ -15,7 +15,7 @@ public sealed class ReplaySeriesTests
             new(new DateOnly(2024, 2, 29), 1.10),
         ];
 
-        var series = ReplaySeries.Of(ReplaySeriesKind.Strategy, days, 0d);
+        var series = ReplaySeries.Of(ReplaySeries.StrategyCode, "Strategy", days, 0d);
 
         series.Points.Count.ShouldBe(2);
         series.Points[0].Growth.ShouldBe(1.00);

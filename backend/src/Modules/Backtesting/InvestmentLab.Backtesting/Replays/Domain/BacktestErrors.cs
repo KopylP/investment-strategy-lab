@@ -11,6 +11,9 @@ public static class BacktestErrors
     public static Error NotEnoughHistory() =>
         Error.Validation("backtest.not_enough_history", "There is too little price history to replay this strategy.");
 
+    public static Error UnknownComparison(string code) =>
+        Error.Validation("backtest.unknown_comparison", $"The strategy type asks to be compared with '{code}', which the backtest does not know.");
+
     public static Error InvalidMoneyPlan() =>
         Error.Validation("backtest.invalid_money_plan", "Start and contribution cannot be negative, and the period must be at least one year.");
 }

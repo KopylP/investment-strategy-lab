@@ -1,13 +1,11 @@
 import { TaxRegime } from '../../../../core/context/tax-regime';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { ChartTheme, withAlpha } from '../../../../shared/charts/chart-theme';
+import { dateAxis } from '../../../../shared/charts/date-axis';
+import { lineChartBase } from '../../../../shared/charts/line-chart-base';
 import { LiveChart } from '../../../../shared/charts/live-chart';
-import {
-  formatAxisNumber,
-  formatDate,
-  formatMoney,
-  shortenDate,
-} from '../../../../shared/pipes/format';
+import { valueAxis } from '../../../../shared/charts/value-axis';
+import { formatAxisNumber, formatDate, formatMoney } from '../../../../shared/pipes/format';
 import { toIsoDate } from '../../../../shared/models/api';
 import { Viewport } from '../../../../shared/ui/viewport';
 import { TaxProgress } from '../../data-access/overview-store';
@@ -83,9 +81,7 @@ export class TaxProgressChart {
     const phone = this.viewport.phone();
 
     return {
-      maintainAspectRatio: false,
-      animation: false,
-      interaction: { mode: 'index', intersect: false },
+      ...lineChartBase(),
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -96,27 +92,14 @@ export class TaxProgressChart {
         },
       },
       scales: {
-        x: {
-          ticks: {
-            color: palette.muted,
-            maxTicksLimit: phone ? 4 : 12,
-            maxRotation: 0,
-            font: phone ? { size: 11 } : undefined,
-            callback(this: { getLabelForValue: (value: number) => string }, value: number) {
-              return shortenDate(this.getLabelForValue(value));
-            },
-          },
-          grid: { display: false },
-        },
+        x: dateAxis(palette, { phone, maxTicks: phone ? 4 : 12, shortLabels: true }),
         y: {
+          ...valueAxis(palette, {
+            phone: false,
+            maxTicks: 5,
+            tick: (value) => (phone ? formatAxisNumber(value) : formatMoney(value, currency, 0)),
+          }),
           min: 0,
-          ticks: {
-            color: palette.muted,
-            maxTicksLimit: 5,
-            callback: (value: number) =>
-              phone ? formatAxisNumber(value) : formatMoney(value, currency, 0),
-          },
-          grid: { color: palette.grid },
         },
       },
     };

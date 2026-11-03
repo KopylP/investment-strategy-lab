@@ -1,7 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { ChartTheme, withAlpha } from '../../../../shared/charts/chart-theme';
 import { LiveChart } from '../../../../shared/charts/live-chart';
-import { formatDate, formatSignedPercent, shortenDate } from '../../../../shared/pipes/format';
+import { dateAxis } from '../../../../shared/charts/date-axis';
+import { lineChartBase } from '../../../../shared/charts/line-chart-base';
+import { valueAxis } from '../../../../shared/charts/value-axis';
+import { formatDate, formatSignedPercent } from '../../../../shared/pipes/format';
 import { Viewport } from '../../../../shared/ui/viewport';
 import { DashboardDto } from '../../data-access/dashboard-api';
 
@@ -47,9 +50,7 @@ export class DrawdownChart {
     const phone = this.viewport.phone();
 
     return {
-      maintainAspectRatio: false,
-      animation: false,
-      interaction: { mode: 'index', intersect: false },
+      ...lineChartBase(),
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -59,29 +60,14 @@ export class DrawdownChart {
         },
       },
       scales: {
-        x: phone
-          ? {
-              ticks: {
-                color: palette.muted,
-                maxTicksLimit: 4,
-                maxRotation: 0,
-                font: { size: 11 },
-                callback(this: { getLabelForValue: (value: number) => string }, value: number) {
-                  return shortenDate(this.getLabelForValue(value));
-                },
-              },
-              grid: { display: false },
-            }
-          : { ticks: { color: palette.muted, maxTicksLimit: 8 }, grid: { display: false } },
+        x: dateAxis(palette, { phone, maxTicks: phone ? 4 : 8, shortLabels: phone }),
         y: {
+          ...valueAxis(palette, {
+            phone,
+            maxTicks: phone ? 4 : undefined,
+            tick: (value) => formatSignedPercent(value, 0),
+          }),
           max: 0,
-          ticks: {
-            color: palette.muted,
-            maxTicksLimit: phone ? 4 : undefined,
-            font: phone ? { size: 11 } : undefined,
-            callback: (value: number) => formatSignedPercent(value, 0),
-          },
-          grid: { color: palette.grid },
         },
       },
     };

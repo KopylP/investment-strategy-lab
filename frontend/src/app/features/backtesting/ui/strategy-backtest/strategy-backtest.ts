@@ -1,25 +1,32 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  effect,
-  inject,
-  input,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { InputNumber } from 'primeng/inputnumber';
 import { Message } from 'primeng/message';
 import { ProgressSpinner } from 'primeng/progressspinner';
 import { SelectButton } from 'primeng/selectbutton';
+import { chartLegendLabels } from '../../../../shared/charts/chart-legend';
 import { ChartTheme } from '../../../../shared/charts/chart-theme';
+import { dateAxis } from '../../../../shared/charts/date-axis';
+import { lineChartBase } from '../../../../shared/charts/line-chart-base';
 import { LiveChart } from '../../../../shared/charts/live-chart';
+import { valueAxis } from '../../../../shared/charts/value-axis';
 import { formatAxisNumber, formatDate, formatPercent } from '../../../../shared/pipes/format';
-import { DatePipe, MoneyPipe, PercentPipe, SignedPercentPipe } from '../../../../shared/pipes/format-pipes';
+import {
+  DatePipe,
+  MoneyPipe,
+  PercentPipe,
+  SignedPercentPipe,
+} from '../../../../shared/pipes/format-pipes';
 import { Viewport } from '../../../../shared/ui/viewport';
 import { BacktestStore } from '../../data-access/backtest-store';
-import { ReplaySeriesDto, ReplaySeriesKind } from '../../models/backtest-dto';
+import { ReplayPointDto, ReplaySeriesDto, STRATEGY_SERIES } from '../../models/backtest-dto';
 
 const FEW_PERIODS = 24;
+const PHONE_DATE_TICKS = 4;
+const DESKTOP_DATE_TICKS = 8;
+const PHONE_VALUE_TICKS = 4;
+const STRATEGY_LINE_WIDTH = 2;
+const COMPARISON_LINE_WIDTH = 1.5;
 
 @Component({
   selector: 'app-strategy-backtest',
@@ -42,7 +49,6 @@ const FEW_PERIODS = 24;
 export class StrategyBacktest {
   readonly strategyId = input.required<string>();
   readonly version = input.required<number>();
-  readonly benchmarkLabel = input.required<string>();
 
   protected readonly store = inject(BacktestStore);
   protected readonly viewport = inject(Viewport);
@@ -58,14 +64,18 @@ export class StrategyBacktest {
 
   protected readonly result = computed(() => this.store.backtest()?.result ?? null);
   protected readonly currency = computed(() => this.result()?.currency ?? '');
+  protected readonly series = computed(() => this.result()?.series ?? []);
   protected readonly strategySummary = computed(
-    () => this.result()?.series.find((series) => series.kind === 'Strategy')?.summary ?? null,
+    () => this.series().find((series) => series.code === STRATEGY_SERIES)?.summary ?? null,
   );
-  protected readonly rows = computed(() =>
-    (this.result()?.series ?? []).map((series) => ({
-      label: this.labelOf(series.kind),
-      summary: series.summary,
-    })),
+
+  protected readonly outcomes = computed(() => this.store.outcomes());
+  protected readonly strategyOutcomes = computed(
+    () =>
+      this.outcomes()?.series.find((series) => series.code === STRATEGY_SERIES)?.outcomes ?? null,
+  );
+  protected readonly comparedOutcomes = computed(() =>
+    (this.outcomes()?.series ?? []).filter((series) => series.outcomes.periods > 0),
   );
 
   protected readonly growthData = computed(() => this.dataOf((point) => point.growth * 100));
@@ -83,51 +93,52 @@ export class StrategyBacktest {
     effect(() => this.store.show(this.strategyId(), this.version()));
   }
 
-  private labelOf(kind: ReplaySeriesKind): string {
-    if (kind === 'Strategy') return 'Стратегія';
-
-    return kind === 'Benchmark' ? this.benchmarkLabel() : 'Порівну в усі фонди';
-  }
-
-  private colorOf(kind: ReplaySeriesKind): string {
-    const palette = this.theme.palette();
-
-    if (kind === 'Strategy') return palette.primary;
-
-    return kind === 'Benchmark' ? palette.series[1] : palette.neutral;
-  }
-
-  private dataOf(valueOf: (point: ReplaySeriesDto['points'][number]) => number) {
-    const series = this.result()?.series ?? [];
+  private dataOf(valueOf: (point: ReplayPointDto) => number) {
+    const series = this.series();
+    const dates = (series[0]?.points ?? []).map((point) => formatDate(point.date));
 
     return {
-      labels: (series[0]?.points ?? []).map((point) => formatDate(point.date)),
-      datasets: series.map((each) => ({
-        label: this.labelOf(each.kind),
-        data: each.points.map(valueOf),
-        borderColor: this.colorOf(each.kind),
-        borderWidth: each.kind === 'Strategy' ? 2 : 1.5,
-        pointRadius: 0,
-        tension: 0.1,
-        fill: false,
-      })),
+      labels: dates,
+      datasets: series.map((each, index) => this.datasetOf(each, index, valueOf)),
     };
+  }
+
+  private datasetOf(
+    series: ReplaySeriesDto,
+    index: number,
+    valueOf: (point: ReplayPointDto) => number,
+  ) {
+    const isStrategy = series.code === STRATEGY_SERIES;
+
+    return {
+      label: series.label,
+      data: series.points.map(valueOf),
+      borderColor: this.colorAt(index),
+      borderWidth: isStrategy ? STRATEGY_LINE_WIDTH : COMPARISON_LINE_WIDTH,
+      pointRadius: 0,
+      tension: 0.1,
+      fill: false,
+    };
+  }
+
+  private colorAt(index: number): string {
+    const colors = this.theme.palette().series;
+
+    return colors[index % colors.length];
   }
 
   private optionsOf(tick: (value: number) => string) {
     const palette = this.theme.palette();
+    const phone = this.viewport.phone();
+    const maxDateTicks = phone ? PHONE_DATE_TICKS : DESKTOP_DATE_TICKS;
+    const maxValueTicks = phone ? PHONE_VALUE_TICKS : undefined;
 
     return {
-      maintainAspectRatio: false,
-      animation: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: { legend: { labels: { color: palette.text, usePointStyle: true } } },
+      ...lineChartBase(),
+      plugins: { legend: { labels: chartLegendLabels(palette, phone) } },
       scales: {
-        x: { ticks: { color: palette.muted, maxTicksLimit: 8 }, grid: { display: false } },
-        y: {
-          ticks: { color: palette.muted, callback: (value: number) => tick(value) },
-          grid: { color: palette.grid },
-        },
+        x: dateAxis(palette, { phone, maxTicks: maxDateTicks, shortLabels: phone }),
+        y: valueAxis(palette, { phone, tick, maxTicks: maxValueTicks }),
       },
     };
   }

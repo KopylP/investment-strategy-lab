@@ -8,4 +8,5 @@ public sealed record StrategyReplaySetupDto(
     IReadOnlyList<Guid> Universe,
     Guid? CashInstrumentId,
     Guid BenchmarkInstrumentId,
-    IReadOnlyList<StrategyReportDto> Reports);
+    IReadOnlyList<StrategyReportDto> Reports,
+    IReadOnlyList<string> Comparisons);

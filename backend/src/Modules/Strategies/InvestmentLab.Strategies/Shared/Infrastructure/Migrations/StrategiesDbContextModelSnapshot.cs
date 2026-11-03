@@ -75,6 +75,11 @@ namespace InvestmentLab.Strategies.Shared.Infrastructure.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("code");
 
+                    b.PrimitiveCollection<List<string>>("BacktestComparisons")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("backtest_comparisons");
+
                     b.Property<string>("DefaultParameters")
                         .IsRequired()
                         .HasColumnType("jsonb")

@@ -29,6 +29,29 @@ public sealed class PriceTable
     public decimal? PriceOn(Guid instrumentId, int dayIndex) =>
         _prices.TryGetValue(instrumentId, out var prices) ? prices[dayIndex] : null;
 
+    public double? ReturnOn(Guid instrumentId, int dayIndex)
+    {
+        if (dayIndex == 0 || PriceOn(instrumentId, dayIndex) is not { } today || PriceOn(instrumentId, dayIndex - 1) is not { } before)
+            return null;
+
+        return before > 0m ? (double)(today / before) - 1d : null;
+    }
+
+    public List<GrowthDay> GrowthOf(Guid instrumentId, int firstDay)
+    {
+        var priced = Enumerable.Range(firstDay, Days.Count - firstDay)
+            .Select(dayIndex => (Index: dayIndex, Price: PriceOn(instrumentId, dayIndex)))
+            .Where(day => day.Price is not null)
+            .ToList();
+
+        if (priced.Count == 0)
+            return [];
+
+        var start = priced[0].Price!.Value;
+
+        return [.. priced.Select(day => new GrowthDay(Days[day.Index], (double)(day.Price!.Value / start)))];
+    }
+
     public int? FirstDayToReplay(ReplaySetup setup)
     {
         var needed = Math.Max(1, (int)Math.Round(setup.Universe.Count * ShareOfUniverseToStart));
@@ -37,7 +60,7 @@ public sealed class PriceTable
         {
             var warmed = setup.Universe.Count(instrumentId => HasWarmedUp(instrumentId, dayIndex));
 
-            if (warmed >= needed && HasWarmedUp(setup.BenchmarkInstrumentId, dayIndex))
+            if (warmed >= needed && HasWarmedUp(setup.Benchmark.InstrumentId, dayIndex))
                 return dayIndex;
         }
 

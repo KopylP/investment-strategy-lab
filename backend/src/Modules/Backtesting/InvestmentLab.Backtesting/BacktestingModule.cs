@@ -5,6 +5,7 @@ using InvestmentLab.Backtesting.Replays.Application.GetMoneyOutcomes;
 using InvestmentLab.Backtesting.Replays.Application.Integration;
 using InvestmentLab.Backtesting.Replays.Application.RunBacktest;
 using InvestmentLab.Backtesting.Replays.Domain;
+using InvestmentLab.Backtesting.Replays.Domain.Comparisons;
 using InvestmentLab.Backtesting.Replays.Infrastructure;
 using InvestmentLab.Backtesting.Shared.Infrastructure;
 using InvestmentLab.BuildingBlocks.Messaging;
@@ -37,6 +38,10 @@ public sealed class BacktestingModule : IModule
         services.AddScoped<IPriceTables, PriceTables>();
         services.AddScoped<IReplaySignals, ReplaySignals>();
         services.AddScoped<IReplayTaxes, ReplayTaxes>();
+        services.AddSingleton<IReplayComparison, BenchmarkComparison>();
+        services.AddSingleton<IReplayComparison, BenchmarkAtEqualRiskComparison>();
+        services.AddSingleton<IReplayComparison, UniverseEqualWeightComparison>();
+        services.AddSingleton<ReplayComparisonCatalog>();
         services.AddScoped<StrategyReplay>();
         services.AddScoped<RunBacktestHandler>();
         services.AddScoped<EnsureBacktestHandler>();

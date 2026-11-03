@@ -9,6 +9,7 @@ public sealed class StrategyTypeDescriptor
     public string EngineVersion { get; private set; }
     public bool SupportsState { get; private set; }
     public bool SupportsBacktest { get; private set; } = true;
+    public List<string> BacktestComparisons { get; private set; } = [];
     public List<string> RequiredSeriesRoles { get; private set; }
 
     public string ParametersSchema { get; private set; }
@@ -46,7 +47,8 @@ public sealed class StrategyTypeDescriptor
         IEnumerable<ReportDefinition> reports,
         DateTimeOffset syncedAt,
         IReadOnlyDictionary<string, string>? messages = null,
-        bool supportsBacktest = true) =>
+        bool supportsBacktest = true,
+        IEnumerable<string>? backtestComparisons = null) =>
         new(
             code,
             name,
@@ -59,7 +61,11 @@ public sealed class StrategyTypeDescriptor
             defaultParameters,
             [.. reports],
             syncedAt)
-        { Messages = messages is null ? [] : new Dictionary<string, string>(messages), SupportsBacktest = supportsBacktest };
+        {
+            Messages = messages is null ? [] : new Dictionary<string, string>(messages),
+            SupportsBacktest = supportsBacktest,
+            BacktestComparisons = [.. backtestComparisons ?? []],
+        };
 
     public void RefreshFrom(StrategyTypeDescriptor published)
     {
@@ -69,6 +75,7 @@ public sealed class StrategyTypeDescriptor
         EngineVersion = published.EngineVersion;
         SupportsState = published.SupportsState;
         SupportsBacktest = published.SupportsBacktest;
+        BacktestComparisons = [.. published.BacktestComparisons];
         RequiredSeriesRoles = [.. published.RequiredSeriesRoles];
         ParametersSchema = published.ParametersSchema;
         DefaultParameters = published.DefaultParameters;

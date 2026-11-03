@@ -16,10 +16,11 @@ public sealed class GetMoneyOutcomesHandler(IBacktestRepository backtests)
         if (backtest?.Result is not { } result)
             return BacktestErrors.NotReady(query.StrategyId);
 
-        return new MoneyOutcomesDto(
-            Contributed: plan.Value.Contributed,
-            Years: plan.Value.Years,
-            Strategy: MoneyOutcomes.Of(result.SeriesOf(ReplaySeriesKind.Strategy).Points, plan.Value),
-            Benchmark: MoneyOutcomes.Of(result.SeriesOf(ReplaySeriesKind.Benchmark).Points, plan.Value));
+        var outcomes = result.Series.Select(series => OutcomesOf(series, plan.Value)).ToList();
+
+        return new MoneyOutcomesDto(Contributed: plan.Value.Contributed, Years: plan.Value.Years, Series: outcomes);
     }
+
+    private static SeriesMoneyOutcomesDto OutcomesOf(ReplaySeries series, MoneyPlan plan) =>
+        new(series.Code, series.Label, MoneyOutcomes.Of(series.Points, plan));
 }

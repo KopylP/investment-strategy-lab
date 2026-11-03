@@ -1,4 +1,5 @@
 using InvestmentLab.Backtesting.Replays.Domain;
+using InvestmentLab.Backtesting.Replays.Domain.Comparisons;
 
 namespace InvestmentLab.Backtesting.Replays.Application.RunBacktest;
 
@@ -7,12 +8,17 @@ public sealed class StrategyReplay(
     IStrategyAnswers answers,
     ITargetTrades targetTrades,
     IReplaySignals signals,
-    IReplayTaxes taxes)
+    IReplayTaxes taxes,
+    ReplayComparisonCatalog comparisonCatalog)
 {
     private const decimal NotionalCapital = 100_000m;
 
     public async Task<Result<ReplayResult>> RunAsync(ReplaySetup setup, CancellationToken cancellationToken)
     {
+        var comparisons = comparisonCatalog.Resolve(setup.Comparisons);
+        if (comparisons.IsFailure)
+            return comparisons.Error;
+
         var prices = await priceTables.LoadAsync(setup, cancellationToken);
 
         if (prices.FirstDayToReplay(setup) is not { } firstDay)
@@ -28,40 +34,46 @@ public sealed class StrategyReplay(
                 return stepped.Error;
         }
 
-        var comparisons = new ReplayComparisons(prices, firstDay, setup);
-        var afterTax = await AfterTaxAsync(run, comparisons, cancellationToken);
+        var history = new ReplayedHistory(prices, firstDay, setup, run.Growth);
+        var series = await SeriesOfAsync(run, history, comparisons.Value, cancellationToken);
 
-        return run.ResultFrom(comparisons, afterTax);
+        return run.ResultFrom(series);
     }
 
-    private async Task<AfterTaxFinals> AfterTaxAsync(Run run, ReplayComparisons comparisons, CancellationToken cancellationToken)
+    private async Task<List<ReplaySeries>> SeriesOfAsync(
+        Run run, ReplayedHistory history, IReadOnlyList<IReplayComparison> comparisons, CancellationToken cancellationToken)
     {
-        var currency = run.Setup.Currency;
+        var riskFree = history.RiskFreeRate;
+        var series = new List<ReplaySeries> { await StrategySeriesAsync(run, riskFree, cancellationToken) };
 
-        var strategy = await StrategyAfterTaxAsync(run, cancellationToken);
-        var benchmark = await HeldAfterTaxAsync(run.Setup.BenchmarkInstrumentId, comparisons.Benchmark, currency, cancellationToken);
-        var equalWeight = await HeldAfterTaxAsync(ReplayComparisons.EqualWeightBasket, comparisons.EqualWeight(), currency, cancellationToken);
+        foreach (var comparison in comparisons)
+        {
+            var line = comparison.LineOf(history);
+            series.Add(await ComparedSeriesAsync(line, run.Setup.Currency, riskFree, cancellationToken));
+        }
 
-        return new AfterTaxFinals(strategy, benchmark, equalWeight);
+        return series;
     }
 
-    private async Task<double> StrategyAfterTaxAsync(Run run, CancellationToken cancellationToken)
+    private async Task<ReplaySeries> StrategySeriesAsync(Run run, double riskFree, CancellationToken cancellationToken)
     {
         var lastDay = run.Prices.Days.Count - 1;
         var liquidation = run.Book.LiquidationOn(run.Prices.Days[lastDay], run.Prices.PricesOn(lastDay));
 
         var yearly = await taxes.YearlyAsync([.. run.Book.TradeLog, .. liquidation], run.Setup.Currency, cancellationToken);
+        var afterTax = AfterTaxGrowth.FinalOf(run.Growth, yearly, NotionalCapital);
 
-        return AfterTaxGrowth.FinalOf(run.Growth, yearly, NotionalCapital);
+        return ReplaySeries.Of(ReplaySeries.StrategyCode, Message.Of("backtest.series.strategy"), run.Growth, riskFree, afterTax);
     }
 
-    private async Task<double> HeldAfterTaxAsync(Guid instrumentId, IReadOnlyList<GrowthDay> growth, string currency, CancellationToken cancellationToken)
+    private async Task<ReplaySeries> ComparedSeriesAsync(ComparedLine line, string currency, double riskFree, CancellationToken cancellationToken)
     {
-        var trades = BookTrade.HeldThroughout(instrumentId, growth, NotionalCapital);
+        var trades = BookTrade.HeldThroughout(line.HeldAs, line.Growth, NotionalCapital);
 
         var yearly = await taxes.YearlyAsync(trades, currency, cancellationToken);
+        var afterTax = AfterTaxGrowth.FinalOf(line.Growth, yearly, NotionalCapital);
 
-        return AfterTaxGrowth.FinalOf(growth, yearly, NotionalCapital);
+        return ReplaySeries.Of(line.Code, line.Label, line.Growth, riskFree, afterTax);
     }
 
     private async Task<Result> StepAsync(Run run, int dayIndex, int firstDay, CancellationToken cancellationToken)
@@ -171,23 +183,14 @@ public sealed class StrategyReplay(
         public void Value(DateOnly day, IReadOnlyDictionary<Guid, decimal> today) =>
             _growth.Add(new GrowthDay(day, (double)(book.ValueAt(today) / NotionalCapital)));
 
-        public ReplayResult ResultFrom(ReplayComparisons comparisons, AfterTaxFinals afterTax)
-        {
-            var riskFree = comparisons.RiskFreeRate;
-
-            return new ReplayResult(
+        public ReplayResult ResultFrom(IReadOnlyList<ReplaySeries> series) =>
+            new(
                 Start: _growth[0].Date,
                 End: _growth[^1].Date,
                 Currency: setup.Currency,
                 Trades: book.Trades,
                 RiskExits: _riskExits,
                 SignalReports: _signalReports,
-                Series:
-                [
-                    ReplaySeries.Of(ReplaySeriesKind.Strategy, _growth, riskFree, afterTax.Strategy),
-                    ReplaySeries.Of(ReplaySeriesKind.Benchmark, comparisons.Benchmark, riskFree, afterTax.Benchmark),
-                    ReplaySeries.Of(ReplaySeriesKind.EqualWeight, comparisons.EqualWeight(), riskFree, afterTax.EqualWeight),
-                ]);
-        }
+                Series: series);
     }
 }

@@ -29,6 +29,8 @@ cd frontend && npx ng build
   usually needs the other side (backend `Strategies` module, frontend models) in the same change.
 - Reports a strategy type declares (code, name, mode, default schedule) drive what the backend schedules and generates
   and what the frontend lists — nothing about a specific report is hard-coded elsewhere.
+- The same holds for what a backtest is compared with (ADR-0017): the type declares comparison codes, each is one
+  `IReplayComparison` block in `Backtesting`, and the screen draws whatever series come back.
 - Reports are generated in the background (ADR-0005): a `ReportRequest` polls the strategies, then the report is
   published as an integration event; Notifications turns events into Home Assistant notices.
 
