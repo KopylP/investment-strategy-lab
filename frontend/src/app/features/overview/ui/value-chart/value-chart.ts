@@ -2,9 +2,10 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, signal } f
 import { FormsModule } from '@angular/forms';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { DisplayCurrency } from '../../../../core/context/display-currency';
-import { chartLegendLabels } from '../../../../shared/charts/chart-legend';
+import { ChartLegend } from '../../../../shared/charts/chart-legend/chart-legend';
 import { ChartTheme, withAlpha } from '../../../../shared/charts/chart-theme';
 import { dateAxis } from '../../../../shared/charts/date-axis';
+import { HiddenLines } from '../../../../shared/charts/hidden-lines';
 import { lineChartBase } from '../../../../shared/charts/line-chart-base';
 import { LiveChart } from '../../../../shared/charts/live-chart';
 import { valueAxis } from '../../../../shared/charts/value-axis';
@@ -22,7 +23,7 @@ const showHeldKey = 'overview.valueChart.showHeld';
 
 @Component({
   selector: 'app-value-chart',
-  imports: [FormsModule, LiveChart, ToggleSwitch],
+  imports: [FormsModule, ChartLegend, LiveChart, ToggleSwitch],
   template: ` <div
       class="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 mb-2 text-sm text-muted-color"
     >
@@ -37,6 +38,11 @@ const showHeldKey = 'overview.valueChart.showHeld';
         активах
       </label>
     </div>
+    <app-chart-legend
+      class="block mb-2"
+      [lines]="legend()"
+      (toggled)="hiddenLines.toggle($event)"
+    />
     <app-live-chart
       [data]="data()"
       [options]="options()"
@@ -75,7 +81,7 @@ export class ValueChart {
     remember(showHeldKey, show);
   }
 
-  protected readonly data = computed(() => {
+  private readonly allLines = computed(() => {
     const { series, reports } = this.dashboard();
     const { rate } = this.scale();
     const scaled = (value: number | null) => (value === null ? null : value * rate);
@@ -136,6 +142,16 @@ export class ValueChart {
     };
   });
 
+  protected readonly hiddenLines = new HiddenLines();
+
+  protected readonly data = computed(() => {
+    const lines = this.allLines();
+
+    return { ...lines, datasets: this.hiddenLines.applyTo(lines.datasets) };
+  });
+
+  protected readonly legend = computed(() => this.hiddenLines.legendOf(this.allLines().datasets));
+
   protected readonly options = computed(() => {
     const palette = this.theme.palette();
     const { series, reports } = this.dashboard();
@@ -147,7 +163,7 @@ export class ValueChart {
     return {
       ...lineChartBase(),
       plugins: {
-        legend: { labels: chartLegendLabels(palette, phone) },
+        legend: { display: false },
         tooltip: {
           callbacks: {
             label: (context: { dataset: { label: string }; parsed: { y: number } }) =>

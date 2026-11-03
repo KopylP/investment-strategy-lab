@@ -1,19 +1,13 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  effect,
-  inject,
-  input,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { InputNumber } from 'primeng/inputnumber';
 import { Message } from 'primeng/message';
 import { ProgressSpinner } from 'primeng/progressspinner';
 import { SelectButton } from 'primeng/selectbutton';
 import { ChartTheme } from '../../../../shared/charts/chart-theme';
+import { ChartLegend } from '../../../../shared/charts/chart-legend/chart-legend';
 import { dateAxis } from '../../../../shared/charts/date-axis';
+import { HiddenLines } from '../../../../shared/charts/hidden-lines';
 import { lineChartBase } from '../../../../shared/charts/line-chart-base';
 import { LiveChart } from '../../../../shared/charts/live-chart';
 import { valueAxis } from '../../../../shared/charts/value-axis';
@@ -43,6 +37,7 @@ const COMPARISON_LINE_WIDTH = 1.5;
     Message,
     ProgressSpinner,
     SelectButton,
+    ChartLegend,
     LiveChart,
     DatePipe,
     MoneyPipe,
@@ -81,14 +76,10 @@ export class StrategyBacktest {
     () =>
       this.outcomes()?.series.find((series) => series.code === STRATEGY_SERIES)?.outcomes ?? null,
   );
-  private readonly hiddenLines = signal<ReadonlySet<string>>(new Set());
+  protected readonly hiddenLines = new HiddenLines();
 
   protected readonly lines = computed(() =>
-    this.series().map((series, index) => ({
-      ...series,
-      color: this.colorAt(index),
-      shown: !this.hiddenLines().has(series.code),
-    })),
+    this.series().map((series, index) => ({ ...series, color: this.colorAt(index) })),
   );
   protected readonly comparedOutcomes = computed(() => {
     const colors = new Map(this.lines().map((line) => [line.code, line.color]));
@@ -99,6 +90,9 @@ export class StrategyBacktest {
     return withHistory.map((series) => ({ ...series, color: colors.get(series.code) ?? '' }));
   });
 
+  protected readonly legend = computed(() =>
+    this.hiddenLines.legendOf(this.datasetsOf((point) => point.growth)),
+  );
   protected readonly growthData = computed(() => this.dataOf((point) => point.growth * 100));
   protected readonly drawdownData = computed(() =>
     this.dataOf((point) => point.worstDrawdown * 100),
@@ -114,25 +108,15 @@ export class StrategyBacktest {
     effect(() => this.store.show(this.strategyId(), this.version()));
   }
 
-  protected toggleLine(code: string): void {
-    this.hiddenLines.update((hidden) => {
-      const next = new Set(hidden);
-
-      if (next.has(code)) next.delete(code);
-      else next.add(code);
-
-      return next;
-    });
-  }
-
   private dataOf(valueOf: (point: ReplayPointDto) => number) {
     const series = this.series();
     const dates = (series[0]?.points ?? []).map((point) => formatDate(point.date));
 
-    return {
-      labels: dates,
-      datasets: series.map((each, index) => this.datasetOf(each, index, valueOf)),
-    };
+    return { labels: dates, datasets: this.hiddenLines.applyTo(this.datasetsOf(valueOf)) };
+  }
+
+  private datasetsOf(valueOf: (point: ReplayPointDto) => number) {
+    return this.series().map((series, index) => this.datasetOf(series, index, valueOf));
   }
 
   private datasetOf(
@@ -147,7 +131,6 @@ export class StrategyBacktest {
       data: series.points.map(valueOf),
       borderColor: this.colorAt(index),
       borderWidth: isStrategy ? STRATEGY_LINE_WIDTH : COMPARISON_LINE_WIDTH,
-      hidden: this.hiddenLines().has(series.code),
       pointRadius: 0,
       tension: 0.1,
       fill: false,

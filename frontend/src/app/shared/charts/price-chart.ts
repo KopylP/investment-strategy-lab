@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { chartLegendLabels } from './chart-legend';
+import { ChartLegend } from './chart-legend/chart-legend';
 import { dateAxis } from './date-axis';
+import { HiddenLines } from './hidden-lines';
 import { LiveChart } from './live-chart';
 import { valueAxis } from './value-axis';
 import { formatAxisNumber, formatDate, formatMoney, formatQuantity } from '../pipes/format';
@@ -22,13 +23,20 @@ export interface TradeMarker {
 
 @Component({
   selector: 'app-price-chart',
-  imports: [LiveChart],
-  template: `<app-live-chart
-    [data]="data()"
-    [options]="options()"
-    [plugins]="[tradeLines()]"
-    [height]="viewport.phone() ? phoneHeight() : height()"
-  />`,
+  imports: [ChartLegend, LiveChart],
+  template: `@if (legend().length) {
+      <app-chart-legend
+        class="block mb-2"
+        [lines]="legend()"
+        (toggled)="hiddenLines.toggle($event)"
+      />
+    }
+    <app-live-chart
+      [data]="data()"
+      [options]="options()"
+      [plugins]="[tradeLines()]"
+      [height]="viewport.phone() ? phoneHeight() : height()"
+    />`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PriceChart {
@@ -62,7 +70,7 @@ export class PriceChart {
     return byIndex;
   });
 
-  protected readonly data = computed(() => {
+  private readonly allLines = computed(() => {
     const points = this.points();
     const palette = this.theme.palette();
     const byIndex = this.tradesByIndex();
@@ -154,6 +162,20 @@ export class PriceChart {
     };
   });
 
+  protected readonly hiddenLines = new HiddenLines();
+
+  protected readonly data = computed(() => {
+    const lines = this.allLines();
+
+    return { ...lines, datasets: this.hiddenLines.applyTo(lines.datasets) };
+  });
+
+  protected readonly legend = computed(() =>
+    this.hiddenLines.legendOf(
+      this.allLines().datasets.filter((dataset) => dataset.showLine === false),
+    ),
+  );
+
   protected readonly options = computed(() => {
     const palette = this.theme.palette();
     const currency = this.currency();
@@ -166,13 +188,7 @@ export class PriceChart {
       maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: {
-          display: byIndex.size > 0,
-          labels: {
-            ...chartLegendLabels(palette, phone),
-            filter: (item: { text: string }) => item.text !== 'Ціна закриття',
-          },
-        },
+        legend: { display: false },
         tooltip: {
           filter: (item: { raw: unknown }) => item.raw !== null,
           callbacks: {
