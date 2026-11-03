@@ -370,5 +370,12 @@
   "builder.problem.fund_in_market_filter": "Ринковий фільтр дивиться на ринок, а не на окремий фонд.",
   "builder.problem.this_fund_signal_in_market_filter": "Сигнал «для цього фонду» не можна вживати в ринковому фільтрі.",
   "builder.problem.extra_series_unknown": "Цей ряд не додано до стратегії: додайте його в кроці «Фонди».",
-  "builder.problem.market_filter_share_missing": "Вкажіть частку у фондах, коли ринок несприятливий."
+  "builder.problem.market_filter_share_missing": "Вкажіть частку у фондах, коли ринок несприятливий.",
+
+  "builder.import.not_json": "Це не JSON правил.",
+  "builder.import.format_version": "Невідома версія формату правил: {version}.",
+  "builder.import.field_unknown": "Невідоме поле «{path}».",
+  "builder.import.indicator_unknown": "Невідомий індикатор «{kind}» у «{path}».",
+  "builder.import.condition_unknown": "Невідома умова «{kind}» у «{path}».",
+  "builder.import.reference_unknown": "Немає індикатора «{name}», на який посилається «{path}»."
 }
