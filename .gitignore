@@ -49,3 +49,7 @@ TestResults/
 # Node / Angular
 node_modules/
 .angular/
+
+# Brainstorming mockups and working specs (deleted after the plan is executed)
+.superpowers/
+docs/superpowers/
