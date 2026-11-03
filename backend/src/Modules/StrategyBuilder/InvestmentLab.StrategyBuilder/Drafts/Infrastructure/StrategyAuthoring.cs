@@ -16,6 +16,64 @@ internal sealed class StrategyAuthoring(IAuthoredStrategies strategies) : IStrat
         return new TrialVersion(written.Value!.StrategyId, written.Value.Version);
     }
 
+    public async Task<Result> DeleteTrialAsync(Guid trialStrategyId, CancellationToken cancellationToken)
+    {
+        var deleted = await strategies.DeleteTrialAsync(trialStrategyId, cancellationToken);
+
+        return deleted.IsSuccess ? Result.Success() : Result.Failure(Failure(deleted));
+    }
+
+    public async Task<Result<PublishedVersion>> PublishAsync(UserId owner, PublishedOrigin? origin, string name, AuthoredStrategy strategy, CancellationToken cancellationToken)
+    {
+        var setup = SetupOf(strategy);
+        var request = new PublishRequest(
+            OwnerId: owner.Value,
+            StrategyId: origin?.StrategyId,
+            Name: name,
+            Setup: setup);
+        var published = await strategies.PublishAsync(request, cancellationToken);
+        if (!published.IsSuccess)
+            return Failure(published);
+
+        return new PublishedVersion(published.Value!.StrategyId, published.Value.Version);
+    }
+
+    public async Task<AuthoredVersion?> GetVersionAsync(Guid strategyId, int version, CancellationToken cancellationToken)
+    {
+        var authored = await strategies.GetVersionAsync(strategyId, version, cancellationToken);
+        if (authored is null)
+            return null;
+
+        var source = authored.Setup;
+        var setup = new DraftSetup(
+            Funds: source.Universe,
+            BenchmarkId: source.BenchmarkInstrumentId,
+            CashId: source.CashInstrumentId,
+            VolatilityIndexId: source.VolatilityIndexInstrumentId,
+            ExtraSeries: source.ExtraSeries);
+        var reports = source.Reports.Select(DraftReportOf).ToList();
+
+        return new AuthoredVersion(
+            Name: authored.Name,
+            Rules: source.Parameters,
+            Setup: setup,
+            Reports: reports,
+            TypeCode: authored.TypeCode);
+    }
+
+    private static DraftReport DraftReportOf(AuthoredReportDto report)
+    {
+        var schedule = report.Schedule;
+        var timing = new ReportTiming(
+            Frequency: schedule.Frequency,
+            Day: schedule.Day,
+            Weekday: schedule.Weekday,
+            Time: schedule.Time,
+            Minute: schedule.Minute);
+
+        return new DraftReport(report.Code, timing, report.SignalKinds, report.SignalIds);
+    }
+
     private static AuthoredSetupDto SetupOf(AuthoredStrategy strategy)
     {
         var reports = strategy.Reports.Select(ReportOf).ToList();

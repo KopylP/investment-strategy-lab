@@ -1,3 +1,4 @@
+using InvestmentLab.Strategies.Definitions.Application.GetAuthoredVersion;
 using System.Text.Json;
 using InvestmentLab.Strategies.Contracts;
 using InvestmentLab.Strategies.Definitions.Application.CheckParameters;
@@ -9,11 +10,15 @@ using InvestmentLab.Strategies.Definitions.Domain;
 namespace InvestmentLab.Strategies.Definitions.Infrastructure;
 
 internal sealed class AuthoredStrategies(
+    GetAuthoredVersionHandler getVersion,
     WriteTrialVersionHandler writeTrial,
     DeleteTrialStrategyHandler deleteTrial,
     PublishStrategyHandler publish,
     CheckParametersHandler checkParameters) : IAuthoredStrategies
 {
+    public Task<AuthoredVersionDto?> GetVersionAsync(Guid strategyId, int version, CancellationToken cancellationToken) =>
+        getVersion.Handle(strategyId, version, cancellationToken);
+
     private const string ParametersRefusedCode = "strategy.parameters_refused";
 
     public async Task<AuthoringResult<TrialVersionDto>> WriteTrialVersionAsync(TrialVersionRequest request, CancellationToken cancellationToken) =>
