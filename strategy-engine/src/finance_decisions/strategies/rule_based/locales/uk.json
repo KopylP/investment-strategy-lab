@@ -133,5 +133,12 @@
   "rule_based.reason.crossed": "{indicator} перетнув {direction} {target} за {withinDays} днів: {verdict}",
   "rule_based.reason.signal": "ваш сигнал {state} {scope}: {verdict}",
   "rule_based.reason.not": "заперечення ({items:join:; }): {verdict}",
-  "rule_based.reason.short_history": "{name}: замало історії, потрібно {days} торгових днів"
+  "rule_based.reason.short_history": "{name}: замало історії, потрібно {days} торгових днів",
+  "rule_based.fund.no_data": "немає котирувань",
+  "rule_based.fund.failed": "не пройшов умову входу: {items:join:; }",
+  "rule_based.fund.exited": "спрацювало правило виходу: {items:join:; }",
+  "rule_based.fund.group_taken": "з групи «{group}» уже обрано {members:join:, }",
+  "rule_based.fund.correlated": "рухається надто схоже на {peer} (кореляція понад {limit:percent})",
+  "rule_based.fund.stronger_exist": "місце {rank}: сильніші фонди вже зайняли всі місця",
+  "rule_based.fund.ranked": "місце {rank}"
 }
