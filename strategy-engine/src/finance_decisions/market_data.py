@@ -135,7 +135,7 @@ def _fund_screen_query(request: FundScreenRequest) -> yf.ETFQuery:
         ("eq", "region", request.region),
         ("eq", "fundfamilyname", request.fund_family),
         ("gte", "fundnetassets", request.min_assets),
-        ("lte", "annualreportnetexpenseratio", request.max_expense_ratio),
+        ("lte", "annualreportnetexpenseratio", request.max_expense_ratio * 100 if request.max_expense_ratio is not None else None),
     ]
     for operator, field, value in criteria:
         if value is not None:
@@ -152,9 +152,14 @@ def _screened_fund(quote: dict) -> dict:
         "currency": quote.get("currency"),
         "exchange": quote.get("fullExchangeName") or quote.get("exchange"),
         "fund_family": quote.get("fundFamily") or quote.get("fundfamilyname"),
-        "total_assets": _finite_figure(quote.get("fundnetassets", quote.get("totalAssets"))),
-        "expense_ratio": _finite_figure(quote.get("annualreportnetexpenseratio", quote.get("annualReportExpenseRatio"))),
+        "total_assets": _finite_figure(quote.get("netAssets")),
+        "expense_ratio": _fund_expense_ratio(quote.get("netExpenseRatio")),
     }
+
+
+def _fund_expense_ratio(value) -> float | None:
+    percent = _finite_figure(value)
+    return percent / 100 if percent is not None else None
 
 
 def _finite_figure(value) -> float | None:

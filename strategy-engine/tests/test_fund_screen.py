@@ -59,14 +59,15 @@ def test_the_query_names_the_providers_fields(monkeypatch):
 
     def screen(query, **options):
         calls.update(query=query.to_dict(), **options)
-        return {"quotes": [{"symbol": "AAA", "longName": "World", "fundnetassets": 2e9,
-                            "annualreportnetexpenseratio": 0.002}]}
+        return {"quotes": [{"symbol": "AAA", "longName": "World", "netAssets": 2e9,
+                            "netExpenseRatio": 0.2}]}
 
     monkeypatch.setattr(market_data.yf, "screen", screen)
-    result = market_data.screen_funds(FundScreenRequest(exchange="GER", min_assets=1e8))
+    result = market_data.screen_funds(FundScreenRequest(exchange="GER", min_assets=1e8, max_expense_ratio=0.002))
     assert calls["query"] == {"operator": "AND", "operands": [
         {"operator": "EQ", "operands": ["exchange", "GER"]},
         {"operator": "GTE", "operands": ["fundnetassets", 1e8]},
+        {"operator": "LTE", "operands": ["annualreportnetexpenseratio", 0.2]},
     ]}
     assert calls["size"] == 250
     assert calls["sortField"] == "fundnetassets"
