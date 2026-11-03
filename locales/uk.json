@@ -377,5 +377,22 @@
   "builder.import.field_unknown": "Невідоме поле «{path}».",
   "builder.import.indicator_unknown": "Невідомий індикатор «{kind}» у «{path}».",
   "builder.import.condition_unknown": "Невідома умова «{kind}» у «{path}».",
-  "builder.import.reference_unknown": "Немає індикатора «{name}», на який посилається «{path}»."
+  "builder.import.reference_unknown": "Немає індикатора «{name}», на який посилається «{path}».",
+
+  "builder.words.market": "Якщо {condition}, у фонди йде все, інакше {share:percent}, решта в {cash}.",
+  "builder.words.exit": "Фонд продається, коли {condition}.",
+  "builder.words.entry": "Фонд купується, коли {condition}.",
+  "builder.words.selection": "Тримаємо до {top} фондів, кращі за: {rank}; з групи не більше {groupLimit}, кореляція не вище {correlation:percent}; гроші діляться {weights}.",
+  "builder.words.universe_order": "порядок у списку фондів",
+  "builder.words.risk": "Позиція продається, коли {limits:join: або }.",
+  "builder.words.risk.stop": "збиток від собівартості досягає {limit:signedPercent}",
+  "builder.words.risk.drawdown": "просадка від піку досягає {limit:signedPercent}",
+  "builder.words.all": "{items:join: і }",
+  "builder.words.any": "{items:join: або }",
+  "builder.words.not": "не ({condition})",
+  "builder.words.series.fund": "фонду",
+  "builder.words.series.benchmark": "бенчмарка {label}",
+  "builder.words.series.vix": "індексу волатильності {label}",
+  "builder.words.series.extra": "{label}",
+  "builder.words.unknown": "невідома умова"
 }
