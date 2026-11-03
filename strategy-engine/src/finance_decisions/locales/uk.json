@@ -32,5 +32,18 @@
   "engine.weekday.3": "четвер",
   "engine.weekday.4": "п'ятниця",
   "engine.weekday.5": "субота",
-  "engine.weekday.6": "неділя"
+  "engine.weekday.6": "неділя",
+  "engine.parameters.missing": "обов'язкове поле",
+  "engine.parameters.extra_forbidden": "невідоме поле",
+  "engine.parameters.greater_than": "має бути більше за {gt}",
+  "engine.parameters.greater_than_equal": "має бути не менше за {ge}",
+  "engine.parameters.less_than": "має бути менше за {lt}",
+  "engine.parameters.less_than_equal": "має бути не більше за {le}",
+  "engine.parameters.literal_error": "має бути одним із: {expected}",
+  "engine.parameters.union_tag_invalid": "невідомий вид «{tag}»; відомі: {expected_tags}",
+  "engine.parameters.int_type": "має бути цілим числом",
+  "engine.parameters.float_type": "має бути числом",
+  "engine.parameters.string_pattern_mismatch": "не відповідає формату",
+  "engine.parameters.too_short": "потрібно щонайменше {min_length}",
+  "engine.parameters.invalid": "некоректне значення ({detail})"
 }

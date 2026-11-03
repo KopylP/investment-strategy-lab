@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 
-from . import catalog, decide, jobs, prices, risk, symbols
+from . import catalog, decide, jobs, parameters_check, prices, risk, symbols
 
 
 def create_app() -> FastAPI:
@@ -16,6 +16,7 @@ def create_app() -> FastAPI:
     app.include_router(catalog.router)
     app.include_router(decide.router)
     app.include_router(risk.router)
+    app.include_router(parameters_check.router)
     app.include_router(jobs.router)
     app.include_router(prices.router)
     app.include_router(symbols.router)

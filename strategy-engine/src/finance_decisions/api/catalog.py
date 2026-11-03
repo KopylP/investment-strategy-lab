@@ -20,7 +20,17 @@ from finance_decisions.strategies.rule_based import decision as rule_based
 from finance_decisions.strategies.rule_based import risk as rule_based_risk
 from finance_decisions.strategies.rule_based.checks import RuleProblem, problems_in, referenced_signals
 from finance_decisions.strategies.rule_based.parameters import RuleParameters
-from .contracts import BacktestComparison, EvaluationContext, ReportDefinition, RiskAssessment, SeriesRole, StrategyDecision, StrategyTypeDescriptor
+from .contracts import (
+    BacktestComparison,
+    EvaluationContext,
+    ParametersCheck,
+    ReportDefinition,
+    RiskAssessment,
+    SeriesRole,
+    StrategyDecision,
+    StrategyTypeDescriptor,
+)
+from .parameter_problems import meaning_problem, shape_problems
 
 router = APIRouter(prefix="/v1", tags=["catalog"])
 
@@ -68,21 +78,28 @@ class StrategyType:
             detail = jsonable_encoder(error.errors(include_url=False, include_context=False))
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=detail) from error
 
-        problems = self.semantic_check(parsed)
+        problems = [meaning_problem(problem) for problem in self.semantic_check(parsed)]
         if problems:
-            raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=[_problem_detail(problem) for problem in problems])
+            detail = [problem.model_dump(by_alias=True) for problem in problems]
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=detail)
 
         return parsed
+
+    def check(self, raw: dict[str, Any]) -> ParametersCheck:
+        try:
+            parsed = self.parameters.model_validate(raw)
+        except ValidationError as error:
+            return ParametersCheck(problems=shape_problems(raw, error))
+
+        problems = [meaning_problem(problem) for problem in self.semantic_check(parsed)]
+
+        return ParametersCheck(problems=problems, signal_ids=self.referenced_signals(parsed))
 
     def _default_parameters(self) -> dict[str, Any] | None:
         if not self.has_defaults:
             return None
 
         return self.parameters().model_dump(by_alias=True, mode="json")
-
-
-def _problem_detail(problem: RuleProblem) -> dict[str, Any]:
-    return {"path": list(problem.path), "code": problem.code, "message": msg(problem.code, **problem.parameters)}
 
 
 SELECTION_COMPARISONS = (

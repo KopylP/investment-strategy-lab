@@ -1,0 +1,1258 @@
+{
+  "$defs": {
+    "AllCondition": {
+      "additionalProperties": false,
+      "properties": {
+        "conditions": {
+          "description": "@rule_based.field.conditions",
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "all": "#/$defs/AllCondition",
+                "any": "#/$defs/AnyCondition",
+                "between": "#/$defs/BetweenCondition",
+                "compare": "#/$defs/CompareCondition",
+                "crossed": "#/$defs/CrossedCondition",
+                "not": "#/$defs/NotCondition",
+                "signal": "#/$defs/SignalCondition"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/CompareCondition"
+              },
+              {
+                "$ref": "#/$defs/BetweenCondition"
+              },
+              {
+                "$ref": "#/$defs/CrossedCondition"
+              },
+              {
+                "$ref": "#/$defs/SignalCondition"
+              },
+              {
+                "$ref": "#/$defs/AllCondition"
+              },
+              {
+                "$ref": "#/$defs/AnyCondition"
+              },
+              {
+                "$ref": "#/$defs/NotCondition"
+              }
+            ]
+          },
+          "minItems": 1,
+          "title": "Conditions",
+          "type": "array"
+        },
+        "kind": {
+          "const": "all",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "conditions"
+      ],
+      "title": "AllCondition",
+      "type": "object",
+      "x-hint": "@rule_based.condition.all.hint",
+      "x-label": "@rule_based.condition.all.label",
+      "x-phrase": "@rule_based.condition.all.phrase"
+    },
+    "AnyCondition": {
+      "additionalProperties": false,
+      "properties": {
+        "conditions": {
+          "description": "@rule_based.field.conditions",
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "all": "#/$defs/AllCondition",
+                "any": "#/$defs/AnyCondition",
+                "between": "#/$defs/BetweenCondition",
+                "compare": "#/$defs/CompareCondition",
+                "crossed": "#/$defs/CrossedCondition",
+                "not": "#/$defs/NotCondition",
+                "signal": "#/$defs/SignalCondition"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/CompareCondition"
+              },
+              {
+                "$ref": "#/$defs/BetweenCondition"
+              },
+              {
+                "$ref": "#/$defs/CrossedCondition"
+              },
+              {
+                "$ref": "#/$defs/SignalCondition"
+              },
+              {
+                "$ref": "#/$defs/AllCondition"
+              },
+              {
+                "$ref": "#/$defs/AnyCondition"
+              },
+              {
+                "$ref": "#/$defs/NotCondition"
+              }
+            ]
+          },
+          "minItems": 1,
+          "title": "Conditions",
+          "type": "array"
+        },
+        "kind": {
+          "const": "any",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "conditions"
+      ],
+      "title": "AnyCondition",
+      "type": "object",
+      "x-hint": "@rule_based.condition.any.hint",
+      "x-label": "@rule_based.condition.any.label",
+      "x-phrase": "@rule_based.condition.any.phrase"
+    },
+    "BetweenCondition": {
+      "additionalProperties": false,
+      "properties": {
+        "high": {
+          "description": "@rule_based.field.high",
+          "title": "High",
+          "type": "number"
+        },
+        "kind": {
+          "const": "between",
+          "title": "Kind",
+          "type": "string"
+        },
+        "left": {
+          "description": "@rule_based.field.left",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/IndicatorOperand"
+            },
+            {
+              "$ref": "#/$defs/ValueOperand"
+            }
+          ],
+          "title": "Left"
+        },
+        "low": {
+          "description": "@rule_based.field.low",
+          "title": "Low",
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "left",
+        "low",
+        "high"
+      ],
+      "title": "BetweenCondition",
+      "type": "object",
+      "x-hint": "@rule_based.condition.between.hint",
+      "x-label": "@rule_based.condition.between.label",
+      "x-phrase": "@rule_based.condition.between.phrase"
+    },
+    "BlendedMomentumIndicator": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "blendedMomentum",
+          "title": "Kind",
+          "type": "string"
+        },
+        "of": {
+          "$ref": "#/$defs/SeriesRef",
+          "description": "@rule_based.field.of"
+        }
+      },
+      "required": [
+        "kind",
+        "of"
+      ],
+      "title": "BlendedMomentumIndicator",
+      "type": "object",
+      "x-column-format": "signedPercent",
+      "x-hint": "@rule_based.indicator.blendedMomentum.hint",
+      "x-label": "@rule_based.indicator.blendedMomentum.label",
+      "x-phrase": "@rule_based.indicator.blendedMomentum.phrase"
+    },
+    "CompareCondition": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "compare",
+          "title": "Kind",
+          "type": "string"
+        },
+        "left": {
+          "description": "@rule_based.field.left",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/IndicatorOperand"
+            },
+            {
+              "$ref": "#/$defs/ValueOperand"
+            }
+          ],
+          "title": "Left"
+        },
+        "operator": {
+          "description": "@rule_based.field.operator",
+          "enum": [
+            "gt",
+            "lt",
+            "gte",
+            "lte"
+          ],
+          "title": "Operator",
+          "type": "string",
+          "x-choice-labels": {
+            "gt": "@rule_based.choice.operator.gt",
+            "gte": "@rule_based.choice.operator.gte",
+            "lt": "@rule_based.choice.operator.lt",
+            "lte": "@rule_based.choice.operator.lte"
+          }
+        },
+        "right": {
+          "description": "@rule_based.field.right",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/IndicatorOperand"
+            },
+            {
+              "$ref": "#/$defs/ValueOperand"
+            }
+          ],
+          "title": "Right"
+        }
+      },
+      "required": [
+        "kind",
+        "left",
+        "operator",
+        "right"
+      ],
+      "title": "CompareCondition",
+      "type": "object",
+      "x-hint": "@rule_based.condition.compare.hint",
+      "x-label": "@rule_based.condition.compare.label",
+      "x-phrase": "@rule_based.condition.compare.phrase"
+    },
+    "CrossedCondition": {
+      "additionalProperties": false,
+      "properties": {
+        "direction": {
+          "description": "@rule_based.field.direction",
+          "enum": [
+            "up",
+            "down"
+          ],
+          "title": "Direction",
+          "type": "string",
+          "x-choice-labels": {
+            "down": "@rule_based.choice.direction.down",
+            "up": "@rule_based.choice.direction.up"
+          }
+        },
+        "indicator": {
+          "description": "@rule_based.field.indicator",
+          "pattern": "^[a-z][A-Za-z0-9]{0,39}$",
+          "title": "Indicator",
+          "type": "string"
+        },
+        "kind": {
+          "const": "crossed",
+          "title": "Kind",
+          "type": "string"
+        },
+        "level": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "@rule_based.field.level",
+          "title": "Level"
+        },
+        "other": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z][A-Za-z0-9]{0,39}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "@rule_based.field.other",
+          "title": "Other"
+        },
+        "withinDays": {
+          "default": 21,
+          "description": "@rule_based.field.withinDays",
+          "maximum": 252,
+          "minimum": 1,
+          "title": "Withindays",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "indicator",
+        "direction"
+      ],
+      "title": "CrossedCondition",
+      "type": "object",
+      "x-hint": "@rule_based.condition.crossed.hint",
+      "x-label": "@rule_based.condition.crossed.label",
+      "x-phrase": "@rule_based.condition.crossed.phrase"
+    },
+    "DrawdownIndicator": {
+      "additionalProperties": false,
+      "properties": {
+        "days": {
+          "description": "@rule_based.field.days",
+          "maximum": 756,
+          "minimum": 5,
+          "title": "Days",
+          "type": "integer"
+        },
+        "kind": {
+          "const": "drawdown",
+          "title": "Kind",
+          "type": "string"
+        },
+        "of": {
+          "$ref": "#/$defs/SeriesRef",
+          "description": "@rule_based.field.of"
+        }
+      },
+      "required": [
+        "kind",
+        "of",
+        "days"
+      ],
+      "title": "DrawdownIndicator",
+      "type": "object",
+      "x-column-format": "signedPercent",
+      "x-hint": "@rule_based.indicator.drawdown.hint",
+      "x-label": "@rule_based.indicator.drawdown.label",
+      "x-phrase": "@rule_based.indicator.drawdown.phrase"
+    },
+    "EmaIndicator": {
+      "additionalProperties": false,
+      "properties": {
+        "days": {
+          "description": "@rule_based.field.days",
+          "maximum": 400,
+          "minimum": 2,
+          "title": "Days",
+          "type": "integer"
+        },
+        "kind": {
+          "const": "ema",
+          "title": "Kind",
+          "type": "string"
+        },
+        "of": {
+          "$ref": "#/$defs/SeriesRef",
+          "description": "@rule_based.field.of"
+        }
+      },
+      "required": [
+        "kind",
+        "of",
+        "days"
+      ],
+      "title": "EmaIndicator",
+      "type": "object",
+      "x-column-format": "number",
+      "x-hint": "@rule_based.indicator.ema.hint",
+      "x-label": "@rule_based.indicator.ema.label",
+      "x-phrase": "@rule_based.indicator.ema.phrase"
+    },
+    "Gate": {
+      "additionalProperties": false,
+      "properties": {
+        "condition": {
+          "description": "@rule_based.field.condition",
+          "discriminator": {
+            "mapping": {
+              "all": "#/$defs/AllCondition",
+              "any": "#/$defs/AnyCondition",
+              "between": "#/$defs/BetweenCondition",
+              "compare": "#/$defs/CompareCondition",
+              "crossed": "#/$defs/CrossedCondition",
+              "not": "#/$defs/NotCondition",
+              "signal": "#/$defs/SignalCondition"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/CompareCondition"
+            },
+            {
+              "$ref": "#/$defs/BetweenCondition"
+            },
+            {
+              "$ref": "#/$defs/CrossedCondition"
+            },
+            {
+              "$ref": "#/$defs/SignalCondition"
+            },
+            {
+              "$ref": "#/$defs/AllCondition"
+            },
+            {
+              "$ref": "#/$defs/AnyCondition"
+            },
+            {
+              "$ref": "#/$defs/NotCondition"
+            }
+          ],
+          "title": "Condition"
+        }
+      },
+      "required": [
+        "condition"
+      ],
+      "title": "Gate",
+      "type": "object"
+    },
+    "IndicatorOperand": {
+      "additionalProperties": false,
+      "properties": {
+        "indicator": {
+          "description": "@rule_based.field.indicator",
+          "pattern": "^[a-z][A-Za-z0-9]{0,39}$",
+          "title": "Indicator",
+          "type": "string"
+        }
+      },
+      "required": [
+        "indicator"
+      ],
+      "title": "IndicatorOperand",
+      "type": "object"
+    },
+    "MarketFilter": {
+      "additionalProperties": false,
+      "properties": {
+        "condition": {
+          "description": "@rule_based.field.condition",
+          "discriminator": {
+            "mapping": {
+              "all": "#/$defs/AllCondition",
+              "any": "#/$defs/AnyCondition",
+              "between": "#/$defs/BetweenCondition",
+              "compare": "#/$defs/CompareCondition",
+              "crossed": "#/$defs/CrossedCondition",
+              "not": "#/$defs/NotCondition",
+              "signal": "#/$defs/SignalCondition"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/CompareCondition"
+            },
+            {
+              "$ref": "#/$defs/BetweenCondition"
+            },
+            {
+              "$ref": "#/$defs/CrossedCondition"
+            },
+            {
+              "$ref": "#/$defs/SignalCondition"
+            },
+            {
+              "$ref": "#/$defs/AllCondition"
+            },
+            {
+              "$ref": "#/$defs/AnyCondition"
+            },
+            {
+              "$ref": "#/$defs/NotCondition"
+            }
+          ],
+          "title": "Condition"
+        },
+        "investWhenUnfavorable": {
+          "description": "@rule_based.field.investWhenUnfavorable",
+          "format": "fraction",
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Investwhenunfavorable",
+          "type": "number"
+        }
+      },
+      "required": [
+        "condition",
+        "investWhenUnfavorable"
+      ],
+      "title": "MarketFilter",
+      "type": "object"
+    },
+    "MomentumIndicator": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "momentum",
+          "title": "Kind",
+          "type": "string"
+        },
+        "months": {
+          "description": "@rule_based.field.months",
+          "maximum": 24,
+          "minimum": 1,
+          "title": "Months",
+          "type": "integer"
+        },
+        "of": {
+          "$ref": "#/$defs/SeriesRef",
+          "description": "@rule_based.field.of"
+        }
+      },
+      "required": [
+        "kind",
+        "of",
+        "months"
+      ],
+      "title": "MomentumIndicator",
+      "type": "object",
+      "x-column-format": "signedPercent",
+      "x-hint": "@rule_based.indicator.momentum.hint",
+      "x-label": "@rule_based.indicator.momentum.label",
+      "x-phrase": "@rule_based.indicator.momentum.phrase"
+    },
+    "NotCondition": {
+      "additionalProperties": false,
+      "properties": {
+        "condition": {
+          "description": "@rule_based.field.condition",
+          "discriminator": {
+            "mapping": {
+              "all": "#/$defs/AllCondition",
+              "any": "#/$defs/AnyCondition",
+              "between": "#/$defs/BetweenCondition",
+              "compare": "#/$defs/CompareCondition",
+              "crossed": "#/$defs/CrossedCondition",
+              "not": "#/$defs/NotCondition",
+              "signal": "#/$defs/SignalCondition"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/CompareCondition"
+            },
+            {
+              "$ref": "#/$defs/BetweenCondition"
+            },
+            {
+              "$ref": "#/$defs/CrossedCondition"
+            },
+            {
+              "$ref": "#/$defs/SignalCondition"
+            },
+            {
+              "$ref": "#/$defs/AllCondition"
+            },
+            {
+              "$ref": "#/$defs/AnyCondition"
+            },
+            {
+              "$ref": "#/$defs/NotCondition"
+            }
+          ],
+          "title": "Condition"
+        },
+        "kind": {
+          "const": "not",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "condition"
+      ],
+      "title": "NotCondition",
+      "type": "object",
+      "x-hint": "@rule_based.condition.not.hint",
+      "x-label": "@rule_based.condition.not.label",
+      "x-phrase": "@rule_based.condition.not.phrase"
+    },
+    "PriceIndicator": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "price",
+          "title": "Kind",
+          "type": "string"
+        },
+        "of": {
+          "$ref": "#/$defs/SeriesRef",
+          "description": "@rule_based.field.of"
+        }
+      },
+      "required": [
+        "kind",
+        "of"
+      ],
+      "title": "PriceIndicator",
+      "type": "object",
+      "x-column-format": "number",
+      "x-hint": "@rule_based.indicator.price.hint",
+      "x-label": "@rule_based.indicator.price.label",
+      "x-phrase": "@rule_based.indicator.price.phrase"
+    },
+    "PriceVsSmaIndicator": {
+      "additionalProperties": false,
+      "properties": {
+        "days": {
+          "description": "@rule_based.field.days",
+          "maximum": 400,
+          "minimum": 2,
+          "title": "Days",
+          "type": "integer"
+        },
+        "kind": {
+          "const": "priceVsSma",
+          "title": "Kind",
+          "type": "string"
+        },
+        "of": {
+          "$ref": "#/$defs/SeriesRef",
+          "description": "@rule_based.field.of"
+        }
+      },
+      "required": [
+        "kind",
+        "of",
+        "days"
+      ],
+      "title": "PriceVsSmaIndicator",
+      "type": "object",
+      "x-column-format": "signedPercent",
+      "x-hint": "@rule_based.indicator.priceVsSma.hint",
+      "x-label": "@rule_based.indicator.priceVsSma.label",
+      "x-phrase": "@rule_based.indicator.priceVsSma.phrase"
+    },
+    "RelativeStrengthIndicator": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "relativeStrength",
+          "title": "Kind",
+          "type": "string"
+        },
+        "months": {
+          "description": "@rule_based.field.months",
+          "maximum": 24,
+          "minimum": 1,
+          "title": "Months",
+          "type": "integer"
+        },
+        "of": {
+          "$ref": "#/$defs/SeriesRef",
+          "description": "@rule_based.field.of"
+        }
+      },
+      "required": [
+        "kind",
+        "of",
+        "months"
+      ],
+      "title": "RelativeStrengthIndicator",
+      "type": "object",
+      "x-column-format": "signedPercent",
+      "x-hint": "@rule_based.indicator.relativeStrength.hint",
+      "x-label": "@rule_based.indicator.relativeStrength.label",
+      "x-phrase": "@rule_based.indicator.relativeStrength.phrase"
+    },
+    "Risk": {
+      "additionalProperties": false,
+      "properties": {
+        "drawdownFromPeak": {
+          "anyOf": [
+            {
+              "maximum": 0,
+              "minimum": -1,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "@rule_based.field.drawdownFromPeak",
+          "format": "fraction",
+          "title": "Drawdownfrompeak"
+        },
+        "stopLossFromCost": {
+          "anyOf": [
+            {
+              "maximum": 0,
+              "minimum": -1,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "@rule_based.field.stopLossFromCost",
+          "format": "fraction",
+          "title": "Stoplossfromcost"
+        }
+      },
+      "title": "Risk",
+      "type": "object"
+    },
+    "RsiIndicator": {
+      "additionalProperties": false,
+      "properties": {
+        "days": {
+          "description": "@rule_based.field.days",
+          "maximum": 100,
+          "minimum": 2,
+          "title": "Days",
+          "type": "integer"
+        },
+        "kind": {
+          "const": "rsi",
+          "title": "Kind",
+          "type": "string"
+        },
+        "of": {
+          "$ref": "#/$defs/SeriesRef",
+          "description": "@rule_based.field.of"
+        }
+      },
+      "required": [
+        "kind",
+        "of",
+        "days"
+      ],
+      "title": "RsiIndicator",
+      "type": "object",
+      "x-column-format": "number",
+      "x-hint": "@rule_based.indicator.rsi.hint",
+      "x-label": "@rule_based.indicator.rsi.label",
+      "x-phrase": "@rule_based.indicator.rsi.phrase"
+    },
+    "Selection": {
+      "additionalProperties": false,
+      "properties": {
+        "correlationDays": {
+          "default": 126,
+          "description": "@rule_based.field.correlationDays",
+          "maximum": 252,
+          "minimum": 20,
+          "title": "Correlationdays",
+          "type": "integer"
+        },
+        "maxCorrelation": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 1,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "@rule_based.field.maxCorrelation",
+          "format": "fraction",
+          "title": "Maxcorrelation"
+        },
+        "maxPerGroup": {
+          "anyOf": [
+            {
+              "maximum": 20,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "@rule_based.field.maxPerGroup",
+          "title": "Maxpergroup"
+        },
+        "order": {
+          "default": "desc",
+          "description": "@rule_based.field.order",
+          "enum": [
+            "desc",
+            "asc"
+          ],
+          "title": "Order",
+          "type": "string",
+          "x-choice-labels": {
+            "asc": "@rule_based.choice.order.asc",
+            "desc": "@rule_based.choice.order.desc"
+          }
+        },
+        "rankBy": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z][A-Za-z0-9]{0,39}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "@rule_based.field.rankBy",
+          "title": "Rankby"
+        },
+        "top": {
+          "description": "@rule_based.field.top",
+          "maximum": 60,
+          "minimum": 1,
+          "title": "Top",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "top"
+      ],
+      "title": "Selection",
+      "type": "object"
+    },
+    "SeriesRef": {
+      "additionalProperties": false,
+      "properties": {
+        "instrumentId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "@rule_based.field.instrumentId",
+          "title": "Instrumentid"
+        },
+        "series": {
+          "description": "@rule_based.field.series",
+          "enum": [
+            "fund",
+            "benchmark",
+            "volatilityIndex",
+            "extra"
+          ],
+          "title": "Series",
+          "type": "string",
+          "x-choice-labels": {
+            "benchmark": "@rule_based.choice.series.benchmark",
+            "extra": "@rule_based.choice.series.extra",
+            "fund": "@rule_based.choice.series.fund",
+            "volatilityIndex": "@rule_based.choice.series.volatilityIndex"
+          }
+        }
+      },
+      "required": [
+        "series"
+      ],
+      "title": "SeriesRef",
+      "type": "object"
+    },
+    "SharpeIndicator": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "sharpe",
+          "title": "Kind",
+          "type": "string"
+        },
+        "months": {
+          "description": "@rule_based.field.months",
+          "maximum": 36,
+          "minimum": 1,
+          "title": "Months",
+          "type": "integer"
+        },
+        "of": {
+          "$ref": "#/$defs/SeriesRef",
+          "description": "@rule_based.field.of"
+        }
+      },
+      "required": [
+        "kind",
+        "of",
+        "months"
+      ],
+      "title": "SharpeIndicator",
+      "type": "object",
+      "x-column-format": "number",
+      "x-hint": "@rule_based.indicator.sharpe.hint",
+      "x-label": "@rule_based.indicator.sharpe.label",
+      "x-phrase": "@rule_based.indicator.sharpe.phrase"
+    },
+    "SignalCondition": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "signal",
+          "title": "Kind",
+          "type": "string"
+        },
+        "scope": {
+          "description": "@rule_based.field.scope",
+          "enum": [
+            "anyInstrument",
+            "thisFund"
+          ],
+          "title": "Scope",
+          "type": "string",
+          "x-choice-labels": {
+            "anyInstrument": "@rule_based.choice.scope.anyInstrument",
+            "thisFund": "@rule_based.choice.scope.thisFund"
+          }
+        },
+        "signalId": {
+          "description": "@rule_based.field.signalId",
+          "title": "Signalid",
+          "type": "string"
+        },
+        "state": {
+          "description": "@rule_based.field.state",
+          "enum": [
+            "active",
+            "inactive"
+          ],
+          "title": "State",
+          "type": "string",
+          "x-choice-labels": {
+            "active": "@rule_based.choice.state.active",
+            "inactive": "@rule_based.choice.state.inactive"
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "signalId",
+        "state",
+        "scope"
+      ],
+      "title": "SignalCondition",
+      "type": "object",
+      "x-hint": "@rule_based.condition.signal.hint",
+      "x-label": "@rule_based.condition.signal.label",
+      "x-phrase": "@rule_based.condition.signal.phrase"
+    },
+    "SmaIndicator": {
+      "additionalProperties": false,
+      "properties": {
+        "days": {
+          "description": "@rule_based.field.days",
+          "maximum": 400,
+          "minimum": 2,
+          "title": "Days",
+          "type": "integer"
+        },
+        "kind": {
+          "const": "sma",
+          "title": "Kind",
+          "type": "string"
+        },
+        "of": {
+          "$ref": "#/$defs/SeriesRef",
+          "description": "@rule_based.field.of"
+        }
+      },
+      "required": [
+        "kind",
+        "of",
+        "days"
+      ],
+      "title": "SmaIndicator",
+      "type": "object",
+      "x-column-format": "number",
+      "x-hint": "@rule_based.indicator.sma.hint",
+      "x-label": "@rule_based.indicator.sma.label",
+      "x-phrase": "@rule_based.indicator.sma.phrase"
+    },
+    "ValueOperand": {
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "description": "@rule_based.field.value",
+          "title": "Value",
+          "type": "number"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "title": "ValueOperand",
+      "type": "object"
+    },
+    "VolatilityIndicator": {
+      "additionalProperties": false,
+      "properties": {
+        "days": {
+          "description": "@rule_based.field.days",
+          "maximum": 252,
+          "minimum": 5,
+          "title": "Days",
+          "type": "integer"
+        },
+        "kind": {
+          "const": "volatility",
+          "title": "Kind",
+          "type": "string"
+        },
+        "of": {
+          "$ref": "#/$defs/SeriesRef",
+          "description": "@rule_based.field.of"
+        }
+      },
+      "required": [
+        "kind",
+        "of",
+        "days"
+      ],
+      "title": "VolatilityIndicator",
+      "type": "object",
+      "x-column-format": "percent",
+      "x-hint": "@rule_based.indicator.volatility.hint",
+      "x-label": "@rule_based.indicator.volatility.label",
+      "x-phrase": "@rule_based.indicator.volatility.phrase"
+    },
+    "Weights": {
+      "additionalProperties": false,
+      "properties": {
+        "maxPerFund": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 1,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "@rule_based.field.maxPerFund",
+          "format": "fraction",
+          "title": "Maxperfund"
+        },
+        "method": {
+          "description": "@rule_based.field.method",
+          "enum": [
+            "equal",
+            "inverseVolatility"
+          ],
+          "title": "Method",
+          "type": "string",
+          "x-choice-labels": {
+            "equal": "@rule_based.choice.method.equal",
+            "inverseVolatility": "@rule_based.choice.method.inverseVolatility"
+          }
+        },
+        "targetVolatility": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0.02,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "@rule_based.field.targetVolatility",
+          "format": "fraction",
+          "title": "Targetvolatility"
+        },
+        "targetVolatilityDays": {
+          "default": 21,
+          "description": "@rule_based.field.targetVolatilityDays",
+          "maximum": 126,
+          "minimum": 5,
+          "title": "Targetvolatilitydays",
+          "type": "integer"
+        },
+        "volatilityDays": {
+          "default": 63,
+          "description": "@rule_based.field.volatilityDays",
+          "maximum": 252,
+          "minimum": 5,
+          "title": "Volatilitydays",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "method"
+      ],
+      "title": "Weights",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "entry": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Gate"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "@rule_based.field.entry"
+    },
+    "exit": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Gate"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "@rule_based.field.exit"
+    },
+    "formatVersion": {
+      "const": 1,
+      "description": "@rule_based.field.formatVersion",
+      "title": "Formatversion",
+      "type": "integer"
+    },
+    "indicators": {
+      "description": "@rule_based.field.indicators",
+      "patternProperties": {
+        "^[a-z][A-Za-z0-9]{0,39}$": {
+          "discriminator": {
+            "mapping": {
+              "blendedMomentum": "#/$defs/BlendedMomentumIndicator",
+              "drawdown": "#/$defs/DrawdownIndicator",
+              "ema": "#/$defs/EmaIndicator",
+              "momentum": "#/$defs/MomentumIndicator",
+              "price": "#/$defs/PriceIndicator",
+              "priceVsSma": "#/$defs/PriceVsSmaIndicator",
+              "relativeStrength": "#/$defs/RelativeStrengthIndicator",
+              "rsi": "#/$defs/RsiIndicator",
+              "sharpe": "#/$defs/SharpeIndicator",
+              "sma": "#/$defs/SmaIndicator",
+              "volatility": "#/$defs/VolatilityIndicator"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/PriceIndicator"
+            },
+            {
+              "$ref": "#/$defs/SmaIndicator"
+            },
+            {
+              "$ref": "#/$defs/EmaIndicator"
+            },
+            {
+              "$ref": "#/$defs/PriceVsSmaIndicator"
+            },
+            {
+              "$ref": "#/$defs/MomentumIndicator"
+            },
+            {
+              "$ref": "#/$defs/BlendedMomentumIndicator"
+            },
+            {
+              "$ref": "#/$defs/RelativeStrengthIndicator"
+            },
+            {
+              "$ref": "#/$defs/VolatilityIndicator"
+            },
+            {
+              "$ref": "#/$defs/DrawdownIndicator"
+            },
+            {
+              "$ref": "#/$defs/SharpeIndicator"
+            },
+            {
+              "$ref": "#/$defs/RsiIndicator"
+            }
+          ]
+        }
+      },
+      "title": "Indicators",
+      "type": "object"
+    },
+    "marketFilter": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MarketFilter"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "@rule_based.field.marketFilter"
+    },
+    "risk": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Risk"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "@rule_based.field.risk"
+    },
+    "selection": {
+      "$ref": "#/$defs/Selection",
+      "description": "@rule_based.field.selection"
+    },
+    "weights": {
+      "$ref": "#/$defs/Weights",
+      "description": "@rule_based.field.weights"
+    }
+  },
+  "required": [
+    "formatVersion",
+    "indicators",
+    "selection",
+    "weights"
+  ],
+  "title": "RuleParameters",
+  "type": "object"
+}
