@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../InvestmentLab.StrategyBuilder.Contracts/InvestmentLab.StrategyBuilder.Contracts.csproj" />
+    <ProjectReference Include="../../Backtesting/InvestmentLab.Backtesting.Contracts/InvestmentLab.Backtesting.Contracts.csproj" />
+    <ProjectReference Include="../../MarketData/InvestmentLab.MarketData.Contracts/InvestmentLab.MarketData.Contracts.csproj" />
+    <ProjectReference Include="../../Signals/InvestmentLab.Signals.Contracts/InvestmentLab.Signals.Contracts.csproj" />
+    <ProjectReference Include="../../Strategies/InvestmentLab.Strategies.Contracts/InvestmentLab.Strategies.Contracts.csproj" />
+  </ItemGroup>
+</Project>

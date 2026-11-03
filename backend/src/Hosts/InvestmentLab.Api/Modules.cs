@@ -1,13 +1,14 @@
+using InvestmentLab.Backtesting;
 using InvestmentLab.BuildingBlocks.Modules;
 using InvestmentLab.Identity;
 using InvestmentLab.MarketData;
-using InvestmentLab.Backtesting;
 using InvestmentLab.Notifications;
 using InvestmentLab.Performance;
 using InvestmentLab.Portfolio;
 using InvestmentLab.Rebalancing;
 using InvestmentLab.Signals;
 using InvestmentLab.Strategies;
+using InvestmentLab.StrategyBuilder;
 using InvestmentLab.Taxation;
 
 namespace InvestmentLab.Api;
@@ -25,6 +26,7 @@ internal static class Modules
         new PerformanceModule(),
         new SignalsModule(),
         new BacktestingModule(),
+        new StrategyBuilderModule(),
         new NotificationsModule(),
     ];
 }

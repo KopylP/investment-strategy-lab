@@ -26,6 +26,10 @@
     <Project Path="src/Modules/Backtesting/InvestmentLab.Backtesting.Contracts/InvestmentLab.Backtesting.Contracts.csproj" />
     <Project Path="src/Modules/Backtesting/InvestmentLab.Backtesting/InvestmentLab.Backtesting.csproj" />
   </Folder>
+  <Folder Name="/src/Modules/StrategyBuilder/">
+    <Project Path="src/Modules/StrategyBuilder/InvestmentLab.StrategyBuilder.Contracts/InvestmentLab.StrategyBuilder.Contracts.csproj" />
+    <Project Path="src/Modules/StrategyBuilder/InvestmentLab.StrategyBuilder/InvestmentLab.StrategyBuilder.csproj" />
+  </Folder>
   <Folder Name="/src/Modules/Performance/">
     <Project Path="src/Modules/Performance/InvestmentLab.Performance.Contracts/InvestmentLab.Performance.Contracts.csproj" />
     <Project Path="src/Modules/Performance/InvestmentLab.Performance/InvestmentLab.Performance.csproj" />
@@ -64,6 +68,7 @@
     <Project Path="tests/Modules/InvestmentLab.Rebalancing.Tests/InvestmentLab.Rebalancing.Tests.csproj" />
     <Project Path="tests/Modules/InvestmentLab.Signals.Tests/InvestmentLab.Signals.Tests.csproj" />
     <Project Path="tests/Modules/InvestmentLab.Strategies.Tests/InvestmentLab.Strategies.Tests.csproj" />
+    <Project Path="tests/Modules/InvestmentLab.StrategyBuilder.Tests/InvestmentLab.StrategyBuilder.Tests.csproj" />
     <Project Path="tests/Modules/InvestmentLab.Taxation.Tests/InvestmentLab.Taxation.Tests.csproj" />
   </Folder>
   <Folder Name="/tests/BuildingBlocks/">
