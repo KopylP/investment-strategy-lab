@@ -1,3 +1,4 @@
+import { PublishedStrategyPanel } from '../../../strategy-builder/ui/published-strategy-panel/published-strategy-panel';
 import { StrategyBacktest } from '../../../backtesting/ui/strategy-backtest/strategy-backtest';
 import {
   ChangeDetectionStrategy,
@@ -36,6 +37,7 @@ import { StrategyDetailStore } from '../../data-access/strategies-store';
     SchemaForm,
     DateTimePipe,
     StrategyBacktest,
+    PublishedStrategyPanel,
   ],
   providers: [StrategyDetailStore],
   templateUrl: './strategy-detail-page.html',
@@ -47,6 +49,7 @@ export class StrategyDetailPage {
 
   readonly strategyId = input.required<string>();
 
+  protected readonly builderEditable = signal<boolean | null>(null);
   protected readonly editing = signal(false);
   protected readonly parameters = signal<JsonObject>({});
   protected readonly universe = signal<string[]>([]);
@@ -72,6 +75,11 @@ export class StrategyDetailPage {
 
   constructor() {
     effect(() => this.store.open(this.strategyId()));
+    effect(() => {
+      this.store.strategy()?.version.number;
+      this.builderEditable.set(null);
+      this.editing.set(false);
+    });
   }
 
   protected startEditing(): void {

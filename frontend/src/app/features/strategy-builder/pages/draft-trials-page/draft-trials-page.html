@@ -1,0 +1,73 @@
+<app-page-header
+  title="Бектести чернетки"
+  [backLink]="'/strategy-builder/' + draftId()"
+  backLabel="Чернетка"
+/>
+@if (store.error()) {
+  <p-message severity="error" text="Не вдалося завантажити бектести" />
+}
+<div class="card min-w-0">
+  <p class="mb-4 text-muted-color">
+    Виберіть один запуск для перегляду або два готові запуски для порівняння.
+  </p>
+  <p-table
+    [value]="store.trials()"
+    [loading]="store.loading()"
+    [tableStyle]="{ 'min-width': '65rem' }"
+  >
+    <ng-template #header
+      ><tr>
+        <th>Вибір</th>
+        <th>№</th>
+        <th>Мітка</th>
+        <th>Час</th>
+        <th>Статус</th>
+        <th>Річна дохідність</th>
+        <th>Після податку</th>
+        <th>Волатильність</th>
+        <th>Sharpe</th>
+        <th>Найбільше падіння</th>
+      </tr></ng-template
+    >
+    <ng-template #body let-run
+      ><tr>
+        <td>
+          <input
+            type="checkbox"
+            [attr.aria-label]="'Вибрати запуск ' + run.number"
+            [checked]="store.selected().includes(run.number)"
+            [disabled]="!store.canSelect(run)"
+            (change)="store.toggle(run.number)"
+          />
+        </td>
+        <td>{{ run.number }}</td>
+        <td>{{ run.label || '—' }}</td>
+        <td>{{ run.ranAt | dateTime }}</td>
+        <td>
+          {{ statuses[run.status] }}
+          @if (run.failureReason) {
+            <p class="text-red-500">{{ run.failureReason }}</p>
+          }
+        </td>
+        <td>{{ run.annualReturn | percent }}</td>
+        <td>{{ run.annualReturnAfterTax | percent }}</td>
+        <td>{{ run.volatility | percent }}</td>
+        <td>{{ run.sharpe === null ? '—' : (run.sharpe | number: '1.2-2') }}</td>
+        <td>{{ run.maxDrawdown | percent }}</td>
+      </tr></ng-template
+    >
+    <ng-template #emptymessage
+      ><tr>
+        <td colspan="10">Запусків ще немає. Поверніться до чернетки й натисніть «Бектест».</td>
+      </tr></ng-template
+    >
+  </p-table>
+</div>
+@if (store.selectedRuns(); as runs) {
+  @if (runs.length === 1 && runs[0].status !== 'Failed') {
+    <app-strategy-backtest [strategyId]="runs[0].strategyId" [version]="runs[0].version" />
+  }
+  @if (runs.length === 2 && runs[0].status === 'Succeeded' && runs[1].status === 'Succeeded') {
+    <app-trial-comparison [first]="runs[0]" [second]="runs[1]" />
+  }
+}

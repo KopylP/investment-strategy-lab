@@ -28,12 +28,14 @@
       >
     </p-select>
     @if (strategy.status === 'Active' && !editing()) {
-      <p-button
-        label="Змінити"
-        icon="pi pi-pencil"
-        [disabled]="!isLatest()"
-        (onClick)="startEditing()"
-      />
+      @if (builderEditable() === false) {
+        <p-button
+          label="Змінити"
+          icon="pi pi-pencil"
+          [disabled]="!isLatest()"
+          (onClick)="startEditing()"
+        />
+      }
       <p-button
         icon="pi pi-box"
         severity="secondary"
@@ -93,16 +95,23 @@
         </div>
       </div>
     </div>
+    <app-published-strategy-panel
+      [strategyId]="strategy.id"
+      [version]="strategy.version.number"
+      (editable)="builderEditable.set($event)"
+    />
     <app-strategy-backtest [strategyId]="strategy.id" [version]="strategy.version.number" />
-    @if (store.type(); as type) {
-      <div class="card mt-4">
-        <h2 class="text-lg font-semibold mb-3">Параметри</h2>
-        <app-schema-form
-          [schema]="$any(type.parametersSchema)"
-          [value]="strategy.version.parameters"
-          [disabled]="true"
-        />
-      </div>
+    @if (builderEditable() === false) {
+      @if (store.type(); as type) {
+        <div class="card mt-4">
+          <h2 class="text-lg font-semibold mb-3">Параметри</h2>
+          <app-schema-form
+            [schema]="$any(type.parametersSchema)"
+            [value]="strategy.version.parameters"
+            [disabled]="true"
+          />
+        </div>
+      }
     }
   } @else {
     <div class="card">

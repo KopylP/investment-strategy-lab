@@ -1,5 +1,9 @@
+import { PublishedVersionDto } from '../models/published-version-dto';
+import { TrialRunDto } from '../models/trial-run-dto';
+import { HttpErrorResponse } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
+import { translateDeep } from '../../../core/i18n/translate';
 import { problemCode, toProblemMessage } from '../../../core/api/api-client';
 import {
   DraftDto,
@@ -8,6 +12,7 @@ import {
   DraftSetupDto,
   GraphDto,
   LayoutDto,
+  DraftProblemDto,
 } from '../models/draft-dto';
 import { EditorMode, SaveState } from '../models/draft-vm';
 import { InstrumentChoiceDto } from '../models/instrument-dto';
@@ -42,6 +47,8 @@ export class DraftStore {
   readonly mode = this.currentMode.asReadonly();
   readonly selectedNodeId = this.currentSelection.asReadonly();
   readonly saving = this.saveState.asReadonly();
+  readonly busy = signal(false);
+  readonly nameError = signal<string | null>(null);
   readonly loading = signal(false);
   readonly loadError = signal<unknown>(null);
   readonly reportNames = computed(() =>
@@ -93,6 +100,7 @@ export class DraftStore {
     const trimmed = name.trim();
     if (!trimmed || trimmed === this.currentDraft()?.name) return;
 
+    this.nameError.set(null);
     this.changeDraft((draft) => ({ ...draft, name: trimmed }));
   }
 
@@ -126,20 +134,80 @@ export class DraftStore {
     await Promise.all([this.saveRules(), this.saveLayout()]);
   }
 
-  async check(): Promise<void> {
-    const draft = this.currentDraft();
-    if (!draft) return;
-
+  async check(): Promise<boolean> {
     await this.flush();
+    const draft = this.currentDraft();
+    if (!draft || this.rulesDirty || this.layoutDirty) return false;
 
     try {
       const check = await this.api.check(draft.id);
       this.currentDraft.update((current) =>
         current ? { ...current, problems: check.problems } : current,
       );
+
+      return check.isClean;
     } catch (error) {
       this.reportFailure('Не вдалося перевірити чернетку', error);
+
+      return false;
     }
+  }
+
+  async runTrial(): Promise<TrialRunDto | null> {
+    if (this.busy()) return null;
+    this.busy.set(true);
+
+    try {
+      if (!(await this.check())) return null;
+      const draft = this.currentDraft();
+
+      return draft ? await this.api.runTrial(draft.id) : null;
+    } catch (error) {
+      this.placeProblems(error);
+      this.reportFailure('Не вдалося запустити бектест', error);
+
+      return null;
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  async publish(): Promise<PublishedVersionDto | null> {
+    if (this.busy()) return null;
+    this.busy.set(true);
+    this.nameError.set(null);
+
+    try {
+      if (!(await this.check())) return null;
+      const draft = this.currentDraft();
+      if (!draft) return null;
+
+      return await this.api.publish(draft.id, draft.revision);
+    } catch (error) {
+      this.placeProblems(error);
+      if (problemCode(error) === 'strategy.name_taken') this.nameError.set(toProblemMessage(error));
+      this.reportFailure('Не вдалося опублікувати стратегію', error);
+
+      return null;
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  private placeProblems(error: unknown): void {
+    if (!(error instanceof HttpErrorResponse)) return;
+    const problems = error.error?.parameters?.problems as Partial<DraftProblemDto>[] | undefined;
+    if (!Array.isArray(problems)) return;
+
+    const translated = translateDeep(problems) as Partial<DraftProblemDto>[];
+    const placed = translated.map((problem) => ({
+      message: problem.message ?? '',
+      severity: problem.severity ?? 'Error',
+      nodeId: problem.nodeId ?? null,
+      block: problem.block ?? null,
+      reportCode: problem.reportCode ?? null,
+    }));
+    this.currentDraft.update((draft) => (draft ? { ...draft, problems: placed } : draft));
   }
 
   async copyEntryToExit(margin: number): Promise<boolean> {

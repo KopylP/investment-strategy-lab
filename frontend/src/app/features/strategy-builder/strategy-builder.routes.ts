@@ -8,6 +8,14 @@ export const strategyBuilderRoutes: Routes = [
     title: 'Конструктор',
   },
   {
+    path: ':draftId/trials',
+    loadComponent: () =>
+      import('./pages/draft-trials-page/draft-trials-page').then(
+        (module) => module.DraftTrialsPage,
+      ),
+    title: 'Бектести чернетки',
+  },
+  {
     path: ':draftId',
     loadComponent: () =>
       import('./pages/draft-editor-page/draft-editor-page').then(

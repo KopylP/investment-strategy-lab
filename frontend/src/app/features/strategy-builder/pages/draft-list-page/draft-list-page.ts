@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Button } from 'primeng/button';
 import { Message } from 'primeng/message';
 import { Skeleton } from 'primeng/skeleton';
@@ -29,7 +29,9 @@ import { NewDraftDialog } from '../../ui/new-draft-dialog/new-draft-dialog';
 export class DraftListPage {
   protected readonly store = inject(DraftsStore);
   protected readonly router = inject(Router);
-  protected readonly newDraftVisible = signal(false);
+  protected readonly newDraftVisible = signal(
+    inject(ActivatedRoute).snapshot.queryParamMap.get('new') === '1',
+  );
 
   protected async create(request: { name: string; template: string | null }): Promise<void> {
     const draft = await this.store.create(request.name, request.template);

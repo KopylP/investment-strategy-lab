@@ -6,8 +6,21 @@
 } @else if (store.draft(); as draft) {
   <app-page-header title="Чернетка" backLink="/strategy-builder" backLabel="Конструктор">
     <p-button label="Сьогодні" icon="pi pi-calendar" severity="secondary" [disabled]="true" />
-    <p-button label="Бектест" icon="pi pi-chart-line" severity="secondary" [disabled]="true" />
-    <p-button label="Опублікувати" icon="pi pi-check-circle" [disabled]="true" />
+    <p-button
+      label="Бектест"
+      ariaLabel="Бектест"
+      icon="pi pi-chart-line"
+      severity="secondary"
+      [disabled]="store.busy()"
+      (onClick)="runTrial()"
+    />
+    <p-button
+      label="Опублікувати"
+      ariaLabel="Опублікувати"
+      icon="pi pi-check-circle"
+      [disabled]="store.busy()"
+      (onClick)="confirmPublish()"
+    />
   </app-page-header>
 
   <div class="mb-4 flex min-w-0 flex-wrap items-center gap-3">
@@ -18,6 +31,8 @@
       [pTooltip]="draft.name"
       tooltipPosition="bottom"
       (change)="store.rename($any($event.target).value)"
+      [attr.aria-invalid]="!!store.nameError()"
+      aria-describedby="draft-name-error"
       aria-label="Назва чернетки"
     />
     <span class="whitespace-nowrap text-sm text-muted-color">
@@ -33,6 +48,10 @@
       ariaLabel="Режим редактора"
     />
   </div>
+
+  @if (store.nameError(); as error) {
+    <p id="draft-name-error" role="alert" class="mb-4 text-red-500">{{ error }}</p>
+  }
 
   @if (summary(); as setupSummary) {
     <app-builder-setup-row
