@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import pandas as pd
 
 from finance_decisions.messages import msg
+from finance_decisions.portfolio_math import pairwise_correlation
 from .fund_reading import FundReading
 
 STATUS_SELECTED = "selected"
@@ -90,17 +91,9 @@ def _too_similar_to(reading: FundReading, chosen: list[FundReading], prices: pd.
     if limit >= 1.0:
         return None
 
-    recent = prices.tail(CORRELATION_WINDOW_DAYS + 1)
     for other in chosen:
-        if _correlation(recent, reading.key, other.key) > limit:
+        if pairwise_correlation(prices, reading.key, other.key, CORRELATION_WINDOW_DAYS, MIN_CORRELATION_DAYS) > limit:
             return other
 
     return None
 
-
-def _correlation(prices: pd.DataFrame, first: str, second: str) -> float:
-    returns = prices[[first, second]].dropna().pct_change().dropna()
-    if len(returns) < MIN_CORRELATION_DAYS:
-        return float("-inf")
-
-    return float(returns[first].corr(returns[second]))
