@@ -5,7 +5,7 @@ namespace InvestmentLab.StrategyBuilder.Tests.Drafts;
 
 public sealed class GraphFromRulesTests
 {
-    public static TheoryData<string> Templates => new(DraftTemplates.Codes);
+    public static TheoryData<string> Templates => [.. DraftTemplates.Codes];
 
     private const string Minimal = """{"formatVersion":1,"indicators":{},"selection":{"top":3},"weights":{"method":"equal"}""";
 
