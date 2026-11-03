@@ -20,7 +20,6 @@
   "profile.currency_unsupported": "Підсумки можна показувати в EUR, USD або PLN.",
   "profile.locale_unknown": "Невідома мова.",
   "profile.time_zone_unknown": "Невідомий часовий пояс.",
-
   "isin.invalid": "Некоректний ISIN.",
   "currency.invalid": "Некоректний код валюти.",
   "percentage.out_of_range": "Частка має бути від 0 до 1.",
@@ -32,7 +31,6 @@
   "cadence.time": "Час має бути у форматі ГГ:ХХ.",
   "cadence.minute": "Хвилина — від 0 до 59.",
   "year_month.invalid": "Некоректний місяць.",
-
   "fx_rate.not_found": "Немає курсу на цю дату.",
   "instrument.isin_required": "Для такого інструмента потрібен ISIN.",
   "instrument.exposure_incomplete": "Клас активів і регіон потрібно вказати разом.",
@@ -47,11 +45,9 @@
   "quote.price_not_positive": "Ціни котирування мають бути більшими за нуль.",
   "quote.reason_required": "Вкажіть причину виправлення.",
   "quote.instrument_not_found": "Інструмент не знайдено.",
-
   "notification.no_channel": "Сповіщення працюють лише в Home Assistant.",
   "notification.channel_failed": "Сповіщення не доставлено: {details}",
   "dashboard.currency_invalid": "Некоректний код валюти.",
-
   "account.not_found": "Рахунок не знайдено.",
   "account.contribution_policy_unknown": "Невідомий спосіб розподілу внеску.",
   "account.name_required": "Вкажіть назву рахунку.",
@@ -67,7 +63,6 @@
   "account.last_sub_portfolio": "Останній активний під-портфель не можна закрити.",
   "account.strategy_required": "Виберіть стратегію.",
   "account.strategy_version_invalid": "Некоректна версія стратегії.",
-
   "statement_import.mode_invalid": "Невідомий режим імпорту.",
   "statement_import.instrument_not_registered": "{ticker}: інструмент не вдалося додати. {error}",
   "statement_import.not_found": "Імпорт не знайдено.",
@@ -77,7 +72,6 @@
   "statement_import.unmapped": "Виберіть інструмент і під-портфель для: {tickers}.",
   "import.unknown_tickers": "Немає інструмента з таким тікером: {tickers}.",
   "import.ticker_repeated": "Кожен тікер може бути лише один раз.",
-
   "transaction.not_found": "Операцію не знайдено.",
   "transaction.duplicate_source": "Цю операцію вже записано.",
   "transaction.quantity_not_positive": "Кількість має бути більшою за нуль.",
@@ -96,7 +90,6 @@
   "transaction.already_reversed": "Операцію вже сторновано.",
   "transaction.reason_required": "Вкажіть причину сторно.",
   "transaction.settlement_in_account_currency": "Розрахунок має бути в іншій валюті, ніж валюта рахунку.",
-
   "report_request.not_found": "Запит на рапорт не знайдено.",
   "report.unknown_code": "Стратегії цього рахунку не складають такого рапорту.",
   "report.definition_not_found": "Стратегії цього рахунку не складають такого рапорту.",
@@ -116,12 +109,10 @@
   "report.no_sub_portfolios": "На рахунку немає під-портфеля зі стратегією. Призначте стратегію на сторінці рахунку.",
   "report.no_strategy_answered": "Жодна стратегія не змогла оцінити рахунок. Найчастіше бракує котирувань — оновіть їх на сторінці «Інструменти й котирування».",
   "report.contribution_negative": "Внесок не може бути від'ємним.",
-
   "signal_report_rule.account": "Такого рахунку немає.",
   "signal_report_rule.report": "Стратегії цього рахунку не складають такого рапорту.",
   "signal_report_rule.exists": "Цей сигнал уже запускає такий рапорт на цьому рахунку.",
   "signal_report_rule.not_found": "Такого правила немає.",
-
   "signal.not_found": "Такого сигналу немає.",
   "signal.name": "Назва сигналу має містити від 1 до {maximum} символів.",
   "signal.target": "Виберіть, за чим стежить сигнал.",
@@ -140,7 +131,6 @@
   "signal.builtin.account_drawdown": "Просадка рахунку «{account}»",
   "signal.builtin.position_drawdown": "Падіння позиції на рахунку «{account}»",
   "signal.subject.unknown_sub_portfolio": "Під-портфель",
-
   "strategy.not_found": "Стратегію не знайдено.",
   "strategy.version_not_found": "У стратегії немає такої версії.",
   "strategy.name_required": "Вкажіть назву стратегії.",
@@ -161,7 +151,6 @@
   "strategy.engine_unavailable": "Рушій стратегій не відповів: {details}",
   "strategy.failed": "Стратегія не змогла відповісти: {details}",
   "strategy.engine_rejected": "Рушій стратегій відхилив запит: {details}",
-
   "tax.year_not_found": "За цей рік немає оподатковуваних подій.",
   "tax.loss_not_found": "Збиток не знайдено.",
   "tax.loss_not_positive": "Збиток має бути більшим за нуль.",
@@ -176,7 +165,6 @@
   "tax.form_not_printable": "Для цієї форми немає такого PDF.",
   "tax.pit8c_not_found": "За цей рік немає сум PIT-8C.",
   "tax.pit8c_negative": "Суми PIT-8C не можуть бути від'ємними.",
-
   "rationale.default_title": "Чому саме ці інструменти",
   "rationale.default_instrument": "Інструмент",
   "report.warning.of_sub_portfolio": "«{sub}»: {note}",
@@ -195,7 +183,6 @@
   "report.action.no_reason": "без причини",
   "report.action.mark_undone": "відмітку в рапорті скасовано",
   "report.parking.cash": "кеш на рахунку",
-
   "report.reason.several": "{reasons:join:; }",
   "report.reason.contribution": "щомісячний внесок на рахунок",
   "report.reason.exit_signal": "сигнал виходу: {reason}",
@@ -211,7 +198,6 @@
   "report.reason.rank_momentum": "{rank}, моментум {momentum:signedPercent}",
   "report.reason.buy_more": "докупити до цілі {weight:percent} портфеля ({detail})",
   "report.reason.buy_new": "нова позиція, ціль {weight:percent} портфеля ({detail})",
-
   "report.note.no_price": "Немає ціни для {label}: перевірте цю позицію вручну.",
   "report.note.zero_contribution": "Внесок цього місяця дорівнює 0.",
   "report.note.weak_market": "Ринок слабкий: інвестуємо {fraction:percent} внеску ({invested:money:currency}), решту ({rest:money:currency}) паркуємо в {parking}. Через стан ринку поточні позиції не продаємо.",
@@ -220,7 +206,6 @@
   "report.note.empty_slots": "Знайдено {found} з {slots} кандидатів: {empty} {empty:plural:порожній слот|порожні слоти|порожні слоти} ({share:percent} портфеля) лишаються в {parking} до наступного місяця.",
   "report.note.partial_targets": "Цілі стратегії займають {total:percent} портфеля: решта лишається в {parking}.",
   "report.note.small_buys_skipped": "Пропущено дрібні покупки (менше {minimum:money:currency}): {labels}.",
-
   "report.warning.target_capped": "Ціль {label} {target:percent} обрізано до максимуму позиції {cap:percent}.",
   "report.warning.targets_scaled": "Цілі стратегії разом {total:percent}: без плеча, тому їх пропорційно зменшено до 100%.",
   "report.warning.turnover": "Оборот плану {turnover:percent} перевищує ліміт {limit:percent} на місяць: перегляньте продажі перед виконанням.",
@@ -231,11 +216,9 @@
   "report.warning.fx_missing": "Немає курсу {currency}/{accountCurrency}: ETF у {currency} цього разу не торгуються. Оновіть курси валют.",
   "report.warning.no_quotes": "Немає котирувань для {label}: оновіть котирування перед виконанням.",
   "report.warning.stale_quote": "Котирування {label} застаріле (останнє {date}): оновіть котирування перед виконанням.",
-
   "signal_rule.account_gone": "Цього рахунку більше немає.",
   "signal_rule.report_gone": "Стратегії рахунку «{account}» більше не складають цього рапорту.",
   "signal_rule.no_sub_portfolios": "Рапорт не вдалося запустити: на рахунку немає під-портфелів, що його складають.",
-
   "statement.reversal.import": "імпорт виписки {file}",
   "statement.reversal.corrected": "виправлено за випискою",
   "statement.reversal.undo": "скасовано імпорт {file}",
@@ -261,7 +244,6 @@
   "statement.row.no_instrument": "{ticker}: не вибрано інструмент",
   "statement.row.no_sub_portfolio": "{ticker}: не вибрано під-портфель",
   "statement.row.no_cash_sub_portfolio": "не вибрано під-портфель для коштів",
-
   "notification.test.title": "Investment Lab: тестове сповіщення",
   "notification.test.message": "Сповіщення працюють: сюди прийде звістка, коли буде готовий рапорт.",
   "notification.open_panel": "Відкрити Investment Lab",
@@ -281,7 +263,6 @@
   "notification.signal.title": "Сигнал: {name}",
   "notification.signal.list": "{list:join:, }.",
   "notification.signal.more": "{list:join:, } і ще {hidden}.",
-
   "month.1": "січень",
   "month.2": "лютий",
   "month.3": "березень",
@@ -294,7 +275,6 @@
   "month.10": "жовтень",
   "month.11": "листопад",
   "month.12": "грудень",
-
   "tax.policy.pl_belka.name": "Звичайний (Белка 19%)",
   "tax.policy.pl_belka.hint": "Податок 19% з прибутку від продажів і дивідендів, рахується за FIFO в злотих.",
   "tax.policy.pl_belka.summary": "Белка, один PIT-38 на всі рахунки: FIFO в межах рахунку, курс NBP останнього робочого дня перед угодою, 19%, річне сальдо всіх брокерів",
@@ -324,7 +304,6 @@
   "tax.summary.facts": "Довідково",
   "tax.summary.before_filing": "Перед поданням",
   "tax.summary.computed_mark": "рахує форма — звірте",
-
   "pit38.treatment.untaxed": "Не оподатковується",
   "pit38.treatment.row1": "Рядок 1 (PIT-8C) · дивіденди в G",
   "pit38.treatment.row2": "Рядок 2 · дивіденди в G",
@@ -369,5 +348,11 @@
   "pit38.note.unknown_country": "{count} продажів без країни в ISIN (немає ISIN або XS/EU): їх немає в PIT/ZG — перевірте країну емітента.",
   "pit38.note.unknown_country_short": "{count} продажів без країни в ISIN — їх немає в PIT/ZG.",
   "pit38.note.over_treaty": "{count} дивідендів з утриманням понад ставку договору (немає W-8BEN?). Тут залік до 19% (art. 30a ust. 9, NSA); податкова (KIS) зараховує лише за ставкою договору — тоді poz. 48 = {credit}, poz. 49 = {difference} zł.",
-  "pit38.note.over_treaty_short": "Утримано понад ставку договору: за позицією KIS poz. 48 = {credit}, poz. 49 = {difference} zł."
+  "pit38.note.over_treaty_short": "Утримано понад ставку договору: за позицією KIS poz. 48 = {credit}, poz. 49 = {difference} zł.",
+  "builder.draft.not_found": "Чернетку не знайдено.",
+  "builder.draft.stale": "Чернетку вже змінено в іншому вікні: оновіть сторінку.",
+  "builder.draft.name_required": "Дайте чернетці назву.",
+  "builder.setup.too_many_funds": "У стратегії може бути щонайбільше {max} фондів.",
+  "builder.setup.fund_repeated": "Фонд можна додати лише раз.",
+  "builder.vocabulary.unavailable": "Рушій ще не надіслав тип стратегії «з правил». Спробуйте пізніше."
 }
