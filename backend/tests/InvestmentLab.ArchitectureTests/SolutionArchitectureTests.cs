@@ -58,6 +58,17 @@ public sealed class SolutionArchitectureTests
     }
 
     [Fact]
+    public void No_module_depends_on_the_strategy_builder()
+    {
+        var dependents = CodeLocation.Modules
+            .Where(module => module != "StrategyBuilder")
+            .SelectMany(module => new[] { $"InvestmentLab.{module}", $"InvestmentLab.{module}.Contracts" })
+            .Where(assembly => OwnReferences(Assembly.Load(assembly)).Any(name => name.StartsWith("InvestmentLab.StrategyBuilder", StringComparison.Ordinal)));
+
+        dependents.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void Shared_kernel_references_no_other_investment_lab_assembly()
     {
         OwnReferences(Assembly.Load("InvestmentLab.SharedKernel")).ShouldBeEmpty();
