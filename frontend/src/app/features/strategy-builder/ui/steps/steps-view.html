@@ -33,6 +33,7 @@
     }
     @case (1) {
       <app-builder-setup-dialog
+        (instrumentsChanged)="store.refreshInstruments()"
         [inline]="true"
         [setup]="draft.setup"
         [instruments]="store.instruments()"

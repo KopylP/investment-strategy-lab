@@ -15,6 +15,7 @@ import { Button } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
 import { MultiSelect } from 'primeng/multiselect';
 import { Select } from 'primeng/select';
+import { FundSearchDialog } from '../fund-search-dialog/fund-search-dialog';
 import { DraftSetupDto } from '../../models/draft-dto';
 import { InstrumentChoiceDto } from '../../models/instrument-dto';
 
@@ -30,7 +31,7 @@ interface InstrumentGroup {
 
 @Component({
   selector: 'app-builder-setup-dialog',
-  imports: [NgTemplateOutlet, FormsModule, Button, Dialog, MultiSelect, Select],
+  imports: [NgTemplateOutlet, FormsModule, Button, Dialog, MultiSelect, Select, FundSearchDialog],
   templateUrl: './setup-dialog.html',
   host: { class: 'contents' },
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -41,6 +42,8 @@ export class SetupDialog {
   readonly setup = input.required<DraftSetupDto>();
   readonly instruments = input.required<InstrumentChoiceDto[]>();
   readonly saved = output<DraftSetupDto>();
+  readonly instrumentsChanged = output<void>();
+  protected readonly fundSearchVisible = signal(false);
 
   protected readonly draft = signal<DraftSetupDto>(emptySetup());
   protected readonly groupedFunds = computed(() =>
@@ -63,6 +66,12 @@ export class SetupDialog {
   protected patch(change: Partial<DraftSetupDto>): void {
     this.draft.update((draft) => ({ ...draft, ...change }));
     if (this.inline()) this.saved.emit(cloneSetup(this.draft()));
+  }
+
+  protected fundsAdded(ids: string[]): void {
+    const funds = [...new Set([...this.draft().funds, ...ids])];
+    this.patch({ funds });
+    this.instrumentsChanged.emit();
   }
 
   protected save(): void {

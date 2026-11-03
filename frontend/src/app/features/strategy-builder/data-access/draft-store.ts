@@ -89,6 +89,14 @@ export class DraftStore {
     }
   }
 
+  async refreshInstruments(): Promise<void> {
+    try {
+      this.currentInstruments.set(await this.api.instruments());
+    } catch (error) {
+      this.reportFailure('Не вдалося оновити список фондів', error);
+    }
+  }
+
   changeGraph(graph: GraphDto): void {
     this.changeDraft((draft) => ({ ...draft, graph }));
   }

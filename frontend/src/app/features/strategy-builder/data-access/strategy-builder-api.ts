@@ -1,3 +1,7 @@
+import { FundSearchOptionsDto } from '../models/fund-search-options-dto';
+import { FundSearchCriteriaDto } from '../models/fund-search-criteria-dto';
+import { FoundFundDto } from '../models/found-fund-dto';
+import { AddedFundsDto } from '../models/added-funds-dto';
 import { OwnSignalDto } from '../models/own-signal-dto';
 import { PublishedStrategyDto } from '../models/published-strategy-dto';
 import { PublishedVersionDto } from '../models/published-version-dto';
@@ -31,6 +35,18 @@ export class StrategyBuilderApi {
 
   instruments(): Promise<InstrumentChoiceDto[]> {
     return this.api.get<InstrumentChoiceDto[]>(`${base}/instruments`);
+  }
+
+  fundSearchOptions(): Promise<FundSearchOptionsDto> {
+    return this.api.get<FundSearchOptionsDto>(`${base}/funds/options`);
+  }
+
+  searchFunds(criteria: FundSearchCriteriaDto): Promise<FoundFundDto[]> {
+    return this.api.post<FoundFundDto[]>(`${base}/funds/search`, criteria);
+  }
+
+  addFunds(funds: FoundFundDto[], selectedInstrumentIds: string[]): Promise<AddedFundsDto> {
+    return this.api.post<AddedFundsDto>(`${base}/funds`, { funds, selectedInstrumentIds });
   }
 
   drafts(): Promise<DraftSummaryDto[]> {

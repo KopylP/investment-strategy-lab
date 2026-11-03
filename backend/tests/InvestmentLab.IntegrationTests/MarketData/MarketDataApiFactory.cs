@@ -29,6 +29,8 @@ public sealed class MarketDataApiFactory : WebApplicationFactory<api::Program>, 
 
     public FakeQuoteProvider Quotes { get; } = new();
 
+    public FakeFundScreener Funds { get; } = new();
+
     public ConcurrentQueue<QuoteCorrectedV1> CorrectedQuotes { get; } = new();
 
     public async ValueTask InitializeAsync() => await _postgres.StartAsync();
@@ -41,6 +43,7 @@ public sealed class MarketDataApiFactory : WebApplicationFactory<api::Program>, 
         {
             services.RemoveReactionsThatNeedTheStrategyEngine();
             services.AddSingleton<IQuoteProvider>(Quotes);
+            services.AddSingleton<IFundScreener>(Funds);
             services.AddSingleton<IFxRateProvider, FakeNbpProvider>();
             services.AddSingleton<ISymbolLookup, FakeSymbolLookup>();
             services.AddSingleton<IStrategyDirectory, NoStrategies>();

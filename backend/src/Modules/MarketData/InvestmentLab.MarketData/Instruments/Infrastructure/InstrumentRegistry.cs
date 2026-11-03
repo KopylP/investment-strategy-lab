@@ -1,6 +1,7 @@
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.MarketData.Instruments.Application.DescribeInstruments;
 using InvestmentLab.MarketData.Instruments.Application.RegisterInstrument;
+using InvestmentLab.MarketData.Instruments.Application.RegisterListedFund;
 using InvestmentLab.MarketData.Instruments.Application.Shared;
 using InvestmentLab.MarketData.Instruments.Domain;
 
@@ -9,6 +10,7 @@ namespace InvestmentLab.MarketData.Instruments.Infrastructure;
 internal sealed class InstrumentRegistry(
     IInstrumentRepository instruments,
     RegisterInstrumentHandler register,
+    RegisterListedFundHandler registerFund,
     ISymbolLookup lookup,
     DescribeInstrumentsHandler describe,
     ISymbolConvention convention)
@@ -46,16 +48,18 @@ internal sealed class InstrumentRegistry(
     {
         var symbol = ProviderSymbol.TryParse($"{QuoteProvider.Primary}:{instrument.Symbol.Trim().ToUpperInvariant()}");
         if (symbol.IsFailure)
-            return new RegisteredInstrumentDto(null, symbol.Error.Message);
+            return new RegisteredInstrumentDto(null, symbol.Error.AsMessage());
 
         if (await instruments.FindOwnerAsync(symbol.Value, cancellationToken) is { } owner)
             return new RegisteredInstrumentDto(owner.Value, null);
 
         var command = RegisterCommandOf(instrument, symbol.Value);
 
-        var result = await register.Handle(command, cancellationToken);
+        var result = command.Kind == InstrumentKind.Etf
+            ? await registerFund.Handle(new RegisterListedFundCommand(instrument.Symbol, instrument.Name, instrument.TradingCurrency), cancellationToken)
+            : await register.Handle(command, cancellationToken);
         if (result.IsFailure)
-            return new RegisteredInstrumentDto(null, result.Error.Message);
+            return new RegisteredInstrumentDto(null, result.Error.AsMessage());
 
         await describe.Handle([InstrumentId.Of(result.Value)], cancellationToken);
 
