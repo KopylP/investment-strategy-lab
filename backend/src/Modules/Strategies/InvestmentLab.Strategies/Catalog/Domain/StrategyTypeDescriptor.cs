@@ -14,7 +14,7 @@ public sealed class StrategyTypeDescriptor
 
     public string ParametersSchema { get; private set; }
 
-    public string DefaultParameters { get; private set; }
+    public string? DefaultParameters { get; private set; }
 
     public List<ReportDefinition> Reports { get; private set; }
 
@@ -24,7 +24,7 @@ public sealed class StrategyTypeDescriptor
 
     private StrategyTypeDescriptor(
         string code, string name, string description, string engine, string engineVersion, bool supportsState,
-        List<string> requiredSeriesRoles, string parametersSchema, string defaultParameters, List<ReportDefinition> reports, DateTimeOffset syncedAt)
+        List<string> requiredSeriesRoles, string parametersSchema, string? defaultParameters, List<ReportDefinition> reports, DateTimeOffset syncedAt)
     {
         Code = code;
         Name = name;
@@ -43,7 +43,7 @@ public sealed class StrategyTypeDescriptor
         string code, string name, string description, string engine, string engineVersion, bool supportsState,
         IEnumerable<string> requiredSeriesRoles,
         string parametersSchema,
-        string defaultParameters,
+        string? defaultParameters,
         IEnumerable<ReportDefinition> reports,
         DateTimeOffset syncedAt,
         IReadOnlyDictionary<string, string>? messages = null,

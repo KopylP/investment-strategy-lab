@@ -79,6 +79,11 @@ class ConditionReader:
 
         return self._cache[cache_key]
 
+    def last_price(self, fund_key: str) -> float | None:
+        prices = self._book.fund(fund_key).dropna()
+
+        return float(prices.iloc[-1]) if len(prices) else None
+
     def column_format(self, name: str) -> str:
         definition = self._parameters.indicators[name]
 

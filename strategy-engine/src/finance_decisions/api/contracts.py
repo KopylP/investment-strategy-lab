@@ -332,7 +332,7 @@ class StrategyTypeDescriptor(ApiModel):
     supports_state: bool
     required_series_roles: list[SeriesRole]
     parameters_schema: dict[str, Any]
-    default_parameters: dict[str, Any]
+    default_parameters: dict[str, Any] | None = Field(None, description="Null for a type whose parameters are always written in full, such as rules.")
     reports: list[ReportDefinition]
     supports_backtest: bool = Field(default=True, description="False for a strategy that cannot answer thousands of times in a row, such as an AI agent.")
     backtest_comparisons: list[BacktestComparison] = Field(

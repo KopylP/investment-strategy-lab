@@ -81,7 +81,6 @@ namespace InvestmentLab.Strategies.Shared.Infrastructure.Migrations
                         .HasColumnName("backtest_comparisons");
 
                     b.Property<string>("DefaultParameters")
-                        .IsRequired()
                         .HasColumnType("jsonb")
                         .HasColumnName("default_parameters");
 

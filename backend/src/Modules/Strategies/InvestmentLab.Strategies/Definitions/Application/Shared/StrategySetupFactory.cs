@@ -34,15 +34,30 @@ public sealed class StrategySetupFactory(IStrategyTypes types, IInstrumentCatalo
 
     public static Result<string> Parameters(StrategyTypeDescriptor type, JsonElement? given)
     {
-        var merged = JsonNode.Parse(type.DefaultParameters)!.AsObject();
+        var parameters = type.DefaultParameters is null ? AsGiven(given) : MergedIntoDefaults(type.DefaultParameters, given);
+
+        return parameters.IsFailure ? parameters.Error : Validated(type, parameters.Value);
+    }
+
+    private static Result<string> AsGiven(JsonElement? given) =>
+        given is { ValueKind: JsonValueKind.Object } parameters
+            ? parameters.GetRawText()
+            : StrategyErrors.InvalidParameters("expected a JSON object.");
+
+    private static Result<string> MergedIntoDefaults(string defaults, JsonElement? given)
+    {
+        var merged = JsonNode.Parse(defaults)!.AsObject();
 
         if (given is { ValueKind: JsonValueKind.Object } overrides)
             Merge(merged, JsonNode.Parse(overrides.GetRawText())!.AsObject());
         else if (given is { ValueKind: not (JsonValueKind.Null or JsonValueKind.Undefined) })
             return StrategyErrors.InvalidParameters("expected a JSON object.");
 
-        var json = merged.ToJsonString();
+        return merged.ToJsonString();
+    }
 
+    private static Result<string> Validated(StrategyTypeDescriptor type, string json)
+    {
         var evaluation = JsonSchema.FromText(type.ParametersSchema, new BuildOptions { Dialect = Dialect.Draft202012 })
             .Evaluate(JsonDocument.Parse(json).RootElement, new EvaluationOptions { OutputFormat = OutputFormat.List });
         if (evaluation.IsValid)

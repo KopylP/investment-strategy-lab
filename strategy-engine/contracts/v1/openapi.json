@@ -1755,9 +1755,17 @@
             "title": "Parametersschema"
           },
           "defaultParameters": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Defaultparameters"
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Defaultparameters",
+            "description": "Null for a type whose parameters are always written in full, such as rules."
           },
           "reports": {
             "items": {
@@ -1800,7 +1808,6 @@
           "supportsState",
           "requiredSeriesRoles",
           "parametersSchema",
-          "defaultParameters",
           "reports"
         ],
         "title": "StrategyTypeDescriptor"

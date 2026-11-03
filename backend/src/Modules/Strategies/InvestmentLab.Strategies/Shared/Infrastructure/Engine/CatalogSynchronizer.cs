@@ -1,3 +1,4 @@
+using System.Text.Json;
 using InvestmentLab.Strategies.Catalog.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -47,7 +48,7 @@ public sealed class CatalogSynchronizer(StrategiesDbContext db, StrategyEngineCl
         var now = clock.GetUtcNow();
         var published = (await engine.GetStrategyTypesAsync(cancellationToken))
             .Select(type => StrategyTypeDescriptor.Of(type.Code, type.Name, type.Description, type.Engine, type.Version, type.SupportsState,
-                type.RequiredSeriesRoles, type.ParametersSchema.GetRawText(), type.DefaultParameters.GetRawText(), type.Reports ?? [], now, type.Messages, type.SupportsBacktest, type.BacktestComparisons))
+                type.RequiredSeriesRoles, type.ParametersSchema.GetRawText(), RawDefaults(type), type.Reports ?? [], now, type.Messages, type.SupportsBacktest, type.BacktestComparisons))
             .ToList();
 
         var stored = await db.StrategyTypes.ToDictionaryAsync(type => type.Code, cancellationToken);
@@ -64,4 +65,7 @@ public sealed class CatalogSynchronizer(StrategiesDbContext db, StrategyEngineCl
 
         return stored.Count + published.Count(type => !stored.ContainsKey(type.Code));
     }
+
+    private static string? RawDefaults(EngineStrategyType type) =>
+        type.DefaultParameters is { ValueKind: JsonValueKind.Object } defaults ? defaults.GetRawText() : null;
 }
