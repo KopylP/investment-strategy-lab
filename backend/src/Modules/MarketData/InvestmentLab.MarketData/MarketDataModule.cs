@@ -72,6 +72,7 @@ public sealed class MarketDataModule : IModule
         services.AddScheduledJob<InstrumentDescriptionsJob>(InstrumentDescriptionsJob.Schedule, runAtStartup: true);
         services.AddScoped<IInstrumentCatalog, InstrumentCatalog>();
         services.AddScoped<IInstrumentRegistry, InstrumentRegistry>();
+        services.AddScoped<IFundScreen, FundScreen>();
         services.AddSingleton<ISymbolConvention, YFinanceSymbolConvention>();
         services.AddScoped<IModuleDataSeeder, InstrumentSeeder>();
 
@@ -127,6 +128,9 @@ public sealed class MarketDataModule : IModule
                 resilience.CircuitBreaker.SamplingDuration = TimeSpan.FromMinutes(2);
                 resilience.TotalRequestTimeout.Timeout = TimeSpan.FromMinutes(2);
             });
+        builder.Services.AddHttpClient<YFinanceFundScreener>(http => http.BaseAddress = new Uri(baseAddress))
+            .RemoveAllResilienceHandlers();
+        builder.Services.AddScoped<IFundScreener>(services => services.GetRequiredService<YFinanceFundScreener>());
 #pragma warning restore EXTEXP0001
         builder.Services.AddScoped<ISymbolLookup>(services => services.GetRequiredService<YFinanceSymbolLookup>());
     }
