@@ -7,11 +7,12 @@ public sealed record ReplaySetup(
     bool CanBeReplayed,
     IReadOnlyList<Guid> Universe,
     Guid? CashInstrumentId,
-    Guid BenchmarkInstrumentId,
+    ReplayBenchmark Benchmark,
     ReplayCadence RebalanceCadence,
     ReplayCadence? RiskReviewCadence,
     ReplaySignalTriggers Signals,
-    string Currency)
+    string Currency,
+    IReadOnlyList<string> Comparisons)
 {
     public IReadOnlyList<Guid> PricedInstruments
     {
@@ -20,7 +21,7 @@ public sealed record ReplaySetup(
             IEnumerable<Guid> cash = CashInstrumentId is { } id ? [id] : [];
             IEnumerable<Guid> volatilityIndex = Signals.VolatilityIndexInstrumentId is { } index ? [index] : [];
 
-            return [.. Universe.Append(BenchmarkInstrumentId).Concat(cash).Concat(volatilityIndex).Distinct()];
+            return [.. Universe.Append(Benchmark.InstrumentId).Concat(cash).Concat(volatilityIndex).Distinct()];
         }
     }
 }

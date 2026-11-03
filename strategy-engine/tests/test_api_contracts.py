@@ -132,6 +132,14 @@ def test_catalog_declares_the_reports_and_when_they_come_by_default(client: Test
     assert "reporting" not in descriptor["defaultParameters"]
 
 
+def test_only_a_strategy_that_selects_from_its_universe_is_compared_with_holding_it_equally(client: TestClient) -> None:
+    comparisons = {item["code"]: item["backtestComparisons"] for item in client.get("/v1/strategies").json()}
+
+    assert "universe-equal-weight" in comparisons["etf-momentum"]
+    assert "universe-equal-weight" in comparisons["adaptive-momentum"]
+    assert comparisons["buy-and-hold"] == ["benchmark", "benchmark-at-equal-risk"]
+
+
 def test_decide_matches_scanner_on_same_data(client: TestClient) -> None:
     frame = _frame()
 

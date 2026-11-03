@@ -1,5 +1,6 @@
 using InvestmentLab.Backtesting.Replays.Application.RunBacktest;
 using InvestmentLab.Backtesting.Replays.Domain;
+using InvestmentLab.Backtesting.Replays.Domain.Comparisons;
 
 namespace InvestmentLab.Backtesting.Tests.Replays;
 
@@ -17,11 +18,32 @@ public sealed class StrategyReplayTests
         var replayed = await ReplayAsync(answers, riskReview: null);
 
         var result = replayed.Value;
-        result.Series.Select(series => series.Kind).ShouldBe([ReplaySeriesKind.Strategy, ReplaySeriesKind.Benchmark, ReplaySeriesKind.EqualWeight]);
-        var points = result.SeriesOf(ReplaySeriesKind.Strategy).Points;
+        var points = result.SeriesOf(ReplaySeries.StrategyCode).Points;
         points.Select(point => (point.Date.Year, point.Date.Month)).Distinct().Count().ShouldBe(points.Count);
         answers.Decisions.ShouldBe(points.Count);
         answers.Reviews.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task The_strategy_is_shown_next_to_exactly_the_comparisons_its_type_declares_in_their_order()
+    {
+        var replay = ReplayOf(new FakeAnswers());
+        var setup = SetupOf(riskReview: null) with { Comparisons = ["universe-equal-weight", "benchmark"] };
+
+        var replayed = await replay.RunAsync(setup, TestContext.Current.CancellationToken);
+
+        replayed.Value.Series.Select(series => series.Code).ShouldBe([ReplaySeries.StrategyCode, "universe-equal-weight", "benchmark"]);
+    }
+
+    [Fact]
+    public async Task A_comparison_the_backtest_does_not_know_fails_the_replay_instead_of_vanishing()
+    {
+        var replay = ReplayOf(new FakeAnswers());
+        var setup = SetupOf(riskReview: null) with { Comparisons = ["benchmark", "sixty-forty"] };
+
+        var replayed = await replay.RunAsync(setup, TestContext.Current.CancellationToken);
+
+        replayed.Error.Code.ShouldBe("backtest.unknown_comparison");
     }
 
     [Fact]
@@ -39,8 +61,8 @@ public sealed class StrategyReplayTests
     {
         var replayed = await ReplayAsync(new FakeAnswers(), riskReview: null, jumpOnDayAfterStart: true);
 
-        var strategy = replayed.Value.SeriesOf(ReplaySeriesKind.Strategy).Points[^1].Growth;
-        var benchmark = replayed.Value.SeriesOf(ReplaySeriesKind.Benchmark).Points[^1].Growth;
+        var strategy = replayed.Value.SeriesOf(ReplaySeries.StrategyCode).Points[^1].Growth;
+        var benchmark = replayed.Value.SeriesOf("benchmark").Points[^1].Growth;
         benchmark.ShouldBe(2d, 0.001);
         strategy.ShouldBeLessThan(1.01);
     }
@@ -58,7 +80,7 @@ public sealed class StrategyReplayTests
     [Fact]
     public async Task Too_short_a_history_is_refused()
     {
-        var replay = new StrategyReplay(new FakePrices(days: 100, jump: false), new FakeAnswers(), new FakeTrades(), new FakeSignals(), new FakeTaxes());
+        var replay = ReplayOf(new FakeAnswers(), new FakePrices(days: 100, jump: false));
 
         var replayed = await replay.RunAsync(SetupOf(riskReview: null), TestContext.Current.CancellationToken);
 
@@ -68,7 +90,7 @@ public sealed class StrategyReplayTests
     [Fact]
     public async Task A_failing_strategy_fails_the_replay()
     {
-        var replay = new StrategyReplay(new FakePrices(Days, jump: false), new FakeAnswers { Fails = true }, new FakeTrades(), new FakeSignals(), new FakeTaxes());
+        var replay = ReplayOf(new FakeAnswers { Fails = true });
 
         var replayed = await replay.RunAsync(SetupOf(riskReview: null), TestContext.Current.CancellationToken);
 
@@ -115,7 +137,7 @@ public sealed class StrategyReplayTests
     {
         var replayed = await ReplayAsync(new FakeAnswers(), riskReview: null, jumpOnDayAfterStart: true);
 
-        var strategy = replayed.Value.SeriesOf(ReplaySeriesKind.Strategy).Summary;
+        var strategy = replayed.Value.SeriesOf(ReplaySeries.StrategyCode).Summary;
 
         strategy.AnnualReturnAfterTax!.Value.ShouldBe(strategy.AnnualReturn, 1e-9);
     }
@@ -145,9 +167,22 @@ public sealed class StrategyReplayTests
         ReplaySignalTriggers? triggers = null,
         FakeTaxes? taxes = null)
     {
-        var replay = new StrategyReplay(new FakePrices(Days, jumpOnDayAfterStart), answers, new FakeTrades(), signals ?? new FakeSignals(), taxes ?? new FakeTaxes());
+        var replay = ReplayOf(answers, new FakePrices(Days, jumpOnDayAfterStart), signals, taxes);
 
         return replay.RunAsync(SetupOf(riskReview, triggers), TestContext.Current.CancellationToken);
+    }
+
+    private static StrategyReplay ReplayOf(FakeAnswers answers, FakePrices? prices = null, FakeSignals? signals = null, FakeTaxes? taxes = null)
+    {
+        var comparisons = new ReplayComparisonCatalog([new BenchmarkComparison(), new BenchmarkAtEqualRiskComparison(), new UniverseEqualWeightComparison()]);
+
+        return new StrategyReplay(
+            priceTables: prices ?? new FakePrices(Days, jump: false),
+            answers: answers,
+            targetTrades: new FakeTrades(),
+            signals: signals ?? new FakeSignals(),
+            taxes: taxes ?? new FakeTaxes(),
+            comparisonCatalog: comparisons);
     }
 
     private static ReplaySetup SetupOf(ReplayCadence? riskReview, ReplaySignalTriggers? triggers = null) => new(
@@ -157,11 +192,12 @@ public sealed class StrategyReplayTests
         CanBeReplayed: true,
         Universe: [Fund],
         CashInstrumentId: Other,
-        BenchmarkInstrumentId: Benchmark,
+        Benchmark: new ReplayBenchmark(Benchmark, "SXR8"),
         RebalanceCadence: ReplayCadence.Monthly,
         RiskReviewCadence: riskReview,
         Signals: triggers ?? ReplaySignalTriggers.None,
-        Currency: "EUR");
+        Currency: "EUR",
+        Comparisons: ["benchmark", "benchmark-at-equal-risk", "universe-equal-weight"]);
 
     private sealed class FakePrices(int days, bool jump) : IPriceTables
     {

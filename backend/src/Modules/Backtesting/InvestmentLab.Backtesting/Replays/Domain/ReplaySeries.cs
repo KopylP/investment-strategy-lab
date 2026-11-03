@@ -1,12 +1,14 @@
 namespace InvestmentLab.Backtesting.Replays.Domain;
 
-public sealed record ReplaySeries(ReplaySeriesKind Kind, ReplaySummary Summary, IReadOnlyList<ReplayPoint> Points)
+public sealed record ReplaySeries(string Code, string Label, ReplaySummary Summary, IReadOnlyList<ReplayPoint> Points)
 {
+    public const string StrategyCode = "strategy";
+
     private const double DaysInYear = 365.25;
     private const double TradingDaysInYear = 252d;
 
-    public static ReplaySeries Of(ReplaySeriesKind kind, IReadOnlyList<GrowthDay> days, double riskFreeRate, double? finalGrowthAfterTax = null) =>
-        new(kind, SummaryOf(days, riskFreeRate, finalGrowthAfterTax), MonthlyPointsOf(days));
+    public static ReplaySeries Of(string code, string label, IReadOnlyList<GrowthDay> days, double riskFreeRate, double? finalGrowthAfterTax = null) =>
+        new(code, label, SummaryOf(days, riskFreeRate, finalGrowthAfterTax), MonthlyPointsOf(days));
 
     public static double AnnualReturnOf(IReadOnlyList<GrowthDay> days) => AnnualReturnOf(days, days[^1].Growth);
 
@@ -34,7 +36,7 @@ public sealed record ReplaySeries(ReplaySeriesKind Kind, ReplaySummary Summary, 
             AnnualReturnAfterTax: annualReturnAfterTax);
     }
 
-    private static double VolatilityOf(IReadOnlyList<GrowthDay> days)
+    public static double VolatilityOf(IReadOnlyList<GrowthDay> days)
     {
         var returns = days.Skip(1).Select((day, index) => day.Growth / days[index].Growth - 1d).ToList();
         if (returns.Count < 2)

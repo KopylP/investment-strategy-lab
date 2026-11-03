@@ -28,7 +28,7 @@
   @if (result(); as replay) {
     <p class="text-sm text-muted-color mt-0 mb-4">
       За ваших параметрів, {{ replay.start | date }} – {{ replay.end | date }}. Це минулі
-      результати, а не прогноз: за сьогоднішнім списком фондів, тому реальний результат,
+      результати, а не прогноз: за сьогоднішнім списком інструментів, тому реальний результат,
       імовірно, буде гіршим. Колонка «Після податку» рахує податок за типовою податковою політикою:
       стратегія платить його щороку з прибутку від продажів, а порівняння — один раз, коли все
       продано в кінці. Податок з дивідендів не враховано.
@@ -85,13 +85,17 @@
           </tr>
         </thead>
         <tbody>
-          @for (row of rows(); track row.label) {
+          @for (row of series(); track row.code) {
             <tr>
               <td class="py-1">{{ row.label }}</td>
               <td class="py-1 text-right">{{ row.summary.totalReturn | signedPercent: 0 }}</td>
               <td class="py-1 text-right">{{ row.summary.annualReturn | percent }}</td>
               <td class="py-1 text-right">
-                {{ row.summary.annualReturnAfterTax === null ? '—' : (row.summary.annualReturnAfterTax | percent) }}
+                {{
+                  row.summary.annualReturnAfterTax === null
+                    ? '—'
+                    : (row.summary.annualReturnAfterTax | percent)
+                }}
               </td>
               <td class="py-1 text-right">{{ row.summary.volatility | percent }}</td>
               <td class="py-1 text-right">{{ row.summary.sharpe.toFixed(2) }}</td>
@@ -141,8 +145,8 @@
       />
     </div>
 
-    @if (store.outcomes(); as outcomes) {
-      @if (outcomes.strategy.periods === 0) {
+    @if (outcomes(); as outcomes) {
+      @if (!strategyOutcomes()?.periods) {
         <p-message
           severity="secondary"
           [text]="'Історії замало для відрізків у ' + outcomes.years + ' років.'"
@@ -159,29 +163,17 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td class="py-1">Стратегія</td>
-                <td class="py-1 text-right">
-                  {{ outcomes.strategy.worst?.final | money: currency() : 0 }}
-                </td>
-                <td class="py-1 text-right font-medium">
-                  {{ outcomes.strategy.typical?.final | money: currency() : 0 }}
-                </td>
-                <td class="py-1 text-right">
-                  {{ outcomes.strategy.best?.final | money: currency() : 0 }}
-                </td>
-              </tr>
-              @if (outcomes.benchmark.periods > 0) {
+              @for (row of comparedOutcomes(); track row.code) {
                 <tr>
-                  <td class="py-1">{{ benchmarkLabel() }}</td>
+                  <td class="py-1">{{ row.label }}</td>
                   <td class="py-1 text-right">
-                    {{ outcomes.benchmark.worst?.final | money: currency() : 0 }}
+                    {{ row.outcomes.worst?.final | money: currency() : 0 }}
+                  </td>
+                  <td class="py-1 text-right font-medium">
+                    {{ row.outcomes.typical?.final | money: currency() : 0 }}
                   </td>
                   <td class="py-1 text-right">
-                    {{ outcomes.benchmark.typical?.final | money: currency() : 0 }}
-                  </td>
-                  <td class="py-1 text-right">
-                    {{ outcomes.benchmark.best?.final | money: currency() : 0 }}
+                    {{ row.outcomes.best?.final | money: currency() : 0 }}
                   </td>
                 </tr>
               }
@@ -190,8 +182,8 @@
         </div>
         <div class="text-xs text-muted-color mt-2">
           Внесено {{ outcomes.contributed | money: currency() : 0 }}. Порівняно
-          {{ outcomes.strategy.periods }} відрізків, що перекриваються.
-          @if (outcomes.strategy.periods < fewPeriods) {
+          {{ strategyOutcomes()?.periods }} відрізків, що перекриваються.
+          @if ((strategyOutcomes()?.periods ?? 0) < fewPeriods) {
             Їх мало, тому діапазон може бути надто вузьким.
           }
         </div>

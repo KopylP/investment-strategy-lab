@@ -34,13 +34,14 @@ public sealed class BacktestingScenarioTests : IClassFixture<StrategiesApiFactor
 
         finished.Status.ShouldBe(nameof(BacktestStatus.Succeeded), finished.FailureReason);
         finished.Result!.Trades.ShouldBeGreaterThan(0);
-        finished.Result.Series.Count.ShouldBe(3);
+        finished.Result.Series[0].Code.ShouldBe(ReplaySeries.StrategyCode);
+        finished.Result.Series.ShouldContain(series => series.Code == "benchmark");
 
         var outcomes = await client.GetFromJsonAsync<MoneyOutcomesDto>(
             $"/api/backtesting/strategies/{strategy.Id}/money-outcomes?version={finished.StrategyVersion}&start=1000&contribution=100&years=1", ct);
 
         outcomes!.Contributed.ShouldBe(2200m);
-        outcomes.Strategy.Periods.ShouldBeGreaterThanOrEqualTo(0);
+        outcomes.Series.Select(series => series.Code).ShouldBe(finished.Result.Series.Select(series => series.Code));
     }
 
     [Fact]

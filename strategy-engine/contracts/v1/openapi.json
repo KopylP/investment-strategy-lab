@@ -391,6 +391,15 @@
   },
   "components": {
     "schemas": {
+      "BacktestComparison": {
+        "type": "string",
+        "enum": [
+          "benchmark",
+          "benchmark-at-equal-risk",
+          "universe-equal-weight"
+        ],
+        "title": "BacktestComparison"
+      },
       "ColumnFormat": {
         "type": "string",
         "enum": [
@@ -1723,6 +1732,14 @@
             "title": "Supportsbacktest",
             "description": "False for a strategy that cannot answer thousands of times in a row, such as an AI agent.",
             "default": true
+          },
+          "backtestComparisons": {
+            "items": {
+              "$ref": "#/components/schemas/BacktestComparison"
+            },
+            "type": "array",
+            "title": "Backtestcomparisons",
+            "description": "What a backtest of this type is shown next to, in this order: only the comparisons that answer a question about it."
           },
           "messages": {
             "additionalProperties": {

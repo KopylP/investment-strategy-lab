@@ -36,7 +36,8 @@ internal sealed class StrategyDirectory(IStrategyRepository strategies, CatalogS
             Universe: chosen.Universe,
             CashInstrumentId: chosen.CashInstrumentId,
             BenchmarkInstrumentId: chosen.BenchmarkInstrumentId,
-            Reports: ReportsOf(type));
+            Reports: ReportsOf(type),
+            Comparisons: type?.BacktestComparisons ?? []);
     }
 
     private static List<StrategyReportDto> ReportsOf(StrategyTypeDescriptor? type) =>

@@ -16,7 +16,7 @@ from finance_decisions.strategies.buy_and_hold import decision as buy_and_hold
 from finance_decisions.strategies.buy_and_hold.parameters import BuyAndHoldParameters
 from finance_decisions.strategies.etf_momentum import decision as etf_momentum
 from finance_decisions.strategies.etf_momentum.parameters import EtfMomentumParameters
-from .contracts import EvaluationContext, ReportDefinition, RiskAssessment, SeriesRole, StrategyDecision, StrategyTypeDescriptor
+from .contracts import BacktestComparison, EvaluationContext, ReportDefinition, RiskAssessment, SeriesRole, StrategyDecision, StrategyTypeDescriptor
 
 router = APIRouter(prefix="/v1", tags=["catalog"])
 
@@ -34,6 +34,7 @@ class StrategyType:
     reports: tuple[ReportDefinition, ...]
     # The engine version a decision of this type reports (strategy code / package version).
     version: Callable[[], str]
+    backtest_comparisons: tuple[BacktestComparison, ...]
     supports_backtest: bool = True
 
     def descriptor(self) -> StrategyTypeDescriptor:
@@ -49,6 +50,7 @@ class StrategyType:
             default_parameters=self.parameters().model_dump(by_alias=True, mode="json"),
             reports=list(self.reports),
             supports_backtest=self.supports_backtest,
+            backtest_comparisons=list(self.backtest_comparisons),
             messages=self.messages,
         )
 
@@ -59,6 +61,16 @@ class StrategyType:
             detail = jsonable_encoder(error.errors(include_url=False, include_context=False))
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=detail) from error
 
+
+SELECTION_COMPARISONS = (
+    BacktestComparison.BENCHMARK,
+    BacktestComparison.BENCHMARK_AT_EQUAL_RISK,
+    BacktestComparison.UNIVERSE_EQUAL_WEIGHT,
+)
+HOLDING_COMPARISONS = (
+    BacktestComparison.BENCHMARK,
+    BacktestComparison.BENCHMARK_AT_EQUAL_RISK,
+)
 
 STRATEGY_TYPES: dict[str, StrategyType] = {
     etf_momentum.STRATEGY_CODE: StrategyType(
@@ -71,6 +83,7 @@ STRATEGY_TYPES: dict[str, StrategyType] = {
         assess_risk=etf_momentum.assess_risk,
         required_series_roles=(SeriesRole.INSTRUMENT, SeriesRole.BENCHMARK, SeriesRole.VOLATILITY_INDEX),
         reports=etf_momentum.REPORTS,
+        backtest_comparisons=SELECTION_COMPARISONS,
         version=etf_momentum.engine_version,
     ),
     adaptive_momentum.STRATEGY_CODE: StrategyType(
@@ -83,6 +96,7 @@ STRATEGY_TYPES: dict[str, StrategyType] = {
         assess_risk=adaptive_momentum.assess_risk,
         required_series_roles=(SeriesRole.INSTRUMENT, SeriesRole.BENCHMARK),
         reports=adaptive_momentum.REPORTS,
+        backtest_comparisons=SELECTION_COMPARISONS,
         version=adaptive_momentum.engine_version,
     ),
     buy_and_hold.STRATEGY_CODE: StrategyType(
@@ -95,6 +109,7 @@ STRATEGY_TYPES: dict[str, StrategyType] = {
         assess_risk=buy_and_hold.assess_risk,
         required_series_roles=(SeriesRole.INSTRUMENT, SeriesRole.BENCHMARK),
         reports=buy_and_hold.REPORTS,
+        backtest_comparisons=HOLDING_COMPARISONS,
         version=buy_and_hold.engine_version,
     ),
 }

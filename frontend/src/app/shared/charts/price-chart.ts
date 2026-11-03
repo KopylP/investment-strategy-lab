@@ -1,12 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { chartLegendLabels } from './chart-legend';
+import { dateAxis } from './date-axis';
 import { LiveChart } from './live-chart';
-import {
-  formatAxisNumber,
-  formatDate,
-  formatMoney,
-  formatQuantity,
-  shortenDate,
-} from '../pipes/format';
+import { valueAxis } from './value-axis';
+import { formatAxisNumber, formatDate, formatMoney, formatQuantity } from '../pipes/format';
 import { Viewport } from '../ui/viewport';
 import { ChartTheme, withAlpha } from './chart-theme';
 
@@ -172,9 +169,7 @@ export class PriceChart {
         legend: {
           display: byIndex.size > 0,
           labels: {
-            color: palette.text,
-            usePointStyle: true,
-            ...(phone ? { boxWidth: 6, boxHeight: 6, padding: 10, font: { size: 11 } } : {}),
+            ...chartLegendLabels(palette, phone),
             filter: (item: { text: string }) => item.text !== 'Ціна закриття',
           },
         },
@@ -202,42 +197,16 @@ export class PriceChart {
         },
       },
       scales: {
-        x: phone
-          ? {
-              ticks: {
-                color: palette.muted,
-                maxTicksLimit: 3,
-                maxRotation: 0,
-                font: { size: 11 },
-                callback(this: { getLabelForValue: (value: number) => string }, value: number) {
-                  return shortenDate(this.getLabelForValue(value));
-                },
-              },
-              grid: { display: false },
-            }
-          : {
-              ticks: { color: palette.muted, maxTicksLimit: 6, maxRotation: 0 },
-              grid: { display: false },
-            },
-        y: phone
-          ? {
-              position: 'right',
-              ticks: {
-                color: palette.muted,
-                maxTicksLimit: 5,
-                font: { size: 11 },
-                callback: (value: number) => formatAxisNumber(value, digits),
-              },
-              grid: { color: palette.grid },
-            }
-          : {
-              position: 'right',
-              ticks: {
-                color: palette.muted,
-                callback: (value: number) => formatMoney(value, currency, digits),
-              },
-              grid: { color: palette.grid },
-            },
+        x: dateAxis(palette, { phone, maxTicks: phone ? 3 : 6, shortLabels: phone }),
+        y: {
+          ...valueAxis(palette, {
+            phone,
+            maxTicks: phone ? 5 : undefined,
+            tick: (value) =>
+              phone ? formatAxisNumber(value, digits) : formatMoney(value, currency, digits),
+          }),
+          position: 'right',
+        },
       },
     };
   });

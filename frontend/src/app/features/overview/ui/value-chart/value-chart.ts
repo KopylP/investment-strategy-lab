@@ -2,14 +2,17 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, signal } f
 import { FormsModule } from '@angular/forms';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { DisplayCurrency } from '../../../../core/context/display-currency';
+import { chartLegendLabels } from '../../../../shared/charts/chart-legend';
 import { ChartTheme, withAlpha } from '../../../../shared/charts/chart-theme';
+import { dateAxis } from '../../../../shared/charts/date-axis';
+import { lineChartBase } from '../../../../shared/charts/line-chart-base';
 import { LiveChart } from '../../../../shared/charts/live-chart';
+import { valueAxis } from '../../../../shared/charts/value-axis';
 import {
   formatAxisNumber,
   formatDate,
   formatMoney,
   formatPeriod,
-  shortenDate,
 } from '../../../../shared/pipes/format';
 import { Viewport } from '../../../../shared/ui/viewport';
 import { DashboardDto } from '../../data-access/dashboard-api';
@@ -142,22 +145,9 @@ export class ValueChart {
     const phone = this.viewport.phone();
 
     return {
-      maintainAspectRatio: false,
-      animation: false,
-      interaction: { mode: 'index', intersect: false },
+      ...lineChartBase(),
       plugins: {
-        legend: {
-          labels: phone
-            ? {
-                color: palette.text,
-                usePointStyle: true,
-                boxWidth: 6,
-                boxHeight: 6,
-                padding: 10,
-                font: { size: 11 },
-              }
-            : { color: palette.text, usePointStyle: true },
-        },
+        legend: { labels: chartLegendLabels(palette, phone) },
         tooltip: {
           callbacks: {
             label: (context: { dataset: { label: string }; parsed: { y: number } }) =>
@@ -182,43 +172,18 @@ export class ValueChart {
           },
         },
       },
-      scales: phone
-        ? {
-            x: {
-              ticks: {
-                color: palette.muted,
-                maxTicksLimit: 4,
-                maxRotation: 0,
-                font: { size: 11 },
-                callback(this: { getLabelForValue: (value: number) => string }, value: number) {
-                  return shortenDate(this.getLabelForValue(value));
-                },
-              },
-              grid: { display: false },
-            },
-            y: {
-              ticks: {
-                color: palette.muted,
-                maxTicksLimit: 5,
-                font: { size: 11 },
-                callback: (value: number) => formatAxisNumber(value),
-              },
-              grid: { color: palette.grid },
-            },
-          }
-        : {
-            x: {
-              ticks: { color: palette.muted, maxTicksLimit: series.length > 60 ? 8 : 12 },
-              grid: { display: false },
-            },
-            y: {
-              ticks: {
-                color: palette.muted,
-                callback: (value: number) => formatMoney(value, currency, 0),
-              },
-              grid: { color: palette.grid },
-            },
-          },
+      scales: {
+        x: dateAxis(palette, {
+          phone,
+          maxTicks: phone ? 4 : series.length > 60 ? 8 : 12,
+          shortLabels: phone,
+        }),
+        y: valueAxis(palette, {
+          phone,
+          maxTicks: phone ? 5 : undefined,
+          tick: (value) => (phone ? formatAxisNumber(value) : formatMoney(value, currency, 0)),
+        }),
+      },
     };
   });
 }
