@@ -465,6 +465,21 @@
               }
             ],
             "title": "State"
+          },
+          "signals": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SignalState"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signals",
+            "description": "States of the user's market signals the parameters refer to."
           }
         },
         "additionalProperties": false,
@@ -1560,6 +1575,29 @@
         ],
         "title": "SignalKind",
         "description": "A kind of the service's built-in signals; a report may ask to come when one of them fires."
+      },
+      "SignalState": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Id"
+          },
+          "activeFor": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Activefor",
+            "description": "Keys of the instruments (as in marketSeries) the signal fires for now."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "SignalState"
       },
       "StrategyDecision": {
         "properties": {
