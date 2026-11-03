@@ -19,7 +19,8 @@ public sealed class StrategySetupFactory(IStrategyTypes types, IInstrumentCatalo
 ] referenced = [.. (draft.Universe ?? []).Select(id => (Guid?)id),
             draft.BenchmarkInstrumentId,
             draft.VolatilityIndexInstrumentId,
-            draft.CashInstrumentId];
+            draft.CashInstrumentId,
+            .. (draft.ExtraSeries ?? []).Select(id => (Guid?)id)];
         var unknown = referenced.OfType<Guid>().Where(id => !known.Contains(id)).Distinct().ToList();
         if (unknown.Count > 0)
             return StrategyErrors.UnknownInstruments(unknown.Select(id => id.ToString()));
@@ -37,7 +38,8 @@ public sealed class StrategySetupFactory(IStrategyTypes types, IInstrumentCatalo
             Universe: draft.Universe ?? [],
             CashInstrumentId: draft.CashInstrumentId,
             Market: new MarketSeriesRefs(draft.BenchmarkInstrumentId, draft.VolatilityIndexInstrumentId),
-            Reports: reports);
+            Reports: reports,
+            ExtraSeries: draft.ExtraSeries ?? []);
     }
 
     private static List<VersionReport> ReportsOf(StrategySetupDraft draft) =>

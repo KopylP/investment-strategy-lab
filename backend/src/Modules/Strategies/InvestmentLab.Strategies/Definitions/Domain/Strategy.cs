@@ -100,5 +100,13 @@ public sealed class Strategy : AggregateRoot<StrategyId>
         setup.Universe.Count == 0 ? StrategyErrors.UniverseEmpty()
         : setup.Universe.Distinct().Count() != setup.Universe.Count ? StrategyErrors.UniverseRepeated()
         : setup.Universe.Contains(Guid.Empty) || setup.Market.BenchmarkInstrumentId == Guid.Empty ? StrategyErrors.InstrumentRequired()
+        : HasRepeatedExtraSeries(setup) ? StrategyErrors.ExtraSeriesRepeated()
         : null;
+
+    private static bool HasRepeatedExtraSeries(StrategySetup setup)
+    {
+        var extra = setup.ExtraSeries ?? [];
+
+        return extra.Distinct().Count() != extra.Count;
+    }
 }

@@ -155,6 +155,7 @@
   "strategy.report_unknown": "Тип стратегії не має рапорту «{code}».",
   "strategy.report_repeated": "Рапорт «{code}» налаштовано двічі.",
   "strategy.report_frequency_unknown": "Невідома частота рапорту «{frequency}».",
+  "strategy.extra_series_repeated": "Додатковий ряд вказано двічі.",
   "strategy.not_trial": "Цю стратегію не можна змінити як пробну.",
   "strategy.engine_unavailable": "Рушій стратегій не відповів: {details}",
   "strategy.failed": "Стратегія не змогла відповісти: {details}",

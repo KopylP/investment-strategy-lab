@@ -131,4 +131,13 @@ public sealed class StrategyTests
         Regular().IsListed.ShouldBeTrue();
         archived.IsListed.ShouldBeTrue();
     }
+
+    [Fact]
+    public void Extra_series_may_not_repeat()
+    {
+        var extra = Guid.CreateVersion7();
+        var setup = Setup(Guid.CreateVersion7()) with { ExtraSeries = [extra, extra] };
+
+        Strategy.Create(UserId.New(), "EU", "rule-based", setup, Now).Error.Code.ShouldBe("strategy.extra_series_repeated");
+    }
 }

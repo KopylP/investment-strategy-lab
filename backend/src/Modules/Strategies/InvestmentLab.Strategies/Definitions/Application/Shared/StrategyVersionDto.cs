@@ -10,4 +10,5 @@ public sealed record StrategyVersionDto(
     Guid? CashInstrumentId,
     Guid BenchmarkInstrumentId,
     Guid? VolatilityIndexInstrumentId,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    IReadOnlyList<Guid> ExtraSeries);

@@ -13,6 +13,8 @@ public sealed class StrategyVersion
 
     public List<VersionReport> Reports { get; private set; } = [];
 
+    public List<Guid> ExtraSeries { get; private set; } = [];
+
     private StrategyVersion(int number, StrategySetup setup, DateTimeOffset createdAt)
     {
         Id = Guid.CreateVersion7();
@@ -24,6 +26,7 @@ public sealed class StrategyVersion
         VolatilityIndexInstrumentId = setup.Market.VolatilityIndexInstrumentId;
         CreatedAt = createdAt;
         Reports = [.. setup.Reports ?? []];
+        ExtraSeries = [.. setup.ExtraSeries ?? []];
     }
 
     private StrategyVersion() => (Parameters, Universe) = (null!, null!);

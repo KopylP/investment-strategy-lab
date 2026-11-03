@@ -27,7 +27,8 @@ internal static class StrategyMapping
                     shown.CashInstrumentId,
                     shown.BenchmarkInstrumentId,
                     shown.VolatilityIndexInstrumentId,
-                    shown.CreatedAt),
+                    shown.CreatedAt,
+                    shown.ExtraSeries),
                 EffectiveReportMapping.ReportsOf(type, shown));
         }
     }
