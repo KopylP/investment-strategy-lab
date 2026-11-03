@@ -1,63 +1,5 @@
 [
   {
-    "name": "EU ETF momentum",
-    "typeCode": "etf-momentum",
-    "currency": "EUR",
-    "universe": [
-      "IE00B5BMR087",
-      "IE00B53SZB19",
-      "IE00BF4RFH31",
-      "IE00B53L3W79",
-      "IE00BKM4GZ66",
-      "DE000A0S9GB0",
-      "IE00BDFL4P12",
-      "IE00BSKRJZ44",
-      "IE00B2NPKV68",
-      "IE00B0M62X26",
-      "IE00B0M62S72",
-      "LU1875395870",
-      "IE00B3WJKG14",
-      "IE00B42NKQ00",
-      "IE00B43HR379",
-      "IE00BD1F4M44",
-      "IE00BYVQ9F29"
-    ],
-    "cashInstrument": "LU0290358497",
-    "benchmark": "US78462F1030",
-    "parameters": {
-      "scanner": {
-        "topN": 4,
-        "lookbackMonths": 6,
-        "maPeriod": 200,
-        "maxVolatility": 0.35,
-        "maxDrawdown": -0.2,
-        "maxVix": 30.0,
-        "minSharpe": 0.2,
-        "minMomentum": 0.0,
-        "holdBufferK": 8,
-        "maxPerGroup": 1,
-        "maxCorrelation": 0.7,
-        "riskFreeRate": 0.02,
-        "maxStaleDays": 5
-      },
-      "risk": {
-        "maPeriod": 200,
-        "stopLossPct": -0.08,
-        "drawdownWarn": -0.1,
-        "drawdownExit": -0.18,
-        "vixWarn": 25.0,
-        "vixExit": 35.0,
-        "portfolioWarn": -0.1,
-        "portfolioExit": -0.2,
-        "maExitBand": 0.02,
-        "smallLossWarn": -0.04,
-        "sellOnPositionExit": false
-      },
-      "weakMarketInvestPct": 0.5
-    },
-    "usesVolatilityIndex": true
-  },
-  {
     "name": "EU adaptive momentum",
     "typeCode": "adaptive-momentum",
     "currency": "EUR",
@@ -93,65 +35,6 @@
       "volatilityWindowDays": 21
     },
     "usesVolatilityIndex": false
-  },
-  {
-    "name": "US ETF momentum",
-    "typeCode": "etf-momentum",
-    "currency": "USD",
-    "universe": [
-      "US78462F1030",
-      "US46090E1038",
-      "US4642876555",
-      "US4642874659",
-      "US4642872349",
-      "US78463V1070",
-      "US46428Q1094",
-      "US4642874329",
-      "US4642874402",
-      "US4642872422",
-      "US9229085538",
-      "US91232N2071",
-      "US46140H1068",
-      "US81369Y5069",
-      "US81369Y8030",
-      "US81369Y2090",
-      "US81369Y6059",
-      "US81369Y8865"
-    ],
-    "cashInstrument": "US78468R6633",
-    "benchmark": "US78462F1030",
-    "parameters": {
-      "scanner": {
-        "topN": 4,
-        "lookbackMonths": 6,
-        "maPeriod": 200,
-        "maxVolatility": 0.35,
-        "maxDrawdown": -0.2,
-        "maxVix": 30.0,
-        "minSharpe": 0.2,
-        "minMomentum": 0.0,
-        "holdBufferK": 8,
-        "maxPerGroup": 1,
-        "maxCorrelation": 0.7,
-        "riskFreeRate": 0.035,
-        "maxStaleDays": 5
-      },
-      "risk": {
-        "maPeriod": 200,
-        "stopLossPct": -0.08,
-        "drawdownWarn": -0.1,
-        "drawdownExit": -0.18,
-        "vixWarn": 25.0,
-        "vixExit": 35.0,
-        "portfolioWarn": -0.1,
-        "portfolioExit": -0.2,
-        "maExitBand": 0.02,
-        "smallLossWarn": -0.04,
-        "sellOnPositionExit": false
-      },
-      "weakMarketInvestPct": 0.5
-    },
-    "usesVolatilityIndex": true
   },
   {
     "name": "US adaptive momentum",

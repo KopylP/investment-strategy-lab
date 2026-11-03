@@ -20,7 +20,7 @@ test('a new user goes from registration to a partly executed monthly report', as
   await page.goto('/accounts/new');
   await page.getByRole('button', { name: 'Далі' }).click();
   await page.getByRole('button', { name: /Європа 70 \/ США 30/ }).click();
-  await expect(page.getByText('US ETF momentum').first()).toBeVisible();
+  await expect(page.getByText('US adaptive momentum').first()).toBeVisible();
   await shot('03-account-new');
   await page.getByRole('button', { name: 'Далі' }).click();
   await page.locator('input#contribution').fill('227');
@@ -100,7 +100,7 @@ test('a new user goes from registration to a partly executed monthly report', as
 
   await page.goto('/strategies');
   await shot('13-strategies');
-  await page.getByText('EU ETF momentum').first().click();
+  await page.getByText('EU adaptive momentum').first().click();
   await expect(page.getByRole('heading', { name: 'Параметри' })).toBeVisible();
   await shot('14-strategy-detail');
 

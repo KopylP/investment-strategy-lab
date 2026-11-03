@@ -34,6 +34,7 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
         (await client.PostAsync("/api/market-data/quotes/ingest", null, ct)).EnsureSuccessStatusCode();
         (await client.PostAsync("/api/market-data/fx-rates/ingest", null, ct)).EnsureSuccessStatusCode();
         var strategies = await client.DefaultStrategiesAsync<StrategyDto>(strategy => strategy.Name, ct);
+        var etfMomentum = await client.CreateEtfMomentumOnAsync(strategies[0], ct);
 
         var account = await PostAsync<AccountSetupDto>(client, "/api/portfolio/accounts", new
         {
@@ -42,8 +43,8 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
             baseCurrency = "EUR",
             subPortfolios = new object[]
             {
-                new { name = "EU momentum", targetSharePercent = 70m, strategyId = strategies[0].Id },
-                new { name = "US momentum", targetSharePercent = 30m, strategyId = strategies.Single(strategy => strategy.Name == "US ETF momentum").Id },
+                new { name = "EU momentum", targetSharePercent = 70m, strategyId = etfMomentum.Id },
+                new { name = "US momentum", targetSharePercent = 30m, strategyId = strategies.Single(strategy => strategy.Name == "US adaptive momentum").Id },
             },
         }, ct);
         (await client.PutAsJsonAsync($"/api/rebalancing/accounts/{account.Id}/settings",
@@ -154,6 +155,7 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
         var ct = TestContext.Current.CancellationToken;
         var client = await _factory.CreateSignedInClientAsync(ct);
         var strategies = await client.DefaultStrategiesAsync<StrategyDto>(strategy => strategy.Name, ct);
+        var etfMomentum = await client.CreateEtfMomentumOnAsync(strategies[0], ct);
         var account = await PostAsync<AccountSetupDto>(client, "/api/portfolio/accounts", new
         {
             name = "XTB signals",
@@ -161,7 +163,7 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
             baseCurrency = "EUR",
             subPortfolios = new object[]
             {
-                new { name = "EU momentum", targetSharePercent = 100m, strategyId = strategies[0].Id },
+                new { name = "EU momentum", targetSharePercent = 100m, strategyId = etfMomentum.Id },
             },
         }, ct);
 

@@ -1,0 +1,48 @@
+<a
+  [routerLink]="['/strategies', strategy().id]"
+  class="card mb-0 block hover:shadow-md transition-shadow"
+>
+  <div class="flex items-start justify-between gap-2 mb-3">
+    <div>
+      <div class="text-lg font-semibold">{{ strategy().name }}</div>
+      <div class="text-sm text-muted-color">{{ store.typeName(strategy().typeCode) }}</div>
+    </div>
+    @if (strategy().status === 'Archived') {
+      <p-tag value="архів" severity="secondary" />
+    } @else {
+      <p-tag [value]="'v' + strategy().latestVersion" severity="info" />
+    }
+  </div>
+  @let info = blurb();
+  <div class="text-sm mb-2">{{ info.headline }}</div>
+  <ul class="text-xs text-muted-color mt-0 mb-3 pl-4">
+    @for (point of info.points; track point) {
+      <li>{{ point }}</li>
+    }
+  </ul>
+  <div class="flex flex-wrap gap-1 mb-3">
+    @for (id of strategy().version.universe.slice(0, 8); track id) {
+      <p-tag [value]="store.instruments.symbol(id)" severity="secondary" />
+    }
+    @if (strategy().version.universe.length > 8) {
+      <p-tag [value]="'+' + (strategy().version.universe.length - 8)" severity="secondary" />
+    }
+  </div>
+  <div class="text-sm text-muted-color">
+    Бенчмарк {{ store.instruments.symbol(strategy().version.benchmarkInstrumentId) }}
+    @if (strategy().version.cashInstrumentId) {
+      · кеш у {{ store.instruments.symbol(strategy().version.cashInstrumentId) }}
+    }
+    · з {{ strategy().createdAt | date }}
+  </div>
+  <div class="text-sm mt-3 pt-3 border-t border-surface">
+    @if (places().length) {
+      <i class="pi pi-wallet text-xs mr-1 text-primary"></i>Працює в: {{ places().join(', ') }}
+    } @else {
+      <span class="text-muted-color"
+        ><i class="pi pi-info-circle text-xs mr-1"></i>Ще ніде не використовується — оберіть її в
+        під-портфелі рахунку</span
+      >
+    }
+  </div>
+</a>

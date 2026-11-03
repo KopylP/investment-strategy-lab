@@ -50,7 +50,9 @@ export function describeStrategy(
         : 'Між ребалансами перевіряє ризик: окремі позиції лише попереджають, а продаж усього портфеля лишається',
     );
   if (typeof maxCorrelation === 'number' && maxCorrelation < 1)
-    points.push(`Не бере фонд, що рухається надто схоже на вже обраний (кореляція понад ${maxCorrelation})`);
+    points.push(
+      `Не бере фонд, що рухається надто схоже на вже обраний (кореляція понад ${maxCorrelation})`,
+    );
   if (typeof targetVolatility === 'number' && targetVolatility < 1)
     points.push(
       `Коли обрані фонди коливаються сильніше за ${Math.round(targetVolatility * 100)}% на рік, частину грошей тримає${version.cashInstrumentId ? ` в ${symbol(version.cashInstrumentId)}` : ' в кеші'}`,

@@ -12,7 +12,7 @@ test('a strategy shows its backtest and the money outcomes', async ({ page }) =>
   await page.getByRole('button', { name: 'Зареєструватися' }).click();
   await expect(page.getByRole('heading', { name: 'Огляд' })).toBeVisible();
 
-  for (const name of ['EU index hold', 'EU ETF momentum']) {
+  for (const name of ['EU index hold', 'EU adaptive momentum']) {
     await page.goto('/strategies');
     await page.getByText(name).first().click();
     await expect(page.getByRole('heading', { name: 'Як стратегія поводилась у минулому' })).toBeVisible();
