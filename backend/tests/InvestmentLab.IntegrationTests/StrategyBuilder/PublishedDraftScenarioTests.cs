@@ -130,7 +130,7 @@ public sealed class PublishedDraftScenarioTests : IClassFixture<StrategiesApiFac
         created.EnsureSuccessStatusCode();
         var draft = (await created.Content.ReadFromJsonAsync<DraftDto>(cancellationToken))!;
         var setup = new DraftSetupDto(
-            Funds: regular.Take(5).Select(instrument => instrument.Id).ToList(),
+            Funds: [.. regular.Take(5).Select(instrument => instrument.Id)],
             BenchmarkId: regular[0].Id,
             CashId: regular[5].Id,
             VolatilityIndexId: null,
