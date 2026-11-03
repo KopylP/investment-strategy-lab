@@ -4,7 +4,6 @@ import { InputNumber } from 'primeng/inputnumber';
 import { Message } from 'primeng/message';
 import { ProgressSpinner } from 'primeng/progressspinner';
 import { SelectButton } from 'primeng/selectbutton';
-import { chartLegendLabels } from '../../../../shared/charts/chart-legend';
 import { ChartTheme } from '../../../../shared/charts/chart-theme';
 import { dateAxis } from '../../../../shared/charts/date-axis';
 import { lineChartBase } from '../../../../shared/charts/line-chart-base';
@@ -74,9 +73,17 @@ export class StrategyBacktest {
     () =>
       this.outcomes()?.series.find((series) => series.code === STRATEGY_SERIES)?.outcomes ?? null,
   );
-  protected readonly comparedOutcomes = computed(() =>
-    (this.outcomes()?.series ?? []).filter((series) => series.outcomes.periods > 0),
+  protected readonly lines = computed(() =>
+    this.series().map((series, index) => ({ ...series, color: this.colorAt(index) })),
   );
+  protected readonly comparedOutcomes = computed(() => {
+    const colors = new Map(this.lines().map((line) => [line.code, line.color]));
+    const withHistory = (this.outcomes()?.series ?? []).filter(
+      (series) => series.outcomes.periods > 0,
+    );
+
+    return withHistory.map((series) => ({ ...series, color: colors.get(series.code) ?? '' }));
+  });
 
   protected readonly growthData = computed(() => this.dataOf((point) => point.growth * 100));
   protected readonly drawdownData = computed(() =>
@@ -135,7 +142,7 @@ export class StrategyBacktest {
 
     return {
       ...lineChartBase(),
-      plugins: { legend: { labels: chartLegendLabels(palette, phone) } },
+      plugins: { legend: { display: false } },
       scales: {
         x: dateAxis(palette, { phone, maxTicks: maxDateTicks, shortLabels: phone }),
         y: valueAxis(palette, { phone, tick, maxTicks: maxValueTicks }),
