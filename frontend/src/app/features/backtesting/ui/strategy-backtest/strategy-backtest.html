@@ -57,6 +57,18 @@
       </div>
     }
 
+    <ul class="list-none p-0 m-0 mb-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+      @for (line of lines(); track line.code) {
+        <li class="flex items-start gap-2">
+          <span
+            class="inline-block w-2.5 h-2.5 rounded-full mt-1 shrink-0"
+            [style.background]="line.color"
+          ></span>
+          {{ line.label }}
+        </li>
+      }
+    </ul>
+
     <h3 class="text-base font-medium mb-2">Зростання 100 одиниць</h3>
     <app-live-chart
       [data]="growthData()"
@@ -71,40 +83,96 @@
       [height]="viewport.phone() ? '10rem' : '12rem'"
     />
 
-    <div class="overflow-x-auto mt-5">
-      <table class="w-full text-sm">
-        <thead>
-          <tr class="text-left text-muted-color">
-            <th class="font-normal py-1"></th>
-            <th class="font-normal py-1 text-right">За весь період</th>
-            <th class="font-normal py-1 text-right">Дохідність на рік</th>
-            <th class="font-normal py-1 text-right">Після податку</th>
-            <th class="font-normal py-1 text-right">Волатильність</th>
-            <th class="font-normal py-1 text-right">Sharpe</th>
-            <th class="font-normal py-1 text-right">Найбільше просідання</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (row of series(); track row.code) {
-            <tr>
-              <td class="py-1">{{ row.label }}</td>
-              <td class="py-1 text-right">{{ row.summary.totalReturn | signedPercent: 0 }}</td>
-              <td class="py-1 text-right">{{ row.summary.annualReturn | percent }}</td>
-              <td class="py-1 text-right">
-                {{
-                  row.summary.annualReturnAfterTax === null
-                    ? '—'
-                    : (row.summary.annualReturnAfterTax | percent)
-                }}
-              </td>
-              <td class="py-1 text-right">{{ row.summary.volatility | percent }}</td>
-              <td class="py-1 text-right">{{ row.summary.sharpe.toFixed(2) }}</td>
-              <td class="py-1 text-right">{{ row.summary.maxDrawdown | percent }}</td>
+    @if (viewport.phone()) {
+      <div class="flex flex-col gap-3 mt-5">
+        @for (line of lines(); track line.code) {
+          <div class="border border-surface rounded-border p-3">
+            <div class="flex items-start gap-2 mb-2 font-medium text-sm">
+              <span
+                class="inline-block w-2.5 h-2.5 rounded-full mt-1 shrink-0"
+                [style.background]="line.color"
+              ></span>
+              {{ line.label }}
+            </div>
+            <dl class="m-0 grid grid-cols-3 gap-x-3 gap-y-2 text-sm">
+              <div>
+                <dt class="text-xs text-muted-color">За весь період</dt>
+                <dd class="m-0">{{ line.summary.totalReturn | signedPercent: 0 }}</dd>
+              </div>
+              <div>
+                <dt class="text-xs text-muted-color">На рік</dt>
+                <dd class="m-0">{{ line.summary.annualReturn | percent }}</dd>
+              </div>
+              <div>
+                <dt class="text-xs text-muted-color">Після податку</dt>
+                <dd class="m-0">
+                  {{
+                    line.summary.annualReturnAfterTax === null
+                      ? '—'
+                      : (line.summary.annualReturnAfterTax | percent)
+                  }}
+                </dd>
+              </div>
+              <div>
+                <dt class="text-xs text-muted-color">Волатильність</dt>
+                <dd class="m-0">{{ line.summary.volatility | percent }}</dd>
+              </div>
+              <div>
+                <dt class="text-xs text-muted-color">Sharpe</dt>
+                <dd class="m-0">{{ line.summary.sharpe.toFixed(2) }}</dd>
+              </div>
+              <div>
+                <dt class="text-xs text-muted-color">Просідання</dt>
+                <dd class="m-0">{{ line.summary.maxDrawdown | percent }}</dd>
+              </div>
+            </dl>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="overflow-x-auto mt-5">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-muted-color">
+              <th class="font-normal py-1"></th>
+              <th class="font-normal py-1 text-right">За весь період</th>
+              <th class="font-normal py-1 text-right">Дохідність на рік</th>
+              <th class="font-normal py-1 text-right">Після податку</th>
+              <th class="font-normal py-1 text-right">Волатильність</th>
+              <th class="font-normal py-1 text-right">Sharpe</th>
+              <th class="font-normal py-1 text-right">Найбільше просідання</th>
             </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            @for (line of lines(); track line.code) {
+              <tr>
+                <td class="py-1">
+                  <span class="flex items-start gap-2">
+                    <span
+                      class="inline-block w-2.5 h-2.5 rounded-full mt-1 shrink-0"
+                      [style.background]="line.color"
+                    ></span>
+                    {{ line.label }}
+                  </span>
+                </td>
+                <td class="py-1 text-right">{{ line.summary.totalReturn | signedPercent: 0 }}</td>
+                <td class="py-1 text-right">{{ line.summary.annualReturn | percent }}</td>
+                <td class="py-1 text-right">
+                  {{
+                    line.summary.annualReturnAfterTax === null
+                      ? '—'
+                      : (line.summary.annualReturnAfterTax | percent)
+                  }}
+                </td>
+                <td class="py-1 text-right">{{ line.summary.volatility | percent }}</td>
+                <td class="py-1 text-right">{{ line.summary.sharpe.toFixed(2) }}</td>
+                <td class="py-1 text-right">{{ line.summary.maxDrawdown | percent }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
     <div class="text-xs text-muted-color mt-2">
       Угод за весь період: {{ replay.trades }}
       @if (replay.signalReports > 0) {
@@ -152,34 +220,74 @@
           [text]="'Історії замало для відрізків у ' + outcomes.years + ' років.'"
         />
       } @else {
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="text-left text-muted-color">
-                <th class="font-normal py-1"></th>
-                <th class="font-normal py-1 text-right">Гірший відрізок</th>
-                <th class="font-normal py-1 text-right">Типовий</th>
-                <th class="font-normal py-1 text-right">Кращий</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (row of comparedOutcomes(); track row.code) {
-                <tr>
-                  <td class="py-1">{{ row.label }}</td>
-                  <td class="py-1 text-right">
-                    {{ row.outcomes.worst?.final | money: currency() : 0 }}
-                  </td>
-                  <td class="py-1 text-right font-medium">
-                    {{ row.outcomes.typical?.final | money: currency() : 0 }}
-                  </td>
-                  <td class="py-1 text-right">
-                    {{ row.outcomes.best?.final | money: currency() : 0 }}
-                  </td>
+        @if (viewport.phone()) {
+          <div class="flex flex-col gap-3">
+            @for (row of comparedOutcomes(); track row.code) {
+              <div class="border border-surface rounded-border p-3">
+                <div class="flex items-start gap-2 mb-2 font-medium text-sm">
+                  <span
+                    class="inline-block w-2.5 h-2.5 rounded-full mt-1 shrink-0"
+                    [style.background]="row.color"
+                  ></span>
+                  {{ row.label }}
+                </div>
+                <dl class="m-0 grid grid-cols-3 gap-x-3 text-sm">
+                  <div>
+                    <dt class="text-xs text-muted-color">Гірший</dt>
+                    <dd class="m-0">{{ row.outcomes.worst?.final | money: currency() : 0 }}</dd>
+                  </div>
+                  <div>
+                    <dt class="text-xs text-muted-color">Типовий</dt>
+                    <dd class="m-0 font-medium">
+                      {{ row.outcomes.typical?.final | money: currency() : 0 }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-xs text-muted-color">Кращий</dt>
+                    <dd class="m-0">{{ row.outcomes.best?.final | money: currency() : 0 }}</dd>
+                  </div>
+                </dl>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="text-left text-muted-color">
+                  <th class="font-normal py-1"></th>
+                  <th class="font-normal py-1 text-right">Гірший відрізок</th>
+                  <th class="font-normal py-1 text-right">Типовий</th>
+                  <th class="font-normal py-1 text-right">Кращий</th>
                 </tr>
-              }
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                @for (row of comparedOutcomes(); track row.code) {
+                  <tr>
+                    <td class="py-1">
+                      <span class="flex items-start gap-2">
+                        <span
+                          class="inline-block w-2.5 h-2.5 rounded-full mt-1 shrink-0"
+                          [style.background]="row.color"
+                        ></span>
+                        {{ row.label }}
+                      </span>
+                    </td>
+                    <td class="py-1 text-right">
+                      {{ row.outcomes.worst?.final | money: currency() : 0 }}
+                    </td>
+                    <td class="py-1 text-right font-medium">
+                      {{ row.outcomes.typical?.final | money: currency() : 0 }}
+                    </td>
+                    <td class="py-1 text-right">
+                      {{ row.outcomes.best?.final | money: currency() : 0 }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
         <div class="text-xs text-muted-color mt-2">
           Внесено {{ outcomes.contributed | money: currency() : 0 }}. Порівняно
           {{ strategyOutcomes()?.periods }} відрізків, що перекриваються.

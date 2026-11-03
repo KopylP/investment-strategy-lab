@@ -28,7 +28,14 @@ export function formatPercent(fraction: number | null | undefined, digits = 1): 
     style: 'percent',
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
-  }).format(fraction);
+  }).format(roundedWithoutNegativeZero(fraction, digits));
+}
+
+function roundedWithoutNegativeZero(fraction: number, percentDigits: number): number {
+  const scale = 10 ** (percentDigits + 2);
+  const rounded = Math.round(fraction * scale) / scale;
+
+  return rounded === 0 ? 0 : rounded;
 }
 
 export function formatSignedPercent(fraction: number | null | undefined, digits = 1): string {
