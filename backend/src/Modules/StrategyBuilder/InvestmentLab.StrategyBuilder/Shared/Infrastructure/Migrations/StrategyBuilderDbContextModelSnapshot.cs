@@ -67,6 +67,44 @@ namespace InvestmentLab.StrategyBuilder.Shared.Infrastructure.Migrations
                     b.ToTable("outbox_messages", "strategy_builder");
                 });
 
+            modelBuilder.Entity("InvestmentLab.StrategyBuilder.Drafts.Domain.PublishedLayout", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Graph")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("graph");
+
+                    b.Property<string>("Layout")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("layout");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_id");
+
+                    b.Property<Guid>("StrategyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("strategy_id");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_published_layouts");
+
+                    b.HasIndex("StrategyId", "Version")
+                        .IsUnique()
+                        .HasDatabaseName("ix_published_layouts_strategy_id_version");
+
+                    b.ToTable("published_layouts", "strategy_builder");
+                });
+
             modelBuilder.Entity("InvestmentLab.StrategyBuilder.Drafts.Domain.StrategyDraft", b =>
                 {
                     b.Property<Guid>("Id")
@@ -138,6 +176,33 @@ namespace InvestmentLab.StrategyBuilder.Shared.Infrastructure.Migrations
                         .HasName("pk_drafts");
 
                     b.ToTable("drafts", "strategy_builder");
+                });
+
+            modelBuilder.Entity("InvestmentLab.StrategyBuilder.Drafts.Domain.TrialCleanup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("integer")
+                        .HasColumnName("attempts");
+
+                    b.Property<DateTimeOffset>("NextAttemptAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("next_attempt_at");
+
+                    b.Property<Guid>("TrialStrategyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("trial_strategy_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_trial_cleanups");
+
+                    b.HasIndex("NextAttemptAt")
+                        .HasDatabaseName("ix_trial_cleanups_next_attempt_at");
+
+                    b.ToTable("trial_cleanups", "strategy_builder");
                 });
 #pragma warning restore 612, 618
         }

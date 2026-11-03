@@ -1,3 +1,8 @@
+using InvestmentLab.BuildingBlocks.Scheduling;
+using InvestmentLab.StrategyBuilder.Drafts.Application.CleanUpTrials;
+using InvestmentLab.StrategyBuilder.Drafts.Application.PublishDraft;
+using InvestmentLab.StrategyBuilder.Drafts.Application.OpenPublishedStrategy;
+using InvestmentLab.StrategyBuilder.Drafts.Application.GetPublishedStrategy;
 using InvestmentLab.StrategyBuilder.Trials.Api;
 using InvestmentLab.StrategyBuilder.Trials.Application.ListTrials;
 using InvestmentLab.StrategyBuilder.Trials.Application.RunTrial;
@@ -44,6 +49,13 @@ public sealed class StrategyBuilderModule : IModule
         services.AddScoped<ITrialBacktests, TrialBacktests>();
         services.AddScoped<RunTrialHandler>();
         services.AddScoped<ListTrialsHandler>();
+        services.AddScoped<IPublishedLayoutRepository, PublishedLayoutRepository>();
+        services.AddScoped<ITrialCleanupRepository, TrialCleanupRepository>();
+        services.AddScoped<CleanUpTrialHandler>();
+        services.AddScoped<PublishDraftHandler>();
+        services.AddScoped<OpenPublishedStrategyHandler>();
+        services.AddScoped<GetPublishedStrategyHandler>();
+        services.AddScheduledJob<TrialCleanupJob>(TrialCleanupJob.Schedule);
         services.AddScoped<IDraftRepository, DraftRepository>();
         services.AddScoped<IRuleVocabulary, RuleVocabularyFromSchema>();
         services.AddScoped<IInstrumentDirectory, InstrumentDirectory>();

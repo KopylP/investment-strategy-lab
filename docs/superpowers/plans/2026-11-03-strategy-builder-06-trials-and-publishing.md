@@ -109,7 +109,7 @@ git pull --rebase && git push
   - `GetPublishedStrategyHandler.Handle(Guid strategyId, int version, ct) -> Result<PublishedStrategyDto>` with `PublishedStrategyDto(bool Editable, Guid? DraftId, IReadOnlyList<BlockWordsDto> Words)`; `Editable` = the version's type is `RuleBasedType.Code`; `Words` from `StrategyInWords` over the chosen source.
   - Routes: `POST /drafts/{id}/publish` `{ revision }`, `POST /published/{strategyId}/versions/{version}/draft`, `GET /published/{strategyId}/versions/{version}`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```csharp
 [Fact] public void The_saved_layout_of_the_same_version_is_used() { }
@@ -118,13 +118,13 @@ git pull --rebase && git push
 [Fact] public void Cleanup_retries_wait_at_most_a_day() { }
 ```
 
-- [ ] **Step 2: Run to verify they fail; implement; run to verify they pass**
+- [x] **Step 2: Run to verify they fail; implement; run to verify they pass**
 
 Run: `dotnet test --project tests/Modules/InvestmentLab.StrategyBuilder.Tests`
 Expected: FAIL, then PASS. Then add the migration:
 Run: `dotnet ef migrations add PublishedLayoutsAndTrialCleanups --project src/Modules/StrategyBuilder/InvestmentLab.StrategyBuilder --output-dir Shared/Infrastructure/Migrations`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add backend locales/uk.json
@@ -243,4 +243,4 @@ git pull --rebase && git push
 
 ## Execution status — 2026-11-03
 
-Task 1 is complete. Authoring ports now cover trial creation, publishing, deletion and immutable version lookup. The real-engine integration scenario verifies concurrent requests reuse one trial version, replay succeeds, trial strategies stay out of the normal list, and changed setup creates the next run. A schema regression found by the scenario is fixed: successful alternatives no longer return errors from unmatched branches. StrategyBuilder (87), Strategies (36), architecture (50), and the trial integration scenario (1) pass. Task 2 is next; Tasks 2–5 have not started. Plans remain tracked at the user's explicit request.
+Tasks 1–2 are complete. Publishing saves the exact version's graph and layout, removes the draft only after successful authoring, and durably queues trial cleanup. Cleanup failure leaves the published strategy intact, records backoff, and can be retried; discarded drafts queue the same cleanup job. Published rule-based strategies reopen with their saved layout and reuse an existing draft. Refused duplicate-name publication preserves the draft. The migration is generated. Task 2 verification: StrategyBuilder (94), architecture (50), and publishing/cleanup integration scenarios (2) pass. Task 1's real-engine trial scenario and schema-alternative regression were verified in its own commit. Tasks 3–5 remain open. Plans remain tracked at the user's explicit request.

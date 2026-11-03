@@ -1,3 +1,6 @@
+using InvestmentLab.StrategyBuilder.Drafts.Application.PublishDraft;
+using InvestmentLab.StrategyBuilder.Drafts.Application.OpenPublishedStrategy;
+using InvestmentLab.StrategyBuilder.Drafts.Application.GetPublishedStrategy;
 using InvestmentLab.BuildingBlocks.Http;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.StrategyBuilder.Drafts.Application.ChangeDraft;
@@ -25,6 +28,9 @@ internal static class DraftEndpoints
     {
         var builder = group.MapGroup("").WithTags("StrategyBuilder");
 
+        builder.MapPost("/drafts/{draftId:guid}/publish", PublishDraft).WithName("PublishDraft");
+        builder.MapPost("/published/{strategyId:guid}/versions/{version:int}/draft", OpenPublishedStrategy).WithName("OpenPublishedStrategy");
+        builder.MapGet("/published/{strategyId:guid}/versions/{version:int}", GetPublishedStrategy).WithName("GetPublishedBuilderStrategy");
         builder.MapGet("/vocabulary", GetVocabulary).WithName("GetBuilderVocabulary");
         builder.MapGet("/instruments", ListInstruments).WithName("ListBuilderInstruments");
         builder.MapGet("/drafts", ListDrafts).WithName("ListDrafts");
@@ -39,6 +45,27 @@ internal static class DraftEndpoints
         builder.MapDelete("/drafts/{draftId:guid}", DiscardDraft).WithName("DiscardDraft");
 
         return group;
+    }
+
+    private static async Task<IResult> PublishDraft(Guid draftId, PublishDraftCommand body, PublishDraftHandler handler, CancellationToken cancellationToken)
+    {
+        var published = await handler.Handle(draftId, body.Revision, cancellationToken);
+
+        return published.ToHttpResult();
+    }
+
+    private static async Task<IResult> OpenPublishedStrategy(Guid strategyId, int version, OpenPublishedStrategyHandler handler, ICurrentUser user, CancellationToken cancellationToken)
+    {
+        var draft = await handler.Handle(user.RequiredId, strategyId, version, cancellationToken);
+
+        return draft.ToHttpResult();
+    }
+
+    private static async Task<IResult> GetPublishedStrategy(Guid strategyId, int version, GetPublishedStrategyHandler handler, ICurrentUser user, CancellationToken cancellationToken)
+    {
+        var published = await handler.Handle(user.RequiredId, strategyId, version, cancellationToken);
+
+        return published.ToHttpResult();
     }
 
     private static async Task<IResult> GetVocabulary(GetVocabularyHandler handler, CancellationToken cancellationToken)
