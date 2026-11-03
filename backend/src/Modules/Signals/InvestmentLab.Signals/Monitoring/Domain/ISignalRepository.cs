@@ -10,6 +10,8 @@ public interface ISignalRepository
 
     Task<IReadOnlyList<SignalOccurrence>> OpenOccurrencesOfAsync(Guid signalId, CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<SignalOccurrence>> OpenOccurrencesOfAsync(IReadOnlyList<Guid> signalIds, CancellationToken cancellationToken);
+
     Task<IReadOnlyList<SignalOccurrence>> AllOpenOccurrencesAsync(CancellationToken cancellationToken);
 
     Task<IReadOnlyList<SignalOccurrence>> ClearedOccurrencesAsync(int count, CancellationToken cancellationToken);

@@ -20,6 +20,7 @@ export interface Strategy {
   latestVersion: number;
   version: StrategyVersion;
   reports: ReportDefinition[];
+  deletedSignalIds: string[];
 }
 
 export interface StrategyType {

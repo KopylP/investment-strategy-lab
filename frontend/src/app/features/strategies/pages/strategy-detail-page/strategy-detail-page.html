@@ -49,6 +49,14 @@
     }
   </app-page-header>
 
+  @if (strategy.deletedSignalIds.length) {
+    <p-message
+      severity="warn"
+      styleClass="mb-4"
+      text="Стратегія спирається на видалений сигнал. Змініть її в конструкторі; рапорти, правила яких використовують цей сигнал, не будуються."
+    />
+  }
+
   @if (store.type()?.description) {
     <p-message severity="secondary" styleClass="mb-4" [text]="store.type()!.description" />
   }

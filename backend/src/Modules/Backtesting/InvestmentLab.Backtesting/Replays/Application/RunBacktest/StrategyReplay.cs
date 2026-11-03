@@ -19,12 +19,19 @@ public sealed class StrategyReplay(
         if (comparisons.IsFailure)
             return comparisons.Error;
 
+        var watches = await WatchesAsync(setup, cancellationToken);
+        if (watches.IsFailure)
+            return watches.Error;
+
+        var signalInstruments = watches.Value.User.Values.SelectMany(watch => watch.Instruments).Distinct().ToList();
+        setup = setup with { SignalInstruments = signalInstruments };
+
         var prices = await priceTables.LoadAsync(setup, cancellationToken);
 
         if (prices.FirstDayToReplay(setup) is not { } firstDay)
             return BacktestErrors.NotEnoughHistory();
 
-        var alarms = new ReplayAlarms(setup.Signals, signals);
+        var alarms = new ReplayAlarms(setup.Signals, setup.LogicSignalIds ?? [], watches.Value);
         var run = new Run(setup, prices, new ReplayBook(NotionalCapital), alarms);
 
         for (var dayIndex = firstDay; dayIndex < prices.Days.Count; dayIndex++)
@@ -38,6 +45,26 @@ public sealed class StrategyReplay(
         var series = await SeriesOfAsync(run, history, comparisons.Value, cancellationToken);
 
         return run.ResultFrom(series);
+    }
+
+    private async Task<Result<ReplaySignalWatches>> WatchesAsync(ReplaySetup setup, CancellationToken cancellationToken)
+    {
+        var builtIn = setup.Signals.AllKinds.ToDictionary(kind => kind, signals.Watch);
+        var user = new Dictionary<Guid, IReplaySignalWatch>();
+        var logicIds = setup.LogicSignalIds ?? [];
+        var ids = logicIds.Concat(setup.Signals.AllSignalIds).Distinct();
+
+        foreach (var id in ids)
+        {
+            var watch = await signals.WatchSignalAsync(id, cancellationToken);
+            if (watch is null && logicIds.Contains(id))
+                return BacktestErrors.SignalMissing(id);
+
+            if (watch is not null)
+                user.Add(id, watch);
+        }
+
+        return new ReplaySignalWatches(builtIn, user);
     }
 
     private async Task<List<ReplaySeries>> SeriesOfAsync(
@@ -88,11 +115,11 @@ public sealed class StrategyReplay(
 
         var rebalanceDue = ReplayCalendar.OpensPeriod(run.Setup.RebalanceCadence, previous, day);
         if (rebalanceDue || fired.Rebalance)
-            return await RebalanceAsync(run, day, today, broughtBySignal: !rebalanceDue, cancellationToken);
+            return await RebalanceAsync(run, day, today, broughtBySignal: !rebalanceDue, fired.States ?? [], cancellationToken);
 
         var riskReviewDue = IsRiskReviewDue(run.Setup, previous, day);
         if (riskReviewDue || fired.RiskReview)
-            return await ReviewRiskAsync(run, day, broughtBySignal: !riskReviewDue, cancellationToken);
+            return await ReviewRiskAsync(run, day, broughtBySignal: !riskReviewDue, fired.States ?? [], cancellationToken);
 
         return Result.Success();
     }
@@ -101,11 +128,11 @@ public sealed class StrategyReplay(
         setup.RiskReviewCadence is { } review && ReplayCalendar.OpensPeriod(review, previous, day);
 
     private async Task<Result> RebalanceAsync(
-        Run run, DateOnly day, IReadOnlyDictionary<Guid, decimal> today, bool broughtBySignal, CancellationToken cancellationToken)
+        Run run, DateOnly day, IReadOnlyDictionary<Guid, decimal> today, bool broughtBySignal, IReadOnlyList<ReplaySignalState> states, CancellationToken cancellationToken)
     {
         run.NoteReport(broughtBySignal);
 
-        var decision = await answers.DecideAsync(run.Setup, run.Book, day, cancellationToken);
+        var decision = await answers.DecideAsync(run.Setup, run.Book, day, states, cancellationToken);
         if (decision.IsFailure)
             return decision.Error;
 
@@ -114,14 +141,14 @@ public sealed class StrategyReplay(
         return Result.Success();
     }
 
-    private async Task<Result> ReviewRiskAsync(Run run, DateOnly day, bool broughtBySignal, CancellationToken cancellationToken)
+    private async Task<Result> ReviewRiskAsync(Run run, DateOnly day, bool broughtBySignal, IReadOnlyList<ReplaySignalState> states, CancellationToken cancellationToken)
     {
         run.NoteReport(broughtBySignal);
 
         if (run.Book.Positions.Count == 0)
             return Result.Success();
 
-        var exits = await answers.ExitsAsync(run.Setup, run.Book, day, cancellationToken);
+        var exits = await answers.ExitsAsync(run.Setup, run.Book, day, states, cancellationToken);
         if (exits.IsFailure)
             return exits.Error;
 

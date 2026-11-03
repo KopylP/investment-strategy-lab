@@ -66,4 +66,45 @@ public sealed class SignalWatchTests
 
     private static List<bool> FiringsOf(SignalWatch watch, decimal[] values, string subject) =>
         [.. values.Select((value, index) => watch.FiresOn(FirstDay.AddDays(index), [new WatchedReading(subject, value)]))];
+    [Fact]
+    public void A_day_fall_is_replayed_from_consecutive_closes()
+    {
+        var condition = SignalCondition.TryOf(SignalMetric.DayFall, SignalDirection.Above, 0.05m, null, null).Value;
+        var watch = new SignalWatch(condition);
+
+        watch.FiresOn(FirstDay, [new WatchedReading("fund", 100m)]).ShouldBeFalse();
+        watch.FiresOn(FirstDay.AddDays(1), [new WatchedReading("fund", 94m)]).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void A_loss_from_cost_is_replayed_with_the_unit_cost()
+    {
+        var condition = SignalCondition.TryOf(SignalMetric.LossFromCost, SignalDirection.Above, 0.12m, null, null).Value;
+        var watch = new SignalWatch(condition);
+
+        watch.FiresOn(FirstDay, [new WatchedReading("fund", 85m, UnitCost: 100m)]).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void A_loss_without_a_unit_cost_is_not_measured()
+    {
+        var condition = SignalCondition.TryOf(SignalMetric.LossFromCost, SignalDirection.Above, 0.12m, null, null).Value;
+        var watch = new SignalWatch(condition);
+
+        watch.FiresOn(FirstDay, [new WatchedReading("fund", 85m)]).ShouldBeFalse();
+        watch.Alarmed.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Alarmed_subjects_stay_until_they_rearm()
+    {
+        var watch = new SignalWatch(BuiltInSignalRules.ConditionOf(BuiltInSignalKind.VolatilityIndex));
+
+        watch.FiresOn(FirstDay, [new WatchedReading("index", 31m)]).ShouldBeTrue();
+        watch.FiresOn(FirstDay.AddDays(1), [new WatchedReading("index", 28m)]).ShouldBeFalse();
+        watch.Alarmed.ShouldBe(["index"]);
+        watch.FiresOn(FirstDay.AddDays(2), [new WatchedReading("index", 20m)]).ShouldBeFalse();
+        watch.Alarmed.ShouldBeEmpty();
+    }
+
 }

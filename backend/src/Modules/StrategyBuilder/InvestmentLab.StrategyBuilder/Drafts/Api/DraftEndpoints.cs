@@ -13,6 +13,7 @@ using InvestmentLab.StrategyBuilder.Drafts.Application.GetDraftRules;
 using InvestmentLab.StrategyBuilder.Drafts.Application.GetVocabulary;
 using InvestmentLab.StrategyBuilder.Drafts.Application.ImportRules;
 using InvestmentLab.StrategyBuilder.Drafts.Application.ListDrafts;
+using InvestmentLab.StrategyBuilder.Drafts.Application.ListOwnSignals;
 using InvestmentLab.StrategyBuilder.Drafts.Application.ListInstruments;
 using InvestmentLab.StrategyBuilder.Drafts.Application.MoveNodes;
 using InvestmentLab.StrategyBuilder.Drafts.Application.Shared;
@@ -32,6 +33,7 @@ internal static class DraftEndpoints
         builder.MapPost("/published/{strategyId:guid}/versions/{version:int}/draft", OpenPublishedStrategy).WithName("OpenPublishedStrategy");
         builder.MapGet("/published/{strategyId:guid}/versions/{version:int}", GetPublishedStrategy).WithName("GetPublishedBuilderStrategy");
         builder.MapGet("/vocabulary", GetVocabulary).WithName("GetBuilderVocabulary");
+        builder.MapGet("/signals", ListOwnSignals).WithName("ListBuilderSignals");
         builder.MapGet("/instruments", ListInstruments).WithName("ListBuilderInstruments");
         builder.MapGet("/drafts", ListDrafts).WithName("ListDrafts");
         builder.MapPost("/drafts", CreateDraft).WithName("CreateDraft");
@@ -73,6 +75,13 @@ internal static class DraftEndpoints
         var vocabulary = await handler.Handle(cancellationToken);
 
         return vocabulary.ToHttpResult();
+    }
+
+    private static async Task<IResult> ListOwnSignals(ListOwnSignalsHandler handler, CancellationToken cancellationToken)
+    {
+        var signals = await handler.Handle(cancellationToken);
+
+        return TypedResults.Ok(signals);
     }
 
     private static async Task<IResult> ListInstruments(ListInstrumentsHandler handler, CancellationToken cancellationToken)

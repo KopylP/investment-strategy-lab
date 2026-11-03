@@ -141,4 +141,28 @@ public sealed class DeclaredSignalRulesTests
         rule.Dismiss(Now.AddDays(1)).Error.ShouldBe(SignalReportRuleErrors.NotFound());
         rule.DismissedAt.ShouldBe(Now);
     }
+    [Fact]
+    public void A_report_that_names_a_user_signal_wants_a_rule_for_its_owner()
+    {
+        var report = Report() with { SignalIds = [SignalId] };
+
+        DeclaredSignalRules.WantedBy(Account(true, report), [], [new UserSignal(SignalId, Owner)]).ShouldBe([Wanted()]);
+    }
+
+    [Fact]
+    public void A_deleted_user_signal_gets_no_rule()
+    {
+        var report = Report() with { SignalIds = [SignalId] };
+
+        DeclaredSignalRules.WantedBy(Account(true, report), [], []).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void A_user_signal_of_someone_else_gets_no_rule()
+    {
+        var report = Report() with { SignalIds = [SignalId] };
+
+        DeclaredSignalRules.WantedBy(Account(true, report), [], [new UserSignal(SignalId, UserId.New())]).ShouldBeEmpty();
+    }
+
 }

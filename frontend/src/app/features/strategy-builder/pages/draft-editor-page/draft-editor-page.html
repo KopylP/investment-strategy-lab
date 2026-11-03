@@ -106,6 +106,7 @@
                 [node]="node"
                 [graph]="draft.graph"
                 [vocabulary]="store.vocabulary()!"
+                [signals]="store.signals()"
                 [instruments]="store.instruments()"
                 (nodeChange)="updateNode($event)"
                 (duplicate)="duplicateNode()"
@@ -139,6 +140,7 @@
     [(visible)]="reportsVisible"
     [reports]="draft.reports"
     [declarations]="store.vocabulary()?.reports ?? []"
+    [signals]="store.signals()"
     (saved)="store.changeReports($event)"
   />
   <app-copy-entry-dialog [(visible)]="copyEntryVisible" (copy)="copyEntryToExit($event)" />

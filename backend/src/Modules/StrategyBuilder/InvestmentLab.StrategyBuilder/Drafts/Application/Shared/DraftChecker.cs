@@ -2,7 +2,7 @@ using InvestmentLab.StrategyBuilder.Drafts.Domain;
 
 namespace InvestmentLab.StrategyBuilder.Drafts.Application.Shared;
 
-public sealed class DraftChecker(IRuleVocabulary vocabularies, IStrategyAuthoring authoring)
+public sealed class DraftChecker(IRuleVocabulary vocabularies, IStrategyAuthoring authoring, IOwnSignals signals)
 {
     public async Task<Result<DraftCheck>> CheckAsync(StrategyDraft draft, CancellationToken cancellationToken)
     {
@@ -10,7 +10,7 @@ public sealed class DraftChecker(IRuleVocabulary vocabularies, IStrategyAuthorin
         if (vocabulary.IsFailure)
             return vocabulary.Error;
 
-        var local = GraphCheck.Of(draft, vocabulary.Value);
+        var local = GraphCheck.Of(draft, vocabulary.Value, await signals.AllAsync(cancellationToken));
         if (DraftCheck.HasErrors(local))
             return new DraftCheck(local, null, []);
 

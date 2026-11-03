@@ -4,15 +4,15 @@ namespace InvestmentLab.StrategyBuilder.Drafts.Domain;
 
 public static class StrategyInWords
 {
-    public static IReadOnlyList<BlockWords> Of(StrategyDraft draft, RuleVocabulary vocabulary, InstrumentLabels labels)
+    public static IReadOnlyList<BlockWords> Of(StrategyDraft draft, RuleVocabulary vocabulary, InstrumentLabels labels, IReadOnlyList<OwnSignal>? signals = null)
     {
-        var speaking = new Speaking(draft, vocabulary, labels);
+        var speaking = new Speaking(draft, vocabulary, labels, signals ?? []);
 
         return [.. new[] { speaking.Market(), speaking.Gate(BlockKind.Exit, "builder.words.exit"), speaking.Gate(BlockKind.Entry, "builder.words.entry"),
             speaking.Selection(), speaking.Risk() }.OfType<BlockWords>()];
     }
 
-    private sealed class Speaking(StrategyDraft draft, RuleVocabulary vocabulary, InstrumentLabels labels)
+    private sealed class Speaking(StrategyDraft draft, RuleVocabulary vocabulary, InstrumentLabels labels, IReadOnlyList<OwnSignal> signals)
     {
         private readonly StrategyGraph _graph = draft.Graph;
 
@@ -93,9 +93,20 @@ public static class StrategyInWords
             foreach (var field in kind?.Fields.Where(field => field.Kind == FieldKind.Choice) ?? [])
                 parameters[field.Name] = ChoiceLabel(field, node.Parameters.Text(field.Name));
 
+            if (node.Kind == NodeKind.Signal)
+                parameters["signalId"] = SignalName(node.Parameters.Text("signalId"));
+
             AddLinkedWords(node, parameters);
 
             return Message.Of(CodeOf(kind?.Phrase), parameters);
+        }
+
+        private string? SignalName(string? signalId)
+        {
+            if (!Guid.TryParse(signalId, out var id))
+                return signalId;
+
+            return signals.FirstOrDefault(signal => signal.Id == id)?.Name ?? signalId;
         }
 
         private void AddLinkedWords(GraphNode node, Dictionary<string, object?> parameters)

@@ -32,7 +32,8 @@ internal sealed class AccountReports(IPlanningAccounts accounts, IStrategyDirect
         Mode: report.Mode,
         Kind: report.Mode == StrategyReportDto.RiskReview ? ReportKind.RiskReview : ReportKind.Monthly,
         SubPortfolio: new SubPortfolioReport(sub.Id, sub.Name, strategy.Name, CadenceOf(report.Schedule)),
-        SignalKinds: report.SignalKinds ?? []);
+        SignalKinds: report.SignalKinds ?? [],
+        SignalIds: report.SignalIds ?? []);
 
     private static Cadence CadenceOf(StrategyReportScheduleDto schedule) =>
         Cadence.Of(schedule.Frequency, schedule.Day, schedule.Weekday, schedule.Time, schedule.Minute);

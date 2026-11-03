@@ -29,7 +29,8 @@ internal static class StrategyMapping
                     shown.VolatilityIndexInstrumentId,
                     shown.CreatedAt,
                     shown.ExtraSeries),
-                EffectiveReportMapping.ReportsOf(type, shown));
+                EffectiveReportMapping.ReportsOf(type, shown),
+                strategy.DeletedSignalIds);
         }
     }
 }

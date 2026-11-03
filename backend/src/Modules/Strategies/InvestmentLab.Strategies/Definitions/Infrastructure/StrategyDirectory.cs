@@ -37,7 +37,8 @@ internal sealed class StrategyDirectory(IStrategyRepository strategies, CatalogS
             CashInstrumentId: chosen.CashInstrumentId,
             BenchmarkInstrumentId: chosen.BenchmarkInstrumentId,
             Reports: EffectiveReportMapping.ReportsOf(type, chosen),
-            Comparisons: type?.BacktestComparisons ?? []);
+            Comparisons: type?.BacktestComparisons ?? [],
+            LogicSignalIds: chosen.SignalIds);
     }
 
     public async Task<IReadOnlyDictionary<string, string>> GetMessages(CancellationToken cancellationToken)

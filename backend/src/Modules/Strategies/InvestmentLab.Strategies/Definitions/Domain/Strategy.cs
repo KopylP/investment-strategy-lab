@@ -4,6 +4,8 @@ public sealed class Strategy : AggregateRoot<StrategyId>
 {
     private readonly List<StrategyVersion> _versions = [];
 
+    public List<Guid> DeletedSignalIds { get; private set; } = [];
+
     public UserId OwnerId { get; private set; }
     public string Name { get; private set; }
     public string TypeCode { get; private set; }
@@ -78,10 +80,24 @@ public sealed class Strategy : AggregateRoot<StrategyId>
 
         var version = StrategyVersion.Create(Latest.Number + 1, setup, reconfiguredAt);
         _versions.Add(version);
+        DeletedSignalIds.RemoveAll(id => !ReferencesSignal(id));
         Raise(new StrategyReconfigured(Id, OwnerId, version.Number, reconfiguredAt));
 
         return version;
     }
+
+    public bool MarkSignalDeleted(Guid signalId)
+    {
+        if (!ReferencesSignal(signalId) || DeletedSignalIds.Contains(signalId))
+            return false;
+
+        DeletedSignalIds.Add(signalId);
+
+        return true;
+    }
+
+    private bool ReferencesSignal(Guid signalId) =>
+        Latest.SignalIds.Contains(signalId) || Latest.Reports.Any(report => report.SignalIds.Contains(signalId));
 
     public void Rename(string name)
     {

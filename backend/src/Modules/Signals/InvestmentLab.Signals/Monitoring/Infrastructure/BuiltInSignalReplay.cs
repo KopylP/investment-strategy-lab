@@ -26,6 +26,6 @@ internal sealed class BuiltInSignalReplay : IBuiltInSignalReplay
         public string Subject => subject;
 
         public bool FiresOn(DateOnly day, IReadOnlyList<SignalSubjectValueDto> readings) =>
-            watch.FiresOn(day, [.. readings.Select(reading => new WatchedReading(reading.Key, reading.Value, reading.HeldSince))]);
+            watch.FiresOn(day, [.. readings.Select(reading => new WatchedReading(reading.Key, reading.Value, reading.HeldSince, reading.UnitCost))]);
     }
 }

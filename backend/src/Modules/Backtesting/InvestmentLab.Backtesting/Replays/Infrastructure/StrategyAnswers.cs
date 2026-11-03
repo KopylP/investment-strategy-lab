@@ -7,9 +7,9 @@ internal sealed class StrategyAnswers(IStrategyEvaluation evaluation) : IStrateg
 {
     private const string ExitSignal = "exit";
 
-    public async Task<Result<ReplayDecision>> DecideAsync(ReplaySetup setup, ReplayBook book, DateOnly day, CancellationToken cancellationToken)
+    public async Task<Result<ReplayDecision>> DecideAsync(ReplaySetup setup, ReplayBook book, DateOnly day, IReadOnlyList<ReplaySignalState> states, CancellationToken cancellationToken)
     {
-        var answer = await evaluation.EvaluateAsync(RequestOf(setup, book, day), cancellationToken);
+        var answer = await evaluation.EvaluateAsync(RequestOf(setup, book, day, states), cancellationToken);
         if (!answer.IsSuccess)
             return FailureOf(answer.ErrorCode, answer.ErrorMessage);
 
@@ -19,9 +19,9 @@ internal sealed class StrategyAnswers(IStrategyEvaluation evaluation) : IStrateg
         return new ReplayDecision(decided.Market.IsFavorable, decided.InvestFraction, targets);
     }
 
-    public async Task<Result<IReadOnlyList<Guid>>> ExitsAsync(ReplaySetup setup, ReplayBook book, DateOnly day, CancellationToken cancellationToken)
+    public async Task<Result<IReadOnlyList<Guid>>> ExitsAsync(ReplaySetup setup, ReplayBook book, DateOnly day, IReadOnlyList<ReplaySignalState> states, CancellationToken cancellationToken)
     {
-        var answer = await evaluation.AssessRiskAsync(RequestOf(setup, book, day), cancellationToken);
+        var answer = await evaluation.AssessRiskAsync(RequestOf(setup, book, day, states), cancellationToken);
         if (!answer.IsSuccess)
             return FailureOf(answer.ErrorCode, answer.ErrorMessage);
 
@@ -30,14 +30,16 @@ internal sealed class StrategyAnswers(IStrategyEvaluation evaluation) : IStrateg
         return exits;
     }
 
-    private static EvaluateStrategyRequest RequestOf(ReplaySetup setup, ReplayBook book, DateOnly day)
+    private static EvaluateStrategyRequest RequestOf(ReplaySetup setup, ReplayBook book, DateOnly day, IReadOnlyList<ReplaySignalState> states)
     {
         var holdings = book.Positions.Select(position => new HoldingStateDto(
             position.InstrumentId,
             [.. position.Lots.Select(lot => new LotStateDto(lot.Quantity, lot.UnitCost, lot.AcquiredOn))]));
         var state = new SubPortfolioStateDto(setup.Currency, Math.Max(0m, book.Cash), [.. holdings]);
 
-        return new EvaluateStrategyRequest(setup.StrategyId, setup.Version, state, 0m, day);
+        var signalStates = states.Select(signal => new SignalStateDto(signal.SignalId, signal.ActiveFor)).ToList();
+
+        return new EvaluateStrategyRequest(setup.StrategyId, setup.Version, state, 0m, day, SignalStates: signalStates);
     }
 
     private static Error FailureOf(string? code, string? message) =>

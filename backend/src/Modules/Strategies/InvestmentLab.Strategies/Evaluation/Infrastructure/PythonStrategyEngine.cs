@@ -90,7 +90,23 @@ internal sealed class PythonStrategyEngine(StrategyEngineClient client) : IStrat
                 .Select(holding => new EngineHolding(
                     holding.InstrumentId.ToString(),
                     [.. holding.Lots.Where(lot => lot.Quantity > 0m && lot.UnitCost > 0m)
-                        .Select(lot => new EngineLot(lot.Quantity, lot.UnitCost, lot.AcquiredOn))]))]));
+                        .Select(lot => new EngineLot(lot.Quantity, lot.UnitCost, lot.AcquiredOn))]))]),
+        SignalsOf(context));
+
+    private static IReadOnlyList<EngineSignalState>? SignalsOf(StrategyEvaluationContext context)
+    {
+        if (context.Signals is not { Count: > 0 } signals)
+            return null;
+
+        return [.. signals.Select(ToEngineSignalState)];
+    }
+
+    private static EngineSignalState ToEngineSignalState(InvestmentLab.Strategies.Evaluation.Domain.SignalState state)
+    {
+        var activeFor = state.ActiveFor.Select(id => id.ToString()).ToList();
+
+        return new EngineSignalState(state.SignalId.ToString(), activeFor);
+    }
 
     private static string KeyOf(MarketSeries series) => series.Role switch
     {

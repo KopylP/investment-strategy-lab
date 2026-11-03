@@ -1,3 +1,5 @@
+using InvestmentLab.Signals.Contracts;
+using InvestmentLab.Strategies.Evaluation.Domain;
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.MarketData.Contracts.Quotes;
 using InvestmentLab.Strategies.Contracts;
@@ -5,7 +7,7 @@ using InvestmentLab.Strategies.Definitions.Domain;
 
 namespace InvestmentLab.Strategies.Evaluation.Application.Shared;
 
-public sealed class EvaluationPreparer(IStrategyReader strategies, IQuoteHistory quotes, IInstrumentCatalog instruments)
+public sealed class EvaluationPreparer(IStrategyReader strategies, IQuoteHistory quotes, IInstrumentCatalog instruments, IMarketSignalStates marketSignals)
 {
     private const int HistoryDays = 2 * 365 + 14;
 
@@ -16,6 +18,10 @@ public sealed class EvaluationPreparer(IStrategyReader strategies, IQuoteHistory
 
         if (strategy.Version(request.Version) is not { } version)
             return StrategyErrors.VersionNotFound(request.StrategyId, request.Version!.Value);
+
+        var signals = await SignalStatesAsync(version.SignalIds, request, cancellationToken);
+        if (signals.IsFailure)
+            return signals.Error;
 
         var cashInstrumentId = request.CashInstrumentId ?? version.CashInstrumentId;
         var instrumentIds = InstrumentsToPrice(request, version, cashInstrumentId);
@@ -29,9 +35,29 @@ public sealed class EvaluationPreparer(IStrategyReader strategies, IQuoteHistory
             cashInstrumentId,
             series,
             request.SubPortfolio,
-            request.Contribution);
+            request.Contribution,
+            signals.Value);
 
         return new PreparedEvaluation(strategy, version, context);
+    }
+
+    private async Task<Result<IReadOnlyList<SignalState>>> SignalStatesAsync(
+        IReadOnlyList<Guid> referenced, EvaluateStrategyRequest request, CancellationToken cancellationToken)
+    {
+        if (referenced.Count == 0)
+            return Array.Empty<SignalState>();
+
+        if (request.SignalStates is { } replayed)
+        {
+            var known = replayed.Select(state => new SignalState(state.SignalId, state.ActiveFor)).ToList();
+
+            return SignalStates.For(referenced, known);
+        }
+
+        var current = await marketSignals.GetStatesAsync(referenced, cancellationToken);
+        var live = current.Select(state => new SignalState(state.SignalId, state.ActiveFor)).ToList();
+
+        return SignalStates.For(referenced, live);
     }
 
     private static List<Guid> InstrumentsToPrice(EvaluateStrategyRequest request, StrategyVersion version, Guid? cashInstrumentId)

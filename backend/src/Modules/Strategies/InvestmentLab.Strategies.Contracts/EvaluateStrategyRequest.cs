@@ -6,4 +6,5 @@ public sealed record EvaluateStrategyRequest(
     SubPortfolioStateDto SubPortfolio,
     decimal Contribution,
     DateOnly AsOf,
-    Guid? CashInstrumentId = null);
+    Guid? CashInstrumentId = null,
+    IReadOnlyList<SignalStateDto>? SignalStates = null);

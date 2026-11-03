@@ -157,4 +157,72 @@ public sealed class GraphCheckTests
 
         codes.ShouldBe(["builder.problem.funds_missing", "builder.problem.benchmark_missing", "builder.problem.cash_missing"], ignoreOrder: true);
     }
+    private static StrategyDraft SignalDraft(Guid id, bool inReport = false)
+    {
+        var node = new GraphNode(new NodeId("signal"), NodeKind.Signal, BlockKind.Entry,
+            NodeParameters.Empty.With("signalId", id.ToString()).With("state", "active").With("scope", "thisFund"));
+        var graph = inReport ? MomentumEntry() : Graph([node], [Link("signal", "result-entry", "condition")]);
+        DraftReport[] reports = inReport ? [new DraftReport("risk-review", new ReportTiming("off", 1, "Monday", "12:00", 0), [], [id])] : [];
+
+        return StrategyDraft.Start(UserId.New(), "Signal draft", Setup, graph, reports, null, Now).Value;
+    }
+
+    [Fact]
+    public void A_deleted_signal_in_the_rules_is_a_problem_on_its_node()
+    {
+        var draft = SignalDraft(Guid.NewGuid());
+
+        GraphCheck.Of(draft, EngineSchema.Vocabulary, []).ShouldContain(problem =>
+            problem.Code == "builder.problem.signal_deleted" && problem.Node == new NodeId("signal"));
+    }
+
+    [Fact]
+    public void A_signal_of_someone_else_is_treated_as_missing()
+    {
+        var draft = SignalDraft(Guid.NewGuid());
+        OwnSignal[] own = [new OwnSignal(Guid.NewGuid(), "Own", true, "Instrument")];
+
+        GraphCheck.Of(draft, EngineSchema.Vocabulary, own).ShouldContain(problem => problem.Code == "builder.problem.signal_deleted");
+    }
+
+    [Fact]
+    public void A_position_signal_cannot_be_a_condition()
+    {
+        var id = Guid.NewGuid();
+
+        GraphCheck.Of(SignalDraft(id), EngineSchema.Vocabulary, [new OwnSignal(id, "Position", false, "EachPosition")])
+            .ShouldContain(problem => problem.Code == "builder.problem.signal_not_market");
+    }
+
+    [Fact]
+    public void A_deleted_signal_in_a_report_is_a_problem_of_that_report()
+    {
+        GraphCheck.Of(SignalDraft(Guid.NewGuid(), inReport: true), EngineSchema.Vocabulary, [])
+            .ShouldContain(problem => problem.Code == "builder.problem.signal_deleted" && problem.ReportCode == "risk-review");
+    }
+
+    [Fact]
+    public void A_position_signal_as_a_report_trigger_is_a_warning()
+    {
+        var id = Guid.NewGuid();
+        var problems = GraphCheck.Of(SignalDraft(id, inReport: true), EngineSchema.Vocabulary,
+            [new OwnSignal(id, "Position", false, "EachPosition")]);
+
+        problems.ShouldContain(problem => problem.Code == "builder.problem.trigger_differs_in_backtest" && problem.Severity == ProblemSeverity.Warning);
+        DraftCheck.HasErrors(problems).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void A_draft_remembers_a_deleted_signal()
+    {
+        var id = Guid.NewGuid();
+        var draft = SignalDraft(id);
+        draft.MarkSignalMissing(id);
+        draft.MarkSignalMissing(id);
+
+        draft.MissingSignalIds.ShouldBe([id]);
+        GraphCheck.Of(draft, EngineSchema.Vocabulary, [new OwnSignal(id, "Stale", true, "Instrument")])
+            .ShouldContain(problem => problem.Code == "builder.problem.signal_deleted");
+    }
+
 }

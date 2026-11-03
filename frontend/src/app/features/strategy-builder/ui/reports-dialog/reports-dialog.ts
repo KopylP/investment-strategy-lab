@@ -1,3 +1,6 @@
+import { OwnSignalDto } from '../../models/own-signal-dto';
+import { MultiSelect } from 'primeng/multiselect';
+import { Tooltip } from 'primeng/tooltip';
 import { NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -20,7 +23,16 @@ import { ReportKindDto } from '../../models/vocabulary-dto';
 
 @Component({
   selector: 'app-builder-reports-dialog',
-  imports: [NgTemplateOutlet, FormsModule, Button, Checkbox, Dialog, ReportTimingEditor],
+  imports: [
+    NgTemplateOutlet,
+    FormsModule,
+    Button,
+    Checkbox,
+    Dialog,
+    ReportTimingEditor,
+    MultiSelect,
+    Tooltip,
+  ],
   templateUrl: './reports-dialog.html',
   host: { class: 'contents' },
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -30,6 +42,7 @@ export class ReportsDialog {
   readonly inline = input(false);
   readonly reports = input.required<DraftReportDto[]>();
   readonly declarations = input.required<ReportKindDto[]>();
+  readonly signals = input<OwnSignalDto[]>([]);
   readonly saved = output<DraftReportDto[]>();
 
   protected readonly draft = signal<DraftReportDto[]>([]);

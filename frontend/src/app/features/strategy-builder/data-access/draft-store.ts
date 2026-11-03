@@ -1,3 +1,4 @@
+import { OwnSignalDto } from '../models/own-signal-dto';
 import { PublishedVersionDto } from '../models/published-version-dto';
 import { TrialRunDto } from '../models/trial-run-dto';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -29,6 +30,7 @@ export class DraftStore {
   private readonly currentDraft = signal<DraftDto | null>(null);
   private readonly currentVocabulary = signal<VocabularyDto | null>(null);
   private readonly currentInstruments = signal<InstrumentChoiceDto[]>([]);
+  private readonly currentSignals = signal<OwnSignalDto[]>([]);
   private readonly currentMode = signal<EditorMode>('steps');
   private readonly currentSelection = signal<string | null>(null);
   private readonly saveState = signal<SaveState>('saved');
@@ -44,6 +46,7 @@ export class DraftStore {
   readonly draft = this.currentDraft.asReadonly();
   readonly vocabulary = this.currentVocabulary.asReadonly();
   readonly instruments = this.currentInstruments.asReadonly();
+  readonly signals = this.currentSignals.asReadonly();
   readonly mode = this.currentMode.asReadonly();
   readonly selectedNodeId = this.currentSelection.asReadonly();
   readonly saving = this.saveState.asReadonly();
@@ -64,16 +67,18 @@ export class DraftStore {
     this.loadError.set(null);
 
     try {
-      const [draft, vocabulary, instruments] = await Promise.all([
+      const [draft, vocabulary, instruments, signals] = await Promise.all([
         this.api.get(id),
         this.api.vocabulary(),
         this.api.instruments(),
+        this.api.signals(),
       ]);
       if (request !== this.openNumber) return;
 
       this.currentDraft.set(draft);
       this.currentVocabulary.set(vocabulary);
       this.currentInstruments.set(instruments);
+      this.currentSignals.set(signals);
       this.rulesDirty = false;
       this.layoutDirty = false;
       this.saveState.set('saved');

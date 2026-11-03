@@ -3,6 +3,8 @@ namespace InvestmentLab.Strategies.Definitions.Domain;
 
 public static class StrategyErrors
 {
+    public static Error SignalDeleted(Guid id) => Error.Validation("strategy.signal_deleted", "A referenced market signal no longer exists.", new { id });
+
     public static Error NotFound(Guid strategyId) => Error.NotFound("strategy.not_found", $"Strategy {strategyId} does not exist.");
 
     public static Error VersionNotFound(Guid strategyId, int version) =>

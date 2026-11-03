@@ -20,6 +20,22 @@
   }
 
   <div class="mt-4 flex flex-col gap-4">
+    @if (node().kind === 'Signal') {
+      <label class="flex flex-col gap-2 text-sm font-medium">
+        Мій сигнал
+        <p-select
+          [options]="marketSignals()"
+          optionLabel="name"
+          optionValue="id"
+          [ngModel]="node().parameters['signalId']"
+          (ngModelChange)="changeSignal($event)"
+          placeholder="Оберіть ринковий сигнал"
+          [filter]="true"
+          appendTo="body"
+          fluid
+        />
+      </label>
+    }
     @for (field of fields(); track field.name) {
       <div class="flex flex-col gap-1.5">
         <label class="text-sm font-medium" [attr.for]="'node-' + node().id + '-' + field.name">{{

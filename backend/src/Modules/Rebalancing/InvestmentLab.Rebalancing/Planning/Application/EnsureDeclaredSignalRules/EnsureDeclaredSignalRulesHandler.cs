@@ -9,13 +9,15 @@ public sealed class EnsureDeclaredSignalRulesHandler(
     IAccountReports accountReports,
     IPlanSettingsRepository settings,
     IBuiltInSignalQueries builtInSignals,
+    ISignalDirectory signalDirectory,
     ISignalReportRuleRepository rules,
     TimeProvider clock)
 {
     public async Task Handle(CancellationToken cancellationToken)
     {
         var signals = await BuiltInSignalsAsync(cancellationToken);
-        var wanted = await WantedRulesAsync(signals, cancellationToken);
+        var userSignals = await UserSignalsAsync(cancellationToken);
+        var wanted = await WantedRulesAsync(signals, userSignals, cancellationToken);
         var existing = await rules.AllWithDismissedAsync(cancellationToken);
 
         var changes = DeclaredSignalRules.ChangesBetween(wanted, existing);
@@ -25,6 +27,13 @@ public sealed class EnsureDeclaredSignalRulesHandler(
         Apply(changes);
 
         await rules.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task<IReadOnlyList<UserSignal>> UserSignalsAsync(CancellationToken cancellationToken)
+    {
+        var signals = await signalDirectory.GetSignalsAsync(cancellationToken);
+
+        return [.. signals.Select(signal => new UserSignal(signal.Id, UserId.Of(signal.OwnerId)))];
     }
 
     private async Task<List<BuiltInSignal>> BuiltInSignalsAsync(CancellationToken cancellationToken)
@@ -40,14 +49,14 @@ public sealed class EnsureDeclaredSignalRulesHandler(
         AccountId: signal.AccountId,
         Kind: signal.Kind);
 
-    private async Task<List<DeclaredSignalRule>> WantedRulesAsync(List<BuiltInSignal> signals, CancellationToken cancellationToken)
+    private async Task<List<DeclaredSignalRule>> WantedRulesAsync(List<BuiltInSignal> signals, IReadOnlyList<UserSignal> userSignals, CancellationToken cancellationToken)
     {
         var wanted = new List<DeclaredSignalRule>();
 
         foreach (var account in await accounts.GetAccountSetups(cancellationToken))
         {
             var declaring = await DeclaringAccountOfAsync(account, cancellationToken);
-            wanted.AddRange(DeclaredSignalRules.WantedBy(declaring, signals));
+            wanted.AddRange(DeclaredSignalRules.WantedBy(declaring, signals, userSignals));
         }
 
         return wanted;

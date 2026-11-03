@@ -155,6 +155,11 @@ namespace InvestmentLab.Strategies.Shared.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.PrimitiveCollection<List<Guid>>("DeletedSignalIds")
+                        .IsRequired()
+                        .HasColumnType("uuid[]")
+                        .HasColumnName("deleted_signal_ids");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)

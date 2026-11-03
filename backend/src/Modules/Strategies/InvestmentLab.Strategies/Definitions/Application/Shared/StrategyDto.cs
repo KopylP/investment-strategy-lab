@@ -11,4 +11,5 @@ public sealed record StrategyDto(
     DateTimeOffset CreatedAt,
     int LatestVersion,
     StrategyVersionDto Version,
-    IReadOnlyList<StrategyReportDto> Reports);
+    IReadOnlyList<StrategyReportDto> Reports,
+    IReadOnlyList<Guid> DeletedSignalIds);

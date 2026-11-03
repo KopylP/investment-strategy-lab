@@ -31,6 +31,11 @@ internal sealed class SignalRepository(SignalsDbContext db) : ISignalRepository
             .Where(occurrence => occurrence.SignalId == signalId)
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<SignalOccurrence>> OpenOccurrencesOfAsync(IReadOnlyList<Guid> signalIds, CancellationToken cancellationToken) =>
+        await OpenOccurrences
+            .Where(occurrence => signalIds.Contains(occurrence.SignalId))
+            .ToListAsync(cancellationToken);
+
     public async Task<IReadOnlyList<SignalOccurrence>> AllOpenOccurrencesAsync(CancellationToken cancellationToken) =>
         await OpenOccurrences
             .AsNoTracking()
