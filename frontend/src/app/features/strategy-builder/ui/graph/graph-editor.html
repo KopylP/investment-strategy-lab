@@ -1,0 +1,138 @@
+<div
+  class="overflow-x-auto rounded-xl bg-surface-50 p-3 dark:bg-surface-950"
+  (click)="cancelWire()"
+>
+  <div class="min-w-[72rem]">
+    @for (block of blockDefinitions; track block.kind) {
+      <app-block-frame
+        [number]="block.number"
+        [title]="block.title"
+        [purpose]="block.purpose"
+        [sentence]="wordOf(block.kind)"
+        [collapsed]="isCollapsed(block.kind)"
+        (arrange)="arrange(block.kind)"
+        (toggle)="toggleBlock(block.kind)"
+      >
+        <div
+          data-block-canvas
+          class="relative overflow-hidden bg-[linear-gradient(to_right,var(--p-surface-200)_1px,transparent_1px),linear-gradient(to_bottom,var(--p-surface-200)_1px,transparent_1px)] bg-[size:16px_16px] dark:bg-[linear-gradient(to_right,var(--p-surface-800)_1px,transparent_1px),linear-gradient(to_bottom,var(--p-surface-800)_1px,transparent_1px)]"
+          [style.height.px]="blockHeight(block.kind)"
+          (click)="canvasClick($event, block.kind)"
+        >
+          <svg
+            class="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
+            aria-hidden="true"
+          >
+            @for (link of linksIn(block.kind); track link.from + '-' + link.to + '-' + link.input) {
+              <path
+                class="pointer-events-auto cursor-pointer"
+                [attr.d]="connectionPath(link)"
+                fill="none"
+                stroke="var(--p-surface-400)"
+                stroke-width="2"
+                (dblclick)="openConnectionMenu($event, link, block.kind)"
+              />
+            }
+          </svg>
+
+          @if (compatibleMenu(); as menu) {
+            @if (menu.block === block.kind) {
+              <app-compatible-nodes-menu
+                [kinds]="compatibleKinds()"
+                [style.left.px]="menu.x"
+                [style.top.px]="menu.y"
+                (click)="$event.stopPropagation()"
+                (choose)="insertCompatible($event)"
+              />
+            }
+          }
+
+          @for (node of nodesIn(block.kind); track node.id) {
+            <article
+              class="absolute w-56 cursor-move select-none rounded-xl border bg-surface-0 p-3 text-[13px] shadow-sm dark:bg-surface-900"
+              [class.border-primary]="selectedNodeId() === node.id"
+              [class.ring-2]="selectedNodeId() === node.id"
+              [class.ring-primary-100]="selectedNodeId() === node.id"
+              [class.border-surface]="selectedNodeId() !== node.id"
+              [class.bg-surface-100]="isResult(node)"
+              [class.dark:bg-surface-800]="isResult(node)"
+              [style.left.px]="position(node.id).x"
+              [style.top.px]="position(node.id).y"
+              (pointerdown)="startDragging($event, node)"
+              (click)="$event.stopPropagation(); select.emit(node.id)"
+            >
+              @if (problemOf(node.id); as problem) {
+                <span
+                  class="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full text-xs text-white"
+                  [class.bg-red-500]="problem.severity === 'Error'"
+                  [class.bg-amber-500]="problem.severity === 'Warning'"
+                  [pTooltip]="problem.message"
+                  >!</span
+                >
+              }
+
+              @switch (node.kind) {
+                @case ('Indicator') {
+                  <app-indicator-node [node]="node" [vocabulary]="vocabulary()" />
+                }
+                @case ('Compare') {
+                  <app-compare-node [node]="node" />
+                }
+                @case ('All') {
+                  <app-logic-node [node]="node" />
+                }
+                @case ('Any') {
+                  <app-logic-node [node]="node" />
+                }
+                @case ('Not') {
+                  <app-logic-node [node]="node" />
+                }
+                @case ('Between') {
+                  <app-range-node [node]="node" />
+                }
+                @case ('Crossed') {
+                  <app-range-node [node]="node" />
+                }
+                @case ('Signal') {
+                  <app-signal-node [node]="node" />
+                }
+                @default {
+                  @if (isResult(node)) {
+                    <app-result-node [node]="node" [title]="block.result" />
+                  } @else {
+                    <app-condition-node [node]="node" [vocabulary]="vocabulary()" />
+                  }
+                }
+              }
+
+              @for (socket of inputsOf(node); track socket.name) {
+                <button
+                  data-socket
+                  type="button"
+                  class="absolute -left-2 flex items-center gap-1 text-xs text-muted-color"
+                  [class.opacity-20]="socketDimmed(node, socket)"
+                  [style.top.px]="34 + $index * 24"
+                  (click)="connect($event, node, socket)"
+                  [attr.aria-label]="'Вхід ' + socket.name"
+                >
+                  <app-socket-shape [type]="socket.type" [label]="socket.name" />
+                </button>
+              }
+              @if (outputOf(node); as output) {
+                <button
+                  data-socket
+                  type="button"
+                  class="absolute -right-2 top-9 text-muted-color"
+                  (pointerdown)="beginWire($event, node)"
+                  aria-label="Почати звʼязок"
+                >
+                  <app-socket-shape [type]="output" label="Вихід" />
+                </button>
+              }
+            </article>
+          }
+        </div>
+      </app-block-frame>
+    }
+  </div>
+</div>

@@ -1,0 +1,113 @@
+@if (inline()) {
+  <ng-container *ngTemplateOutlet="fields" />
+} @else {
+  <p-dialog
+    header="Фонди й ряди"
+    [modal]="true"
+    [visible]="visible()"
+    (visibleChange)="visible.set($event)"
+    [style]="{ width: '44rem' }"
+    [breakpoints]="{ '760px': '95vw' }"
+  >
+    <ng-container *ngTemplateOutlet="fields" />
+
+    <ng-template #footer>
+      <p-button
+        label="Скасувати"
+        [text]="true"
+        severity="secondary"
+        (onClick)="visible.set(false)"
+      />
+      <p-button label="Зберегти" icon="pi pi-check" (onClick)="save()" />
+    </ng-template>
+  </p-dialog>
+}
+<ng-template #fields>
+  <div class="flex flex-col gap-4">
+    <div class="flex flex-col gap-2">
+      <div class="flex items-center justify-between gap-3">
+        <label for="builder-funds" class="font-medium">Фонди, з яких стратегія вибирає</label>
+        <small class="text-muted-color">{{ draft().funds.length }} із 60</small>
+      </div>
+      <p-multiselect
+        inputId="builder-funds"
+        [options]="groupedFunds()"
+        optionGroupLabel="label"
+        optionGroupChildren="items"
+        optionLabel="label"
+        optionValue="value"
+        [ngModel]="draft().funds"
+        (ngModelChange)="patch({ funds: $event })"
+        [filter]="true"
+        filterPlaceholder="Пошук фонду"
+        display="chip"
+        appendTo="body"
+        fluid
+      />
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-2">
+      <div class="flex flex-col gap-2">
+        <label for="builder-benchmark" class="font-medium">Бенчмарк</label>
+        <p-select
+          inputId="builder-benchmark"
+          [options]="regularOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="draft().benchmarkId"
+          (ngModelChange)="patch({ benchmarkId: $event })"
+          [filter]="true"
+          [showClear]="true"
+          appendTo="body"
+          fluid
+        />
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="builder-cash" class="font-medium">Фонд для кешу</label>
+        <p-select
+          inputId="builder-cash"
+          [options]="regularOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="draft().cashId"
+          (ngModelChange)="patch({ cashId: $event })"
+          [filter]="true"
+          [showClear]="true"
+          appendTo="body"
+          fluid
+        />
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="builder-volatility" class="font-medium">Індекс волатильності</label>
+        <p-select
+          inputId="builder-volatility"
+          [options]="volatilityOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="draft().volatilityIndexId"
+          (ngModelChange)="patch({ volatilityIndexId: $event })"
+          [filter]="true"
+          [showClear]="true"
+          placeholder="Необовʼязково"
+          appendTo="body"
+          fluid
+        />
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="builder-extra" class="font-medium">Додаткові ряди</label>
+        <p-multiselect
+          inputId="builder-extra"
+          [options]="regularOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="draft().extraSeries"
+          (ngModelChange)="patch({ extraSeries: $event })"
+          [filter]="true"
+          placeholder="Необовʼязково"
+          appendTo="body"
+          fluid
+        />
+      </div>
+    </div>
+  </div>
+</ng-template>

@@ -20,12 +20,18 @@ export function hasUnknownMessage(value: unknown): boolean {
   if (typeof value === 'string') {
     const token = tokenPattern.exec(value);
 
-    return token !== null && templateOf(token[1]) === undefined;
+    if (token === null) return false;
+    if (templateOf(token[1]) === undefined) return true;
+
+    const parameters = parametersOf(token[2]);
+
+    return parameters !== null && hasUnknownMessage(parameters);
   }
 
   if (Array.isArray(value)) return value.some(hasUnknownMessage);
 
-  if (value !== null && typeof value === 'object') return Object.values(value).some(hasUnknownMessage);
+  if (value !== null && typeof value === 'object')
+    return Object.values(value).some(hasUnknownMessage);
 
   return false;
 }
@@ -78,16 +84,24 @@ function parametersOf(json: string | undefined): Parameters | null {
 }
 
 function fill(template: string, parameters: Parameters): string {
-  return template.replace(placeholderPattern, (_, name: string, format?: string, argument?: string) => {
-    const value = parameters[name];
+  return template.replace(
+    placeholderPattern,
+    (_, name: string, format?: string, argument?: string) => {
+      const value = parameters[name];
 
-    if (value === undefined || value === null) return '';
+      if (value === undefined || value === null) return '';
 
-    return formatted(value, format, argument, parameters);
-  });
+      return formatted(value, format, argument, parameters);
+    },
+  );
 }
 
-function formatted(value: unknown, format: string | undefined, argument: string | undefined, parameters: Parameters): string {
+function formatted(
+  value: unknown,
+  format: string | undefined,
+  argument: string | undefined,
+  parameters: Parameters,
+): string {
   switch (format) {
     case 'percent':
       return percent(Number(value));
@@ -125,7 +139,10 @@ function signedPercent(fraction: number): string {
 function money(amount: number, currency: string): string {
   const prefixes: Record<string, string> = { EUR: '€', USD: '$', GBP: '£', PLN: 'zł ' };
   const prefix = prefixes[currency] ?? `${currency} `;
-  const digits = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const digits = new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
   return `${amount < 0 ? '-' : ''}${prefix}${digits.format(Math.abs(amount))}`;
 }

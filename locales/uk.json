@@ -351,6 +351,7 @@
   "pit38.note.over_treaty_short": "Утримано понад ставку договору: за позицією KIS poz. 48 = {credit}, poz. 49 = {difference} zł.",
   "builder.draft.not_found": "Чернетку не знайдено.",
   "builder.draft.stale": "Чернетку вже змінено в іншому вікні: оновіть сторінку.",
+  "builder.copy.margin_out_of_range": "Запас має бути від 0 до 50 %.",
   "builder.draft.name_required": "Дайте чернетці назву.",
   "builder.setup.too_many_funds": "У стратегії може бути щонайбільше {max} фондів.",
   "builder.setup.fund_repeated": "Фонд можна додати лише раз.",

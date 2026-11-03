@@ -1,0 +1,63 @@
+@if (inline()) {
+  <ng-container *ngTemplateOutlet="fields" />
+} @else {
+  <p-dialog
+    header="Рапорти"
+    [modal]="true"
+    [visible]="visible()"
+    (visibleChange)="visible.set($event)"
+    [style]="{ width: '48rem' }"
+    [breakpoints]="{ '800px': '95vw' }"
+  >
+    <ng-container *ngTemplateOutlet="fields" />
+
+    <ng-template #footer>
+      <p-button
+        label="Скасувати"
+        [text]="true"
+        severity="secondary"
+        (onClick)="visible.set(false)"
+      />
+      <p-button label="Зберегти" icon="pi pi-check" (onClick)="save()" />
+    </ng-template>
+  </p-dialog>
+}
+<ng-template #fields>
+  <div class="flex flex-col gap-5">
+    @for (report of draft(); track report.code) {
+      <section class="rounded-xl border border-surface p-4">
+        <h3 class="font-semibold">{{ declaration(report.code)?.name ?? report.code }}</h3>
+        @if (declaration(report.code)?.description; as description) {
+          <p class="mt-1 text-sm text-muted-color">{{ description }}</p>
+        }
+        <div class="mt-4">
+          <app-report-timing-editor
+            [id]="'builder-report-' + report.code"
+            [timing]="report.schedule"
+            (timingChange)="update({ ...report, schedule: $event })"
+          />
+        </div>
+        @if (declaration(report.code)?.signalKinds?.length) {
+          <div class="mt-4">
+            <div class="mb-2 text-sm font-medium">Створити рапорт також після сигналу</div>
+            <div class="flex flex-wrap gap-x-5 gap-y-2">
+              @for (kind of signalKinds; track kind.value) {
+                @if (declaration(report.code)!.signalKinds.includes(kind.value)) {
+                  <label class="flex items-center gap-2 text-sm">
+                    <p-checkbox
+                      [inputId]="report.code + '-' + kind.value"
+                      [ngModel]="report.signalKinds"
+                      (ngModelChange)="update({ ...report, signalKinds: $event })"
+                      [value]="kind.value"
+                    />
+                    {{ kind.label }}
+                  </label>
+                }
+              }
+            </div>
+          </div>
+        }
+      </section>
+    }
+  </div>
+</ng-template>

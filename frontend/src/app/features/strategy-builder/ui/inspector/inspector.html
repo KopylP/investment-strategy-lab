@@ -1,0 +1,111 @@
+<aside class="card mb-0 h-fit">
+  <div class="flex items-start justify-between gap-3">
+    <div>
+      <div class="text-xs uppercase tracking-wide text-muted-color">Вибраний вузол</div>
+      <h2 class="mt-1 font-semibold">{{ title() }}</h2>
+    </div>
+    @if (allowDuplicate()) {
+      <p-button
+        icon="pi pi-copy"
+        label="Дублювати"
+        size="small"
+        [text]="true"
+        (onClick)="duplicate.emit()"
+      />
+    }
+  </div>
+
+  @if (definition()?.hint; as hint) {
+    <p class="mt-3 text-sm text-muted-color">{{ hint }}</p>
+  }
+
+  <div class="mt-4 flex flex-col gap-4">
+    @for (field of fields(); track field.name) {
+      <div class="flex flex-col gap-1.5">
+        <label class="text-sm font-medium" [attr.for]="'node-' + node().id + '-' + field.name">{{
+          field.label || field.name
+        }}</label>
+        @switch (field.kind) {
+          @case ('Integer') {
+            <p-inputnumber
+              [inputId]="'node-' + node().id + '-' + field.name"
+              [ngModel]="fieldValue(field)"
+              (ngModelChange)="changeField(field, $event)"
+              [min]="field.minimum ?? undefined"
+              [max]="field.maximum ?? undefined"
+              [showButtons]="true"
+              fluid
+            />
+          }
+          @case ('Number') {
+            <p-inputnumber
+              [inputId]="'node-' + node().id + '-' + field.name"
+              [ngModel]="fieldValue(field)"
+              (ngModelChange)="changeField(field, $event)"
+              [min]="field.minimum ?? undefined"
+              [max]="field.maximum ?? undefined"
+              [maxFractionDigits]="6"
+              fluid
+            />
+          }
+          @case ('Fraction') {
+            <p-inputnumber
+              [inputId]="'node-' + node().id + '-' + field.name"
+              [ngModel]="fieldValue(field)"
+              (ngModelChange)="changeField(field, $event)"
+              suffix=" %"
+              [min]="field.minimum === null ? undefined : field.minimum * 100"
+              [max]="field.maximum === null ? undefined : field.maximum * 100"
+              [maxFractionDigits]="2"
+              fluid
+            />
+          }
+          @case ('Choice') {
+            <p-select
+              [inputId]="'node-' + node().id + '-' + field.name"
+              [options]="choiceOptions(field)"
+              optionLabel="label"
+              optionValue="value"
+              [ngModel]="fieldValue(field)"
+              (ngModelChange)="changeField(field, $event)"
+              appendTo="body"
+              fluid
+            />
+          }
+          @case ('Series') {
+            <p-select
+              [inputId]="'node-' + node().id + '-' + field.name"
+              [options]="seriesOptions()"
+              optionLabel="label"
+              optionValue="value"
+              [ngModel]="fieldValue(field)"
+              (ngModelChange)="changeField(field, $event)"
+              [filter]="true"
+              appendTo="body"
+              fluid
+            />
+          }
+          @default {
+            <input
+              pInputText
+              [id]="'node-' + node().id + '-' + field.name"
+              [ngModel]="fieldValue(field)"
+              (ngModelChange)="changeField(field, $event)"
+            />
+          }
+        }
+      </div>
+    }
+  </div>
+
+  @if (links().length) {
+    <div class="mt-5 border-t border-surface pt-4">
+      <div class="mb-2 text-sm font-medium">Звʼязки</div>
+      <ul class="flex flex-col gap-1 text-xs text-muted-color">
+        @for (link of links(); track link) {
+          <li>{{ link }}</li>
+        }
+      </ul>
+    </div>
+  }
+</aside>

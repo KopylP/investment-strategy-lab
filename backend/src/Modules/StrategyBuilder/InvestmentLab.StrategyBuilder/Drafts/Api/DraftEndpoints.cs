@@ -3,6 +3,7 @@ using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.StrategyBuilder.Drafts.Application.ChangeDraft;
 using InvestmentLab.StrategyBuilder.Drafts.Application.CheckDraft;
 using InvestmentLab.StrategyBuilder.Drafts.Application.CreateDraft;
+using InvestmentLab.StrategyBuilder.Drafts.Application.CopyEntryToExit;
 using InvestmentLab.StrategyBuilder.Drafts.Application.DiscardDraft;
 using InvestmentLab.StrategyBuilder.Drafts.Application.GetDraft;
 using InvestmentLab.StrategyBuilder.Drafts.Application.GetDraftRules;
@@ -33,6 +34,7 @@ internal static class DraftEndpoints
         builder.MapPut("/drafts/{draftId:guid}", ChangeDraft).WithName("ChangeDraft");
         builder.MapPut("/drafts/{draftId:guid}/layout", MoveNodes).WithName("MoveDraftNodes");
         builder.MapPost("/drafts/{draftId:guid}/check", CheckDraft).WithName("CheckDraft");
+        builder.MapPost("/drafts/{draftId:guid}/copy-entry-to-exit", CopyEntryToExit).WithName("CopyEntryToExit");
         builder.MapGet("/drafts/{draftId:guid}/rules", GetDraftRules).WithName("GetDraftRules");
         builder.MapDelete("/drafts/{draftId:guid}", DiscardDraft).WithName("DiscardDraft");
 
@@ -100,6 +102,17 @@ internal static class DraftEndpoints
         var check = await handler.Handle(draftId, cancellationToken);
 
         return check.ToHttpResult();
+    }
+
+    private static async Task<IResult> CopyEntryToExit(
+        Guid draftId,
+        CopyEntryToExitCommand body,
+        CopyEntryToExitHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var copied = await handler.Handle(draftId, body.Revision, body.Margin, cancellationToken);
+
+        return copied.ToHttpResult();
     }
 
     private static async Task<IResult> GetDraftRules(Guid draftId, GetDraftRulesHandler handler, CancellationToken cancellationToken)

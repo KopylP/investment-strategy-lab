@@ -1,0 +1,85 @@
+<app-page-header
+  title="Конструктор"
+  subtitle="Створюйте власні правила стратегії як схему, покроково або з готового JSON"
+>
+  <input
+    #importInput
+    type="file"
+    accept="application/json,.json"
+    class="hidden"
+    (change)="importFile($event)"
+  />
+  <p-button
+    label="Імпортувати JSON"
+    icon="pi pi-upload"
+    severity="secondary"
+    [outlined]="true"
+    [loading]="store.busy() === 'import'"
+    (onClick)="importInput.click()"
+  />
+  <p-button label="Нова стратегія" icon="pi pi-plus" (onClick)="newDraftVisible.set(true)" />
+</app-page-header>
+
+@if (store.isLoading() && !store.drafts().length) {
+  <div class="card"><p-skeleton height="12rem" /></div>
+} @else if (store.loadError()) {
+  <div class="card"><p-message severity="error" text="Не вдалося завантажити чернетки" /></div>
+} @else if (!store.drafts().length) {
+  <div class="card">
+    <app-empty-state
+      icon="pi pi-sitemap"
+      title="Ще немає чернеток"
+      text="Почніть із порожньої схеми, готового шаблону або імпортуйте файл правил."
+    >
+      <p-button label="Нова стратегія" icon="pi pi-plus" (onClick)="newDraftVisible.set(true)" />
+    </app-empty-state>
+  </div>
+} @else {
+  <div class="card overflow-hidden p-0">
+    <p-table [value]="store.drafts()" [rowHover]="true" responsiveLayout="stack" breakpoint="760px">
+      <ng-template #header>
+        <tr>
+          <th>Назва</th>
+          <th>З якої стратегії</th>
+          <th>Остання зміна</th>
+          <th>Останній пробний запуск</th>
+          <th class="w-16"></th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-draft>
+        <tr
+          class="cursor-pointer"
+          tabindex="0"
+          (click)="router.navigate(['/strategy-builder', draft.id])"
+        >
+          <td>
+            <span class="p-column-title">Назва</span><strong>{{ draft.name }}</strong>
+          </td>
+          <td>
+            <span class="p-column-title">З якої стратегії</span>
+            {{
+              draft.originStrategyName
+                ? draft.originStrategyName + ' · версія ' + draft.originVersion
+                : 'Нова'
+            }}
+          </td>
+          <td><span class="p-column-title">Остання зміна</span>{{ draft.updatedAt | dateTime }}</td>
+          <td>
+            <span class="p-column-title">Останній пробний запуск</span>
+            {{ draft.lastTrialAt ? (draft.lastTrialAt | dateTime) : 'Ще не було' }}
+          </td>
+          <td>
+            <p-button icon="pi pi-chevron-right" [text]="true" ariaLabel="Відкрити" />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+}
+
+<app-new-builder-draft-dialog
+  [(visible)]="newDraftVisible"
+  [templates]="store.vocabulary()?.templates ?? []"
+  [busy]="store.busy() === 'create'"
+  (create)="create($event)"
+/>

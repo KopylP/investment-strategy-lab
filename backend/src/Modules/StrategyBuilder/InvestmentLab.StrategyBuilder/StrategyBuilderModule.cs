@@ -4,6 +4,7 @@ using InvestmentLab.StrategyBuilder.Drafts.Api;
 using InvestmentLab.StrategyBuilder.Drafts.Application.ChangeDraft;
 using InvestmentLab.StrategyBuilder.Drafts.Application.CheckDraft;
 using InvestmentLab.StrategyBuilder.Drafts.Application.CreateDraft;
+using InvestmentLab.StrategyBuilder.Drafts.Application.CopyEntryToExit;
 using InvestmentLab.StrategyBuilder.Drafts.Application.DiscardDraft;
 using InvestmentLab.StrategyBuilder.Drafts.Application.GetDraft;
 using InvestmentLab.StrategyBuilder.Drafts.Application.GetDraftRules;
@@ -43,6 +44,7 @@ public sealed class StrategyBuilderModule : IModule
         services.AddScoped<GetVocabularyHandler>();
         services.AddScoped<ListInstrumentsHandler>();
         services.AddScoped<CreateDraftHandler>();
+        services.AddScoped<CopyEntryToExitHandler>();
         services.AddScoped<GetDraftHandler>();
         services.AddScoped<ListDraftsHandler>();
         services.AddScoped<ChangeDraftHandler>();
