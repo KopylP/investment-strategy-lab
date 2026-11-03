@@ -50,7 +50,7 @@ public sealed class TrialRunScenarioTests : IClassFixture<StrategiesApiFactory>
         {
             revision = draft.Revision,
             description = "A changed trial fingerprint keeps the first version immutable.",
-            setup = draft.Setup with { Funds = draft.Setup.Funds.Take(4).ToList() },
+            setup = draft.Setup with { Funds = [.. draft.Setup.Funds.Take(4)] },
         }, cancellationToken);
         changed.EnsureSuccessStatusCode();
         var second = await RunAsync(client, draft.Id, cancellationToken);
@@ -71,7 +71,7 @@ public sealed class TrialRunScenarioTests : IClassFixture<StrategiesApiFactory>
         created.EnsureSuccessStatusCode();
         var draft = (await created.Content.ReadFromJsonAsync<DraftDto>(cancellationToken))!;
         var setup = new DraftSetupDto(
-            Funds: regular.Take(5).Select(instrument => instrument.Id).ToList(),
+            Funds: [.. regular.Take(5).Select(instrument => instrument.Id)],
             BenchmarkId: regular[0].Id,
             CashId: regular[5].Id,
             VolatilityIndexId: null,
