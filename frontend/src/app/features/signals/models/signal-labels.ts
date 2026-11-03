@@ -9,6 +9,12 @@ export const metricLabels: Record<SignalMetric, string> = {
   Level: 'Рівень значення',
 };
 
+export const builtInSignalKindLabels: Record<string, string> = {
+  'volatility-index': 'Індекс волатильності',
+  'account-drawdown': 'Просадка рахунку',
+  'position-drawdown': 'Просадка позиції',
+};
+
 export const targetChoices: { label: string; value: SignalTargetKind }[] = [
   { label: 'Інструмент або група', value: 'Instrument' },
   { label: 'Кожна позиція рахунку', value: 'EachPosition' },

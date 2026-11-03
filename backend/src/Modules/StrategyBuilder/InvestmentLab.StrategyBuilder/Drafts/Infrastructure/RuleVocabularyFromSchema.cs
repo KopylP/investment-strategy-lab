@@ -38,7 +38,7 @@ internal sealed class RuleVocabularyFromSchema(IStrategyTypeQueries types) : IRu
     {
         var schedule = new ReportTiming(report.Schedule.Frequency, report.Schedule.Day, report.Schedule.Weekday, report.Schedule.Time, report.Schedule.Minute);
 
-        return new DeclaredDraftReport(report.Code, schedule, report.SignalKinds ?? []);
+        return new DeclaredDraftReport(report.Code, report.Name, report.Description, schedule, report.SignalKinds ?? []);
     }
 
     private static List<(string Code, string Definition)> IndicatorDefinitions(JsonElement root)

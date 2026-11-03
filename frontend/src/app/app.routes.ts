@@ -53,6 +53,13 @@ export const routes: Routes = [
           import('./features/strategies/strategies.routes').then((m) => m.strategiesRoutes),
       },
       {
+        path: 'strategy-builder',
+        loadChildren: () =>
+          import('./features/strategy-builder/strategy-builder.routes').then(
+            (m) => m.strategyBuilderRoutes,
+          ),
+      },
+      {
         path: 'instruments',
         loadChildren: () =>
           import('./features/instruments/instruments.routes').then((m) => m.instrumentsRoutes),

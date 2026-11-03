@@ -1,0 +1,126 @@
+@if (store.loading() && !store.draft()) {
+  <div class="card"><p-skeleton height="16rem" /></div>
+} @else if (store.loadError()) {
+  <app-page-header title="Чернетка" backLink="/strategy-builder" backLabel="Конструктор" />
+  <div class="card"><p-message severity="error" text="Чернетку не знайдено" /></div>
+} @else if (store.draft(); as draft) {
+  <app-page-header title="Чернетка" backLink="/strategy-builder" backLabel="Конструктор">
+    <p-button label="Сьогодні" icon="pi pi-calendar" severity="secondary" [disabled]="true" />
+    <p-button label="Бектест" icon="pi pi-chart-line" severity="secondary" [disabled]="true" />
+    <p-button label="Опублікувати" icon="pi pi-check-circle" [disabled]="true" />
+  </app-page-header>
+
+  <div class="mb-4 flex min-w-0 flex-wrap items-center gap-3">
+    <input
+      pInputText
+      class="min-w-0 flex-1 text-xl font-semibold"
+      [value]="draft.name"
+      [pTooltip]="draft.name"
+      tooltipPosition="bottom"
+      (change)="store.rename($any($event.target).value)"
+      aria-label="Назва чернетки"
+    />
+    <span class="whitespace-nowrap text-sm text-muted-color">
+      Чернетка · {{ store.saving() === 'saved' ? 'збережено' : 'зберігаю…' }}
+    </span>
+    <p-selectbutton
+      [options]="modes"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="store.mode()"
+      (ngModelChange)="changeMode($event)"
+      [allowEmpty]="false"
+      ariaLabel="Режим редактора"
+    />
+  </div>
+
+  @if (summary(); as setupSummary) {
+    <app-builder-setup-row
+      [summary]="setupSummary"
+      (editSetup)="setupVisible.set(true)"
+      (editReports)="reportsVisible.set(true)"
+    />
+  }
+
+  <div class="grid min-w-0 gap-4 2xl:grid-cols-[minmax(0,1fr)_22rem]">
+    <div class="card min-h-96 min-w-0">
+      @switch (store.mode()) {
+        @case ('steps') {
+          <app-builder-steps-view
+            (editSetup)="setupVisible.set(true)"
+            (editReports)="reportsVisible.set(true)"
+          />
+        }
+        @case ('graph') {
+          <div class="mb-3 flex flex-wrap items-start gap-2">
+            <div class="min-w-0 flex-1">
+              <app-node-palette
+                [indicators]="store.vocabulary()!.indicators"
+                [conditions]="store.vocabulary()!.conditions"
+                (add)="addNode($event)"
+              />
+            </div>
+            <p-button
+              label="Скопіювати вхід у вихід із запасом"
+              icon="pi pi-copy"
+              severity="secondary"
+              [outlined]="true"
+              (onClick)="copyEntryVisible.set(true)"
+            />
+          </div>
+          <div class="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
+            <div class="min-w-0">
+              <app-graph-editor
+                [graph]="draft.graph"
+                [layout]="draft.layout"
+                [vocabulary]="store.vocabulary()!"
+                [problems]="draft.problems"
+                [selectedNodeId]="store.selectedNodeId()"
+                [words]="draft.words"
+                (graphChange)="store.changeGraph($event)"
+                (layoutChange)="store.moveNodes($event)"
+                (select)="store.select($event)"
+              />
+            </div>
+            @if (selectedNode(); as node) {
+              <app-node-inspector
+                [node]="node"
+                [graph]="draft.graph"
+                [vocabulary]="store.vocabulary()!"
+                [instruments]="store.instruments()"
+                (nodeChange)="updateNode($event)"
+                (duplicate)="duplicateNode()"
+              />
+            } @else {
+              <aside class="card mb-0 h-fit text-sm text-muted-color">
+                Виберіть вузол на схемі, щоб змінити його параметри.
+              </aside>
+            }
+          </div>
+        }
+        @case ('json') {
+          <app-builder-json-view />
+        }
+      }
+    </div>
+
+    <aside class="flex min-w-0 flex-col gap-4">
+      <app-builder-words-panel [words]="draft.words" />
+      <app-builder-problems-panel [problems]="draft.problems" (choose)="showProblem($event)" />
+    </aside>
+  </div>
+
+  <app-builder-setup-dialog
+    [(visible)]="setupVisible"
+    [setup]="draft.setup"
+    [instruments]="store.instruments()"
+    (saved)="store.changeSetup($event)"
+  />
+  <app-builder-reports-dialog
+    [(visible)]="reportsVisible"
+    [reports]="draft.reports"
+    [declarations]="store.vocabulary()?.reports ?? []"
+    (saved)="store.changeReports($event)"
+  />
+  <app-copy-entry-dialog [(visible)]="copyEntryVisible" (copy)="copyEntryToExit($event)" />
+}

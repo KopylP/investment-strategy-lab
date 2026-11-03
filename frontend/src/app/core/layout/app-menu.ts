@@ -41,6 +41,7 @@ export class AppMenu {
       items: [
         { label: 'Рахунки', icon: 'pi pi-fw pi-wallet', routerLink: ['/accounts'] },
         { label: 'Стратегії', icon: 'pi pi-fw pi-sliders-h', routerLink: ['/strategies'] },
+        { label: 'Конструктор', icon: 'pi pi-fw pi-sitemap', routerLink: ['/strategy-builder'] },
         {
           label: 'Інструменти й котирування',
           icon: 'pi pi-fw pi-chart-line',
