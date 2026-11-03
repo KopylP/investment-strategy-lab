@@ -12,6 +12,14 @@ public static class DraftErrors
 
     public static Error FundRepeated() => Error.Validation("builder.setup.fund_repeated", "Each fund may appear once.");
 
+    public static Error TemplateUnknown(string template) =>
+        Error.Validation("builder.template.unknown", $"No template '{template}'.", new { template });
+
+    public static Error GraphInvalid(string details) =>
+        Error.Validation("builder.draft.graph_invalid", $"The graph cannot be read: {details}", new { details });
+
+    public static Error HasProblems() => Error.Conflict("builder.draft.has_problems", "The draft has problems to fix first.");
+
     public static Error VocabularyUnavailable() =>
         Error.Conflict("builder.vocabulary.unavailable", "The rule-based strategy type is not in the catalog.");
 }

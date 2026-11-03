@@ -9,7 +9,9 @@ from fastapi import APIRouter, HTTPException, status
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, ValidationError
 
-from finance_decisions.messages import msg
+from pathlib import Path
+
+from finance_decisions.messages import catalog_of, msg
 from finance_decisions.strategies.adaptive_momentum import decision as adaptive_momentum
 from finance_decisions.strategies.adaptive_momentum.parameters import AdaptiveMomentumParameters
 from finance_decisions.strategies.buy_and_hold import decision as buy_and_hold
@@ -33,6 +35,11 @@ from .contracts import (
 from .parameter_problems import meaning_problem, shape_problems
 
 router = APIRouter(prefix="/v1", tags=["catalog"])
+
+PARAMETER_PROBLEM_PREFIX = "engine.parameters."
+PARAMETER_PROBLEM_TEXTS = {
+    code: text for code, text in catalog_of(Path(__file__).resolve().parents[1]).items() if code.startswith(PARAMETER_PROBLEM_PREFIX)
+}
 
 
 @dataclass(frozen=True)
@@ -68,7 +75,7 @@ class StrategyType:
             reports=list(self.reports),
             supports_backtest=self.supports_backtest,
             backtest_comparisons=list(self.backtest_comparisons),
-            messages=self.messages,
+            messages={**PARAMETER_PROBLEM_TEXTS, **self.messages},
         )
 
     def parse_parameters(self, raw: dict[str, Any]) -> Any:
