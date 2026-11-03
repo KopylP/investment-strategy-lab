@@ -415,6 +415,47 @@
         }
       }
     },
+    "/v1/funds/screen": {
+      "post": {
+        "tags": [
+          "funds"
+        ],
+        "summary": "Screen",
+        "operationId": "screen_v1_funds_screen_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FundScreenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FundScreenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -544,6 +585,103 @@
         ],
         "title": "EvaluationContext",
         "description": "Everything a strategy may look at. Data after ``asOf`` is ignored."
+      },
+      "FundScreenRequest": {
+        "properties": {
+          "exchange": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exchange"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region"
+          },
+          "fundFamily": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fundfamily"
+          },
+          "minAssets": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minassets"
+          },
+          "maxExpenseRatio": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 0.1,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maxexpenseratio"
+          },
+          "nameWords": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 5,
+            "title": "Namewords"
+          },
+          "size": {
+            "type": "integer",
+            "maximum": 250.0,
+            "minimum": 1.0,
+            "title": "Size",
+            "default": 100
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "FundScreenRequest"
+      },
+      "FundScreenResponse": {
+        "properties": {
+          "funds": {
+            "items": {
+              "$ref": "#/components/schemas/ScreenedFund"
+            },
+            "type": "array",
+            "title": "Funds"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "funds"
+        ],
+        "title": "FundScreenResponse"
       },
       "HTTPValidationError": {
         "properties": {
@@ -1682,6 +1820,80 @@
           "exit"
         ],
         "title": "RiskSignalKind"
+      },
+      "ScreenedFund": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "exchange": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exchange"
+          },
+          "fundFamily": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fundfamily"
+          },
+          "totalAssets": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Totalassets"
+          },
+          "expenseRatio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expenseratio"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "symbol",
+          "name"
+        ],
+        "title": "ScreenedFund"
       },
       "SeriesRole": {
         "type": "string",

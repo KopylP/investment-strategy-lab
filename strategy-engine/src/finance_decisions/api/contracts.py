@@ -426,3 +426,37 @@ class StrategyJob(ApiModel):
     status: JobStatus
     result: dict[str, Any] | None = None
     error: JobError | None = None
+
+
+class FundScreenRequest(ApiModel):
+    exchange: str | None = None
+    region: str | None = None
+    fund_family: str | None = None
+    min_assets: float | None = Field(None, ge=0, allow_inf_nan=False)
+    max_expense_ratio: float | None = Field(None, ge=0, le=0.1, allow_inf_nan=False)
+    name_words: list[str] = Field(default_factory=list, max_length=5)
+    size: int = Field(100, ge=1, le=250)
+
+    @model_validator(mode="after")
+    def _require_place(self) -> "FundScreenRequest":
+        self.exchange = (self.exchange or "").strip() or None
+        self.region = (self.region or "").strip() or None
+        self.fund_family = (self.fund_family or "").strip() or None
+        self.name_words = [word.strip() for word in self.name_words if word.strip()]
+        if not self.exchange and not self.region:
+            raise ValueError("a search needs an exchange or a region")
+        return self
+
+
+class ScreenedFund(ApiModel):
+    symbol: str
+    name: str
+    currency: str | None = None
+    exchange: str | None = None
+    fund_family: str | None = None
+    total_assets: float | None = None
+    expense_ratio: float | None = None
+
+
+class FundScreenResponse(ApiModel):
+    funds: list[ScreenedFund]
