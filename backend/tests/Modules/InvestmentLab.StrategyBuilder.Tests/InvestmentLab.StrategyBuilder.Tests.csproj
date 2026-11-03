@@ -4,6 +4,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="JsonSchema.Net" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="../../../src/Modules/StrategyBuilder/InvestmentLab.StrategyBuilder/InvestmentLab.StrategyBuilder.csproj" />
   </ItemGroup>
 
