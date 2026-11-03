@@ -22,7 +22,12 @@ internal sealed class BacktestRepository(BacktestingDbContext db) : IBacktestRep
     public async Task<IReadOnlyList<Backtest>> AllAsync(CancellationToken cancellationToken) =>
         await db.Backtests.ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<Backtest>> OfStrategyAsync(Guid strategyId, CancellationToken cancellationToken) =>
+        await db.Backtests.Where(backtest => backtest.StrategyId == strategyId).ToListAsync(cancellationToken);
+
     public void Add(Backtest backtest) => db.Backtests.Add(backtest);
+
+    public void Remove(Backtest backtest) => db.Backtests.Remove(backtest);
 
     public Task SaveChangesAsync(CancellationToken cancellationToken) => db.SaveChangesAsync(cancellationToken);
 }

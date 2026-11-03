@@ -44,4 +44,14 @@ public sealed class BacktestTests
 
         return backtest;
     }
+
+    [Fact]
+    public void A_result_gives_the_summary_of_the_strategy_line()
+    {
+        var benchmark = new ReplaySeries("benchmark", "@benchmark", new ReplaySummary(0.5, 0.05, 0.15, 0.3, -0.3), []);
+        var strategy = new ReplaySeries(ReplaySeries.StrategyCode, "@strategy", new ReplaySummary(0.9, 0.08, 0.12, 0.6, -0.2, 0.07), []);
+        var result = new ReplayResult(new DateOnly(2008, 1, 2), new DateOnly(2026, 10, 30), "EUR", 10, 1, 0, [benchmark, strategy]);
+
+        result.StrategySummary.ShouldBe(strategy.Summary);
+    }
 }
