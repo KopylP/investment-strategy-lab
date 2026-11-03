@@ -83,7 +83,7 @@ internal static class CompatibilityDrafts
 
     private static StrategyGraph ExtraSeries()
     {
-        GraphNode Extra(string id, string kind, int? days = null)
+        static GraphNode Extra(string id, string kind, int? days = null)
         {
             var node = Indicator(id, BlockKind.MarketFilter, kind, days: days);
             return node with { Parameters = node.Parameters.WithObject("of", new { series = "extra", instrumentId = Gold }) };

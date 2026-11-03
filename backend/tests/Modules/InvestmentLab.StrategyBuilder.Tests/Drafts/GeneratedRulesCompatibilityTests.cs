@@ -8,7 +8,7 @@ public sealed class GeneratedRulesCompatibilityTests
 {
     private static readonly Lazy<JsonSchema> Schema = new(() => JsonSchema.FromText(File.ReadAllText(EngineSchema.SchemaPath), new BuildOptions { Dialect = Dialect.Draft202012 }));
 
-    public static TheoryData<string> Names => new(CompatibilityDrafts.All().Keys.Order());
+    public static TheoryData<string> Names => [.. CompatibilityDrafts.All().Keys.Order()];
 
     private static string FixturePath(string name) =>
         Path.Combine(EngineSchema.Backend().FullName, "tests", "Modules", "InvestmentLab.StrategyBuilder.Tests", "Fixtures", "GeneratedRules", $"{name}.json");
