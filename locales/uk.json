@@ -354,5 +354,21 @@
   "builder.draft.name_required": "Дайте чернетці назву.",
   "builder.setup.too_many_funds": "У стратегії може бути щонайбільше {max} фондів.",
   "builder.setup.fund_repeated": "Фонд можна додати лише раз.",
-  "builder.vocabulary.unavailable": "Рушій ще не надіслав тип стратегії «з правил». Спробуйте пізніше."
+  "builder.vocabulary.unavailable": "Рушій ще не надіслав тип стратегії «з правил». Спробуйте пізніше.",
+
+  "builder.problem.funds_missing": "Оберіть фонди, з яких стратегія вибирає.",
+  "builder.problem.benchmark_missing": "Оберіть бенчмарк.",
+  "builder.problem.cash_missing": "Оберіть кеш-фонд, куди йдуть гроші, яких не вклали.",
+  "builder.problem.link_across_blocks": "Зв'язок виходить за межі блоку: з'єднуйте вузли одного блоку.",
+  "builder.problem.socket_mismatch": "Сюди очікується {expected}, а приєднано {actual}.",
+  "builder.problem.cycle": "Вузли замкнулися в коло.",
+  "builder.problem.input_missing": "Під'єднайте вхід «{input}».",
+  "builder.problem.dangling_node": "Цей вузол ніхто не читає.",
+  "builder.problem.indicator_unknown": "Рушій не знає індикатора «{kind}».",
+  "builder.problem.parameter_missing": "Заповніть поле «{field}».",
+  "builder.problem.parameter_out_of_range": "Поле «{field}» має бути від {min} до {max}.",
+  "builder.problem.fund_in_market_filter": "Ринковий фільтр дивиться на ринок, а не на окремий фонд.",
+  "builder.problem.this_fund_signal_in_market_filter": "Сигнал «для цього фонду» не можна вживати в ринковому фільтрі.",
+  "builder.problem.extra_series_unknown": "Цей ряд не додано до стратегії: додайте його в кроці «Фонди».",
+  "builder.problem.market_filter_share_missing": "Вкажіть частку у фондах, коли ринок несприятливий."
 }
