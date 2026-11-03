@@ -13,6 +13,10 @@ public sealed class Strategy : AggregateRoot<StrategyId>
 
     public StrategyVersion Latest => _versions.MaxBy(version => version.Number)!;
 
+    public bool IsTrial => Status == StrategyStatus.Trial;
+
+    public bool IsListed => !IsTrial;
+
     private Strategy(StrategyId id, UserId ownerId, string name, string typeCode, DateTimeOffset createdAt) : base(id)
     {
         OwnerId = ownerId;
@@ -36,6 +40,32 @@ public sealed class Strategy : AggregateRoot<StrategyId>
         strategy._versions.Add(StrategyVersion.Create(1, setup, createdAt));
 
         return strategy;
+    }
+
+    public static Result<Strategy> CreateTrial(UserId ownerId, string typeCode, StrategySetup setup, DateTimeOffset createdAt)
+    {
+        if (CheckSetup(setup) is { } invalid)
+            return invalid;
+
+        var id = StrategyId.New();
+        var strategy = new Strategy(id, ownerId, TrialName(id), typeCode, createdAt) { Status = StrategyStatus.Trial };
+        strategy._versions.Add(StrategyVersion.Create(1, setup, createdAt));
+        strategy.Raise(new StrategyReconfigured(id, ownerId, 1, createdAt));
+
+        return strategy;
+    }
+
+    public Result<StrategyVersion> ReconfigureTrial(StrategySetup setup, DateTimeOffset reconfiguredAt) =>
+        IsTrial ? Reconfigure(setup, reconfiguredAt) : StrategyErrors.NotTrial(Id.Value);
+
+    public Result Delete(DateTimeOffset deletedAt)
+    {
+        if (!IsTrial)
+            return StrategyErrors.NotTrial(Id.Value);
+
+        Raise(new StrategyDeleted(Id, OwnerId, deletedAt));
+
+        return Result.Success();
     }
 
     public Result<StrategyVersion> Reconfigure(StrategySetup setup, DateTimeOffset reconfiguredAt)
@@ -63,6 +93,8 @@ public sealed class Strategy : AggregateRoot<StrategyId>
 
     public StrategyVersion? Version(int? number) =>
         number is { } pinned ? _versions.FirstOrDefault(version => version.Number == pinned) : Latest;
+
+    private static string TrialName(StrategyId id) => $"trial-{id.Value:N}";
 
     private static Error? CheckSetup(StrategySetup setup) =>
         setup.Universe.Count == 0 ? StrategyErrors.UniverseEmpty()

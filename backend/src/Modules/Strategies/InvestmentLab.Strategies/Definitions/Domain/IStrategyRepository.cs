@@ -12,5 +12,7 @@ public interface IStrategyRepository
 
     void Add(Strategy strategy);
 
+    void Remove(Strategy strategy);
+
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }

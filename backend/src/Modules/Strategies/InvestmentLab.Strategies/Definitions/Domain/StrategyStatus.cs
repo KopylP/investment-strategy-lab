@@ -4,4 +4,5 @@ public enum StrategyStatus
 {
     Active,
     Archived,
+    Trial,
 }
