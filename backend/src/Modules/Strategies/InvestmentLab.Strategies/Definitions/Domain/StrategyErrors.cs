@@ -1,3 +1,4 @@
+using InvestmentLab.Strategies.Contracts;
 namespace InvestmentLab.Strategies.Definitions.Domain;
 
 public static class StrategyErrors
@@ -27,6 +28,16 @@ public static class StrategyErrors
 
     public static Error ExtraSeriesRepeated() =>
         Error.Validation("strategy.extra_series_repeated", "Each extra market series may appear once.");
+
+    public static Error EngineUnavailable(string details) =>
+        Error.Conflict(StrategyErrorCodes.EngineUnavailable, $"The strategy engine did not answer: {details}", new { details });
+
+    public static Error ParametersRefused(IReadOnlyList<ParameterProblem> problems)
+    {
+        var messages = problems.Select(problem => problem.Message).ToList();
+
+        return Error.Validation("strategy.parameters_refused", $"The engine refused the parameters: {string.Join(" | ", problems.Select(problem => problem.Code))}", new { messages, problems });
+    }
 
     public static Error NotTrial(Guid strategyId) => Error.Conflict("strategy.not_trial", $"Strategy {strategyId} is not a trial strategy.");
 

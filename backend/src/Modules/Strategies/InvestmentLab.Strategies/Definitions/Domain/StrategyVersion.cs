@@ -15,6 +15,8 @@ public sealed class StrategyVersion
 
     public List<Guid> ExtraSeries { get; private set; } = [];
 
+    public List<Guid> SignalIds { get; private set; } = [];
+
     private StrategyVersion(int number, StrategySetup setup, DateTimeOffset createdAt)
     {
         Id = Guid.CreateVersion7();
@@ -27,6 +29,7 @@ public sealed class StrategyVersion
         CreatedAt = createdAt;
         Reports = [.. setup.Reports ?? []];
         ExtraSeries = [.. setup.ExtraSeries ?? []];
+        SignalIds = [.. setup.SignalIds ?? []];
     }
 
     private StrategyVersion() => (Parameters, Universe) = (null!, null!);

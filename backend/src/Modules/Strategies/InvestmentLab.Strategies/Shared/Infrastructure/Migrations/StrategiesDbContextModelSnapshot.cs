@@ -228,6 +228,13 @@ namespace InvestmentLab.Strategies.Shared.Infrastructure.Migrations
                         .HasColumnName("reports")
                         .HasDefaultValueSql("'[]'::jsonb");
 
+                    b.PrimitiveCollection<List<Guid>>("SignalIds")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid[]")
+                        .HasColumnName("signal_ids")
+                        .HasDefaultValueSql("'{}'::uuid[]");
+
                     b.Property<Guid?>("StrategyId")
                         .HasColumnType("uuid")
                         .HasColumnName("strategy_id");
