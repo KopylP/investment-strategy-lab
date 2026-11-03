@@ -78,3 +78,9 @@ def test_the_exported_rule_schema_is_fresh() -> None:
     expected = json.dumps(RuleParameters.model_json_schema(by_alias=True), indent=2, sort_keys=True, ensure_ascii=False) + "\n"
 
     assert RULE_SCHEMA_PATH.read_text(encoding="utf-8") == expected
+
+
+def test_every_type_sends_the_texts_of_parameter_problems(client: TestClient) -> None:
+    types = client.get("/v1/strategies").json()
+
+    assert all("engine.parameters.float_type" in item["messages"] for item in types)

@@ -394,5 +394,15 @@
   "builder.words.series.benchmark": "бенчмарка {label}",
   "builder.words.series.vix": "індексу волатильності {label}",
   "builder.words.series.extra": "{label}",
-  "builder.words.unknown": "невідома умова"
+  "builder.words.unknown": "невідома умова",
+
+  "builder.draft.graph_invalid": "Схему не вдалося прочитати: {details}",
+  "builder.draft.has_problems": "Спершу виправте проблеми чернетки.",
+  "builder.template.unknown": "Немає шаблону «{template}».",
+  "builder.template.momentum-trend-filter.name": "Моментум із фільтром тренду",
+  "builder.template.momentum-trend-filter.description": "Найсильніші фонди за змішаним моментумом, лише над 200-денною середньою; коли ринок нижче своєї середньої, у фондах лише 30%.",
+  "builder.template.dual-momentum.name": "Подвійний моментум",
+  "builder.template.dual-momentum.description": "Фонд, що зростає за рік і сильніший за бенчмарк; коли таких немає, гроші в кеш-фонді.",
+  "builder.template.index-hold.name": "Утримання індексу",
+  "builder.template.index-hold.description": "Тримає всі обрані фонди порівну без жодних умов."
 }

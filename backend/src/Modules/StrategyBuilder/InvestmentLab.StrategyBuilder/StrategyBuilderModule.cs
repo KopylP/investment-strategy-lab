@@ -1,7 +1,24 @@
 using InvestmentLab.BuildingBlocks.Modules;
 using InvestmentLab.BuildingBlocks.Persistence;
+using InvestmentLab.StrategyBuilder.Drafts.Api;
+using InvestmentLab.StrategyBuilder.Drafts.Application.ChangeDraft;
+using InvestmentLab.StrategyBuilder.Drafts.Application.CheckDraft;
+using InvestmentLab.StrategyBuilder.Drafts.Application.CreateDraft;
+using InvestmentLab.StrategyBuilder.Drafts.Application.DiscardDraft;
+using InvestmentLab.StrategyBuilder.Drafts.Application.GetDraft;
+using InvestmentLab.StrategyBuilder.Drafts.Application.GetDraftRules;
+using InvestmentLab.StrategyBuilder.Drafts.Application.GetVocabulary;
+using InvestmentLab.StrategyBuilder.Drafts.Application.ImportRules;
+using InvestmentLab.StrategyBuilder.Drafts.Application.ListDrafts;
+using InvestmentLab.StrategyBuilder.Drafts.Application.ListInstruments;
+using InvestmentLab.StrategyBuilder.Drafts.Application.MoveNodes;
+using InvestmentLab.StrategyBuilder.Drafts.Application.Shared;
+using InvestmentLab.StrategyBuilder.Drafts.Domain;
+using InvestmentLab.StrategyBuilder.Drafts.Infrastructure;
 using InvestmentLab.StrategyBuilder.Shared.Infrastructure;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace InvestmentLab.StrategyBuilder;
@@ -12,10 +29,30 @@ public sealed class StrategyBuilderModule : IModule
 
     public string Name => "StrategyBuilder";
 
-    public void AddServices(IHostApplicationBuilder builder) =>
+    public void AddServices(IHostApplicationBuilder builder)
+    {
         builder.AddModuleDbContext<StrategyBuilderDbContext>(Schema);
 
-    public void MapEndpoints(IEndpointRouteBuilder endpoints)
-    {
+        var services = builder.Services;
+        services.AddScoped<IDraftRepository, DraftRepository>();
+        services.AddScoped<IRuleVocabulary, RuleVocabularyFromSchema>();
+        services.AddScoped<IInstrumentDirectory, InstrumentDirectory>();
+        services.AddScoped<IStrategyAuthoring, StrategyAuthoring>();
+        services.AddScoped<DraftDescriber>();
+        services.AddScoped<DraftChecker>();
+        services.AddScoped<GetVocabularyHandler>();
+        services.AddScoped<ListInstrumentsHandler>();
+        services.AddScoped<CreateDraftHandler>();
+        services.AddScoped<GetDraftHandler>();
+        services.AddScoped<ListDraftsHandler>();
+        services.AddScoped<ChangeDraftHandler>();
+        services.AddScoped<MoveNodesHandler>();
+        services.AddScoped<CheckDraftHandler>();
+        services.AddScoped<GetDraftRulesHandler>();
+        services.AddScoped<ImportRulesHandler>();
+        services.AddScoped<DiscardDraftHandler>();
     }
+
+    public void MapEndpoints(IEndpointRouteBuilder endpoints) =>
+        endpoints.MapGroup("/api/strategy-builder").MapDrafts();
 }
