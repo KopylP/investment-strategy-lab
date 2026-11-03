@@ -1,6 +1,6 @@
 # Strategy Builder 06 — Trial Backtests, Comparison, Publishing Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** The owner runs trial backtests of a draft (each an immutable version of one trial strategy), compares two runs, publishes the draft as a new strategy or a new version, and reopens a published `rule-based` strategy in the builder; trial strategies and their backtests disappear after publishing or discarding.
 
@@ -147,18 +147,18 @@ git pull --rebase && git push
 - Consumes: `POST/GET /api/strategy-builder/drafts/{id}/trials`; `GET /api/backtesting/strategies/{strategyId}?version=N` (existing, `BacktestDto` from `features/backtesting/models/backtest-dto.ts`); `app-strategy-backtest` (`features/backtesting/ui/strategy-backtest`) with `[strategyId]` and `[version]`; shared chart legend (`shared/charts/chart-legend`, `hidden-lines.ts`).
 - Produces: the list (№, мітка, час, статус, річна дохідність, після податку, волатильність, Sharpe, найбільше падіння); selecting two runs shows `app-trial-comparison`: one table (rows: річна дохідність, після податку, волатильність, Sharpe, найбільше падіння; columns: запуск A, запуск B, різниця) and one growth chart with both strategy lines and run A's comparison lines; selecting one run shows `app-strategy-backtest` for it. A failed run shows its reason and cannot be chosen for comparison.
 
-- [ ] **Step 1: Implement store, page, comparison; wire «Бектест»**
-- [ ] **Step 2: Build**
+- [x] **Step 1: Implement store, page, comparison; wire «Бектест»**
+- [x] **Step 2: Build**
 
 Run: `cd frontend && npx ng build`
 Expected: success.
 
-- [ ] **Step 3: Check in the browser**
+- [x] **Step 3: Check in the browser**
 
 Run a trial of the template, change `top` to 2, run again, wait for both, compare; press «Бектест» again without changes (the same run opens); add a fund with three months of history and run (the run fails with its reason).
 Expected: as described.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add frontend
@@ -179,18 +179,18 @@ git pull --rebase && git push
 **Interfaces:**
 - Consumes: `POST /drafts/{id}/publish`, `GET /published/{strategyId}/versions/{version}`, `POST /published/{strategyId}/versions/{version}/draft`.
 
-- [ ] **Step 1: Implement**
-- [ ] **Step 2: Build**
+- [x] **Step 1: Implement**
+- [x] **Step 2: Build**
 
 Run: `npx ng build`
 Expected: success.
 
-- [ ] **Step 3: Check in the browser**
+- [x] **Step 3: Check in the browser**
 
 Publish the template draft: the strategy page opens with v1, «Стратегія словами» and «Змінити в конструкторі», no parameters form; the draft and its trials are gone from «Конструктор»; «Змінити в конструкторі» opens a draft with the same layout; change `top`, publish: v2 of the same strategy.
 Expected: as described.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add frontend
@@ -208,7 +208,7 @@ git pull --rebase && git push
 **Interfaces:**
 - Consumes: `StrategiesApiFactory`, `SyntheticQuoteProvider`, `SignedInClient`, the waiting helper of `BacktestingScenarioTests` (`FinishedAsync`, `LongestReplay`); move `FinishedAsync` into a small shared helper class in the integration tests project if it is private.
 
-- [ ] **Step 1: Write the scenario**
+- [x] **Step 1: Write the scenario**
 
 ```csharp
 [Fact]
@@ -228,12 +228,12 @@ public async Task A_draft_is_backtested_published_and_leaves_no_trial_behind()
 }
 ```
 
-- [ ] **Step 2: Run**
+- [x] **Step 2: Run**
 
 Run: `cd backend && dotnet test --project tests/InvestmentLab.IntegrationTests --filter "FullyQualifiedName~StrategyBuilderScenarioTests"` (Docker running)
 Expected: PASS.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add backend/tests/InvestmentLab.IntegrationTests
@@ -243,4 +243,4 @@ git pull --rebase && git push
 
 ## Execution status — 2026-11-03
 
-Tasks 1–2 are complete. Publishing saves the exact version's graph and layout, removes the draft only after successful authoring, and durably queues trial cleanup. Cleanup failure leaves the published strategy intact, records backoff, and can be retried; discarded drafts queue the same cleanup job. Published rule-based strategies reopen with their saved layout and reuse an existing draft. Refused duplicate-name publication preserves the draft. The migration is generated. Task 2 verification: StrategyBuilder (94), architecture (50), and publishing/cleanup integration scenarios (2) pass. Task 1's real-engine trial scenario and schema-alternative regression were verified in its own commit. Tasks 3–5 remain open. Plans remain tracked at the user's explicit request.
+Tasks 1–2 are complete. Publishing saves the exact version's graph and layout, removes the draft only after successful authoring, and durably queues trial cleanup. Cleanup failure leaves the published strategy intact, records backoff, and can be retried; discarded drafts queue the same cleanup job. Published rule-based strategies reopen with their saved layout and reuse an existing draft. Refused duplicate-name publication preserves the draft. The migration is generated. Task 2 verification: StrategyBuilder (94), architecture (50), and publishing/cleanup integration scenarios (2) pass. Task 1's real-engine trial scenario and schema-alternative regression were verified in its own commit. Tasks 3–5 are complete. Trial runs poll while active, retain the last list on transient failures, open the existing full backtest, and compare two successful runs with date-aligned growth series and a shared legend. A failed selected run is deselected so it cannot block further comparison. Publishing checks and saves the draft, confirms the destination, places refused problems on nodes and duplicate-name errors beside the name, and opens the published strategy with replacement navigation. Published strategies show readable rules and reopen in the builder; standard strategies retain their parameter form. Verification: frontend production build and backend solution build pass; the real-engine lifecycle integration scenario passes, including trial backtest deletion, the published backtest, reopening idempotence, and preservation of the draft and trial after a refused duplicate name. Both Chromium scenarios pass (existing editor and lifecycle); polling, failure selection, unequal-date comparison, legend toggling, mobile layout, publication v1/v2, reopening, and duplicate-name feedback are covered. Comparison and short-history failure presentation use deterministic browser API fixtures; the integration scenario uses synthetic quote data with the real engine. Plans remain tracked at the user's explicit request.
