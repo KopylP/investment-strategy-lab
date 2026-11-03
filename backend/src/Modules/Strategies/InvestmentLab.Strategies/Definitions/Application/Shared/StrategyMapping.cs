@@ -1,3 +1,4 @@
+using InvestmentLab.Strategies.Catalog.Domain;
 using System.Text.Json;
 using InvestmentLab.Strategies.Definitions.Domain;
 using Json.Schema;
@@ -8,7 +9,7 @@ internal static class StrategyMapping
 {
     extension(Strategy strategy)
     {
-        public StrategyDto ToDto(StrategyVersion? version = null)
+        public StrategyDto ToDto(StrategyTypeDescriptor? type, StrategyVersion? version = null)
         {
             var shown = version ?? strategy.Latest;
 
@@ -26,7 +27,8 @@ internal static class StrategyMapping
                     shown.CashInstrumentId,
                     shown.BenchmarkInstrumentId,
                     shown.VolatilityIndexInstrumentId,
-                    shown.CreatedAt));
+                    shown.CreatedAt),
+                EffectiveReportMapping.ReportsOf(type, shown));
         }
     }
 }

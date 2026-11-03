@@ -3,7 +3,7 @@ using InvestmentLab.Strategies.Definitions.Domain;
 
 namespace InvestmentLab.Strategies.Definitions.Application.ReconfigureStrategy;
 
-public sealed class ReconfigureStrategyHandler(IStrategyRepository strategies, StrategySetupFactory setups, TimeProvider clock)
+public sealed class ReconfigureStrategyHandler(IStrategyRepository strategies, IStrategyTypes types, StrategySetupFactory setups, TimeProvider clock)
 {
     public async Task<Result<StrategyDto>> Handle(Guid strategyId, StrategySetupDraft command, CancellationToken cancellationToken)
     {
@@ -21,6 +21,8 @@ public sealed class ReconfigureStrategyHandler(IStrategyRepository strategies, S
 
         await strategies.SaveChangesAsync(cancellationToken);
 
-        return strategy.ToDto();
+        var type = await types.FindAsync(strategy.TypeCode, cancellationToken);
+
+        return strategy.ToDto(type);
     }
 }

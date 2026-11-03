@@ -27,5 +27,14 @@ public static class StrategyErrors
 
     public static Error NotTrial(Guid strategyId) => Error.Conflict("strategy.not_trial", $"Strategy {strategyId} is not a trial strategy.");
 
+    public static Error ReportUnknown(string code) =>
+        Error.Validation("strategy.report_unknown", $"The strategy type declares no report '{code}'.", new { code });
+
+    public static Error ReportRepeated(string code) =>
+        Error.Validation("strategy.report_repeated", $"The report '{code}' is set more than once.", new { code });
+
+    public static Error ReportFrequencyUnknown(string frequency) =>
+        Error.Validation("strategy.report_frequency_unknown", $"Unknown report frequency '{frequency}'.", new { frequency });
+
     public static Error Archived(Guid strategyId) => Error.Conflict("strategy.archived", $"Strategy {strategyId} is archived.");
 }

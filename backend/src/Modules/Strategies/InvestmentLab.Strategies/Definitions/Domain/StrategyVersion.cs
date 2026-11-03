@@ -11,6 +11,8 @@ public sealed class StrategyVersion
     public Guid? VolatilityIndexInstrumentId { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
 
+    public List<VersionReport> Reports { get; private set; } = [];
+
     private StrategyVersion(int number, StrategySetup setup, DateTimeOffset createdAt)
     {
         Id = Guid.CreateVersion7();
@@ -21,6 +23,7 @@ public sealed class StrategyVersion
         BenchmarkInstrumentId = setup.Market.BenchmarkInstrumentId;
         VolatilityIndexInstrumentId = setup.Market.VolatilityIndexInstrumentId;
         CreatedAt = createdAt;
+        Reports = [.. setup.Reports ?? []];
     }
 
     private StrategyVersion() => (Parameters, Universe) = (null!, null!);

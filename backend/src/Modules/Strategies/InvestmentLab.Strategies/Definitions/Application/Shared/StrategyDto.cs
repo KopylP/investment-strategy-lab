@@ -1,3 +1,4 @@
+using InvestmentLab.Strategies.Contracts;
 using Json.Schema;
 
 namespace InvestmentLab.Strategies.Definitions.Application.Shared;
@@ -9,4 +10,5 @@ public sealed record StrategyDto(
     string Status,
     DateTimeOffset CreatedAt,
     int LatestVersion,
-    StrategyVersionDto Version);
+    StrategyVersionDto Version,
+    IReadOnlyList<StrategyReportDto> Reports);
