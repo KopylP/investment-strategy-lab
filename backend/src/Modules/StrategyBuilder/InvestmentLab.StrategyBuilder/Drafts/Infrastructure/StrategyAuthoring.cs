@@ -58,7 +58,8 @@ internal sealed class StrategyAuthoring(IAuthoredStrategies strategies) : IStrat
             Rules: source.Parameters,
             Setup: setup,
             Reports: reports,
-            TypeCode: authored.TypeCode);
+            TypeCode: authored.TypeCode,
+            Version: version);
     }
 
     private static DraftReport DraftReportOf(AuthoredReportDto report)

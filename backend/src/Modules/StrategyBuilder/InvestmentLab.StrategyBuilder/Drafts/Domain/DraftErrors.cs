@@ -21,8 +21,13 @@ public static class DraftErrors
     public static Error CopyMarginOutOfRange() =>
         Error.Validation("builder.copy.margin_out_of_range", "The entry-to-exit margin must be between 0 and 0.5.");
 
-    public static Error HasProblems() => Error.Conflict("builder.draft.has_problems", "The draft has problems to fix first.");
+    public static Error HasProblems(object? parameters = null) => Error.Conflict("builder.draft.has_problems", "The draft has problems to fix first.", parameters);
 
     public static Error VocabularyUnavailable() =>
         Error.Conflict("builder.vocabulary.unavailable", "The rule-based strategy type is not in the catalog.");
+    public static Error PublishedNotFound(Guid strategyId, int version) =>
+        Error.NotFound("builder.published.not_found", $"Strategy {strategyId} version {version} does not exist.");
+
+    public static Error PublishedNotEditable() =>
+        Error.Conflict("builder.published.not_editable", "This strategy type cannot be edited in the builder.");
 }

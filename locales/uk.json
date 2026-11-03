@@ -407,5 +407,7 @@
   "builder.template.index-hold.name": "Утримання індексу",
   "builder.template.index-hold.description": "Тримає всі обрані фонди порівну без жодних умов.",
   "builder.trial.not_supported": "Бектест недоступний для цієї стратегії.",
-  "builder.trial.draft_has_problems": "Спершу виправте проблеми чернетки."
+  "builder.trial.draft_has_problems": "Спершу виправте проблеми чернетки.",
+  "builder.published.not_found": "Версію стратегії не знайдено.",
+  "builder.published.not_editable": "Цей тип стратегії не можна змінювати в конструкторі."
 }
