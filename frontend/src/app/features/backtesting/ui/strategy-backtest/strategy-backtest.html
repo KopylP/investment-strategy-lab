@@ -57,28 +57,11 @@
       </div>
     }
 
-    <div
-      class="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-sm"
-      role="group"
-      aria-label="Лінії на графіках"
-    >
-      @for (line of lines(); track line.code) {
-        <button
-          type="button"
-          class="flex items-start gap-2 p-0 bg-transparent border-0 text-left text-color cursor-pointer"
-          [class.opacity-50]="!line.shown"
-          [class.line-through]="!line.shown"
-          [attr.aria-pressed]="line.shown"
-          (click)="toggleLine(line.code)"
-        >
-          <span
-            class="inline-block w-2.5 h-2.5 rounded-full mt-1 shrink-0"
-            [style.background]="line.color"
-          ></span>
-          {{ line.label }}
-        </button>
-      }
-    </div>
+    <app-chart-legend
+      class="block mb-3"
+      [lines]="legend()"
+      (toggled)="hiddenLines.toggle($event)"
+    />
 
     <h3 class="text-base font-medium mb-2">Зростання 100 одиниць</h3>
     <app-live-chart
