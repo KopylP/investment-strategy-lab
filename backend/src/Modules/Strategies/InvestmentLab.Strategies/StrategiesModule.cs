@@ -1,3 +1,4 @@
+using InvestmentLab.Strategies.Definitions.Application.GetAuthoredVersion;
 using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.BuildingBlocks.Modules;
 using InvestmentLab.BuildingBlocks.Persistence;
@@ -96,6 +97,7 @@ public sealed class StrategiesModule : IModule
         services.AddScoped<CheckParametersHandler>();
         services.AddScoped<IAuthoredStrategies, AuthoredStrategies>();
         services.AddScoped<IStrategyTypeQueries, StrategyTypeQueries>();
+        services.AddScoped<GetAuthoredVersionHandler>();
         services.AddScoped<GetStrategyHandler>();
         services.AddScoped<ListStrategiesHandler>();
         services.AddScoped<CreateDefaultStrategiesHandler>();

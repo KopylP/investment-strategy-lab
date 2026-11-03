@@ -67,14 +67,14 @@
 Run: `cd backend && dotnet test --project tests/Modules/InvestmentLab.StrategyBuilder.Tests`
 Expected: FAIL.
 
-- [ ] **Step 3: Implement the contract addition in `Strategies`, the ports, adapters, handlers, endpoints and registrations**
+- [x] **Step 3: Implement the contract addition in `Strategies`, the ports, adapters, handlers, endpoints and registrations**
 
 - [x] **Step 4: Run tests**
 
 Run: `dotnet test --project tests/Modules/InvestmentLab.StrategyBuilder.Tests && dotnet test --project tests/Modules/InvestmentLab.Strategies.Tests && dotnet test --project tests/InvestmentLab.ArchitectureTests`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend locales/uk.json
@@ -243,4 +243,4 @@ git pull --rebase && git push
 
 ## Execution status — 2026-11-03
 
-Task 1 is in progress. Trial numbering/fingerprint tests pass; the trial authoring adapter, list/run endpoints, status mapping and serialized run requests are implemented. StrategyBuilder (87), Strategies (34), and architecture (50) tests pass. The version query contract needed by publishing and HTTP integration/concurrency verification remain open; Step 3 and Task 1 are not complete. Tasks 2–5 have not started.
+Task 1 is complete. Authoring ports now cover trial creation, publishing, deletion and immutable version lookup. The real-engine integration scenario verifies concurrent requests reuse one trial version, replay succeeds, trial strategies stay out of the normal list, and changed setup creates the next run. A schema regression found by the scenario is fixed: successful alternatives no longer return errors from unmatched branches. StrategyBuilder (87), Strategies (36), architecture (50), and the trial integration scenario (1) pass. Task 2 is next; Tasks 2–5 have not started. Plans remain tracked at the user's explicit request.

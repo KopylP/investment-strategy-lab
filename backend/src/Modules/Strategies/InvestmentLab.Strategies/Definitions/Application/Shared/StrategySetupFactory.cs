@@ -101,7 +101,11 @@ public sealed class StrategySetupFactory(IStrategyTypes types, IInstrumentCatalo
 
     private static List<ParameterProblem> SchemaProblems(StrategyTypeDescriptor type, string json)
     {
-        var details = SchemaEvaluation(type, json).Details ?? [];
+        var evaluation = SchemaEvaluation(type, json);
+        if (evaluation.IsValid)
+            return [];
+
+        var details = evaluation.Details ?? [];
         var failing = details.Where(detail => detail.Errors is { Count: > 0 });
 
         return [.. failing.Select(SchemaProblem).DistinctBy(problem => (problem.Path, problem.Message))];

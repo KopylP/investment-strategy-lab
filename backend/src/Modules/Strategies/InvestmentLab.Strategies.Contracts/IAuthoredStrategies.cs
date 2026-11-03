@@ -2,6 +2,8 @@ namespace InvestmentLab.Strategies.Contracts;
 
 public interface IAuthoredStrategies
 {
+    Task<AuthoredVersionDto?> GetVersionAsync(Guid strategyId, int version, CancellationToken cancellationToken);
+
     Task<AuthoringResult<TrialVersionDto>> WriteTrialVersionAsync(TrialVersionRequest request, CancellationToken cancellationToken);
 
     Task<AuthoringResult<bool>> DeleteTrialAsync(Guid strategyId, CancellationToken cancellationToken);
