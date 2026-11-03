@@ -7,9 +7,8 @@ import numpy as np
 import pandas as pd
 
 from finance_decisions.messages import msg
+from finance_decisions.portfolio_math import TRADING_DAYS_PER_MONTH, TRADING_DAYS_PER_YEAR
 
-TRADING_DAYS_PER_MONTH = 21
-TRADING_DAYS_PER_YEAR = 252
 MOMENTUM_MONTHS = (3, 6, 12)
 VOLATILITY_WINDOW_DAYS = 63
 MIN_VOLATILITY_DAYS = 20

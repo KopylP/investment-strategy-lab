@@ -28,6 +28,7 @@ class SeriesRole(str, Enum):
     INSTRUMENT = "instrument"
     BENCHMARK = "benchmark"
     VOLATILITY_INDEX = "volatilityIndex"
+    EXTRA = "extra"
 
 
 class BacktestComparison(str, Enum):

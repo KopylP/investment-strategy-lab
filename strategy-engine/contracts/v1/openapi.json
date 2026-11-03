@@ -1546,7 +1546,8 @@
         "enum": [
           "instrument",
           "benchmark",
-          "volatilityIndex"
+          "volatilityIndex",
+          "extra"
         ],
         "title": "SeriesRole"
       },
