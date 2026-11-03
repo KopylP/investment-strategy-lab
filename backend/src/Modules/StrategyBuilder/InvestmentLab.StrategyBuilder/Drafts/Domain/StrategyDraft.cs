@@ -85,6 +85,26 @@ public sealed class StrategyDraft : AggregateRoot<Guid>
             MissingSignalIds = [.. MissingSignalIds, signalId];
     }
 
+    public TrialRun? TrialWith(string fingerprint) =>
+        Trials.FirstOrDefault(trial => trial.Fingerprint == fingerprint);
+
+    public TrialRun RecordTrial(Guid trialStrategyId, int version, string fingerprint, string? label, DateTimeOffset now)
+    {
+        var trial = new TrialRun(
+            Number: Trials.Count + 1,
+            StrategyId: trialStrategyId,
+            StrategyVersion: version,
+            Fingerprint: fingerprint,
+            Label: label,
+            RanAt: now);
+
+        TrialStrategyId ??= trialStrategyId;
+        Trials = [.. Trials, trial];
+        UpdatedAt = now;
+
+        return trial;
+    }
+
     private void ReplaceGraph(StrategyGraph graph)
     {
         Graph = graph;
