@@ -83,6 +83,7 @@ public sealed class StrategiesModule : IModule
         services.AddScoped<IStrategyTypes, StrategyTypes>();
         services.AddSingleton<IDefaultStrategies, DefaultStrategies>();
         services.AddScoped<StrategySetupFactory>();
+        services.AddScoped<IParameterChecks, EngineParameterChecks>();
         services.AddScoped<CreateStrategyHandler>();
         services.AddScoped<ReconfigureStrategyHandler>();
         services.AddScoped<ArchiveStrategyHandler>();

@@ -7,7 +7,7 @@ using Json.Schema;
 
 namespace InvestmentLab.Strategies.Definitions.Application.Shared;
 
-public sealed class StrategySetupFactory(IStrategyTypes types, IInstrumentCatalog instruments)
+public sealed class StrategySetupFactory(IStrategyTypes types, IInstrumentCatalog instruments, IParameterChecks checks)
 {
     public async Task<Result<StrategySetup>> CreateAsync(string typeCode, StrategySetupDraft draft, CancellationToken cancellationToken)
     {
@@ -33,13 +33,36 @@ public sealed class StrategySetupFactory(IStrategyTypes types, IInstrumentCatalo
         if (parameters.IsFailure)
             return parameters.Error;
 
+        var check = await checks.CheckAsync(typeCode, parameters.Value, cancellationToken);
+        if (check.IsFailure)
+            return check.Error;
+        if (!check.Value.IsClean)
+            return StrategyErrors.ParametersRefused(check.Value.Problems);
+
         return new StrategySetup(
             Parameters: parameters.Value,
             Universe: draft.Universe ?? [],
             CashInstrumentId: draft.CashInstrumentId,
             Market: new MarketSeriesRefs(draft.BenchmarkInstrumentId, draft.VolatilityIndexInstrumentId),
             Reports: reports,
-            ExtraSeries: draft.ExtraSeries ?? []);
+            ExtraSeries: draft.ExtraSeries ?? [],
+            SignalIds: check.Value.SignalIds);
+    }
+
+    public async Task<Result<ParametersCheck>> CheckAsync(string typeCode, JsonElement? given, CancellationToken cancellationToken)
+    {
+        if (await types.FindAsync(typeCode, cancellationToken) is not { } type)
+            return StrategyErrors.UnknownType(typeCode);
+
+        var shaped = type.DefaultParameters is null ? AsGiven(given) : MergedIntoDefaults(type.DefaultParameters, given);
+        if (shaped.IsFailure)
+            return new ParametersCheck([new ParameterProblem("", shaped.Error.Code, shaped.Error.AsMessage())], []);
+
+        var schemaProblems = SchemaProblems(type, shaped.Value);
+        if (schemaProblems.Count > 0)
+            return new ParametersCheck(schemaProblems, []);
+
+        return await checks.CheckAsync(typeCode, shaped.Value, cancellationToken);
     }
 
     private static List<VersionReport> ReportsOf(StrategySetupDraft draft) =>
@@ -75,6 +98,27 @@ public sealed class StrategySetupFactory(IStrategyTypes types, IInstrumentCatalo
 
         return merged.ToJsonString();
     }
+
+    private static List<ParameterProblem> SchemaProblems(StrategyTypeDescriptor type, string json)
+    {
+        var details = SchemaEvaluation(type, json).Details ?? [];
+        var failing = details.Where(detail => detail.Errors is { Count: > 0 });
+
+        return [.. failing.Select(SchemaProblem).DistinctBy(problem => (problem.Path, problem.Message))];
+    }
+
+    private static ParameterProblem SchemaProblem(EvaluationResults detail)
+    {
+        var path = detail.InstanceLocation.ToString().TrimStart('/').Replace('/', '.');
+        var details = string.Join("; ", detail.Errors!.Values);
+        var error = StrategyErrors.InvalidParameters(details);
+
+        return new ParameterProblem(path, error.Code, error.AsMessage());
+    }
+
+    private static EvaluationResults SchemaEvaluation(StrategyTypeDescriptor type, string json) =>
+        JsonSchema.FromText(type.ParametersSchema, new BuildOptions { Dialect = Dialect.Draft202012 })
+            .Evaluate(JsonDocument.Parse(json).RootElement, new EvaluationOptions { OutputFormat = OutputFormat.List });
 
     private static Result<string> Validated(StrategyTypeDescriptor type, string json)
     {

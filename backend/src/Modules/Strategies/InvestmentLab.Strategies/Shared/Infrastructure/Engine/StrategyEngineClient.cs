@@ -13,6 +13,17 @@ public sealed class StrategyEngineClient(HttpClient http)
     public async Task<IReadOnlyList<EngineStrategyType>> GetStrategyTypesAsync(CancellationToken cancellationToken) =>
         await http.GetFromJsonAsync<List<EngineStrategyType>>("/v1/strategies", Json, cancellationToken) ?? [];
 
+    public async Task<EngineParametersCheck> CheckParametersAsync(string typeCode, JsonElement parameters, CancellationToken cancellationToken)
+    {
+        var path = $"/v1/strategies/{Uri.EscapeDataString(typeCode)}/parameters/check";
+        using var response = await http.PostAsJsonAsync(path, new { parameters }, Json, cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        var check = await response.Content.ReadFromJsonAsync<EngineParametersCheck>(Json, cancellationToken);
+
+        return check ?? throw new JsonException("The engine answered the parameters check with nothing.");
+    }
+
     public async Task<(JsonNode? Answer, int StatusCode, string? Error)> PostContextAsync(
         string typeCode, string action, EngineContext context, CancellationToken cancellationToken)
     {

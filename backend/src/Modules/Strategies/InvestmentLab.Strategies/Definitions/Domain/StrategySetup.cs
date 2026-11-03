@@ -6,4 +6,5 @@ public sealed record StrategySetup(
     Guid? CashInstrumentId,
     MarketSeriesRefs Market,
     IReadOnlyList<VersionReport>? Reports = null,
-    IReadOnlyList<Guid>? ExtraSeries = null);
+    IReadOnlyList<Guid>? ExtraSeries = null,
+    IReadOnlyList<Guid>? SignalIds = null);
