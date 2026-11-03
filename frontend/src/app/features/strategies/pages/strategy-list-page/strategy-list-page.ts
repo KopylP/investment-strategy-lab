@@ -1,20 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { Button } from 'primeng/button';
 import { Message } from 'primeng/message';
 import { Skeleton } from 'primeng/skeleton';
-import { Tag } from 'primeng/tag';
-import { DatePipe } from '../../../../shared/pipes/format-pipes';
 import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { AccountContext } from '../../../../core/context/account-context';
 import { StrategiesStore } from '../../data-access/strategies-store';
-import { Strategy } from '../../models/strategy';
-import { describeStrategy } from '../../models/strategy-summary';
+import { StrategyCard } from '../../ui/strategy-card/strategy-card';
 
 @Component({
   selector: 'app-strategy-list-page',
-  imports: [RouterLink, Button, Message, Skeleton, Tag, PageHeader, EmptyState, DatePipe],
+  imports: [Button, Message, Skeleton, PageHeader, EmptyState, StrategyCard],
   providers: [StrategiesStore],
   templateUrl: './strategy-list-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -22,6 +18,13 @@ import { describeStrategy } from '../../models/strategy-summary';
 export class StrategyListPage {
   protected readonly store = inject(StrategiesStore);
   private readonly accounts = inject(AccountContext);
+
+  protected readonly active = computed(() =>
+    this.store.strategies().filter((strategy) => strategy.status !== 'Archived'),
+  );
+  protected readonly archived = computed(() =>
+    this.store.strategies().filter((strategy) => strategy.status === 'Archived'),
+  );
 
   protected readonly usage = computed(() => {
     const usage = new Map<string, string[]>();
@@ -36,12 +39,4 @@ export class StrategyListPage {
 
     return usage;
   });
-
-  protected blurb(strategy: Strategy) {
-    return describeStrategy(
-      strategy,
-      (id) => this.store.instruments.symbol(id),
-      (id) => this.store.instruments.byId().get(id)?.tradingCurrency,
-    );
-  }
 }

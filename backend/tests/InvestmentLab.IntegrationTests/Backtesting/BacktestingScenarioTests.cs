@@ -21,7 +21,7 @@ public sealed class BacktestingScenarioTests : IClassFixture<StrategiesApiFactor
 
     [Theory]
     [InlineData("EU index hold")]
-    [InlineData("EU ETF momentum")]
+    [InlineData("EU adaptive momentum")]
     public async Task Any_strategy_type_is_replayed_in_the_background_and_gives_money_outcomes(string name)
     {
         var ct = TestContext.Current.CancellationToken;

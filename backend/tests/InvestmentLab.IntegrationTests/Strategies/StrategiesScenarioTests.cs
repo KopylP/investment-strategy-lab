@@ -31,11 +31,11 @@ public sealed class StrategiesScenarioTests : IClassFixture<StrategiesApiFactory
         catalog!.ShouldContain(type => type.Code == "etf-momentum");
 
         var defaults = await client.DefaultStrategiesAsync<StrategyDto>(strategy => strategy.Name, ct);
-        defaults.Select(strategy => strategy.Name).ShouldBe(["EU ETF momentum", "EU adaptive momentum", "EU index hold", "US ETF momentum", "US adaptive momentum", "US index hold"]);
-        var eu = defaults[0];
-        eu.Version.Universe.Count.ShouldBe(17);
-        eu.Version.Parameters.GetProperty("scanner").GetProperty("topN").GetInt32().ShouldBe(4);
+        defaults.Select(strategy => strategy.Name).ShouldBe(["EU adaptive momentum", "EU index hold", "US adaptive momentum", "US index hold"]);
+        defaults[0].Version.Universe.Count.ShouldBe(17);
+        defaults[0].Version.Parameters.GetProperty("scanner").GetProperty("topN").GetInt32().ShouldBe(3);
         (await PostAsync<List<StrategyDto>>(client, "/api/strategies/defaults", new { }, ct)).ShouldBeEmpty();
+        var eu = await client.CreateEtfMomentumOnAsync(defaults[0], ct);
 
         var account = await PortfolioScenarioTests.OpenTwoSleeveAccountAsync(client, ct);
         var sleeve = account.SubPortfolios[0].Id;
@@ -77,7 +77,8 @@ public sealed class StrategiesScenarioTests : IClassFixture<StrategiesApiFactory
     {
         var ct = TestContext.Current.CancellationToken;
         var client = await _factory.CreateSignedInClientAsync(ct);
-        var eu = (await client.DefaultStrategiesAsync<StrategyDto>(strategy => strategy.Name, ct))[0];
+        var defaults = await client.DefaultStrategiesAsync<StrategyDto>(strategy => strategy.Name, ct);
+        var eu = await client.CreateEtfMomentumOnAsync(defaults[0], ct);
         var setup = eu.Version;
 
         var invalid = await client.PutAsJsonAsync($"/api/strategies/{eu.Id}", new
