@@ -19,7 +19,7 @@ public static class NodeSockets
         _ => null,
     };
 
-    public static IReadOnlyList<NodeInput> InputsOf(NodeKind kind) => kind switch
+    public static IReadOnlyList<InputSocket> InputsOf(NodeKind kind) => kind switch
     {
         NodeKind.Compare => [new(Left, SocketType.Number, true, false), new(Right, SocketType.Number, false, false)],
         NodeKind.Between => [new(Value, SocketType.Number, true, false)],
