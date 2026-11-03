@@ -29,6 +29,11 @@ class SeriesBook:
     def benchmark(self) -> pd.Series:
         return self._first_of(SeriesRole.BENCHMARK)
 
+    def benchmark_or_none(self) -> pd.Series | None:
+        found = self.by_role[SeriesRole.BENCHMARK]
+
+        return next(iter(found.values())).dropna() if found else None
+
     def volatility_index(self) -> pd.Series:
         return self._first_of(SeriesRole.VOLATILITY_INDEX)
 

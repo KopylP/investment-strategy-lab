@@ -16,6 +16,10 @@ from finance_decisions.strategies.buy_and_hold import decision as buy_and_hold
 from finance_decisions.strategies.buy_and_hold.parameters import BuyAndHoldParameters
 from finance_decisions.strategies.etf_momentum import decision as etf_momentum
 from finance_decisions.strategies.etf_momentum.parameters import EtfMomentumParameters
+from finance_decisions.strategies.rule_based import decision as rule_based
+from finance_decisions.strategies.rule_based import risk as rule_based_risk
+from finance_decisions.strategies.rule_based.checks import RuleProblem, problems_in, referenced_signals
+from finance_decisions.strategies.rule_based.parameters import RuleParameters
 from .contracts import BacktestComparison, EvaluationContext, ReportDefinition, RiskAssessment, SeriesRole, StrategyDecision, StrategyTypeDescriptor
 
 router = APIRouter(prefix="/v1", tags=["catalog"])
@@ -36,6 +40,9 @@ class StrategyType:
     version: Callable[[], str]
     backtest_comparisons: tuple[BacktestComparison, ...]
     supports_backtest: bool = True
+    has_defaults: bool = True
+    semantic_check: Callable[[Any], list[RuleProblem]] = lambda _parameters: []
+    referenced_signals: Callable[[Any], list[str]] = lambda _parameters: []
 
     def descriptor(self) -> StrategyTypeDescriptor:
         return StrategyTypeDescriptor(
@@ -47,7 +54,7 @@ class StrategyType:
             supports_state=False,
             required_series_roles=list(self.required_series_roles),
             parameters_schema=self.parameters.model_json_schema(by_alias=True),
-            default_parameters=self.parameters().model_dump(by_alias=True, mode="json"),
+            default_parameters=self._default_parameters(),
             reports=list(self.reports),
             supports_backtest=self.supports_backtest,
             backtest_comparisons=list(self.backtest_comparisons),
@@ -56,10 +63,26 @@ class StrategyType:
 
     def parse_parameters(self, raw: dict[str, Any]) -> Any:
         try:
-            return self.parameters.model_validate(raw)
+            parsed = self.parameters.model_validate(raw)
         except ValidationError as error:
             detail = jsonable_encoder(error.errors(include_url=False, include_context=False))
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=detail) from error
+
+        problems = self.semantic_check(parsed)
+        if problems:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=[_problem_detail(problem) for problem in problems])
+
+        return parsed
+
+    def _default_parameters(self) -> dict[str, Any] | None:
+        if not self.has_defaults:
+            return None
+
+        return self.parameters().model_dump(by_alias=True, mode="json")
+
+
+def _problem_detail(problem: RuleProblem) -> dict[str, Any]:
+    return {"path": list(problem.path), "code": problem.code, "message": msg(problem.code, **problem.parameters)}
 
 
 SELECTION_COMPARISONS = (
@@ -111,6 +134,22 @@ STRATEGY_TYPES: dict[str, StrategyType] = {
         reports=buy_and_hold.REPORTS,
         backtest_comparisons=HOLDING_COMPARISONS,
         version=buy_and_hold.engine_version,
+    ),
+    rule_based.STRATEGY_CODE: StrategyType(
+        code=rule_based.STRATEGY_CODE,
+        name="Rule-based",
+        description=msg("rule_based.description"),
+        messages=rule_based.MESSAGES,
+        parameters=RuleParameters,
+        decide=rule_based.decide,
+        assess_risk=rule_based_risk.assess_risk,
+        required_series_roles=(SeriesRole.INSTRUMENT, SeriesRole.BENCHMARK),
+        reports=rule_based.REPORTS,
+        backtest_comparisons=SELECTION_COMPARISONS,
+        version=rule_based.engine_version,
+        has_defaults=False,
+        semantic_check=problems_in,
+        referenced_signals=referenced_signals,
     ),
 }
 

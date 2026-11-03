@@ -30,7 +30,7 @@ export interface StrategyType {
   supportsState: boolean;
   requiredSeriesRoles: string[];
   parametersSchema: Record<string, unknown>;
-  defaultParameters: JsonObject;
+  defaultParameters: JsonObject | null;
   reports: ReportDefinition[];
 }
 

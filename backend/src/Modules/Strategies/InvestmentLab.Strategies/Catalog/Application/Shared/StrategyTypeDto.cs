@@ -12,5 +12,5 @@ public sealed record StrategyTypeDto(
     bool SupportsState,
     IReadOnlyList<string> RequiredSeriesRoles,
     JsonElement ParametersSchema,
-    JsonElement DefaultParameters,
+    JsonElement? DefaultParameters,
     IReadOnlyList<ReportDefinition> Reports);
