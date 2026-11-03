@@ -25,5 +25,7 @@ public static class StrategyErrors
     public static Error InvalidParameters(string details) =>
         Error.Validation("strategy.parameters_invalid", $"Parameters do not fit the strategy type: {details}", new { details });
 
+    public static Error NotTrial(Guid strategyId) => Error.Conflict("strategy.not_trial", $"Strategy {strategyId} is not a trial strategy.");
+
     public static Error Archived(Guid strategyId) => Error.Conflict("strategy.archived", $"Strategy {strategyId} is archived.");
 }

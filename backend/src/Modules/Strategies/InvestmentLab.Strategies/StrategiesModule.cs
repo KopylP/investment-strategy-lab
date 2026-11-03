@@ -11,6 +11,7 @@ using InvestmentLab.Strategies.Definitions.Api;
 using InvestmentLab.Strategies.Definitions.Application.ArchiveStrategy;
 using InvestmentLab.Strategies.Definitions.Application.CreateDefaultStrategies;
 using InvestmentLab.Strategies.Definitions.Application.CreateStrategy;
+using InvestmentLab.Strategies.Definitions.Application.DeleteTrialStrategy;
 using InvestmentLab.Strategies.Definitions.Application.GetStrategy;
 using InvestmentLab.Strategies.Definitions.Application.Integration;
 using InvestmentLab.Strategies.Definitions.Application.ListStrategies;
@@ -48,6 +49,7 @@ public sealed class StrategiesModule : IModule
     {
         builder.AddModuleDbContext<StrategiesDbContext>(Schema);
         builder.Services.AddDomainEventMapper<StrategyReconfigured, StrategyReconfiguredV1, StrategyReconfiguredMapper>();
+        builder.Services.AddDomainEventMapper<StrategyDeleted, StrategyDeletedV1, StrategyDeletedMapper>();
 
         var services = builder.Services;
         AddEngineClient(builder);
@@ -84,6 +86,7 @@ public sealed class StrategiesModule : IModule
         services.AddScoped<CreateStrategyHandler>();
         services.AddScoped<ReconfigureStrategyHandler>();
         services.AddScoped<ArchiveStrategyHandler>();
+        services.AddScoped<DeleteTrialStrategyHandler>();
         services.AddScoped<GetStrategyHandler>();
         services.AddScoped<ListStrategiesHandler>();
         services.AddScoped<CreateDefaultStrategiesHandler>();

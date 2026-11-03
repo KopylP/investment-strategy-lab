@@ -71,4 +71,64 @@ public sealed class StrategyTests
     [InlineData("""{"weakMarketInvestPct":2}""")]
     public void Parameters_outside_the_schema_are_refused(string given) =>
         StrategySetupFactory.Parameters(Type, Json(given)).Error.Code.ShouldBe("strategy.parameters_invalid");
+
+    private static Strategy Trial() => Strategy.CreateTrial(UserId.New(), "rule-based", Setup(Guid.CreateVersion7()), Now).Value;
+
+    private static Strategy Regular() => Strategy.Create(UserId.New(), "EU", "etf-momentum", Setup(Guid.CreateVersion7()), Now).Value;
+
+    [Fact]
+    public void A_trial_strategy_is_named_after_its_id()
+    {
+        var trial = Trial();
+
+        trial.Name.ShouldBe($"trial-{trial.Id.Value:N}");
+        trial.Status.ShouldBe(StrategyStatus.Trial);
+        trial.IsTrial.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void A_trial_strategy_announces_its_first_version()
+    {
+        var reconfigured = Trial().DomainEvents.ShouldHaveSingleItem().ShouldBeOfType<StrategyReconfigured>();
+
+        reconfigured.Version.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Only_a_trial_strategy_can_be_deleted() =>
+        Regular().Delete(Now).Error.Code.ShouldBe("strategy.not_trial");
+
+    [Fact]
+    public void Deleting_a_trial_strategy_announces_it()
+    {
+        var trial = Trial();
+        trial.ClearDomainEvents();
+
+        trial.Delete(Now).IsSuccess.ShouldBeTrue();
+
+        trial.DomainEvents.ShouldHaveSingleItem().ShouldBeOfType<StrategyDeleted>().StrategyId.ShouldBe(trial.Id);
+    }
+
+    [Fact]
+    public void A_regular_strategy_cannot_take_a_trial_version() =>
+        Regular().ReconfigureTrial(Setup(Guid.CreateVersion7()), Now).Error.Code.ShouldBe("strategy.not_trial");
+
+    [Fact]
+    public void A_trial_strategy_takes_its_next_version()
+    {
+        var trial = Trial();
+
+        trial.ReconfigureTrial(Setup(Guid.CreateVersion7()), Now.AddMinutes(1)).Value.Number.ShouldBe(2);
+    }
+
+    [Fact]
+    public void Trial_strategies_are_not_listed()
+    {
+        var archived = Regular();
+        archived.Archive();
+
+        Trial().IsListed.ShouldBeFalse();
+        Regular().IsListed.ShouldBeTrue();
+        archived.IsListed.ShouldBeTrue();
+    }
 }
