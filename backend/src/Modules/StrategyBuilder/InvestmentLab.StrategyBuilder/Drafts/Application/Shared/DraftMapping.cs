@@ -62,7 +62,9 @@ public static class DraftMapping
         {
             if (!Enum.TryParse<NodeKind>(node.Kind, out var kind) || !Enum.TryParse<BlockKind>(node.Block, out var block))
                 return DraftErrors.GraphInvalid($"node '{node.Id}' has kind '{node.Kind}' in block '{node.Block}'");
-            nodes.Add(new GraphNode(new NodeId(node.Id), kind, block, new NodeParameters(node.Parameters ?? new Dictionary<string, JsonElement>())));
+            if (NodeKinds.IsResult(kind) && block != NodeKinds.ResultBlock(kind))
+                return DraftErrors.GraphInvalid($"result '{node.Id}' has an incompatible purpose");
+            nodes.Add(new GraphNode(new NodeId(node.Id), kind, NodeKinds.IsResult(kind) ? block : BlockKind.Shared, new NodeParameters(node.Parameters ?? new Dictionary<string, JsonElement>())));
         }
 
         var links = graph.Links.Select(link => new GraphLink(new NodeId(link.From), new NodeId(link.To), link.Input)).ToList();
@@ -83,7 +85,7 @@ public static class DraftMapping
 
     private static GraphDto ToDto(StrategyGraph graph) =>
         new(
-            [.. graph.Nodes.Select(node => new NodeDto(node.Id.Value, node.Kind.ToString(), node.Block.ToString(), node.Parameters.Values))],
+            [.. graph.Nodes.Select(node => new NodeDto(node.Id.Value, node.Kind.ToString(), NodeKinds.IsResult(node.Kind) ? node.Block.ToString() : nameof(BlockKind.Shared), node.Parameters.Values))],
             [.. graph.Links.Select(link => new LinkDto(link.From.Value, link.To.Value, link.Input))]);
 
     private static LayoutDto ToDto(DraftLayout layout) => new(layout.Positions, [.. layout.Collapsed.Select(block => block.ToString())]);

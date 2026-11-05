@@ -25,13 +25,53 @@ public sealed class GraphCheckTests
     }
 
     [Fact]
-    public void A_link_across_blocks_is_a_problem()
+    public void Shared_indicators_can_feed_conditions_from_different_legacy_blocks()
     {
         var graph = Graph(
             [Indicator("mom", BlockKind.Exit, "blendedMomentum"), Compare("positive", BlockKind.Entry, "gt", 0)],
             [Link("mom", "positive", "left"), Link("positive", "result-entry", "condition")]);
 
-        Problems(graph).ShouldContain(problem => problem.Code == "builder.problem.link_across_blocks" && problem.Node == new NodeId("positive"));
+        Problems(graph).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void One_condition_can_feed_entry_and_exit_and_one_indicator_can_rank_selection()
+    {
+        var graph = MomentumEntry();
+        graph = graph with { Links = [.. graph.Links, Link("positive", "result-exit", "condition"), Link("mom", "result-selection", "rankBy")] };
+        Problems(graph).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Market_context_is_checked_through_shared_nested_conditions()
+    {
+        var graph = Graph(
+            [Indicator("fund", BlockKind.Shared, "price"), Compare("up", BlockKind.Shared, "gt", 100), Logic("all", BlockKind.Shared, NodeKind.All)],
+            [Link("fund", "up", "left"), Link("up", "all", "conditions"), Link("all", "result-entry", "condition"), Link("all", "result-market", "condition")],
+            NodeParameters.Empty.With("investWhenUnfavorable", 0));
+        Problems(graph).ShouldContain(problem => problem.Code == "builder.problem.fund_in_market_filter" && problem.Node == new NodeId("fund"));
+    }
+
+    [Fact]
+    public void A_benchmark_condition_can_be_shared_by_market_and_entry()
+    {
+        var graph = Graph(
+            [Indicator("market", BlockKind.Shared, "price", "benchmark"), Compare("up", BlockKind.Shared, "gt", 100)],
+            [Link("market", "up", "left"), Link("up", "result-entry", "condition"), Link("up", "result-market", "condition")],
+            NodeParameters.Empty.With("investWhenUnfavorable", 0));
+        Problems(graph).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void A_shared_fund_signal_cannot_indirectly_feed_a_market_filter()
+    {
+        var id = Guid.NewGuid();
+        var signal = new GraphNode(new NodeId("signal"), NodeKind.Signal, BlockKind.Shared,
+            NodeParameters.Empty.With("signalId", id.ToString()).With("state", "active").With("scope", "thisFund"));
+        var graph = Graph([signal, Logic("not", BlockKind.Shared, NodeKind.Not)],
+            [Link("signal", "not", "condition"), Link("not", "result-market", "condition")], NodeParameters.Empty.With("investWhenUnfavorable", 0));
+        GraphCheck.Of(Of(graph), EngineSchema.Vocabulary, [new OwnSignal(id, "Signal", true, "Instrument")])
+            .ShouldContain(problem => problem.Code == "builder.problem.this_fund_signal_in_market_filter");
     }
 
     [Fact]

@@ -6,8 +6,10 @@ import {
   inject,
   input,
   signal,
+  untracked,
 } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { LayoutService } from '../../../../core/layout/layout-service';
 import { ConfirmationService } from 'primeng/api';
 import { FormsModule } from '@angular/forms';
 import { Button } from 'primeng/button';
@@ -22,12 +24,12 @@ import { setupSummary } from '../../data-access/draft-mapper';
 import { graphWithNode } from '../../data-access/graph-mapper';
 import { DraftProblemDto, NodeDto } from '../../models/draft-dto';
 import { EditorMode } from '../../models/draft-vm';
+import { confirmDiscardDraft } from '../../ui/confirm-discard-draft';
 import { ReportsDialog } from '../../ui/reports-dialog/reports-dialog';
 import { GraphEditor } from '../../ui/graph/graph-editor';
 import { SetupDialog } from '../../ui/setup-dialog/setup-dialog';
 import { SetupRow } from '../../ui/setup-row/setup-row';
-import { Inspector } from '../../ui/inspector/inspector';
-import { NewPaletteNode, Palette } from '../../ui/palette/palette';
+import { NewPaletteNode } from '../../ui/palette/palette';
 import { CopyEntryDialog } from '../../ui/graph/copy-entry-dialog';
 
 import { JsonView } from '../../ui/json-view/json-view';
@@ -38,6 +40,7 @@ import { ProblemsPanel } from '../../ui/problems-panel/problems-panel';
 @Component({
   selector: 'app-builder-draft-editor-page',
   imports: [
+    RouterLink,
     JsonView,
     StepsView,
     WordsPanel,
@@ -54,17 +57,18 @@ import { ProblemsPanel } from '../../ui/problems-panel/problems-panel';
     GraphEditor,
     SetupDialog,
     SetupRow,
-    Inspector,
-    Palette,
     CopyEntryDialog,
   ],
   providers: [DraftStore],
   templateUrl: './draft-editor-page.html',
+  styleUrl: './draft-editor-page.css',
+  host: { '[class.graph-mode]': "store.mode() === 'graph'" },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DraftEditorPage {
   protected readonly store = inject(DraftStore);
   private readonly router = inject(Router);
+  private readonly appLayout = inject(LayoutService);
   private readonly confirmation = inject(ConfirmationService);
   readonly draftId = input.required<string>();
   protected readonly setupVisible = signal(false);
@@ -90,6 +94,24 @@ export class DraftEditorPage {
 
   constructor() {
     effect(() => void this.store.open(this.draftId()));
+    effect((onCleanup) => {
+      if (this.store.mode() !== 'graph') return;
+      const previousMode = untracked(() => this.appLayout.layoutConfig().menuMode);
+      this.appLayout.layoutConfig.update((config) => ({ ...config, menuMode: 'overlay' }));
+      onCleanup(() => {
+        this.appLayout.layoutConfig.update((config) => ({ ...config, menuMode: previousMode }));
+        this.appLayout.layoutState.update((state) => ({ ...state, overlayMenuActive: false }));
+      });
+    });
+  }
+
+  protected confirmDiscard(): void {
+    const draft = this.store.draft();
+    if (!draft || this.store.busy()) return;
+    confirmDiscardDraft(this.confirmation, draft.name, () => void this.discard());
+  }
+  private async discard(): Promise<void> {
+    if (await this.store.discard()) await this.router.navigate(['/strategy-builder']);
   }
 
   protected async runTrial(): Promise<void> {
@@ -130,13 +152,18 @@ export class DraftEditorPage {
       return;
     }
 
+    if (!problem.nodeId && !problem.block) {
+      this.setupVisible.set(true);
+      return;
+    }
+
     await this.store.setMode('graph');
     const draft = this.store.draft();
     if (!draft) return;
 
     const block =
       problem.block ?? draft.graph.nodes.find((node) => node.id === problem.nodeId)?.block;
-    if (block && draft.layout.collapsed.includes(block)) {
+    if (block && block !== 'Shared' && draft.layout.collapsed.includes(block)) {
       this.store.moveNodes({
         ...draft.layout,
         collapsed: draft.layout.collapsed.filter((kind) => kind !== block),
@@ -162,6 +189,17 @@ export class DraftEditorPage {
     const node: NodeDto = { id, ...request };
     this.store.changeGraph({ ...draft.graph, nodes: [...draft.graph.nodes, node] });
     this.store.select(id);
+  }
+
+  protected removeNode(): void {
+    const draft = this.store.draft();
+    const node = this.selectedNode();
+    if (!draft || !node || node.kind.endsWith('Result')) return;
+    this.store.changeGraph({
+      nodes: draft.graph.nodes.filter((item) => item.id !== node.id),
+      links: draft.graph.links.filter((link) => link.from !== node.id && link.to !== node.id),
+    });
+    this.store.select(null);
   }
 
   protected duplicateNode(): void {

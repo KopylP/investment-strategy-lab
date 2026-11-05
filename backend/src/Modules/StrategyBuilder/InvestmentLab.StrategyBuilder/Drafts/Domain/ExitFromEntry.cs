@@ -11,7 +11,6 @@ public static class ExitFromEntry
     {
         private readonly List<GraphNode> _newNodes = [];
         private readonly List<GraphLink> _newLinks = [];
-        private readonly Dictionary<NodeId, NodeId> _copiedNumbers = [];
         private int _nextId = 1;
 
         public StrategyGraph Build()
@@ -33,10 +32,10 @@ public static class ExitFromEntry
 
         private StrategyGraph RemoveExitBlock()
         {
-            var removed = source.Nodes
-                .Where(node => node.Block == BlockKind.Exit && node.Id != StrategyGraph.ExitResultId)
-                .Select(node => node.Id)
-                .ToHashSet();
+            var exitDependencies = source.DependenciesOf(StrategyGraph.ExitResultId);
+            var otherDependencies = source.Nodes.Where(node => NodeKinds.IsResult(node.Kind) && node.Id != StrategyGraph.ExitResultId)
+                .SelectMany(node => source.DependenciesOf(node.Id)).ToHashSet();
+            var removed = exitDependencies.Where(id => id != StrategyGraph.ExitResultId && !otherDependencies.Contains(id)).ToHashSet();
             var nodes = source.Nodes.Where(node => !removed.Contains(node.Id)).ToList();
             var links = source.Links.Where(link =>
                 !removed.Contains(link.From) &&
@@ -156,17 +155,8 @@ public static class ExitFromEntry
 
         private NodeId CopyNumber(NodeId originalId)
         {
-            if (_copiedNumbers.TryGetValue(originalId, out var existing))
-                return existing;
-
-            var original = RequiredNode(originalId);
-            var copied = Add(original.Kind, original.Parameters);
-            _copiedNumbers.Add(originalId, copied);
-
-            foreach (var link in source.Into(original.Id))
-                _newLinks.Add(new GraphLink(CopyNumber(link.From), copied, link.Input));
-
-            return copied;
+            // Indicators are immutable definitions and can feed both entry and exit.
+            return originalId;
         }
 
         private NodeId RequiredInput(NodeId nodeId, string input) =>
@@ -178,7 +168,7 @@ public static class ExitFromEntry
         private NodeId Add(NodeKind kind, NodeParameters parameters)
         {
             var id = NextId();
-            _newNodes.Add(new GraphNode(id, kind, BlockKind.Exit, parameters));
+            _newNodes.Add(new GraphNode(id, kind, BlockKind.Shared, parameters));
 
             return id;
         }

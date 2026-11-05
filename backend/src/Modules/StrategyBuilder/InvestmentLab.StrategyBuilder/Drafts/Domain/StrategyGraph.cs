@@ -28,6 +28,35 @@ public sealed record StrategyGraph(IReadOnlyList<GraphNode> Nodes, IReadOnlyList
 
     public GraphNode ResultOf(BlockKind block) => Nodes.First(node => node.Block == block && NodeKinds.IsResult(node.Kind));
 
+    // The result defines a branch's purpose; intermediate nodes can feed several results.
+    public IReadOnlyList<GraphNode> ResultsUsing(NodeId id)
+    {
+        var visited = new HashSet<NodeId>();
+        var pending = new Stack<NodeId>();
+        var results = new List<GraphNode>();
+        pending.Push(id);
+        while (pending.TryPop(out var current))
+        {
+            if (!visited.Add(current)) continue;
+            if (Node(current) is { } node && NodeKinds.IsResult(node.Kind)) results.Add(node);
+            foreach (var link in OutOf(current)) pending.Push(link.To);
+        }
+        return results;
+    }
+
+    public IReadOnlySet<NodeId> DependenciesOf(NodeId id)
+    {
+        var visited = new HashSet<NodeId>();
+        var pending = new Stack<NodeId>();
+        pending.Push(id);
+        while (pending.TryPop(out var current))
+        {
+            if (!visited.Add(current)) continue;
+            foreach (var link in Into(current)) pending.Push(link.From);
+        }
+        return visited;
+    }
+
     public StrategyGraph WithNode(GraphNode node) => this with { Nodes = [.. Nodes.Where(existing => existing.Id != node.Id), node] };
 
     private static NodeParameters DefaultSelection() =>

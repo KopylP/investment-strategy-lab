@@ -23,6 +23,18 @@ public sealed class GraphFromRulesTests
     }
 
     [Fact]
+    public void Import_reuses_indicators_shared_by_multiple_results()
+    {
+        var source = MomentumEntry();
+        source = source with { Links = [.. source.Links, Link("mom", "result-selection", "rankBy"), Link("positive", "result-exit", "condition")] };
+        var json = RulesGenerator.Generate(Of(source)).Json;
+        var imported = Import(json).Value.Graph;
+        imported.Nodes.Count(node => node.Kind == NodeKind.Indicator).ShouldBe(1);
+        imported.Nodes.Where(node => !NodeKinds.IsResult(node.Kind)).ShouldAllBe(node => node.Block == BlockKind.Shared);
+        RulesGenerator.Generate(Of(imported)).Json.ShouldBe(json);
+    }
+
+    [Fact]
     public void Unknown_fields_refuse_the_import()
     {
         var error = Import(Minimal + ""","entry":{"condition":{"kind":"signal","signalId":"x","state":"active","scope":"anyInstrument"},"foo":1}}""").Error;

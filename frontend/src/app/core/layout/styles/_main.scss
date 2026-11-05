@@ -1,13 +1,42 @@
 .layout-main-container {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    justify-content: space-between;
-    padding: 6rem 2rem 0 2rem;
-    transition: margin-left var(--layout-section-transition-duration);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  justify-content: space-between;
+  padding: 6rem 2rem 0 2rem;
+  transition: margin-left var(--layout-section-transition-duration);
 }
 
 .layout-main {
-    flex: 1 1 auto;
-    padding-bottom: 2rem;
+  flex: 1 1 auto;
+  padding-bottom: 2rem;
+}
+
+/* The strategy graph is a workspace: navigation opens over it, with tools fitting inside the viewport. */
+.layout-wrapper:has(app-builder-draft-editor-page.graph-mode) {
+  .layout-main-container {
+    padding: 64px 8px 8px;
+    margin-left: 0;
+    transition: none;
+  }
+  .layout-main {
+    padding-bottom: 0;
+    min-width: 0;
+  }
+  app-footer {
+    display: none;
+  }
+}
+@media (max-width: 575px) {
+  .layout-wrapper:has(app-builder-draft-editor-page.graph-mode) .layout-main-container {
+    padding: 56px 8px 60px;
+  }
+}
+
+.layout-wrapper:has(app-builder-draft-editor-page.graph-mode) .layout-sidebar {
+  top:4rem;
+  height:calc(100dvh - 4rem);
+}
+@media(max-width:575px) {
+  .layout-wrapper:has(app-builder-draft-editor-page.graph-mode) .layout-sidebar {top:3.5rem;height:calc(100dvh - 3.5rem);}
 }
