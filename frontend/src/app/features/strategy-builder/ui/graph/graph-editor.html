@@ -1,138 +1,90 @@
-<div
-  class="overflow-x-auto rounded-xl bg-surface-50 p-3 dark:bg-surface-950"
-  (click)="cancelWire()"
->
-  <div class="min-w-[72rem]">
-    @for (block of blockDefinitions; track block.kind) {
-      <app-block-frame
-        [number]="block.number"
-        [title]="block.title"
-        [purpose]="block.purpose"
-        [sentence]="wordOf(block.kind)"
-        [collapsed]="isCollapsed(block.kind)"
-        (arrange)="arrange(block.kind)"
-        (toggle)="toggleBlock(block.kind)"
+<div #workspace class="workspace" tabindex="0" aria-label="Редактор схеми стратегії">
+  <aside class="palette" [class.mobile-open]="paletteOpen()">
+    <app-node-palette
+      [indicators]="vocabulary().indicators"
+      [conditions]="vocabulary().conditions"
+      [overlayContainer]="overlayContainer()"
+      (add)="addNode($event)"
+    />
+  </aside>
+  <section class="editor">
+    <div class="toolbar">
+      <button
+        class="mobile-palette-toggle"
+        type="button"
+        (click)="paletteOpen.set(!paletteOpen())"
+        [attr.aria-expanded]="paletteOpen()"
       >
-        <div
-          data-block-canvas
-          class="relative overflow-hidden bg-[linear-gradient(to_right,var(--p-surface-200)_1px,transparent_1px),linear-gradient(to_bottom,var(--p-surface-200)_1px,transparent_1px)] bg-[size:16px_16px] dark:bg-[linear-gradient(to_right,var(--p-surface-800)_1px,transparent_1px),linear-gradient(to_bottom,var(--p-surface-800)_1px,transparent_1px)]"
-          [style.height.px]="blockHeight(block.kind)"
-          (click)="canvasClick($event, block.kind)"
+        <i class="pi pi-th-large"></i> Елементи
+      </button>
+      <strong>Схема стратегії</strong>
+      <div class="tools">
+        <button type="button" aria-label="Скасувати дію" [disabled]="!canUndo()" (click)="undo()">
+          <i class="pi pi-undo"></i>
+        </button>
+        <button type="button" aria-label="Повторити дію" [disabled]="!canRedo()" (click)="redo()">
+          <i class="pi pi-refresh"></i>
+        </button>
+        <button type="button" (click)="arrangeAll()">Упорядкувати</button>
+        <button
+          type="button"
+          (click)="fit()"
+          aria-label="Показати всю схему"
+          title="Показати всю схему"
         >
-          <svg
-            class="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
+          <i class="pi pi-arrows-alt" aria-hidden="true"></i>
+        </button>
+        <button
+          type="button"
+          (click)="toggleFullscreen()"
+          [attr.aria-label]="isFullscreen() ? 'Вийти з повноекранного режиму' : 'На весь екран'"
+          [attr.title]="isFullscreen() ? 'Вийти з повноекранного режиму (Esc)' : 'На весь екран'"
+          [attr.aria-pressed]="isFullscreen()"
+        >
+          <i
+            [class]="isFullscreen() ? 'pi pi-window-minimize' : 'pi pi-expand'"
             aria-hidden="true"
+          ></i>
+        </button>
+        <button type="button" aria-label="Зменшити" (click)="setZoom(-0.1)">−</button>
+        <output>{{ (zoom() * 100).toFixed(0) }}%</output>
+        <button type="button" aria-label="Збільшити" (click)="setZoom(0.1)">+</button>
+      </div>
+    </div>
+    <nav class="role-nav" aria-label="Ролі стратегії">
+      @for (role of roles; track role.kind) {
+        <button type="button" (click)="focusRole(role.kind)">{{ role.title }}</button>
+      }
+    </nav>
+    @if (error() || connecting()) {
+      <div class="status" aria-live="polite">
+        @if (error(); as message) {
+          <span role="alert">{{ message }}</span>
+        } @else if (connecting()) {
+          <span>Оберіть підсвічений вхід тієї самої ролі.</span>
+        } @else {
+          <span
+            >Перетягніть елемент зліва · тягніть фон для навігації · коліщатко для масштабу</span
           >
-            @for (link of linksIn(block.kind); track link.from + '-' + link.to + '-' + link.input) {
-              <path
-                class="pointer-events-auto cursor-pointer"
-                [attr.d]="connectionPath(link)"
-                fill="none"
-                stroke="var(--p-surface-400)"
-                stroke-width="2"
-                (dblclick)="openConnectionMenu($event, link, block.kind)"
-              />
-            }
-          </svg>
-
-          @if (compatibleMenu(); as menu) {
-            @if (menu.block === block.kind) {
-              <app-compatible-nodes-menu
-                [kinds]="compatibleKinds()"
-                [style.left.px]="menu.x"
-                [style.top.px]="menu.y"
-                (click)="$event.stopPropagation()"
-                (choose)="insertCompatible($event)"
-              />
-            }
-          }
-
-          @for (node of nodesIn(block.kind); track node.id) {
-            <article
-              class="absolute w-56 cursor-move select-none rounded-xl border bg-surface-0 p-3 text-[13px] shadow-sm dark:bg-surface-900"
-              [class.border-primary]="selectedNodeId() === node.id"
-              [class.ring-2]="selectedNodeId() === node.id"
-              [class.ring-primary-100]="selectedNodeId() === node.id"
-              [class.border-surface]="selectedNodeId() !== node.id"
-              [class.bg-surface-100]="isResult(node)"
-              [class.dark:bg-surface-800]="isResult(node)"
-              [style.left.px]="position(node.id).x"
-              [style.top.px]="position(node.id).y"
-              (pointerdown)="startDragging($event, node)"
-              (click)="$event.stopPropagation(); select.emit(node.id)"
-            >
-              @if (problemOf(node.id); as problem) {
-                <span
-                  class="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full text-xs text-white"
-                  [class.bg-red-500]="problem.severity === 'Error'"
-                  [class.bg-amber-500]="problem.severity === 'Warning'"
-                  [pTooltip]="problem.message"
-                  >!</span
-                >
-              }
-
-              @switch (node.kind) {
-                @case ('Indicator') {
-                  <app-indicator-node [node]="node" [vocabulary]="vocabulary()" />
-                }
-                @case ('Compare') {
-                  <app-compare-node [node]="node" />
-                }
-                @case ('All') {
-                  <app-logic-node [node]="node" />
-                }
-                @case ('Any') {
-                  <app-logic-node [node]="node" />
-                }
-                @case ('Not') {
-                  <app-logic-node [node]="node" />
-                }
-                @case ('Between') {
-                  <app-range-node [node]="node" />
-                }
-                @case ('Crossed') {
-                  <app-range-node [node]="node" />
-                }
-                @case ('Signal') {
-                  <app-signal-node [node]="node" />
-                }
-                @default {
-                  @if (isResult(node)) {
-                    <app-result-node [node]="node" [title]="block.result" />
-                  } @else {
-                    <app-condition-node [node]="node" [vocabulary]="vocabulary()" />
-                  }
-                }
-              }
-
-              @for (socket of inputsOf(node); track socket.name) {
-                <button
-                  data-socket
-                  type="button"
-                  class="absolute -left-2 flex items-center gap-1 text-xs text-muted-color"
-                  [class.opacity-20]="socketDimmed(node, socket)"
-                  [style.top.px]="34 + $index * 24"
-                  (click)="connect($event, node, socket)"
-                  [attr.aria-label]="'Вхід ' + socket.name"
-                >
-                  <app-socket-shape [type]="socket.type" [label]="socket.name" />
-                </button>
-              }
-              @if (outputOf(node); as output) {
-                <button
-                  data-socket
-                  type="button"
-                  class="absolute -right-2 top-9 text-muted-color"
-                  (pointerdown)="beginWire($event, node)"
-                  aria-label="Почати звʼязок"
-                >
-                  <app-socket-shape [type]="output" label="Вихід" />
-                </button>
-              }
-            </article>
-          }
-        </div>
-      </app-block-frame>
+        }
+        @if (connecting() || error()) {
+          <button type="button" (click)="cancelWire()">Скасувати</button>
+        }
+      </div>
     }
-  </div>
+    <div
+      #canvas
+      data-block-canvas
+      class="canvas"
+      aria-label="Полотно стратегії"
+      (dragover)="$event.preventDefault()"
+      (drop)="drop($event)"
+    ></div>
+    <div class="footer">
+      <span><i class="pi pi-circle-fill" style="color: #2563eb"></i> Число</span
+      ><span><i class="pi pi-circle-fill" style="color: #7c3aed"></i> Так / ні</span
+      ><span><i class="pi pi-circle-fill" style="color: #0f766e"></i> Фонди</span
+      ><span>Вихід → вхід · Esc скасовує зв’язок · Delete видаляє вузол</span>
+    </div>
+  </section>
 </div>

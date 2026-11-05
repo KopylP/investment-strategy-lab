@@ -1,9 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
-import { Button } from 'primeng/button';
-import { Select } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
-import { BlockKind, JsonValue, NodeKind } from '../../models/draft-dto';
-import { blocks } from '../../models/draft-vm';
+import { JsonValue, NodeKind } from '../../models/draft-dto';
 import {
   ConditionKindDto,
   IndicatorKindDto,
@@ -11,7 +8,7 @@ import {
 } from '../../models/vocabulary-dto';
 
 export interface NewPaletteNode {
-  block: BlockKind;
+  block: 'Shared';
   kind: NodeKind;
   parameters: Record<string, JsonValue>;
 }
@@ -28,66 +25,182 @@ const conditionKinds: Record<string, NodeKind> = {
 
 @Component({
   selector: 'app-node-palette',
-  imports: [FormsModule, Button, Select],
+  imports: [FormsModule],
   template: `
-    <div class="card mb-3 flex flex-wrap items-center gap-2 py-3">
-      <span class="mr-1 text-sm font-medium">Додати блок</span>
-      <p-select
-        [options]="blockOptions"
-        optionLabel="label"
-        optionValue="value"
-        [ngModel]="block()"
-        (ngModelChange)="block.set($event)"
-        size="small"
+    <div class="palette-content">
+      <strong>Елементи стратегії</strong>
+      <p class="hint">Перетягніть на полотно або натисніть, щоб додати.</p>
+      <input
+        class="search"
+        type="search"
+        placeholder="Знайти елемент…"
+        aria-label="Пошук елементів"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
       />
+      <h3>Індикатори</h3>
       @for (indicator of indicators(); track indicator.code) {
-        <p-button
-          [label]="indicator.label"
-          icon="pi pi-chart-line"
-          size="small"
-          severity="secondary"
-          [outlined]="true"
-          (onClick)="addIndicator(indicator)"
-        />
+        @if (matches(indicator.label)) {
+          <button
+            type="button"
+            draggable="true"
+            (dragstart)="drag($event, indicatorRequest(indicator))"
+            (click)="addIndicator(indicator)"
+            class="item indicator"
+          >
+            <i class="pi pi-chart-line"></i
+            ><span>{{ indicator.label }}<small>Числове значення</small></span
+            ><i class="pi pi-plus plus"></i>
+          </button>
+        }
       }
+      <h3>Умови та логіка</h3>
       @for (condition of conditions(); track condition.code) {
-        <p-button
-          [label]="condition.code === 'signal' ? 'Мій сигнал' : condition.label"
-          icon="pi pi-directions-alt"
-          size="small"
-          severity="secondary"
-          [outlined]="true"
-          (onClick)="addCondition(condition)"
-        />
+        @if (matches(condition.label)) {
+          <button
+            type="button"
+            draggable="true"
+            (dragstart)="drag($event, conditionRequest(condition))"
+            (click)="addCondition(condition)"
+            class="item"
+            [class.logic]="['all', 'any', 'not'].includes(condition.code)"
+            [class.signal]="condition.code === 'signal'"
+          >
+            <i
+              [class]="
+                condition.code === 'signal'
+                  ? 'pi pi-bolt'
+                  : ['all', 'any', 'not'].includes(condition.code)
+                    ? 'pi pi-sitemap'
+                    : 'pi pi-filter'
+              "
+            ></i>
+            <span
+              >{{ condition.code === 'signal' ? 'Мій сигнал' : condition.label
+              }}<small>{{
+                ['all', 'any', 'not'].includes(condition.code) ? 'Поєднати умови' : 'Так / ні'
+              }}</small></span
+            ><i class="pi pi-plus plus"></i>
+          </button>
+        }
       }
+      @if (!indicators().some(matchesItem) && !conditions().some(matchesItem)) {
+        <p class="hint">Елементів не знайдено.</p>
+      }
+      <p class="hint">
+        Один вузол можна підключити до кількох правил. Гілки завершуються вузлами результату.
+      </p>
     </div>
   `,
+  styles: [
+    `
+      .palette-content {
+        padding: 12px 10px;
+      }
+      strong {
+        font-size: 14px;
+      }
+      .hint {
+        font-size: 12px;
+        color: var(--p-text-muted-color);
+        line-height: 1.5;
+        margin: 8px 0 16px;
+      }
+      .search {
+        width: 100%;
+        border: 1px solid var(--p-content-border-color);
+        border-radius: 6px;
+        padding: 9px;
+        margin-top: 14px;
+        font-size: 12px;
+        background: var(--p-content-background);
+        color: var(--p-text-color);
+      }
+      h3 {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--p-text-muted-color);
+        margin: 16px 0 8px;
+      }
+      .item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        text-align: left;
+        padding: 8px;
+        margin: 6px 0;
+        border: 1px solid var(--p-content-border-color);
+
+        border-radius: 6px;
+        background: var(--p-content-background);
+        color: var(--p-text-color);
+        cursor: grab;
+        font-size: 12px;
+      }
+      .item:hover,
+      .item:focus-visible {
+        background: var(--p-content-hover-background);
+        color: var(--p-content-hover-color);
+      }
+      .item:hover small,
+      .item:focus-visible small {
+        color: var(--p-text-hover-muted-color);
+      }
+      .item:focus-visible {
+        outline: 2px solid var(--p-primary-color);
+      }
+      .item.logic {
+        border-radius: 6px;
+      }
+      small {
+        display: block;
+        font-size: 10px;
+        color: var(--p-text-muted-color);
+        margin-top: 3px;
+      }
+      .plus {
+        margin-left: auto;
+        font-size: 10px;
+      }
+    `,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Palette {
+  readonly overlayContainer = input<HTMLElement | 'body'>('body');
   readonly indicators = input.required<IndicatorKindDto[]>();
   readonly conditions = input.required<ConditionKindDto[]>();
   readonly add = output<NewPaletteNode>();
-  protected readonly block = signal<BlockKind>('Entry');
-  protected readonly blockOptions = blocks.map((block) => ({
-    label: `${block.number}. ${block.title}`,
-    value: block.kind,
-  }));
-
-  protected addIndicator(indicator: IndicatorKindDto): void {
-    this.add.emit({
-      block: this.block(),
+  protected readonly search = signal('');
+  protected matches(label: string): boolean {
+    return label.toLocaleLowerCase().includes(this.search().trim().toLocaleLowerCase());
+  }
+  protected readonly matchesItem = (item: { label: string }) => this.matches(item.label);
+  protected indicatorRequest(indicator: IndicatorKindDto): NewPaletteNode {
+    return {
+      block: 'Shared',
       kind: 'Indicator',
       parameters: { indicator: indicator.code, ...defaultsOf(indicator.fields) },
-    });
+    };
   }
-
-  protected addCondition(condition: ConditionKindDto): void {
-    this.add.emit({
-      block: this.block(),
+  protected conditionRequest(condition: ConditionKindDto): NewPaletteNode {
+    return {
+      block: 'Shared',
       kind: conditionKinds[condition.code],
       parameters: defaultsOf(condition.fields),
-    });
+    };
+  }
+  protected drag(event: DragEvent, node: NewPaletteNode) {
+    event.dataTransfer?.setData('application/strategy-node', JSON.stringify(node));
+    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'copy';
+  }
+  protected addIndicator(indicator: IndicatorKindDto): void {
+    this.add.emit(this.indicatorRequest(indicator));
+  }
+  protected addCondition(condition: ConditionKindDto): void {
+    this.add.emit(this.conditionRequest(condition));
   }
 }
 

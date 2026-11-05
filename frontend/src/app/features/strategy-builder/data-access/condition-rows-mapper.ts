@@ -15,13 +15,13 @@ export function conditionRows(graph: GraphDto, block: BlockKind): ConditionRows 
   if (roots.length !== 1) return null;
 
   const root = graph.nodes.find((node) => node.id === roots[0].from);
-  if (!root || root.block !== block) return null;
+  if (!root) return null;
   if (rowKinds.has(root.kind)) return { junction: null, conditions: [root] };
   if (root.kind !== 'All' && root.kind !== 'Any') return null;
 
   const links = graph.links.filter((link) => link.to === root.id);
   const children = links.map((link) => graph.nodes.find((node) => node.id === link.from));
-  const simple = children.every((node) => node && node.block === block && rowKinds.has(node.kind));
+  const simple = children.every((node) => node && rowKinds.has(node.kind));
   if (!simple || !children.length) return null;
 
   return { junction: root, conditions: children as NodeDto[] };

@@ -4,29 +4,17 @@
   <app-page-header title="Чернетка" backLink="/strategy-builder" backLabel="Конструктор" />
   <div class="card"><p-message severity="error" text="Чернетку не знайдено" /></div>
 } @else if (store.draft(); as draft) {
-  <app-page-header title="Чернетка" backLink="/strategy-builder" backLabel="Конструктор">
-    <p-button label="Сьогодні" icon="pi pi-calendar" severity="secondary" [disabled]="true" />
-    <p-button
-      label="Бектест"
-      ariaLabel="Бектест"
-      icon="pi pi-chart-line"
-      severity="secondary"
-      [disabled]="store.busy()"
-      (onClick)="runTrial()"
-    />
-    <p-button
-      label="Опублікувати"
-      ariaLabel="Опублікувати"
-      icon="pi pi-check-circle"
-      [disabled]="store.busy()"
-      (onClick)="confirmPublish()"
-    />
-  </app-page-header>
-
-  <div class="mb-4 flex min-w-0 flex-wrap items-center gap-3">
+  <header class="editor-header">
+    <a
+      routerLink="/strategy-builder"
+      class="back-link"
+      aria-label="До конструктора"
+      title="До конструктора"
+      ><i class="pi pi-arrow-left"></i
+    ></a>
     <input
       pInputText
-      class="min-w-0 flex-1 text-xl font-semibold"
+      class="draft-name"
       [value]="draft.name"
       [pTooltip]="draft.name"
       tooltipPosition="bottom"
@@ -35,9 +23,9 @@
       aria-describedby="draft-name-error"
       aria-label="Назва чернетки"
     />
-    <span class="whitespace-nowrap text-sm text-muted-color">
-      Чернетка · {{ store.saving() === 'saved' ? 'збережено' : 'зберігаю…' }}
-    </span>
+    <span class="save-status">{{
+      store.saveError() ? 'Не збережено' : store.saving() === 'saved' ? 'Збережено' : 'Зберігаю…'
+    }}</span>
     <p-selectbutton
       [options]="modes"
       optionLabel="label"
@@ -47,76 +35,111 @@
       [allowEmpty]="false"
       ariaLabel="Режим редактора"
     />
-  </div>
-
+    <div class="header-actions">
+      <p-button
+        icon="pi pi-trash"
+        ariaLabel="Видалити чернетку"
+        pTooltip="Видалити чернетку"
+        tooltipPosition="bottom"
+        severity="danger"
+        [text]="true"
+        size="small"
+        [disabled]="store.busy()"
+        (onClick)="confirmDiscard()"
+      />
+      <p-button
+        label="Бектест"
+        ariaLabel="Бектест"
+        icon="pi pi-chart-line"
+        severity="secondary"
+        size="small"
+        [text]="true"
+        [disabled]="store.busy()"
+        (onClick)="runTrial()"
+      />
+      <p-button
+        label="Опублікувати"
+        ariaLabel="Опублікувати"
+        icon="pi pi-check-circle"
+        size="small"
+        [disabled]="store.busy()"
+        (onClick)="confirmPublish()"
+      />
+    </div>
+  </header>
+  @if (store.saveError(); as error) {
+    <div role="alert" class="mb-4 rounded-xl border border-red-300 p-4">
+      <p>{{ error }}</p>
+      @if (!store.saveConflict()) {
+        <p-button label="Повторити збереження" (onClick)="store.flush()" />
+      }
+      <p-button
+        label="Завантажити локальну копію"
+        severity="secondary"
+        (onClick)="store.downloadLocalCopy()"
+      />
+    </div>
+  }
   @if (store.nameError(); as error) {
     <p id="draft-name-error" role="alert" class="mb-4 text-red-500">{{ error }}</p>
   }
 
-  @if (summary(); as setupSummary) {
+  @if (store.mode() === 'graph') {
+    <div class="setup-toolbar">
+      <button type="button" (click)="setupVisible.set(true)">
+        <i class="pi pi-sliders-h"></i> Налаштування
+        <span>{{ summary()?.fundCount ?? 0 }} фондів</span>
+      </button>
+      <button type="button" (click)="reportsVisible.set(true)">
+        <i class="pi pi-file"></i> Рапорти
+      </button>
+      <button
+        type="button"
+        (click)="copyEntryVisible.set(true)"
+        title="Скопіювати вхід у вихід із запасом"
+      >
+        <i class="pi pi-copy"></i> Копіювати вхід у вихід
+      </button>
+      <button
+        class="review-button"
+        type="button"
+        (click)="store.reviewVisible.set(!store.reviewVisible())"
+        [attr.aria-expanded]="store.reviewVisible()"
+      >
+        <i class="pi pi-check-circle"></i> Перевірка · {{ draft.problems.length }}
+      </button>
+    </div>
+  } @else if (summary(); as setupSummary) {
     <app-builder-setup-row
       [summary]="setupSummary"
       (editSetup)="setupVisible.set(true)"
       (editReports)="reportsVisible.set(true)"
     />
   }
-
-  <div class="grid min-w-0 gap-4 2xl:grid-cols-[minmax(0,1fr)_22rem]">
-    <div class="card min-h-96 min-w-0">
+  <div class="editor-body grid min-w-0 gap-4">
+    <div class="editor-content card min-h-96 min-w-0">
       @switch (store.mode()) {
         @case ('steps') {
           <app-builder-steps-view
+            (chooseProblem)="showProblem($event)"
             (editSetup)="setupVisible.set(true)"
             (editReports)="reportsVisible.set(true)"
           />
         }
         @case ('graph') {
-          <div class="mb-3 flex flex-wrap items-start gap-2">
-            <div class="min-w-0 flex-1">
-              <app-node-palette
-                [indicators]="store.vocabulary()!.indicators"
-                [conditions]="store.vocabulary()!.conditions"
-                (add)="addNode($event)"
-              />
-            </div>
-            <p-button
-              label="Скопіювати вхід у вихід із запасом"
-              icon="pi pi-copy"
-              severity="secondary"
-              [outlined]="true"
-              (onClick)="copyEntryVisible.set(true)"
-            />
-          </div>
-          <div class="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
-            <div class="min-w-0">
-              <app-graph-editor
-                [graph]="draft.graph"
-                [layout]="draft.layout"
-                [vocabulary]="store.vocabulary()!"
-                [problems]="draft.problems"
-                [selectedNodeId]="store.selectedNodeId()"
-                [words]="draft.words"
-                (graphChange)="store.changeGraph($event)"
-                (layoutChange)="store.moveNodes($event)"
-                (select)="store.select($event)"
-              />
-            </div>
-            @if (selectedNode(); as node) {
-              <app-node-inspector
-                [node]="node"
-                [graph]="draft.graph"
-                [vocabulary]="store.vocabulary()!"
-                [signals]="store.signals()"
-                [instruments]="store.instruments()"
-                (nodeChange)="updateNode($event)"
-                (duplicate)="duplicateNode()"
-              />
-            } @else {
-              <aside class="card mb-0 h-fit text-sm text-muted-color">
-                Виберіть вузол на схемі, щоб змінити його параметри.
-              </aside>
-            }
-          </div>
+          <app-graph-editor
+            [graph]="draft.graph"
+            [layout]="draft.layout"
+            [vocabulary]="store.vocabulary()!"
+            [problems]="draft.problems"
+            [selectedNodeId]="store.selectedNodeId()"
+            [words]="draft.words"
+            [signals]="store.signals()"
+            [instruments]="store.instruments()"
+            (graphChange)="store.changeGraph($event)"
+            (layoutChange)="store.moveNodes($event)"
+            (select)="store.select($event)"
+          />
         }
         @case ('json') {
           <app-builder-json-view />
@@ -124,10 +147,20 @@
       }
     </div>
 
-    <aside class="flex min-w-0 flex-col gap-4">
-      <app-builder-words-panel [words]="draft.words" />
-      <app-builder-problems-panel [problems]="draft.problems" (choose)="showProblem($event)" />
-    </aside>
+    <details
+      [open]="store.reviewVisible()"
+      (toggle)="store.reviewVisible.set($any($event.target).open)"
+      [class.review-hidden]="store.mode() === 'graph' && !store.reviewVisible()"
+      class="review-panel min-w-0 rounded-xl border border-surface p-4"
+    >
+      <summary class="cursor-pointer font-medium">
+        Опис стратегії та перевірка ({{ draft.problems.length }})
+      </summary>
+      <div class="mt-4 grid gap-4 md:grid-cols-2">
+        <app-builder-words-panel [words]="draft.words" />
+        <app-builder-problems-panel [problems]="draft.problems" (choose)="showProblem($event)" />
+      </div>
+    </details>
   </div>
 
   <app-builder-setup-dialog

@@ -7,4 +7,5 @@ public enum BlockKind
     Entry,
     Selection,
     Risk,
+    Shared,
 }

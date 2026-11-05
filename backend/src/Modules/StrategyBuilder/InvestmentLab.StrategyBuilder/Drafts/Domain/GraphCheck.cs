@@ -13,8 +13,8 @@ public static class GraphCheck
             .. CycleProblems(graph),
             .. MissingInputs(graph),
             .. graph.Nodes.SelectMany(node => ParameterProblems(node, graph, vocabulary)),
-            .. graph.Nodes.SelectMany(node => SeriesProblems(node, draft.Setup)),
-            .. graph.Nodes.SelectMany(node => SignalProblems(node, draft.MissingSignalIds, signals ?? [])),
+            .. graph.Nodes.SelectMany(node => SeriesProblems(node, graph, draft.Setup)),
+            .. graph.Nodes.SelectMany(node => SignalProblems(node, graph, draft.MissingSignalIds, signals ?? [])),
             .. ReportSignalProblems(draft, signals ?? []),
             .. DanglingNodes(graph),
         ];
@@ -37,9 +37,7 @@ public static class GraphCheck
             if (graph.Node(link.From) is not { } from || graph.Node(link.To) is not { } to)
                 continue;
 
-            if (from.Block != to.Block)
-                yield return DraftProblem.OnNode("builder.problem.link_across_blocks", to);
-            else if (SocketMismatch(from, to, link.Input) is { } mismatch)
+            if (SocketMismatch(from, to, link.Input) is { } mismatch)
                 yield return mismatch;
         }
     }
@@ -146,12 +144,12 @@ public static class GraphCheck
     private static bool IsOutOfRange(VocabularyField field, double value) =>
         field.Minimum is { } minimum && value < minimum || field.Maximum is { } maximum && value > maximum;
 
-    private static IEnumerable<DraftProblem> SeriesProblems(GraphNode node, DraftSetup setup)
+    private static IEnumerable<DraftProblem> SeriesProblems(GraphNode node, StrategyGraph graph, DraftSetup setup)
     {
         if (node.Kind != NodeKind.Indicator || SeriesChoice.Of(node.Parameters) is not { } series)
             yield break;
 
-        if (node.Block == BlockKind.MarketFilter && series.Series == SeriesChoice.Fund)
+        if (graph.ResultsUsing(node.Id).Any(result => result.Kind == NodeKind.MarketResult) && series.Series == SeriesChoice.Fund)
             yield return DraftProblem.OnNode("builder.problem.fund_in_market_filter", node);
         if (series.Series == SeriesChoice.Extra && (series.InstrumentId is not { } instrument || !setup.ExtraSeries.Contains(instrument)))
             yield return DraftProblem.OnNode("builder.problem.extra_series_unknown", node);
@@ -172,7 +170,7 @@ public static class GraphCheck
         }
     }
 
-    private static IEnumerable<DraftProblem> SignalProblems(GraphNode node, IReadOnlyList<Guid> missing, IReadOnlyList<OwnSignal> signals)
+    private static IEnumerable<DraftProblem> SignalProblems(GraphNode node, StrategyGraph graph, IReadOnlyList<Guid> missing, IReadOnlyList<OwnSignal> signals)
     {
         if (node.Kind != NodeKind.Signal)
             yield break;
@@ -185,7 +183,7 @@ public static class GraphCheck
             yield return DraftProblem.OnNode("builder.problem.signal_not_market", node);
 
         var isThisFundSignal = node.Kind == NodeKind.Signal && node.Parameters.Text("scope") == "thisFund";
-        if (isThisFundSignal && node.Block == BlockKind.MarketFilter)
+        if (isThisFundSignal && graph.ResultsUsing(node.Id).Any(result => result.Kind == NodeKind.MarketResult))
             yield return DraftProblem.OnNode("builder.problem.this_fund_signal_in_market_filter", node);
     }
 

@@ -99,6 +99,19 @@ public sealed class ExitFromEntryTests
         exit.Nodes.ShouldNotContain(node => node.Block == BlockKind.Exit && node.Kind == NodeKind.Not);
     }
 
+    [Fact]
+    public void Replacing_exit_keeps_shared_entry_nodes_and_reuses_the_indicator()
+    {
+        var source = MomentumEntry();
+        source = source with { Links = [.. source.Links, Link("positive", "result-exit", "condition")] };
+        var result = ExitFromEntry.Of(source, EngineSchema.Vocabulary, 0.02);
+        result.Nodes.Count(node => node.Kind == NodeKind.Indicator).ShouldBe(1);
+        result.Node(new NodeId("positive")).ShouldNotBeNull();
+        result.Into(StrategyGraph.EntryResultId, "condition").ShouldHaveSingleItem().From.Value.ShouldBe("positive");
+        Input(result, ExitCondition(result, NodeKind.Compare), NodeSockets.Left).Id.Value.ShouldBe("mom");
+        GraphCheck.Of(Of(result), EngineSchema.Vocabulary).ShouldBeEmpty();
+    }
+
     private static GraphNode ExitCondition(StrategyGraph graph, NodeKind expectedKind)
     {
         var link = graph.Into(StrategyGraph.ExitResultId, NodeSockets.Condition).ShouldHaveSingleItem();

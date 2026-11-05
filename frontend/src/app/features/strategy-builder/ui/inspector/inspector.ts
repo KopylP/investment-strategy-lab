@@ -5,6 +5,7 @@ import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { OwnSignalDto } from '../../models/own-signal-dto';
+import { blocks } from '../../models/draft-vm';
 import { GraphDto, JsonValue, NodeDto } from '../../models/draft-dto';
 import { InstrumentChoiceDto } from '../../models/instrument-dto';
 import { VocabularyDto, VocabularyFieldDto } from '../../models/vocabulary-dto';
@@ -23,6 +24,36 @@ const conditionCodes: Record<string, string> = {
   selector: 'app-node-inspector',
   imports: [FormsModule, Button, InputNumber, InputText, Select],
   templateUrl: './inspector.html',
+  styles: [
+    `
+      :host {
+        display: block;
+        min-width: 0;
+      }
+      .inline-fields {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .inline-fields .wide,
+      .inline-fields > label {
+        grid-column: 1 / -1;
+      }
+      .inline-fields label {
+        font-size: 11px;
+        font-weight: 500;
+      }
+      .inline-fields .parameter-field {
+        min-width: 0;
+        gap: 4px;
+      }
+      .inline-inspector {
+        --p-form-field-padding-x: 8px;
+        --p-form-field-padding-y: 5px;
+        --p-form-field-sm-font-size: 12px;
+      }
+    `,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Inspector {
@@ -30,13 +61,17 @@ export class Inspector {
   readonly graph = input.required<GraphDto>();
   readonly vocabulary = input.required<VocabularyDto>();
   readonly instruments = input.required<InstrumentChoiceDto[]>();
+  readonly overlayContainer = input<HTMLElement | 'body'>('body');
   readonly signals = input<OwnSignalDto[]>([]);
   protected readonly marketSignals = computed(() =>
     this.signals().filter((signal) => signal.isMarket),
   );
   readonly nodeChange = output<NodeDto>();
   readonly duplicate = output<void>();
+  readonly remove = output<void>();
   readonly allowDuplicate = input(true);
+  readonly guided = input(false);
+  readonly inline = input(false);
 
   protected readonly definition = computed(() => {
     if (this.node().kind === 'Indicator') {
@@ -113,6 +148,12 @@ export class Inspector {
   }
 
   protected title(): string {
-    return this.definition()?.label ?? this.node().kind;
+    return (
+      this.definition()?.label ??
+      (this.node().kind.endsWith('Result')
+        ? blocks.find((block) => block.kind === this.node().block)?.result
+        : null) ??
+      this.node().kind
+    );
   }
 }

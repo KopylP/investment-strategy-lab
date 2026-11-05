@@ -43,6 +43,20 @@ public sealed class RulesGeneratorTests
     }
 
     [Fact]
+    public void Shared_indicators_and_conditions_compile_into_each_result_without_duplication()
+    {
+        var graph = MomentumEntry();
+        graph = graph with { Links = [.. graph.Links, Link("positive", "result-exit", "condition"), Link("mom", "result-selection", "rankBy")] };
+        var generated = RulesGenerator.Generate(Of(graph));
+        var rules = JsonNode.Parse(generated.Json)!;
+        rules["indicators"]!.AsObject().Count.ShouldBe(1);
+        rules["entry"]!["condition"]!.ToJsonString().ShouldBe(rules["exit"]!["condition"]!.ToJsonString());
+        generated.SourceMap.NodeAt("entry.condition")!.Value.ShouldBe("positive");
+        generated.SourceMap.NodeAt("exit.condition")!.Value.ShouldBe("positive");
+        rules["selection"]!["rankBy"]!.ToString().ShouldBe("blendedMomentumFund");
+    }
+
+    [Fact]
     public void An_unconnected_exit_leaves_the_exit_out() =>
         JsonNode.Parse(RulesGenerator.Generate(Of(MomentumEntry())).Json)!.AsObject().ContainsKey("exit").ShouldBeFalse();
 

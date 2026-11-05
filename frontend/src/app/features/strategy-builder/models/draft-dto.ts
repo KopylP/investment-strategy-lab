@@ -23,7 +23,7 @@ export type JsonValue =
 export interface NodeDto {
   id: string;
   kind: NodeKind;
-  block: BlockKind;
+  block: BlockKind | 'Shared';
   parameters: Record<string, JsonValue>;
 }
 

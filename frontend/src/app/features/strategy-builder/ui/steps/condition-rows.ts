@@ -24,6 +24,7 @@ import { Inspector } from '../inspector/inspector';
           [instruments]="instruments()"
           [signals]="signals()"
           [allowDuplicate]="false"
+          [guided]="true"
           (nodeChange)="nodeChange.emit($event)"
         />
       </div>

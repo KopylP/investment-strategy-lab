@@ -31,7 +31,7 @@ export class DraftStore {
   private readonly currentVocabulary = signal<VocabularyDto | null>(null);
   private readonly currentInstruments = signal<InstrumentChoiceDto[]>([]);
   private readonly currentSignals = signal<OwnSignalDto[]>([]);
-  private readonly currentMode = signal<EditorMode>('steps');
+  private readonly currentMode = signal<EditorMode>('graph');
   private readonly currentSelection = signal<string | null>(null);
   private readonly saveState = signal<SaveState>('saved');
   private rulesTimer: ReturnType<typeof setTimeout> | null = null;
@@ -39,6 +39,7 @@ export class DraftStore {
   private rulesDirty = false;
   private layoutDirty = false;
   private changeNumber = 0;
+  private discarding = false;
   private rulesSave: Promise<void> | null = null;
   private layoutSave: Promise<void> | null = null;
   private openNumber = 0;
@@ -51,6 +52,9 @@ export class DraftStore {
   readonly selectedNodeId = this.currentSelection.asReadonly();
   readonly saving = this.saveState.asReadonly();
   readonly busy = signal(false);
+  readonly saveError = signal<string | null>(null);
+  readonly saveConflict = signal(false);
+  readonly reviewVisible = signal(false);
   readonly nameError = signal<string | null>(null);
   readonly loading = signal(false);
   readonly loadError = signal<unknown>(null);
@@ -122,6 +126,7 @@ export class DraftStore {
   }
 
   moveNodes(layout: LayoutDto): void {
+    if (this.discarding) return;
     const draft = this.currentDraft();
     if (!draft) return;
 
@@ -144,7 +149,37 @@ export class DraftStore {
 
   async flush(): Promise<void> {
     this.cancelTimers();
-    await Promise.all([this.saveRules(), this.saveLayout()]);
+    await this.saveRules();
+    if (!this.rulesDirty && !this.saveConflict()) await this.saveLayout();
+  }
+
+  async discard(): Promise<boolean> {
+    const draft = this.currentDraft();
+    if (!draft || this.busy()) return false;
+    this.busy.set(true);
+    this.discarding = true;
+    this.cancelTimers();
+    try {
+      // Let already submitted saves settle before deleting, then suppress queued saves.
+      await Promise.allSettled([this.rulesSave, this.layoutSave]);
+      this.cancelTimers();
+      await this.api.discard(draft.id);
+      this.rulesDirty = false;
+      this.layoutDirty = false;
+      this.currentDraft.set(null);
+      this.messages.add({ severity: 'success', summary: 'Чернетку видалено' });
+      return true;
+    } catch (error) {
+      this.reportFailure('Не вдалося видалити чернетку', error);
+      return false;
+    } finally {
+      this.discarding = false;
+      this.busy.set(false);
+      if (this.currentDraft()) {
+        if (this.rulesDirty) this.scheduleRulesSave();
+        if (this.layoutDirty) this.scheduleLayoutSave();
+      }
+    }
   }
 
   async check(): Promise<boolean> {
@@ -154,6 +189,7 @@ export class DraftStore {
 
     try {
       const check = await this.api.check(draft.id);
+      this.reviewVisible.set(!check.isClean);
       this.currentDraft.update((current) =>
         current ? { ...current, problems: check.problems } : current,
       );
@@ -220,13 +256,14 @@ export class DraftStore {
       block: problem.block ?? null,
       reportCode: problem.reportCode ?? null,
     }));
+    this.reviewVisible.set(true);
     this.currentDraft.update((draft) => (draft ? { ...draft, problems: placed } : draft));
   }
 
   async copyEntryToExit(margin: number): Promise<boolean> {
     await this.flush();
     const draft = this.currentDraft();
-    if (!draft) return false;
+    if (!draft || this.rulesDirty || this.layoutDirty || this.saveConflict()) return false;
 
     try {
       const copied = await this.api.copyEntryToExit(draft.id, draft.revision, margin);
@@ -247,6 +284,7 @@ export class DraftStore {
     if (!draft) return null;
 
     await this.flush();
+    if (this.rulesDirty || this.layoutDirty || this.saveConflict()) return null;
 
     try {
       return await this.api.rules(draft.id);
@@ -258,9 +296,11 @@ export class DraftStore {
   }
 
   private changeDraft(change: (draft: DraftDto) => DraftDto): void {
+    if (this.discarding) return;
     const draft = this.currentDraft();
     if (!draft) return;
 
+    if (!this.saveConflict()) this.saveError.set(null);
     this.currentDraft.set(change(draft));
     this.changeNumber++;
     this.rulesDirty = true;
@@ -279,6 +319,8 @@ export class DraftStore {
   }
 
   private async saveRules(): Promise<void> {
+    if (this.discarding) return;
+    if (this.saveConflict()) return;
     if (!this.rulesDirty) {
       if (this.rulesSave) await this.rulesSave;
       this.updateSaveState();
@@ -320,6 +362,7 @@ export class DraftStore {
         graph: draft.graph,
         reports: draft.reports,
       });
+      this.saveError.set(null);
       const current = this.currentDraft();
       if (!current || current.id !== saved.id) return true;
 
@@ -335,9 +378,17 @@ export class DraftStore {
         });
       }
     } catch (error) {
-      if (problemCode(error) === 'builder.draft.stale') await this.reloadStaleDraft(draft.id);
-      else {
+      if (problemCode(error) === 'builder.draft.stale') {
         this.rulesDirty = true;
+        this.saveConflict.set(true);
+        this.saveError.set(
+          'Чернетку змінили в іншому вікні. Ваші зміни залишилися тут. Збережіть локальну копію перед відкриттям серверної версії.',
+        );
+        return false;
+      } else {
+        this.rulesDirty = true;
+        this.saveError.set('Не вдалося зберегти зміни. Перевірте з’єднання та спробуйте ще раз.');
+        this.placeProblems(error);
         this.reportFailure('Чернетку не збережено', error);
         return false;
       }
@@ -349,6 +400,8 @@ export class DraftStore {
   }
 
   private async saveLayout(): Promise<void> {
+    if (this.discarding) return;
+    if (this.saveConflict()) return;
     if (!this.layoutDirty) {
       if (this.layoutSave) await this.layoutSave;
       this.updateSaveState();
@@ -382,8 +435,10 @@ export class DraftStore {
 
     try {
       await this.api.moveNodes(draft.id, draft.layout);
+      this.saveError.set(null);
     } catch (error) {
       this.layoutDirty = true;
+      this.saveError.set('Не вдалося зберегти розташування вузлів. Спробуйте ще раз.');
       this.reportFailure('Розташування вузлів не збережено', error);
       return false;
     } finally {
@@ -393,17 +448,17 @@ export class DraftStore {
     return true;
   }
 
-  private async reloadStaleDraft(id: string): Promise<void> {
-    const fresh = await this.api.get(id);
-    this.currentDraft.set(fresh);
-    this.rulesDirty = false;
-    this.layoutDirty = false;
-    this.messages.add({
-      severity: 'warn',
-      summary: 'Чернетку оновлено',
-      detail: 'Її змінили в іншому вікні, тому відкрито останню збережену версію.',
-      life: 8000,
-    });
+  downloadLocalCopy(): void {
+    const draft = this.currentDraft();
+    if (!draft) return;
+    const url = URL.createObjectURL(
+      new Blob([JSON.stringify(draft, null, 2)], { type: 'application/json' }),
+    );
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${draft.name}-local-draft.json`;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   private updateSaveState(): void {

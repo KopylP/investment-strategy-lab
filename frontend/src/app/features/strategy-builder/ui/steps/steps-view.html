@@ -1,99 +1,123 @@
-<nav class="mb-5 flex flex-wrap gap-2" aria-label="Кроки стратегії">
-  @for (title of titles; track title) {
-    <button
-      type="button"
-      class="rounded border border-surface px-3 py-2 text-sm"
-      [class.bg-primary]="step() === $index"
-      [class.text-primary-contrast]="step() === $index"
-      [attr.aria-current]="step() === $index ? 'step' : null"
-      (click)="step.set($index)"
-    >
-      {{ $index + 1 }}. {{ title }}
-    </button>
-  }
-</nav>
-<p class="mb-2 text-sm text-muted-color">Крок {{ step() + 1 }} із {{ titles.length }}</p>
-<h2 class="mb-4 text-lg font-semibold">{{ titles[step()] }}</h2>
-@if (store.draft(); as draft) {
-  @switch (step()) {
-    @case (0) {
-      <label class="mb-3 flex flex-col gap-2"
-        >Назва
-        <input pInputText [ngModel]="draft.name" (ngModelChange)="store.rename($event)" />
-      </label>
-      <label class="flex flex-col gap-2"
-        >Опис
-        <textarea
-          pInputText
-          rows="4"
-          [ngModel]="draft.description"
-          (ngModelChange)="store.changeDescription($event)"
-        ></textarea>
-      </label>
+<div class="grid min-w-0 gap-6 lg:grid-cols-[15rem_minmax(0,1fr)]">
+  <nav
+    class="flex gap-2 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible"
+    aria-label="Кроки стратегії"
+  >
+    @for (title of titles; track title) {
+      <button
+        type="button"
+        class="shrink-0 rounded-lg border border-surface px-3 py-3 text-left text-sm"
+        [class.bg-primary]="step() === $index"
+        [class.text-primary-contrast]="step() === $index"
+        [attr.aria-current]="step() === $index ? 'step' : null"
+        (click)="step.set($index)"
+      >
+        {{ $index + 1 }}. {{ title }}
+      </button>
     }
-    @case (1) {
-      <app-builder-setup-dialog
-        (instrumentsChanged)="store.refreshInstruments()"
-        [inline]="true"
-        [setup]="draft.setup"
-        [instruments]="store.instruments()"
-        (saved)="store.changeSetup($event)"
+  </nav>
+  <section class="min-w-0">
+    <p class="mb-2 text-sm text-muted-color">Крок {{ step() + 1 }} із {{ titles.length }}</p>
+    <h2 class="mb-2 text-lg font-semibold">{{ titles[step()] }}</h2>
+    <p class="mb-5 text-sm text-muted-color">{{ guidance[step()] }}</p>
+    @if (store.draft(); as draft) {
+      @switch (step()) {
+        @case (0) {
+          <label class="mb-3 flex flex-col gap-2"
+            >Назва
+            <input pInputText [ngModel]="draft.name" (ngModelChange)="store.rename($event)" />
+          </label>
+          <label class="flex flex-col gap-2"
+            >Опис
+            <textarea
+              pInputText
+              rows="4"
+              [ngModel]="draft.description"
+              (ngModelChange)="store.changeDescription($event)"
+            ></textarea>
+          </label>
+        }
+        @case (1) {
+          <app-builder-setup-dialog
+            (instrumentsChanged)="store.refreshInstruments()"
+            [inline]="true"
+            [setup]="draft.setup"
+            [instruments]="store.instruments()"
+            (saved)="store.changeSetup($event)"
+          />
+        }
+        @case (7) {
+          <app-builder-reports-dialog
+            [inline]="true"
+            [reports]="draft.reports"
+            [declarations]="store.vocabulary()!.reports"
+            [signals]="store.signals()"
+            (saved)="store.changeReports($event)"
+          />
+        }
+        @case (8) {
+          <p-button label="Перевірити" icon="pi pi-check" (onClick)="store.check()" />
+          <app-builder-problems-panel
+            [problems]="draft.problems"
+            (choose)="chooseProblem.emit($event)"
+          />
+        }
+        @default {
+          <div class="mb-4 rounded-lg bg-surface-50 p-4 dark:bg-surface-900">
+            <strong>Як працює правило</strong>
+            <p class="mb-0">{{ sentence() }}</p>
+          </div>
+          @if (rows() || block() === 'Selection') {
+            <p-button
+              label="Змінити зв’язки на схемі"
+              severity="secondary"
+              [text]="true"
+              (onClick)="editGraph()"
+            />
+          }
+          @if (step() === 6) {
+            <p class="mb-3 text-sm text-muted-color">Необовʼязковий крок. Можна перейти далі.</p>
+          }
+          @if (rows(); as condition) {
+            <app-condition-rows
+              [rows]="condition"
+              [graph]="draft.graph"
+              [vocabulary]="store.vocabulary()!"
+              [signals]="store.signals()"
+              [instruments]="store.instruments()"
+              (nodeChange)="updateNode($event)"
+              (select)="store.select($event)"
+            />
+          } @else if (block() !== 'Selection') {
+            <app-readonly-condition [sentence]="sentence()" (edit)="editGraph()" />
+          }
+          @if (result(); as node) {
+            <app-node-inspector
+              [node]="node"
+              [graph]="draft.graph"
+              [vocabulary]="store.vocabulary()!"
+              [signals]="store.signals()"
+              [instruments]="store.instruments()"
+              [allowDuplicate]="false"
+              [guided]="true"
+              (nodeChange)="updateNode($event)"
+            />
+          }
+        }
+      }
+    }
+    <div class="mt-5 flex justify-between gap-3">
+      <p-button
+        label="Назад"
+        severity="secondary"
+        [disabled]="step() === 0"
+        (onClick)="step.set(step() - 1)"
       />
-    }
-    @case (7) {
-      <app-builder-reports-dialog
-        [inline]="true"
-        [reports]="draft.reports"
-        [declarations]="store.vocabulary()!.reports"
-        [signals]="store.signals()"
-        (saved)="store.changeReports($event)"
+      <p-button
+        label="Далі"
+        [disabled]="step() === titles.length - 1"
+        (onClick)="step.set(step() + 1)"
       />
-    }
-    @case (8) {
-      <p-button label="Перевірити" icon="pi pi-check" (onClick)="store.check()" />
-      <app-builder-problems-panel [problems]="draft.problems" (choose)="editGraph()" />
-    }
-    @default {
-      @if (step() === 6) {
-        <p class="mb-3 text-sm text-muted-color">Необовʼязковий крок. Можна перейти далі.</p>
-      }
-      @if (rows(); as condition) {
-        <app-condition-rows
-          [rows]="condition"
-          [graph]="draft.graph"
-          [vocabulary]="store.vocabulary()!"
-          [signals]="store.signals()"
-          [instruments]="store.instruments()"
-          (nodeChange)="updateNode($event)"
-          (select)="store.select($event)"
-        />
-      } @else if (block() !== 'Selection') {
-        <app-readonly-condition [sentence]="sentence()" (edit)="editGraph()" />
-      }
-      @if (result(); as node) {
-        <app-node-inspector
-          [node]="node"
-          [graph]="draft.graph"
-          [vocabulary]="store.vocabulary()!"
-          [signals]="store.signals()"
-          [instruments]="store.instruments()"
-          [allowDuplicate]="false"
-          (nodeChange)="updateNode($event)"
-        />
-      }
-    }
-  }
-}
-<div class="mt-5 flex justify-between gap-3">
-  <p-button
-    label="Назад"
-    severity="secondary"
-    [disabled]="step() === 0"
-    (onClick)="step.set(step() - 1)"
-  />
-  <p-button
-    label="Далі"
-    [disabled]="step() === titles.length - 1"
-    (onClick)="step.set(step() + 1)"
-  />
+    </div>
+  </section>
 </div>

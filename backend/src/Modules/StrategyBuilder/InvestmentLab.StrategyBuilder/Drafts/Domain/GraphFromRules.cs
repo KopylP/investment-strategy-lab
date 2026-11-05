@@ -56,6 +56,7 @@ public static class GraphFromRules
     private sealed class RulesReading(JsonElement rules, RuleVocabulary vocabulary)
     {
         private readonly Dictionary<string, JsonElement> _indicators = [];
+        private readonly Dictionary<string, NodeId> _indicatorNodes = [];
         private readonly List<Guid> _extraSeries = [];
         private StrategyGraph _graph = StrategyGraph.Empty;
         private int _nextNode = 1;
@@ -218,6 +219,7 @@ public static class GraphFromRules
 
         private NodeId IndicatorNode(string name, BlockKind block, string path)
         {
+            if (_indicatorNodes.TryGetValue(name, out var existing)) return existing;
             if (!_indicators.TryGetValue(name, out var definition))
                 throw new ImportRefused(ImportErrors.ReferenceUnknown(name, path));
 
@@ -225,12 +227,14 @@ public static class GraphFromRules
             foreach (var property in definition.EnumerateObject().Where(property => property.Name != "kind"))
                 parameters = parameters.With(property.Name, property.Value);
 
-            return Add(NodeKind.Indicator, block, parameters).Id;
+            var id = Add(NodeKind.Indicator, BlockKind.Shared, parameters).Id;
+            _indicatorNodes[name] = id;
+            return id;
         }
 
         private GraphNode Add(NodeKind kind, BlockKind block, NodeParameters parameters)
         {
-            var node = new GraphNode(new NodeId($"n-{_nextNode++:D3}"), kind, block, parameters);
+            var node = new GraphNode(new NodeId($"n-{_nextNode++:D3}"), kind, NodeKinds.IsResult(kind) ? block : BlockKind.Shared, parameters);
             _graph = _graph with { Nodes = [.. _graph.Nodes, node] };
 
             return node;
