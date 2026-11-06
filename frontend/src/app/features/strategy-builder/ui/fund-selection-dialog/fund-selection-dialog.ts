@@ -47,7 +47,7 @@ export class FundSelectionDialog {
   protected readonly scope = signal<'added' | 'external'>('added');
   protected readonly searchScopes = [
     { label: 'Додані інструменти', value: 'added' },
-    { label: 'Пошук у Yahoo Finance', value: 'external' },
+    { label: 'Пошук у джерелі котирувань', value: 'external' },
   ];
   protected readonly exchange = signal<string | null>(null);
   protected readonly region = signal<string | null>(null);

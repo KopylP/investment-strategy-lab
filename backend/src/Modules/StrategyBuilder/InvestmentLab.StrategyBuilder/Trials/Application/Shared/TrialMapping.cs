@@ -17,5 +17,7 @@ public static class TrialMapping
         AnnualReturnAfterTax: summary.AnnualReturnAfterTax,
         Volatility: summary.Volatility,
         Sharpe: summary.Sharpe,
-        MaxDrawdown: summary.MaxDrawdown);
+        MaxDrawdown: summary.MaxDrawdown,
+        ExperimentId: run.ExperimentId,
+        Experiment: run.Experiment);
 }

@@ -1,7 +1,7 @@
 # ADR-0008: Постачальник котирувань, курси й податкові правила мають одного власника
 
 - Статус: прийнято (2026-11-01)
-- Контекст: D8 у [migration-plan](../migration-plan.md), [ADR-0004](ADR-0004-python-strategy-engine.md), [ADR-0009](ADR-0009-messages-as-codes.md)
+- Контекст: [ADR-0004](ADR-0004-python-strategy-engine.md), [ADR-0009](ADR-0009-messages-as-codes.md)
 
 ## Контекст
 Префікс `yfinance:` розбирали вісім обробників у шести модулях і фронтенд, а суфікси бірж були в імпорті виписок. Правило «усе через PLN і NBP»

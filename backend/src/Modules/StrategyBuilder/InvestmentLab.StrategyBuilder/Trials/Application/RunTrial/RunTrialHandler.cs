@@ -4,9 +4,16 @@ using InvestmentLab.StrategyBuilder.Trials.Domain;
 
 namespace InvestmentLab.StrategyBuilder.Trials.Application.RunTrial;
 
-public sealed record RunTrialCommand(Guid DraftId, string? Label);
+public sealed record RunTrialCommand(Guid DraftId, string? Label, TrialExperiment? Experiment = null);
 
-public sealed class RunTrialHandler(IDraftRepository drafts, IRuleVocabulary vocabularies, IStrategyAuthoring authoring, ITrialBacktests backtests, ITrialRunGate gate, TimeProvider clock, IOwnSignals signals)
+public sealed class RunTrialHandler(
+    IDraftRepository drafts,
+    IDraftChecks checker,
+    IStrategyAuthoring authoring,
+    ITrialExperiments experiments,
+    TrialRunSummaries summaries,
+    ITrialRunGate gate,
+    TimeProvider clock)
 {
     public async Task<Result<TrialRunDto>> Handle(RunTrialCommand command, CancellationToken cancellationToken)
     {
@@ -16,52 +23,82 @@ public sealed class RunTrialHandler(IDraftRepository drafts, IRuleVocabulary voc
         if (draft is null)
             return DraftErrors.NotFound(command.DraftId);
 
-        var vocabulary = await vocabularies.GetAsync(cancellationToken);
-        if (vocabulary.IsFailure)
-            return vocabulary.Error;
+        var checkedDraft = await checker.CheckAsync(draft, cancellationToken);
+        if (checkedDraft.IsFailure)
+            return checkedDraft.Error;
+        if (!checkedDraft.Value.IsClean)
+            return ProblemsOf(checkedDraft.Value.Problems);
 
-        var problems = GraphCheck.Of(draft, vocabulary.Value, await signals.AllAsync(cancellationToken));
-        if (DraftCheck.HasErrors(problems))
-            return ProblemsOf(problems);
+        var rules = checkedDraft.Value.Rules!;
+        var experimentCheck = await CheckExperiment(command.Experiment, rules, cancellationToken);
+        if (experimentCheck.IsFailure)
+            return experimentCheck.Error;
 
-        var rules = RulesGenerator.Generate(draft);
-        var fingerprint = DraftFingerprint.Of(rules, draft.Setup, draft.Reports);
+        var fingerprint = DraftFingerprint.Of(rules, draft.Setup, draft.Reports, command.Experiment);
         if (draft.TrialWith(fingerprint) is { } existing)
-            return await DescribeAsync(existing, cancellationToken);
+            return await summaries.DescribeAsync(existing, cancellationToken);
 
-        var strategy = new AuthoredStrategy(rules.Json, SetupBindings.EvaluationSetup(draft), draft.Reports);
-        var written = await authoring.WriteTrialVersionAsync(draft.OwnerId, draft.TrialStrategyId, strategy, cancellationToken);
-        if (written.IsFailure)
-        {
-            if (written.Error.Parameters is not RulesRefused refused)
-                return written.Error;
+        var executed = await Execute(draft, rules, command.Experiment, cancellationToken);
+        if (executed.IsFailure)
+            return executed.Error;
 
-            var placed = EngineProblems.Placed(refused.Problems, rules.SourceMap, draft.Graph);
-
-            return ProblemsOf(placed);
-        }
-
-        var version = written.Value;
-        var run = draft.RecordTrial(version.StrategyId, version.Version, fingerprint, command.Label, clock.GetUtcNow());
+        var run = draft.RecordTrial(executed.Value, fingerprint, command.Label, clock.GetUtcNow());
         await drafts.SaveChangesAsync(cancellationToken);
 
-        return await DescribeAsync(run, cancellationToken);
+        return await summaries.DescribeAsync(run, cancellationToken);
+    }
+
+    private async Task<Result> CheckExperiment(TrialExperiment? experiment, GeneratedRules rules, CancellationToken cancellationToken)
+    {
+        if (experiment is null)
+            return Result.Success();
+        if (experiment.ShapeProblem() is { } shapeProblem)
+            return Result.Failure(shapeProblem);
+
+        return await experiments.CheckAsync(experiment, rules.Json, cancellationToken);
+    }
+
+    private async Task<Result<TrialExecution>> Execute(
+        StrategyDraft draft,
+        GeneratedRules rules,
+        TrialExperiment? experiment,
+        CancellationToken cancellationToken)
+    {
+        var setup = SetupBindings.EvaluationSetup(draft);
+        var strategy = new AuthoredStrategy(rules.Json, setup, draft.Reports);
+        var written = await authoring.WriteTrialVersionAsync(draft.OwnerId, draft.TrialStrategyId, strategy, cancellationToken);
+        if (written.IsFailure)
+            return AuthoringFailure(written.Error, rules, draft.Graph);
+
+        if (experiment is null)
+            return new TrialExecution(written.Value);
+
+        var requested = await experiments.RequestAsync(written.Value, experiment, cancellationToken);
+        if (requested.IsFailure)
+            return requested.Error;
+
+        return new TrialExecution(written.Value, requested.Value, experiment);
+    }
+
+    private static Error AuthoringFailure(Error error, GeneratedRules rules, StrategyGraph graph)
+    {
+        if (error.Parameters is not RulesRefused refused)
+            return error;
+
+        var placed = EngineProblems.Placed(refused.Problems, rules.SourceMap, graph);
+
+        return ProblemsOf(placed);
     }
 
     private static Error ProblemsOf(IReadOnlyList<DraftProblem> problems)
     {
-        var placed = problems.Select(problem => new TrialProblemDto(
-            Message: problem.Message,
-            Severity: problem.Severity.ToString(),
-            NodeId: problem.Node?.Value)).ToList();
+        var placed = problems.Select(ProblemOf).ToList();
 
         return TrialErrors.DraftHasProblems(new { problems = placed });
     }
 
-    private async Task<TrialRunDto> DescribeAsync(TrialRun run, CancellationToken cancellationToken)
-    {
-        var summary = await backtests.SummaryOfAsync(run.StrategyId, run.StrategyVersion, cancellationToken);
-
-        return TrialMapping.ToDto(run, summary);
-    }
+    private static TrialProblemDto ProblemOf(DraftProblem problem) => new(
+        Message: problem.Message,
+        Severity: problem.Severity.ToString(),
+        NodeId: problem.Node?.Value);
 }

@@ -1,3 +1,5 @@
+using InvestmentLab.StrategyBuilder.Trials.Domain;
+
 namespace InvestmentLab.StrategyBuilder.Drafts.Domain;
 
 public sealed class StrategyDraft : AggregateRoot<Guid>
@@ -92,15 +94,25 @@ public sealed class StrategyDraft : AggregateRoot<Guid>
 
     public TrialRun RecordTrial(Guid trialStrategyId, int version, string fingerprint, string? label, DateTimeOffset now)
     {
+        var trialVersion = new TrialVersion(trialStrategyId, version);
+        var execution = new TrialExecution(trialVersion);
+
+        return RecordTrial(execution, fingerprint, label, now);
+    }
+
+    public TrialRun RecordTrial(TrialExecution execution, string fingerprint, string? label, DateTimeOffset now)
+    {
         var trial = new TrialRun(
             Number: Trials.Count + 1,
-            StrategyId: trialStrategyId,
-            StrategyVersion: version,
+            StrategyId: execution.Version.StrategyId,
+            StrategyVersion: execution.Version.Version,
             Fingerprint: fingerprint,
             Label: label,
-            RanAt: now);
+            RanAt: now,
+            ExperimentId: execution.ExperimentId,
+            Experiment: execution.Experiment);
 
-        TrialStrategyId ??= trialStrategyId;
+        TrialStrategyId ??= execution.Version.StrategyId;
         Trials = [.. Trials, trial];
         UpdatedAt = now;
 

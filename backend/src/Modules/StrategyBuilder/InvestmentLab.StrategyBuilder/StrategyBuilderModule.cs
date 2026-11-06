@@ -15,6 +15,7 @@ using InvestmentLab.StrategyBuilder.Drafts.Application.OpenPublishedStrategy;
 using InvestmentLab.StrategyBuilder.Drafts.Application.GetPublishedStrategy;
 using InvestmentLab.StrategyBuilder.Trials.Api;
 using InvestmentLab.StrategyBuilder.Trials.Application.ListTrials;
+using InvestmentLab.StrategyBuilder.Trials.Application.Shared;
 using InvestmentLab.StrategyBuilder.Trials.Application.RunTrial;
 using InvestmentLab.StrategyBuilder.Trials.Domain;
 using InvestmentLab.StrategyBuilder.Trials.Infrastructure;
@@ -61,6 +62,8 @@ public sealed class StrategyBuilderModule : IModule
         services.AddScoped<AddFundsHandler>();
         services.AddSingleton<ITrialRunGate, TrialRunGate>();
         services.AddScoped<ITrialBacktests, TrialBacktests>();
+        services.AddScoped<ITrialExperiments, TrialExperiments>();
+        services.AddScoped<TrialRunSummaries>();
         services.AddScoped<RunTrialHandler>();
         services.AddScoped<ListTrialsHandler>();
         services.AddScoped<IPublishedLayoutRepository, PublishedLayoutRepository>();
@@ -79,6 +82,7 @@ public sealed class StrategyBuilderModule : IModule
         services.AddScoped<IStrategyAuthoring, StrategyAuthoring>();
         services.AddScoped<DraftDescriber>();
         services.AddScoped<DraftChecker>();
+        services.AddScoped<IDraftChecks>(provider => provider.GetRequiredService<DraftChecker>());
         services.AddScoped<GetVocabularyHandler>();
         services.AddScoped<ListInstrumentsHandler>();
         services.AddScoped<CreateDraftHandler>();

@@ -1,0 +1,25 @@
+    @if (studies().length) {
+      <section class="card mt-4" aria-label="Перевірка стійкості">
+        <h2 class="mt-0 text-lg font-semibold">Перевірка стійкості</h2>
+        <p class="text-sm text-muted-color">Незалежні тести обирають параметр лише за Sharpe навчального вікна. Кожне тестове вікно починається з указаного капіталу. Перевірка сусідніх значень за весь період є дослідницькою.</p>
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[54rem] text-left text-sm">
+            <thead><tr class="text-muted-color"><th class="p-2">Перевірка</th><th class="p-2">Навчальне вікно</th><th class="p-2">Тестове вікно</th><th class="p-2">Значення параметра</th><th class="p-2">Дохідність / рік</th><th class="p-2">Sharpe</th><th class="p-2">Просідання</th></tr></thead>
+            <tbody>
+              @for (study of studies(); track $index) {
+                <tr class="border-t border-surface">
+                  <th class="p-2 font-medium">{{ studyNames[study.kind] }}</th>
+                  <td class="p-2">@if (study.window.training; as training) { {{ training.start | date }} – {{ training.end | date }} } @else { — }</td>
+                  <td class="p-2">{{ study.window.test.start | date }} – {{ study.window.test.end | date }}</td>
+                  <td class="p-2">{{ study.parameterValue === null ? 'Поточний' : (study.parameterValue | number: '1.0-6') }}</td>
+                  @if (study.summary; as summary) {
+                    <td class="p-2">{{ summary.annualReturn | percent }}</td><td class="p-2">{{ summary.sharpe | number: '1.2-2' }}</td><td class="p-2">{{ summary.maxDrawdown | percent }}</td>
+                  } @else { <td colspan="3" class="p-2 text-red-600">{{ study.failureReason }}</td> }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="mb-0 text-xs text-muted-color">Значення параметра показані у частках для відсоткових величин: 0,1 = 10%.</p>
+      </section>
+    }

@@ -212,4 +212,11 @@
     (saved)="store.changeReports($event)"
   />
   <app-copy-entry-dialog [(visible)]="copyEntryVisible" (copy)="copyEntryToExit($event)" />
+  <app-experiment-dialog
+    [(visible)]="experimentVisible"
+    [parameters]="experimentChoices()"
+    [busy]="store.busy()"
+    [error]="store.trialError()"
+    (requested)="launchExperiment($event)"
+  />
 }

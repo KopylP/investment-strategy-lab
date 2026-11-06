@@ -15,19 +15,19 @@ namespace InvestmentLab.IntegrationTests.StrategyBuilder;
 public sealed class StrategyBuilderScenarioTests : IClassFixture<StrategiesApiFactory>
 {
     private static readonly TimeSpan LongestReplay = TimeSpan.FromMinutes(5);
-    private readonly StrategiesApiFactory factory;
+    private readonly StrategiesApiFactory _factory;
 
     public StrategyBuilderScenarioTests(AppHostFixture appHost, StrategiesApiFactory factory)
     {
-        this.factory = factory;
-        factory.StrategyEngineUrl ??= appHost.App.GetEndpoint("strategy-engine", "http").ToString();
+        _factory = factory;
+        _factory.StrategyEngineUrl ??= appHost.App.GetEndpoint("strategy-engine", "http").ToString();
     }
 
     [Fact]
     public async Task A_draft_is_backtested_published_and_leaves_no_trial_behind()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        var client = await factory.CreateSignedInClientAsync(cancellationToken);
+        var client = await _factory.CreateSignedInClientAsync(cancellationToken);
         var ingestion = await client.PostAsync("/api/market-data/quotes/ingest", null, cancellationToken);
         ingestion.EnsureSuccessStatusCode();
         var name = $"Lifecycle {Guid.CreateVersion7()}";

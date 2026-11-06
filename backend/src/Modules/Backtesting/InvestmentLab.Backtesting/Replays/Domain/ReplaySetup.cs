@@ -19,7 +19,10 @@ public sealed record ReplaySetup(
     IReadOnlyList<Guid>? ExtraSeries = null,
     ReplaySchedule? RebalanceSchedule = null,
     ReplaySchedule? RiskReviewSchedule = null,
-    string? UnsupportedSchedule = null)
+    string? UnsupportedSchedule = null,
+    ReplayExperiment? Experiment = null,
+    string? ParametersOverride = null,
+    IReadOnlyDictionary<Guid, string>? InstrumentLabels = null)
 {
     public IReadOnlyList<Guid> PricedInstruments
     {

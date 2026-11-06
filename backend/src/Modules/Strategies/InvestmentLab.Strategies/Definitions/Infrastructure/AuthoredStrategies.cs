@@ -42,7 +42,7 @@ internal sealed class AuthoredStrategies(
 
         var problems = check.Value.Problems.Select(ToDto).ToList();
 
-        return new AuthoringResult<ParametersCheckDto>(new ParametersCheckDto(problems, check.Value.SignalIds));
+        return new AuthoringResult<ParametersCheckDto>(new ParametersCheckDto(problems, check.Value.SignalIds, check.Value.HistoryBars));
     }
 
     private static AuthoringResult<T> ToAuthoring<T>(Result<T> result) =>

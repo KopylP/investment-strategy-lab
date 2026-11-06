@@ -27,7 +27,8 @@ public sealed class EvaluationPreparer(IStrategyReader strategies, IQuoteHistory
 
         var cashInstrumentId = request.CashInstrumentId ?? version.CashInstrumentId;
         var instrumentIds = InstrumentsToPrice(request, version, cashInstrumentId);
-        var check = await checks.CheckAsync(strategy.TypeCode, version.Parameters, cancellationToken);
+        var parameters = request.ParametersOverride ?? version.Parameters;
+        var check = await checks.CheckAsync(strategy.TypeCode, parameters, cancellationToken);
         if (check.IsFailure)
             return check.Error;
         if (!check.Value.IsClean)
@@ -48,7 +49,7 @@ public sealed class EvaluationPreparer(IStrategyReader strategies, IQuoteHistory
 
         var context = new StrategyEvaluationContext(
             request.AsOf,
-            version.Parameters,
+            parameters,
             universe,
             cashInstrumentId,
             series,
@@ -146,7 +147,7 @@ public sealed class EvaluationPreparer(IStrategyReader strategies, IQuoteHistory
                 rates = await fxRates.GetCrossRateHistory(instrument.TradingCurrency, currency, from.AddDays(-7), asOf, cancellationToken);
                 ratesByCurrency[instrument.TradingCurrency] = rates;
             }
-            var converted = ValuationPrices.Converted(item.Points, rates.Select(rate => (rate.Date, rate.Rate)).ToList());
+            var converted = ValuationPrices.Converted(item.Points, [.. rates.Select(rate => (rate.Date, rate.Rate))]);
             if (converted is null)
                 return EvaluationErrors.EngineRejected($"Missing {instrument.TradingCurrency}/{currency} rate for instrument {item.InstrumentId}.");
             valued.Add(item with { Points = converted });

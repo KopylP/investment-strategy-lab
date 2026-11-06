@@ -16,8 +16,8 @@ internal sealed class PriceTables(
 
     public async Task<PriceTable> LoadAsync(ReplaySetup setup, CancellationToken cancellationToken)
     {
-        var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
-        var from = today.AddYears(-YearsOfHistory);
+        var today = setup.Experiment?.End ?? DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
+        var from = setup.Experiment is { } experiment ? experiment.Start.AddDays(-(setup.HistoryBars * 2 + 30)) : today.AddYears(-YearsOfHistory);
 
         var history = await quotes.GetQuoteHistoryWithArchive(setup.PricedInstruments, from, today, cancellationToken);
         var foreign = await ForeignCurrenciesAsync(setup, cancellationToken);

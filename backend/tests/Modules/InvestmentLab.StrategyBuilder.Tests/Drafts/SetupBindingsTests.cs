@@ -22,7 +22,7 @@ public sealed class SetupBindingsTests
     public void The_old_separate_universe_output_is_merged_without_changing_rules()
     {
         var graph = DraftTemplates.GraphOf(DraftTemplates.MomentumTrendFilter);
-        var old = graph with { Links = graph.Links.Select(link => link.From == StrategyGraph.SetupId && link.Input == NodeSockets.Funds ? link with { Output = "universe" } : link).ToList() };
+        var old = graph with { Links = [.. graph.Links.Select(link => link.From == StrategyGraph.SetupId && link.Input == NodeSockets.Funds ? link with { Output = "universe" } : link)] };
         var merged = PortfolioFlow.Upgrade(old);
         merged.Links.ShouldNotContain(link => link.Output == "universe");
         RulesGenerator.Generate(Of(merged)).Json.ShouldBe(RulesGenerator.Generate(Of(graph)).Json);
@@ -38,7 +38,7 @@ public sealed class SetupBindingsTests
     public void An_api_payload_cannot_delete_the_setup_node()
     {
         var graph = StrategyGraph.Empty;
-        var payload = new GraphDto(graph.Nodes.Where(node => node.Kind != NodeKind.Setup).Select(node => new NodeDto(node.Id.Value, node.Kind.ToString(), node.Block.ToString(), node.Parameters.Values)).ToList(), []);
+        var payload = new GraphDto([.. graph.Nodes.Where(node => node.Kind != NodeKind.Setup).Select(node => new NodeDto(node.Id.Value, node.Kind.ToString(), node.Block.ToString(), node.Parameters.Values))], []);
         var mapped = DraftMapping.ToChange(new DraftChangeDto(1, null, null, null, payload, null)).Value.Graph!;
         mapped.Nodes.ShouldContain(node => node.Id == StrategyGraph.SetupId && node.Kind == NodeKind.Setup);
     }
@@ -110,11 +110,11 @@ public sealed class SetupBindingsTests
     [Fact]
     public void Legacy_migration_preserves_rules_and_does_not_recreate_removed_bindings()
     {
-        var legacy = MomentumEntry() with { Nodes = MomentumEntry().Nodes.Where(node => node.Kind != NodeKind.Setup).ToList() };
+        var legacy = MomentumEntry() with { Nodes = [.. MomentumEntry().Nodes.Where(node => node.Kind != NodeKind.Setup)] };
         var migrated = SetupBindings.WithLegacyBindings(legacy);
         migrated.Into(new NodeId("mom"), "of").ShouldHaveSingleItem().Output.ShouldBe("funds");
         RulesGenerator.Generate(Of(migrated)).Json.ShouldBe(RulesGenerator.Generate(Of(legacy)).Json);
-        var detached = migrated with { Links = migrated.Links.Where(link => link.Input != "of").ToList() };
+        var detached = migrated with { Links = [.. migrated.Links.Where(link => link.Input != "of")] };
         SetupBindings.WithLegacyBindings(detached).Links.ShouldBe(detached.Links);
     }
 

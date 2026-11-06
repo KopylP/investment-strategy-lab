@@ -18,6 +18,7 @@ import {
 } from '../models/draft-dto';
 import { InstrumentChoiceDto } from '../models/instrument-dto';
 import { VocabularyDto } from '../models/vocabulary-dto';
+import { ExperimentConditionsDto } from '../models/experiment-conditions-dto';
 
 const base = '/api/strategy-builder';
 
@@ -89,8 +90,8 @@ export class StrategyBuilderApi {
     return this.api.get<TrialRunDto[]>(`${base}/drafts/${id}/trials`);
   }
 
-  runTrial(id: string, label: string | null = null): Promise<TrialRunDto> {
-    return this.api.post<TrialRunDto>(`${base}/drafts/${id}/trials`, { label });
+  runTrial(id: string, label: string | null = null, experiment: ExperimentConditionsDto | null = null): Promise<TrialRunDto> {
+    return this.api.post<TrialRunDto>(`${base}/drafts/${id}/trials`, { label, experiment });
   }
 
   publish(id: string, revision: number): Promise<PublishedVersionDto> {

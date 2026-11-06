@@ -1,6 +1,7 @@
 namespace InvestmentLab.Backtesting.Replays.Domain;
 
-public sealed record BookTrade(Guid InstrumentId, DateOnly On, bool IsSale, decimal Quantity, decimal Price, decimal Fee)
+public sealed record BookTrade(Guid InstrumentId, DateOnly On, bool IsSale, decimal Quantity, decimal Price, decimal Fee,
+    decimal? ReferencePrice = null, decimal SpreadCost = 0m, decimal SlippageCost = 0m)
 {
     public static IReadOnlyList<BookTrade> HeldThroughout(Guid instrumentId, IReadOnlyList<GrowthDay> growth, decimal capital)
     {

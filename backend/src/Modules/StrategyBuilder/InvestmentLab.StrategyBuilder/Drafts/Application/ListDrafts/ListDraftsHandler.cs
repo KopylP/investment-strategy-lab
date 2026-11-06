@@ -15,5 +15,5 @@ public sealed class ListDraftsHandler(IDraftRepository drafts)
     }
 
     private static DraftSummaryDto SummaryOf(StrategyDraft draft) =>
-        new(draft.Id, draft.Name, draft.Origin?.StrategyName, draft.Origin?.Version, draft.UpdatedAt, draft.Trials.LastOrDefault()?.RanAt);
+        new(draft.Id, draft.Name, draft.Origin?.StrategyName, draft.Origin?.Version, draft.UpdatedAt, (draft.Trials.Count > 0 ? draft.Trials[^1].RanAt : null));
 }

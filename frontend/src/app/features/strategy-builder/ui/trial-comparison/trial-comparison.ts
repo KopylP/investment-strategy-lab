@@ -21,6 +21,9 @@ import { Viewport } from '../../../../shared/ui/viewport';
 import { TrialRunDto } from '../../models/trial-run-dto';
 
 import { TrialMetric } from '../../models/trial-metric';
+import { ExperimentsApi } from '../../data-access/experiments-api';
+import { experimentBacktest } from '../../data-access/experiment-result-mapper';
+import { BacktestComparisonDto } from '../../models/backtest-comparison-dto';
 const metrics: { key: TrialMetric; label: string }[] = [
   { key: 'annualReturn', label: 'Річна дохідність' },
   { key: 'annualReturnAfterTax', label: 'Після податку' },
@@ -39,6 +42,7 @@ export class TrialComparison {
   readonly first = input.required<TrialRunDto>();
   readonly second = input.required<TrialRunDto>();
   private readonly api = inject(ApiClient);
+  private readonly experiments = inject(ExperimentsApi);
   private readonly theme = inject(ChartTheme);
   private readonly viewport = inject(Viewport);
   protected readonly hiddenLines = new HiddenLines();
@@ -46,19 +50,34 @@ export class TrialComparison {
     params: () => [this.first(), this.second()],
     loader: ({ params }) =>
       Promise.all(
-        params.map((run) =>
-          this.api.get<BacktestDto>(`/api/backtesting/strategies/${run.strategyId}`, {
-            version: run.version,
-          }),
-        ),
+        params.map((run) => this.load(run)),
       ),
   });
   protected readonly error = this.results.error;
+  private readonly comparison = resource({
+    params: () => ({ first: this.reference(this.first()), second: this.reference(this.second()) }),
+    loader: ({ params }) => this.api.post<BacktestComparisonDto>('/api/backtesting/comparisons', params),
+  });
+  protected readonly comparisonReason = computed(() => this.comparison.hasValue() ? this.comparison.value().reason : null);
+  protected readonly comparisonError = this.comparison.error;
+
+  private reference(run: TrialRunDto) {
+    return { strategyId: run.strategyId, version: run.version, experimentId: run.experimentId ?? null };
+  }
+
+  private async load(run: TrialRunDto): Promise<BacktestDto> {
+    if (run.experimentId) {
+      const experiment = await this.experiments.get(run.experimentId);
+      return experimentBacktest(experiment);
+    }
+
+    return this.api.get<BacktestDto>(`/api/backtesting/strategies/${run.strategyId}`, { version: run.version });
+  }
   protected readonly rows = computed(() =>
     metrics.map(({ key, label }) => {
       const first = this.first()[key];
       const second = this.second()[key];
-      const difference = first === null || second === null ? null : second - first;
+      const difference = this.comparison.hasValue() ? this.comparison.value().difference?.[key] ?? null : null;
 
       return {
         label,

@@ -31,6 +31,8 @@ export interface ReplayResultDto {
   riskExits: number;
   signalReports: number;
   series: ReplaySeriesDto[];
+  initialCapital?: number;
+  finalCapital?: number;
 }
 
 export interface BacktestDto {

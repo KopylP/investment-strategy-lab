@@ -1,7 +1,6 @@
 # ADR-0004: Python-сайдкар як рушій стратегій
 
 - Статус: прийнято (2026-10-25)
-- Контекст: [migration-plan.md](../migration-plan.md), D4–D6, §12
 
 ## Рішення
 Наявний код `finance_decisions` переїжджає в `strategy-engine/` без змін логіки й отримує FastAPI-обгортку.

@@ -1,3 +1,4 @@
+using InvestmentLab.Backtesting.Experiments.Domain;
 using InvestmentLab.Backtesting.Replays.Domain;
 using InvestmentLab.Backtesting.Replays.Domain.Comparisons;
 
@@ -9,249 +10,144 @@ public sealed class StrategyReplay(
     ITargetTrades targetTrades,
     IReplaySignals signals,
     IReplayTaxes taxes,
-    ReplayComparisonCatalog comparisonCatalog)
+    ReplayComparisonCatalog comparisonCatalog) : IResearchReplay
 {
-    private const decimal NotionalCapital = 100_000m;
-
     public async Task<Result<ReplayResult>> RunAsync(ReplaySetup setup, CancellationToken cancellationToken)
     {
-        if (setup.UnsupportedSchedule is { } unsupported)
-            return BacktestErrors.UnsupportedSchedule(unsupported);
+        if (ReplayReadiness.ScheduleProblem(setup) is { } scheduleProblem)
+            return scheduleProblem;
+
         var comparisons = comparisonCatalog.Resolve(setup.Comparisons);
         if (comparisons.IsFailure)
             return comparisons.Error;
 
-        var watches = await WatchesAsync(setup, cancellationToken);
+        var watches = await Watches(setup, cancellationToken);
         if (watches.IsFailure)
             return watches.Error;
 
-        var signalInstruments = watches.Value.User.Values.SelectMany(watch => watch.Instruments).Distinct().ToList();
-        setup = setup with { SignalInstruments = signalInstruments };
+        setup = ReplaySignalWatches.WithInstruments(setup, watches.Value);
+        var history = await priceTables.LoadAsync(setup, cancellationToken);
+        var prices = history.ForReplay(setup);
+        var firstDay = ReplayReadiness.FirstDay(setup, prices);
+        if (firstDay.IsFailure)
+            return firstDay.Error;
 
-        var prices = await priceTables.LoadAsync(setup, cancellationToken);
+        var portfolio = ReplayedPortfolio.Start(setup, prices, watches.Value);
+        var replayed = await Replay(portfolio, firstDay.Value, cancellationToken);
+        if (replayed.IsFailure)
+            return replayed.Error;
 
-        if (prices.FirstDayToReplay(setup) is not { } firstDay)
-            return BacktestErrors.NotEnoughHistory();
+        var series = await Series(portfolio, firstDay.Value, comparisons.Value, cancellationToken);
 
-        var alarms = new ReplayAlarms(setup.Signals, setup.LogicSignalIds ?? [], watches.Value);
-        var run = new Run(setup, prices, new ReplayBook(NotionalCapital), alarms);
-
-        for (var dayIndex = firstDay; dayIndex < prices.Days.Count; dayIndex++)
-        {
-            var stepped = await StepAsync(run, dayIndex, cancellationToken);
-            if (stepped.IsFailure)
-                return stepped.Error;
-        }
-
-        var history = new ReplayedHistory(prices, firstDay, setup, run.Growth);
-        var series = await SeriesOfAsync(run, history, comparisons.Value, cancellationToken);
-
-        return run.ResultFrom(series);
+        return portfolio.ResultFrom(series);
     }
 
-    private async Task<Result<ReplaySignalWatches>> WatchesAsync(ReplaySetup setup, CancellationToken cancellationToken)
+    private async Task<Result> Replay(ReplayedPortfolio portfolio, int firstDay, CancellationToken cancellationToken)
+    {
+        for (var index = firstDay; index < portfolio.Prices.Days.Count; index++)
+        {
+            var session = portfolio.Advance(index);
+            if (session is null)
+                continue;
+
+            var rebalanced = await Rebalance(portfolio, session, cancellationToken);
+            if (rebalanced.IsFailure)
+                return rebalanced;
+
+            var reviewed = await ReviewRisk(portfolio, session, cancellationToken);
+            if (reviewed.IsFailure)
+                return reviewed;
+        }
+
+        return Result.Success();
+    }
+
+    private async Task<Result<ReplaySignalWatches>> Watches(ReplaySetup setup, CancellationToken cancellationToken)
     {
         var builtIn = setup.Signals.AllKinds.ToDictionary(kind => kind, signals.Watch);
         var user = new Dictionary<Guid, IReplaySignalWatch>();
-        var logicIds = setup.LogicSignalIds ?? [];
-        var ids = logicIds.Concat(setup.Signals.AllSignalIds).Distinct();
+        var logicIdentifiers = setup.LogicSignalIds ?? [];
+        var identifiers = logicIdentifiers.Concat(setup.Signals.AllSignalIds).Distinct();
 
-        foreach (var id in ids)
+        foreach (var id in identifiers)
         {
             var watch = await signals.WatchSignalAsync(id, cancellationToken);
-            if (watch is null && logicIds.Contains(id))
-                return BacktestErrors.SignalMissing(id);
-
             if (watch is not null)
                 user.Add(id, watch);
         }
 
-        return new ReplaySignalWatches(builtIn, user);
+        return ReplaySignalWatches.Checked(builtIn, user, logicIdentifiers);
     }
 
-    private async Task<List<ReplaySeries>> SeriesOfAsync(
-        Run run, ReplayedHistory history, IReadOnlyList<IReplayComparison> comparisons, CancellationToken cancellationToken)
+    private async Task<Result> Rebalance(ReplayedPortfolio portfolio, ReplaySession session, CancellationToken cancellationToken)
     {
-        var riskFree = history.RiskFreeRate;
-        var series = new List<ReplaySeries> { await StrategySeriesAsync(run, riskFree, cancellationToken) };
+        if (!session.RebalanceRequested)
+            return Result.Success();
+
+        var decision = await answers.DecideAsync(portfolio.Setup, portfolio.Book, session.Date, session.SignalStates, cancellationToken);
+        if (decision.IsFailure)
+            return Result.Failure(decision.Error);
+
+        var trades = targetTrades.TradesFor(decision.Value, portfolio.Setup, portfolio.Book, session.Prices);
+        portfolio.Rebalance(session, decision.Value, trades);
+
+        return Result.Success();
+    }
+
+    private async Task<Result> ReviewRisk(ReplayedPortfolio portfolio, ReplaySession session, CancellationToken cancellationToken)
+    {
+        if (!session.NeedsRiskAssessment(portfolio.HasPositions))
+            return Result.Success();
+
+        var assessment = await answers.AssessAsync(portfolio.Setup, portfolio.Book, session.Date, session.SignalStates, cancellationToken);
+        if (assessment.IsFailure)
+            return Result.Failure(assessment.Error);
+
+        portfolio.ReviewRisk(session, assessment.Value);
+
+        return Result.Success();
+    }
+
+    private async Task<IReadOnlyList<ReplaySeries>> Series(
+        ReplayedPortfolio portfolio,
+        int firstDay,
+        IReadOnlyList<IReplayComparison> comparisons,
+        CancellationToken cancellationToken)
+    {
+        var history = new ReplayedHistory(portfolio.Prices, firstDay, portfolio.Setup, portfolio.Growth);
+        var strategy = await StrategySeries(portfolio, history.RiskFreeRate, cancellationToken);
+        var series = new List<ReplaySeries> { strategy };
 
         foreach (var comparison in comparisons)
         {
             var line = comparison.LineOf(history);
-            series.Add(await ComparedSeriesAsync(line, run.Setup.Currency, riskFree, cancellationToken));
+            var compared = await ComparedSeries(line, portfolio, history.RiskFreeRate, cancellationToken);
+            series.Add(compared);
         }
 
         return series;
     }
 
-    private async Task<ReplaySeries> StrategySeriesAsync(Run run, double riskFree, CancellationToken cancellationToken)
+    private async Task<ReplaySeries> StrategySeries(ReplayedPortfolio portfolio, double riskFreeRate, CancellationToken cancellationToken)
     {
-        var lastDay = run.Prices.Days.Count - 1;
-        var liquidation = run.Book.LiquidationOn(run.Prices.Days[lastDay], run.Prices.PricesOn(lastDay));
+        var liquidation = portfolio.FinalLiquidation();
+        var trades = portfolio.Book.TradeLog.Concat(liquidation).ToList();
+        var yearlyTaxes = await taxes.YearlyAsync(trades, portfolio.Setup.Currency, cancellationToken);
+        var afterTax = AfterTaxGrowth.FinalOf(portfolio.Growth, yearlyTaxes, portfolio.Capital);
 
-        var yearly = await taxes.YearlyAsync([.. run.Book.TradeLog, .. liquidation], run.Setup.Currency, cancellationToken);
-        var afterTax = AfterTaxGrowth.FinalOf(run.Growth, yearly, NotionalCapital);
-
-        return ReplaySeries.Of(ReplaySeries.StrategyCode, Message.Of("backtest.series.strategy"), run.Growth, riskFree, afterTax);
+        return ReplaySeries.Of(ReplaySeries.StrategyCode, Message.Of("backtest.series.strategy"), portfolio.Growth, riskFreeRate, afterTax);
     }
 
-    private async Task<ReplaySeries> ComparedSeriesAsync(ComparedLine line, string currency, double riskFree, CancellationToken cancellationToken)
+    private async Task<ReplaySeries> ComparedSeries(
+        ComparedLine line,
+        ReplayedPortfolio portfolio,
+        double riskFreeRate,
+        CancellationToken cancellationToken)
     {
-        var trades = BookTrade.HeldThroughout(line.HeldAs, line.Growth, NotionalCapital);
+        var trades = BookTrade.HeldThroughout(line.HeldAs, line.Growth, portfolio.Capital);
+        var yearlyTaxes = await taxes.YearlyAsync(trades, portfolio.Setup.Currency, cancellationToken);
+        var afterTax = AfterTaxGrowth.FinalOf(line.Growth, yearlyTaxes, portfolio.Capital);
 
-        var yearly = await taxes.YearlyAsync(trades, currency, cancellationToken);
-        var afterTax = AfterTaxGrowth.FinalOf(line.Growth, yearly, NotionalCapital);
-
-        return ReplaySeries.Of(line.Code, line.Label, line.Growth, riskFree, afterTax);
-    }
-
-    private async Task<Result> StepAsync(Run run, int dayIndex, CancellationToken cancellationToken)
-    {
-        var day = run.Prices.Days[dayIndex];
-        var today = run.Prices.PricesOn(dayIndex);
-        var tradable = run.Prices.TradablePricesOn(dayIndex);
-        run.ExecutePending(tradable, day);
-        run.Value(day, today);
-        if (!run.Setup.Universe.Any(tradable.ContainsKey))
-            return Result.Success();
-        var previous = run.PreviousSession;
-        run.PreviousSession = day;
-        var fired = run.AlarmsOn(day, today);
-
-        var rebalanceDue = run.Setup.RebalanceSchedule is { } rebalance
-            ? ReplayCalendar.IsDue(rebalance, previous, day)
-            : ReplayCalendar.OpensPeriod(run.Setup.RebalanceCadence, previous, day);
-        if (rebalanceDue || fired.Rebalance)
-        {
-            var result = await RebalanceAsync(run, day, today, broughtBySignal: !rebalanceDue, fired.States ?? [], cancellationToken);
-            if (result.IsFailure) return result;
-        }
-
-        var riskReviewDue = IsRiskReviewDue(run.Setup, previous, day);
-        if (riskReviewDue || fired.RiskReview)
-            return await ReviewRiskAsync(run, day, broughtBySignal: !riskReviewDue, fired.States ?? [], cancellationToken);
-
-        return Result.Success();
-    }
-
-    private static bool IsRiskReviewDue(ReplaySetup setup, DateOnly? previous, DateOnly day) =>
-        setup.RiskReviewSchedule is { } schedule ? ReplayCalendar.IsDue(schedule, previous, day) :
-            setup.RiskReviewCadence is { } review && ReplayCalendar.OpensPeriod(review, previous, day);
-
-    private async Task<Result> RebalanceAsync(
-        Run run, DateOnly day, IReadOnlyDictionary<Guid, decimal> today, bool broughtBySignal, IReadOnlyList<ReplaySignalState> states, CancellationToken cancellationToken)
-    {
-        run.NoteReport(broughtBySignal);
-
-        var decision = await answers.DecideAsync(run.Setup, run.Book, day, states, cancellationToken);
-        if (decision.IsFailure)
-            return decision.Error;
-
-        run.Order(targetTrades.TradesFor(decision.Value, run.Setup, run.Book, today), day);
-
-        return Result.Success();
-    }
-
-    private async Task<Result> ReviewRiskAsync(Run run, DateOnly day, bool broughtBySignal, IReadOnlyList<ReplaySignalState> states, CancellationToken cancellationToken)
-    {
-        run.NoteReport(broughtBySignal);
-
-        if (run.Book.Positions.Count == 0)
-            return Result.Success();
-
-        var exits = await answers.ExitsAsync(run.Setup, run.Book, day, states, cancellationToken);
-        if (exits.IsFailure)
-            return exits.Error;
-
-        run.OrderExits(exits.Value, day);
-
-        return Result.Success();
-    }
-
-    private sealed class Run(ReplaySetup setup, PriceTable prices, ReplayBook book, ReplayAlarms alarms)
-    {
-        private readonly List<GrowthDay> _growth = [];
-        private sealed record PendingTrade(ReplayTrade Trade, DateOnly PlacedOn, bool IsRiskExit = false);
-        private List<PendingTrade> _pending = [];
-        private int _riskExits;
-        private int _signalReports;
-
-        public ReplaySetup Setup => setup;
-        public PriceTable Prices => prices;
-        public ReplayBook Book => book;
-        public IReadOnlyList<GrowthDay> Growth => _growth;
-        public DateOnly? PreviousSession { get; set; }
-
-        public FiredReports AlarmsOn(DateOnly day, IReadOnlyDictionary<Guid, decimal> today) =>
-            alarms.FiredOn(new ReplayMoment(day, book, today, _growth[^1].Growth));
-
-        public void NoteReport(bool broughtBySignal)
-        {
-            if (broughtBySignal)
-                _signalReports++;
-        }
-
-        public void Order(IReadOnlyList<ReplayTrade> trades, DateOnly day)
-        {
-            var exits = _pending.Where(order => order.IsRiskExit).ToList();
-            var blocked = exits.Select(order => order.Trade.InstrumentId).ToHashSet();
-            _pending = [.. exits, .. trades.Where(trade => !blocked.Contains(trade.InstrumentId)).Select(trade => new PendingTrade(trade, day))];
-        }
-
-        public void OrderExits(IReadOnlyList<Guid> instruments, DateOnly day)
-        {
-            var held = book.Positions.Where(position => instruments.Contains(position.InstrumentId)).ToList();
-            if (held.Count == 0) return;
-            var exiting = held.Select(position => position.InstrumentId).ToHashSet();
-            _pending = [.. _pending.Where(order => !exiting.Contains(order.Trade.InstrumentId)),
-                .. held.Select(position => new PendingTrade(new ReplayTrade(position.InstrumentId, true, position.Quantity, 0m), day, IsRiskExit: true))];
-        }
-
-        public void ExecutePending(IReadOnlyDictionary<Guid, decimal> today, DateOnly day)
-        {
-            var riskSold = false;
-            var waiting = new List<PendingTrade>();
-            foreach (var order in _pending.OrderByDescending(order => order.Trade.IsSale))
-            {
-                // Wait through exchange holidays; expire an old instruction instead of filling it months later.
-                if (day.DayNumber - order.PlacedOn.DayNumber > 7) continue;
-                var trade = order.Trade;
-                if (!today.ContainsKey(trade.InstrumentId))
-                {
-                    waiting.Add(order);
-                    continue;
-                }
-                if (trade.IsSale)
-                {
-                    var before = book.Trades;
-                    book.Sell(trade.InstrumentId, trade.Quantity, today[trade.InstrumentId], day);
-                    if (book.Trades > before && order.IsRiskExit)
-                    {
-                        _riskExits++;
-                        riskSold = true;
-                    }
-                }
-                else
-                    book.Buy(trade.InstrumentId, trade.Amount, today[trade.InstrumentId], day);
-            }
-
-            if (riskSold && setup.CashInstrumentId is { } cash && today.TryGetValue(cash, out var price))
-                book.Buy(cash, book.Cash, price, day);
-
-            _pending = waiting;
-        }
-
-        public void Value(DateOnly day, IReadOnlyDictionary<Guid, decimal> today) =>
-            _growth.Add(new GrowthDay(day, (double)(book.ValueAt(today) / NotionalCapital)));
-
-        public ReplayResult ResultFrom(IReadOnlyList<ReplaySeries> series) =>
-            new(
-                Start: _growth[0].Date,
-                End: _growth[^1].Date,
-                Currency: setup.Currency,
-                Trades: book.Trades,
-                RiskExits: _riskExits,
-                SignalReports: _signalReports,
-                Series: series);
+        return ReplaySeries.Of(line.Code, line.Label, line.Growth, riskFreeRate, afterTax);
     }
 }

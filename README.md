@@ -1,7 +1,7 @@
 # Investment Strategy Lab
 
 Монорепо сервісу інвестиційних стратегій. Архітектура й етапи міграції —
-[`docs/architecture/migration-plan.md`](docs/architecture/migration-plan.md), рішення — [`docs/architecture/adr/`](docs/architecture/adr/).
+[`docs/architecture/adr/`](docs/architecture/adr/), терміни — [`docs/domain/glossary.md`](docs/domain/glossary.md).
 
 | Папка | Що |
 |---|---|

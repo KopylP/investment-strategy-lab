@@ -27,8 +27,8 @@ public sealed class PortfolioFlowTests
         var graph = Template();
         var previous = graph with
         {
-            Nodes = graph.Nodes.Where(node => node.Id != PortfolioFlow.PortfolioId).ToList(),
-            Links = graph.Links.Where(link => link.To != PortfolioFlow.PortfolioId).ToList(),
+            Nodes = [.. graph.Nodes.Where(node => node.Id != PortfolioFlow.PortfolioId)],
+            Links = [.. graph.Links.Where(link => link.To != PortfolioFlow.PortfolioId)],
         };
         var completed = PortfolioFlow.Upgrade(previous);
         RulesGenerator.Generate(Of(completed)).Json.ShouldBe(RulesGenerator.Generate(Of(previous)).Json);
@@ -40,7 +40,7 @@ public sealed class PortfolioFlowTests
     public void An_explicitly_disconnected_portfolio_branch_is_reported_instead_of_silently_reconnected()
     {
         var graph = Template();
-        graph = graph with { Links = graph.Links.Where(link => !(link.To == PortfolioFlow.PortfolioId && link.Input == NodeSockets.Funds)).ToList() };
+        graph = graph with { Links = [.. graph.Links.Where(link => !(link.To == PortfolioFlow.PortfolioId && link.Input == NodeSockets.Funds))] };
         var problems = GraphCheck.Of(Of(graph), EngineSchema.Vocabulary);
         problems.ShouldContain(problem => problem.Node == PortfolioFlow.PortfolioId && problem.Code == "builder.problem.input_missing");
     }
@@ -65,8 +65,8 @@ public sealed class PortfolioFlowTests
         var selector = PortfolioFlow.Selector(graph)!;
         foreach (var (name, value) in selector.Parameters.Values) weights = weights with { Parameters = weights.Parameters.With(name, value) };
         var legacy = new StrategyGraph(
-            graph.Nodes.Where(node => node.Kind is not (NodeKind.Cash or NodeKind.FundSelection)).Select(node => node.Id == weights.Id ? weights : node).ToList(),
-            graph.Links.Where(link => link.Input is not (NodeSockets.Funds or NodeSockets.Budget or NodeSockets.Remainder)).Select(link => link.To == selector.Id ? link with { To = weights.Id } : link).ToList());
+            [.. graph.Nodes.Where(node => node.Kind is not (NodeKind.Cash or NodeKind.FundSelection)).Select(node => node.Id == weights.Id ? weights : node)],
+            [.. graph.Links.Where(link => link.Input is not (NodeSockets.Funds or NodeSockets.Budget or NodeSockets.Remainder)).Select(link => link.To == selector.Id ? link with { To = weights.Id } : link)]);
 
         RulesGenerator.Generate(Of(legacy)).Json.ShouldBe(RulesGenerator.Generate(Of(graph)).Json);
         var migrated = PortfolioFlow.Upgrade(legacy);
@@ -82,7 +82,7 @@ public sealed class PortfolioFlowTests
         var gate = graph.ResultOf(block);
         var input = graph.Into(gate.Id, NodeSockets.Funds).Single();
         var output = graph.OutOf(gate.Id).Single();
-        graph = graph with { Links = graph.Links.Where(link => link != output).Append(output with { From = input.From, Output = input.Output }).ToList() };
+        graph = graph with { Links = [.. graph.Links.Where(link => link != output), output with { From = input.From, Output = input.Output }] };
 
         GraphCheck.Of(Of(graph), EngineSchema.Vocabulary).ShouldNotContain(problem => problem.Severity == ProblemSeverity.Error);
         JsonNode.Parse(RulesGenerator.Generate(Of(graph)).Json)!.AsObject().ContainsKey(section).ShouldBeFalse();
@@ -94,7 +94,7 @@ public sealed class PortfolioFlowTests
     {
         var graph = Template();
         var connection = graph.Into(StrategyGraph.SelectionResultId, NodeSockets.Funds).Single();
-        graph = graph with { Links = graph.Links.Where(link => link != connection).Append(connection with { From = StrategyGraph.EntryResultId }).ToList() };
+        graph = graph with { Links = [.. graph.Links.Where(link => link != connection), connection with { From = StrategyGraph.EntryResultId }] };
         var rules = JsonNode.Parse(RulesGenerator.Generate(Of(graph)).Json)!;
         rules["selection"]!["top"]!.GetValue<int>().ShouldBe(Setup.Funds.Count);
         rules["selection"]!.AsObject().ContainsKey("rankBy").ShouldBeFalse();
@@ -104,7 +104,7 @@ public sealed class PortfolioFlowTests
     public void Only_the_remainder_after_weights_can_feed_cash()
     {
         var graph = Template();
-        graph = graph with { Links = graph.Links.Select(link => link.To == PortfolioFlow.CashId ? link with { From = StrategyGraph.MarketResultId, Output = "output" } : link).ToList() };
+        graph = graph with { Links = [.. graph.Links.Select(link => link.To == PortfolioFlow.CashId ? link with { From = StrategyGraph.MarketResultId, Output = "output" } : link)] };
         GraphCheck.Of(Of(graph), EngineSchema.Vocabulary).ShouldContain(problem => problem.Node == PortfolioFlow.CashId && problem.Code == "builder.problem.socket_mismatch");
     }
 
@@ -113,7 +113,7 @@ public sealed class PortfolioFlowTests
     {
         var draft = Of(Template());
         var dto = DraftMapping.ToDto(draft, [], []);
-        var graph = dto.Graph with { Nodes = dto.Graph.Nodes.Where(node => node.Kind != "Cash").ToList() };
+        var graph = dto.Graph with { Nodes = [.. dto.Graph.Nodes.Where(node => node.Kind != "Cash")] };
         var mapped = DraftMapping.ToChange(new DraftChangeDto(dto.Revision, null, null, null, graph, null));
         mapped.IsFailure.ShouldBeFalse();
         mapped.Value.Graph!.Nodes.ShouldContain(node => node.Id == PortfolioFlow.CashId && node.Kind == NodeKind.Cash);
@@ -123,7 +123,7 @@ public sealed class PortfolioFlowTests
     public void Cash_price_series_is_an_external_input_even_when_the_cash_budget_is_a_sink()
     {
         var graph = Template();
-        graph = graph with { Links = graph.Links.Select(link => link.To.Value == "m-price" && link.Input == "of" ? link with { From = PortfolioFlow.CashId, Output = "series" } : link).ToList() };
+        graph = graph with { Links = [.. graph.Links.Select(link => link.To.Value == "m-price" && link.Input == "of" ? link with { From = PortfolioFlow.CashId, Output = "series" } : link)] };
         var problems = GraphCheck.Of(Of(graph), EngineSchema.Vocabulary);
         problems.ShouldNotContain(problem => problem.Code == "builder.problem.cycle" || problem.Code == "builder.problem.fund_in_market_filter");
     }

@@ -1,6 +1,6 @@
 # Backend (.NET 10 modular monolith)
 
-Solution `InvestmentLab.slnx`. Design: `../docs/architecture/migration-plan.md` and `../docs/architecture/adr/`.
+Solution `InvestmentLab.slnx`. Design decisions: `../docs/architecture/adr/`. Domain terms: `../docs/domain/glossary.md`.
 
 ## Commands (from `backend/`)
 

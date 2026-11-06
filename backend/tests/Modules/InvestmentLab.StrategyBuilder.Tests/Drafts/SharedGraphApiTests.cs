@@ -8,8 +8,8 @@ namespace InvestmentLab.StrategyBuilder.Tests.Drafts;
 public sealed class SharedGraphApiTests
 {
     private static GraphDto Payload(StrategyGraph graph) => new(
-        graph.Nodes.Select(node => new NodeDto(node.Id.Value, node.Kind.ToString(), node.Block.ToString(), node.Parameters.Values)).ToList(),
-        graph.Links.Select(link => new LinkDto(link.From.Value, link.To.Value, link.Input)).ToList());
+        [.. graph.Nodes.Select(node => new NodeDto(node.Id.Value, node.Kind.ToString(), node.Block.ToString(), node.Parameters.Values))],
+        [.. graph.Links.Select(link => new LinkDto(link.From.Value, link.To.Value, link.Input))]);
 
     [Fact]
     public void A_legacy_payload_becomes_shared_and_checks_all_reachable_results()

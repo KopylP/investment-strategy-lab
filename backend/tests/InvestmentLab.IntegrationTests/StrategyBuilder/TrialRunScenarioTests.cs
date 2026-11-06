@@ -12,19 +12,19 @@ namespace InvestmentLab.IntegrationTests.StrategyBuilder;
 public sealed class TrialRunScenarioTests : IClassFixture<StrategiesApiFactory>
 {
     private static readonly TimeSpan LongestReplay = TimeSpan.FromMinutes(5);
-    private readonly StrategiesApiFactory factory;
+    private readonly StrategiesApiFactory _factory;
 
     public TrialRunScenarioTests(AppHostFixture appHost, StrategiesApiFactory factory)
     {
-        this.factory = factory;
-        factory.StrategyEngineUrl ??= appHost.App.GetEndpoint("strategy-engine", "http").ToString();
+        _factory = factory;
+        _factory.StrategyEngineUrl ??= appHost.App.GetEndpoint("strategy-engine", "http").ToString();
     }
 
     [Fact]
     public async Task Concurrent_trial_requests_reuse_one_version_and_changed_rules_create_the_next_run()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        var client = await factory.CreateSignedInClientAsync(cancellationToken);
+        var client = await _factory.CreateSignedInClientAsync(cancellationToken);
         var ingestion = await client.PostAsync("/api/market-data/quotes/ingest", null, cancellationToken);
         ingestion.EnsureSuccessStatusCode();
         var draft = await ConfiguredDraftAsync(client, cancellationToken);

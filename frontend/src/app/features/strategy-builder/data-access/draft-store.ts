@@ -18,6 +18,7 @@ import {
 import { EditorMode, SaveState } from '../models/draft-vm';
 import { InstrumentChoiceDto } from '../models/instrument-dto';
 import { VocabularyDto } from '../models/vocabulary-dto';
+import { ExperimentConditionsDto } from '../models/experiment-conditions-dto';
 import { StrategyBuilderApi } from './strategy-builder-api';
 
 export const RULES_SAVE_DELAY_MS = 800;
@@ -58,6 +59,7 @@ export class DraftStore {
   readonly nameError = signal<string | null>(null);
   readonly loading = signal(false);
   readonly loadError = signal<unknown>(null);
+  readonly trialError = signal<string | null>(null);
   readonly reportNames = computed(() =>
     Object.fromEntries(
       (this.currentVocabulary()?.reports ?? []).map((report) => [report.code, report.name]),
@@ -202,16 +204,18 @@ export class DraftStore {
     }
   }
 
-  async runTrial(): Promise<TrialRunDto | null> {
+  async runTrial(experiment: ExperimentConditionsDto | null = null, label: string | null = null): Promise<TrialRunDto | null> {
     if (this.busy()) return null;
     this.busy.set(true);
+    this.trialError.set(null);
 
     try {
       if (!(await this.check())) return null;
       const draft = this.currentDraft();
 
-      return draft ? await this.api.runTrial(draft.id) : null;
+      return draft ? await this.api.runTrial(draft.id, label, experiment) : null;
     } catch (error) {
+      this.trialError.set(toProblemMessage(error));
       this.placeProblems(error);
       this.reportFailure('Не вдалося запустити бектест', error);
 

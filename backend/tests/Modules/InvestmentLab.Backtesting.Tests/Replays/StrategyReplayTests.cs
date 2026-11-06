@@ -330,12 +330,13 @@ public sealed class StrategyReplayTests
             return Task.FromResult(answer);
         }
 
-        public Task<Result<IReadOnlyList<Guid>>> ExitsAsync(ReplaySetup setup, ReplayBook book, DateOnly day, IReadOnlyList<ReplaySignalState> states, CancellationToken cancellationToken)
+        public Task<Result<ReplayRiskDecision>> AssessAsync(ReplaySetup setup, ReplayBook book, DateOnly day, IReadOnlyList<ReplaySignalState> states, CancellationToken cancellationToken)
         {
             Reviews++;
             IReadOnlyList<Guid> exits = ExitFund ? [Fund] : [];
+            Result<ReplayRiskDecision> decision = new ReplayRiskDecision(exits);
 
-            return Task.FromResult<Result<IReadOnlyList<Guid>>>(Result<IReadOnlyList<Guid>>.Success(exits));
+            return Task.FromResult(decision);
         }
     }
 

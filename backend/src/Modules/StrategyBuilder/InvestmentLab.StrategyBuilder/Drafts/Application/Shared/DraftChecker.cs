@@ -2,7 +2,7 @@ using InvestmentLab.StrategyBuilder.Drafts.Domain;
 
 namespace InvestmentLab.StrategyBuilder.Drafts.Application.Shared;
 
-public sealed class DraftChecker(IRuleVocabulary vocabularies, IStrategyAuthoring authoring, IOwnSignals signals)
+public sealed class DraftChecker(IRuleVocabulary vocabularies, IStrategyAuthoring authoring, IOwnSignals signals) : IDraftChecks
 {
     public async Task<Result<DraftCheck>> CheckAsync(StrategyDraft draft, CancellationToken cancellationToken)
     {

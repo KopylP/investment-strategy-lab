@@ -1,0 +1,27 @@
+@if (store.error()) {
+  <div class="card mt-4"><p-message severity="error" text="Не вдалося завантажити експеримент." /></div>
+}
+@if (store.experiment(); as experiment) {
+  <section class="card mt-4" aria-label="Умови експерименту">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h2 class="m-0 text-lg font-semibold">Умови експерименту</h2>
+      @if (store.waiting()) { <span class="text-sm text-muted-color"><i class="pi pi-spin pi-spinner mr-2"></i>Виконується у фоні</span> }
+    </div>
+    <dl class="mt-4 grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
+      <div><dt class="text-muted-color">Період</dt><dd class="m-0">{{ experiment.conditions.period.start | date }} – {{ experiment.conditions.period.end | date }}</dd></div>
+      <div><dt class="text-muted-color">Початковий капітал</dt><dd class="m-0">{{ experiment.conditions.initialCapital | money: currency() }}</dd></div>
+      <div><dt class="text-muted-color">Комісія</dt><dd class="m-0">{{ experiment.conditions.costs.commissionRate | percent }} + {{ experiment.conditions.costs.feePerTrade | money: currency() }} за угоду</dd></div>
+      <div><dt class="text-muted-color">Spread / slippage</dt><dd class="m-0">{{ experiment.conditions.costs.spreadBps | number }} / {{ experiment.conditions.costs.slippageBps | number }} б.п.</dd></div>
+      @if (experiment.result?.baseline?.finalCapital !== undefined) {
+        <div><dt class="text-muted-color">Капітал наприкінці, до податку</dt><dd class="m-0 font-semibold">{{ experiment.result!.baseline.finalCapital | money: currency() }}</dd></div>
+      }
+    </dl>
+    @if (experiment.failureReason) { <p-message severity="error" [text]="experiment.failureReason" /> }
+  </section>
+  @if (experiment.result; as report) {
+    <app-strategy-backtest [strategyId]="experiment.strategyId" [version]="experiment.strategyVersion" [replay]="report.baseline" />
+    <app-robustness-results [studies]="report.studies" />
+
+    <app-experiment-journal />
+  }
+}

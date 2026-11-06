@@ -20,7 +20,7 @@ import {
 } from '../../../../shared/pipes/format-pipes';
 import { Viewport } from '../../../../shared/ui/viewport';
 import { BacktestStore } from '../../data-access/backtest-store';
-import { ReplayPointDto, ReplaySeriesDto, STRATEGY_SERIES } from '../../models/backtest-dto';
+import { ReplayPointDto, ReplaySeriesDto, ReplayResultDto, STRATEGY_SERIES } from '../../models/backtest-dto';
 
 const FEW_PERIODS = 24;
 const PHONE_DATE_TICKS = 4;
@@ -51,6 +51,7 @@ const COMPARISON_LINE_WIDTH = 1.5;
 export class StrategyBacktest {
   readonly strategyId = input.required<string>();
   readonly version = input.required<number>();
+  readonly replay = input<ReplayResultDto | null>(null);
 
   protected readonly store = inject(BacktestStore);
   protected readonly viewport = inject(Viewport);
@@ -64,7 +65,7 @@ export class StrategyBacktest {
     { label: '20 років', value: 20 },
   ];
 
-  protected readonly result = computed(() => this.store.backtest()?.result ?? null);
+  protected readonly result = computed(() => this.replay() ?? this.store.backtest()?.result ?? null);
   protected readonly currency = computed(() => this.result()?.currency ?? '');
   protected readonly series = computed(() => this.result()?.series ?? []);
   protected readonly strategySummary = computed(
@@ -105,7 +106,10 @@ export class StrategyBacktest {
   );
 
   constructor() {
-    effect(() => this.store.show(this.strategyId(), this.version()));
+    effect(() => {
+      if (this.replay()) this.store.clear();
+      else this.store.show(this.strategyId(), this.version());
+    });
   }
 
   private dataOf(valueOf: (point: ReplayPointDto) => number) {

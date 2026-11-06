@@ -35,7 +35,8 @@ internal sealed class ReplayedStrategies(IStrategyDirectory strategies, IInstrum
             ExtraSeries: setup.ExtraSeries,
             RebalanceSchedule: ScheduleOf(setup, StrategyReportDto.Rebalance),
             RiskReviewSchedule: ScheduleOf(setup, StrategyReportDto.RiskReview),
-            UnsupportedSchedule: UnsupportedScheduleOf(setup));
+            UnsupportedSchedule: UnsupportedScheduleOf(setup),
+            InstrumentLabels: catalog.ToDictionary(instrument => instrument.Id, instrument => instrument.Label));
     }
 
     private static ReplayBenchmark BenchmarkOf(Guid instrumentId, IReadOnlyList<InstrumentDto> catalog)

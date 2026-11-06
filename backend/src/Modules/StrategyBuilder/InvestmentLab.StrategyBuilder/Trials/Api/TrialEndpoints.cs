@@ -19,7 +19,8 @@ internal static class TrialEndpoints
 
     private static async Task<IResult> RunTrial(Guid draftId, RunTrialRequest body, RunTrialHandler handler, CancellationToken cancellationToken)
     {
-        var result = await handler.Handle(new RunTrialCommand(draftId, body.Label), cancellationToken);
+        var command = body.CommandFor(draftId);
+        var result = await handler.Handle(command, cancellationToken);
 
         return result.ToHttpResult();
     }

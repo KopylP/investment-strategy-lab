@@ -1,4 +1,5 @@
 using InvestmentLab.Backtesting.Replays.Application.EnsureBacktest;
+using InvestmentLab.Backtesting.Replays.Application.CompareBacktests;
 using InvestmentLab.Backtesting.Replays.Application.GetBacktest;
 using InvestmentLab.Backtesting.Replays.Application.GetMoneyOutcomes;
 using InvestmentLab.BuildingBlocks.Http;
@@ -12,6 +13,7 @@ internal static class BacktestEndpoints
 {
     public static RouteGroupBuilder MapBacktests(this RouteGroupBuilder group)
     {
+        group.MapPost("/comparisons", Compare).WithName("CompareBacktests");
         group.MapGet("/strategies/{strategyId:guid}", EnsureAndGetBacktest)
             .WithTags("Backtesting")
             .WithName("GetBacktest");
@@ -21,6 +23,13 @@ internal static class BacktestEndpoints
             .WithName("GetMoneyOutcomes");
 
         return group;
+    }
+
+    private static async Task<IResult> Compare(CompareBacktestsQuery query, CompareBacktestsHandler handler, CancellationToken cancellationToken)
+    {
+        var result = await handler.Handle(query, cancellationToken);
+
+        return result.ToHttpResult();
     }
 
     private static async Task<IResult> EnsureAndGetBacktest(
