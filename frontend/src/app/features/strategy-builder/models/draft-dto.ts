@@ -15,7 +15,11 @@ export type NodeKind =
   | 'ExitResult'
   | 'EntryResult'
   | 'SelectionResult'
-  | 'RiskResult';
+  | 'RiskResult'
+  | 'Setup'
+  | 'FundSelection'
+  | 'Cash'
+  | 'Portfolio';
 
 export type JsonValue =
   string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
@@ -31,6 +35,7 @@ export interface LinkDto {
   from: string;
   to: string;
   input: string;
+  output?: string;
 }
 
 export interface GraphDto {
@@ -46,6 +51,7 @@ export interface NodePosition {
 export interface LayoutDto {
   positions: Record<string, NodePosition>;
   collapsed: BlockKind[];
+  edgeRoutes?: Record<string, NodePosition[]>;
 }
 
 export interface DraftSetupDto {

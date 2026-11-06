@@ -72,7 +72,7 @@ public static class GraphFromRules
             ReadSelection();
             ReadResultFields("risk", BlockKind.Risk, ResultFields.Risk);
 
-            return new ImportedRules(_graph, _extraSeries);
+            return new ImportedRules(PortfolioFlow.Upgrade(SetupBindings.WithLegacyBindings(_graph, force: true)), _extraSeries);
         }
 
         private void ReadIndicators()

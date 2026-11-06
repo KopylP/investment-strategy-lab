@@ -29,7 +29,7 @@ const conditionKinds: Record<string, NodeKind> = {
   template: `
     <div class="palette-content">
       <strong>Елементи стратегії</strong>
-      <p class="hint">Перетягніть на полотно або натисніть, щоб додати.</p>
+      <p class="hint">Перетягніть елемент на полотно або натисніть, щоб додати.</p>
       <input
         class="search"
         type="search"
@@ -84,7 +84,24 @@ const conditionKinds: Record<string, NodeKind> = {
           </button>
         }
       }
-      @if (!indicators().some(matchesItem) && !conditions().some(matchesItem)) {
+      @if (matches('Відібрати фонди')) {
+        <h3>Модулі відбору</h3>
+        <button
+          class="item"
+          type="button"
+          draggable="true"
+          (dragstart)="drag($event, selectorRequest)"
+          (click)="add.emit(selectorRequest)"
+        >
+          <i class="pi pi-filter"></i><span>Відібрати фонди<small>Оцінка → кандидати</small></span
+          ><i class="pi pi-plus plus"></i>
+        </button>
+      }
+      @if (
+        !indicators().some(matchesItem) &&
+        !conditions().some(matchesItem) &&
+        !matches('Відібрати фонди')
+      ) {
         <p class="hint">Елементів не знайдено.</p>
       }
       <p class="hint">
@@ -117,7 +134,7 @@ const conditionKinds: Record<string, NodeKind> = {
         color: var(--p-text-color);
       }
       h3 {
-        font-size: 10px;
+        font-size: 12px;
         text-transform: uppercase;
         letter-spacing: 0.08em;
         color: var(--p-text-muted-color);
@@ -156,13 +173,34 @@ const conditionKinds: Record<string, NodeKind> = {
       }
       small {
         display: block;
-        font-size: 10px;
+        font-size: 12px;
         color: var(--p-text-muted-color);
         margin-top: 3px;
       }
       .plus {
         margin-left: auto;
-        font-size: 10px;
+        font-size: 12px;
+      }
+      @media (min-width: 1600px) {
+        .palette-content {
+          padding: 16px 14px;
+        }
+        strong {
+          font-size: 15px;
+        }
+        .hint,
+        .search,
+        .item {
+          font-size: 13px;
+        }
+        .item {
+          padding: 10px;
+          gap: 10px;
+        }
+        .item small,
+        h3 {
+          font-size: 12px;
+        }
       }
     `,
   ],
@@ -173,6 +211,11 @@ export class Palette {
   readonly indicators = input.required<IndicatorKindDto[]>();
   readonly conditions = input.required<ConditionKindDto[]>();
   readonly add = output<NewPaletteNode>();
+  protected readonly selectorRequest: NewPaletteNode = {
+    kind: 'FundSelection',
+    block: 'Shared',
+    parameters: { top: 3, order: 'desc' },
+  };
   protected readonly search = signal('');
   protected matches(label: string): boolean {
     return label.toLocaleLowerCase().includes(this.search().trim().toLocaleLowerCase());

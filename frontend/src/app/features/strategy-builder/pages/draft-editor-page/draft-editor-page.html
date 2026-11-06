@@ -86,27 +86,27 @@
 
   @if (store.mode() === 'graph') {
     <div class="setup-toolbar">
-      <button type="button" (click)="setupVisible.set(true)">
+      <button type="button" (click)="focusSetupNode()">
         <i class="pi pi-sliders-h"></i> Налаштування
         <span>{{ summary()?.fundCount ?? 0 }} фондів</span>
       </button>
       <button type="button" (click)="reportsVisible.set(true)">
         <i class="pi pi-file"></i> Рапорти
       </button>
-      <button
-        type="button"
-        (click)="copyEntryVisible.set(true)"
-        title="Скопіювати вхід у вихід із запасом"
-      >
-        <i class="pi pi-copy"></i> Копіювати вхід у вихід
-      </button>
+      <details class="strategy-actions">
+        <summary>Дії зі стратегією</summary>
+        <button type="button" (click)="copyEntryVisible.set(true)">
+          <i class="pi pi-copy"></i> Створити вихід з умов входу…
+        </button>
+      </details>
       <button
         class="review-button"
         type="button"
         (click)="store.reviewVisible.set(!store.reviewVisible())"
         [attr.aria-expanded]="store.reviewVisible()"
+        aria-controls="strategy-review"
       >
-        <i class="pi pi-check-circle"></i> Перевірка · {{ draft.problems.length }}
+        <i class="pi pi-check-circle"></i> Зауважень: {{ draft.problems.length }}
       </button>
     </div>
   } @else if (summary(); as setupSummary) {
@@ -128,6 +128,9 @@
         }
         @case ('graph') {
           <app-graph-editor
+            [setup]="draft.setup"
+            (setupChange)="store.changeSetup($event)"
+            (instrumentsChanged)="store.refreshInstruments()"
             [graph]="draft.graph"
             [layout]="draft.layout"
             [vocabulary]="store.vocabulary()!"
@@ -147,20 +150,51 @@
       }
     </div>
 
-    <details
-      [open]="store.reviewVisible()"
-      (toggle)="store.reviewVisible.set($any($event.target).open)"
-      [class.review-hidden]="store.mode() === 'graph' && !store.reviewVisible()"
-      class="review-panel min-w-0 rounded-xl border border-surface p-4"
-    >
-      <summary class="cursor-pointer font-medium">
-        Опис стратегії та перевірка ({{ draft.problems.length }})
-      </summary>
-      <div class="mt-4 grid gap-4 md:grid-cols-2">
-        <app-builder-words-panel [words]="draft.words" />
-        <app-builder-problems-panel [problems]="draft.problems" (choose)="showProblem($event)" />
-      </div>
-    </details>
+    @if (store.reviewVisible()) {
+      <section id="strategy-review" class="review-panel" aria-labelledby="strategy-review-title">
+        <header class="review-header">
+          <h2 id="strategy-review-title">Опис стратегії та перевірка</h2>
+          @if (!draft.problems.length) {
+            <span class="review-status"
+              ><i class="pi pi-check-circle" aria-hidden="true"></i> Проблем не виявлено</span
+            >
+          } @else {
+            <span class="review-status">Зауважень: {{ draft.problems.length }}</span>
+          }
+          <p-button
+            icon="pi pi-times"
+            ariaLabel="Закрити опис і перевірку"
+            pTooltip="Закрити"
+            [text]="true"
+            severity="secondary"
+            size="small"
+            (onClick)="closeReview()"
+          />
+        </header>
+        <div class="review-content" [class.has-problems]="draft.problems.length > 0">
+          <app-builder-words-panel [words]="draft.words" [compact]="true" />
+          @if (draft.problems.length) {
+            <app-builder-problems-panel
+              [problems]="draft.problems"
+              [compact]="true"
+              (choose)="showProblem($event)"
+            />
+          }
+        </div>
+      </section>
+    } @else if (store.mode() !== 'graph') {
+      <button
+        type="button"
+        class="review-toggle"
+        aria-expanded="false"
+        aria-controls="strategy-review"
+        (click)="store.reviewVisible.set(true)"
+      >
+        <i class="pi pi-chevron-down" aria-hidden="true"></i> Опис стратегії та перевірка ({{
+          draft.problems.length
+        }})
+      </button>
+    }
   </div>
 
   <app-builder-setup-dialog

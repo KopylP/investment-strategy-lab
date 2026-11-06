@@ -108,7 +108,7 @@ public sealed class StrategyDraftTests
     [Fact]
     public void The_empty_graph_has_one_result_per_block()
     {
-        var results = StrategyGraph.Empty.Nodes.Select(node => node.Block).ToList();
+        var results = StrategyGraph.Empty.Nodes.Where(node => NodeKinds.IsResult(node.Kind)).Select(node => node.Block).ToList();
 
         results.ShouldBe([BlockKind.MarketFilter, BlockKind.Exit, BlockKind.Entry, BlockKind.Selection, BlockKind.Risk]);
     }

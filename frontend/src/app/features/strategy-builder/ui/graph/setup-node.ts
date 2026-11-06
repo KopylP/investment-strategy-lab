@@ -1,0 +1,360 @@
+import { Component, Input, OnChanges, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { KeyValuePipe } from '@angular/common';
+import { Select } from 'primeng/select';
+import { MultiSelect } from 'primeng/multiselect';
+import { RefDirective } from 'rete-angular-plugin/21';
+import { StrategyNode } from './rete-model';
+import { DraftSetupDto } from '../../models/draft-dto';
+import { setupFields } from '../../data-access/setup-bindings';
+import { FundSearchDialog } from '../fund-search-dialog/fund-search-dialog';
+import { fitNodeSelectOverlay } from './node-select-overlay';
+import { FundPicker } from '../fund-picker/fund-picker';
+
+@Component({
+  selector: 'app-setup-rete-node',
+  imports: [
+    FormsModule,
+    KeyValuePipe,
+    Select,
+    MultiSelect,
+    RefDirective,
+    FundSearchDialog,
+    FundPicker,
+  ],
+  host: { '[style.width.px]': 'data.width' },
+  template: `
+    <article
+      data-node-id="strategy-setup"
+      [style.opacity]="data.branchDimmed ? 0.35 : 1"
+      (click)="data.choose()"
+      data-node-category="Налаштування"
+      tabindex="0"
+      aria-label="Фонди й ряди · постійний вузол"
+    >
+      <header>
+        <i class="pi pi-sliders-h"></i><strong>Фонди й ряди</strong
+        ><i class="pi pi-lock" title="Постійний вузол" aria-label="Постійний вузол"></i>
+      </header>
+      <div
+        class="fields"
+        (pointerdown)="$event.stopPropagation()"
+        (dblclick)="$event.stopPropagation()"
+        (wheel)="$event.stopPropagation()"
+      >
+        @for (field of fields; track field.key) {
+          <div class="field">
+            <label [for]="'setup-node-' + field.key">{{ field.label }}</label>
+            <div class="field-value">
+              @if (field.key === 'funds') {
+                <app-builder-fund-picker
+                  inputId="setup-node-funds"
+                  [instruments]="data.instruments"
+                  [value]="data.setup.funds"
+                  (valueChange)="patch('funds', $event)"
+                  [compact]="true"
+                  [overlayContainer]="data.overlayContainer"
+                />
+              } @else if (field.key === 'extraSeries') {
+                <p-multiselect
+                  [inputId]="'setup-node-' + field.key"
+                  [options]="options(false)"
+                  optionLabel="label"
+                  optionValue="id"
+                  [ngModel]="value(field.key)"
+                  (ngModelChange)="patch(field.key, $event ?? [])"
+                  [filter]="true"
+                  [maxSelectedLabels]="0"
+                  selectedItemsLabel="Обрано: {0}"
+                  placeholder="Оберіть фонди"
+                  size="small"
+                  [appendTo]="data.overlayContainer"
+                  fluid
+                />
+              } @else {
+                <p-select
+                  #nodeSelect
+                  panelStyleClass="builder-node-select-panel"
+                  (onShow)="fitNodeSelect(nodeSelect)"
+                  [inputId]="'setup-node-' + field.key"
+                  [options]="options(field.key === 'volatilityIndexId')"
+                  optionLabel="label"
+                  optionValue="id"
+                  [ngModel]="value(field.key)"
+                  (ngModelChange)="patch(field.key, $event ?? null)"
+                  [filter]="true"
+                  [showClear]="true"
+                  placeholder="Оберіть інструмент"
+                  size="small"
+                  [appendTo]="data.overlayContainer"
+                  fluid
+                />
+              }
+              <button
+                type="button"
+                class="port"
+                [attr.aria-label]="'Вихід ' + field.label"
+                [title]="
+                  field.key === 'funds' ? 'Вибрані фонди для правил та індикаторів' : field.label
+                "
+                [attr.data-socket-key]="data.id + ':output:' + field.key"
+                (click)="keyboard($event, field.key)"
+                refComponent
+                [data]="{
+                  type: 'socket',
+                  side: 'output',
+                  key: field.key,
+                  nodeId: data.id,
+                  payload: data.outputs[field.key]?.socket,
+                  seed,
+                }"
+                [emit]="emit"
+              ></button>
+            </div>
+            @if (field.key === 'funds') {
+              <div class="fund-loop" aria-label="Вибрані фонди перебираються по одному">
+                <div class="loop-heading">
+                  <i class="pi pi-sync"></i><span>Для кожного фонду</span
+                  ><b>×{{ data.setup.funds.length }}</b>
+                </div>
+                <div class="loop-items">
+                  @for (fund of selectedFunds.slice(0, 3); track fund.id; let last = $last) {
+                    <span class="fund-token" [title]="fund.name">{{ fund.label }}</span>
+                    @if (!last) {
+                      <i class="pi pi-angle-right"></i>
+                    }
+                  }
+                  @if (selectedFunds.length > 3) {
+                    <span class="more-funds">+{{ selectedFunds.length - 3 }}</span>
+                  }
+                  @if (!selectedFunds.length) {
+                    <span class="more-funds">Оберіть фонди для перебору</span>
+                  }
+                </div>
+              </div>
+              <button class="find" type="button" (click)="searchVisible.set(true)">
+                <i class="pi pi-search"></i> Знайти фонди
+              </button>
+            }
+          </div>
+        }
+        @for (output of data.outputs | keyvalue; track output.key) {
+          @if (output.key.startsWith('extra:')) {
+            <div class="extra-row">
+              <span>{{ extraLabel(output.key) }}</span>
+              <button
+                class="port"
+                type="button"
+                [attr.aria-label]="'Вихід ' + extraLabel(output.key)"
+                [attr.data-socket-key]="data.id + ':output:' + output.key"
+                (click)="keyboard($event, output.key)"
+                refComponent
+                [data]="{
+                  type: 'socket',
+                  side: 'output',
+                  key: output.key,
+                  nodeId: data.id,
+                  payload: output.value?.socket,
+                  seed,
+                }"
+                [emit]="emit"
+              ></button>
+            </div>
+          }
+        }
+      </div>
+    </article>
+    <app-builder-fund-search-dialog
+      [(visible)]="searchVisible"
+      [overlayContainer]="data.overlayContainer"
+      [selectedInstrumentIds]="data.setup.funds"
+      (added)="fundsAdded($event)"
+    />
+  `,
+  styles: [
+    `
+      :host {
+        display: block;
+        width: 320px;
+      }
+      article {
+        background: var(--p-content-background);
+        color: var(--p-text-color);
+        border: 1px solid var(--p-content-border-color);
+        border-radius: 10px;
+        box-shadow: 0 4px 16px #0000000d;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--p-content-border-color);
+        font-size: 13px;
+        cursor: grab;
+      }
+      header .pi-lock {
+        margin-left: auto;
+        font-size: 11px;
+        color: var(--p-text-muted-color);
+      }
+      .fields {
+        padding: 10px 0 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        cursor: default;
+        --p-form-field-padding-x: 8px;
+        --p-form-field-padding-y: 5px;
+        --p-form-field-sm-font-size: 12px;
+      }
+      .field {
+        min-width: 0;
+      }
+      label {
+        font-size: 11px;
+        font-weight: 500;
+        display: block;
+        margin-bottom: 4px;
+      }
+      .field-value {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .field-value p-select,
+      .field-value p-multiselect,
+      .field-value app-builder-fund-picker {
+        flex: 1;
+        min-width: 0;
+      }
+      .port {
+        display: grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        flex-shrink: 0;
+        border: 0;
+        padding: 0;
+        background: transparent;
+        border-radius: 50%;
+        cursor: crosshair;
+      }
+      .port:focus-visible,
+      .find:focus-visible {
+        outline: 2px solid var(--p-primary-color);
+      }
+      .find {
+        font-size: 11px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-top: 5px;
+        padding: 4px 6px;
+        border-radius: 4px;
+        cursor: pointer;
+        color: var(--p-text-muted-color);
+      }
+      .find:hover {
+        color: var(--p-content-hover-color);
+        background: var(--p-content-hover-background);
+      }
+      .extra-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 11px;
+        gap: 6px;
+      }
+      .fund-loop {
+        margin: 7px 28px 0 0;
+        padding: 7px 8px;
+        border: 1px solid var(--p-content-border-color);
+        border-radius: 7px;
+        background: var(--p-content-hover-background);
+      }
+      .loop-heading,
+      .loop-items {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 10px;
+      }
+      .loop-heading {
+        color: var(--p-text-color);
+      }
+      .loop-heading .pi {
+        font-size: 11px;
+      }
+      .loop-heading b {
+        margin-left: auto;
+        font-variant-numeric: tabular-nums;
+      }
+      .loop-items {
+        margin-top: 6px;
+        color: var(--p-text-muted-color);
+      }
+      .fund-token {
+        max-width: 66px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        padding: 2px 5px;
+        border: 1px solid var(--p-content-border-color);
+        border-radius: 4px;
+        background: var(--p-content-background);
+        color: var(--p-text-color);
+      }
+      .loop-items .pi {
+        font-size: 10px;
+      }
+      .more-funds {
+        white-space: nowrap;
+      }
+    `,
+  ],
+})
+export class SetupNode implements OnChanges {
+  protected readonly fitNodeSelect = fitNodeSelectOverlay;
+  @Input() data!: StrategyNode;
+  @Input() emit!: (event: any) => void;
+  @Input() rendered!: () => void;
+  protected readonly fields = setupFields.filter((field) => field.key !== 'cashId');
+  protected readonly searchVisible = signal(false);
+  seed = 0;
+  get selectedFunds() {
+    return this.data.setup.funds.map(
+      (id) =>
+        this.data.instruments.find((item) => item.id === id) ?? { id, label: 'Фонд', name: '' },
+    );
+  }
+  options(volatility: boolean) {
+    return this.data.instruments.filter((item) =>
+      volatility ? item.isVolatilityIndex : !item.isVolatilityIndex,
+    );
+  }
+  value(key: string) {
+    return this.data.setup[key as keyof DraftSetupDto];
+  }
+  patch(key: string, value: string[] | string | null) {
+    this.data.setup = { ...this.data.setup, [key]: value };
+    this.data.changeSetup(this.data.setup);
+  }
+  extraLabel(key: string) {
+    return (
+      this.data.instruments.find((item) => item.id === key.slice(6))?.label ?? 'Додатковий ряд'
+    );
+  }
+  fundsAdded(ids: string[]) {
+    this.patch('funds', [...new Set([...this.data.setup.funds, ...ids])]);
+    this.data.refreshInstruments();
+  }
+  keyboard(event: MouseEvent, key: string) {
+    if (event.detail === 0) this.data.outputClick(key);
+    event.stopPropagation();
+  }
+  ngOnChanges() {
+    this.seed++;
+    requestAnimationFrame(() => this.rendered?.());
+  }
+}

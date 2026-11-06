@@ -4,9 +4,12 @@ import {
   computed,
   effect,
   inject,
+  HostListener,
+  ElementRef,
   input,
   signal,
   untracked,
+  viewChild,
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { LayoutService } from '../../../../core/layout/layout-service';
@@ -67,6 +70,30 @@ import { ProblemsPanel } from '../../ui/problems-panel/problems-panel';
 })
 export class DraftEditorPage {
   protected readonly store = inject(DraftStore);
+  private readonly graphEditor = viewChild(GraphEditor);
+  private readonly element = inject<ElementRef<HTMLElement>>(ElementRef);
+  protected closeReview(): void {
+    this.store.reviewVisible.set(false);
+    requestAnimationFrame(() =>
+      this.element.nativeElement
+        .querySelector<HTMLButtonElement>('.review-button, .review-toggle')
+        ?.focus(),
+    );
+  }
+  @HostListener('document:keydown.escape')
+  protected dismissReview(): void {
+    if (
+      this.store.reviewVisible() &&
+      !this.reportsVisible() &&
+      !this.setupVisible() &&
+      !this.copyEntryVisible() &&
+      !document.querySelector('[role="dialog"], [role="listbox"]')
+    )
+      this.closeReview();
+  }
+  protected focusSetupNode(): void {
+    void this.graphEditor()?.focusSetup();
+  }
   private readonly router = inject(Router);
   private readonly appLayout = inject(LayoutService);
   private readonly confirmation = inject(ConfirmationService);

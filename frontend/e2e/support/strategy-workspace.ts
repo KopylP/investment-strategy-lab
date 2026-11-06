@@ -1,6 +1,9 @@
 import { Page } from '@playwright/test';
 
-export async function mockStrategyWorkspace(page: Page) {
+export async function mockStrategyWorkspace(
+  page: Page,
+  customize?: (draft: any, vocabulary: any) => void,
+) {
   const blocks = ['MarketFilter', 'Exit', 'Entry', 'Selection', 'Risk'];
   const kinds = ['MarketResult', 'ExitResult', 'EntryResult', 'SelectionResult', 'RiskResult'];
   const nodes = blocks.flatMap((block, i) => [
@@ -90,11 +93,51 @@ export async function mockStrategyWorkspace(page: Page) {
     templates: [],
     nodeKinds: ['All', ...kinds].map((kind) => ({
       kind,
-      output: kind === 'All' ? 'Boolean' : null,
-      inputs: [{ name: 'condition', type: 'Boolean', many: kind === 'All', required: true }],
+      output:
+        kind === 'All'
+          ? 'Boolean'
+          : kind === 'MarketResult'
+            ? 'Budget'
+            : kind === 'SelectionResult'
+              ? 'Funds'
+              : ['EntryResult', 'ExitResult'].includes(kind)
+                ? 'Candidates'
+                : null,
+      inputs:
+        kind === 'SelectionResult'
+          ? [
+              { name: 'funds', type: 'Candidates', many: false, required: true },
+              { name: 'budget', type: 'Budget', many: false, required: true },
+            ]
+          : kind === 'RiskResult'
+            ? []
+            : [
+                {
+                  name: 'condition',
+                  type: 'Boolean',
+                  many: kind === 'All',
+                  required: kind === 'All',
+                },
+                ...(['EntryResult', 'ExitResult'].includes(kind)
+                  ? [{ name: 'funds', type: 'Candidates', many: false, required: true }]
+                  : []),
+              ],
     })),
   };
   vocabulary.nodeKinds.push(
+    {
+      kind: 'FundSelection',
+      output: 'Candidates',
+      inputs: [
+        { name: 'funds', type: 'Candidates', many: false, required: true },
+        { name: 'rankBy', type: 'Number', many: false, required: false },
+      ],
+    },
+    {
+      kind: 'Cash',
+      output: null,
+      inputs: [{ name: 'remainder', type: 'Budget', many: false, required: true }],
+    },
     { kind: 'Indicator', output: 'Number', inputs: [] },
     {
       kind: 'Compare',
@@ -103,6 +146,7 @@ export async function mockStrategyWorkspace(page: Page) {
     },
     { kind: 'Signal', output: 'Boolean', inputs: [] },
   );
+  customize?.(draft, vocabulary);
   await page.route('**/api/**', async (route) => {
     const path = new URL(route.request().url()).pathname;
     let body: any = [];

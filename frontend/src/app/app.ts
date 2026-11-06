@@ -6,7 +6,11 @@ import { Toast } from 'primeng/toast';
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet, Toast, ConfirmDialog],
-  template: `<router-outlet /><p-toast position="top-right" /><p-confirmdialog />`,
+  template: `
+    <router-outlet />
+    <p-toast position="top-right" />
+    <p-confirmdialog [style]="{ width: '34rem', maxWidth: 'calc(100vw - 2rem)' }" />
+  `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {}

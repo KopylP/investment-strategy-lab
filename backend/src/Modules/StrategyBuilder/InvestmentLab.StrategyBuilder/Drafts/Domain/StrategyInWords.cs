@@ -19,6 +19,7 @@ public static class StrategyInWords
         public BlockWords? Market()
         {
             var result = _graph.ResultOf(BlockKind.MarketFilter);
+            if (!_graph.Into(StrategyGraph.SelectionResultId, NodeSockets.Budget).Any(link => link.From == result.Id)) return null;
             if (InputNode(result, NodeSockets.Condition) is not { } condition)
                 return null;
 
@@ -32,6 +33,7 @@ public static class StrategyInWords
         public BlockWords? Gate(BlockKind block, string code)
         {
             var result = _graph.ResultOf(block);
+            if (!PortfolioFlow.Uses(_graph, result.Id)) return null;
             if (InputNode(result, NodeSockets.Condition) is not { } condition)
                 return null;
 
@@ -41,15 +43,16 @@ public static class StrategyInWords
         public BlockWords Selection()
         {
             var result = _graph.ResultOf(BlockKind.Selection);
-            var parameters = result.Parameters;
-            var rank = InputNode(result, NodeSockets.RankBy) is { } ranking ? Indicator(ranking) : Message.Of("builder.words.universe_order");
+            var selector = PortfolioFlow.Selector(_graph);
+            var parameters = selector?.Parameters ?? NodeParameters.Empty.With("top", Math.Max(1, draft.Setup.Funds.Count));
+            var rank = selector is not null && InputNode(selector, NodeSockets.RankBy) is { } ranking ? Indicator(ranking) : Message.Of("builder.words.universe_order");
             var sentence = Message.Of("builder.words.selection", new
             {
                 top = parameters.Integer("top"),
                 rank,
                 groupLimit = parameters.Integer("maxPerGroup"),
                 correlation = parameters.Number("maxCorrelation"),
-                weights = ChoiceLabel(vocabulary.BlockFields.GetValueOrDefault("method"), parameters.Text("method")),
+                weights = ChoiceLabel(vocabulary.BlockFields.GetValueOrDefault("method"), result.Parameters.Text("method")),
             });
 
             return new BlockWords(BlockKind.Selection, sentence);
@@ -131,6 +134,7 @@ public static class StrategyInWords
 
         private string Indicator(GraphNode node)
         {
+            node = SetupBindings.Resolve(node, _graph, draft.Setup);
             var kind = vocabulary.Indicator(node.Parameters.Text("indicator") ?? "");
             var parameters = PlainParameters(node.Parameters);
             parameters["of"] = SeriesWords(SeriesChoice.Of(node.Parameters));

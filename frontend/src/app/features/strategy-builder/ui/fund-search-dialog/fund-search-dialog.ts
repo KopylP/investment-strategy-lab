@@ -42,6 +42,7 @@ import { FundSearchStore } from '../../data-access/fund-search-store';
 export class FundSearchDialog {
   protected readonly store = inject(FundSearchStore);
   readonly visible = model(false);
+  readonly overlayContainer = input<HTMLElement | 'body'>('body');
   readonly selectedInstrumentIds = input.required<string[]>();
   readonly added = output<string[]>();
   protected readonly exchangeId = signal<string | null>(null);

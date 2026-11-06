@@ -1,3 +1,23 @@
-/* Only layers, icons and the Sakai layout; components are styled by the PrimeNG theme (§11.4). */
+/* Global layout, icons and shared overlay adjustments. */
 @use 'primeicons/primeicons.css';
 @use 'app/core/layout/styles/layout';
+
+/* Fund groups remain visibly separate from their selectable instruments, including body overlays. */
+.builder-fund-picker-panel {
+  .p-multiselect-option-group {
+    padding: 8px 0 4px;
+    background: transparent;
+  }
+  .p-multiselect-option {
+    margin-inline-start: 24px;
+    padding-block: 8px;
+  }
+}
+
+
+.builder-node-select-panel {
+  font-size: 12px;
+  line-height: 1.4;
+  .p-select-list { gap: 2px; padding: 4px; }
+  .p-select-option { padding: 6px 8px; min-height: 28px; white-space: normal; }
+}

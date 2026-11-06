@@ -2,6 +2,8 @@ namespace InvestmentLab.StrategyBuilder.Drafts.Domain;
 
 public static class NodeKinds
 {
+    public static bool IsPinned(NodeKind kind) => kind is NodeKind.Setup or NodeKind.Cash or NodeKind.Portfolio || IsResult(kind);
+
     public static bool IsResult(NodeKind kind) =>
         kind is NodeKind.MarketResult or NodeKind.ExitResult or NodeKind.EntryResult or NodeKind.SelectionResult or NodeKind.RiskResult;
 

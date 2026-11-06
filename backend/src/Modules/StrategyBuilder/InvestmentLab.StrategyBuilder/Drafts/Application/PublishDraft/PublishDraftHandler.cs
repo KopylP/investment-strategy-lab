@@ -36,7 +36,7 @@ public sealed class PublishDraftHandler(
             return Refused(problems);
 
         var rules = RulesGenerator.Generate(draft);
-        var strategy = new AuthoredStrategy(rules.Json, draft.Setup, draft.Reports);
+        var strategy = new AuthoredStrategy(rules.Json, SetupBindings.EvaluationSetup(draft), draft.Reports);
         var published = await authoring.PublishAsync(draft.OwnerId, draft.Origin, draft.Name, strategy, cancellationToken);
         if (published.IsFailure)
             return PublicationFailure(published.Error, rules, draft.Graph);

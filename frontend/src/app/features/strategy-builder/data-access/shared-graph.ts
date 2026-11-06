@@ -7,6 +7,7 @@ export function dependenciesOf(graph: GraphDto, id: string): Set<string> {
     const current = pending.pop()!;
     if (visited.has(current)) continue;
     visited.add(current);
+    if (graph.nodes.find((node) => node.id === current)?.kind === 'Cash') continue;
     pending.push(...graph.links.filter((link) => link.to === current).map((link) => link.from));
   }
   return visited;
@@ -21,7 +22,10 @@ export function resultsUsing(graph: GraphDto, id: string): NodeDto[] {
     if (visited.has(current)) continue;
     visited.add(current);
     const node = graph.nodes.find((node) => node.id === current);
-    if (node?.kind.endsWith('Result')) results.push(node);
+    if (node?.kind.endsWith('Result')) {
+      results.push(node);
+      continue;
+    }
     pending.push(...graph.links.filter((link) => link.from === current).map((link) => link.to));
   }
   return results;

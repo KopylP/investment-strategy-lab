@@ -11,6 +11,7 @@ import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { DraftStore } from '../../data-access/draft-store';
 import { resultsUsing } from '../../data-access/shared-graph';
+import { candidatePath } from '../../data-access/portfolio-flow';
 import { conditionRows } from '../../data-access/condition-rows-mapper';
 import { graphWithNode } from '../../data-access/graph-mapper';
 import { DraftProblemDto, NodeDto } from '../../models/draft-dto';
@@ -73,6 +74,10 @@ export class StepsView {
       .draft()
       ?.graph.nodes.find((node) => node.block === this.block() && node.kind.endsWith('Result')),
   );
+  protected readonly selector = computed(() => {
+    const graph = this.store.draft()?.graph;
+    return graph ? candidatePath(graph).find((node) => node.kind === 'FundSelection') : undefined;
+  });
   protected readonly sentence = computed(
     () =>
       this.store.draft()?.words.find((words) => words.block === this.block())?.sentence ??

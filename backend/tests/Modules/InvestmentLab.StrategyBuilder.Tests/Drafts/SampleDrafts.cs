@@ -43,7 +43,7 @@ internal static class SampleDrafts
 
     public static StrategyGraph Graph(IEnumerable<GraphNode> nodes, IEnumerable<GraphLink> links, NodeParameters? market = null)
     {
-        var graph = StrategyGraph.Empty with { Nodes = [.. StrategyGraph.Empty.Nodes, .. nodes], Links = [.. links] };
+        var graph = StrategyGraph.Empty with { Nodes = [.. StrategyGraph.Empty.Nodes, .. nodes], Links = [.. StrategyGraph.Empty.Links, .. links] };
 
         return market is null ? graph : graph.WithNode(graph.ResultOf(BlockKind.MarketFilter) with { Parameters = market });
     }

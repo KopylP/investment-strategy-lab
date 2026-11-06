@@ -2,21 +2,23 @@ namespace InvestmentLab.StrategyBuilder.Drafts.Domain;
 
 public sealed record StrategyGraph(IReadOnlyList<GraphNode> Nodes, IReadOnlyList<GraphLink> Links)
 {
+    public static readonly NodeId SetupId = new("strategy-setup");
     public static readonly NodeId MarketResultId = new("result-market");
     public static readonly NodeId ExitResultId = new("result-exit");
     public static readonly NodeId EntryResultId = new("result-entry");
     public static readonly NodeId SelectionResultId = new("result-selection");
     public static readonly NodeId RiskResultId = new("result-risk");
 
-    public static StrategyGraph Empty { get; } = new(
+    public static StrategyGraph Empty { get; } = PortfolioFlow.Upgrade(new(
         [
+            new GraphNode(SetupId, NodeKind.Setup, BlockKind.Shared, NodeParameters.Empty),
             new GraphNode(MarketResultId, NodeKind.MarketResult, BlockKind.MarketFilter, NodeParameters.Empty),
             new GraphNode(ExitResultId, NodeKind.ExitResult, BlockKind.Exit, NodeParameters.Empty),
             new GraphNode(EntryResultId, NodeKind.EntryResult, BlockKind.Entry, NodeParameters.Empty),
             new GraphNode(SelectionResultId, NodeKind.SelectionResult, BlockKind.Selection, DefaultSelection()),
             new GraphNode(RiskResultId, NodeKind.RiskResult, BlockKind.Risk, NodeParameters.Empty),
         ],
-        []);
+        []));
 
     public GraphNode? Node(NodeId id) => Nodes.FirstOrDefault(node => node.Id == id);
 
@@ -38,7 +40,7 @@ public sealed record StrategyGraph(IReadOnlyList<GraphNode> Nodes, IReadOnlyList
         while (pending.TryPop(out var current))
         {
             if (!visited.Add(current)) continue;
-            if (Node(current) is { } node && NodeKinds.IsResult(node.Kind)) results.Add(node);
+            if (Node(current) is { } node && NodeKinds.IsResult(node.Kind)) { results.Add(node); continue; }
             foreach (var link in OutOf(current)) pending.Push(link.To);
         }
         return results;
@@ -52,6 +54,7 @@ public sealed record StrategyGraph(IReadOnlyList<GraphNode> Nodes, IReadOnlyList
         while (pending.TryPop(out var current))
         {
             if (!visited.Add(current)) continue;
+            if (Node(current)?.Kind == NodeKind.Cash) continue;
             foreach (var link in Into(current)) pending.Push(link.From);
         }
         return visited;

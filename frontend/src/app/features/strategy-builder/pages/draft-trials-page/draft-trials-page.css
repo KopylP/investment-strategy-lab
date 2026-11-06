@@ -1,0 +1,25 @@
+.trial-row {
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.trial-row:hover > td {
+  background: var(--p-content-hover-background);
+}
+.trial-row.selected > td {
+  background: var(--p-highlight-background);
+  color: var(--p-highlight-color);
+}
+.trial-row.selected > td:first-child {
+  box-shadow: inset 3px 0 var(--p-primary-color);
+  font-weight: 600;
+}
+.trial-row:focus-visible {
+  outline: 2px solid var(--p-primary-color);
+  outline-offset: -2px;
+}
+.trial-row.unavailable {
+  cursor: default;
+}
+.trial-row.unavailable:hover > td {
+  background: inherit;
+}

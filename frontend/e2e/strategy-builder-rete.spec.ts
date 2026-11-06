@@ -24,7 +24,9 @@ test('Rete workspace supports inline fields, palette drop, wires and navigation'
             }
             const points = [path.getPointAtLength(0), path.getPointAtLength(path.getTotalLength())];
             const keys = [
-              `${path.dataset['edgeFrom']}:output`,
+              path.dataset['edgeOutput'] && path.dataset['edgeOutput'] !== 'output'
+                ? `${path.dataset['edgeFrom']}:output:${path.dataset['edgeOutput']}`
+                : `${path.dataset['edgeFrom']}:output`,
               `${path.dataset['edgeTo']}:input:${path.dataset['edgeInput']}`,
             ];
             keys.forEach((key, i) => {
@@ -48,15 +50,47 @@ test('Rete workspace supports inline fields, palette drop, wires and navigation'
       )
       .toEqual([]);
   };
+  const assertCenteredZoom = async () => {
+    const viewport = () =>
+      page.locator('[data-block-canvas]').evaluate((canvas) => {
+        const holder = canvas.firstElementChild as HTMLElement;
+        const transform = new DOMMatrix(getComputedStyle(holder).transform);
+        return {
+          scale: transform.a,
+          worldX: (canvas.clientWidth / 2 - transform.e) / transform.a,
+          worldY: (canvas.clientHeight / 2 - transform.f) / transform.a,
+        };
+      });
+    const before = await viewport();
+    await page.getByRole('button', { name: 'Збільшити', exact: true }).click();
+    await expect.poll(async () => (await viewport()).scale).toBeGreaterThan(before.scale);
+    const enlarged = await viewport();
+    expect(Math.abs(enlarged.worldX - before.worldX) * enlarged.scale).toBeLessThan(0.5);
+    expect(Math.abs(enlarged.worldY - before.worldY) * enlarged.scale).toBeLessThan(0.5);
+    await page.getByRole('button', { name: 'Зменшити', exact: true }).click();
+    await expect.poll(async () => (await viewport()).scale).toBeCloseTo(before.scale, 5);
+    const restored = await viewport();
+    expect(Math.abs(restored.worldX - before.worldX) * restored.scale).toBeLessThan(0.5);
+    expect(Math.abs(restored.worldY - before.worldY) * restored.scale).toBeLessThan(0.5);
+  };
   await assertEdgesMeetSockets();
   const canvas = page.locator('[data-block-canvas]');
-  await expect(page.locator('app-graph-editor article')).toHaveCount(13);
-  await page.getByRole('button', { name: 'Збільшити', exact: true }).click();
+  await expect(page.locator('app-graph-editor article')).toHaveCount(17);
+  const outputs = page.locator('[data-node-id="result-3"] .outputs .port');
+  await expect(outputs).toHaveCount(2);
+  await expect(outputs.first()).toHaveAttribute('data-socket-key', 'result-3:output');
+  const alignedOutputs = () =>
+    outputs.evaluateAll((ports) => {
+      const [top, bottom] = ports.map((port) => port.getBoundingClientRect());
+      return Math.abs(top.right - bottom.right) < 0.5 && bottom.top >= top.bottom - 0.5;
+    });
+  await expect.poll(alignedOutputs).toBe(true);
+  await assertCenteredZoom();
   await page.getByRole('button', { name: 'Показати всю схему' }).click();
   await page.getByRole('searchbox', { name: 'Пошук елементів' }).fill('Моментум');
   await expect(page.locator('app-node-palette button.item')).toHaveCount(1);
   await page.locator('app-node-palette button.item').click();
-  await expect(page.locator('app-graph-editor article')).toHaveCount(14);
+  await expect(page.locator('app-graph-editor article')).toHaveCount(18);
   await assertEdgesMeetSockets();
   const added = page.locator('app-graph-editor article').last();
   await expect(added.locator('app-node-inspector')).toBeVisible();
@@ -85,18 +119,20 @@ test('Rete workspace supports inline fields, palette drop, wires and navigation'
     clientX: box.x + 250,
     clientY: box.y + 180,
   });
-  await expect(page.locator('app-graph-editor article')).toHaveCount(15);
-  await expect.poll(() => workspace.draft.graph.nodes.length).toBe(15);
+  await expect(page.locator('app-graph-editor article')).toHaveCount(19);
+  await expect.poll(() => workspace.draft.graph.nodes.length).toBe(19);
   await page.getByRole('button', { name: 'Скасувати дію', exact: true }).click();
-  await expect(page.locator('app-graph-editor article')).toHaveCount(14);
+  await expect(page.locator('app-graph-editor article')).toHaveCount(18);
   await page.getByRole('button', { name: 'Повторити дію', exact: true }).click();
-  await expect(page.locator('app-graph-editor article')).toHaveCount(15);
+  await expect(page.locator('app-graph-editor article')).toHaveCount(19);
   await page.getByRole('button', { name: 'Показати всю схему' }).click();
   await page.getByRole('button', { name: 'Упорядкувати', exact: true }).click();
   await page
     .getByRole('navigation', { name: 'Ролі стратегії' })
     .getByRole('button', { name: 'Ринковий фільтр', exact: true })
     .click();
+  // Include disconnected nodes before creating their first wire.
+  await page.getByRole('button', { name: 'Показати всю схему' }).click();
   // Native Rete wires support both click-click and pointer drag.
   await assertEdgesMeetSockets();
   const source = page.locator('[data-node-id="number"]');
@@ -141,7 +177,13 @@ test('Rete workspace supports inline fields, palette drop, wires and navigation'
     .getByRole('button', { name: 'Вхід', exact: true })
     .click();
   await assertEdgesMeetSockets();
-  for (const width of [1440, 1024, 390]) {
+  const panBox = (await canvas.boundingBox())!;
+  await page.mouse.move(panBox.x + panBox.width - 16, panBox.y + panBox.height - 16);
+  await page.mouse.down();
+  await page.mouse.move(panBox.x + panBox.width - 96, panBox.y + panBox.height - 56, { steps: 5 });
+  await page.mouse.up();
+  await assertCenteredZoom();
+  for (const width of [1440, 2560, 3440, 1024, 390]) {
     await page.setViewportSize({ width, height: 900 });
     if (width < 992)
       await expect
@@ -154,6 +196,12 @@ test('Rete workspace supports inline fields, palette drop, wires and navigation'
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
     ).toBeTruthy();
+    if (width >= 1960) {
+      const workspace = (await page.locator('.workspace').boundingBox())!;
+      expect(workspace.width).toBeGreaterThan(width - 32);
+      expect(workspace.x).toBeLessThan(16);
+    }
+    await assertCenteredZoom();
     await assertEdgesMeetSockets();
     await page.screenshot({ path: testInfo.outputPath(`rete-${width}.png`), fullPage: true });
   }

@@ -19,6 +19,25 @@
       </button>
       <strong>Схема стратегії</strong>
       <div class="tools">
+        <button type="button" (click)="helpVisible.set(!helpVisible())" [attr.aria-expanded]="helpVisible()" aria-controls="graph-help" title="Як працювати зі схемою" aria-label="Як працювати зі схемою"><i class="pi pi-question-circle"></i></button>
+        @if (selectedEdge()) {
+          <button
+            type="button"
+            (click)="removeSelectedEdge()"
+            aria-label="Видалити зв’язок"
+            title="Видалити зв’язок (Delete)"
+          >
+            <i class="pi pi-trash"></i>
+          </button>
+          <button
+            type="button"
+            (click)="resetEdgeRoute()"
+            aria-label="Автоматичний маршрут"
+            title="Відновити автоматичний маршрут"
+          >
+            <i class="pi pi-replay"></i>
+          </button>
+        }
         <button type="button" aria-label="Скасувати дію" [disabled]="!canUndo()" (click)="undo()">
           <i class="pi pi-undo"></i>
         </button>
@@ -46,16 +65,25 @@
             aria-hidden="true"
           ></i>
         </button>
-        <button type="button" aria-label="Зменшити" (click)="setZoom(-0.1)">−</button>
+        <button type="button" aria-label="Зменшити" (click)="setZoom(-1)">−</button>
         <output>{{ (zoom() * 100).toFixed(0) }}%</output>
-        <button type="button" aria-label="Збільшити" (click)="setZoom(0.1)">+</button>
+        <button type="button" aria-label="Збільшити" (click)="setZoom(1)">+</button>
       </div>
     </div>
     <nav class="role-nav" aria-label="Ролі стратегії">
+      <button type="button" (click)="focusSetup()">Фонди й ряди</button>
       @for (role of roles; track role.kind) {
-        <button type="button" (click)="focusRole(role.kind)">{{ role.title }}</button>
+        <button type="button" (click)="focusRole(role.kind)" title="Перейти до наступного вузла розділу">{{ role.title }}</button>
       }
     </nav>
+    @if (helpVisible()) {
+      <div id="graph-help" class="graph-help">
+        Додайте елемент із панелі зліва. Тягніть від виходу до сумісного входу, щоб з’єднати вузли.
+        Тягніть фон для навігації, коліщатко змінює масштаб. Виберіть вузол, щоб простежити його гілку. Подвійний клік по вузлу наближає його; натисніть на фон, щоб показати все.
+        Esc скасовує зв’язок, Delete видаляє вибраний елемент.
+        <button type="button" (click)="helpVisible.set(false)" aria-label="Закрити підказку">✕</button>
+      </div>
+    }
     @if (error() || connecting()) {
       <div class="status" aria-live="polite">
         @if (error(); as message) {
@@ -77,14 +105,18 @@
       data-block-canvas
       class="canvas"
       aria-label="Полотно стратегії"
+      (dblclick)="focusDoubleClickedNode($event)"
       (dragover)="$event.preventDefault()"
       (drop)="drop($event)"
     ></div>
     <div class="footer">
-      <span><i class="pi pi-circle-fill" style="color: #2563eb"></i> Число</span
-      ><span><i class="pi pi-circle-fill" style="color: #7c3aed"></i> Так / ні</span
-      ><span><i class="pi pi-circle-fill" style="color: #0f766e"></i> Фонди</span
-      ><span>Вихід → вхід · Esc скасовує зв’язок · Delete видаляє вузол</span>
+      @for (wire of wireLegend; track wire.type) {
+        <span class="legend-item" [style.color]="wire.color">
+          <i class="legend-socket" [class.number]="wire.type === 'Number'" [class.funds]="wire.type === 'Funds'"></i>
+          <svg width="22" height="8" aria-hidden="true"><path d="M0 4H22" [attr.stroke]="wire.color" [attr.stroke-width]="wire.width" [attr.stroke-dasharray]="wire.dash" /></svg>
+          <span>{{ wire.label }}</span>
+        </span>
+      }
     </div>
   </section>
 </div>

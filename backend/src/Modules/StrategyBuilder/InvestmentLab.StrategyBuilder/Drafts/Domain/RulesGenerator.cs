@@ -25,6 +25,7 @@ public static class RulesGenerator
     private sealed class RulesWriting(StrategyDraft draft)
     {
         private readonly StrategyGraph _graph = draft.Graph;
+        private readonly DraftSetup _setup = SetupBindings.EvaluationSetup(draft);
 
         public JsonObject Indicators { get; } = [];
 
@@ -33,6 +34,10 @@ public static class RulesGenerator
         public void AddGate(JsonObject rules, string section, BlockKind block)
         {
             var result = _graph.ResultOf(block);
+            if (block is BlockKind.Entry or BlockKind.Exit && !PortfolioFlow.Uses(_graph, result.Id))
+                return;
+            if (block == BlockKind.MarketFilter && !_graph.Into(StrategyGraph.SelectionResultId, NodeSockets.Budget).Any(link => link.From == result.Id))
+                return;
             if (InputNode(result, NodeSockets.Condition) is not { } condition)
                 return;
 
@@ -47,11 +52,14 @@ public static class RulesGenerator
         public void AddSelection(JsonObject rules)
         {
             var result = _graph.ResultOf(BlockKind.Selection);
-            var selection = Fields(result, ResultFields.Selection);
-            if (InputNode(result, NodeSockets.RankBy) is { } ranking)
+            var selector = PortfolioFlow.Selector(_graph);
+            var selection = selector is null
+                ? new JsonObject { ["top"] = Math.Max(1, _setup.Funds.Count), ["order"] = "desc" }
+                : Fields(selector, ResultFields.Selection);
+            if (selector is not null && InputNode(selector, NodeSockets.RankBy) is { } ranking)
                 selection["rankBy"] = IndicatorName(ranking, "selection.rankBy");
 
-            SourceMap.Place("selection", result.Id);
+            SourceMap.Place("selection", selector?.Id ?? result.Id);
             SourceMap.Place("weights", result.Id);
             rules["selection"] = selection;
             rules["weights"] = Fields(result, ResultFields.Weights);
@@ -121,7 +129,8 @@ public static class RulesGenerator
 
         private string IndicatorName(GraphNode indicator, string path)
         {
-            var name = IndicatorNaming.NameOf(indicator, draft.Setup);
+            indicator = SetupBindings.Resolve(indicator, _graph, _setup);
+            var name = IndicatorNaming.NameOf(indicator, _setup);
             SourceMap.Place(path, indicator.Id);
             SourceMap.UseIndicator(name, indicator.Id);
             Indicators[name] = IndicatorDefinition(indicator);

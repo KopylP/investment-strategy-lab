@@ -8,7 +8,7 @@
 }
 <div class="card min-w-0">
   <p class="mb-4 text-muted-color">
-    Виберіть один запуск для перегляду або два готові запуски для порівняння.
+    Натисніть на рядок для перегляду. Оберіть другий готовий запуск, щоб порівняти результати.
   </p>
   <p-table
     [value]="store.trials()"
@@ -17,7 +17,6 @@
   >
     <ng-template #header
       ><tr>
-        <th>Вибір</th>
         <th>№</th>
         <th>Мітка</th>
         <th>Час</th>
@@ -30,16 +29,21 @@
       </tr></ng-template
     >
     <ng-template #body let-run
-      ><tr>
-        <td>
-          <input
-            type="checkbox"
-            [attr.aria-label]="'Вибрати запуск ' + run.number"
-            [checked]="store.selected().includes(run.number)"
-            [disabled]="!store.canSelect(run)"
-            (change)="store.toggle(run.number)"
-          />
-        </td>
+      ><tr
+        class="trial-row"
+        [class.selected]="store.selected().includes(run.number)"
+        [class.unavailable]="!store.canSelect(run)"
+        [attr.tabindex]="store.canSelect(run) ? 0 : -1"
+        [attr.aria-selected]="store.selected().includes(run.number)"
+        [attr.aria-disabled]="!store.canSelect(run)"
+        [attr.data-trial-number]="run.number"
+        [attr.aria-label]="
+          'Запуск ' + run.number + (store.selected().includes(run.number) ? ', вибрано' : '')
+        "
+        (click)="store.toggle(run.number)"
+        (keydown.enter)="store.toggle(run.number)"
+        (keydown.space)="$event.preventDefault(); store.toggle(run.number)"
+      >
         <td>{{ run.number }}</td>
         <td>{{ run.label || '—' }}</td>
         <td>{{ run.ranAt | dateTime }}</td>
@@ -58,7 +62,7 @@
     >
     <ng-template #emptymessage
       ><tr>
-        <td colspan="10">Запусків ще немає. Поверніться до чернетки й натисніть «Бектест».</td>
+        <td colspan="9">Запусків ще немає. Поверніться до чернетки й натисніть «Бектест».</td>
       </tr></ng-template
     >
   </p-table>

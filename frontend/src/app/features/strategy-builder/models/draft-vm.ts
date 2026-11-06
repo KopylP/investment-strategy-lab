@@ -39,7 +39,7 @@ export const blocks: BlockVm[] = [
     number: 4,
     title: 'Відбір і ваги',
     purpose: 'серед кандидатів',
-    result: 'Цільові ваги',
+    result: 'Розподілити гроші',
   },
   {
     kind: 'Risk',

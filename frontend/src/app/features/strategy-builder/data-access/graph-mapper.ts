@@ -25,7 +25,7 @@ export function positionsForMissingNodes(graph: GraphDto, layout: LayoutDto): La
     });
   }
 
-  return { positions, collapsed: [...layout.collapsed] };
+  return { ...layout, positions, collapsed: [...layout.collapsed] };
 }
 
 export function arrangedBlock(graph: GraphDto, layout: LayoutDto, block: BlockKind): LayoutDto {
@@ -39,7 +39,7 @@ export function arrangedBlock(graph: GraphDto, layout: LayoutDto, block: BlockKi
     (node, index) => (positions[node.id] = { x: 800, y: gridSize + index * rowHeight }),
   );
 
-  return { positions, collapsed: [...layout.collapsed] };
+  return { ...layout, positions, collapsed: [...layout.collapsed] };
 }
 
 export function snapPosition(position: NodePosition): NodePosition {
