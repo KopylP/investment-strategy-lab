@@ -6,5 +6,7 @@ public interface IStrategyCatalog
 {
     Task<IReadOnlyList<StrategyTypeDescriptor>> ListAsync(CancellationToken cancellationToken);
 
+    Task<StrategyTypeDescriptor?> FindAsync(string code, CancellationToken cancellationToken);
+
     Task<int> SyncAsync(CancellationToken cancellationToken);
 }

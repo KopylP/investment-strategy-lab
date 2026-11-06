@@ -9,5 +9,7 @@ internal sealed class StrategyCatalog(CatalogSynchronizer synchronizer) : IStrat
 {
     public Task<IReadOnlyList<StrategyTypeDescriptor>> ListAsync(CancellationToken cancellationToken) => synchronizer.ListAsync(cancellationToken);
 
+    public Task<StrategyTypeDescriptor?> FindAsync(string code, CancellationToken cancellationToken) => synchronizer.FindAsync(code, cancellationToken);
+
     public Task<int> SyncAsync(CancellationToken cancellationToken) => synchronizer.SyncAsync(cancellationToken);
 }

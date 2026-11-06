@@ -25,8 +25,7 @@ internal sealed class StrategyDirectory(IStrategyRepository strategies, CatalogS
         if (strategy.Version(version) is not { } chosen)
             return null;
 
-        var types = await catalog.ListAsync(cancellationToken);
-        var type = types.FirstOrDefault(candidate => candidate.Code == strategy.TypeCode);
+        var type = await catalog.FindAsync(strategy.TypeCode, cancellationToken);
         var check = await checks.CheckAsync(strategy.TypeCode, chosen.Parameters, cancellationToken);
         if (check.IsFailure)
             throw new InvalidOperationException(check.Error.Message);

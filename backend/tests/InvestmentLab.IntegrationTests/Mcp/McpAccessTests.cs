@@ -3,22 +3,33 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using InvestmentLab.IntegrationTests.Identity;
+using InvestmentLab.Strategies.Shared.Infrastructure;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol.Client;
 
 namespace InvestmentLab.IntegrationTests.Mcp;
 
-public sealed class McpAccessTests(McpApiFactory factory) : IClassFixture<McpApiFactory>
+public sealed class McpAccessTests : IClassFixture<McpApiFactory>
 {
     private const string McpPath = "/api/investlab/mcp";
 
     private static readonly string[] ResearchLoopTools =
         ["create_signal", "import_rules", "replace_draft_rules", "check_draft", "run_trial", "list_trials", "get_backtest", "get_experiment_journal"];
 
+    private readonly McpApiFactory _factory;
+
+    public McpAccessTests(AppHostFixture appHost, McpApiFactory factory)
+    {
+        _factory = factory;
+        _factory.StrategyEngineUrl ??= appHost.App.GetEndpoint("strategy-engine", "http").ToString();
+    }
+
     [Fact]
     public async Task Without_a_token_the_client_is_told_where_to_get_one()
     {
         var ct = TestContext.Current.CancellationToken;
-        var client = factory.CreateClient();
+        var client = _factory.CreateClient();
 
         var refused = await client.PostAsJsonAsync(McpPath, new { }, ct);
 
@@ -36,7 +47,7 @@ public sealed class McpAccessTests(McpApiFactory factory) : IClassFixture<McpApi
     public async Task A_token_its_issuer_refuses_is_not_let_in()
     {
         var ct = TestContext.Current.CancellationToken;
-        var client = WithToken(factory.CreateClient(), FakeHomeAssistantTokens.RejectedUser);
+        var client = WithToken(_factory.CreateClient(), FakeHomeAssistantTokens.RejectedUser);
 
         var refused = await client.PostAsJsonAsync(McpPath, new { }, ct);
 
@@ -47,7 +58,7 @@ public sealed class McpAccessTests(McpApiFactory factory) : IClassFixture<McpApi
     public async Task A_home_assistant_user_who_never_opened_the_panel_is_asked_to_do_it_once()
     {
         var ct = TestContext.Current.CancellationToken;
-        var client = WithToken(factory.CreateClient(), NewHomeAssistantUser());
+        var client = WithToken(_factory.CreateClient(), NewHomeAssistantUser());
 
         var refused = await client.PostAsJsonAsync(McpPath, new { }, ct);
 
@@ -74,6 +85,21 @@ public sealed class McpAccessTests(McpApiFactory factory) : IClassFixture<McpApi
     }
 
     [Fact]
+    public async Task The_blocks_of_strategy_rules_are_offered_even_when_the_stored_catalog_lacks_their_type()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var homeAssistantUser = await LinkedHomeAssistantUserAsync(ct);
+        await using var mcp = await ConnectAsync(homeAssistantUser, ct);
+        (await mcp.CallToolAsync("get_vocabulary", cancellationToken: ct)).IsError.ShouldNotBe(true);
+
+        await ForgetStoredStrategyTypeAsync("rule-based", ct);
+        var vocabulary = await mcp.CallToolAsync("get_vocabulary", cancellationToken: ct);
+
+        vocabulary.IsError.ShouldNotBe(true, TextOf(vocabulary));
+        TextOf(vocabulary).ShouldContain("momentum");
+    }
+
+    [Fact]
     public async Task A_failed_tool_call_explains_itself_in_the_users_language()
     {
         var ct = TestContext.Current.CancellationToken;
@@ -92,7 +118,7 @@ public sealed class McpAccessTests(McpApiFactory factory) : IClassFixture<McpApi
         var homeAssistantUser = NewHomeAssistantUser();
         var email = $"investor-{Guid.NewGuid():N}@example.com";
         var credentials = new { email, password = SignedInClient.Password };
-        var panel = factory.CreateClient();
+        var panel = _factory.CreateClient();
         panel.DefaultRequestHeaders.Add(HomeAssistantApiFactory.PeerHeader, HomeAssistantApiFactory.Supervisor);
 
         (await panel.PostAsJsonAsync("/api/identity/register", credentials, ct)).EnsureSuccessStatusCode();
@@ -103,9 +129,17 @@ public sealed class McpAccessTests(McpApiFactory factory) : IClassFixture<McpApi
         return homeAssistantUser;
     }
 
+    private async Task ForgetStoredStrategyTypeAsync(string code, CancellationToken ct)
+    {
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<StrategiesDbContext>();
+
+        await db.StrategyTypes.Where(type => type.Code == code).ExecuteDeleteAsync(ct);
+    }
+
     private async Task<McpClient> ConnectAsync(string homeAssistantUser, CancellationToken ct)
     {
-        var http = factory.CreateClient();
+        var http = _factory.CreateClient();
         var options = new HttpClientTransportOptions
         {
             Endpoint = new Uri(http.BaseAddress!, McpPath),
