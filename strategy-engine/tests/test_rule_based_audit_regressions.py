@@ -139,5 +139,17 @@ def test_replay_valuations_drive_stops_while_signal_prices_keep_their_currency()
     reader = ConditionReader(parameters, SeriesBook.from_context(context), None)
     assert reader.value_of('price', 'AAA') == 90
     stale = context.model_copy(update={'as_of': context.as_of + timedelta(days=90)})
-    with pytest.raises(ContextError, match='fresh valuation'):
+    with pytest.raises(ContextError, match='rule_based.error.stale_price') as raised:
         assess_risk(stale, parameters)
+    assert '"lastPriceOn": "2026-11-06"' in str(raised.value)
+    assert '"asOf": "2027-02-04"' in str(raised.value)
+
+
+def test_a_held_fund_without_any_price_is_named_in_the_error():
+    context = EvaluationContext.model_validate({'asOf': '2026-11-06', 'universe': [{'key': 'AAA', 'name': 'ASWC.DE'}],
+        'marketSeries': [{'key': 'AAA', 'dates': [], 'adjustedClose': []}],
+        'subPortfolio': {'currency': 'EUR', 'holdings': [{'key': 'AAA', 'lots': [{'quantity': 1, 'price': 80, 'acquiredOn': '2026-01-01'}]}]}})
+    parameters = RuleParameters.model_validate({'formatVersion': 1, 'indicators': {}, 'selection': {'top': 1}, 'weights': {'method': 'equal'}})
+    with pytest.raises(ContextError, match='rule_based.error.no_price') as raised:
+        assess_risk(context, parameters)
+    assert '"instrument": "ASWC.DE"' in str(raised.value)

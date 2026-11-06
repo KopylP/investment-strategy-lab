@@ -1,13 +1,12 @@
 using InvestmentLab.MarketData.Contracts.Quotes;
 using InvestmentLab.MarketData.Instruments.Domain;
-using InvestmentLab.MarketData.Quotes.Application.IngestDailyQuotes;
 using InvestmentLab.MarketData.Quotes.Domain;
 using InvestmentLab.MarketData.Shared.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 namespace InvestmentLab.MarketData.Quotes.Infrastructure;
 
-internal sealed class QuoteHistory(MarketDataDbContext db, IQuoteArchive archive, TimeProvider clock) : IQuoteHistory
+internal sealed class QuoteHistory(MarketDataDbContext db, IQuoteArchive archive) : IQuoteHistory
 {
     private static readonly QualityFlags[] StoredFlags = [QualityFlags.Gap, QualityFlags.Spike, QualityFlags.Corrected];
 
@@ -29,9 +28,6 @@ internal sealed class QuoteHistory(MarketDataDbContext db, IQuoteArchive archive
         IReadOnlyCollection<Guid> instrumentIds, DateOnly from, DateOnly to, CancellationToken cancellationToken)
     {
         var stored = await GetQuoteHistory(instrumentIds, from, to, cancellationToken);
-        if (from >= StoredWindowStart())
-            return stored;
-
         var startingLater = await StoredOnlyAfterAsync(ToIds(instrumentIds), from, cancellationToken);
         if (startingLater.Count == 0)
             return stored;
@@ -58,9 +54,6 @@ internal sealed class QuoteHistory(MarketDataDbContext db, IQuoteArchive archive
             quote.InstrumentId.Value, quote.TradingDate, quote.Close, quote.AdjustedClose, currencies[quote.InstrumentId],
             QuoteQualityInspector.IsStale(quote.TradingDate, asOf)))];
     }
-
-    private DateOnly StoredWindowStart() =>
-        DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime).AddYears(-IngestDailyQuotesHandler.InitialHistoryYears);
 
     private async Task<List<InstrumentId>> StoredOnlyAfterAsync(List<InstrumentId> ids, DateOnly from, CancellationToken cancellationToken)
     {

@@ -9,7 +9,7 @@ from finance_decisions.strategies.errors import ContextError
 from .conditions import ConditionReader
 from .decision import STRATEGY_CODE, engine_version
 from .parameters import RuleParameters
-from .series_book import SeriesBook
+from .series_book import MAX_PRICE_AGE_DAYS, SeriesBook
 
 STATUS_OK = "ok"
 STATUS_ACT = "act"
@@ -19,7 +19,8 @@ def assess_risk(context: EvaluationContext, parameters: RuleParameters) -> RiskA
     book = SeriesBook.from_context(context)
     reader = ConditionReader(parameters, book, context.signals)
 
-    candidates = [_exit_signal(holding, parameters, reader, book) for holding in context.sub_portfolio.holdings]
+    names = {member.key: member.name or member.key for member in context.universe}
+    candidates = [_exit_signal(holding, parameters, reader, book, names) for holding in context.sub_portfolio.holdings]
     signals = [signal for signal in candidates if signal is not None]
     actions = [signal.reason for signal in signals]
 
@@ -36,10 +37,12 @@ def assess_risk(context: EvaluationContext, parameters: RuleParameters) -> RiskA
     )
 
 
-def _exit_signal(holding: Holding, parameters: RuleParameters, reader: ConditionReader, book: SeriesBook) -> RiskSignal | None:
+def _exit_signal(
+    holding: Holding, parameters: RuleParameters, reader: ConditionReader, book: SeriesBook, names: dict[str, str],
+) -> RiskSignal | None:
     prices = book.valuation_fund(holding.key).dropna()
     if not book.is_fresh(prices):
-        raise ContextError(f"no fresh valuation price for held instrument {holding.key}")
+        raise ContextError(_no_fresh_price(names.get(holding.key, holding.key), prices, book))
 
     price = float(prices.iloc[-1])
     reasons = _stop_reasons(holding, price, prices, parameters) + _exit_rule_reasons(holding, parameters, reader)
@@ -49,6 +52,16 @@ def _exit_signal(holding: Holding, parameters: RuleParameters, reader: Condition
     reason = msg("rule_based.risk.reasons", items=reasons)
 
     return RiskSignal(key=holding.key, kind=RiskSignalKind.EXIT, reason=reason, exit_price=price)
+
+
+def _no_fresh_price(name: str, prices: pd.Series, book: SeriesBook) -> str:
+    as_of = book.as_of.isoformat()
+    if not len(prices):
+        return msg("rule_based.error.no_price", instrument=name, asOf=as_of)
+
+    last_price_on = prices.index[-1].date().isoformat()
+
+    return msg("rule_based.error.stale_price", instrument=name, asOf=as_of, lastPriceOn=last_price_on, maxDays=MAX_PRICE_AGE_DAYS)
 
 
 def _stop_reasons(holding: Holding, price: float, prices: pd.Series, parameters: RuleParameters) -> list[str]:

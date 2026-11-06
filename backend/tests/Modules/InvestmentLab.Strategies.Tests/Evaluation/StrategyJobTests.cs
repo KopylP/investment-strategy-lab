@@ -52,6 +52,29 @@ public sealed class StrategyJobTests
     }
 
     [Fact]
+    public async Task A_refused_risk_review_passes_on_the_engine_message_instead_of_its_raw_answer()
+    {
+        const string engineMessage = """@rule_based.error.stale_price {"instrument": "ASWC.DE", "asOf": "2025-12-31"}""";
+        var body = JsonSerializer.Serialize(new { detail = engineMessage });
+        var answer = new Answer(HttpStatusCode.UnprocessableEntity, body);
+
+        var assessment = await Engine(answer).AssessRiskAsync("rule-based", Context(), CancellationToken.None);
+
+        assessment.Error.Code.ShouldBe("strategy.engine_rejected");
+        assessment.Error.AsMessage().ShouldBe(Message.Of("strategy.engine_rejected", new { details = engineMessage }));
+    }
+
+    [Fact]
+    public async Task A_refusal_that_is_not_json_is_passed_on_as_it_came()
+    {
+        var answer = new Answer(HttpStatusCode.UnprocessableEntity, "Unprocessable");
+
+        var assessment = await Engine(answer).AssessRiskAsync("rule-based", Context(), CancellationToken.None);
+
+        assessment.Error.AsMessage().ShouldBe(Message.Of("strategy.engine_rejected", new { details = "Unprocessable" }));
+    }
+
+    [Fact]
     public async Task A_running_job_is_polled_again_later()
     {
         var answer = new Answer(HttpStatusCode.OK, """{"jobId":"abc","code":"agent","action":"decide","status":"running","result":null,"error":null}""");

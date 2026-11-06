@@ -4,7 +4,7 @@
   "backtest.not_enough_history": "Замало історії цін, щоб перевірити цю стратегію.",
   "backtest.invalid_money_plan": "Суми не можуть бути від'ємними, а період має бути щонайменше рік.",
   "backtest.failed": "Бектест не вдалося порахувати.",
-  "backtest.strategy_failed": "Стратегія не змогла відповісти під час бектесту.",
+  "backtest.strategy_failed": "Стратегія не змогла відповісти під час бектесту на {day}: {reason}",
   "backtest.unknown_comparison": "Тип стратегії просить порівняння, якого бектест не знає.",
   "backtest.series.strategy": "Стратегія",
   "backtest.series.benchmark": "{name}",

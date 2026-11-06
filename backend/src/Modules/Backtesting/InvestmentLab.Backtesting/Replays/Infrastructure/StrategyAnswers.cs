@@ -11,7 +11,7 @@ internal sealed class StrategyAnswers(IStrategyEvaluation evaluation) : IStrateg
     {
         var answer = await evaluation.EvaluateAsync(RequestOf(setup, book, day, states), cancellationToken);
         if (!answer.IsSuccess)
-            return FailureOf(answer.ErrorCode, answer.ErrorMessage);
+            return FailureOf(day, answer.ErrorMessage);
 
         var decided = answer.Value!;
         var targets = decided.Targets.Select(target => new ReplayTarget(target.InstrumentId, target.Weight)).ToList();
@@ -24,7 +24,7 @@ internal sealed class StrategyAnswers(IStrategyEvaluation evaluation) : IStrateg
     {
         var answer = await evaluation.AssessRiskAsync(RequestOf(setup, book, day, states), cancellationToken);
         if (!answer.IsSuccess)
-            return FailureOf(answer.ErrorCode, answer.ErrorMessage);
+            return FailureOf(day, answer.ErrorMessage);
 
         var assessment = answer.Value!;
         var exits = ExitsOf(assessment);
@@ -99,6 +99,6 @@ internal sealed class StrategyAnswers(IStrategyEvaluation evaluation) : IStrateg
             ParametersOverride: setup.ParametersOverride);
     }
 
-    private static Error FailureOf(string? code, string? message) =>
-        Error.Validation("backtest.strategy_failed", $"{code}: {message}");
+    private static Error FailureOf(DateOnly day, string? reason) =>
+        Error.Validation("backtest.strategy_failed", $"The strategy did not answer on {day:yyyy-MM-dd}: {reason}", new { day, reason });
 }
