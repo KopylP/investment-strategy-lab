@@ -13,9 +13,12 @@ public static class SetupBindings
             var series = SeriesChoice.Of(node.Parameters);
             var output = series?.Series switch
             {
-                SeriesChoice.Fund => "funds", SeriesChoice.Benchmark => "benchmarkId", "cash" => "cashId",
+                SeriesChoice.Fund => "funds",
+                SeriesChoice.Benchmark => "benchmarkId",
+                "cash" => "cashId",
                 SeriesChoice.VolatilityIndex => "volatilityIndexId",
-                SeriesChoice.Extra when series.InstrumentId is { } id => $"extra:{id}", _ => null,
+                SeriesChoice.Extra when series.InstrumentId is { } id => $"extra:{id}",
+                _ => null,
             };
             if (output is not null) links.Add(new GraphLink(StrategyGraph.SetupId, node.Id, NodeSockets.Of, output));
         }
@@ -30,7 +33,8 @@ public static class SetupBindings
         var output = binding.From == PortfolioFlow.CashId && binding.Output == "series" ? "cashId" : binding.Output;
         object? value = output switch
         {
-            "funds" => new { series = "fund" }, "benchmarkId" => new { series = "benchmark" },
+            "funds" => new { series = "fund" },
+            "benchmarkId" => new { series = "benchmark" },
             "volatilityIndexId" => new { series = "volatilityIndex" },
             "cashId" => new { series = "extra", instrumentId = setup.CashId },
             _ when binding.Output.StartsWith("extra:", StringComparison.Ordinal) && Guid.TryParse(binding.Output[6..], out var id) => new { series = "extra", instrumentId = (Guid?)id },
