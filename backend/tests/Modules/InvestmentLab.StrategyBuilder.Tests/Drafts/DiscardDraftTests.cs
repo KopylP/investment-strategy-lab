@@ -40,19 +40,19 @@ public sealed class DiscardDraftTests
 
     private sealed class Drafts(StrategyDraft draft) : IDraftRepository
     {
-        public StrategyDraft? Current {get;private set;} = draft;
-        public int Saves {get;private set;}
+        public StrategyDraft? Current { get; private set; } = draft;
+        public int Saves { get; private set; }
         public Task<StrategyDraft?> FindAsync(Guid id, CancellationToken ct) => Task.FromResult(Current?.Id == id ? Current : null);
         public Task<StrategyDraft?> FindByOriginAsync(Guid id, CancellationToken ct) => throw new NotSupportedException();
         public Task<IReadOnlyList<StrategyDraft>> ListAsync(CancellationToken ct) => throw new NotSupportedException();
         public Task<IReadOnlyList<StrategyDraft>> ReferencingSignalAsync(Guid id, CancellationToken ct) => throw new NotSupportedException();
         public void Add(StrategyDraft value) => throw new NotSupportedException();
-        public void Remove(StrategyDraft value) {value.ShouldBe(Current);Current=null;}
-        public Task SaveChangesAsync(CancellationToken ct) {Saves++;return Task.CompletedTask;}
+        public void Remove(StrategyDraft value) { value.ShouldBe(Current); Current = null; }
+        public Task SaveChangesAsync(CancellationToken ct) { Saves++; return Task.CompletedTask; }
     }
     private sealed class Cleanups : ITrialCleanupRepository
     {
-        public List<TrialCleanup> Items {get;}=[];
+        public List<TrialCleanup> Items { get; } = [];
         public Task<TrialCleanup?> FindAsync(Guid id, CancellationToken ct) => throw new NotSupportedException();
         public Task<IReadOnlyList<Guid>> DueAsync(DateTimeOffset now, CancellationToken ct) => throw new NotSupportedException();
         public void Add(TrialCleanup value) => Items.Add(value);

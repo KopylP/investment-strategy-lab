@@ -155,7 +155,7 @@ public static class ExitFromEntry
                 _newLinks.Add(new GraphLink(CopyNumber(link.From), copied, link.Input));
         }
 
-        private NodeId CopyNumber(NodeId originalId)
+        private static NodeId CopyNumber(NodeId originalId)
         {
             // Indicators are immutable definitions and can feed both entry and exit.
             return originalId;

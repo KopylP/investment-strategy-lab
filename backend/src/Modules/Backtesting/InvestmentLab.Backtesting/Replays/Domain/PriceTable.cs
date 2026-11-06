@@ -78,7 +78,7 @@ public sealed class PriceTable
     private void Fill(Guid instrumentId, IReadOnlyList<PricedDay> points, List<DateOnly> days)
     {
         var byDay = points.ToDictionary(point => point.Date, point => point.Price);
-        _quotedDays[instrumentId] = byDay.Keys.ToHashSet();
+        _quotedDays[instrumentId] = [.. byDay.Keys];
         var prices = new decimal?[days.Count];
         var seen = new int[days.Count];
 

@@ -70,7 +70,8 @@ public static class GraphCheck
             {
                 var available = link.Output switch
                 {
-                    "funds" => setup.Funds.Count > 0, "benchmarkId" => setup.BenchmarkId is not null,
+                    "funds" => setup.Funds.Count > 0,
+                    "benchmarkId" => setup.BenchmarkId is not null,
                     "cashId" or "series" when link.From == PortfolioFlow.CashId || link.From == StrategyGraph.SetupId => setup.CashId is not null,
                     "volatilityIndexId" => setup.VolatilityIndexId is not null,
                     _ when link.Output.StartsWith("extra:", StringComparison.Ordinal) && Guid.TryParse(link.Output[6..], out var id) => setup.ExtraSeries.Contains(id),
@@ -110,7 +111,7 @@ public static class GraphCheck
             var valid = portfolioCash ? link.From == PortfolioFlow.CashId && link.Output == "output"
                 : cashAsset ? link.From == StrategyGraph.SetupId && link.Output == "cashId"
                 : cashBudget ? link.From == StrategyGraph.SelectionResultId && link.Output == "cash"
-                : portfolioBudget ? link.From == StrategyGraph.MarketResultId && link.Output == "output" : true;
+                : !portfolioBudget || link.From == StrategyGraph.MarketResultId && link.Output == "output";
             if (!valid && graph.Node(link.To) is { } target)
                 yield return DraftProblem.OnNode("builder.problem.socket_mismatch", target, new { expected = portfolioCash ? "кеш після розподілу" : cashAsset ? "фонд для кешу" : cashBudget ? "залишок після розподілу" : "ринковий бюджет", actual = "інше джерело" });
         }
