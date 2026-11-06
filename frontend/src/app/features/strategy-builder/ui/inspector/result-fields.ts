@@ -8,6 +8,7 @@ export interface FieldGroup {
 }
 
 const labels: Record<string, string> = {
+  whenUnfavorable: 'Що робити з триманими фондами',
   investWhenUnfavorable: 'Залишити у фондах',
   top: 'Максимум фондів у портфелі',
   order: 'Які оцінки обирати',
@@ -24,6 +25,8 @@ const labels: Record<string, string> = {
 };
 
 export const fieldHints: Record<string, string> = {
+  whenUnfavorable:
+    '«Скорочувати тримане» продає фонди до вказаної частки, решта йде в кеш-фонд. «Лише нові внески» не чіпає тримане: у фонди йде тільки вказана частка нових внесків.',
   maxPerFund: 'Ліміт цільової ваги. Нерозподілений залишок іде в кеш.',
   maxCorrelation: 'Від 0 до 1: ближче до 1 — ціни фондів рухаються схожіше.',
   targetVolatility: 'Якщо розрахований ризик вищий, стратегія зменшує вкладення.',
@@ -49,7 +52,7 @@ export function resultFieldGroups(node: NodeDto, vocabulary: VocabularyDto): Fie
   });
   switch (node.kind) {
     case 'MarketResult':
-      return [group('Якщо умова не виконується', ['investWhenUnfavorable'])];
+      return [group('Якщо умова не виконується', ['whenUnfavorable', 'investWhenUnfavorable'])];
     case 'FundSelection':
       return [
         group('Які фонди обрати', ['top', 'order']),

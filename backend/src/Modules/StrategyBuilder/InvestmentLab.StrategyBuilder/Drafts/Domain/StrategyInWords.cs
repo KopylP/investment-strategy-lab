@@ -25,10 +25,13 @@ public static class StrategyInWords
 
             var cash = draft.Setup.CashId is { } id ? labels.Of(id) : "";
             var share = result.Parameters.Number(ResultFields.InvestWhenUnfavorable);
-            var sentence = Message.Of("builder.words.market", new { condition = Condition(condition), share, cash });
+            var sentence = Message.Of(MarketSentenceCode(result), new { condition = Condition(condition), share, cash });
 
             return new BlockWords(BlockKind.MarketFilter, sentence);
         }
+
+        private static string MarketSentenceCode(GraphNode result) =>
+            result.Parameters.Text(ResultFields.WhenUnfavorable) == ResultFields.ReduceHoldings ? "builder.words.market" : "builder.words.market_new_money";
 
         public BlockWords? Gate(BlockKind block, string code)
         {

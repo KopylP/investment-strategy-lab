@@ -26,7 +26,7 @@ public static class DraftTemplates
         builder.Indicator("m-sma", BlockKind.MarketFilter, "sma", "benchmark", ("days", 200));
         builder.Compare("m-above", BlockKind.MarketFilter, "gt", "m-price", right: "m-sma");
         builder.Link("m-above", StrategyGraph.MarketResultId.Value, NodeSockets.Condition);
-        builder.Result(StrategyGraph.MarketResultId, ("investWhenUnfavorable", 0.3));
+        builder.Result(StrategyGraph.MarketResultId, ("investWhenUnfavorable", 0.3), ("whenUnfavorable", ResultFields.ReduceHoldings));
 
         builder.Indicator("e-mom", BlockKind.Entry, "blendedMomentum", "fund");
         builder.Indicator("e-trend", BlockKind.Entry, "priceVsSma", "fund", ("days", 200));
