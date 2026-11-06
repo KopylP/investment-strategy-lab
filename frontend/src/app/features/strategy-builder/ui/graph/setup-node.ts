@@ -1,18 +1,17 @@
 import { Component, Input, OnChanges, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { KeyValuePipe } from '@angular/common';
-import { Select } from 'primeng/select';
-import { MultiSelect } from 'primeng/multiselect';
 import { RefDirective } from 'rete-angular-plugin/21';
 import { StrategyNode } from './rete-model';
 import { DraftSetupDto } from '../../models/draft-dto';
 import { setupFields } from '../../data-access/setup-bindings';
 import { FundSelectionDialog } from '../fund-selection-dialog/fund-selection-dialog';
-import { fitNodeSelectOverlay } from './node-select-overlay';
+import { setupPickers } from '../../data-access/setup-pickers';
+import { InstrumentPickerVm } from '../../models/instrument-picker-vm';
 
 @Component({
   selector: 'app-setup-rete-node',
-  imports: [FormsModule, KeyValuePipe, Select, MultiSelect, RefDirective, FundSelectionDialog],
+  imports: [FormsModule, KeyValuePipe, RefDirective, FundSelectionDialog],
   host: { '[style.width.px]': 'data.width' },
   template: `
     <article
@@ -37,59 +36,25 @@ import { fitNodeSelectOverlay } from './node-select-overlay';
           <div class="field">
             <label [for]="'setup-node-' + field.key">{{ field.label }}</label>
             <div class="field-value">
-              @if (field.key === 'funds') {
-                <button
-                  type="button"
-                  class="fund-select-button"
-                  [class.empty]="!data.setup.funds.length"
-                  (click)="searchVisible.set(true)"
-                  aria-haspopup="dialog"
-                  aria-label="Обрати фонди"
-                >
-                  <i class="pi pi-folder-open"></i>
-                  <span class="fund-select-label">
-                    {{ data.setup.funds.length ? 'Змінити фонди' : 'Обрати фонди' }}
-                  </span>
-                  @if (data.setup.funds.length) {
-                    <span class="fund-count">{{ data.setup.funds.length }}</span>
-                  }
-                  <i class="pi pi-chevron-right"></i>
-                </button>
-              } @else if (field.key === 'extraSeries') {
-                <p-multiselect
-                  [inputId]="'setup-node-' + field.key"
-                  [options]="options(false)"
-                  optionLabel="label"
-                  optionValue="id"
-                  [ngModel]="value(field.key)"
-                  (ngModelChange)="patch(field.key, $event ?? [])"
-                  [filter]="true"
-                  [maxSelectedLabels]="0"
-                  selectedItemsLabel="Обрано: {0}"
-                  placeholder="Оберіть фонди"
-                  size="small"
-                  [appendTo]="data.overlayContainer"
-                  fluid
-                />
-              } @else {
-                <p-select
-                  #nodeSelect
-                  panelStyleClass="builder-node-select-panel"
-                  (onShow)="fitNodeSelect(nodeSelect)"
-                  [inputId]="'setup-node-' + field.key"
-                  [options]="options(field.key === 'volatilityIndexId')"
-                  optionLabel="label"
-                  optionValue="id"
-                  [ngModel]="value(field.key)"
-                  (ngModelChange)="patch(field.key, $event ?? null)"
-                  [filter]="true"
-                  [showClear]="true"
-                  placeholder="Оберіть інструмент"
-                  size="small"
-                  [appendTo]="data.overlayContainer"
-                  fluid
-                />
-              }
+              <button
+                type="button"
+                class="picker-button"
+                [class.empty]="!picked(field.key).length"
+                [class.required]="pickerOf(field.key).required"
+                (click)="openPicker(field.key)"
+                aria-haspopup="dialog"
+                [attr.aria-label]="field.label + ' · ' + pickerSummary(field.key)"
+              >
+                <i
+                  class="pi"
+                  [class]="field.key === 'funds' ? 'pi-folder-open' : 'pi-chart-line'"
+                ></i>
+                <span class="picker-label">{{ pickerSummary(field.key) }}</span>
+                @if (pickerOf(field.key).limit > 1 && picked(field.key).length) {
+                  <span class="picker-count">{{ picked(field.key).length }}</span>
+                }
+                <i class="pi pi-chevron-right"></i>
+              </button>
               <button
                 type="button"
                 class="port"
@@ -162,11 +127,12 @@ import { fitNodeSelectOverlay } from './node-select-overlay';
       </div>
     </article>
     <app-fund-selection-dialog
-      [(visible)]="searchVisible"
+      [(visible)]="pickerVisible"
+      [picker]="pickerOf(pickerKey())"
       [overlayContainer]="data.overlayContainer"
       [instruments]="data.instruments"
-      [value]="data.setup.funds"
-      (applied)="patch('funds', $event)"
+      [value]="picked(pickerKey())"
+      (applied)="applyPicked($event)"
       (instrumentsChanged)="data.refreshInstruments()"
     />
   `,
@@ -221,13 +187,7 @@ import { fitNodeSelectOverlay } from './node-select-overlay';
         align-items: center;
         gap: 6px;
       }
-      .field-value p-select,
-      .field-value p-multiselect,
-      .field-value app-builder-fund-picker {
-        flex: 1;
-        min-width: 0;
-      }
-      .fund-select-button {
+      .picker-button {
         flex: 1;
         min-width: 0;
         display: flex;
@@ -246,47 +206,59 @@ import { fitNodeSelectOverlay } from './node-select-overlay';
           background 0.15s,
           box-shadow 0.15s;
       }
-      .fund-select-button > .pi:first-child {
+      .picker-button > .pi:first-child {
         color: var(--p-primary-color);
         font-size: 14px;
       }
-      .fund-select-button .pi-chevron-right {
+      .picker-button .pi-chevron-right {
         margin-left: auto;
         font-size: 11px;
         color: var(--p-primary-color);
       }
-      .fund-select-label {
+      .picker-label {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-      .fund-count {
+      .picker-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        flex-shrink: 0;
         min-width: 20px;
-        padding: 1px 6px;
-        border-radius: 999px;
+        height: 20px;
+        padding: 0 5px;
+        border-radius: 10px;
         background: var(--p-primary-color);
         color: var(--p-primary-contrast-color);
         font-size: 11px;
-        text-align: center;
+        line-height: 1;
         font-variant-numeric: tabular-nums;
       }
-      .fund-select-button:hover {
+      .picker-button:hover {
         background: color-mix(in srgb, var(--p-primary-color) 24%, transparent);
         box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-primary-color) 18%, transparent);
       }
-      .fund-select-button:focus-visible {
+      .picker-button:focus-visible {
         outline: 2px solid var(--p-primary-color);
         outline-offset: 2px;
       }
-      .fund-select-button.empty {
+      .picker-button.empty:not(.required) {
+        border-style: dashed;
+        background: transparent;
+        color: var(--p-text-muted-color);
+        font-weight: 500;
+      }
+      .picker-button.empty.required {
         background: var(--p-primary-color);
         color: var(--p-primary-contrast-color);
-        animation: fund-select-pulse 2s ease-in-out infinite;
+        animation: picker-pulse 2s ease-in-out infinite;
       }
-      .fund-select-button.empty .pi {
+      .picker-button.empty.required .pi {
         color: var(--p-primary-contrast-color);
       }
-      @keyframes fund-select-pulse {
+      @keyframes picker-pulse {
         0%,
         100% {
           box-shadow: 0 0 0 0 color-mix(in srgb, var(--p-primary-color) 45%, transparent);
@@ -296,7 +268,7 @@ import { fitNodeSelectOverlay } from './node-select-overlay';
         }
       }
       @media (prefers-reduced-motion: reduce) {
-        .fund-select-button.empty {
+        .picker-button.empty.required {
           animation: none;
         }
       }
@@ -387,12 +359,12 @@ import { fitNodeSelectOverlay } from './node-select-overlay';
   ],
 })
 export class SetupNode implements OnChanges {
-  protected readonly fitNodeSelect = fitNodeSelectOverlay;
   @Input() data!: StrategyNode;
   @Input() emit!: (event: any) => void;
   @Input() rendered!: () => void;
   protected readonly fields = setupFields.filter((field) => field.key !== 'cashId');
-  protected readonly searchVisible = signal(false);
+  protected readonly pickerVisible = signal(false);
+  protected readonly pickerKey = signal('funds');
   seed = 0;
   get selectedFunds() {
     return this.data.setup.funds.map(
@@ -400,13 +372,31 @@ export class SetupNode implements OnChanges {
         this.data.instruments.find((item) => item.id === id) ?? { id, label: 'Фонд', name: '' },
     );
   }
-  options(volatility: boolean) {
-    return this.data.instruments.filter((item) =>
-      volatility ? item.isVolatilityIndex : !item.isVolatilityIndex,
-    );
+  pickerOf(key: string): InstrumentPickerVm {
+    return setupPickers[key];
   }
-  value(key: string) {
-    return this.data.setup[key as keyof DraftSetupDto];
+  picked(key: string): string[] {
+    const value = this.data.setup[key as keyof DraftSetupDto];
+    if (Array.isArray(value)) return value;
+
+    return typeof value === 'string' ? [value] : [];
+  }
+  pickerSummary(key: string): string {
+    const picker = this.pickerOf(key);
+    const ids = this.picked(key);
+    if (!ids.length) return picker.chooseLabel;
+    if (picker.limit > 1) return picker.changeLabel;
+
+    return this.data.instruments.find((item) => item.id === ids[0])?.label ?? picker.changeLabel;
+  }
+  openPicker(key: string) {
+    this.pickerKey.set(key);
+    this.pickerVisible.set(true);
+  }
+  applyPicked(ids: string[]) {
+    const key = this.pickerKey();
+    const value = this.pickerOf(key).limit > 1 ? ids : (ids[0] ?? null);
+    this.patch(key, value);
   }
   patch(key: string, value: string[] | string | null) {
     this.data.setup = { ...this.data.setup, [key]: value };
