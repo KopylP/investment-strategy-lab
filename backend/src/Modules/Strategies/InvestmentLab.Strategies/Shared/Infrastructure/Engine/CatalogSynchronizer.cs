@@ -18,6 +18,17 @@ public sealed class CatalogSynchronizer(StrategiesDbContext db, StrategyEngineCl
         return await SyncedOrStoredAsync(stored, cancellationToken);
     }
 
+    public async Task<StrategyTypeDescriptor?> FindAsync(string code, CancellationToken cancellationToken)
+    {
+        var listed = TypeOf(code, await ListAsync(cancellationToken));
+        if (listed is not null)
+            return listed;
+
+        var published = await ListFromEngineAsync(cancellationToken);
+
+        return TypeOf(code, published);
+    }
+
     public async Task<IReadOnlyList<StrategyTypeDescriptor>> ListFromEngineAsync(CancellationToken cancellationToken)
     {
         var stored = await db.StrategyTypes.OrderBy(type => type.Code).ToListAsync(cancellationToken);
@@ -65,6 +76,9 @@ public sealed class CatalogSynchronizer(StrategiesDbContext db, StrategyEngineCl
 
         return stored.Count + published.Count(type => !stored.ContainsKey(type.Code));
     }
+
+    private static StrategyTypeDescriptor? TypeOf(string code, IReadOnlyList<StrategyTypeDescriptor> types) =>
+        types.FirstOrDefault(type => type.Code == code);
 
     private static string? RawDefaults(EngineStrategyType type) =>
         type.DefaultParameters is { ValueKind: JsonValueKind.Object } defaults ? defaults.GetRawText() : null;

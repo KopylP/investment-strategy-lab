@@ -8,8 +8,7 @@ internal sealed class StrategyTypeQueries(IStrategyCatalog catalog) : IStrategyT
 {
     public async Task<StrategyTypeSchemaDto?> GetTypeAsync(string code, CancellationToken cancellationToken)
     {
-        var types = await catalog.ListAsync(cancellationToken);
-        var type = types.FirstOrDefault(candidate => candidate.Code == code);
+        var type = await catalog.FindAsync(code, cancellationToken);
 
         return type is null ? null : new StrategyTypeSchemaDto(type.Code, type.ParametersSchema, [.. type.Reports.Select(ToDto)]);
     }
