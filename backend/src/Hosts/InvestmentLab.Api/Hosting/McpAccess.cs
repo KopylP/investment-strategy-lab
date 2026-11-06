@@ -74,7 +74,8 @@ public static class McpAccess
     {
         var server = services.AddMcpServer(options => options.ServerInstructions = McpInstructions.Text)
             .WithHttpTransport(http => http.Stateless = true)
-            .AddAuthorizationFilters();
+            .AddAuthorizationFilters()
+            .WithLocalizedReplies();
 
         foreach (var module in modules)
             server.WithToolsFromAssembly(module.GetType().Assembly, McpJson.Options);

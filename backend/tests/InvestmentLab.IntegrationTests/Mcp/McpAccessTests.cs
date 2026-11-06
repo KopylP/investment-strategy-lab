@@ -100,6 +100,19 @@ public sealed class McpAccessTests : IClassFixture<McpApiFactory>
     }
 
     [Fact]
+    public async Task Texts_of_the_strategy_catalog_reach_the_assistant_in_ukrainian()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var homeAssistantUser = await LinkedHomeAssistantUserAsync(ct);
+        await using var mcp = await ConnectAsync(homeAssistantUser, ct);
+
+        var vocabulary = TextOf(await mcp.CallToolAsync("get_vocabulary", cancellationToken: ct));
+
+        vocabulary.ShouldNotContain("@rule_based.");
+        vocabulary.ShouldContain("Що робити з триманими фондами");
+    }
+
+    [Fact]
     public async Task An_assistant_imports_rules_written_as_a_json_object()
     {
         var ct = TestContext.Current.CancellationToken;
