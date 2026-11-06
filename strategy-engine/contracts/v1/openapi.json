@@ -1071,6 +1071,13 @@
             "type": "array",
             "title": "Problems"
           },
+          "historyBars": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Historybars",
+            "description": "Daily observations required before replay/evaluation, including crossing windows.",
+            "default": 260
+          },
           "signalIds": {
             "items": {
               "type": "string"
@@ -1368,6 +1375,27 @@
               }
             ],
             "title": "Close"
+          },
+          "valuationClose": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valuationclose"
           }
         },
         "additionalProperties": false,

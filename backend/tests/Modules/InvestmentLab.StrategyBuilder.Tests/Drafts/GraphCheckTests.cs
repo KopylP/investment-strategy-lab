@@ -15,6 +15,16 @@ public sealed class GraphCheckTests
     public void A_simple_draft_has_no_problems() => Problems(MomentumEntry()).ShouldBeEmpty();
 
     [Fact]
+    public void A_reversed_range_is_reported_on_its_node_before_publication()
+    {
+        var range = new GraphNode(new NodeId("range"), NodeKind.Between, BlockKind.Entry,
+            NodeParameters.Empty.With("low", 110).With("high", 90));
+        var graph = Graph([Indicator("price", BlockKind.Entry, "price"), range],
+            [Link("price", "range", "value"), Link("range", "result-entry", "condition")]);
+        Problems(graph).ShouldContain(problem => problem.Code == "builder.problem.range_reversed" && problem.Node == range.Id);
+    }
+
+    [Fact]
     public void A_cycle_is_a_problem()
     {
         var graph = Graph(

@@ -2,12 +2,12 @@ namespace InvestmentLab.Backtesting.Replays.Domain;
 
 public sealed class PriceTable
 {
-    private const int WarmupDays = 260;
     private const int LeastReplayedDays = 20;
     private const double ShareOfUniverseToStart = 0.5;
 
     private readonly Dictionary<Guid, decimal?[]> _prices = [];
     private readonly Dictionary<Guid, int[]> _observations = [];
+    private readonly Dictionary<Guid, HashSet<DateOnly>> _quotedDays = [];
 
     public IReadOnlyList<DateOnly> Days { get; }
 
@@ -25,6 +25,10 @@ public sealed class PriceTable
         _prices
             .Where(entry => entry.Value[dayIndex] is not null)
             .ToDictionary(entry => entry.Key, entry => entry.Value[dayIndex]!.Value);
+
+    public IReadOnlyDictionary<Guid, decimal> TradablePricesOn(int dayIndex) =>
+        PricesOn(dayIndex).Where(entry => _quotedDays[entry.Key].Contains(Days[dayIndex]))
+            .ToDictionary(entry => entry.Key, entry => entry.Value);
 
     public decimal? PriceOn(Guid instrumentId, int dayIndex) =>
         _prices.TryGetValue(instrumentId, out var prices) ? prices[dayIndex] : null;
@@ -58,21 +62,23 @@ public sealed class PriceTable
 
         for (var dayIndex = 0; dayIndex < Days.Count - LeastReplayedDays; dayIndex++)
         {
-            var warmed = setup.Universe.Count(instrumentId => HasWarmedUp(instrumentId, dayIndex));
+            var warmed = setup.Universe.Count(instrumentId => HasWarmedUp(instrumentId, dayIndex, setup.HistoryBars));
 
-            if (warmed >= needed && HasWarmedUp(setup.Benchmark.InstrumentId, dayIndex))
+            var references = (setup.ExtraSeries ?? []).Append(setup.Benchmark.InstrumentId);
+            if (warmed >= needed && references.All(id => HasWarmedUp(id, dayIndex, setup.HistoryBars)))
                 return dayIndex;
         }
 
         return null;
     }
 
-    private bool HasWarmedUp(Guid instrumentId, int dayIndex) =>
-        _observations.TryGetValue(instrumentId, out var seen) && seen[dayIndex] >= WarmupDays;
+    private bool HasWarmedUp(Guid instrumentId, int dayIndex, int historyBars) =>
+        _observations.TryGetValue(instrumentId, out var seen) && seen[dayIndex] >= historyBars;
 
     private void Fill(Guid instrumentId, IReadOnlyList<PricedDay> points, List<DateOnly> days)
     {
         var byDay = points.ToDictionary(point => point.Date, point => point.Price);
+        _quotedDays[instrumentId] = byDay.Keys.ToHashSet();
         var prices = new decimal?[days.Count];
         var seen = new int[days.Count];
 

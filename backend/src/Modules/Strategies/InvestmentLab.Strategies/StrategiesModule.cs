@@ -57,6 +57,7 @@ public sealed class StrategiesModule : IModule
         builder.Services.AddDomainEventMapper<StrategyDeleted, StrategyDeletedV1, StrategyDeletedMapper>();
 
         var services = builder.Services;
+        services.AddMemoryCache();
         AddEngineClient(builder);
         AddCatalog(services);
         AddDefinitions(services);

@@ -10,8 +10,8 @@ TRADING_DAYS_PER_YEAR = 252
 def pairwise_correlation(prices: pd.DataFrame, first: str, second: str, window_days: int, min_days: int = 60) -> float:
     recent = prices.tail(window_days + 1)
     returns = recent[[first, second]].dropna().pct_change().dropna()
-    if len(returns) < min_days:
-        return float("-inf")
+    if len(returns) < min(min_days, window_days):
+        return float("nan")
 
     return float(returns[first].corr(returns[second]))
 

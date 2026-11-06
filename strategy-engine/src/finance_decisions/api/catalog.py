@@ -22,6 +22,7 @@ from finance_decisions.strategies.rule_based import decision as rule_based
 from finance_decisions.strategies.rule_based import risk as rule_based_risk
 from finance_decisions.strategies.rule_based.checks import RuleProblem, problems_in, referenced_signals
 from finance_decisions.strategies.rule_based.parameters import RuleParameters
+from finance_decisions.strategies.rule_based.history import required_history
 from .contracts import (
     BacktestComparison,
     EvaluationContext,
@@ -60,6 +61,7 @@ class StrategyType:
     has_defaults: bool = True
     semantic_check: Callable[[Any], list[RuleProblem]] = lambda _parameters: []
     referenced_signals: Callable[[Any], list[str]] = lambda _parameters: []
+    history_bars: Callable[[Any], int] = lambda _parameters: 260
 
     def descriptor(self) -> StrategyTypeDescriptor:
         return StrategyTypeDescriptor(
@@ -100,7 +102,7 @@ class StrategyType:
 
         problems = [meaning_problem(problem) for problem in self.semantic_check(parsed)]
 
-        return ParametersCheck(problems=problems, signal_ids=self.referenced_signals(parsed))
+        return ParametersCheck(problems=problems, signal_ids=self.referenced_signals(parsed), history_bars=self.history_bars(parsed))
 
     def _default_parameters(self) -> dict[str, Any] | None:
         if not self.has_defaults:
@@ -174,6 +176,7 @@ STRATEGY_TYPES: dict[str, StrategyType] = {
         has_defaults=False,
         semantic_check=problems_in,
         referenced_signals=referenced_signals,
+        history_bars=required_history,
     ),
 }
 

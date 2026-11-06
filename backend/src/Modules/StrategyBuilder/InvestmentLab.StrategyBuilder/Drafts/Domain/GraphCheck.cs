@@ -150,7 +150,12 @@ public static class GraphCheck
         if (node.Kind == NodeKind.Indicator)
             return IndicatorProblems(node, vocabulary);
         if (NodeKinds.IsCondition(node.Kind))
-            return FieldProblems(node, vocabulary.Condition(NodeKinds.ConditionCode(node.Kind))?.Fields ?? []);
+        {
+            var fields = FieldProblems(node, vocabulary.Condition(NodeKinds.ConditionCode(node.Kind))?.Fields ?? []);
+            if (node.Kind == NodeKind.Between && node.Parameters.Number("low") is { } low && node.Parameters.Number("high") is { } high && low > high)
+                return [.. fields, DraftProblem.OnNode("builder.problem.range_reversed", node)];
+            return fields;
+        }
 
         return ResultProblems(node, graph, vocabulary);
     }

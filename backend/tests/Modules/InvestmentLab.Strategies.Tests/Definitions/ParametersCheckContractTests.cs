@@ -59,6 +59,14 @@ public sealed class ParametersCheckContractTests
     }
 
     [Fact]
+    public async Task Required_observations_are_taken_from_the_engine_without_backend_indicator_rules()
+    {
+        var check = (await Checks(new Answer("""{"problems":[],"signalIds":[],"historyBars":1009}"""))
+            .CheckAsync("rule-based", "{}", CancellationToken.None)).Value;
+        check.HistoryBars.ShouldBe(1009);
+    }
+
+    [Fact]
     public async Task An_engine_that_does_not_answer_refuses_the_setup()
     {
         var check = await Checks(new Silence()).CheckAsync("rule-based", "{}", CancellationToken.None);

@@ -15,6 +15,8 @@ public sealed class StrategyReplay(
 
     public async Task<Result<ReplayResult>> RunAsync(ReplaySetup setup, CancellationToken cancellationToken)
     {
+        if (setup.UnsupportedSchedule is { } unsupported)
+            return BacktestErrors.UnsupportedSchedule(unsupported);
         var comparisons = comparisonCatalog.Resolve(setup.Comparisons);
         if (comparisons.IsFailure)
             return comparisons.Error;
@@ -36,7 +38,7 @@ public sealed class StrategyReplay(
 
         for (var dayIndex = firstDay; dayIndex < prices.Days.Count; dayIndex++)
         {
-            var stepped = await StepAsync(run, dayIndex, firstDay, cancellationToken);
+            var stepped = await StepAsync(run, dayIndex, cancellationToken);
             if (stepped.IsFailure)
                 return stepped.Error;
         }
@@ -103,19 +105,27 @@ public sealed class StrategyReplay(
         return ReplaySeries.Of(line.Code, line.Label, line.Growth, riskFree, afterTax);
     }
 
-    private async Task<Result> StepAsync(Run run, int dayIndex, int firstDay, CancellationToken cancellationToken)
+    private async Task<Result> StepAsync(Run run, int dayIndex, CancellationToken cancellationToken)
     {
         var day = run.Prices.Days[dayIndex];
         var today = run.Prices.PricesOn(dayIndex);
-        var previous = dayIndex == firstDay ? (DateOnly?)null : run.Prices.Days[dayIndex - 1];
-
-        run.ExecutePending(today, day);
+        var tradable = run.Prices.TradablePricesOn(dayIndex);
+        run.ExecutePending(tradable, day);
         run.Value(day, today);
+        if (!run.Setup.Universe.Any(tradable.ContainsKey))
+            return Result.Success();
+        var previous = run.PreviousSession;
+        run.PreviousSession = day;
         var fired = run.AlarmsOn(day, today);
 
-        var rebalanceDue = ReplayCalendar.OpensPeriod(run.Setup.RebalanceCadence, previous, day);
+        var rebalanceDue = run.Setup.RebalanceSchedule is { } rebalance
+            ? ReplayCalendar.IsDue(rebalance, previous, day)
+            : ReplayCalendar.OpensPeriod(run.Setup.RebalanceCadence, previous, day);
         if (rebalanceDue || fired.Rebalance)
-            return await RebalanceAsync(run, day, today, broughtBySignal: !rebalanceDue, fired.States ?? [], cancellationToken);
+        {
+            var result = await RebalanceAsync(run, day, today, broughtBySignal: !rebalanceDue, fired.States ?? [], cancellationToken);
+            if (result.IsFailure) return result;
+        }
 
         var riskReviewDue = IsRiskReviewDue(run.Setup, previous, day);
         if (riskReviewDue || fired.RiskReview)
@@ -125,7 +135,8 @@ public sealed class StrategyReplay(
     }
 
     private static bool IsRiskReviewDue(ReplaySetup setup, DateOnly? previous, DateOnly day) =>
-        setup.RiskReviewCadence is { } review && ReplayCalendar.OpensPeriod(review, previous, day);
+        setup.RiskReviewSchedule is { } schedule ? ReplayCalendar.IsDue(schedule, previous, day) :
+            setup.RiskReviewCadence is { } review && ReplayCalendar.OpensPeriod(review, previous, day);
 
     private async Task<Result> RebalanceAsync(
         Run run, DateOnly day, IReadOnlyDictionary<Guid, decimal> today, bool broughtBySignal, IReadOnlyList<ReplaySignalState> states, CancellationToken cancellationToken)
@@ -136,7 +147,7 @@ public sealed class StrategyReplay(
         if (decision.IsFailure)
             return decision.Error;
 
-        run.Order(targetTrades.TradesFor(decision.Value, run.Setup, run.Book, today));
+        run.Order(targetTrades.TradesFor(decision.Value, run.Setup, run.Book, today), day);
 
         return Result.Success();
     }
@@ -152,7 +163,7 @@ public sealed class StrategyReplay(
         if (exits.IsFailure)
             return exits.Error;
 
-        run.OrderExits(exits.Value);
+        run.OrderExits(exits.Value, day);
 
         return Result.Success();
     }
@@ -160,8 +171,8 @@ public sealed class StrategyReplay(
     private sealed class Run(ReplaySetup setup, PriceTable prices, ReplayBook book, ReplayAlarms alarms)
     {
         private readonly List<GrowthDay> _growth = [];
-        private List<ReplayTrade> _pending = [];
-        private bool _parkAfterwards;
+        private sealed record PendingTrade(ReplayTrade Trade, DateOnly PlacedOn, bool IsRiskExit = false);
+        private List<PendingTrade> _pending = [];
         private int _riskExits;
         private int _signalReports;
 
@@ -169,6 +180,7 @@ public sealed class StrategyReplay(
         public PriceTable Prices => prices;
         public ReplayBook Book => book;
         public IReadOnlyList<GrowthDay> Growth => _growth;
+        public DateOnly? PreviousSession { get; set; }
 
         public FiredReports AlarmsOn(DateOnly day, IReadOnlyDictionary<Guid, decimal> today) =>
             alarms.FiredOn(new ReplayMoment(day, book, today, _growth[^1].Growth));
@@ -179,32 +191,54 @@ public sealed class StrategyReplay(
                 _signalReports++;
         }
 
-        public void Order(IReadOnlyList<ReplayTrade> trades) => _pending = [.. trades];
+        public void Order(IReadOnlyList<ReplayTrade> trades, DateOnly day)
+        {
+            var exits = _pending.Where(order => order.IsRiskExit).ToList();
+            var blocked = exits.Select(order => order.Trade.InstrumentId).ToHashSet();
+            _pending = [.. exits, .. trades.Where(trade => !blocked.Contains(trade.InstrumentId)).Select(trade => new PendingTrade(trade, day))];
+        }
 
-        public void OrderExits(IReadOnlyList<Guid> instruments)
+        public void OrderExits(IReadOnlyList<Guid> instruments, DateOnly day)
         {
             var held = book.Positions.Where(position => instruments.Contains(position.InstrumentId)).ToList();
-
-            _pending = [.. held.Select(position => new ReplayTrade(position.InstrumentId, true, position.Quantity, 0m))];
-            _parkAfterwards = held.Count > 0;
-            _riskExits += held.Count;
+            if (held.Count == 0) return;
+            var exiting = held.Select(position => position.InstrumentId).ToHashSet();
+            _pending = [.. _pending.Where(order => !exiting.Contains(order.Trade.InstrumentId)),
+                .. held.Select(position => new PendingTrade(new ReplayTrade(position.InstrumentId, true, position.Quantity, 0m), day, IsRiskExit: true))];
         }
 
         public void ExecutePending(IReadOnlyDictionary<Guid, decimal> today, DateOnly day)
         {
-            foreach (var trade in _pending.Where(trade => today.ContainsKey(trade.InstrumentId)))
+            var riskSold = false;
+            var waiting = new List<PendingTrade>();
+            foreach (var order in _pending.OrderByDescending(order => order.Trade.IsSale))
             {
+                // Wait through exchange holidays; expire an old instruction instead of filling it months later.
+                if (day.DayNumber - order.PlacedOn.DayNumber > 7) continue;
+                var trade = order.Trade;
+                if (!today.ContainsKey(trade.InstrumentId))
+                {
+                    waiting.Add(order);
+                    continue;
+                }
                 if (trade.IsSale)
+                {
+                    var before = book.Trades;
                     book.Sell(trade.InstrumentId, trade.Quantity, today[trade.InstrumentId], day);
+                    if (book.Trades > before && order.IsRiskExit)
+                    {
+                        _riskExits++;
+                        riskSold = true;
+                    }
+                }
                 else
                     book.Buy(trade.InstrumentId, trade.Amount, today[trade.InstrumentId], day);
             }
 
-            if (_parkAfterwards && setup.CashInstrumentId is { } cash && today.TryGetValue(cash, out var price))
+            if (riskSold && setup.CashInstrumentId is { } cash && today.TryGetValue(cash, out var price))
                 book.Buy(cash, book.Cash, price, day);
 
-            _pending = [];
-            _parkAfterwards = false;
+            _pending = waiting;
         }
 
         public void Value(DateOnly day, IReadOnlyDictionary<Guid, decimal> today) =>

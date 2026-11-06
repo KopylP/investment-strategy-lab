@@ -6,7 +6,7 @@ using InvestmentLab.Strategies.Shared.Infrastructure.Engine;
 
 namespace InvestmentLab.Strategies.Definitions.Infrastructure;
 
-internal sealed class StrategyDirectory(IStrategyRepository strategies, CatalogSynchronizer catalog) : IStrategyDirectory
+internal sealed class StrategyDirectory(IStrategyRepository strategies, CatalogSynchronizer catalog, IParameterChecks checks) : IStrategyDirectory
 {
     public async Task<IReadOnlyList<StrategySummaryDto>> GetStrategies(CancellationToken cancellationToken)
     {
@@ -27,6 +27,9 @@ internal sealed class StrategyDirectory(IStrategyRepository strategies, CatalogS
 
         var types = await catalog.ListAsync(cancellationToken);
         var type = types.FirstOrDefault(candidate => candidate.Code == strategy.TypeCode);
+        var check = await checks.CheckAsync(strategy.TypeCode, chosen.Parameters, cancellationToken);
+        if (check.IsFailure)
+            throw new InvalidOperationException(check.Error.Message);
 
         return new StrategyReplaySetupDto(
             StrategyId: strategy.Id.Value,
@@ -38,7 +41,9 @@ internal sealed class StrategyDirectory(IStrategyRepository strategies, CatalogS
             BenchmarkInstrumentId: chosen.BenchmarkInstrumentId,
             Reports: EffectiveReportMapping.ReportsOf(type, chosen),
             Comparisons: type?.BacktestComparisons ?? [],
-            LogicSignalIds: chosen.SignalIds);
+            LogicSignalIds: chosen.SignalIds,
+            HistoryBars: check.Value.HistoryBars,
+            ExtraSeries: chosen.ExtraSeries);
     }
 
     public async Task<IReadOnlyDictionary<string, string>> GetMessages(CancellationToken cancellationToken)

@@ -5,6 +5,7 @@ import pandas as pd
 from finance_decisions.api.contracts import EvaluationContext, Holding, PortfolioRisk, RiskAssessment, RiskSignal, RiskSignalKind
 from finance_decisions.messages import msg
 from finance_decisions.portfolio_math import TRADING_DAYS_PER_YEAR
+from finance_decisions.strategies.errors import ContextError
 from .conditions import ConditionReader
 from .decision import STRATEGY_CODE, engine_version
 from .parameters import RuleParameters
@@ -36,9 +37,9 @@ def assess_risk(context: EvaluationContext, parameters: RuleParameters) -> RiskA
 
 
 def _exit_signal(holding: Holding, parameters: RuleParameters, reader: ConditionReader, book: SeriesBook) -> RiskSignal | None:
-    prices = book.fund(holding.key).dropna()
-    if prices.empty:
-        return None
+    prices = book.valuation_fund(holding.key).dropna()
+    if not book.is_fresh(prices):
+        raise ContextError(f"no fresh valuation price for held instrument {holding.key}")
 
     price = float(prices.iloc[-1])
     reasons = _stop_reasons(holding, price, prices, parameters) + _exit_rule_reasons(holding, parameters, reader)
@@ -94,7 +95,7 @@ def _portfolio(context: EvaluationContext, book: SeriesBook) -> PortfolioRisk:
     cash = context.sub_portfolio.cash
     value, cost = cash, cash
     for holding in context.sub_portfolio.holdings:
-        prices = book.fund(holding.key).dropna()
+        prices = book.valuation_fund(holding.key).dropna()
         price = float(prices.iloc[-1]) if len(prices) else _average_cost(holding)
         value += holding.quantity * price
         cost += holding.quantity * _average_cost(holding)

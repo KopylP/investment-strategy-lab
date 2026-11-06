@@ -30,7 +30,7 @@ def test_valid_rules_have_no_problems_and_list_their_signals(client: TestClient)
     rules = copy.deepcopy(MOMENTUM_RULES)
     rules["exit"] = {"condition": {"kind": "signal", "signalId": SIGNAL_ID, "state": "active", "scope": "thisFund"}}
 
-    assert _check(client, rules) == {"problems": [], "signalIds": [SIGNAL_ID]}
+    assert _check(client, rules) == {"problems": [], "signalIds": [SIGNAL_ID], "historyBars": 260}
 
 
 def test_a_shape_problem_has_a_json_path_without_union_tags(client: TestClient) -> None:

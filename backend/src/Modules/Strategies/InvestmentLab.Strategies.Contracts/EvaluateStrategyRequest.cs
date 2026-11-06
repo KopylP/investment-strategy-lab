@@ -7,4 +7,5 @@ public sealed record EvaluateStrategyRequest(
     decimal Contribution,
     DateOnly AsOf,
     Guid? CashInstrumentId = null,
-    IReadOnlyList<SignalStateDto>? SignalStates = null);
+    IReadOnlyList<SignalStateDto>? SignalStates = null,
+    string? ValuationCurrency = null);

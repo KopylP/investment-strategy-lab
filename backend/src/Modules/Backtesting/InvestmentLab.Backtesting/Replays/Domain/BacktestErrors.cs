@@ -2,6 +2,8 @@ namespace InvestmentLab.Backtesting.Replays.Domain;
 
 public static class BacktestErrors
 {
+    public static Error UnsupportedSchedule(string schedule) =>
+        Error.Validation("backtest.unsupported_schedule", "Daily-close replay supports end-of-day reports at 20:00; an intraday schedule cannot be replayed faithfully.", new { schedule });
     public static Error SignalMissing(Guid id) => Error.Validation("backtest.signal_missing", "A signal referenced by the strategy no longer exists.", new { id });
 
     public static Error StrategyNotFound(Guid strategyId) =>

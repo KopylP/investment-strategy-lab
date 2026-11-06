@@ -39,7 +39,7 @@ internal sealed class StrategyAnswers(IStrategyEvaluation evaluation) : IStrateg
 
         var signalStates = states.Select(signal => new SignalStateDto(signal.SignalId, signal.ActiveFor)).ToList();
 
-        return new EvaluateStrategyRequest(setup.StrategyId, setup.Version, state, 0m, day, SignalStates: signalStates);
+        return new EvaluateStrategyRequest(setup.StrategyId, setup.Version, state, 0m, day, SignalStates: signalStates, ValuationCurrency: setup.Currency);
     }
 
     private static Error FailureOf(string? code, string? message) =>

@@ -30,7 +30,12 @@ internal sealed class ReplayedStrategies(IStrategyDirectory strategies, IInstrum
             Signals: signals,
             Currency: currency,
             Comparisons: setup.Comparisons,
-            LogicSignalIds: setup.LogicSignalIds ?? []);
+            LogicSignalIds: setup.LogicSignalIds ?? [],
+            HistoryBars: setup.HistoryBars,
+            ExtraSeries: setup.ExtraSeries,
+            RebalanceSchedule: ScheduleOf(setup, StrategyReportDto.Rebalance),
+            RiskReviewSchedule: ScheduleOf(setup, StrategyReportDto.RiskReview),
+            UnsupportedSchedule: UnsupportedScheduleOf(setup));
     }
 
     private static ReplayBenchmark BenchmarkOf(Guid instrumentId, IReadOnlyList<InstrumentDto> catalog)
@@ -78,5 +83,21 @@ internal sealed class ReplayedStrategies(IStrategyDirectory strategies, IInstrum
             "QUARTERLY" => ReplayCadence.Quarterly,
             var unknown => throw new InvalidOperationException($"Unknown report frequency '{unknown}'."),
         };
+    }
+
+    private static ReplaySchedule? ScheduleOf(StrategyReplaySetupDto setup, string mode)
+    {
+        var report = setup.Reports.FirstOrDefault(candidate => candidate.Mode == mode);
+        var cadence = CadenceOf(setup, mode);
+        return report is null || cadence is null ? null : new ReplaySchedule(cadence.Value, report.Schedule.Day,
+            Enum.TryParse<DayOfWeek>(report.Schedule.Weekday, true, out var weekday) ? weekday : DayOfWeek.Sunday);
+    }
+
+    private static string? UnsupportedScheduleOf(StrategyReplaySetupDto setup)
+    {
+        var unsupported = setup.Reports.FirstOrDefault(report =>
+            !string.Equals(report.Schedule.Frequency, "off", StringComparison.OrdinalIgnoreCase) &&
+            (string.Equals(report.Schedule.Frequency, "hourly", StringComparison.OrdinalIgnoreCase) || report.Schedule.Time != "20:00"));
+        return unsupported is null ? null : $"{unsupported.Code}: {unsupported.Schedule.Frequency} at {unsupported.Schedule.Time}";
     }
 }
