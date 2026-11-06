@@ -9,7 +9,7 @@ public static class McpJson
 {
     public static JsonSerializerOptions Options { get; } = new(JsonSerializerDefaults.Web)
     {
-        Converters = { new JsonStringEnumConverter(), new LocalizedTextConverter() },
+        Converters = { new JsonStringEnumConverter() },
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
         TypeInfoResolver = new DefaultJsonTypeInfoResolver(),
     };
