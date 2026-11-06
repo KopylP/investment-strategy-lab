@@ -90,7 +90,7 @@ public sealed class StrategyDraft : AggregateRoot<Guid>
     }
 
     public TrialRun? TrialWith(string fingerprint) =>
-        Trials.FirstOrDefault(trial => trial.Fingerprint == fingerprint);
+        Trials.LastOrDefault(trial => trial.Fingerprint == fingerprint);
 
     public TrialRun RecordTrial(Guid trialStrategyId, int version, string fingerprint, string? label, DateTimeOffset now)
     {

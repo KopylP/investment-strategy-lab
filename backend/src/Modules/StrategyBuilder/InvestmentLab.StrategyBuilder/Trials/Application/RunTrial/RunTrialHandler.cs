@@ -35,8 +35,8 @@ public sealed class RunTrialHandler(
             return experimentCheck.Error;
 
         var fingerprint = DraftFingerprint.Of(rules, draft.Setup, draft.Reports, command.Experiment);
-        if (draft.TrialWith(fingerprint) is { } existing)
-            return await summaries.DescribeAsync(existing, cancellationToken);
+        if (await ReusableTrialAsync(draft, fingerprint, cancellationToken) is { } reused)
+            return reused;
 
         var executed = await Execute(draft, rules, command.Experiment, cancellationToken);
         if (executed.IsFailure)
@@ -46,6 +46,16 @@ public sealed class RunTrialHandler(
         await drafts.SaveChangesAsync(cancellationToken);
 
         return await summaries.DescribeAsync(run, cancellationToken);
+    }
+
+    private async Task<TrialRunDto?> ReusableTrialAsync(StrategyDraft draft, string fingerprint, CancellationToken cancellationToken)
+    {
+        if (draft.TrialWith(fingerprint) is not { } existing)
+            return null;
+
+        var described = await summaries.DescribeAsync(existing, cancellationToken);
+
+        return described.Status == nameof(TrialStatus.Failed) ? null : described;
     }
 
     private async Task<Result> CheckExperiment(TrialExperiment? experiment, GeneratedRules rules, CancellationToken cancellationToken)
