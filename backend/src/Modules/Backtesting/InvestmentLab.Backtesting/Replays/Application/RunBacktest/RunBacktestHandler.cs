@@ -1,8 +1,9 @@
 using InvestmentLab.Backtesting.Replays.Domain;
+using Microsoft.Extensions.Logging;
 
 namespace InvestmentLab.Backtesting.Replays.Application.RunBacktest;
 
-public sealed class RunBacktestHandler(IBacktestRepository backtests, IReplayedStrategies strategies, StrategyReplay replay, TimeProvider clock)
+public sealed class RunBacktestHandler(IBacktestRepository backtests, IReplayedStrategies strategies, StrategyReplay replay, TimeProvider clock, ILogger<RunBacktestHandler> logger)
 {
     public async Task Handle(Guid backtestId, CancellationToken cancellationToken)
     {
@@ -29,8 +30,12 @@ public sealed class RunBacktestHandler(IBacktestRepository backtests, IReplayedS
         var replayed = await replay.RunAsync(setup, cancellationToken);
 
         if (replayed.IsSuccess)
+        {
             backtest.Complete(replayed.Value, clock.GetUtcNow());
-        else
-            backtest.Fail(replayed.Error.AsMessage(), clock.GetUtcNow());
+            return;
+        }
+
+        logger.LogWarning("Backtest of strategy {StrategyId} version {Version} failed: {Detail}", setup.StrategyId, backtest.StrategyVersion, replayed.Error.Message);
+        backtest.Fail(replayed.Error.AsMessage(), clock.GetUtcNow());
     }
 }
