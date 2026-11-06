@@ -93,8 +93,15 @@
         <tr
           class="cursor-pointer"
           tabindex="0"
-          (keydown.enter)="$event.target === $event.currentTarget && router.navigate(['/strategy-builder', draft.id])"
-          (keydown.space)="$event.target === $event.currentTarget && $event.preventDefault(); $event.target === $event.currentTarget && router.navigate(['/strategy-builder', draft.id])"
+          (keydown.enter)="
+            $event.target === $event.currentTarget &&
+              router.navigate(['/strategy-builder', draft.id])
+          "
+          (keydown.space)="
+            $event.target === $event.currentTarget && $event.preventDefault();
+            $event.target === $event.currentTarget &&
+              router.navigate(['/strategy-builder', draft.id])
+          "
           (click)="router.navigate(['/strategy-builder', draft.id])"
         >
           <td>
@@ -113,6 +120,15 @@
           </td>
           <td (click)="$event.stopPropagation()">
             <div class="flex items-center justify-end gap-1">
+              @if (draft.lastTrialAt) {
+                <p-button
+                  icon="pi pi-history"
+                  [text]="true"
+                  ariaLabel="Історія бектестів"
+                  pTooltip="Історія бектестів"
+                  (onClick)="router.navigate(['/strategy-builder', draft.id, 'trials'])"
+                />
+              }
               <p-button
                 icon="pi pi-chevron-right"
                 [text]="true"

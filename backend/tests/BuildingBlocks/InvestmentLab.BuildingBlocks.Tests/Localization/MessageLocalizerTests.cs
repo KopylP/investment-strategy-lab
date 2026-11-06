@@ -37,6 +37,14 @@ public sealed class MessageLocalizerTests
     }
 
     [Fact]
+    public void A_parameter_without_a_value_leaves_its_place_empty_whatever_its_format()
+    {
+        var withoutValues = Message.Of("test.percent", new { share = (decimal?)null, change = (decimal?)null });
+
+        Localizer.Render(withoutValues).ShouldBe(" і ");
+    }
+
+    [Fact]
     public void Numbers_are_formatted_by_the_template()
     {
         Localizer.Render(Message.Of("test.percent", new { share = 0.25m, change = 0.281m })).ShouldBe("25% і +28.1%");

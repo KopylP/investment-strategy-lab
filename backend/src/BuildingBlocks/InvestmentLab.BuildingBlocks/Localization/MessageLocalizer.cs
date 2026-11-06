@@ -56,7 +56,7 @@ public sealed partial class MessageLocalizer(IReadOnlyDictionary<string, string>
         var format = placeholder.Groups["format"].Value;
         var argument = placeholder.Groups["argument"].Value;
 
-        if (!parameters.TryGetValue(name, out var value))
+        if (!parameters.TryGetValue(name, out var value) || value.ValueKind == JsonValueKind.Null)
             return "";
 
         return format switch

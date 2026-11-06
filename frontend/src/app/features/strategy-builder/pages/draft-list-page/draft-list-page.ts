@@ -13,6 +13,7 @@ import { Viewport } from '../../../../shared/ui/viewport';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { DraftsStore } from '../../data-access/drafts-store';
 import { NewDraftDialog } from '../../ui/new-draft-dialog/new-draft-dialog';
+import { Tooltip } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-builder-draft-list-page',
@@ -26,6 +27,7 @@ import { NewDraftDialog } from '../../ui/new-draft-dialog/new-draft-dialog';
     EmptyState,
     PageHeader,
     NewDraftDialog,
+    Tooltip,
   ],
   providers: [DraftsStore],
   templateUrl: './draft-list-page.html',

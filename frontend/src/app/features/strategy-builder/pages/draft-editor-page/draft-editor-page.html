@@ -48,6 +48,15 @@
         (onClick)="confirmDiscard()"
       />
       <p-button
+        label="Історія бектестів"
+        ariaLabel="Історія бектестів"
+        icon="pi pi-history"
+        severity="secondary"
+        size="small"
+        [text]="true"
+        [routerLink]="['/strategy-builder', draft.id, 'trials']"
+      />
+      <p-button
         label="Бектест"
         ariaLabel="Бектест"
         icon="pi pi-chart-line"
