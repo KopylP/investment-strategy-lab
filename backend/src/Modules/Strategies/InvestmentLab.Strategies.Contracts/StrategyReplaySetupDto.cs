@@ -10,4 +10,6 @@ public sealed record StrategyReplaySetupDto(
     Guid BenchmarkInstrumentId,
     IReadOnlyList<StrategyReportDto> Reports,
     IReadOnlyList<string> Comparisons,
-    IReadOnlyList<Guid>? LogicSignalIds = null);
+    IReadOnlyList<Guid>? LogicSignalIds = null,
+    int HistoryBars = 260,
+    IReadOnlyList<Guid>? ExtraSeries = null);

@@ -57,6 +57,83 @@ public sealed class StrategyReplayTests
     }
 
     [Fact]
+    public async Task Daily_rebalancing_does_not_suppress_daily_stops()
+    {
+        var answers = new FakeAnswers { ExitFund = true };
+        var setup = SetupOf(ReplayCadence.Daily) with { RebalanceCadence = ReplayCadence.Daily };
+
+        var result = await ReplayOf(answers).RunAsync(setup, TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        answers.Reviews.ShouldBeGreaterThan(0);
+        result.Value.RiskExits.ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
+    public async Task A_forward_filled_mark_does_not_fill_an_order_on_a_missing_quote()
+    {
+        var answers = new FakeAnswers();
+        var replay = ReplayOf(answers, new FakePrices(Days, jump: true, missingFundDay: 260));
+
+        var result = await replay.RunAsync(SetupOf(null), TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        answers.CashAtDecision[1].ShouldBeLessThan(1m);
+        result.Value.SeriesOf(ReplaySeries.StrategyCode).Points[^1].Growth.ShouldBeLessThan(1.01);
+    }
+
+    [Fact]
+    public async Task Instructions_expire_instead_of_filling_after_a_long_suspension()
+    {
+        var answers = new FakeAnswers();
+        var missing = Enumerable.Range(260, 11).ToHashSet();
+        var replay = ReplayOf(answers, new FakePrices(Days, jump: false, missingFundDays: missing));
+        var result = await replay.RunAsync(SetupOf(null), TestContext.Current.CancellationToken);
+        result.IsSuccess.ShouldBeTrue();
+        answers.CashAtDecision[1].ShouldBe(100_000m);
+    }
+
+    [Fact]
+    public async Task Unfilled_stops_are_not_counted_as_executed_exits()
+    {
+        var answers = new FakeAnswers { ExitFund = true };
+        var replay = ReplayOf(answers, new FakePrices(Days, jump: false, lastFundDay: 260));
+        var result = await replay.RunAsync(SetupOf(ReplayCadence.Weekly) with { Universe = [Fund, Other] }, TestContext.Current.CancellationToken);
+        result.IsSuccess.ShouldBeTrue();
+        answers.Reviews.ShouldBeGreaterThan(0);
+        result.Value.RiskExits.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task A_benchmark_session_does_not_consume_the_funds_holiday_schedule()
+    {
+        var holiday = new DateOnly(2020, 10, 15);
+        var answers = new FakeAnswers();
+        var replay = ReplayOf(answers, new FakePrices(Days, jump: false, missingFundDay: holiday.DayNumber - FirstDay.DayNumber));
+        var setup = SetupOf(null) with { RebalanceSchedule = new(ReplayCadence.Monthly, Day: 15) };
+        var result = await replay.RunAsync(setup, TestContext.Current.CancellationToken);
+        result.IsSuccess.ShouldBeTrue();
+        answers.DecisionDays.ShouldNotContain(holiday);
+        answers.DecisionDays.ShouldContain(holiday.AddDays(1));
+    }
+
+    [Fact]
+    public async Task Intraday_schedules_are_explicitly_refused_with_daily_close_data()
+    {
+        var setup = SetupOf(null) with { UnsupportedSchedule = "rebalance: hourly at 10:00" };
+        var result = await ReplayOf(new FakeAnswers()).RunAsync(setup, TestContext.Current.CancellationToken);
+        result.Error.Code.ShouldBe("backtest.unsupported_schedule");
+    }
+
+    [Fact]
+    public async Task Warmup_follows_the_engines_required_observation_count()
+    {
+        var setup = SetupOf(null) with { HistoryBars = 400 };
+        var result = await ReplayOf(new FakeAnswers()).RunAsync(setup, TestContext.Current.CancellationToken);
+        result.Value.Start.ShouldBe(FirstDay.AddDays(399));
+    }
+
+    [Fact]
     public async Task A_decision_made_at_the_close_is_executed_at_the_next_close()
     {
         var replayed = await ReplayAsync(new FakeAnswers(), riskReview: null, jumpOnDayAfterStart: true);
@@ -199,7 +276,7 @@ public sealed class StrategyReplayTests
         Currency: "EUR",
         Comparisons: ["benchmark", "benchmark-at-equal-risk", "universe-equal-weight"]);
 
-    private sealed class FakePrices(int days, bool jump) : IPriceTables
+    private sealed class FakePrices(int days, bool jump, int? missingFundDay = null, int? lastFundDay = null, IReadOnlySet<int>? missingFundDays = null) : IPriceTables
     {
         public ReplaySetup? LoadedSetup { get; private set; }
 
@@ -218,6 +295,12 @@ public sealed class StrategyReplayTests
                 [Other] = Rising(),
                 [Benchmark] = jump ? Jumping() : Rising(),
             };
+            if (missingFundDay is { } missing)
+                history[Fund] = [.. history[Fund].Where(point => point.Date != FirstDay.AddDays(missing))];
+            if (lastFundDay is { } last)
+                history[Fund] = [.. history[Fund].Where(point => point.Date <= FirstDay.AddDays(last))];
+            if (missingFundDays is { } gaps)
+                history[Fund] = [.. history[Fund].Where(point => !gaps.Contains(point.Date.DayNumber - FirstDay.DayNumber))];
 
             return Task.FromResult(new PriceTable(history));
         }
@@ -228,12 +311,16 @@ public sealed class StrategyReplayTests
         public int Decisions { get; private set; }
         public int Reviews { get; private set; }
         public List<IReadOnlyList<ReplaySignalState>> SeenStates { get; } = [];
+        public List<decimal> CashAtDecision { get; } = [];
+        public List<DateOnly> DecisionDays { get; } = [];
         public bool ExitFund { get; init; }
         public bool Fails { get; init; }
 
         public Task<Result<ReplayDecision>> DecideAsync(ReplaySetup setup, ReplayBook book, DateOnly day, IReadOnlyList<ReplaySignalState> states, CancellationToken cancellationToken)
         {
             Decisions++;
+            CashAtDecision.Add(book.Cash);
+            DecisionDays.Add(day);
             SeenStates.Add(states);
 
             Result<ReplayDecision> answer = Fails

@@ -167,5 +167,7 @@
   "rule_based.indicator.volatility.column": "Волатильність {days} дн",
   "rule_based.indicator.drawdown.column": "Просадка {days} дн",
   "rule_based.indicator.sharpe.column": "Sharpe {months} міс",
-  "rule_based.indicator.rsi.column": "RSI {days}"
+  "rule_based.indicator.rsi.column": "RSI {days}",
+  "rule_based.check.range_reversed": "Нижня межа діапазону не може перевищувати верхню",
+  "rule_based.fund.correlation_unknown": "Неможливо перевірити кореляцію з {peer}: недостатньо спільних даних або відсутня варіація цін"
 }

@@ -95,6 +95,8 @@ def _condition_problems(placed: PlacedCondition, parameters: RuleParameters) -> 
 
     if isinstance(condition, CrossedCondition) and (condition.level is None) == (condition.other is None):
         problems.append(RuleProblem(placed.path, "rule_based.check.crossed_needs_one_side"))
+    if isinstance(condition, BetweenCondition) and condition.low > condition.high:
+        problems.append(RuleProblem(placed.path + ("low",), "rule_based.check.range_reversed"))
     if isinstance(condition, SignalCondition):
         problems.extend(_signal_problems(condition, placed))
 

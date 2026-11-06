@@ -31,6 +31,6 @@ public sealed class RunBacktestHandler(IBacktestRepository backtests, IReplayedS
         if (replayed.IsSuccess)
             backtest.Complete(replayed.Value, clock.GetUtcNow());
         else
-            backtest.Fail(Message.Of(replayed.Error.Code), clock.GetUtcNow());
+            backtest.Fail(replayed.Error.AsMessage(), clock.GetUtcNow());
     }
 }

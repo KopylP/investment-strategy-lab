@@ -80,7 +80,8 @@ internal sealed class PythonStrategyEngine(StrategyEngineClient client) : IStrat
             },
             [.. series.Points.Select(point => point.Date)],
             [.. series.Points.Select(point => (decimal?)point.AdjustedClose)],
-            [.. series.Points.Select(point => (decimal?)point.Close)]))],
+            [.. series.Points.Select(point => (decimal?)point.Close)],
+            series.Points.Any(point => point.ValuationClose is not null) ? [.. series.Points.Select(point => point.ValuationClose)] : null))],
         new EngineSubPortfolio(
             context.SubPortfolio.Currency,
             Math.Max(0m, context.SubPortfolio.Cash),

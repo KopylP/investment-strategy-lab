@@ -24,6 +24,10 @@
 }
 <ng-template #fields>
   <div class="flex flex-col gap-5">
+    <p class="text-sm text-muted-color">
+      Для бектесту оберіть час 20:00 та частоту від щоденної до квартальної.
+      День місяця й тижня враховуються; у свято перевірка переноситься на наступну доступну сесію.
+    </p>
     @for (report of draft(); track report.code) {
       <section class="rounded-xl border border-surface p-4">
         <h3 class="font-semibold">{{ declaration(report.code)?.name ?? report.code }}</h3>

@@ -45,11 +45,15 @@ class PriceSeries(ApiModel):
     dates: list[date]
     adjusted_close: list[float | None]
     close: list[float | None] | None = None
+    # Optional monetary prices in subPortfolio.currency; signals still use adjustedClose.
+    valuation_close: list[float | None] | None = None
 
     @model_validator(mode="after")
     def _aligned_and_ordered(self) -> "PriceSeries":
         if len(self.adjusted_close) != len(self.dates) or (self.close is not None and len(self.close) != len(self.dates)):
             raise ValueError(f"series '{self.key}': dates and values must have the same length")
+        if self.valuation_close is not None and len(self.valuation_close) != len(self.dates):
+            raise ValueError(f"series '{self.key}': dates and valuationClose must have the same length")
         if any(later <= earlier for earlier, later in zip(self.dates, self.dates[1:])):
             raise ValueError(f"series '{self.key}': dates must be strictly ascending")
         return self
@@ -354,6 +358,7 @@ class ParameterProblem(ApiModel):
 
 class ParametersCheck(ApiModel):
     problems: list[ParameterProblem]
+    history_bars: int = Field(260, ge=1, description="Daily observations required before replay/evaluation, including crossing windows.")
     signal_ids: list[str] = Field(default_factory=list, description="User signals the parameters refer to, when their shape is valid.")
 
 

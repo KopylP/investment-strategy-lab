@@ -1,13 +1,17 @@
 using System.Text.Json;
 using InvestmentLab.Strategies.Definitions.Domain;
 using InvestmentLab.Strategies.Shared.Infrastructure.Engine;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace InvestmentLab.Strategies.Definitions.Infrastructure;
 
-internal sealed class EngineParameterChecks(StrategyEngineClient engine) : IParameterChecks
+internal sealed class EngineParameterChecks(StrategyEngineClient engine, IMemoryCache? cache = null) : IParameterChecks
 {
     public async Task<Result<ParametersCheck>> CheckAsync(string typeCode, string parameters, CancellationToken cancellationToken)
     {
+        var key = (typeof(EngineParameterChecks), typeCode, parameters);
+        if (cache?.TryGetValue(key, out ParametersCheck? cached) == true && cached is not null)
+            return cached;
         EngineParametersCheck answer;
         try
         {
@@ -21,7 +25,10 @@ internal sealed class EngineParameterChecks(StrategyEngineClient engine) : IPara
         var problems = answer.Problems.Select(problem => new ParameterProblem(PathOf(problem.Path), problem.Code, problem.Message));
         var signalIds = answer.SignalIds.Select(Guid.Parse);
 
-        return new ParametersCheck([.. problems], [.. signalIds]);
+        var check = new ParametersCheck([.. problems], [.. signalIds], Math.Max(1, answer.HistoryBars));
+        if (check.IsClean)
+            cache?.Set(key, check, TimeSpan.FromMinutes(10));
+        return check;
     }
 
     private static string PathOf(IReadOnlyList<JsonElement> segments) =>

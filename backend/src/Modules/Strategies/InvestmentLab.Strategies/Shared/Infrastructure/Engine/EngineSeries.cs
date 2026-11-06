@@ -5,4 +5,6 @@ public sealed record EngineSeries(
     string Role,
     IReadOnlyList<DateOnly> Dates,
     IReadOnlyList<decimal?> AdjustedClose,
-    IReadOnlyList<decimal?> Close);
+    IReadOnlyList<decimal?> Close,
+    [property: System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    IReadOnlyList<decimal?>? ValuationClose = null);

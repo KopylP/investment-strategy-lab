@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 
 import pandas as pd
 
@@ -79,7 +80,7 @@ def judge_funds(
 
 def _gate(parameters: RuleParameters, reader: ConditionReader, member: UniverseMember, is_held: bool, prices: pd.DataFrame) -> FundVerdict | None:
     candidate = Candidate(member, None)
-    if not _has_price(prices, member.key):
+    if not _has_price(prices, member.key) or not reader.has_fresh_price(member.key):
         return _verdict(candidate, STATUS_FAILED, msg("rule_based.fund.no_data"))
 
     if is_held and parameters.exit is not None:
@@ -137,27 +138,19 @@ def _judge(candidate: Candidate, rank: int, chosen: list[Candidate], prices: pd.
         reason = msg("rule_based.fund.group_taken", group=candidate.group, members=group_members)
         return _verdict(candidate, STATUS_GROUP_BLOCKED, reason, rank)
 
-    twin = _too_similar_to(candidate, chosen, prices, selection)
-    if twin is not None:
-        reason = msg("rule_based.fund.correlated", peer=twin.name, limit=selection.max_correlation)
-        return _verdict(candidate, STATUS_CORRELATED, reason, rank)
+    if selection.max_correlation is not None and selection.max_correlation < 1.0:
+        for other in chosen:
+            correlation = pairwise_correlation(prices, candidate.key, other.key, selection.correlation_days)
+            if not math.isfinite(correlation):
+                return _verdict(candidate, STATUS_FAILED, msg("rule_based.fund.correlation_unknown", peer=other.name), rank)
+            if correlation > selection.max_correlation:
+                reason = msg("rule_based.fund.correlated", peer=other.name, limit=selection.max_correlation)
+                return _verdict(candidate, STATUS_CORRELATED, reason, rank)
 
     if len(chosen) >= selection.top:
         return _verdict(candidate, STATUS_RESERVE, msg("rule_based.fund.stronger_exist", rank=rank), rank)
 
     return _verdict(candidate, STATUS_SELECTED, msg("rule_based.fund.ranked", rank=rank), rank)
-
-
-def _too_similar_to(candidate: Candidate, chosen: list[Candidate], prices: pd.DataFrame, selection: Selection) -> Candidate | None:
-    limit = selection.max_correlation
-    if limit is None or limit >= 1.0:
-        return None
-
-    for other in chosen:
-        if pairwise_correlation(prices, candidate.key, other.key, selection.correlation_days) > limit:
-            return other
-
-    return None
 
 
 def _verdict(candidate: Candidate, status: str, reason: str, rank: int | None = None) -> FundVerdict:

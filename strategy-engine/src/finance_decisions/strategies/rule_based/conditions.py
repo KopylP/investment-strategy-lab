@@ -36,6 +36,7 @@ COMPARISONS = {
 class Outcome:
     passed: bool
     reasons: list[str]
+    known: bool = True
 
 
 class ConditionReader:
@@ -84,6 +85,9 @@ class ConditionReader:
 
         return float(prices.iloc[-1]) if len(prices) else None
 
+    def has_fresh_price(self, fund_key: str) -> bool:
+        return self._book.is_fresh(self._book.fund(fund_key))
+
     def column_format(self, name: str) -> str:
         definition = self._parameters.indicators[name]
 
@@ -95,7 +99,7 @@ class ConditionReader:
     def short_history(self, name: str, extra_days: int = 0) -> Outcome:
         days = history_needed(self._parameters.indicators[name]) + extra_days
 
-        return Outcome(False, [msg("rule_based.reason.short_history", name=name, days=days)])
+        return Outcome(False, [msg("rule_based.reason.short_history", name=name, days=days)], known=False)
 
     def _compare(self, condition: CompareCondition, fund_key: str | None) -> Outcome:
         left = self._operand_value(condition.left, fund_key)
@@ -136,16 +140,18 @@ class ConditionReader:
         return Outcome(passed, [reason])
 
     def _crossed(self, condition: CrossedCondition, fund_key: str | None) -> Outcome:
-        series = self.series_of(condition.indicator, fund_key).dropna()
-        if len(series) <= condition.within_days:
+        series = self.series_of(condition.indicator, fund_key).tail(condition.within_days + 1)
+        if len(series) <= condition.within_days or series.isna().any():
             return self.short_history(condition.indicator, condition.within_days)
 
-        before, now = float(series.iloc[-1 - condition.within_days]), float(series.iloc[-1])
-        level_before, level_now = self._crossing_levels(condition, series, fund_key)
-        if level_before is None or level_now is None:
+        levels = (self.series_of(condition.other, fund_key).reindex(series.index)
+                  if condition.other is not None else pd.Series(condition.level, index=series.index))
+        if levels.isna().any():
             return self.short_history(condition.other or condition.indicator, condition.within_days)
 
-        passed = _has_crossed(condition.direction, before, now, level_before, level_now)
+        passed = any(_has_crossed(condition.direction, float(series.iloc[i - 1]), float(series.iloc[i]),
+                                  float(levels.iloc[i - 1]), float(levels.iloc[i]))
+                     for i in range(1, len(series)))
         target = condition.other if condition.other is not None else self.shown(condition.indicator, condition.level)
         reason = msg(
             "rule_based.reason.crossed",
@@ -157,14 +163,6 @@ class ConditionReader:
         )
 
         return Outcome(passed, [reason])
-
-    def _crossing_levels(self, condition: CrossedCondition, series: pd.Series, fund_key: str | None) -> tuple[float | None, float | None]:
-        if condition.other is None:
-            return condition.level, condition.level
-
-        other = self.series_of(condition.other, fund_key).reindex(series.index)
-
-        return _known(other.iloc[-1 - condition.within_days]), _known(other.iloc[-1])
 
     def _signal(self, condition: SignalCondition, fund_key: str | None) -> Outcome:
         state = self._signals.get(condition.signal_id)
@@ -184,20 +182,24 @@ class ConditionReader:
 
     def _all(self, condition: AllCondition, fund_key: str | None) -> Outcome:
         outcomes = [self.read(child, fund_key) for child in condition.conditions]
-        passed = all(outcome.passed for outcome in outcomes)
+        known = any(outcome.known and not outcome.passed for outcome in outcomes) or all(outcome.known for outcome in outcomes)
+        passed = known and all(outcome.passed for outcome in outcomes)
         telling = outcomes if passed else [outcome for outcome in outcomes if not outcome.passed]
 
-        return Outcome(passed, _reasons_of(telling))
+        return Outcome(passed, _reasons_of(telling), known=known)
 
     def _any(self, condition: AnyCondition, fund_key: str | None) -> Outcome:
         outcomes = [self.read(child, fund_key) for child in condition.conditions]
-        passed = any(outcome.passed for outcome in outcomes)
+        passed = any(outcome.known and outcome.passed for outcome in outcomes)
+        known = passed or all(outcome.known for outcome in outcomes)
         telling = [outcome for outcome in outcomes if outcome.passed] if passed else outcomes
 
-        return Outcome(passed, _reasons_of(telling))
+        return Outcome(passed, _reasons_of(telling), known=known)
 
     def _not(self, condition: NotCondition, fund_key: str | None) -> Outcome:
         inner = self.read(condition.condition, fund_key)
+        if not inner.known:
+            return inner
         reason = msg("rule_based.reason.not", items=inner.reasons, verdict=_verdict(not inner.passed))
 
         return Outcome(not inner.passed, [reason])
@@ -237,7 +239,7 @@ def _has_crossed(direction: str, before: float, now: float, level_before: float,
 def _known(value) -> float | None:
     number = float(value)
 
-    return None if math.isnan(number) else number
+    return number if math.isfinite(number) else None
 
 
 def _verdict(passed: bool) -> str:
