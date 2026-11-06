@@ -1,25 +1,24 @@
 import { expect, test } from '@playwright/test';
 
-test('selecting all grouped funds saves instrument identifiers and survives reload', async ({
+test('trend template saves an entire fund group and shows per-fund and shared evaluation after reload', async ({
   page,
-}) => {
+}, testInfo) => {
+  test.skip(!process.env['E2E_LIVE_TEMPLATES'], 'Uses a local API and a disposable test account.');
+  await page.setViewportSize({ width: 1366, height: 768 });
   await page.goto('/auth/register');
   await page.locator('#email').fill(`fund-selection-${Date.now()}@example.com`);
   await page.locator('#password').fill('correct horse battery');
   await page.locator('#confirm').fill('correct horse battery');
-  await page.getByRole('button', { name: 'Зареєструватися' }).click();
+  await page.getByRole('button', { name: /Зареєструватися/ }).click();
   await expect(page.getByRole('heading', { name: 'Огляд', exact: true })).toBeVisible();
 
   const directoryResponse = await page.request.get('/api/strategy-builder/instruments');
-  expect(directoryResponse.ok()).toBeTruthy();
+  expect(directoryResponse.ok()).toBe(true);
   const directory = await directoryResponse.json();
   const funds = directory
-    .filter((instrument: { isVolatilityIndex: boolean }) => !instrument.isVolatilityIndex)
+    .filter((item: { isVolatilityIndex: boolean }) => !item.isVolatilityIndex)
     .slice(0, 3)
-    .map((instrument: { id: string }, index: number) => ({
-      ...instrument,
-      group: index < 2 ? 'Перша група' : 'Друга група',
-    }));
+    .map((item: { id: string }) => ({ ...item, group: 'Тестова група' }));
   expect(funds).toHaveLength(3);
   const expectedIds = funds.map((fund: { id: string }) => fund.id).sort();
   await page.route('**/api/strategy-builder/instruments', (route) =>
@@ -27,35 +26,66 @@ test('selecting all grouped funds saves instrument identifiers and survives relo
   );
 
   const created = await page.request.post('/api/strategy-builder/drafts', {
-    data: { name: 'Вибір усіх фондів', template: null },
+    data: { name: 'Перебір групи фондів', template: 'momentum-trend-filter' },
   });
-  expect(created.ok()).toBeTruthy();
+  expect(created.ok()).toBe(true);
   const draft = await created.json();
-
   try {
     await page.goto(`/strategy-builder/${draft.id}`);
-    await page.getByRole('button', { name: '2. Фонди й ряди', exact: true }).click();
-    await page.locator('p-multiselect:has(#builder-funds)').click();
+    await page.getByRole('button', { name: /Налаштування/ }).click();
+    const setup = page.locator('[data-node-id="strategy-setup"]');
+    await setup.locator('app-builder-fund-picker p-multiselect').click();
+    const group = page.getByRole('checkbox', { name: 'Уся група «Тестова група»', exact: true });
+    await expect(group).toHaveAttribute('aria-checked', 'false');
     const savedResponse = page.waitForResponse(
       (response) =>
         response.url().endsWith(`/drafts/${draft.id}`) && response.request().method() === 'PUT',
     );
-    await page.locator('.p-multiselect-header').getByRole('checkbox').check();
+    await group.click();
     const saved = await savedResponse;
-    const selectedIds = saved.request().postDataJSON().setup.funds;
-    expect(selectedIds.toSorted()).toEqual(expectedIds);
-    expect(saved.ok()).toBeTruthy();
+    expect(saved.ok(), await saved.text()).toBe(true);
+    expect(saved.request().postDataJSON().setup.funds.toSorted()).toEqual(expectedIds);
     await page.keyboard.press('Escape');
-    await expect(page.getByText('3 із 60', { exact: true })).toBeVisible();
-    await expect(page.getByText('Чернетка · збережено', { exact: true })).toBeVisible();
+    await expect(setup.locator('.fund-token')).toHaveCount(3);
+    await expect(page.locator('[data-node-id="e-mom"]')).toHaveAttribute(
+      'data-iteration-count',
+      '3',
+    );
+    await expect(page.locator('[data-node-id="e-all"]')).toHaveClass(/multi-fund/);
+    await expect(page.locator('[data-node-id="m-price"]')).toHaveAttribute(
+      'data-evaluation-scope',
+      'shared',
+    );
+    await expect(page.locator('[data-node-id="result-selection"]')).toHaveAttribute(
+      'data-evaluation-scope',
+      'portfolio',
+    );
+    await page.getByRole('button', { name: 'Показати всю схему' }).click();
+    await page.screenshot({ path: testInfo.outputPath('trend-fund-iteration.png') });
+    await page
+      .getByRole('navigation', { name: 'Ролі стратегії' })
+      .getByRole('button', { name: 'Вхід', exact: true })
+      .click();
+    await page.screenshot({ path: testInfo.outputPath('trend-fund-loop-branch.png') });
 
     await page.reload();
-    await page.getByRole('button', { name: '2. Фонди й ряди', exact: true }).click();
-    await expect(page.getByText('3 із 60', { exact: true })).toBeVisible();
     const persisted = await (
       await page.request.get(`/api/strategy-builder/drafts/${draft.id}`)
     ).json();
     expect(persisted.setup.funds.toSorted()).toEqual(expectedIds);
+    expect(
+      persisted.graph.nodes.filter((node: { kind: string }) => node.kind === 'Setup'),
+    ).toHaveLength(1);
+    await expect(page.locator('[data-node-id="e-mom"]')).toHaveAttribute(
+      'data-iteration-count',
+      '3',
+    );
+    await page.getByRole('button', { name: /Налаштування/ }).click();
+    await setup.locator('app-builder-fund-picker p-multiselect').click();
+    await expect(group).toHaveAttribute('aria-checked', 'true');
+    await expect(page.locator('.p-multiselect-overlay:visible')).toHaveCSS('opacity', '1');
+    await page.screenshot({ path: testInfo.outputPath('selected-fund-group.png') });
+    await page.keyboard.press('Escape');
   } finally {
     await page.request.delete(`/api/strategy-builder/drafts/${draft.id}`);
   }

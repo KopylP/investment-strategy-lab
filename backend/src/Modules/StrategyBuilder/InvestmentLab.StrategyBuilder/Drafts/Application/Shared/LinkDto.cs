@@ -1,3 +1,3 @@
 namespace InvestmentLab.StrategyBuilder.Drafts.Application.Shared;
 
-public sealed record LinkDto(string From, string To, string Input);
+public sealed record LinkDto(string From, string To, string Input, string Output = "output");

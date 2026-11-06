@@ -18,20 +18,25 @@ import { Select } from 'primeng/select';
 import { FundSearchDialog } from '../fund-search-dialog/fund-search-dialog';
 import { DraftSetupDto } from '../../models/draft-dto';
 import { InstrumentChoiceDto } from '../../models/instrument-dto';
+import { FundPicker } from '../fund-picker/fund-picker';
 
 interface InstrumentOption {
   label: string;
   value: string;
 }
 
-interface InstrumentGroup {
-  label: string;
-  items: InstrumentOption[];
-}
-
 @Component({
   selector: 'app-builder-setup-dialog',
-  imports: [NgTemplateOutlet, FormsModule, Button, Dialog, MultiSelect, Select, FundSearchDialog],
+  imports: [
+    NgTemplateOutlet,
+    FormsModule,
+    Button,
+    Dialog,
+    MultiSelect,
+    Select,
+    FundSearchDialog,
+    FundPicker,
+  ],
   templateUrl: './setup-dialog.html',
   host: { class: 'contents' },
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,9 +51,6 @@ export class SetupDialog {
   protected readonly fundSearchVisible = signal(false);
 
   protected readonly draft = signal<DraftSetupDto>(emptySetup());
-  protected readonly groupedFunds = computed(() =>
-    groupOptions(this.instruments().filter((item) => !item.isVolatilityIndex)),
-  );
   protected readonly regularOptions = computed(() =>
     optionsOf(this.instruments().filter((item) => !item.isVolatilityIndex)),
   );
@@ -85,19 +87,6 @@ function optionsOf(instruments: InstrumentChoiceDto[]): InstrumentOption[] {
     label: `${instrument.label} · ${instrument.name}`,
     value: instrument.id,
   }));
-}
-
-function groupOptions(instruments: InstrumentChoiceDto[]): InstrumentGroup[] {
-  const groups = new Map<string, InstrumentChoiceDto[]>();
-
-  for (const instrument of instruments) {
-    const group = instrument.group ?? 'Інші';
-    groups.set(group, [...(groups.get(group) ?? []), instrument]);
-  }
-
-  return [...groups.entries()]
-    .sort(([left], [right]) => left.localeCompare(right, 'uk'))
-    .map(([label, items]) => ({ label, items: optionsOf(items) }));
 }
 
 function cloneSetup(setup: DraftSetupDto): DraftSetupDto {

@@ -43,22 +43,21 @@ export class TrialsStore {
   }
 
   canSelect(run: TrialRunDto): boolean {
-    if (run.status === 'Failed') return false;
-    if (this.selected().includes(run.number)) return true;
-    if (!this.selectedRuns().length) return true;
-
-    return (
-      run.status === 'Succeeded' &&
-      this.selectedRuns().every((selected) => selected.status === 'Succeeded')
-    );
+    return run.status !== 'Failed';
   }
 
   toggle(number: number): void {
+    const run = this.trials().find((trial) => trial.number === number);
+    if (!run || !this.canSelect(run)) return;
     const selected = this.selected();
-    const next = selected.includes(number)
-      ? selected.filter((current) => current !== number)
-      : [...selected.slice(-1), number];
-    this.chosen.set(next);
+    if (selected.includes(number)) {
+      this.chosen.set(selected.filter((current) => current !== number));
+      return;
+    }
+    const canCompare =
+      run.status === 'Succeeded' &&
+      this.selectedRuns().every((current) => current.status === 'Succeeded');
+    this.chosen.set(canCompare ? [...selected.slice(-1), number] : [number]);
   }
 
   private async reload(): Promise<void> {

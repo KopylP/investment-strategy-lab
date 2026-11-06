@@ -2,7 +2,8 @@ import { JsonValue, NodeKind } from './draft-dto';
 
 export type FieldKind =
   'Integer' | 'Number' | 'Fraction' | 'Series' | 'Choice' | 'Indicator' | 'Signal';
-export type SocketType = 'Number' | 'Boolean' | 'Funds';
+export type SocketType =
+  'Number' | 'Boolean' | 'Funds' | 'Series' | 'SeriesList' | 'Candidates' | 'Budget' | 'RiskPolicy';
 
 export interface VocabularyFieldDto {
   name: string;

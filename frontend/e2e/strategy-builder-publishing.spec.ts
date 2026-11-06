@@ -110,9 +110,9 @@ test('trial comparison and publication preserve the draft lifecycle', async ({ p
   );
   await page.reload();
   await expect(page.getByText('Недостатньо історії для бектесту', { exact: true })).toBeVisible();
-  await expect(page.getByRole('checkbox', { name: 'Вибрати запуск 3' })).toBeDisabled();
+  await expect(page.locator('[data-trial-number="3"]')).toHaveAttribute('aria-disabled', 'true');
   await expect.poll(() => reads, { timeout: 15_000 }).toBeGreaterThan(1);
-  await page.getByRole('checkbox', { name: 'Вибрати запуск 2' }).check();
+  await page.locator('[data-trial-number="2"]').click();
   const comparison = page.locator('app-trial-comparison');
   await expect(comparison).toBeVisible();
   await expect(comparison.getByRole('button', { name: 'Запуск B · №2' })).toBeVisible();
@@ -124,7 +124,7 @@ test('trial comparison and publication preserve the draft lifecycle', async ({ p
   await page.screenshot({ path: 'test-results/builder-trial-comparison.png', fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.reload();
-  await page.getByRole('checkbox', { name: 'Вибрати запуск 2' }).check();
+  await page.locator('[data-trial-number="2"]').click();
   await expect(comparison).toBeVisible();
   await expect
     .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
@@ -133,9 +133,9 @@ test('trial comparison and publication preserve the draft lifecycle', async ({ p
   await page.setViewportSize({ width: 1440, height: 900 });
 
   await page.goto(`/strategy-builder/${draft.id}/trials?run=3`);
-  await expect(page.getByRole('checkbox', { name: 'Вибрати запуск 3' })).not.toBeChecked();
-  await page.getByRole('checkbox', { name: 'Вибрати запуск 1' }).check();
-  await page.getByRole('checkbox', { name: 'Вибрати запуск 2' }).check();
+  await expect(page.locator('[data-trial-number="3"]')).toHaveAttribute('aria-selected', 'false');
+  await page.locator('[data-trial-number="1"]').click();
+  await page.locator('[data-trial-number="2"]').click();
   await expect(comparison).toBeVisible();
 
   await page.goto(`/strategy-builder/${draft.id}`);

@@ -49,7 +49,10 @@ public static class DraftMapping
             collapsed.Add(kind);
         }
 
-        return new DraftLayout(layout.Positions, collapsed);
+        var routes = layout.EdgeRoutes ?? new Dictionary<string, IReadOnlyList<NodePosition>>();
+        if (routes.Values.Any(points => points.Count > 128 || points.Any(point => !double.IsFinite(point.X) || !double.IsFinite(point.Y))))
+            return DraftErrors.GraphInvalid("edge routes must contain finite coordinates and at most 128 points");
+        return new DraftLayout(layout.Positions, collapsed) { EdgeRoutes = routes };
     }
 
     private static Result<DraftSetup> ToSetup(DraftSetupDto setup) =>
@@ -67,28 +70,39 @@ public static class DraftMapping
             nodes.Add(new GraphNode(new NodeId(node.Id), kind, NodeKinds.IsResult(kind) ? block : BlockKind.Shared, new NodeParameters(node.Parameters ?? new Dictionary<string, JsonElement>())));
         }
 
-        var links = graph.Links.Select(link => new GraphLink(new NodeId(link.From), new NodeId(link.To), link.Input)).ToList();
+        var links = graph.Links.Select(link => new GraphLink(new NodeId(link.From), new NodeId(link.To), link.Input, link.Output ?? "output")).ToList();
 
+        if (nodes.Select(node => node.Id).Distinct().Count() != nodes.Count)
+            return DraftErrors.GraphInvalid("node identifiers must be unique");
+        if (nodes.Any(node => (node.Id == PortfolioFlow.PortfolioId) != (node.Kind == NodeKind.Portfolio)))
+            return DraftErrors.GraphInvalid("the portfolio node has a permanent identifier");
+        if (nodes.Any(node => (node.Id == PortfolioFlow.CashId) != (node.Kind == NodeKind.Cash)))
+            return DraftErrors.GraphInvalid("the cash node has a permanent identifier");
+        if (nodes.Any(node => (node.Id == StrategyGraph.SetupId) != (node.Kind == NodeKind.Setup)))
+            return DraftErrors.GraphInvalid("the setup node has a permanent identifier");
         return WithAllResults(new StrategyGraph(nodes, links));
     }
 
     private static Result<StrategyGraph> WithAllResults(StrategyGraph graph)
     {
-        var missing = StrategyGraph.Empty.Nodes.Where(result => graph.Node(result.Id) is null);
+        var missing = StrategyGraph.Empty.Nodes.Where(result => (NodeKinds.IsResult(result.Kind) || result.Kind == NodeKind.Setup) && graph.Node(result.Id) is null);
 
-        return graph with { Nodes = [.. graph.Nodes, .. missing] };
+        return PortfolioFlow.Upgrade(graph with { Nodes = [.. graph.Nodes, .. missing] });
     }
 
     private static DraftReport ToReport(DraftReportDto report) => new(report.Code, report.Schedule, report.SignalKinds ?? [], report.SignalIds ?? []);
 
     private static DraftSetupDto ToDto(DraftSetup setup) => new(setup.Funds, setup.BenchmarkId, setup.CashId, setup.VolatilityIndexId, setup.ExtraSeries);
 
-    private static GraphDto ToDto(StrategyGraph graph) =>
-        new(
+    private static GraphDto ToDto(StrategyGraph source)
+    {
+        var graph = PortfolioFlow.Upgrade(SetupBindings.WithLegacyBindings(source));
+        return new(
             [.. graph.Nodes.Select(node => new NodeDto(node.Id.Value, node.Kind.ToString(), NodeKinds.IsResult(node.Kind) ? node.Block.ToString() : nameof(BlockKind.Shared), node.Parameters.Values))],
-            [.. graph.Links.Select(link => new LinkDto(link.From.Value, link.To.Value, link.Input))]);
+            [.. graph.Links.Select(link => new LinkDto(link.From.Value, link.To.Value, link.Input, link.Output))]);
+    }
 
-    private static LayoutDto ToDto(DraftLayout layout) => new(layout.Positions, [.. layout.Collapsed.Select(block => block.ToString())]);
+    private static LayoutDto ToDto(DraftLayout layout) => new(layout.Positions, [.. layout.Collapsed.Select(block => block.ToString())], layout.EdgeRoutes);
 
     private static DraftReportDto ToDto(DraftReport report) => new(report.Code, report.Schedule, report.SignalKinds, report.SignalIds);
 

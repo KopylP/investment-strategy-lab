@@ -30,6 +30,7 @@ import { TrialComparison } from '../../ui/trial-comparison/trial-comparison';
   ],
   providers: [TrialsStore],
   templateUrl: './draft-trials-page.html',
+  styleUrl: './draft-trials-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DraftTrialsPage {

@@ -9,7 +9,7 @@ import { InputNumber } from 'primeng/inputnumber';
   imports: [FormsModule, Button, Dialog, InputNumber],
   template: `
     <p-dialog
-      header="Скопіювати вхід у вихід"
+      header="Створити вихід з умов входу"
       [modal]="true"
       [visible]="visible()"
       (visibleChange)="visible.set($event)"
@@ -21,6 +21,7 @@ import { InputNumber } from 'primeng/inputnumber';
         Умови входу буде перетворено на протилежні умови виходу. Запас зменшує зайві продажі біля
         самої межі.
       </p>
+      <p class="mb-4 text-sm">Поточне правило виходу буде замінено. Умови входу залишаться без змін.</p>
       <div class="flex flex-col gap-2">
         <label for="copy-entry-margin" class="font-medium">Запас</label>
         <p-inputnumber
@@ -41,7 +42,7 @@ import { InputNumber } from 'primeng/inputnumber';
           severity="secondary"
           (onClick)="visible.set(false)"
         />
-        <p-button label="Скопіювати" icon="pi pi-copy" (onClick)="copy.emit(margin() / 100)" />
+        <p-button label="Замінити правило виходу" icon="pi pi-copy" (onClick)="copy.emit(margin() / 100)" />
       </ng-template>
     </p-dialog>
   `,

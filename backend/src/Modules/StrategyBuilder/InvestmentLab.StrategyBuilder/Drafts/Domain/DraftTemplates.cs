@@ -8,13 +8,13 @@ public static class DraftTemplates
 
     public static readonly string[] Codes = [MomentumTrendFilter, DualMomentum, IndexHold];
 
-    public static StrategyGraph GraphOf(string code) => code switch
+    public static StrategyGraph GraphOf(string code) => PortfolioFlow.Upgrade(SetupBindings.WithLegacyBindings(code switch
     {
         MomentumTrendFilter => MomentumWithTrendFilter(),
         DualMomentum => DualMomentumGraph(),
         IndexHold => IndexHoldGraph(),
         _ => StrategyGraph.Empty,
-    };
+    }, force: true));
 
     public static bool IsKnown(string code) => Codes.Contains(code);
 

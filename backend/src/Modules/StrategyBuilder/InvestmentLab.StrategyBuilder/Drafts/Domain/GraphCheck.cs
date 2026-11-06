@@ -5,15 +5,18 @@ public static class GraphCheck
     public static IReadOnlyList<DraftProblem> Of(StrategyDraft draft, RuleVocabulary vocabulary, IReadOnlyList<OwnSignal>? signals = null)
     {
         var graph = draft.Graph;
+        var effectiveNodes = graph.Nodes.Select(node => SetupBindings.Resolve(node, graph, draft.Setup)).ToList();
 
         return
         [
             .. SetupProblems(draft.Setup),
             .. LinkProblems(graph),
+            .. BindingProblems(graph, draft.Setup),
+            .. PortfolioProblems(graph),
             .. CycleProblems(graph),
             .. MissingInputs(graph),
-            .. graph.Nodes.SelectMany(node => ParameterProblems(node, graph, vocabulary)),
-            .. graph.Nodes.SelectMany(node => SeriesProblems(node, graph, draft.Setup)),
+            .. effectiveNodes.SelectMany(node => ParameterProblems(node, graph, vocabulary)),
+            .. effectiveNodes.SelectMany(node => SeriesProblems(node, graph, SetupBindings.EvaluationSetup(draft))),
             .. graph.Nodes.SelectMany(node => SignalProblems(node, graph, draft.MissingSignalIds, signals ?? [])),
             .. ReportSignalProblems(draft, signals ?? []),
             .. DanglingNodes(graph),
@@ -37,21 +40,45 @@ public static class GraphCheck
             if (graph.Node(link.From) is not { } from || graph.Node(link.To) is not { } to)
                 continue;
 
-            if (SocketMismatch(from, to, link.Input) is { } mismatch)
+            if (SocketMismatch(from, to, link.Input, link.Output) is { } mismatch)
                 yield return mismatch;
         }
     }
 
-    private static DraftProblem? SocketMismatch(GraphNode from, GraphNode to, string inputName)
+    private static DraftProblem? SocketMismatch(GraphNode from, GraphNode to, string inputName, string outputName)
     {
         var input = NodeSockets.InputsOf(to.Kind).FirstOrDefault(candidate => candidate.Name == inputName);
-        var output = NodeSockets.OutputOf(from.Kind);
-        if (input is not null && output == input.Type)
+        var output = NodeSockets.OutputOf(from, outputName);
+        // The selected funds are one source: rules consume the list, indicators its price series.
+        if (input is not null && (output == input.Type ||
+            (from.Kind == NodeKind.Setup && outputName == NodeSockets.Funds && input.Type == SocketType.Candidates)))
             return null;
 
         var expected = input?.Type.ToString() ?? inputName;
 
         return DraftProblem.OnNode("builder.problem.socket_mismatch", to, new { expected, actual = output?.ToString() ?? "" });
+    }
+
+    private static IEnumerable<DraftProblem> BindingProblems(StrategyGraph graph, DraftSetup setup)
+    {
+        foreach (var node in graph.Nodes.Where(node => node.Kind == NodeKind.Indicator))
+        {
+            var bindings = graph.Into(node.Id, NodeSockets.Of).ToList();
+            if (bindings.Count > 1)
+                yield return DraftProblem.OnNode("builder.problem.socket_mismatch", node, new { expected = "одне джерело ряду", actual = bindings.Count.ToString() });
+            foreach (var link in bindings.Where(link => link.From == StrategyGraph.SetupId || link.From == PortfolioFlow.CashId))
+            {
+                var available = link.Output switch
+                {
+                    "funds" => setup.Funds.Count > 0, "benchmarkId" => setup.BenchmarkId is not null,
+                    "cashId" or "series" when link.From == PortfolioFlow.CashId || link.From == StrategyGraph.SetupId => setup.CashId is not null,
+                    "volatilityIndexId" => setup.VolatilityIndexId is not null,
+                    _ when link.Output.StartsWith("extra:", StringComparison.Ordinal) && Guid.TryParse(link.Output[6..], out var id) => setup.ExtraSeries.Contains(id),
+                    _ => false,
+                };
+                if (!available) yield return DraftProblem.OnNode("builder.problem.parameter_missing", node, new { field = link.Output });
+            }
+        }
     }
 
     private static IEnumerable<DraftProblem> CycleProblems(StrategyGraph graph)
@@ -65,6 +92,30 @@ public static class GraphCheck
         return graph.Nodes.Where(node => inCycle.Contains(node.Id)).Select(node => DraftProblem.OnNode("builder.problem.cycle", node));
     }
 
+    private static IEnumerable<DraftProblem> PortfolioProblems(StrategyGraph graph)
+    {
+        foreach (var node in graph.Nodes)
+            foreach (var input in NodeSockets.InputsOf(node.Kind).Where(input => !input.Many))
+                if (graph.Into(node.Id, input.Name).Skip(1).Any())
+                    yield return DraftProblem.OnNode("builder.problem.socket_mismatch", node, new { expected = "одне джерело", actual = "кілька з’єднань" });
+        var path = PortfolioFlow.CandidatePath(graph);
+        if (path.Count(node => node.Kind == NodeKind.FundSelection) > 1)
+            yield return DraftProblem.OnNode("builder.problem.socket_mismatch", graph.ResultOf(BlockKind.Selection), new { expected = "один модуль відбору на потік", actual = "кілька модулів відбору" });
+        foreach (var link in graph.Links)
+        {
+            var cashAsset = link.To == PortfolioFlow.CashId && link.Input == NodeSockets.Asset;
+            var cashBudget = link.To == PortfolioFlow.CashId && link.Input == NodeSockets.Remainder;
+            var portfolioBudget = link.To == StrategyGraph.SelectionResultId && link.Input == NodeSockets.Budget;
+            var portfolioCash = link.To == PortfolioFlow.PortfolioId && link.Input == NodeSockets.Cash;
+            var valid = portfolioCash ? link.From == PortfolioFlow.CashId && link.Output == "output"
+                : cashAsset ? link.From == StrategyGraph.SetupId && link.Output == "cashId"
+                : cashBudget ? link.From == StrategyGraph.SelectionResultId && link.Output == "cash"
+                : portfolioBudget ? link.From == StrategyGraph.MarketResultId && link.Output == "output" : true;
+            if (!valid && graph.Node(link.To) is { } target)
+                yield return DraftProblem.OnNode("builder.problem.socket_mismatch", target, new { expected = portfolioCash ? "кеш після розподілу" : cashAsset ? "фонд для кешу" : cashBudget ? "залишок після розподілу" : "ринковий бюджет", actual = "інше джерело" });
+        }
+    }
+
     private static void Visit(NodeId id, StrategyGraph graph, Dictionary<NodeId, bool> onPath, HashSet<NodeId> inCycle)
     {
         if (onPath.TryGetValue(id, out var visiting))
@@ -75,7 +126,7 @@ public static class GraphCheck
         }
 
         onPath[id] = true;
-        foreach (var link in graph.OutOf(id))
+        foreach (var link in graph.OutOf(id).Where(link => !(id == PortfolioFlow.CashId && link.Output == "series")))
             Visit(link.To, graph, onPath, inCycle);
         onPath[id] = false;
     }
@@ -95,6 +146,7 @@ public static class GraphCheck
 
     private static IEnumerable<DraftProblem> ParameterProblems(GraphNode node, StrategyGraph graph, RuleVocabulary vocabulary)
     {
+        if (node.Kind == NodeKind.Setup) return [];
         if (node.Kind == NodeKind.Indicator)
             return IndicatorProblems(node, vocabulary);
         if (NodeKinds.IsCondition(node.Kind))
@@ -189,6 +241,6 @@ public static class GraphCheck
 
     private static IEnumerable<DraftProblem> DanglingNodes(StrategyGraph graph) =>
         graph.Nodes
-            .Where(node => !NodeKinds.IsResult(node.Kind) && !graph.OutOf(node.Id).Any())
+            .Where(node => !NodeKinds.IsPinned(node.Kind) && !graph.OutOf(node.Id).Any())
             .Select(node => DraftProblem.OnNode("builder.problem.dangling_node", node, severity: ProblemSeverity.Warning));
 }

@@ -5,4 +5,9 @@ public enum SocketType
     Number,
     Boolean,
     Funds,
+    Series,
+    SeriesList,
+    Candidates,
+    Budget,
+    RiskPolicy,
 }

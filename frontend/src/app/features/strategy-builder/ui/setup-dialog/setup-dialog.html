@@ -29,21 +29,11 @@
         <label for="builder-funds" class="font-medium">Фонди, з яких стратегія вибирає</label>
         <small class="text-muted-color">{{ draft().funds.length }} із 60</small>
       </div>
-      <p-multiselect
+      <app-builder-fund-picker
         inputId="builder-funds"
-        [options]="groupedFunds()"
-        [group]="true"
-        optionGroupLabel="label"
-        optionGroupChildren="items"
-        optionLabel="label"
-        optionValue="value"
-        [ngModel]="draft().funds"
-        (ngModelChange)="patch({ funds: $event })"
-        [filter]="true"
-        filterPlaceholder="Пошук фонду"
-        display="chip"
-        appendTo="body"
-        fluid
+        [instruments]="instruments()"
+        [value]="draft().funds"
+        (valueChange)="patch({ funds: $event })"
       />
       <p-button
         label="Знайти фонди"

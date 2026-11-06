@@ -32,12 +32,18 @@
     <p class="mt-3 text-sm text-muted-color">{{ hint }}</p>
   }
 
+  @if (node().kind === 'EntryResult' || node().kind === 'ExitResult') {
+    <app-gate-outcome [node]="node()" [graph]="graph()" />
+  }
   @if (fields().length || node().kind === 'Signal') {
-    <div [class]="inline() ? 'inline-fields' : 'mt-3 flex flex-col gap-3'">
+    <div class="parameter-groups">
       @if (node().kind === 'Signal') {
         <label class="flex flex-col gap-2 text-sm font-medium">
           Мій сигнал
           <p-select
+            #nodeSelect
+            [panelStyleClass]="inline() ? 'builder-node-select-panel' : undefined"
+            (onShow)="inline() && fitNodeSelect(nodeSelect)"
             size="small"
             [options]="marketSignals()"
             optionLabel="name"
@@ -51,88 +57,55 @@
           />
         </label>
       }
-      @for (field of fields(); track field.name) {
-        <div
-          class="parameter-field flex flex-col gap-1.5"
-          [class.wide]="field.kind === 'Series' || field.kind === 'Choice'"
-        >
-          <label class="text-sm font-medium" [attr.for]="'node-' + node().id + '-' + field.name">{{
-            field.label || field.name
-          }}</label>
-          @switch (field.kind) {
-            @case ('Integer') {
-              <p-inputnumber
-                size="small"
-                [inputId]="'node-' + node().id + '-' + field.name"
-                [ngModel]="fieldValue(field)"
-                (ngModelChange)="changeField(field, $event)"
-                [min]="field.minimum ?? undefined"
-                [max]="field.maximum ?? undefined"
-                [showButtons]="!inline()"
-                fluid
+      @if (node().kind === 'MarketResult') {
+        <div class="market-pass">
+          <i class="pi pi-check"></i><span>Умова виконується → весь доступний бюджет</span>
+        </div>
+      }
+      @if (node().kind === 'RiskResult') {
+        <div class="risk-state" [attr.data-active-risk-limits]="activeRiskLimits()">
+          <strong>{{
+            activeRiskLimits() ? 'Активних лімітів: ' + activeRiskLimits() : 'Ліміти не задані'
+          }}</strong>
+          <p>Вкажіть відсоток падіння для продажу позиції. Порожнє поле — без цього ліміту.</p>
+          <p>Перевіряється під час рапорту «Перевірка ризику».</p>
+        </div>
+      }
+      @if (node().kind === 'FundSelection') {
+        <div class="selection-flow" aria-label="Відбір кандидатів і розподіл грошей">
+          <span>Кандидати</span><i class="pi pi-arrow-right"></i
+          ><span>Топ {{ node().parameters['top'] ?? '?' }}</span
+          ><i class="pi pi-arrow-right"></i><span>До розподілу</span>
+        </div>
+      }
+      @for (group of fieldGroups(); track group.title) {
+        @if (group.fields.length) {
+          @if (group.advanced) {
+            <details class="advanced-fields">
+              <summary>{{ group.title }}</summary>
+              <ng-container
+                *ngTemplateOutlet="parameterFields; context: { $implicit: group.fields }"
               />
-            }
-            @case ('Number') {
-              <p-inputnumber
-                size="small"
-                [inputId]="'node-' + node().id + '-' + field.name"
-                [ngModel]="fieldValue(field)"
-                (ngModelChange)="changeField(field, $event)"
-                [min]="field.minimum ?? undefined"
-                [max]="field.maximum ?? undefined"
-                [maxFractionDigits]="6"
-                fluid
+            </details>
+          } @else {
+            <section class="field-section">
+              @if (group.title) {
+                <h3 class="group-title">{{ group.title }}</h3>
+              }
+              <ng-container
+                *ngTemplateOutlet="parameterFields; context: { $implicit: group.fields }"
               />
-            }
-            @case ('Fraction') {
-              <p-inputnumber
-                size="small"
-                [inputId]="'node-' + node().id + '-' + field.name"
-                [ngModel]="fieldValue(field)"
-                (ngModelChange)="changeField(field, $event)"
-                suffix=" %"
-                [min]="field.minimum === null ? undefined : field.minimum * 100"
-                [max]="field.maximum === null ? undefined : field.maximum * 100"
-                [maxFractionDigits]="2"
-                fluid
-              />
-            }
-            @case ('Choice') {
-              <p-select
-                size="small"
-                [inputId]="'node-' + node().id + '-' + field.name"
-                [options]="choiceOptions(field)"
-                optionLabel="label"
-                optionValue="value"
-                [ngModel]="fieldValue(field)"
-                (ngModelChange)="changeField(field, $event)"
-                [appendTo]="overlayContainer()"
-                fluid
-              />
-            }
-            @case ('Series') {
-              <p-select
-                size="small"
-                [inputId]="'node-' + node().id + '-' + field.name"
-                [options]="seriesOptions()"
-                optionLabel="label"
-                optionValue="value"
-                [ngModel]="fieldValue(field)"
-                (ngModelChange)="changeField(field, $event)"
-                [filter]="true"
-                [appendTo]="overlayContainer()"
-                fluid
-              />
-            }
-            @default {
-              <input
-                pInputText
-                [id]="'node-' + node().id + '-' + field.name"
-                [ngModel]="fieldValue(field)"
-                (ngModelChange)="changeField(field, $event)"
-              />
-            }
+            </section>
           }
+        }
+      }
+      @let share = marketShare();
+      @if (node().kind === 'MarketResult' && share !== null) {
+        <div class="budget-preview" aria-label="Бюджет при невиконанні ринкової умови">
+          <div class="budget-bar"><span class="invested" [style.width.%]="share"></span></div>
+          <div class="budget-labels">
+            <span>Фонди {{ share }}%</span><span>Кеш {{ 100 - share }}%</span>
+          </div>
         </div>
       }
     </div>
@@ -148,3 +121,106 @@
     </div>
   }
 </aside>
+
+<ng-template #parameterFields let-fields>
+  <div [class]="inline() ? 'inline-fields' : 'mt-3 flex flex-col gap-3'">
+    @for (field of fields; track field.name) {
+      <div
+        class="parameter-field flex flex-col gap-1.5"
+        [class.wide]="
+          node().kind.endsWith('Result') || field.kind === 'Series' || field.kind === 'Choice'
+        "
+      >
+        <label class="text-sm font-medium" [attr.for]="'node-' + node().id + '-' + field.name">{{
+          field.label || field.name
+        }}</label>
+        @switch (field.kind) {
+          @case ('Integer') {
+            <p-inputnumber
+              size="small"
+              [inputId]="'node-' + node().id + '-' + field.name"
+              [ngModel]="fieldValue(field)"
+              (ngModelChange)="changeField(field, $event)"
+              [min]="field.minimum ?? undefined"
+              [max]="field.maximum ?? undefined"
+              [showButtons]="!inline()"
+              [placeholder]="placeholder(field)"
+              fluid
+            />
+          }
+          @case ('Number') {
+            <p-inputnumber
+              size="small"
+              [inputId]="'node-' + node().id + '-' + field.name"
+              [ngModel]="fieldValue(field)"
+              (ngModelChange)="changeField(field, $event)"
+              [min]="field.minimum ?? undefined"
+              [max]="field.maximum ?? undefined"
+              [maxFractionDigits]="6"
+              [placeholder]="placeholder(field)"
+              fluid
+            />
+          }
+          @case ('Fraction') {
+            <p-inputnumber
+              size="small"
+              [inputId]="'node-' + node().id + '-' + field.name"
+              [ngModel]="fieldValue(field)"
+              (ngModelChange)="changeField(field, $event)"
+              suffix=" %"
+              [min]="fractionMinimum(field)"
+              [max]="fractionMaximum(field)"
+              [maxFractionDigits]="2"
+              [placeholder]="placeholder(field)"
+              fluid
+            />
+          }
+          @case ('Choice') {
+            <p-select
+              #nodeSelect
+              [panelStyleClass]="inline() ? 'builder-node-select-panel' : undefined"
+              (onShow)="inline() && fitNodeSelect(nodeSelect)"
+              size="small"
+              [inputId]="'node-' + node().id + '-' + field.name"
+              [options]="choiceOptions(field)"
+              optionLabel="label"
+              optionValue="value"
+              [ngModel]="fieldValue(field)"
+              (ngModelChange)="changeField(field, $event)"
+              [appendTo]="overlayContainer()"
+              fluid
+            />
+          }
+          @case ('Series') {
+            <p-select
+              #nodeSelect
+              [panelStyleClass]="inline() ? 'builder-node-select-panel' : undefined"
+              (onShow)="inline() && fitNodeSelect(nodeSelect)"
+              size="small"
+              [inputId]="'node-' + node().id + '-' + field.name"
+              [options]="seriesOptions()"
+              optionLabel="label"
+              optionValue="value"
+              [ngModel]="fieldValue(field)"
+              (ngModelChange)="changeField(field, $event)"
+              [filter]="true"
+              [appendTo]="overlayContainer()"
+              fluid
+            />
+          }
+          @default {
+            <input
+              pInputText
+              [id]="'node-' + node().id + '-' + field.name"
+              [ngModel]="fieldValue(field)"
+              (ngModelChange)="changeField(field, $event)"
+            />
+          }
+        }
+        @if (fieldHints[field.name]; as hint) {
+          <small class="field-hint">{{ hint }}</small>
+        }
+      </div>
+    }
+  </div>
+</ng-template>

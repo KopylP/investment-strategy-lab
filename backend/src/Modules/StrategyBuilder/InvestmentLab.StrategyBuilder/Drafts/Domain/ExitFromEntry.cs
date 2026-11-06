@@ -32,15 +32,17 @@ public static class ExitFromEntry
 
         private StrategyGraph RemoveExitBlock()
         {
-            var exitDependencies = source.DependenciesOf(StrategyGraph.ExitResultId);
-            var otherDependencies = source.Nodes.Where(node => NodeKinds.IsResult(node.Kind) && node.Id != StrategyGraph.ExitResultId)
-                .SelectMany(node => source.DependenciesOf(node.Id)).ToHashSet();
-            var removed = exitDependencies.Where(id => id != StrategyGraph.ExitResultId && !otherDependencies.Contains(id)).ToHashSet();
+            var exitDependencies = source.Into(StrategyGraph.ExitResultId, NodeSockets.Condition)
+                .SelectMany(link => source.DependenciesOf(link.From)).ToHashSet();
+            var otherDependencies = source.Nodes.Where(node => (NodeKinds.IsResult(node.Kind) || node.Kind == NodeKind.FundSelection) && node.Id != StrategyGraph.ExitResultId)
+                .SelectMany(node => source.Into(node.Id).Where(link => link.Input is NodeSockets.Condition or NodeSockets.RankBy))
+                .SelectMany(link => source.DependenciesOf(link.From)).ToHashSet();
+            var removed = exitDependencies.Where(id => id != StrategyGraph.ExitResultId && source.Node(id)?.Kind != NodeKind.Setup && !otherDependencies.Contains(id)).ToHashSet();
             var nodes = source.Nodes.Where(node => !removed.Contains(node.Id)).ToList();
             var links = source.Links.Where(link =>
                 !removed.Contains(link.From) &&
                 !removed.Contains(link.To) &&
-                link.To != StrategyGraph.ExitResultId).ToList();
+                !(link.To == StrategyGraph.ExitResultId && link.Input == NodeSockets.Condition)).ToList();
 
             return new StrategyGraph(nodes, links);
         }

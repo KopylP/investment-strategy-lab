@@ -3,7 +3,12 @@ import { DraftProblemDto } from '../../models/draft-dto';
 
 @Component({
   selector: 'app-builder-problems-panel',
-  template: `<section class="card mb-0" aria-label="Що перевірити" aria-live="polite">
+  template: `<section
+    class="card mb-0"
+    aria-label="Що перевірити"
+    [class.compact]="compact()"
+    aria-live="polite"
+  >
     <h2 class="mb-3 text-lg font-semibold">Що перевірити</h2>
     @for (problem of problems(); track $index) {
       <button
@@ -25,9 +30,30 @@ import { DraftProblemDto } from '../../models/draft-dto';
       <p class="text-sm text-muted-color">Проблем не виявлено.</p>
     }
   </section>`,
+  styles: `
+    .compact {
+      padding: 0;
+      margin: 0;
+      background: transparent;
+    }
+    .compact h2 {
+      font-size: 14px;
+      line-height: 1.4;
+      margin: 0 0 8px;
+    }
+    .compact button,
+    .compact p {
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .compact button {
+      margin-bottom: 4px;
+    }
+  `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProblemsPanel {
+  readonly compact = input(false);
   readonly problems = input.required<DraftProblemDto[]>();
   readonly choose = output<DraftProblemDto>();
 }

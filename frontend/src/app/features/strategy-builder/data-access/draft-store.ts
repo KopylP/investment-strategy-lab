@@ -438,8 +438,8 @@ export class DraftStore {
       this.saveError.set(null);
     } catch (error) {
       this.layoutDirty = true;
-      this.saveError.set('Не вдалося зберегти розташування вузлів. Спробуйте ще раз.');
-      this.reportFailure('Розташування вузлів не збережено', error);
+      this.saveError.set('Не вдалося зберегти розташування схеми. Спробуйте ще раз.');
+      this.reportFailure('Розташування схеми не збережено', error);
       return false;
     } finally {
       this.updateSaveState();

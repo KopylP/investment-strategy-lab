@@ -68,6 +68,7 @@
             <p class="mb-0">{{ sentence() }}</p>
           </div>
           @if (rows() || block() === 'Selection') {
+            <p class="mb-2 text-sm text-muted-color">Тут можна змінити параметри правила. Щоб додати умови або змінити їх поєднання, відкрийте схему.</p>
             <p-button
               label="Змінити зв’язки на схемі"
               severity="secondary"
@@ -90,6 +91,18 @@
             />
           } @else if (block() !== 'Selection') {
             <app-readonly-condition [sentence]="sentence()" (edit)="editGraph()" />
+          }
+          @if (block() === 'Selection' && selector(); as node) {
+            <app-node-inspector
+              [node]="node"
+              [graph]="draft.graph"
+              [vocabulary]="store.vocabulary()!"
+              [signals]="store.signals()"
+              [instruments]="store.instruments()"
+              [allowDuplicate]="false"
+              [guided]="true"
+              (nodeChange)="updateNode($event)"
+            />
           }
           @if (result(); as node) {
             <app-node-inspector

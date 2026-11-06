@@ -6,14 +6,20 @@ namespace InvestmentLab.StrategyBuilder.Drafts.Infrastructure;
 
 internal sealed class DraftRepository(StrategyBuilderDbContext db) : IDraftRepository
 {
-    public Task<StrategyDraft?> FindAsync(Guid id, CancellationToken cancellationToken) =>
-        db.Drafts.FirstOrDefaultAsync(draft => draft.Id == id, cancellationToken);
+    public async Task<StrategyDraft?> FindAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var draft = await db.Drafts.FirstOrDefaultAsync(draft => draft.Id == id, cancellationToken);
+        draft?.NormalizeGraph();
+        return draft;
+    }
 
     public async Task<StrategyDraft?> FindByOriginAsync(Guid strategyId, CancellationToken cancellationToken)
     {
         var drafts = await db.Drafts.ToListAsync(cancellationToken);
 
-        return drafts.FirstOrDefault(draft => draft.Origin?.StrategyId == strategyId);
+        var draft = drafts.FirstOrDefault(draft => draft.Origin?.StrategyId == strategyId);
+        draft?.NormalizeGraph();
+        return draft;
     }
 
     public async Task<IReadOnlyList<StrategyDraft>> ListAsync(CancellationToken cancellationToken) =>

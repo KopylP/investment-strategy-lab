@@ -13,7 +13,8 @@ public static class ResultFields
     public static IReadOnlyList<string> Of(NodeKind kind) => kind switch
     {
         NodeKind.MarketResult => [InvestWhenUnfavorable],
-        NodeKind.SelectionResult => [.. Selection, .. Weights],
+        NodeKind.SelectionResult => Weights,
+        NodeKind.FundSelection => Selection,
         NodeKind.RiskResult => Risk,
         _ => [],
     };

@@ -1,4 +1,5 @@
 <p-dialog
+  [appendTo]="overlayContainer()"
   header="Знайти фонди"
   [modal]="true"
   [visible]="visible()"
@@ -30,7 +31,7 @@
             (ngModelChange)="exchangeId.set($event)"
             [showClear]="true"
             placeholder="Виберіть біржу"
-            appendTo="body"
+            [appendTo]="overlayContainer()"
             fluid
           />
         </div>
@@ -46,7 +47,7 @@
             (ngModelChange)="regionId.set($event)"
             [showClear]="true"
             placeholder="Виберіть регіон"
-            appendTo="body"
+            [appendTo]="overlayContainer()"
             fluid
           />
         </div>

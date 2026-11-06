@@ -239,3 +239,19 @@ button:focus-visible {
 .workspace::backdrop {
   background: var(--p-content-background, white);
 }
+
+@media (min-width: 1600px) {
+  .workspace { grid-template-columns: 260px minmax(0, 1fr); }
+}
+
+.graph-help { position: absolute; z-index: 15; top: 44px; left: 12px; right: 12px; padding: 12px 40px 12px 14px; font-size: 13px; line-height: 1.6; background: var(--p-content-background); border: 1px solid var(--p-content-border-color); border-radius: 8px; box-shadow: 0 4px 16px #0002; }
+.graph-help button { position: absolute; top: 4px; right: 4px; }
+.footer { height: auto; font-size: 12px; }
+.footer .legend-item { display: inline-flex; align-items: center; gap: 5px; }
+.legend-item > span { color: var(--p-text-muted-color); }
+.footer .legend-item:last-child { display: inline-flex; }
+.footer .legend-socket { width: 10px; height: 10px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.footer .legend-socket.number { border-radius: 2px; }
+.footer .legend-socket.funds { border-radius: 2px; transform: rotate(45deg); }
+@media (min-width: 576px) { .editor { grid-template-rows: 40px minmax(0, 1fr) auto; } }
+@media (max-width: 575px) { .graph-help { top: 80px; max-height: 65%; overflow: auto; } }

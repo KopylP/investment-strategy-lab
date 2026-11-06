@@ -29,7 +29,7 @@ public sealed class RunTrialHandler(IDraftRepository drafts, IRuleVocabulary voc
         if (draft.TrialWith(fingerprint) is { } existing)
             return await DescribeAsync(existing, cancellationToken);
 
-        var strategy = new AuthoredStrategy(rules.Json, draft.Setup, draft.Reports);
+        var strategy = new AuthoredStrategy(rules.Json, SetupBindings.EvaluationSetup(draft), draft.Reports);
         var written = await authoring.WriteTrialVersionAsync(draft.OwnerId, draft.TrialStrategyId, strategy, cancellationToken);
         if (written.IsFailure)
         {

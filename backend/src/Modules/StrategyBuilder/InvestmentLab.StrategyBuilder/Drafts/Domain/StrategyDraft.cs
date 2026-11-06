@@ -34,7 +34,7 @@ public sealed class StrategyDraft : AggregateRoot<Guid>
         OwnerId = ownerId;
         Name = name;
         Setup = setup;
-        Graph = graph;
+        Graph = PortfolioFlow.Upgrade(SetupBindings.WithLegacyBindings(graph));
         Layout = DraftLayout.Empty;
         Reports = reports;
         Revision = 1;
@@ -73,6 +73,8 @@ public sealed class StrategyDraft : AggregateRoot<Guid>
         return Result.Success();
     }
 
+    public void NormalizeGraph() => Graph = PortfolioFlow.Upgrade(SetupBindings.WithLegacyBindings(Graph));
+
     public void MoveNodes(DraftLayout layout, DateTimeOffset now)
     {
         Layout = layout.Keeping(Graph);
@@ -107,7 +109,7 @@ public sealed class StrategyDraft : AggregateRoot<Guid>
 
     private void ReplaceGraph(StrategyGraph graph)
     {
-        Graph = graph;
-        Layout = Layout.Keeping(graph);
+        Graph = PortfolioFlow.Upgrade(SetupBindings.WithLegacyBindings(graph));
+        Layout = Layout.Keeping(Graph);
     }
 }

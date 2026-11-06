@@ -15,4 +15,8 @@ public enum NodeKind
     EntryResult,
     SelectionResult,
     RiskResult,
+    Setup,
+    FundSelection,
+    Cash,
+    Portfolio,
 }
