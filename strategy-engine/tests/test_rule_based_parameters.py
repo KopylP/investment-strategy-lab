@@ -70,6 +70,16 @@ def test_an_unknown_field_is_refused() -> None:
     assert "extra_forbidden" in _error_types(rules)
 
 
+def test_an_unknown_market_mode_is_refused_at_its_path() -> None:
+    rules = _rules(marketFilter={**MOMENTUM_RULES["marketFilter"], "whenUnfavorable": "sellEverything"})
+
+    with pytest.raises(ValidationError) as raised:
+        RuleParameters.model_validate(rules)
+
+    errors = [(error["loc"], error["type"]) for error in raised.value.errors()]
+    assert errors == [(("marketFilter", "whenUnfavorable"), "literal_error")]
+
+
 def test_an_unknown_indicator_kind_is_refused() -> None:
     rules = _rules(indicators={"mom": {"kind": "macd", "of": {"series": "fund"}}})
 

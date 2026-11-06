@@ -247,6 +247,15 @@ class Gate(_Rules):
 class MarketFilter(_Rules):
     condition: Condition = Field(description=msg("rule_based.field.condition"))
     invest_when_unfavorable: float = Field(ge=0, le=1, description=msg("rule_based.field.investWhenUnfavorable"), json_schema_extra=FRACTION)
+    when_unfavorable: Literal["reduceHoldings", "newMoneyOnly"] = Field(
+        "newMoneyOnly",
+        description=msg("rule_based.field.whenUnfavorable"),
+        json_schema_extra=_choices("whenUnfavorable", "reduceHoldings", "newMoneyOnly"),
+    )
+
+    @property
+    def reduces_holdings(self) -> bool:
+        return self.when_unfavorable == "reduceHoldings"
 
 
 class Selection(_Rules):

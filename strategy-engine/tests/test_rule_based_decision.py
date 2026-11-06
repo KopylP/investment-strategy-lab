@@ -51,6 +51,68 @@ def test_an_unfavourable_market_invests_the_chosen_share(client: TestClient) -> 
     assert decision["market"]["isFavorable"] is False
 
 
+def _rules_with_market_mode(when_unfavorable: str | None, share: float, target_volatility: float | None = None) -> dict:
+    rules = copy.deepcopy(MOMENTUM_RULES)
+    rules["marketFilter"]["investWhenUnfavorable"] = share
+    if when_unfavorable is not None:
+        rules["marketFilter"]["whenUnfavorable"] = when_unfavorable
+    if target_volatility is not None:
+        rules["weights"]["targetVolatility"] = target_volatility
+    return rules
+
+
+def _unfavourable_decision(client: TestClient, when_unfavorable: str | None, share: float, target_volatility: float | None = None) -> dict:
+    rules = _rules_with_market_mode(when_unfavorable, share, target_volatility)
+    return _decide(client, _context(_frame(spy_drift=-0.6), parameters=rules))
+
+
+def _target_weight_sum(decision: dict) -> float:
+    return sum(target["weight"] for target in decision["targets"])
+
+
+def _full_weight_sum(client: TestClient, target_volatility: float | None = None) -> float:
+    rules = _rules_with_market_mode(None, 1.0, target_volatility)
+    return _target_weight_sum(_decide(client, _context(_frame(spy_drift=-0.6), parameters=rules)))
+
+
+def test_reduce_holdings_scales_targets_to_the_share(client: TestClient) -> None:
+    decision = _unfavourable_decision(client, "reduceHoldings", share=0.2)
+
+    assert _target_weight_sum(decision) == pytest.approx(0.2 * _full_weight_sum(client))
+    assert decision["investFraction"] == 1.0
+    assert decision["market"]["isFavorable"] is False
+
+
+def test_new_money_only_keeps_targets_and_splits_contributions(client: TestClient) -> None:
+    decision = _unfavourable_decision(client, "newMoneyOnly", share=0.2)
+
+    assert _target_weight_sum(decision) == pytest.approx(_full_weight_sum(client))
+    assert decision["investFraction"] == 0.2
+
+
+def test_a_filter_without_a_mode_keeps_new_money_only(client: TestClient) -> None:
+    decision = _unfavourable_decision(client, None, share=0.2)
+
+    assert decision["investFraction"] == 0.2
+    assert _target_weight_sum(decision) == pytest.approx(_full_weight_sum(client))
+
+
+def test_reduce_holdings_with_target_volatility_scales_once(client: TestClient) -> None:
+    decision = _unfavourable_decision(client, "reduceHoldings", share=0.5, target_volatility=0.02)
+
+    full = _full_weight_sum(client, target_volatility=0.02)
+    assert full < 1.0
+    assert _target_weight_sum(decision) == pytest.approx(0.5 * full)
+
+
+def test_a_favourable_market_ignores_the_mode(client: TestClient) -> None:
+    rules = _rules_with_market_mode("reduceHoldings", 0.2)
+    decision = _decide(client, _context(_frame(), parameters=rules))
+
+    assert decision["investFraction"] == 1.0
+    assert _target_weight_sum(decision) == pytest.approx(1.0)
+
+
 def test_targets_are_the_selected_funds_with_their_weights(client: TestClient) -> None:
     decision = _decide(client, _context(_frame(), parameters=MOMENTUM_RULES))
 
