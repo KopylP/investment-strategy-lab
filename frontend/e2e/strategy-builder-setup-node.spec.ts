@@ -69,8 +69,9 @@ test('setup is permanent, each field has a socket, and bindings follow changed s
     .toEqual(['benchmarkId']);
   await expect(row).toHaveAttribute('data-evaluation-scope', 'shared');
   await page.getByRole('button', { name: /Налаштування/ }).click();
-  await setup.locator('p-select:has(#setup-node-benchmarkId)').getByRole('combobox').click();
-  await page.getByRole('option', { name: 'other', exact: true }).click();
+  await setup.getByRole('button', { name: 'Бенчмарк · benchmark', exact: true }).click();
+  await page.getByRole('radio', { name: /^other/ }).check();
+  await page.getByRole('button', { name: 'Застосувати', exact: true }).click();
   await expect.poll(() => fixture.draft.setup.benchmarkId).toBe(ids.other);
   await expect
     .poll(
@@ -90,9 +91,13 @@ test('setup is permanent, each field has a socket, and bindings follow changed s
     .getByRole('navigation', { name: 'Ролі стратегії' })
     .getByRole('button', { name: 'Фонди й ряди', exact: true })
     .click();
-  await setup.locator('p-select:has(#setup-node-benchmarkId)').getByRole('combobox').click();
-  await expect(page.locator('.workspace .p-select-overlay:visible').last()).toBeVisible();
-  await page.getByRole('option', { name: 'benchmark', exact: true }).click();
+  await setup.getByRole('button', { name: 'Бенчмарк · other', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Бенчмарк' })).toBeVisible();
+  await page.getByRole('radio', { name: /^benchmark/ }).check();
+  await page.getByRole('button', { name: 'Застосувати', exact: true }).click();
+  await expect(
+    setup.getByRole('button', { name: 'Бенчмарк · benchmark', exact: true }),
+  ).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath('setup-node-fullscreen.png') });
   await page.getByRole('button', { name: 'Вийти з повноекранного режиму' }).click();
   expect(errors).toEqual([]);
@@ -115,37 +120,27 @@ test('group selection preserves other groups, supports mixed state and only togg
   await page.goto('/strategy-builder/workspace');
   await page.getByRole('button', { name: /Налаштування/ }).click();
   const setup = page.locator('[data-node-id="strategy-setup"]');
-  await setup.locator('app-builder-fund-picker p-multiselect').click();
-  const group = page.getByRole('checkbox', { name: 'Уся група «Акції»', exact: true });
-  await expect(group).toHaveAttribute('aria-checked', 'mixed');
-  await page.locator('.builder-fund-picker-panel:visible').evaluate(async (panel) => {
-    const overlay = panel.closest('.p-overlay') ?? panel.parentElement ?? panel;
-    await Promise.all(
-      overlay
-        .getAnimations({ subtree: true })
-        .map((animation) => animation.finished.catch(() => {})),
-    );
-  });
+  await setup.getByRole('button', { name: 'Фонди · Змінити фонди', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Фонди стратегії' });
+  const group = dialog.getByRole('checkbox', { name: /^Акції/ });
+  const search = dialog.getByLabel('Назва або тикер серед доданих');
+  await expect(group).toHaveJSProperty('indeterminate', true);
   await page.screenshot({ path: testInfo.outputPath('fund-group-hierarchy.png') });
   await group.click();
-  await expect
-    .poll(() => fixture.draft.setup.funds.toSorted())
-    .toEqual(funds.map((item) => item.id).sort());
-  await expect(group).toHaveAttribute('aria-checked', 'true');
-  const filter = page.locator('.p-multiselect-overlay:visible input.p-multiselect-filter');
-  await filter.fill('Beta');
+  await expect(group).toBeChecked();
+  await expect(dialog.getByRole('heading', { name: 'Вибрано 4 із 60' })).toBeVisible();
+  await search.fill('Beta');
   await group.click();
-  await expect
-    .poll(() => fixture.draft.setup.funds.toSorted())
-    .toEqual([ids.fund, ids.other, ids.cash].sort());
-  await filter.fill('');
-  await expect(group).toHaveAttribute('aria-checked', 'mixed');
+  await search.fill('');
+  await expect(group).toHaveJSProperty('indeterminate', true);
+  await expect(dialog.getByRole('heading', { name: 'Вибрано 3 із 60' })).toBeVisible();
   await group.focus();
   await page.keyboard.press('Space');
-  await expect(group).toHaveAttribute('aria-checked', 'true');
+  await expect(group).toBeChecked();
   await page.keyboard.press('Space');
+  await expect(group).not.toBeChecked();
+  await dialog.getByRole('button', { name: /^Застосувати/ }).click();
   await expect.poll(() => fixture.draft.setup.funds).toEqual([ids.cash]);
-  await page.keyboard.press('Escape');
   await page.reload();
   await expect(page.locator('[data-node-id="number"]')).toHaveAttribute(
     'data-iteration-count',
