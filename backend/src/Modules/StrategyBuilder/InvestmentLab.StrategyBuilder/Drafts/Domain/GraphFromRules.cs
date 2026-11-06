@@ -66,7 +66,7 @@ public static class GraphFromRules
             RefuseUnknown(rules, TopFields, "");
             ReadIndicators();
 
-            ReadGate("marketFilter", BlockKind.MarketFilter, [ResultFields.InvestWhenUnfavorable]);
+            ReadGate("marketFilter", BlockKind.MarketFilter, ResultFields.Market);
             ReadGate("exit", BlockKind.Exit, []);
             ReadGate("entry", BlockKind.Entry, []);
             ReadSelection();

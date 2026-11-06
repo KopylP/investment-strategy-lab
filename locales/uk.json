@@ -389,6 +389,7 @@
   "builder.import.condition_unknown": "Невідома умова «{kind}» у «{path}».",
   "builder.import.reference_unknown": "Немає індикатора «{name}», на який посилається «{path}».",
   "builder.words.market": "Якщо {condition}, у фонди йде все, інакше {share:percent}, решта в {cash}.",
+  "builder.words.market_new_money": "Якщо {condition}, у фонди йде все; інакше тримані фонди лишаються, а з нових внесків у фонди йде {share:percent}, решта чекає в {cash}.",
   "builder.words.exit": "Фонд продається, коли {condition}.",
   "builder.words.entry": "Фонд купується, коли {condition}.",
   "builder.words.selection": "Тримаємо до {top} фондів, кращі за: {rank}; з групи не більше {groupLimit}, кореляція не вище {correlation:percent}; гроші діляться {weights}.",

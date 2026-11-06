@@ -23,6 +23,26 @@ public sealed class GraphFromRulesTests
     }
 
     [Fact]
+    public void The_market_filter_mode_survives_import_and_generation()
+    {
+        const string market = ""","indicators":{"spy":{"kind":"price","of":{"series":"benchmark"}}},"marketFilter":{"condition":{"kind":"compare","left":{"indicator":"spy"},"operator":"gt","right":{"value":1}},"investWhenUnfavorable":0.2,"whenUnfavorable":"newMoneyOnly"}""";
+        var json = """{"formatVersion":1""" + market + ""","selection":{"top":3},"weights":{"method":"equal"}}""";
+
+        var imported = Import(json).Value;
+
+        var generated = RulesGenerator.Generate(Of(imported.Graph)).Json;
+        generated.ShouldContain("\"whenUnfavorable\":\"newMoneyOnly\"");
+    }
+
+    [Fact]
+    public void The_template_with_a_market_filter_reduces_holdings()
+    {
+        var generated = RulesGenerator.Generate(Of(DraftTemplates.GraphOf(DraftTemplates.MomentumTrendFilter))).Json;
+
+        generated.ShouldContain("\"whenUnfavorable\":\"reduceHoldings\"");
+    }
+
+    [Fact]
     public void Import_reuses_indicators_shared_by_multiple_results()
     {
         var source = MomentumEntry();

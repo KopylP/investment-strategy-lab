@@ -23,6 +23,30 @@ public sealed partial class StrategyInWordsTests
         ParametersOf(market.Sentence).GetProperty("cash").GetString().ShouldBe("IB01");
     }
 
+    [Theory]
+    [InlineData("reduceHoldings", "@builder.words.market ")]
+    [InlineData("newMoneyOnly", "@builder.words.market_new_money ")]
+    [InlineData(null, "@builder.words.market_new_money ")]
+    public void The_market_sentence_says_what_happens_to_held_funds(string? whenUnfavorable, string code)
+    {
+        var market = Words(MomentumWithMarketMode(whenUnfavorable)).First(words => words.Block == BlockKind.MarketFilter);
+
+        market.Sentence.ShouldStartWith(code);
+        ParametersOf(market.Sentence).GetProperty("share").GetDouble().ShouldBe(0.3);
+    }
+
+    private static StrategyGraph MomentumWithMarketMode(string? whenUnfavorable)
+    {
+        var graph = DraftTemplates.GraphOf(DraftTemplates.MomentumTrendFilter);
+        var parameters = NodeParameters.Empty.With(ResultFields.InvestWhenUnfavorable, 0.3);
+        if (whenUnfavorable is not null)
+            parameters = parameters.With(ResultFields.WhenUnfavorable, whenUnfavorable);
+
+        var result = graph.ResultOf(BlockKind.MarketFilter) with { Parameters = parameters };
+
+        return graph.WithNode(result);
+    }
+
     [Fact]
     public void Nested_conditions_become_nested_messages()
     {

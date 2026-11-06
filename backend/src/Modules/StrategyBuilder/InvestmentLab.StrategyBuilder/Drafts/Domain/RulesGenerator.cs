@@ -44,9 +44,16 @@ public static class RulesGenerator
             SourceMap.Place(section, result.Id);
             var gate = new JsonObject { ["condition"] = Condition(condition, $"{section}.condition") };
             if (block == BlockKind.MarketFilter)
-                gate[ResultFields.InvestWhenUnfavorable] = Value(result, ResultFields.InvestWhenUnfavorable);
+                AddMarketFields(gate, result);
 
             rules[section] = gate;
+        }
+
+        private static void AddMarketFields(JsonObject gate, GraphNode result)
+        {
+            gate[ResultFields.InvestWhenUnfavorable] = Value(result, ResultFields.InvestWhenUnfavorable);
+            if (result.Parameters.Has(ResultFields.WhenUnfavorable))
+                gate[ResultFields.WhenUnfavorable] = Value(result, ResultFields.WhenUnfavorable);
         }
 
         public void AddSelection(JsonObject rules)
