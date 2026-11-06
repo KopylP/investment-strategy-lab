@@ -57,7 +57,7 @@ public sealed class StrategiesScenarioTests : IClassFixture<StrategiesApiFactory
         decision.Targets.Count.ShouldBeLessThanOrEqualTo(4);
         decision.Targets.Select(target => target.InstrumentId).ShouldBeSubsetOf(eu.Version.Universe);
 
-        var context = _factory.EngineRequests.ShouldHaveSingleItem();
+        var context = _factory.EngineRequests.Where(IsDecisionContext).ShouldHaveSingleItem();
         JsonNode.Parse(context)!["subPortfolio"]!["holdings"]!.AsArray().Count.ShouldBe(3);
         using var engine = _appHost.CreateStrategyEngineClient();
         var direct = await engine.PostAsync("/v1/strategies/etf-momentum/decide", new StringContent(context, System.Text.Encoding.UTF8, "application/json"), ct);
@@ -118,4 +118,6 @@ public sealed class StrategiesScenarioTests : IClassFixture<StrategiesApiFactory
 
         return (await response.Content.ReadFromJsonAsync<T>(ct))!;
     }
+
+    private static bool IsDecisionContext(string request) => JsonNode.Parse(request)?["subPortfolio"] is not null;
 }

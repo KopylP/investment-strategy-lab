@@ -9,6 +9,8 @@ public sealed class CatalogSynchronizer(StrategiesDbContext db, StrategyEngineCl
 {
     private static readonly TimeSpan MaxAge = TimeSpan.FromHours(1);
 
+    private static readonly SemaphoreSlim OneSyncAtATime = new(1, 1);
+
     public async Task<IReadOnlyList<StrategyTypeDescriptor>> ListAsync(CancellationToken cancellationToken)
     {
         var stored = await db.StrategyTypes.OrderBy(type => type.Code).ToListAsync(cancellationToken);
@@ -55,6 +57,19 @@ public sealed class CatalogSynchronizer(StrategiesDbContext db, StrategyEngineCl
     }
 
     public async Task<int> SyncAsync(CancellationToken cancellationToken)
+    {
+        await OneSyncAtATime.WaitAsync(cancellationToken);
+        try
+        {
+            return await SyncWithEngineAsync(cancellationToken);
+        }
+        finally
+        {
+            OneSyncAtATime.Release();
+        }
+    }
+
+    private async Task<int> SyncWithEngineAsync(CancellationToken cancellationToken)
     {
         var now = clock.GetUtcNow();
         var published = (await engine.GetStrategyTypesAsync(cancellationToken))
