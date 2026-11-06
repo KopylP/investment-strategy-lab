@@ -52,6 +52,7 @@ class MarketView:
     favorable: bool
     invest_fraction: float
     reasons: list[str]
+    holdings_share: float = 1.0
 
 
 def engine_version() -> str:
@@ -70,13 +71,14 @@ def decide(context: EvaluationContext, parameters: RuleParameters) -> StrategyDe
     verdicts = judge_funds(parameters, reader, context.universe, held, prices)
     picks = [verdict.key for verdict in verdicts if verdict.selected]
     plan = weights_for(picks, prices, parameters.weights, parameters.selection.top)
+    targets = _targets_within(plan, market.holdings_share)
 
     return StrategyDecision(
         strategy_code=STRATEGY_CODE,
         engine_version=engine_version(),
         as_of=prices.index[-1].date(),
         invest_fraction=market.invest_fraction,
-        targets=[TargetWeight(key=key, weight=weight) for key, weight in plan.weights.items()],
+        targets=targets,
         market=_regime(book, market, plan, parameters),
         rationale=rationale_of(parameters, reader, verdicts, plan),
     )
@@ -91,9 +93,18 @@ def _market_view(parameters: RuleParameters, reader: ConditionReader) -> MarketV
     if outcome.passed:
         return MarketView(True, 1.0, [msg("rule_based.market.favorable", items=outcome.reasons)])
 
-    reason = msg("rule_based.market.unfavorable", items=outcome.reasons, share=market_filter.invest_when_unfavorable)
+    share = market_filter.invest_when_unfavorable
+    if market_filter.reduces_holdings:
+        reason = msg("rule_based.market.unfavorable", items=outcome.reasons, share=share)
+        return MarketView(False, 1.0, [reason], holdings_share=share)
 
-    return MarketView(False, market_filter.invest_when_unfavorable, [reason])
+    reason = msg("rule_based.market.unfavorable_new_money", items=outcome.reasons, share=share)
+
+    return MarketView(False, share, [reason])
+
+
+def _targets_within(plan: WeightPlan, holdings_share: float) -> list[TargetWeight]:
+    return [TargetWeight(key=key, weight=weight * holdings_share) for key, weight in plan.weights.items()]
 
 
 def _regime(book: SeriesBook, market: MarketView, plan: WeightPlan, parameters: RuleParameters) -> MarketRegime:

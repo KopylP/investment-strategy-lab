@@ -505,6 +505,20 @@
           "minimum": 0,
           "title": "Investwhenunfavorable",
           "type": "number"
+        },
+        "whenUnfavorable": {
+          "default": "newMoneyOnly",
+          "description": "@rule_based.field.whenUnfavorable",
+          "enum": [
+            "reduceHoldings",
+            "newMoneyOnly"
+          ],
+          "title": "Whenunfavorable",
+          "type": "string",
+          "x-choice-labels": {
+            "newMoneyOnly": "@rule_based.choice.whenUnfavorable.newMoneyOnly",
+            "reduceHoldings": "@rule_based.choice.whenUnfavorable.reduceHoldings"
+          }
         }
       },
       "required": [
