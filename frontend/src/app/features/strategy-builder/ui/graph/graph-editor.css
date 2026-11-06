@@ -111,9 +111,6 @@ button:focus-visible {
   .toolbar strong {
     font-size: 13px;
   }
-  .footer span:last-child {
-    display: none;
-  }
 }
 
 .role-nav {
@@ -169,9 +166,6 @@ button:focus-visible {
 }
 .role-nav button {
   padding: 5px 7px;
-}
-.footer span:last-child {
-  display: none;
 }
 .footer {
   flex-shrink: 0;

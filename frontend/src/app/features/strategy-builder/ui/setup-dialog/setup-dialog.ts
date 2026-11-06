@@ -15,10 +15,9 @@ import { Button } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
 import { MultiSelect } from 'primeng/multiselect';
 import { Select } from 'primeng/select';
-import { FundSearchDialog } from '../fund-search-dialog/fund-search-dialog';
+import { FundSelectionDialog } from '../fund-selection-dialog/fund-selection-dialog';
 import { DraftSetupDto } from '../../models/draft-dto';
 import { InstrumentChoiceDto } from '../../models/instrument-dto';
-import { FundPicker } from '../fund-picker/fund-picker';
 
 interface InstrumentOption {
   label: string;
@@ -34,8 +33,7 @@ interface InstrumentOption {
     Dialog,
     MultiSelect,
     Select,
-    FundSearchDialog,
-    FundPicker,
+    FundSelectionDialog,
   ],
   templateUrl: './setup-dialog.html',
   host: { class: 'contents' },
@@ -68,12 +66,6 @@ export class SetupDialog {
   protected patch(change: Partial<DraftSetupDto>): void {
     this.draft.update((draft) => ({ ...draft, ...change }));
     if (this.inline()) this.saved.emit(cloneSetup(this.draft()));
-  }
-
-  protected fundsAdded(ids: string[]): void {
-    const funds = [...new Set([...this.draft().funds, ...ids])];
-    this.patch({ funds });
-    this.instrumentsChanged.emit();
   }
 
   protected save(): void {
