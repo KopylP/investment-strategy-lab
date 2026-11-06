@@ -1,5 +1,17 @@
 using InvestmentLab.Backtesting.Contracts;
+using InvestmentLab.Backtesting.Experiments.Api;
+using InvestmentLab.Backtesting.Experiments.Application.CheckExperiment;
+using InvestmentLab.Backtesting.Experiments.Application.FailExperiment;
+using InvestmentLab.Backtesting.Experiments.Application.GetExperiment;
+using InvestmentLab.Backtesting.Experiments.Application.GetExperimentJournal;
+using InvestmentLab.Backtesting.Experiments.Application.GetExperimentStatus;
+using InvestmentLab.Backtesting.Experiments.Application.RequestExperiment;
+using InvestmentLab.Backtesting.Experiments.Application.RunDueExperiments;
+using InvestmentLab.Backtesting.Experiments.Application.RunExperiment;
+using InvestmentLab.Backtesting.Experiments.Domain;
+using InvestmentLab.Backtesting.Experiments.Infrastructure;
 using InvestmentLab.Backtesting.Replays.Api;
+using InvestmentLab.Backtesting.Replays.Application.CompareBacktests;
 using InvestmentLab.Backtesting.Replays.Application.EnsureBacktest;
 using InvestmentLab.Backtesting.Replays.Application.GetBacktest;
 using InvestmentLab.Backtesting.Replays.Application.GetMoneyOutcomes;
@@ -45,7 +57,20 @@ public sealed class BacktestingModule : IModule
         services.AddSingleton<IReplayComparison, UniverseEqualWeightComparison>();
         services.AddSingleton<ReplayComparisonCatalog>();
         services.AddScoped<StrategyReplay>();
+        services.AddScoped<IResearchReplay>(provider => provider.GetRequiredService<StrategyReplay>());
+        services.AddScoped<IResearchStrategies, ResearchStrategies>();
+        services.AddScoped<IExperimentRepository, ExperimentRepository>();
+        services.AddScoped<IBacktestExperiments, BacktestExperiments>();
+        services.AddScoped<CheckExperimentHandler>();
+        services.AddScoped<RequestExperimentHandler>();
+        services.AddScoped<RunExperimentHandler>();
+        services.AddScoped<FailExperimentHandler>();
+        services.AddScoped<GetExperimentHandler>();
+        services.AddScoped<GetExperimentStatusHandler>();
+        services.AddScoped<GetExperimentJournalHandler>();
+        services.AddScheduledJob<ExperimentsJob>(ExperimentsJob.Schedule);
         services.AddScoped<RunBacktestHandler>();
+        services.AddScoped<CompareBacktestsHandler>();
         services.AddScoped<EnsureBacktestHandler>();
         services.AddScoped<GetBacktestHandler>();
         services.AddScoped<GetMoneyOutcomesHandler>();
@@ -55,5 +80,5 @@ public sealed class BacktestingModule : IModule
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>
-        endpoints.MapGroup("/api/backtesting").MapBacktests();
+        endpoints.MapGroup("/api/backtesting").MapBacktests().MapExperiments();
 }

@@ -70,4 +70,8 @@ export class BacktestStore {
   show(id: string, version: number): void {
     this.strategy.set({ id, version });
   }
+
+  clear(): void {
+    this.strategy.set(null);
+  }
 }

@@ -11,6 +11,16 @@ public sealed class PriceTable
 
     public IReadOnlyList<DateOnly> Days { get; }
 
+    public PriceTable ForReplay(ReplaySetup setup) => setup.Experiment is { } experiment ? Until(experiment.End) : this;
+
+    public PriceTable Until(DateOnly end)
+    {
+        var indices = Days.Select((day, index) => (day, index)).ToDictionary(entry => entry.day, entry => entry.index);
+        return new(_quotedDays.ToDictionary(entry => entry.Key,
+            entry => (IReadOnlyList<PricedDay>)[.. entry.Value.Where(day => day <= end).Order()
+                .Select(day => new PricedDay(day, PriceOn(entry.Key, indices[day])!.Value))]));
+    }
+
     public PriceTable(IReadOnlyDictionary<Guid, IReadOnlyList<PricedDay>> history)
     {
         var days = history.Values.SelectMany(points => points.Select(point => point.Date)).Distinct().Order().ToList();
@@ -62,6 +72,8 @@ public sealed class PriceTable
 
         for (var dayIndex = 0; dayIndex < Days.Count - LeastReplayedDays; dayIndex++)
         {
+            if (setup.Experiment is { } experiment && Days[dayIndex] < experiment.Start)
+                continue;
             var warmed = setup.Universe.Count(instrumentId => HasWarmedUp(instrumentId, dayIndex, setup.HistoryBars));
 
             var references = (setup.ExtraSeries ?? []).Append(setup.Benchmark.InstrumentId);

@@ -1,10 +1,9 @@
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 using InvestmentLab.StrategyBuilder.Trials.Application.Shared;
-using InvestmentLab.StrategyBuilder.Trials.Domain;
 
 namespace InvestmentLab.StrategyBuilder.Trials.Application.ListTrials;
 
-public sealed class ListTrialsHandler(IDraftRepository drafts, ITrialBacktests backtests)
+public sealed class ListTrialsHandler(IDraftRepository drafts, TrialRunSummaries summaries)
 {
     public async Task<Result<IReadOnlyList<TrialRunDto>>> Handle(Guid draftId, CancellationToken cancellationToken)
     {
@@ -15,8 +14,8 @@ public sealed class ListTrialsHandler(IDraftRepository drafts, ITrialBacktests b
         var runs = new List<TrialRunDto>();
         foreach (var run in draft.Trials)
         {
-            var summary = await backtests.SummaryOfAsync(run.StrategyId, run.StrategyVersion, cancellationToken);
-            runs.Add(TrialMapping.ToDto(run, summary));
+            var described = await summaries.DescribeAsync(run, cancellationToken);
+            runs.Add(described);
         }
 
         return runs;

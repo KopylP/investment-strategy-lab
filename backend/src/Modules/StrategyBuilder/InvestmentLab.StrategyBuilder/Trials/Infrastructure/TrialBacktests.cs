@@ -8,8 +8,8 @@ internal sealed class TrialBacktests(IBacktestStatusQueries backtests) : ITrialB
     public async Task<TrialSummary> SummaryOfAsync(Guid strategyId, int version, CancellationToken cancellationToken)
     {
         var backtest = await backtests.GetStatusAsync(strategyId, version, cancellationToken);
-        var status = StatusOf(backtest?.Status);
-        var reason = backtest?.Status == "NotSupported" ? Message.Of("builder.trial.not_supported") : backtest?.FailureReason;
+        var status = BacktestStatuses.TrialStatusOf(backtest?.Status);
+        var reason = backtest?.Status == BacktestStatuses.NotSupported ? Message.Of("builder.trial.not_supported") : backtest?.FailureReason;
         var summary = backtest?.Summary;
 
         return new TrialSummary(
@@ -21,13 +21,4 @@ internal sealed class TrialBacktests(IBacktestStatusQueries backtests) : ITrialB
             Sharpe: summary?.Sharpe,
             MaxDrawdown: summary?.MaxDrawdown);
     }
-
-    private static TrialStatus StatusOf(string? status) => status switch
-    {
-        null or "Queued" => TrialStatus.Waiting,
-        "Running" => TrialStatus.Running,
-        "Succeeded" => TrialStatus.Succeeded,
-        "Failed" or "NotSupported" => TrialStatus.Failed,
-        _ => throw new InvalidOperationException($"Unknown backtest status '{status}'."),
-    };
 }

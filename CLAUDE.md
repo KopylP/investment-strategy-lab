@@ -9,7 +9,7 @@ Personal investment service: accounts split into sub-portfolios, each run by a s
 | `frontend/` | Angular 21 + PrimeNG + Tailwind SPA | `frontend/CLAUDE.md` |
 | `strategy-engine/` | Python `finance_decisions`: strategies behind a FastAPI HTTP API | `strategy-engine/CLAUDE.md` |
 | `deploy/home-assistant/` | The add-on: one container with Postgres + engine + API serving the SPA | `deploy/home-assistant/CLAUDE.md` |
-| `docs/architecture/` | `migration-plan.md` (the design, sections referenced as §N and decisions as DN) and `adr/` | — |
+| `docs/architecture/` | `adr/` (architecture decisions); domain terms live in `docs/domain/glossary.md` | — |
 
 ## Commands
 

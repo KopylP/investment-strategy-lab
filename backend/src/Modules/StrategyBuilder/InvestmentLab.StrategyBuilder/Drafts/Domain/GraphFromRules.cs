@@ -121,7 +121,7 @@ public static class GraphFromRules
             {
                 RefuseUnknown(selection, [.. ResultFields.Selection, "rankBy"], "selection");
                 if (selection.TryGetProperty("rankBy", out var rankBy))
-                    Link(IndicatorNode(rankBy.GetString()!, BlockKind.Selection, "selection.rankBy"), result.Id, NodeSockets.RankBy);
+                    Link(IndicatorNode(rankBy.GetString()!, "selection.rankBy"), result.Id, NodeSockets.RankBy);
             }
 
             ReadResultFields("selection", BlockKind.Selection, ResultFields.Selection, replace: true);
@@ -172,9 +172,9 @@ public static class GraphFromRules
                     ReadOperand(condition.GetProperty("left"), node, NodeSockets.Value, $"{path}.left");
                     break;
                 case NodeKind.Crossed:
-                    Link(IndicatorNode(condition.GetProperty("indicator").GetString()!, block, $"{path}.indicator"), node.Id, NodeSockets.Indicator);
+                    Link(IndicatorNode(condition.GetProperty("indicator").GetString()!, $"{path}.indicator"), node.Id, NodeSockets.Indicator);
                     if (condition.TryGetProperty("other", out var other) && other.ValueKind == JsonValueKind.String)
-                        Link(IndicatorNode(other.GetString()!, block, $"{path}.other"), node.Id, NodeSockets.Other);
+                        Link(IndicatorNode(other.GetString()!, $"{path}.other"), node.Id, NodeSockets.Other);
                     break;
                 case NodeKind.All or NodeKind.Any:
                     var index = 0;
@@ -202,7 +202,7 @@ public static class GraphFromRules
         private void ReadOperand(JsonElement operand, GraphNode node, string input, string path)
         {
             RefuseUnknown(operand, ["indicator"], path);
-            Link(IndicatorNode(operand.GetProperty("indicator").GetString()!, node.Block, $"{path}.indicator"), node.Id, input);
+            Link(IndicatorNode(operand.GetProperty("indicator").GetString()!, $"{path}.indicator"), node.Id, input);
         }
 
         private void ReadRightSide(JsonElement right, GraphNode node, string path)
@@ -217,7 +217,7 @@ public static class GraphFromRules
             Replace(_graph.Node(node.Id)! with { Parameters = _graph.Node(node.Id)!.Parameters.With(NodeSockets.Value, right.GetProperty(NodeSockets.Value)) });
         }
 
-        private NodeId IndicatorNode(string name, BlockKind block, string path)
+        private NodeId IndicatorNode(string name, string path)
         {
             if (_indicatorNodes.TryGetValue(name, out var existing)) return existing;
             if (!_indicators.TryGetValue(name, out var definition))

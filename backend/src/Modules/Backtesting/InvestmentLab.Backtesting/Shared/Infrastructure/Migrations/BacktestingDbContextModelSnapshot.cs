@@ -23,6 +23,61 @@ namespace InvestmentLab.Backtesting.Shared.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("InvestmentLab.Backtesting.Experiments.Domain.ResearchExperiment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Conditions")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("conditions");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("failure_reason");
+
+                    b.Property<DateTimeOffset?>("FinishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("finished_at");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_id");
+
+                    b.Property<DateTimeOffset>("RequestedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("requested_at");
+
+                    b.Property<string>("Result")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("result");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("StrategyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("strategy_id");
+
+                    b.Property<int>("StrategyVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("strategy_version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_experiments");
+
+                    b.HasIndex("StrategyId", "StrategyVersion")
+                        .HasDatabaseName("ix_experiments_strategy_id_strategy_version");
+
+                    b.ToTable("experiments", "backtesting");
+                });
+
             modelBuilder.Entity("InvestmentLab.Backtesting.Replays.Domain.Backtest", b =>
                 {
                     b.Property<Guid>("Id")

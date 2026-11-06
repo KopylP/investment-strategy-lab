@@ -8,4 +8,5 @@ public sealed record EvaluateStrategyRequest(
     DateOnly AsOf,
     Guid? CashInstrumentId = null,
     IReadOnlyList<SignalStateDto>? SignalStates = null,
-    string? ValuationCurrency = null);
+    string? ValuationCurrency = null,
+    string? ParametersOverride = null);

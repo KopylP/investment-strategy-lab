@@ -18,19 +18,19 @@ namespace InvestmentLab.IntegrationTests.StrategyBuilder;
 
 public sealed class PublishedDraftScenarioTests : IClassFixture<StrategiesApiFactory>
 {
-    private readonly StrategiesApiFactory factory;
+    private readonly StrategiesApiFactory _factory;
 
     public PublishedDraftScenarioTests(AppHostFixture appHost, StrategiesApiFactory factory)
     {
-        this.factory = factory;
-        factory.StrategyEngineUrl ??= appHost.App.GetEndpoint("strategy-engine", "http").ToString();
+        _factory = factory;
+        _factory.StrategyEngineUrl ??= appHost.App.GetEndpoint("strategy-engine", "http").ToString();
     }
 
     [Fact]
     public async Task Publishing_preserves_the_layout_and_reopening_keeps_one_draft_for_the_next_version()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        var client = await factory.CreateSignedInClientAsync(cancellationToken);
+        var client = await _factory.CreateSignedInClientAsync(cancellationToken);
         var name = $"Published {Guid.CreateVersion7()}";
         var draft = await ConfiguredDraftAsync(client, name, cancellationToken);
         var nodeId = draft.Graph.Nodes[0].Id;
@@ -69,7 +69,7 @@ public sealed class PublishedDraftScenarioTests : IClassFixture<StrategiesApiFac
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         var failure = new TrialDeletionFailure();
-        await using var faultedFactory = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+        await using var faultedFactory = _factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
         {
             var original = services.Single(service => service.ServiceType == typeof(IStrategyAuthoring));
             services.Remove(original);

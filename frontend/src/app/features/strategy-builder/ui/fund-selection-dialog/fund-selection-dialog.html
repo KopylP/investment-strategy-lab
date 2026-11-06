@@ -42,7 +42,7 @@
         />
       } @else {
         <p class="scope-description">
-          Пошук ETF у Yahoo Finance, зокрема ще не доданих до сервісу. Вибрані нові фонди буде
+          Пошук ETF у джерелі котирувань, зокрема ще не доданих до сервісу. Вибрані нові фонди буде
           додано після «Застосувати».
         </p>
         <label for="fund-remote-query">Слова в назві ETF</label>
@@ -138,7 +138,7 @@
               </div>
             </details>
             <p-button
-              [label]="store.searching() ? 'Шукаємо у Yahoo Finance…' : 'Шукати у Yahoo Finance'"
+              [label]="store.searching() ? 'Шукаємо в джерелі котирувань…' : 'Шукати в джерелі котирувань'"
               icon="pi pi-search"
               [loading]="store.searching()"
               [disabled]="busy() || (!exchange() && !region())"
@@ -185,18 +185,18 @@
             </section>
           } @empty {
             <p class="hint">
-              Серед доданих інструментів збігів немає. Перемкніться на «Пошук у Yahoo Finance», щоб
+              Серед доданих інструментів збігів немає. Перемкніться на «Пошук у джерелі котирувань», щоб
               знайти інші ETF.
             </p>
           }
         } @else if (store.searching()) {
           <div class="search-status" role="status">
-            <i class="pi pi-spin pi-spinner" aria-hidden="true"></i> Шукаємо ETF у Yahoo Finance. Це
+            <i class="pi pi-spin pi-spinner" aria-hidden="true"></i> Шукаємо ETF у джерелі котирувань. Це
             може зайняти деякий час…
           </div>
         } @else if (store.funds() !== null) {
           <p class="search-status" role="status">
-            Yahoo Finance · знайдено {{ external().length }} ETF за останнім запитом
+            Джерело котирувань · знайдено {{ external().length }} ETF за останнім запитом
           </p>
 
           @for (fund of external(); track fund.symbol) {
@@ -223,7 +223,7 @@
           }
         } @else {
           <p class="hint" role="status">
-            Виберіть біржу або регіон і натисніть «Шукати у Yahoo Finance». Результати з’являться
+            Виберіть біржу або регіон і натисніть «Шукати в джерелі котирувань». Результати з’являться
             тут.
           </p>
         }

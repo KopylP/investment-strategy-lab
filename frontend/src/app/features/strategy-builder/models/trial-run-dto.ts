@@ -1,3 +1,5 @@
+import { ExperimentConditionsDto } from './experiment-conditions-dto';
+
 export interface TrialRunDto {
   number: number;
   strategyId: string;
@@ -11,4 +13,6 @@ export interface TrialRunDto {
   volatility: number | null;
   sharpe: number | null;
   maxDrawdown: number | null;
+  experimentId?: string | null;
+  experiment?: ExperimentConditionsDto | null;
 }

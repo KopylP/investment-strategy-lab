@@ -34,6 +34,10 @@ import { SetupDialog } from '../../ui/setup-dialog/setup-dialog';
 import { SetupRow } from '../../ui/setup-row/setup-row';
 import { NewPaletteNode } from '../../ui/palette/palette';
 import { CopyEntryDialog } from '../../ui/graph/copy-entry-dialog';
+import { ExperimentDialog } from '../../ui/experiment-dialog/experiment-dialog';
+import { ExperimentRequestVm } from '../../models/experiment-request-vm';
+import { JsonValue } from '../../models/draft-dto';
+import { experimentParameters } from '../../data-access/experiment-parameters-mapper';
 
 import { JsonView } from '../../ui/json-view/json-view';
 import { StepsView } from '../../ui/steps/steps-view';
@@ -61,6 +65,7 @@ import { ProblemsPanel } from '../../ui/problems-panel/problems-panel';
     SetupDialog,
     SetupRow,
     CopyEntryDialog,
+    ExperimentDialog,
   ],
   providers: [DraftStore],
   templateUrl: './draft-editor-page.html',
@@ -101,6 +106,12 @@ export class DraftEditorPage {
   protected readonly setupVisible = signal(false);
   protected readonly reportsVisible = signal(false);
   protected readonly copyEntryVisible = signal(false);
+  protected readonly experimentVisible = signal(false);
+  private readonly experimentRules = signal<Record<string, JsonValue>>({});
+  protected readonly experimentChoices = computed(() => {
+    const vocabulary = this.store.vocabulary();
+    return vocabulary ? experimentParameters(this.experimentRules(), vocabulary) : [];
+  });
   protected readonly modes: { label: string; value: EditorMode }[] = [
     { label: 'Кроки', value: 'steps' },
     { label: 'Схема', value: 'graph' },
@@ -142,11 +153,22 @@ export class DraftEditorPage {
   }
 
   protected async runTrial(): Promise<void> {
-    const run = await this.store.runTrial();
-    if (run)
+    if (!(await this.store.check())) return;
+    const rules = await this.store.rules();
+    if (!rules) return;
+    this.experimentRules.set(JSON.parse(rules.json));
+    this.store.trialError.set(null);
+    this.experimentVisible.set(true);
+  }
+
+  protected async launchExperiment(request: ExperimentRequestVm): Promise<void> {
+    const run = await this.store.runTrial(request.experiment, request.label);
+    if (run) {
+      this.experimentVisible.set(false);
       await this.router.navigate(['/strategy-builder', this.draftId(), 'trials'], {
         queryParams: { run: run.number },
       });
+    }
   }
 
   protected async confirmPublish(): Promise<void> {

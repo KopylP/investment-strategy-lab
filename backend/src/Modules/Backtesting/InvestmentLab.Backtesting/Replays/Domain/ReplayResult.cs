@@ -2,8 +2,11 @@ using System.Text.Json.Serialization;
 
 namespace InvestmentLab.Backtesting.Replays.Domain;
 
-public sealed record ReplayResult(DateOnly Start, DateOnly End, string Currency, int Trades, int RiskExits, int SignalReports, IReadOnlyList<ReplaySeries> Series)
+public sealed record ReplayResult(DateOnly Start, DateOnly End, string Currency, int Trades, int RiskExits, int SignalReports, IReadOnlyList<ReplaySeries> Series,
+    IReadOnlyList<ReplayJournalEntry>? Journal = null, decimal InitialCapital = 100_000m)
 {
+    public decimal FinalCapital => InitialCapital * (1m + (decimal)StrategySummary.TotalReturn);
+
     [JsonIgnore]
     public ReplaySummary StrategySummary =>
         Series.FirstOrDefault(series => series.Code == ReplaySeries.StrategyCode)?.Summary

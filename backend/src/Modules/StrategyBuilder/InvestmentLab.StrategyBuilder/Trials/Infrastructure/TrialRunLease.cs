@@ -2,13 +2,13 @@ namespace InvestmentLab.StrategyBuilder.Trials.Infrastructure;
 
 internal sealed class TrialRunLease(SemaphoreSlim semaphore) : IAsyncDisposable
 {
-    private bool released;
+    private bool _released;
 
     public ValueTask DisposeAsync()
     {
-        if (!released)
+        if (!_released)
         {
-            released = true;
+            _released = true;
             semaphore.Release();
         }
 

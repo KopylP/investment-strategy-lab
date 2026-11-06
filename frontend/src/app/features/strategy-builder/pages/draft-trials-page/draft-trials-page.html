@@ -19,6 +19,7 @@
       ><tr>
         <th>№</th>
         <th>Мітка</th>
+        <th>Період</th>
         <th>Час</th>
         <th>Статус</th>
         <th>Річна дохідність</th>
@@ -46,6 +47,7 @@
       >
         <td>{{ run.number }}</td>
         <td>{{ run.label || '—' }}</td>
+        <td>@if (run.experiment) { {{ run.experiment.period.start | date }} – {{ run.experiment.period.end | date }} } @else { Автоматично }</td>
         <td>{{ run.ranAt | dateTime }}</td>
         <td>
           {{ statuses[run.status] }}
@@ -62,14 +64,18 @@
     >
     <ng-template #emptymessage
       ><tr>
-        <td colspan="9">Запусків ще немає. Поверніться до чернетки й натисніть «Бектест».</td>
+        <td colspan="10">Запусків ще немає. Поверніться до чернетки й натисніть «Бектест».</td>
       </tr></ng-template
     >
   </p-table>
 </div>
 @if (store.selectedRuns(); as runs) {
   @if (runs.length === 1 && runs[0].status !== 'Failed') {
-    <app-strategy-backtest [strategyId]="runs[0].strategyId" [version]="runs[0].version" />
+    @if (runs[0].experimentId) {
+      <app-experiment-results />
+    } @else {
+      <app-strategy-backtest [strategyId]="runs[0].strategyId" [version]="runs[0].version" />
+    }
   }
   @if (runs.length === 2 && runs[0].status === 'Succeeded' && runs[1].status === 'Succeeded') {
     <app-trial-comparison [first]="runs[0]" [second]="runs[1]" />

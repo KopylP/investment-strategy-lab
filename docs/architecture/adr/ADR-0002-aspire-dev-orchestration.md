@@ -1,7 +1,6 @@
 # ADR-0002: .NET Aspire для локального запуску
 
 - Статус: прийнято (2026-10-25)
-- Контекст: [migration-plan.md](../migration-plan.md), §3
 
 ## Контекст
 Локально потрібні Postgres, API, Python-рушій стратегій і Angular dev server. Запуск має бути «одна кнопка» в Rider.
