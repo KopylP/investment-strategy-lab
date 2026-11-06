@@ -41,10 +41,19 @@ import { fitNodeSelectOverlay } from './node-select-overlay';
                 <button
                   type="button"
                   class="fund-select-button"
+                  [class.empty]="!data.setup.funds.length"
                   (click)="searchVisible.set(true)"
                   aria-haspopup="dialog"
+                  aria-label="Обрати фонди"
                 >
-                  <i class="pi pi-folder-open"></i> Обрати фонди · {{ data.setup.funds.length }}
+                  <i class="pi pi-folder-open"></i>
+                  <span class="fund-select-label">
+                    {{ data.setup.funds.length ? 'Змінити фонди' : 'Обрати фонди' }}
+                  </span>
+                  @if (data.setup.funds.length) {
+                    <span class="fund-count">{{ data.setup.funds.length }}</span>
+                  }
+                  <i class="pi pi-chevron-right"></i>
                 </button>
               } @else if (field.key === 'extraSeries') {
                 <p-multiselect
@@ -220,18 +229,76 @@ import { fitNodeSelectOverlay } from './node-select-overlay';
       }
       .fund-select-button {
         flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
         text-align: left;
-        padding: 8px;
-        border: 1px solid var(--p-content-border-color);
-        border-radius: 6px;
+        padding: 9px 10px;
+        border: 1px solid var(--p-primary-color);
+        border-radius: 8px;
+        background: color-mix(in srgb, var(--p-primary-color) 14%, transparent);
+        color: var(--p-text-color);
         cursor: pointer;
-        font-size: 12px;
+        font-size: 13px;
+        font-weight: 600;
+        transition:
+          background 0.15s,
+          box-shadow 0.15s;
+      }
+      .fund-select-button > .pi:first-child {
+        color: var(--p-primary-color);
+        font-size: 14px;
+      }
+      .fund-select-button .pi-chevron-right {
+        margin-left: auto;
+        font-size: 11px;
+        color: var(--p-primary-color);
+      }
+      .fund-select-label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .fund-count {
+        min-width: 20px;
+        padding: 1px 6px;
+        border-radius: 999px;
+        background: var(--p-primary-color);
+        color: var(--p-primary-contrast-color);
+        font-size: 11px;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
       }
       .fund-select-button:hover {
-        background: var(--p-content-hover-background);
+        background: color-mix(in srgb, var(--p-primary-color) 24%, transparent);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-primary-color) 18%, transparent);
       }
       .fund-select-button:focus-visible {
         outline: 2px solid var(--p-primary-color);
+        outline-offset: 2px;
+      }
+      .fund-select-button.empty {
+        background: var(--p-primary-color);
+        color: var(--p-primary-contrast-color);
+        animation: fund-select-pulse 2s ease-in-out infinite;
+      }
+      .fund-select-button.empty .pi {
+        color: var(--p-primary-contrast-color);
+      }
+      @keyframes fund-select-pulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 color-mix(in srgb, var(--p-primary-color) 45%, transparent);
+        }
+        50% {
+          box-shadow: 0 0 0 6px color-mix(in srgb, var(--p-primary-color) 0%, transparent);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .fund-select-button.empty {
+          animation: none;
+        }
       }
       .port {
         display: grid;
