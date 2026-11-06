@@ -100,6 +100,20 @@ public sealed class McpAccessTests : IClassFixture<McpApiFactory>
     }
 
     [Fact]
+    public async Task An_assistant_imports_rules_written_as_a_json_object()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var homeAssistantUser = await LinkedHomeAssistantUserAsync(ct);
+        await using var mcp = await ConnectAsync(homeAssistantUser, ct);
+        var arguments = new Dictionary<string, object?> { ["name"] = "Imported", ["rules"] = HoldEverythingRules() };
+
+        var imported = await mcp.CallToolAsync("import_rules", arguments, cancellationToken: ct);
+
+        imported.IsError.ShouldNotBe(true, TextOf(imported));
+        TextOf(imported).ShouldContain("Imported");
+    }
+
+    [Fact]
     public async Task A_failed_tool_call_explains_itself_in_the_users_language()
     {
         var ct = TestContext.Current.CancellationToken;
@@ -128,6 +142,15 @@ public sealed class McpAccessTests : IClassFixture<McpApiFactory>
 
         return homeAssistantUser;
     }
+
+    private static JsonElement HoldEverythingRules() =>
+        JsonSerializer.SerializeToElement(new
+        {
+            formatVersion = 1,
+            indicators = new { },
+            selection = new { top = 3 },
+            weights = new { method = "equal" },
+        });
 
     private async Task ForgetStoredStrategyTypeAsync(string code, CancellationToken ct)
     {

@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Text.Json;
 using InvestmentLab.BuildingBlocks.Mcp;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.StrategyBuilder.Drafts.Application.ChangeDraft;
@@ -87,12 +88,12 @@ internal static class DraftTools
     [Description("Creates a new draft from rules JSON (formatVersion 1).")]
     public static async Task<DraftDto> ImportRules(
         string name,
-        [Description("The rules as a JSON document.")] string rulesJson,
+        [Description("The rules (formatVersion 1) as a JSON object.")] JsonElement rules,
         ImportRulesHandler handler,
         ICurrentUser user,
         CancellationToken cancellationToken)
     {
-        var command = new ImportRulesCommand(name, rulesJson);
+        var command = new ImportRulesCommand(name, RulesTextOf(rules));
 
         var imported = await handler.Handle(user.RequiredId, command, cancellationToken);
 
@@ -104,11 +105,11 @@ internal static class DraftTools
     public static async Task<DraftDto> ReplaceDraftRules(
         Guid draftId,
         [Description("The draft's current revision, from get_draft.")] int revision,
-        [Description("The rules as a JSON document.")] string rulesJson,
+        [Description("The rules (formatVersion 1) as a JSON object.")] JsonElement rules,
         ReplaceDraftRulesHandler handler,
         CancellationToken cancellationToken)
     {
-        var command = new ReplaceDraftRulesCommand(revision, rulesJson);
+        var command = new ReplaceDraftRulesCommand(revision, RulesTextOf(rules));
 
         var replaced = await handler.Handle(draftId, command, cancellationToken);
 
@@ -212,4 +213,7 @@ internal static class DraftTools
 
         return draft.ValueOrThrow();
     }
+
+    private static string RulesTextOf(JsonElement rules) =>
+        rules.ValueKind == JsonValueKind.String ? rules.GetString()! : rules.GetRawText();
 }
