@@ -23,3 +23,8 @@
 .trial-row.unavailable:hover > td {
   background: inherit;
 }
+.failure-reason {
+  color: var(--p-red-500);
+  font-size: 0.875rem;
+  line-height: 1.35;
+}
