@@ -49,17 +49,16 @@
         <td>{{ run.label || '—' }}</td>
         <td>@if (run.experiment) { {{ run.experiment.period.start | date }} – {{ run.experiment.period.end | date }} } @else { Автоматично }</td>
         <td>{{ run.ranAt | dateTime }}</td>
-        <td>
-          {{ statuses[run.status] }}
-          @if (run.failureReason) {
-            <p class="text-red-500">{{ run.failureReason }}</p>
-          }
-        </td>
-        <td>{{ run.annualReturn | percent }}</td>
-        <td>{{ run.annualReturnAfterTax | percent }}</td>
-        <td>{{ run.volatility | percent }}</td>
-        <td>{{ run.sharpe === null ? '—' : (run.sharpe | number: '1.2-2') }}</td>
-        <td>{{ run.maxDrawdown | percent }}</td>
+        <td>{{ statuses[run.status] }}</td>
+        @if (run.failureReason) {
+          <td colspan="5" class="failure-reason">{{ run.failureReason }}</td>
+        } @else {
+          <td>{{ run.annualReturn | percent }}</td>
+          <td>{{ run.annualReturnAfterTax | percent }}</td>
+          <td>{{ run.volatility | percent }}</td>
+          <td>{{ run.sharpe === null ? '—' : (run.sharpe | number: '1.2-2') }}</td>
+          <td>{{ run.maxDrawdown | percent }}</td>
+        }
       </tr></ng-template
     >
     <ng-template #emptymessage
