@@ -1,44 +1,23 @@
-# ADR-0014: Давня історія котирувань живе лише в пам'яті, а бектест відтворює рапорти за сигналами
+# ADR-0014: Long quote history lives only in memory, and the backtest replays reports by signals
 
-- Статус: прийнято (2026-11-02)
-- Доповнює: ADR-0013
+- Status: accepted (2026-11-02)
+- Complements: ADR-0013
 
-## Контекст
-Бектест має сягати понад 10 років, щоб охопити кризу 2008 року. Перший варіант один раз довантажував 20 років щоденних
-котирувань кожного інструмента в `marketdata.daily_quotes`. Це сотні тисяч рядків, які ростуть із кожним інструментом і
-потрапляють у бекапи Home Assistant, хоча потрібні вони лише на час прогону. Зберігати старі ціни помісячно не можна:
-стратегія рахує ковзні середні, волатильність і кореляції по днях, і на місячних цінах дала б інші рішення.
+## Context
+A backtest must reach back more than 10 years to cover the 2008 crisis. The first option loaded 20 years of daily quotes of each instrument into `marketdata.daily_quotes` once. That is hundreds of thousands of rows, which grow with every instrument and end up in the Home Assistant backups, although they are needed only for the duration of a run. Old prices cannot be stored monthly either: the strategy computes moving averages, volatility and correlations by day, and monthly prices would produce different decisions.
 
-Рапорт ризику стратегії приходить не лише за розкладом, а й коли спрацьовує вбудований сигнал (VIX, падіння рахунку,
-падіння позиції, ADR-0010). Без сигналів прогін робив менше перевірок ризику, ніж зробив би сервіс.
+A strategy's risk report comes not only on the schedule but also when a built-in signal fires (VIX, a fall of the account, a fall of a position, ADR-0010). Without signals, a run made fewer risk checks than the service would have made.
 
-## Рішення
-- У базі лишається щоденне вікно, яке збирає щоденне завантаження (3 роки й далі вперед). Довантаження давньої історії
-  прибрано, а вже довантажені ним рядки видаляє міграція.
-- `IQuoteHistory.GetQuoteHistoryWithArchive` повертає збережені котирування, а коли запит сягає далі за це вікно,
-  `MarketData` бере в провайдера до 25 років щоденних цін і тримає їх у пам'яті. Ліміт там близько 500 тис. цін (≈20 МБ),
-  запис забувається, якщо його не читали 30 хвилин, і за 6 годин у будь-якому разі. Скориговані ціни архіву масштабуються
-  так, щоб на стику зі збереженими не з'являлась вигадана дохідність.
-- Цей метод викликають лише оцінка стратегії та бектест. Сигнали, оцінка рахунку й рапорти читають лише збережене, тож їхня
-  поведінка не змінилась, а рапорт за поточну дату не залежить від доступності провайдера. Помилка провайдера валить
-  прогін, а невдалий бектест повторюється через добу.
-- Бектест відтворює рапорти за сигналами. Тип стратегії оголошує, на які сигнали приходить його рапорт.
-  `Signals` через `IBuiltInSignalReplay` дає «спостерігача» з порогами вбудованих сигналів за замовчуванням: вікно піку,
-  повторне спрацювання лише після відновлення, позиція рахується від першої купівлі. Бектест щодня передає йому рівень VIX,
-  ріст портфеля і ціни позицій. День, коли сигнал спрацював, приносить рапорт, як і в сервісі. Пороги, змінені
-  користувачем для конкретного рахунку, не враховуються, бо бектест належить стратегії, а не рахунку.
-- Прогін не залежить від конкретної стратегії: його вмикає лише прапорець `supportsBacktest` типу. Рішення приходять
-  через `/decide`, частоту дає рапорт ребалансування (без розкладу — щомісяця), а перевірки ризику дають рапорт ризику та
-  його сигнали. Рушій сам дає раду фондам, яких ще не існувало, тож прогін просто пропускає дні без ціни.
-- Прогін іде у валюті, якою торгується більшість фондів стратегії. Ціни фондів, бенчмарка й кешу в інших валютах
-  переводяться за крос-курсом із `IFxRates` на кожен день, як і в живому рапорті. Індекс волатильності не конвертується,
-  бо це рівень, а не ціна. Відсутні курси довантажуються в базу через `IFxRateBackfill`: це кілька тисяч рядків на
-  валюту, NBP публікує їх із 2002 року. Валюту результату показує екран, фронтенд її не вгадує.
-- Коли змінюється вікно чи правила прогону, міграція видаляє збережені бектести, і вони перераховуються при відкритті
-  стратегії.
+## Decision
+- The database keeps a daily window, which the daily load collects (3 years and forward). The loading of the long history is removed, and the rows it had already loaded are deleted by a migration.
+- `IQuoteHistory.GetQuoteHistoryWithArchive` returns the stored quotes, and when a request reaches further back than this window, `MarketData` takes up to 25 years of daily prices from the provider and keeps them in memory. The limit there is about 500 thousand prices (≈20 MB); an entry is forgotten if it has not been read for 30 minutes, and in any case after 6 hours. The adjusted prices of the archive are scaled so that no invented return appears at the joint with the stored ones.
+- Only the strategy evaluation and the backtest call this method. Signals, account assessment and reports read only what is stored, so their behaviour did not change, and a report for the current date does not depend on the availability of the provider. A provider error fails the run, and a failed backtest is retried after a day.
+- The backtest replays the reports by signals. A strategy type declares which signals its report comes on. `Signals` gives, through `IBuiltInSignalReplay`, an "observer" with the default thresholds of the built-in signals: the peak window, a re-firing only after recovery, and a position is counted from its first purchase. Each day the backtest passes it the VIX level, the growth of the portfolio and the prices of the positions. The day a signal fires brings a report, as in the service. Thresholds changed by the user for a specific account are not taken into account, because the backtest belongs to the strategy, not to the account.
+- A run does not depend on a specific strategy: only the `supportsBacktest` flag of the type switches it on. Decisions come through `/decide`, the frequency is given by the rebalancing report (without a schedule, monthly), and the risk checks give the risk report and its signals. The engine itself handles funds that did not yet exist, so a run simply skips the days without a price.
+- A run is in the currency that most of the strategy's funds trade in. The prices of funds, the benchmark and the cash in other currencies are converted at the cross rate from `IFxRates` for each day, as in the live report. The volatility index is not converted, because it is a level, not a price. Missing rates are loaded into the database through `IFxRateBackfill`: this is a few thousand rows per currency, which NBP publishes since 2002. The result's currency is shown by the screen; the frontend does not guess it.
+- When the window or the rules of a run change, a migration deletes the stored backtests, and they are recalculated when the strategy is opened.
 
-## Наслідки
-- База не росте від бектестів. Зберігаються лише місячні точки результату.
-- Кожен прогін раз завантажує давню історію з провайдера, якщо її немає в пам'яті.
-- Фонди, яких тоді не існувало, історії не мають: набір із європейських UCITS-фондів починається приблизно з 2012–2013
-  років, і кризи 2008 року в ньому не видно.
+## Consequences
+- The database does not grow from backtests. Only the monthly points of the result are stored.
+- Each run loads the long history from the provider once, if it is not in memory.
+- Funds that did not exist back then have no history: a set of European UCITS funds starts at about 2012–2013, and the 2008 crisis is not visible in it.

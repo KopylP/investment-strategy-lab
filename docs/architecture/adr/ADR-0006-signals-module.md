@@ -1,39 +1,39 @@
-# ADR-0006: Модуль сигналів, на які реагують інші модулі
+# ADR-0006: A signals module that other modules react to
 
-- Статус: прийнято (2026-10-31)
-- Контекст: [ADR-0003](ADR-0003-outbox-and-scheduler.md), [ADR-0005](ADR-0005-async-report-generation.md), D14
+- Status: accepted (2026-10-31)
+- Context: [ADR-0003](ADR-0003-outbox-and-scheduler.md), [ADR-0005](ADR-0005-async-report-generation.md), D14
 
-## Контекст
-Користувач хоче знати про важливі зміни ринку й свого портфеля (просадка рахунку, падіння позиції, високий VIX),
-а система має гнучко на це реагувати: надсилати сповіщення, складати рапорти, згодом і впливати на стратегії.
-Зараз стратегії бачать ринок лише тоді, коли настав час рапорту за розкладом.
+## Context
+The user wants to know about important changes in the market and in their portfolio (an account drawdown, a position falling, a high VIX),
+and the system should react flexibly: send notifications, build reports and, later, influence strategies.
+Today strategies see the market only when a scheduled report is due.
 
-## Рішення
-- **Новий модуль `Signals`** лише повідомляє, що умова спрацювала. Агрегат `Signal` піднімає доменні події, а маппери перетворюють їх на
-  `SignalTriggeredV1`, `SignalClearedV1`, `SignalDeletedV1` в outbox ([ADR-0007](ADR-0007-domain-events-to-outbox.md)). Про рапорти й сповіщення модуль нічого не знає; реакції живуть у модулях, які їх виконують.
-- **Сигнал це дані, а не код:** об'єкт (інструмент, кожна позиція рахунку, під-портфель, рахунок), метрика (просадка від піку,
-  падіння за день, збиток від собівартості, рівень), поріг і поріг зведення. Вбудовані сигнали мають ту саму модель, що й сигнали користувача.
-- **Спрацювання лише при переході порога.** Подія виникає один раз; знову сигнал зможе спрацювати після повернення за поріг зведення
-  (типово 5/6 порога: −30% → −25%). Стан це відкрите спрацювання (`SignalOccurrence`) за ключем «сигнал + об'єкт», воно ж і є історією.
-- **Одна подія на перевірку:** кілька позицій, що впали разом, дають одну подію зі списком, тож одне сповіщення й один запит на рапорт.
-- **Перевірка:** задача раз на хвилину вибирає сигнали, яким час. Типово «після оновлення даних» (`Cadence` вимкнено; опитування кожні 10 хв,
-  результат на тих самих даних не змінюється), або за власним `Cadence`. Перехід на тих самих числах неможливий, тож повторні перевірки нічого не роблять.
-- **Погані дані:** котирування зі `Spike` не враховуються, із застарілим котируванням об'єкт не оцінюється.
-- **Обчислення:** просадка позиції за `AdjustedClose` у валюті торгів, пік не раніше першої купівлі; збиток у валюті рахунку;
-  просадка рахунку й під-портфеля за TWR-індексом, тож виведення коштів не виглядає як падіння.
-- **Реакція «рапорт»** це політика запуску поруч із розкладом: `SignalReportRule` у `Rebalancing.Planning`. Запит іде наявним `RequestReportHandler`
-  з `ReportTrigger.Signal`. Відкритий місячний рапорт не перезаписується (D14), внесок у такому рапорті нульовий, причину видно в його попередженнях.
-  Ідемпотентність: унікальний ключ «спрацювання + рахунок + код рапорту». Неможливий запуск лишається в правилі як `Problem`.
-- **Реакція «сповіщення»** у `Notifications`: типово сповіщаємо, користувач вимикає окремі сигнали (`MutedSignalIds`). Зняття сигналу прибирає сповіщення.
-- **Стратегії без змін.** Рапорт за сигналом той самий рапорт, лише раніше; стратегії про сигнал не знають.
-- `ReportCadence` став загальним `Cadence` у `SharedKernel`, бо його логіку поділяють рапорти й сигнали.
+## Decision
+- **A new module `Signals`** only announces that a condition fired. The `Signal` aggregate raises domain events, and mappers turn them into
+  `SignalTriggeredV1`, `SignalClearedV1`, `SignalDeletedV1` in the outbox ([ADR-0007](ADR-0007-domain-events-to-outbox.md)). The module knows nothing about reports and notifications; the reactions live in the modules that carry them out.
+- **A signal is data, not code:** a subject (an instrument, each position of an account, a sub-portfolio, an account), a metric (drawdown from peak,
+  fall in a day, loss from cost, level), a threshold and a rearm threshold. Built-in signals have the same model as the user's signals.
+- **Firing only when the threshold is crossed.** The event happens once; the signal can fire again after returning past the rearm threshold
+  (by default 5/6 of the threshold: −30% → −25%). The state is the open occurrence (`SignalOccurrence`) keyed by "signal + subject", and it is also the history.
+- **One event per check:** several positions that fell together give one event with a list, so one notification and one report request.
+- **Checking:** a job picks the signals that are due once a minute. By default "after the data is updated" (`Cadence` off; polling every 10 min,
+  the result on the same data does not change), or by the signal's own `Cadence`. A crossing on the same numbers is impossible, so repeated checks do nothing.
+- **Bad data:** quotes with a `Spike` are ignored, and a subject with a stale quote is not assessed.
+- **Calculation:** a position's drawdown by `AdjustedClose` in the trading currency, the peak no earlier than the first purchase; the loss in the account currency;
+  the drawdown of an account and a sub-portfolio by the TWR index, so a withdrawal does not look like a fall.
+- **The "report" reaction** is a launch policy next to the schedule: `SignalReportRule` in `Rebalancing.Planning`. The request goes through the existing `RequestReportHandler`
+  with `ReportTrigger.Signal`. An open monthly report is not overwritten (D14), the contribution in such a report is zero, and the reason is visible in its warnings.
+  Idempotency: a unique key "occurrence + account + report code". An impossible launch stays in the rule as a `Problem`.
+- **The "notification" reaction** in `Notifications`: by default we notify, and the user mutes individual signals (`MutedSignalIds`). Clearing a signal removes the notification.
+- **Strategies unchanged.** A report from a signal is the same report, only earlier; strategies do not know about the signal.
+- `ReportCadence` became a general `Cadence` in `SharedKernel`, because reports and signals share its logic.
 
-## Чому не окремий модуль реакцій
-Для простого «один сигнал → одна реакція» він лише зберігав би зв'язки й пересилав виклики, а контракти довелося б розширювати командами.
-Його варто вводити, коли з'являться складені правила («A і B, тоді рапорт і пауза стратегії»).
+## Why not a separate reactions module
+For a simple "one signal → one reaction" it would only store links and forward calls, and the contracts would have to grow commands.
+It is worth introducing when composite rules appear ("A and B, then a report and a strategy pause").
 
-## Наслідки
-- Нова реакція не змінює `Signals`: досить підписатися на подію. Стратегіям згодом додасться запит активних сигналів.
-- Дані лише денні, тож сигнал про падіння приходить після закриття торгів. Внутрішньоденні котирування це окремий етап: окреме сховище й запит у рушії, а не `DailyQuote`.
-- Усі сигнали, зокрема ринкові, належать користувачу: так у кожного свої пороги, реакції та історія, а події не змішують чужі дані.
-- Вбудовані сигнали створюються самі для кожного рахунку; їх можна змінити або вимкнути, але не видалити, інакше вони з'являлися б знову.
+## Consequences
+- A new reaction does not change `Signals`: subscribing to the event is enough. Strategies will later get a query of active signals.
+- The data is daily only, so a signal about a fall arrives after the market closes. Intraday quotes are a separate stage: separate storage and a request in the engine, not `DailyQuote`.
+- All signals, market ones included, belong to a user: this way everyone has their own thresholds, reactions and history, and events do not mix other people's data.
+- Built-in signals are created by themselves for each account; they can be changed or turned off, but not deleted, otherwise they would appear again.

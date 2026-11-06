@@ -1,16 +1,16 @@
-# ADR-0002: .NET Aspire для локального запуску
+# ADR-0002: .NET Aspire for running locally
 
-- Статус: прийнято (2026-10-25)
+- Status: accepted (2026-10-25)
 
-## Контекст
-Локально потрібні Postgres, API, Python-рушій стратегій і Angular dev server. Запуск має бути «одна кнопка» в Rider.
+## Context
+Locally we need Postgres, the API, the Python strategy engine and the Angular dev server. Starting it must be "one button" in Rider.
 
-## Рішення
-`InvestmentLab.AppHost` (Aspire 13) описує всі ресурси. Postgres живе в persistent-контейнері з volume
-`investmentlab-postgres-data`, тому котирування й журнал переживають перезапуски. Dashboard і DCP приходять NuGet-пакетами
-(`AspireUseCliBundle=false`), тож Aspire CLI не обов'язковий. Інтеграційні тести запускають той самий AppHost
-через `Aspire.Hosting.Testing` з `InvestmentLab:EphemeralDatabase=true`.
+## Decision
+`InvestmentLab.AppHost` (Aspire 13) describes all resources. Postgres lives in a persistent container with the volume
+`investmentlab-postgres-data`, so quotes and the ledger survive restarts. The dashboard and DCP come as NuGet packages
+(`AspireUseCliBundle=false`), so the Aspire CLI is optional. Integration tests start the same AppHost
+through `Aspire.Hosting.Testing` with `InvestmentLab:EphemeralDatabase=true`.
 
-## Наслідки
-- Потрібен Docker.
-- ServiceDefaults дають OpenTelemetry, health checks і resilience для всіх .NET-сервісів.
+## Consequences
+- Docker is required.
+- ServiceDefaults give OpenTelemetry, health checks and resilience to every .NET service.

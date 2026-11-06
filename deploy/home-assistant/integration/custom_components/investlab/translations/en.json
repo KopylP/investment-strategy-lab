@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Investment Lab MCP",
+        "description": "Publishes the Investment Lab add-on's MCP endpoint at /api/investlab/mcp of this Home Assistant. Clients sign in with Home Assistant."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Investment Lab MCP is already set up."
+    }
+  }
+}

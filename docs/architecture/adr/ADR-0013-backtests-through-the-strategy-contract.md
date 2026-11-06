@@ -1,20 +1,20 @@
-# ADR-0013: Бектест запитує стратегію через той самий контракт, що й рапорти
+# ADR-0013: A backtest asks the strategy through the same contract as the reports
 
-- Статус: прийнято (2026-11-02)
+- Status: accepted (2026-11-02)
 
-## Контекст
-Користувач має бачити, як стратегія з його параметрами поводилась на історії. Стратегії можуть працювати на різних рушіях, тому код бектесту не може залежати від мови чи внутрішньої будови стратегії. Перший варіант, симулятор у Python, викликав стратегії як функції рушія й не підійшов би для рушія іншою мовою.
+## Context
+The user must see how a strategy with their parameters behaved on history. Strategies may run on different engines, so the backtest code cannot depend on the language or the internal structure of a strategy. The first option, a simulator in Python, called the strategies as engine functions and would not work for an engine in another language.
 
-## Рішення
-- Окремий модуль `Backtesting` зі своєю схемою. Він ставить бектест у чергу, виконує його у фоні й зберігає результат.
-- Симуляція йде в C# і запитує стратегію через `IStrategyEvaluation`, а угоди рахує `SubPortfolioRebalancer` через `IRebalancingRules`. Новий тип стратегії працює без коду для бектесту.
-- Частоту рішень задають звіти, які оголошує тип. Перевірка ризику викликається лише для типу, який її оголошує.
-- Тип, що не може відповідати тисячі разів поспіль, наприклад AI-агент, оголошує `supportsBacktest: false`, і екран показує, що перевірка недоступна.
-- Рішення приймається на закритті дня, а угода виконується за ціною наступного дня, щоб не заглядати в майбутнє.
-- Симуляція йде по днях, а зберігаються місячні точки з найгіршим просіданням за місяць і показники, порахований по днях. Суми для користувача множать місячні дохідності на його старт і внески без нового запуску.
-- Бектест запускається для нової версії стратегії, при відкритті стратегії без свіжого результату (понад 32 дні) і після подовження історії котирувань.
+## Decision
+- A separate `Backtesting` module with its own schema. It queues a backtest, runs it in the background and stores the result.
+- The simulation runs in C# and asks the strategy through `IStrategyEvaluation`; the trades are counted by `SubPortfolioRebalancer` through `IRebalancingRules`. A new strategy type works without any backtest code.
+- The frequency of decisions is set by the reports the type declares. The risk check is called only for a type that declares it.
+- A type that cannot answer a thousand times in a row, for example an AI agent, declares `supportsBacktest: false`, and the screen shows that the check is unavailable.
+- A decision is made at the close of the day, and the trade is executed at the price of the next day, so as not to look into the future.
+- The simulation runs day by day, but monthly points are stored, with the worst drawdown within the month and metrics computed by day. For the user, the amounts multiply the monthly returns by their start and contributions, without a new run.
+- A backtest runs for a new version of a strategy, when a strategy is opened without a fresh result (older than 32 days), and after the quote history is extended.
 
-## Наслідки
-- Один прогін робить сотні або тисячі запитів до рушія, тож триває довше за розрахунок усередині рушія. Прогони йдуть по одному.
-- Правила ребалансування існують в одному місці, але суми наближені: мінімальний розмір угоди не перераховується під внески користувача.
-- Результат не враховує податків і будується за сьогоднішнім списком фондів, тому екран прямо каже, що це минуле, а не прогноз.
+## Consequences
+- One run makes hundreds or thousands of requests to the engine, so it takes longer than a calculation inside the engine. Runs go one at a time.
+- The rebalancing rules exist in one place, but the amounts are approximate: the minimum trade size is not recalculated for the user's contributions.
+- The result does not account for taxes and is built on today's list of funds, so the screen says plainly that this is the past, not a forecast.

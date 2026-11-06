@@ -1,12 +1,12 @@
-# ADR-0004: Python-сайдкар як рушій стратегій
+# ADR-0004: A Python sidecar as the strategy engine
 
-- Статус: прийнято (2026-10-25)
+- Status: accepted (2026-10-25)
 
-## Рішення
-Наявний код `finance_decisions` переїжджає в `strategy-engine/` без змін логіки й отримує FastAPI-обгортку.
-.NET викликає його через порт `IStrategyEngine`. Рушій видає цілі (ваги, invest fraction, ризик-сигнали), а не ордери;
-ордери рахує .NET (`SubPortfolioRebalancer`). Ціни передає .NET; рушій сам їх не завантажує, крім `/prices` для MarketData.
+## Decision
+The existing `finance_decisions` code moves into `strategy-engine/` without changes to its logic and gets a FastAPI wrapper.
+.NET calls it through the `IStrategyEngine` port. The engine produces targets (weights, invest fraction, risk signals), not orders;
+.NET computes the orders (`SubPortfolioRebalancer`). .NET passes the prices; the engine does not load them itself, except `/prices` for MarketData.
 
-## Наслідки
-- Legacy-флоу GitHub Actions працює з `strategy-engine/` до кінця паралельного запуску (етап 9).
-- Контракт `/v1/...` версіонується, JSON Schema перевіряється з обох боків.
+## Consequences
+- The legacy GitHub Actions flow works with `strategy-engine/` until the end of the parallel run (stage 9).
+- The `/v1/...` contract is versioned, and its JSON Schema is checked on both sides.

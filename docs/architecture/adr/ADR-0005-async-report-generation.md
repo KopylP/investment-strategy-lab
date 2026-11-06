@@ -1,33 +1,33 @@
-# ADR-0005: Рапорти готуються у фоні, поки стратегії думають
+# ADR-0005: Reports are prepared in the background while the strategies think
 
-- Статус: прийнято (2026-10-30)
-- Контекст: [ADR-0003](ADR-0003-outbox-and-scheduler.md), [ADR-0004](ADR-0004-python-strategy-engine.md), D14
+- Status: accepted (2026-10-30)
+- Context: [ADR-0003](ADR-0003-outbox-and-scheduler.md), [ADR-0004](ADR-0004-python-strategy-engine.md), D14
 
-## Контекст
-Рапорт генерувався синхронно: `POST /accounts/{id}/reports` і задача за розкладом по черзі кликали `/decide` (`/risk`)
-рушія кожного під-портфеля й чекали відповіді в межах одного HTTP-запиту (стандартні таймаути resilience — десятки секунд).
-Стратегія-агент (LLM) може думати хвилини чи години: так її не підключити, а одна повільна стратегія затримувала всі рапорти після неї.
+## Context
+A report used to be generated synchronously: `POST /accounts/{id}/reports` and the scheduled job called the engine's `/decide` (`/risk`)
+for each sub-portfolio in turn and waited for the answer within one HTTP request (the default resilience timeouts are tens of seconds).
+An agent strategy (an LLM) may think for minutes or hours: it could not be plugged in that way, and one slow strategy delayed every report after it.
 
-## Рішення
-- **Рушій** має фоновий API задач: `POST /v1/strategies/{code}/decide/jobs` (і `/risk/jobs`) одразу перевіряє стратегію й параметри
-  та відповідає `202 { jobId }`; `GET /v1/jobs/{jobId}` — `running`, `succeeded` з `result` (те саме, що віддає `/decide`) або `failed` з `error`.
-  Задачі живуть у пам'яті (пул потоків, `STRATEGY_JOB_WORKERS`); після рестарту рушій їх не знає (`404`). Синхронні `/decide` і `/risk` лишаються.
-- **Rebalancing** зберігає `ReportRequest` (таблиця `report_requests`): що за рапорт, для яких під-портфелів, хто й коли попросив,
-  і по під-портфелю — задачу рушія та відповідь (jsonb). `Pending → Completed` (з `ReportId`) або `Failed` (з причиною).
-- Кнопка й розклад лише створюють запит (`202 { requestId }`, `Location: /api/rebalancing/report-requests/{id}`); поки запит того самого коду
-  чекає, повторне прохання повертає його ж. `ReportRequestsJob` (кожні 5 с) подає задачі в рушій, опитує їх, подає знову втрачені
-  (до 5 разів) і, коли відповіли всі (або минув дедлайн — 6 год), складає рапорт тим самим конвеєром (`GenerateMonthlyReportHandler`,
-  `GenerateRiskReviewHandler`) від того, що утримується на цей момент. Рапорт і завершений запит зберігаються однією транзакцією,
-  `ReportGeneratedV1` іде через outbox — сповіщення про готовий рапорт працює як раніше.
-- Стратегія, що не відповіла чи впала, дає попередження в рапорті, як і раніше; якщо не відповіла жодна — запит `Failed`.
-- Сповіщення: рапорт за розкладом — як і раніше; рапорт на вимогу — якщо стратегії думали довше хвилини
-  (`ReportGeneratedV1.RequestedAt`): користувач, найімовірніше, уже пішов зі сторінки. Невдалий запит публікує
-  `ReportRequestFailedV1` — сповіщення з причиною за тим самим правилом.
-- Застосунок показує запити (`GET /api/rebalancing/report-requests?accountId=`) як «Готується… (1 з 2 відповіли)» і відкриває рапорт,
-  щойно той готовий; невдалий запит видно добу.
+## Decision
+- **The engine** has a background job API: `POST /v1/strategies/{code}/decide/jobs` (and `/risk/jobs`) checks the strategy and parameters at once
+  and answers `202 { jobId }`; `GET /v1/jobs/{jobId}` gives `running`, `succeeded` with `result` (the same as `/decide` returns) or `failed` with `error`.
+  Jobs live in memory (a thread pool, `STRATEGY_JOB_WORKERS`); after a restart the engine does not know them (`404`). The synchronous `/decide` and `/risk` remain.
+- **Rebalancing** stores a `ReportRequest` (table `report_requests`): which report, for which sub-portfolios, who asked and when,
+  and per sub-portfolio the engine job and its answer (jsonb). `Pending → Completed` (with `ReportId`) or `Failed` (with a reason).
+- The button and the schedule only create a request (`202 { requestId }`, `Location: /api/rebalancing/report-requests/{id}`); while a request of the same code
+  is waiting, asking again returns that one. `ReportRequestsJob` (every 5 s) submits jobs to the engine, polls them, resubmits lost ones
+  (up to 5 times) and, when all have answered (or the deadline of 6 h has passed), builds the report with the same pipeline (`GenerateMonthlyReportHandler`,
+  `GenerateRiskReviewHandler`) from what is held at that moment. The report and the completed request are saved in one transaction,
+  and `ReportGeneratedV1` goes through the outbox — the notification about a ready report works as before.
+- A strategy that did not answer or failed gives a warning in the report, as before; if none answered, the request is `Failed`.
+- Notifications: a scheduled report — as before; an on-demand report — if the strategies thought for longer than a minute
+  (`ReportGeneratedV1.RequestedAt`): the user has most likely left the page. A failed request publishes
+  `ReportRequestFailedV1` — a notification with the reason by the same rule.
+- The app shows requests (`GET /api/rebalancing/report-requests?accountId=`) as «Готується… (1 з 2 відповіли)» and opens the report
+  as soon as it is ready; a failed request stays visible for a day.
 
-## Наслідки
-- Агент підключається як звичайний тип стратегії рушія (`decide`/`assess_risk`), що думає скільки треба; бекенд від цього не залежить.
-- Розклад рахує час останнього *запиту* за розкладом, тож поки стратегії думають, той самий рапорт не просять щохвилини.
-- Відповіді стратегій прив'язані до стану на момент запиту, а план — до стану на момент складання; між ними позиції можуть змінитися (план усе одно рахується від фактичних).
-- Один екземпляр застосунку й рушія: задачі рушія не переживають його рестарт (їх подають знову), розподіленого блокування запитів немає.
+## Consequences
+- An agent plugs in as an ordinary engine strategy type (`decide`/`assess_risk`) that thinks as long as it needs; the backend does not depend on that.
+- The schedule counts the time of the last scheduled *request*, so while the strategies think, the same report is not requested every minute.
+- The strategies' answers refer to the state at the time of the request, and the plan to the state at the time it is built; positions may change in between (the plan is still computed from the actual ones).
+- One instance of the application and of the engine: engine jobs do not survive its restart (they are resubmitted), and there is no distributed locking of requests.

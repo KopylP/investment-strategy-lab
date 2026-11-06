@@ -40,6 +40,7 @@ cd frontend && npx ng build
   code comments are in English. A report is «рапорт» in the UI.
 - **No text in the user's language in backend or engine code.** See Language below.
 - Commit messages and code follow the code rules below; the why of a decision goes in an ADR, not in a comment.
+  ADRs (`docs/architecture/adr/`) are written in English.
 - Commit messages: one descriptive paragraph of what changed for the user and why (see `git log`), no type prefixes.
 - Do not bump `deploy/home-assistant/investlab/config.yaml` `version` by hand: a workflow bumps it on every push to
   `main` that touches `backend/`, `frontend/`, `strategy-engine/` or the add-on. Backend pushes are also auto-formatted
@@ -49,6 +50,10 @@ cd frontend && npx ng build
 
 New and changed code follows these rules; they win over the style of older code around it.
 
+- **The framework first.** What ASP.NET Core, EF Core, the SDK in use or another library we already have does
+  (authentication schemes, Bearer parsing, challenges, validation, caching, serialization), we use and configure. Own code
+  only fills the one place where the standard configuration falls short, plugged into the framework's extension point
+  (a `TokenHandler`, an events class, an options callback), never a hand-written copy of what the framework does.
 - **Code documents itself.** No `<summary>` or doc comments and no comments that narrate. If code needs explaining,
   rename or extract until it does not.
 - **One action, one handler.** Each use case has its own handler in its own folder (`Application/CreateSignal/`). No

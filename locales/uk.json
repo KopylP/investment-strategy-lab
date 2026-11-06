@@ -13,6 +13,7 @@
   "user.invalid_credentials": "Невірний email або пароль.",
   "user.locked_out": "Забагато невдалих спроб. Спробуйте за кілька хвилин.",
   "user.not_found": "Користувача не знайдено.",
+  "identity.access_token.not_linked": "Цей користувач Home Assistant ще не входив в Investment Lab. Відкрийте панель Investment Lab у Home Assistant і один раз увійдіть, тоді доступ через MCP запрацює.",
   "user.DuplicateUserName": "Такий email уже зареєстровано.",
   "user.DuplicateEmail": "Такий email уже зареєстровано.",
   "user.PasswordTooShort": "Пароль має містити щонайменше 10 символів.",

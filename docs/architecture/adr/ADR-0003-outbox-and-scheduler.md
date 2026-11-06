@@ -1,20 +1,20 @@
-# ADR-0003: Власний outbox і планувальник замість Wolverine
+# ADR-0003: Our own outbox and scheduler instead of Wolverine
 
-- Статус: прийнято (2026-10-25), **замінює** попередню версію («Wolverine для повідомлень»); спосіб запису в outbox уточнює [ADR-0007](ADR-0007-domain-events-to-outbox.md)
+- Status: accepted (2026-10-25), **replaces** the earlier version ("Wolverine for messaging"); how events are written to the outbox is refined by [ADR-0007](ADR-0007-domain-events-to-outbox.md)
 
-## Контекст
-Модулям потрібні: надійні integration events між собою (зміна стану й подія в одній транзакції, повтори при збої споживача),
-задачі за розкладом (котирування, рапорти, ризик) і можливість колись винести модуль у сервіс.
-Wolverine це покриває, але для одного процесу й одного користувача він заважкий: кодогенерація під час старту,
-Roslyn/MSBuild у залежностях, неявне застосування транзакцій — важко дебажити в Rider.
+## Context
+Modules need: reliable integration events between them (a state change and its event in one transaction, retries when a consumer fails),
+scheduled jobs (quotes, reports, risk) and the option to move a module into a service one day.
+Wolverine covers this, but for one process and one user it is too heavy: code generation at startup,
+Roslyn/MSBuild among the dependencies, implicitly applied transactions — hard to debug in Rider.
 
-## Рішення
-- Таблиця `outbox_messages` у схемі кожного модуля; `ModuleDbContext.Publish(event)` додає запис, `SaveChanges` зберігає його разом зі зміною.
-- `OutboxDispatcher` (`BackgroundService`) читає необроблені записи й викликає `IIntegrationEventHandler<T>` споживачів in-process; при помилці — повтор із наростаючою затримкою. Споживачі ідемпотентні (ключ — id повідомлення або `SourceReference`).
-- Планувальник: `IScheduledJob` з розкладом у часовому поясі, хоститься `BackgroundService`.
-- Команди й запити — прямий виклик handler-а з DI; шини немає.
+## Decision
+- An `outbox_messages` table in each module's schema; `ModuleDbContext.Publish(event)` adds a record, `SaveChanges` stores it together with the change.
+- `OutboxDispatcher` (`BackgroundService`) reads unprocessed records and calls the consumers' `IIntegrationEventHandler<T>` in-process; on failure it retries with a growing delay. Consumers are idempotent (the key is the message id or `SourceReference`).
+- Scheduler: `IScheduledJob` with a schedule in a time zone, hosted by a `BackgroundService`.
+- Commands and queries are direct calls of a handler from DI; there is no bus.
 
-## Наслідки
-- Увесь механізм — кілька сотень рядків у `BuildingBlocks`, видно наскрізь.
-- При виділенні модуля в сервіс диспетчер outbox публікує в брокер (RabbitMQ) замість in-process виклику; handler-и не змінюються.
-- Один екземпляр застосунку: без розподіленого блокування задач і outbox (додати `FOR UPDATE SKIP LOCKED`, якщо екземплярів стане більше).
+## Consequences
+- The whole mechanism is a few hundred lines in `BuildingBlocks`, visible end to end.
+- When a module is extracted into a service, the outbox dispatcher publishes to a broker (RabbitMQ) instead of calling in-process; handlers do not change.
+- One application instance: no distributed locking of jobs and the outbox (add `FOR UPDATE SKIP LOCKED` if there are ever more instances).

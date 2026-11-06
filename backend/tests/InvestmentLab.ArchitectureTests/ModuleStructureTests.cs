@@ -1,3 +1,4 @@
+using ModelContextProtocol.Server;
 using Assembly = System.Reflection.Assembly;
 
 namespace InvestmentLab.ArchitectureTests;
@@ -35,6 +36,18 @@ public sealed class ModuleStructureTests
             .SelectMany(module => Assembly.Load($"InvestmentLab.{module}").GetTypes())
             .Where(IsRepositoryInterface)
             .Where(type => CodeLocation.Parse(type.Namespace ?? "").Layer != "Domain")
+            .Select(type => type.FullName);
+
+        misplaced.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Mcp_tools_live_in_the_api_layer_next_to_the_endpoints()
+    {
+        var misplaced = CodeLocation.Modules
+            .SelectMany(module => Assembly.Load($"InvestmentLab.{module}").GetTypes())
+            .Where(type => type.IsDefined(typeof(McpServerToolTypeAttribute), inherit: false))
+            .Where(type => CodeLocation.Parse(type.Namespace ?? "").Layer != "Api")
             .Select(type => type.FullName);
 
         misplaced.ShouldBeEmpty();

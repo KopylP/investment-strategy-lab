@@ -1,37 +1,37 @@
-# ADR-0012: Правила ETF-моментуму оцінюємо бектестом проти простих портфелів
+# ADR-0012: ETF momentum rules are judged by a backtest against simple portfolios
 
-- Статус: прийнято (2026-11-01)
+- Status: accepted (2026-11-01)
 
-## Контекст
-Бектест порівнював стратегію лише з S&P 500, тому не показував, чи окупаються її правила. Прогін на історії Yahoo (EU з 2016 року, US з листопада 2007-го, 100 000 на старті, без внесків) дав такі результати:
+## Context
+The backtest compared the strategy only with the S&P 500, so it did not show whether its rules paid off. A run on Yahoo history (EU from 2016, US from November 2007, 100,000 at the start, no contributions) gave these results:
 
-| Варіант | EU: дохідність, Sharpe, просідання | US: дохідність, Sharpe, просідання |
+| Variant | EU: return, Sharpe, drawdown | US: return, Sharpe, drawdown |
 |---|---|---|
-| Правила до зміни | 10,3%, 0,67, −17,6% | 4,5%, 0,09, −25,7% |
-| Ліміт кореляції 0,7 і без продажу окремих позицій | 12,8%, 0,95, −16,1% | 7,1%, 0,32, −21,3% |
-| Порівну в усі фонди | 11,1%, 0,80, −28,2% | 8,2%, 0,33, −40,8% |
-| 60% акції, 40% облігації | 8,5%, 0,60, −19,0% | 8,4%, 0,44, −31,4% |
-| S&P 500 | 14,9%, 0,81, −33,8% | 11,2%, 0,39, −53,9% |
+| Rules before the change | 10.3%, 0.67, −17.6% | 4.5%, 0.09, −25.7% |
+| Correlation limit 0.7 and no sale of individual positions | 12.8%, 0.95, −16.1% | 7.1%, 0.32, −21.3% |
+| Equal weight in all funds | 11.1%, 0.80, −28.2% | 8.2%, 0.33, −40.8% |
+| 60% equities, 40% bonds | 8.5%, 0.60, −19.0% | 8.4%, 0.44, −31.4% |
+| S&P 500 | 14.9%, 0.81, −33.8% | 11.2%, 0.39, −53.9% |
 
-## Рішення
-- Звіт бектесту показує також рівні частки й 60/40 (`bond_benchmark`). US-прогін іде з кінця 2007 року, щоб охопити кризу.
-- `scanner.maxCorrelation` не дає взяти фонд, що за останні 130 днів рухається надто схоже на вже обраний. Значення 1 вимикає перевірку, для нових стратегій діє 0,7.
-- `risk.sellOnPositionExit` вирішує, чи продавати окрему позицію за її правилом виходу. Для нових стратегій воно вимкнене: позиція лише попереджає, а вихід усього портфеля діє.
-- Типові значення параметрів лишаються старими, тому збережені стратегії не змінюються без рішення користувача.
-- Обмеження за класом активів і регіоном у стратегію не додаємо: вони не дали стабільного покращення в обох наборах.
-- Правило слабкого ринку (`weakMarketInvestPct`) лишається: на результат воно майже не впливає, але його прибирання зламало б збережені параметри, бо модель відкидає невідомі поля.
+## Decision
+- The backtest report also shows equal shares and 60/40 (`bond_benchmark`). The US run starts at the end of 2007 to cover the crisis.
+- `scanner.maxCorrelation` does not allow taking a fund that, over the last 130 days, moves too similarly to one already chosen. A value of 1 turns the check off; for new strategies 0.7 applies.
+- `risk.sellOnPositionExit` decides whether to sell an individual position on its exit rule. For new strategies it is off: a position only warns, and the exit of the whole portfolio applies.
+- The default parameter values stay as they were, so saved strategies do not change without the user's decision.
+- Limits by asset class and by region are not added to the strategy: they did not give a stable improvement in both sets.
+- The weak-market rule (`weakMarketInvestPct`) stays: it has almost no effect on the result, but removing it would break saved parameters, because the model rejects unknown fields.
 
-## Наслідки
-- У кризу 2007–2009 років просідання US-набору більше: −18% проти −12%. Загальне найбільше просідання за весь період при цьому менше, бо інші періоди виявились гіршими.
-- US-стратегія лишається стандартною: вона програє 60/40 у дохідності й Sharpe, але має менше просідання й заробила у кризу (+8% проти −21%).
-- Порівняння завищує результат: фонди взято за сьогоднішнім списком, податки не враховано, а варіанти перебирались на тій самій історії. Поріг 0,7 чутливий: в EU при 0,8 Sharpe дорівнює 0,79, при 0,6 — 0,62.
+## Consequences
+- In the 2007–2009 crisis the US set's drawdown is deeper: −18% against −12%. The largest drawdown over the whole period is smaller, though, because other periods turned out worse.
+- The US strategy stays the standard one: it loses to 60/40 in return and Sharpe, but has a smaller drawdown and earned in the crisis (+8% against −21%).
+- The comparison overstates the result: the funds are taken from today's list, taxes are not counted, and the variants were tried on the same history. The 0.7 threshold is sensitive: in the EU at 0.8 the Sharpe is 0.79, at 0.6 it is 0.62.
 
-## Оцінка за рівнем ризику
-Мета стратегії: більше доходу на одиницю ризику. Тому порівнюємо її з S&P 500, розведеним кешем до такої самої волатильності. Різниця дохідності на рік:
+## Evaluation at equal risk
+The goal of the strategy is more return per unit of risk. So we compare it with the S&P 500 scaled with cash to the same volatility. The difference in annual return:
 
-| Варіант | EU | US |
+| Variant | EU | US |
 |---|---|---|
-| Правила до зміни | −1,5% | −3,2% |
-| Поточні правила | +1,9% | −0,3% |
+| Rules before the change | −1.5% | −3.2% |
+| Current rules | +1.9% | −0.3% |
 
-Для поточних правил 90-відсотковий інтервал охоплює нуль (EU від −3,1% до +7,1%, US від −4,2% до +3,3%), тож перевага над індексом не доведена. Обмеження за ринком, ранг за моментумом із поправкою на волатильність, інша кількість фондів і порогу кореляції не покращили результат одночасно в обох наборах, тому їх не додаємо.
+For the current rules, the 90% interval covers zero (EU from −3.1% to +7.1%, US from −4.2% to +3.3%), so the advantage over the index is not proven. A market limit, a momentum rank adjusted for volatility, a different number of funds and a different correlation threshold did not improve the result in both sets at once, so they are not added.
