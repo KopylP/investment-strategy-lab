@@ -7,21 +7,12 @@ import { RefDirective } from 'rete-angular-plugin/21';
 import { StrategyNode } from './rete-model';
 import { DraftSetupDto } from '../../models/draft-dto';
 import { setupFields } from '../../data-access/setup-bindings';
-import { FundSearchDialog } from '../fund-search-dialog/fund-search-dialog';
+import { FundSelectionDialog } from '../fund-selection-dialog/fund-selection-dialog';
 import { fitNodeSelectOverlay } from './node-select-overlay';
-import { FundPicker } from '../fund-picker/fund-picker';
 
 @Component({
   selector: 'app-setup-rete-node',
-  imports: [
-    FormsModule,
-    KeyValuePipe,
-    Select,
-    MultiSelect,
-    RefDirective,
-    FundSearchDialog,
-    FundPicker,
-  ],
+  imports: [FormsModule, KeyValuePipe, Select, MultiSelect, RefDirective, FundSelectionDialog],
   host: { '[style.width.px]': 'data.width' },
   template: `
     <article
@@ -47,14 +38,14 @@ import { FundPicker } from '../fund-picker/fund-picker';
             <label [for]="'setup-node-' + field.key">{{ field.label }}</label>
             <div class="field-value">
               @if (field.key === 'funds') {
-                <app-builder-fund-picker
-                  inputId="setup-node-funds"
-                  [instruments]="data.instruments"
-                  [value]="data.setup.funds"
-                  (valueChange)="patch('funds', $event)"
-                  [compact]="true"
-                  [overlayContainer]="data.overlayContainer"
-                />
+                <button
+                  type="button"
+                  class="fund-select-button"
+                  (click)="searchVisible.set(true)"
+                  aria-haspopup="dialog"
+                >
+                  <i class="pi pi-folder-open"></i> Обрати фонди · {{ data.setup.funds.length }}
+                </button>
               } @else if (field.key === 'extraSeries') {
                 <p-multiselect
                   [inputId]="'setup-node-' + field.key"
@@ -132,9 +123,6 @@ import { FundPicker } from '../fund-picker/fund-picker';
                   }
                 </div>
               </div>
-              <button class="find" type="button" (click)="searchVisible.set(true)">
-                <i class="pi pi-search"></i> Знайти фонди
-              </button>
             }
           </div>
         }
@@ -164,11 +152,13 @@ import { FundPicker } from '../fund-picker/fund-picker';
         }
       </div>
     </article>
-    <app-builder-fund-search-dialog
+    <app-fund-selection-dialog
       [(visible)]="searchVisible"
       [overlayContainer]="data.overlayContainer"
-      [selectedInstrumentIds]="data.setup.funds"
-      (added)="fundsAdded($event)"
+      [instruments]="data.instruments"
+      [value]="data.setup.funds"
+      (applied)="patch('funds', $event)"
+      (instrumentsChanged)="data.refreshInstruments()"
     />
   `,
   styles: [
@@ -227,6 +217,21 @@ import { FundPicker } from '../fund-picker/fund-picker';
       .field-value app-builder-fund-picker {
         flex: 1;
         min-width: 0;
+      }
+      .fund-select-button {
+        flex: 1;
+        text-align: left;
+        padding: 8px;
+        border: 1px solid var(--p-content-border-color);
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      .fund-select-button:hover {
+        background: var(--p-content-hover-background);
+      }
+      .fund-select-button:focus-visible {
+        outline: 2px solid var(--p-primary-color);
       }
       .port {
         display: grid;
@@ -344,10 +349,6 @@ export class SetupNode implements OnChanges {
     return (
       this.data.instruments.find((item) => item.id === key.slice(6))?.label ?? 'Додатковий ряд'
     );
-  }
-  fundsAdded(ids: string[]) {
-    this.patch('funds', [...new Set([...this.data.setup.funds, ...ids])]);
-    this.data.refreshInstruments();
   }
   keyboard(event: MouseEvent, key: string) {
     if (event.detail === 0) this.data.outputClick(key);

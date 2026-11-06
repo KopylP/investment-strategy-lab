@@ -26,19 +26,13 @@
   <div class="flex flex-col gap-4">
     <div class="flex flex-col gap-2">
       <div class="flex items-center justify-between gap-3">
-        <label for="builder-funds" class="font-medium">Фонди, з яких стратегія вибирає</label>
+        <span class="font-medium">Фонди, з яких стратегія вибирає</span>
         <small class="text-muted-color">{{ draft().funds.length }} із 60</small>
       </div>
-      <app-builder-fund-picker
-        inputId="builder-funds"
-        [instruments]="instruments()"
-        [value]="draft().funds"
-        (valueChange)="patch({ funds: $event })"
-      />
       <p-button
-        label="Знайти фонди"
-        ariaLabel="Знайти фонди"
-        icon="pi pi-search"
+        [label]="'Обрати фонди · ' + draft().funds.length"
+        ariaLabel="Обрати фонди"
+        icon="pi pi-folder-open"
         severity="secondary"
         [outlined]="true"
         (onClick)="fundSearchVisible.set(true)"
@@ -111,8 +105,10 @@
   </div>
 </ng-template>
 
-<app-builder-fund-search-dialog
+<app-fund-selection-dialog
   [(visible)]="fundSearchVisible"
-  [selectedInstrumentIds]="draft().funds"
-  (added)="fundsAdded($event)"
+  [instruments]="instruments()"
+  [value]="draft().funds"
+  (applied)="patch({ funds: $event })"
+  (instrumentsChanged)="instrumentsChanged.emit()"
 />

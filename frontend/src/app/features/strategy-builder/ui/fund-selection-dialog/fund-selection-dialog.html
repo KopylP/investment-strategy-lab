@@ -1,0 +1,279 @@
+<p-dialog
+  header="Фонди стратегії"
+  [modal]="true"
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  [appendTo]="overlayContainer()"
+  [closable]="!busy()"
+  [closeOnEscape]="!busy()"
+  [style]="{ width: '72rem', maxWidth: '96vw' }"
+  [breakpoints]="{ '760px': '98vw' }"
+>
+  <p class="intro">
+    Виберіть фонди, серед яких стратегія шукатиме кандидатів. Зміни застосуються після
+    підтвердження.
+  </p>
+  <div class="selection-layout">
+    <section class="catalog" aria-label="Пошук і каталог фондів">
+      <p-selectbutton
+        [options]="searchScopes"
+        optionLabel="label"
+        optionValue="value"
+        [ngModel]="scope()"
+        (ngModelChange)="scope.set($event)"
+        [allowEmpty]="false"
+        [disabled]="busy()"
+        ariaLabel="Де шукати фонди"
+      />
+      @if (scope() === 'added') {
+        <p class="scope-description">
+          Пошук серед інструментів, уже доданих до сервісу. Наявність у каталозі не гарантує повної
+          історії котирувань.
+        </p>
+        <label for="fund-selection-query">Назва або тикер серед доданих</label>
+        <input
+          pInputText
+          id="fund-selection-query"
+          type="search"
+          placeholder="Наприклад, SPY або MSCI World"
+          [ngModel]="query()"
+          (ngModelChange)="query.set($event)"
+          [disabled]="busy()"
+        />
+      } @else {
+        <p class="scope-description">
+          Пошук ETF у Yahoo Finance, зокрема ще не доданих до сервісу. Вибрані нові фонди буде
+          додано після «Застосувати».
+        </p>
+        <label for="fund-remote-query">Слова в назві ETF</label>
+        <input
+          pInputText
+          id="fund-remote-query"
+          type="search"
+          placeholder="Наприклад, MSCI World"
+          [ngModel]="remoteQuery()"
+          (ngModelChange)="remoteQuery.set($event)"
+          [disabled]="busy() || store.searching()"
+          (keydown.enter)="exchange() || region() ? search() : null"
+        />
+        <div class="external-search">
+          <p class="hint">
+            Виберіть біржу або регіон. Пошук перевіряє до 250 найбільших ETF і показує до 100
+            збігів. Це обмежена вибірка, а не повний список ETF. Пошук за точним тикером тут ще не
+            підтримується.
+          </p>
+          @if (store.options(); as options) {
+            <div class="search-filters">
+              <div>
+                <label for="selection-exchange">Біржа</label
+                ><p-select
+                  inputId="selection-exchange"
+                  [options]="options.exchanges"
+                  optionLabel="label"
+                  optionValue="id"
+                  [ngModel]="exchange()"
+                  (ngModelChange)="exchange.set($event)"
+                  [showClear]="true"
+                  placeholder="Оберіть біржу"
+                  [disabled]="busy()"
+                  [appendTo]="overlayContainer()"
+                  fluid
+                />
+              </div>
+              <div>
+                <label for="selection-region">Регіон</label
+                ><p-select
+                  inputId="selection-region"
+                  [options]="options.regions"
+                  optionLabel="label"
+                  optionValue="id"
+                  [ngModel]="region()"
+                  (ngModelChange)="region.set($event)"
+                  [showClear]="true"
+                  placeholder="Оберіть регіон"
+                  [disabled]="busy()"
+                  [appendTo]="overlayContainer()"
+                  fluid
+                />
+              </div>
+            </div>
+            <details class="advanced-filters">
+              <summary>Додаткові фільтри</summary>
+              <div class="search-filters">
+                <div>
+                  <label for="selection-family">Сімейство фондів</label
+                  ><input
+                    pInputText
+                    id="selection-family"
+                    [ngModel]="family()"
+                    (ngModelChange)="family.set($event)"
+                    [disabled]="busy()"
+                  />
+                </div>
+                <div>
+                  <label for="selection-assets">Мінімальні активи</label
+                  ><p-inputnumber
+                    inputId="selection-assets"
+                    [ngModel]="minAssets()"
+                    (ngModelChange)="minAssets.set($event)"
+                    [min]="0"
+                    [maxFractionDigits]="0"
+                    [disabled]="busy()"
+                    fluid
+                  />
+                </div>
+                <div>
+                  <label for="selection-fee">Максимальна TER, %</label
+                  ><p-inputnumber
+                    inputId="selection-fee"
+                    [ngModel]="maxFee()"
+                    (ngModelChange)="maxFee.set($event)"
+                    [min]="0"
+                    [max]="10"
+                    [maxFractionDigits]="3"
+                    [disabled]="busy()"
+                    fluid
+                  />
+                </div>
+              </div>
+            </details>
+            <p-button
+              [label]="store.searching() ? 'Шукаємо у Yahoo Finance…' : 'Шукати у Yahoo Finance'"
+              icon="pi pi-search"
+              [loading]="store.searching()"
+              [disabled]="busy() || (!exchange() && !region())"
+              (onClick)="search()"
+            />
+          } @else {
+            <p-button
+              label="Завантажити параметри пошуку"
+              [loading]="store.loadingOptions()"
+              (onClick)="store.loadOptions()"
+            />
+          }
+        </div>
+        @if (store.error()) {
+          <p role="alert" class="error">{{ store.error() }}</p>
+        }
+      }
+      <div class="results" [attr.aria-busy]="scope() === 'external' && store.searching()">
+        @if (scope() === 'added') {
+          @for (group of groups(); track group.label) {
+            <section class="fund-group">
+              <label class="group-title"
+                ><input
+                  type="checkbox"
+                  [checked]="groupSelected(group.items)"
+                  [indeterminate]="!groupSelected(group.items) && group.items.some(hasSelectedId)"
+                  [disabled]="busy()"
+                  (change)="toggleGroup(group.items)"
+                />{{ group.label }} <span>{{ group.items.length }}</span></label
+              >
+              @for (fund of group.items; track fund.id) {
+                <label class="fund-row"
+                  ><input
+                    type="checkbox"
+                    [checked]="selectedIds().includes(fund.id)"
+                    [disabled]="busy() || (count() >= 60 && !selectedIds().includes(fund.id))"
+                    (change)="toggleId(fund.id)"
+                  /><span
+                    ><strong>{{ fund.label }}</strong
+                    ><span class="fund-name">{{ fund.name }}</span></span
+                  ></label
+                >
+              }
+            </section>
+          } @empty {
+            <p class="hint">
+              Серед доданих інструментів збігів немає. Перемкніться на «Пошук у Yahoo Finance», щоб
+              знайти інші ETF.
+            </p>
+          }
+        } @else if (store.searching()) {
+          <div class="search-status" role="status">
+            <i class="pi pi-spin pi-spinner" aria-hidden="true"></i> Шукаємо ETF у Yahoo Finance. Це
+            може зайняти деякий час…
+          </div>
+        } @else if (store.funds() !== null) {
+          <p class="search-status" role="status">
+            Yahoo Finance · знайдено {{ external().length }} ETF за останнім запитом
+          </p>
+
+          @for (fund of external(); track fund.symbol) {
+            <label class="fund-row"
+              ><input
+                type="checkbox"
+                [checked]="has(fund)"
+                [disabled]="busy() || (count() >= 60 && !has(fund))"
+                (change)="toggleExternal(fund)"
+              /><span
+                ><strong>{{ fund.symbol }}</strong
+                ><span class="fund-name"
+                  >{{ fund.name }} · {{ fund.currency ?? 'Валюта невідома' }}</span
+                ></span
+              ><small>{{
+                fund.instrumentId ? 'Уже додано до сервісу' : 'Ще не додано'
+              }}</small></label
+            >
+          } @empty {
+            <p class="hint">
+              За цими умовами ETF не знайдено. Спробуйте прибрати слова з назви або змінити біржу чи
+              регіон.
+            </p>
+          }
+        } @else {
+          <p class="hint" role="status">
+            Виберіть біржу або регіон і натисніть «Шукати у Yahoo Finance». Результати з’являться
+            тут.
+          </p>
+        }
+      </div>
+    </section>
+    <aside class="selected-panel" aria-label="Вибрані фонди">
+      <h3 aria-live="polite">Вибрано {{ count() }} із 60</h3>
+      <div class="selected-list">
+        @for (fund of selected(); track fund.key) {
+          <div class="selected-row">
+            <span
+              ><strong>{{ fund.label }}</strong
+              ><span class="fund-name">{{ fund.name }}</span>
+              @if (fund.pending) {
+                <small>Буде додано до каталогу</small>
+              }</span
+            ><button
+              type="button"
+              [attr.aria-label]="'Прибрати ' + fund.label"
+              [disabled]="busy()"
+              (click)="remove(fund.key, fund.pending)"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </div>
+        } @empty {
+          <p class="hint">Позначте потрібні фонди в каталозі або результатах пошуку.</p>
+        }
+      </div>
+    </aside>
+  </div>
+  @if (error()) {
+    <p role="alert" class="error">{{ error() }}</p>
+  }
+  @for (failure of failures(); track failure.symbol) {
+    <p role="alert" class="error">{{ failure.symbol }}: {{ failure.reason }}</p>
+  }
+  <ng-template #footer>
+    <p-button
+      label="Скасувати"
+      severity="secondary"
+      [text]="true"
+      [disabled]="busy()"
+      (onClick)="visible.set(false)"
+    />
+    <p-button
+      [label]="'Застосувати · ' + count() + ' фондів'"
+      [loading]="busy()"
+      [disabled]="store.searching()"
+      (onClick)="apply()"
+    />
+  </ng-template>
+</p-dialog>
