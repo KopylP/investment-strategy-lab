@@ -32,7 +32,7 @@ public sealed class StrategyEngineClient(HttpClient http)
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
-            return (null, (int)response.StatusCode, body);
+            return (null, (int)response.StatusCode, DetailOf(body));
 
         var answer = JsonNode.Parse(body);
         RenameKeys(answer);
@@ -49,7 +49,7 @@ public sealed class StrategyEngineClient(HttpClient http)
 
         return response.IsSuccessStatusCode
             ? (JsonNode.Parse(body)?["jobId"]?.GetValue<string>(), (int)response.StatusCode, null)
-            : (null, (int)response.StatusCode, body);
+            : (null, (int)response.StatusCode, DetailOf(body));
     }
 
     public async Task<EngineJob?> GetJobAsync(string jobId, CancellationToken cancellationToken)
@@ -70,12 +70,30 @@ public sealed class StrategyEngineClient(HttpClient http)
             job["status"]!.GetValue<string>(),
             result,
             error?["statusCode"]?.GetValue<int>(),
-            error?["detail"] is { } detail
-                ? detail.GetValueKind() == JsonValueKind.String
-                ? detail.GetValue<string>()
-                : detail.ToJsonString()
-                : null);
+            error?["detail"] is { } detail ? TextOf(detail) : null);
     }
+
+    private static string DetailOf(string body)
+    {
+        var detail = ParsedOrNull(body) is JsonObject answer ? answer["detail"] : null;
+
+        return detail is null ? body : TextOf(detail);
+    }
+
+    private static JsonNode? ParsedOrNull(string body)
+    {
+        try
+        {
+            return JsonNode.Parse(body);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static string TextOf(JsonNode detail) =>
+        detail.GetValueKind() == JsonValueKind.String ? detail.GetValue<string>() : detail.ToJsonString();
 
     private static void RenameKeys(JsonNode? node)
     {

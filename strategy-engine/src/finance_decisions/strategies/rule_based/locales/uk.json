@@ -153,6 +153,8 @@
   "rule_based.market.unfavorable": "Ринок несприятливий ({items:join:; }): у фондах лише {share:percent}, решта в кеш-фонді.",
   "rule_based.market.nothing_qualified": "Жоден фонд не пройшов правила: гроші чекають у кеш-фонді.",
   "rule_based.market.exposure_reduced": "Обрані фонди коливаються на {volatility:percent} на рік, більше за ціль {target:percent}: у фондах лише {share:percent} їхньої частки.",
+  "rule_based.error.no_price": "Для фонду {instrument} немає жодної ціни до {asOf}, тож його не можна оцінити.",
+  "rule_based.error.stale_price": "Для фонду {instrument} на {asOf} остання ціна від {lastPriceOn}, а оцінка потребує ціни не старшої за {maxDays} днів.",
   "rule_based.risk.reasons": "{items:join:; }",
   "rule_based.risk.stop_loss": "збиток {loss:signedPercent} від собівартості досяг межі {limit:signedPercent}",
   "rule_based.risk.drawdown": "просадка {drawdown:signedPercent} від піку досягла межі {limit:signedPercent}",
