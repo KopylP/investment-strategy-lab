@@ -1,62 +1,47 @@
-# ADR-0015: Адаптивний моментум як окремий тип стратегії
+# ADR-0015: Adaptive momentum as a separate strategy type
 
-- Статус: прийнято (2026-11-02)
-- Доповнює: ADR-0012
+- Status: accepted (2026-11-02)
+- Complements: ADR-0012
 
-## Контекст
-ETF-моментум у бектесті EU-набору давав 8,6% на рік із Sharpe 0,76: менше, ніж «порівну в усі фонди» (10,5%, 0,82).
-Його дохід з'їдали шари захисту: продаж окремих позицій за стопами, вихід за VIX і падінням рахунку, фільтри
-волатильності, Sharpe і просідання, 6-місячний моментум. Мета нової версії: більший дохід при порівнянному ризику, і
-лише за правилами, що допомагають і в EU-, і в US-наборі (ADR-0012).
+## Context
+In the backtest of the EU set, ETF momentum gave 8.6% a year with a Sharpe of 0.76: less than "equal weight in all funds" (10.5%, 0.82). Its return was eaten by the protection layers: selling individual positions on stops, exit on VIX and on an account fall, volatility, Sharpe and drawdown filters, and 6-month momentum. The goal of the new version: more return at comparable risk, and only with rules that help in both the EU and the US sets (ADR-0012).
 
-Правила перебирались дослідницьким симулятором на щоденних цінах Yahoo (EU з 2015 і з 2011 року, US з 2003, 2008 і
-2015 року), а підсумок перевірено бектестом сервісу з ребалансувальником сервісу.
+The rules were iterated with a research simulator on daily Yahoo prices (EU from 2015 and from 2011, US from 2003, 2008 and 2015), and the outcome was verified with the service's backtest, using the service's rebalancer.
 
-## Рішення
-Новий тип `adaptive-momentum` поруч зі старим, старий не змінюється.
+## Decision
+A new type `adaptive-momentum` next to the old one; the old one does not change.
 
-- Сила фонду: середня дохідність за 3, 6 і 12 місяців (63, 126 і 252 торгові дні), без поправки на волатильність.
-- Фонд підходить, лише коли сила додатна і ціна вища за 200-денну середню. Інших фільтрів немає.
-- До трьох найсильніших, по одному з групи, і не схожих на вже обраний (кореляція денних змін за 126 днів понад 0,7).
-  Кожен займає третину, порожнє місце чекає в кеш-фонді.
-- Цільова волатильність 14%: коли обраний портфель останні 21 торговий день коливався сильніше, частка всіх фондів
-  зменшується пропорційно, решта йде в кеш-фонд (volatility-managed portfolios, Moreira & Muir 2017).
-- Рішення лише щомісяця. Рапорту ризику й продажів між ребалансами немає, тож стратегія не ставить стопів.
-- Стратегія завжди оголошує ринок сприятливим: частку в фондах задають ваги, а не прапорець, інакше ребалансувальник
-  не повертав би гроші з кеш-фонду.
-- Типові стратегії «EU adaptive momentum» і «US adaptive momentum» мають ті самі фонди, кеш і бенчмарк, що й ETF-моментум.
-- Збережені бектести видаляються міграцією, щоб усі стратегії перерахувались за однакових правил.
+- Strength of a fund: the average return over 3, 6 and 12 months (63, 126 and 252 trading days), without a volatility adjustment.
+- A fund qualifies only when its strength is positive and its price is above its 200-day average. There are no other filters.
+- Up to three of the strongest, one per group, and not similar to one already chosen (the correlation of daily changes over 126 days above 0.7). Each takes a third; an empty place waits in the cash fund.
+- A target volatility of 14%: when the chosen portfolio has moved more strongly over the last 21 trading days, the share of all funds decreases proportionally, and the rest goes to the cash fund (volatility-managed portfolios, Moreira & Muir 2017).
+- Decisions only monthly. There is no risk report and no sales between rebalances, so the strategy does not set stops.
+- The strategy always declares the market favourable: the share in funds is set by the weights, not by a flag, otherwise the rebalancer would not return money from the cash fund.
+- The default strategies "EU adaptive momentum" and "US adaptive momentum" have the same funds, cash and benchmark as the ETF momentum.
+- The saved backtests are deleted by a migration, so that all strategies are recalculated under the same rules.
 
-## Результати бектесту сервісу
-100 000 на старті, без внесків, комісія 0,1% + 1 за угоду.
+## Results of the service backtest
+100,000 at the start, no contributions, a commission of 0.1% + 1 per trade.
 
-| Стратегія | EU 2015–2026: дохідність, волатильність, Sharpe, просідання | US 2002–2026 |
+| Strategy | EU 2015–2026: return, volatility, Sharpe, drawdown | US 2002–2026 |
 |---|---|---|
-| ETF-моментум (кореляція 0,7, без продажу позицій) | 10,0%, 11,3%, 0,83, −15,8% | 8,3%, 12,1%, 0,57, −25,2% |
-| Адаптивний моментум, ціль 14% | 12,5%, 13,0%, 0,91, −15,0% | 9,5%, 13,8%, 0,59, −29,4% |
-| Адаптивний моментум без цілі волатильності | 13,2%, 14,1%, 0,88, −15,0% | 9,8%, 16,5%, 0,51, −37,7% |
-| Порівну в усі фонди | 10,5%, 11,9%, 0,82, −28,2% | 9,8%, 13,8%, 0,61, −40,8% |
-| S&P 500 | 13,7%, 18,6%, 0,70, −33,0% | 11,3%, 18,5%, 0,54, −55,2% |
+| ETF momentum (correlation 0.7, no sale of positions) | 10.0%, 11.3%, 0.83, −15.8% | 8.3%, 12.1%, 0.57, −25.2% |
+| Adaptive momentum, target 14% | 12.5%, 13.0%, 0.91, −15.0% | 9.5%, 13.8%, 0.59, −29.4% |
+| Adaptive momentum without a volatility target | 13.2%, 14.1%, 0.88, −15.0% | 9.8%, 16.5%, 0.51, −37.7% |
+| Equal weight in all funds | 10.5%, 11.9%, 0.82, −28.2% | 9.8%, 13.8%, 0.61, −40.8% |
+| S&P 500 | 13.7%, 18.6%, 0.70, −33.0% | 11.3%, 18.5%, 0.54, −55.2% |
 
-## Що перевірено й не взято
-Кожне з цього не покращило результат в обох наборах одночасно:
+## What was checked and not taken
+Each of these did not improve the result in both sets at once:
 
-- стопи окремих позицій (в EU коштували близько 4% на рік), вихід портфеля після падіння на 6–10% від ребалансу і вихід
-  за стрибком волатильності між ребалансами: продають на дні й пропускають відскок;
-- ранг за силою з поправкою на волатильність, ваги обернено до волатильності, 6-місячний чи 12-1 моментум, зважений
-  13612W Келлера, якість тренду Кленова (нахил експоненційної регресії × R²);
-- 2 або 4 фонди замість 3, буфер утримання, ліміт волатильності фонду 30–35%;
-- частка в кеші за кількістю фондів із від'ємним моментумом (Keller, DAA), захисні активи замість кешу, ринковий фільтр
-  за S&P 500 чи його моментумом;
-- ядро 30–60% у широкому ринку: у US-наборі допомагало, в EU погіршувало.
+- stops on individual positions (in the EU they cost about 4% a year), an exit of the portfolio after a fall of 6–10% from the rebalance, and an exit on a volatility spike between rebalances: they sell at the bottom and miss the rebound;
+- a rank by strength adjusted for volatility, weights inversely proportional to volatility, 6-month or 12-1 momentum, Keller's 13612W weighting, Clenow's trend quality (slope of an exponential regression × R²);
+- 2 or 4 funds instead of 3, a holding buffer, a fund volatility limit of 30–35%;
+- a share in cash by the number of funds with negative momentum (Keller, DAA), protective assets instead of cash, a market filter by the S&P 500 or its momentum;
+- a 30–60% core in the broad market: it helped in the US set and worsened the EU one.
 
-## Наслідки
-- В EU нова стратегія на 2,5% на рік дохідніша за ETF-моментум і має менше просідання. В US вона на 1,2% дохідніша, але
-  просідання глибше (−29% проти −25%), а з «порівну в усі фонди» на рівному ризику вона лише зрівнюється.
-- Слабке місце: роки бічного ринку, коли сильних трендів немає (US 2011–2016, 2023). Стратегія тоді перебирає захисні
-  сектори й відстає від індексу. Сильна сторона: тривалі падіння (за дослідницьким симулятором 2008 рік: +0,1% проти −37% у S&P 500; 2022 рік в EU:
-  +4,9% проти −14%).
-- Ребалансувальник урізає позицію лише понад смугу 10% і лише прибуткову, тому невеликі зменшення частки за
-  волатильністю виконуються не завжди. Бектест сервісу це враховує, дослідницький симулятор показував на 1–2% більше.
-- Обмеження ADR-0012 лишаються: фонди взято за сьогоднішнім списком, податки не враховано, правила вибирались на тій
-  самій історії, тож майбутній результат буде гіршим за бектест.
+## Consequences
+- In the EU the new strategy is 2.5% a year more profitable than ETF momentum and has a smaller drawdown. In the US it is 1.2% more profitable, but the drawdown is deeper (−29% against −25%), and against "equal weight in all funds" at equal risk it only matches it.
+- A weak spot: years of a sideways market, when there are no strong trends (US 2011–2016, 2023). The strategy then picks the protective sectors and lags the index. Its strong side: long falls (in the research simulator, 2008: +0.1% against −37% for the S&P 500; 2022 in the EU: +4.9% against −14%).
+- The rebalancer trims a position only beyond a 10% band and only a profitable one, so small reductions of the share by volatility are not always executed. The service backtest accounts for this; the research simulator showed 1–2% more.
+- The limitations of ADR-0012 remain: the funds are taken from today's list, taxes are not counted, the rules were chosen on the same history, so the future result will be worse than the backtest.

@@ -1,25 +1,25 @@
-# ADR-0022: Експерименти з фіксованими умовами та незалежними тестами
+# ADR-0022: Experiments with fixed conditions and independent tests
 
-- Статус: прийнято (2026-11-06)
+- Status: accepted (2026-11-06)
 
-## Контекст
+## Context
 
-Звичайний бектест належить версії стратегії й оновлюється зі зміною історії. Для порівняння правил аналітику потрібен окремий експеримент: однакові дати, капітал, витрати виконання та збережений журнал рішень. Результат незалежного періоду не повинен впливати на вибір параметрів.
+An ordinary backtest belongs to a strategy version and is updated when the history changes. For comparing rules, the analyst needs a separate experiment: the same dates, capital, execution costs and a saved journal of decisions. The result of an independent period must not influence the choice of parameters.
 
-## Рішення
+## Decision
 
-- Backtesting володіє експериментами, їхніми умовами та результатами. StrategyBuilder зберігає власний опис запиту й ідентифікатор експерименту у пробному запуску; звертається до Backtesting через порт та адаптер.
-- Період, витрати, план незалежної перевірки, walk-forward, допустимий окіл параметра та вибір за навчальним Sharpe — правила Domain. Application завантажує дані, викликає ці правила й зберігає результат; кожна дія має окремий обробник.
-- Початковий капітал і комісії впливають на фактичні кількості та платежі симуляції. Spread і slippage змінюють ціну виконання в несприятливий бік; у журналі вони відокремлені від комісії.
-- Прогрів індикаторів може читати давнішу історію, але угоди й результат належать лише вибраному періоду. Варіанти мають спільні дати та вимоги до достатньої історії.
-- Для незалежного тесту й кожного кроку walk-forward кандидата обирають лише за навчальним вікном. За рівного Sharpe зберігається початковий порядок кандидатів; першим є поточне значення параметра. Невдале навчання дає помилку перевірки, а не вигаданий результат.
-- Перевірка сусідніх параметрів на всьому періоді показується окремо від незалежних тестів. Вона не є доказом переваги на нових даних.
-- Журнал містить рішення, кандидатів і значення індикаторів, цільові та фактичні ваги, виконані й прострочені накази. Виконання посилається на дату рішення. Журнал читається окремим запитом із фільтрами й сторінками.
-- Експеримент виконується у фоні. Планувальник лише знаходить наступний запуск і викликає обробник у власному scope. Помилка одного запуску не блокує інші.
+- Backtesting owns the experiments, their conditions and their results. StrategyBuilder stores its own description of the request and the experiment identifier in the trial run; it reaches Backtesting through a port and an adapter.
+- The period, the costs, the plan of the independent check, walk-forward, the permitted neighbourhood of a parameter and the selection by the training Sharpe are rules of the Domain. The Application loads the data, calls these rules and stores the result; each action has its own handler.
+- The initial capital and the commissions affect the actual quantities and payments of the simulation. The spread and the slippage change the execution price in an unfavourable direction; in the journal they are separated from the commission.
+- Indicator warm-up may read older history, but the trades and the result belong only to the chosen period. The variants share the dates and the requirements for sufficient history.
+- For an independent test and for each walk-forward step, a candidate is chosen only by the training window. With equal Sharpe, the original order of the candidates is kept; the first one is the current value of the parameter. A failed training gives a verification error, not an invented result.
+- The check of neighbouring parameters over the whole period is shown separately from the independent tests. It is not evidence of an advantage on new data.
+- The journal contains the decisions, the candidates and the indicator values, the target and actual weights, the executed and the expired orders. An execution refers to the date of its decision. The journal is read through a separate request with filters and pages.
+- The experiment runs in the background. The scheduler only finds the next run and calls the handler in its own scope. The failure of one run does not block the others.
 
-## Наслідки
+## Consequences
 
-- Старі пробні запуски без експерименту залишаються доступними.
-- План із незалежними перевірками виконує кілька прогонів і займає більше часу. Кількість кандидатів та кроків walk-forward обмежена доменними правилами.
-- Правила не переписують збережену версію стратегії: числовий варіант передається в оцінку як перевірене перевизначення параметрів лише на час симуляції.
-- Нові терміни внесені до [глосарія](../../domain/glossary.md); правила перевіряються доменними тестами. Наскрізна перевірка нового сценарію через API та базу даних ще потрібна.
+- Old trial runs without an experiment remain available.
+- A plan with independent checks runs several passes and takes more time. The number of candidates and walk-forward steps is limited by the domain rules.
+- The rules do not rewrite the saved version of the strategy: a numeric variant is passed to the evaluation as a verified parameter override only for the duration of the simulation.
+- The new terms are entered in the [glossary](../../domain/glossary.md); the rules are checked by domain tests. An end-to-end check of the new scenario through the API and the database is still needed.

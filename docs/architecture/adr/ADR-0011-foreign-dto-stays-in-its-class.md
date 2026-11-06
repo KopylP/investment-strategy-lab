@@ -1,20 +1,20 @@
-# ADR-0011: DTO іншого модуля не виходить за межі класу, який його читає
+# ADR-0011: A foreign module's DTO does not leave the class that reads it
 
-- Статус: прийнято (2026-11-01)
+- Status: accepted (2026-11-01)
 
-## Контекст
-`PlanningInputs` і `TaxInputs` збирали дані інших модулів для обробників. Вони розрослись у збірні класи із сімома залежностями, тому кожен обробник залежав від усього, що в них лежало. DTO модулів Portfolio, MarketData і Strategies розійшлися по записах, командах і домену планування, і зміна контракту зачіпала багато сценаріїв.
+## Context
+`PlanningInputs` and `TaxInputs` gathered data of other modules for the handlers. They had grown into aggregate classes with seven dependencies, so every handler depended on everything they held. The DTOs of the Portfolio, MarketData and Strategies modules had spread into records, commands and the planning domain, and a change to a contract touched many scenarios.
 
-## Рішення
-- DTO іншого модуля може бути локальною змінною, приватним членом або аргументом приватного методу класу, який викликає контракт. У публічні й внутрішні сигнатури та властивості він не потрапляє. Це перевіряє `ForeignContractIsolationTests`.
-- Якщо сценарій лише перевіряє існування або копіює кілька значень, обробник сам викликає запит із `.Contracts`.
-- Якщо дані стають бізнес-поняттям цього контексту, домен оголошує порт і власні типи, а адаптер в `Infrastructure` реалізує їх над контрактом. DTO загортається в приватний вкладений клас, який лише передає властивості (`=> _dto.Property`).
-- Події `…V1` лишаються в `Application/Integration`: вони вже є публічною мовою між модулями, а їхні обробники й мапери саме перекладають її. Подія, що приходить усередині відповіді на запит (записи журналу), підпорядковується правилу для DTO.
-- Класи, що збирають дані інших модулів, заборонені, зокрема назвами `…Inputs`. Записи, які несуть поля запиту (`NewSubPortfolio`), лишаються.
+## Decision
+- A foreign module's DTO may be a local variable, a private member or an argument of a private method of the class that calls the contract. It does not appear in public or internal signatures or properties. `ForeignContractIsolationTests` checks this.
+- If a scenario only checks existence or copies a few values, the handler calls the `.Contracts` query itself.
+- If the data becomes a business concept of this context, the domain declares a port and its own types, and an adapter in `Infrastructure` implements them over the contract. The DTO is wrapped in a private nested class that only passes properties through (`=> _dto.Property`).
+- The `…V1` events stay in `Application/Integration`: they are already the public language between modules, and their handlers and mappers translate it. An event that arrives inside a query response (journal entries) is subject to the DTO rule.
+- Classes that gather other modules' data are forbidden, including under names like `…Inputs`. Records that carry request fields (`NewSubPortfolio`) remain.
 
-## Наслідки
-- Зміна контракту зачіпає один адаптер або один обробник.
-- Правила, що ховалися в збірних класах, перейшли в домен і отримали юніт-тести (`PlannedSubPortfolios`, `PriceWarnings`, `PriceConversion`, `AccountCash`, `AccountReport.AllOf`, `StrategyAsk`, `StrategyTargets.Of`, `JournalMovements`, `LedgerEntries`, `AssessmentHash`).
-- Запис `StrategyRun.Answer` лишається JSON-відповіддю рушія, тож збережені запити читаються як раніше; читає її лише адаптер `StrategyRuns`.
-- `AccountReports` читає рахунок сам, тому там, де обробнику теж потрібен рахунок, запит іде двічі. Дані лежать у тому самому процесі, і простота важить більше.
-- Збережені відповіді стратегій тепер читаються всі одразу, а не лише для підпортфелів, що лишилися в плані. Відповідь без обов'язкових полів дає помилку обробки запиту навіть тоді, коли її підпортфель уже вибув. Рушій такої відповіді не надсилає, а зіпсовані дані мають проявлятися, а не ховатися.
+## Consequences
+- A change to a contract touches one adapter or one handler.
+- Rules that used to hide in the aggregate classes moved to the domain and received unit tests (`PlannedSubPortfolios`, `PriceWarnings`, `PriceConversion`, `AccountCash`, `AccountReport.AllOf`, `StrategyAsk`, `StrategyTargets.Of`, `JournalMovements`, `LedgerEntries`, `AssessmentHash`).
+- The `StrategyRun.Answer` record stays the engine's JSON answer, so saved requests are read as before; only the `StrategyRuns` adapter reads it.
+- `AccountReports` reads the account itself, so where a handler also needs the account, the query is made twice. The data lies in the same process, and simplicity matters more.
+- Saved strategy answers are now all read at once, not only for the sub-portfolios still in the plan. An answer without required fields gives a request-processing error even when its sub-portfolio has already left. The engine does not send such an answer, and corrupted data should surface, not hide.

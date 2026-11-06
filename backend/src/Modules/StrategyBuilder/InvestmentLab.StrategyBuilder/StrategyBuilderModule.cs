@@ -31,6 +31,7 @@ using InvestmentLab.StrategyBuilder.Drafts.Application.GetDraft;
 using InvestmentLab.StrategyBuilder.Drafts.Application.GetDraftRules;
 using InvestmentLab.StrategyBuilder.Drafts.Application.GetVocabulary;
 using InvestmentLab.StrategyBuilder.Drafts.Application.ImportRules;
+using InvestmentLab.StrategyBuilder.Drafts.Application.ReplaceDraftRules;
 using InvestmentLab.StrategyBuilder.Drafts.Application.ListDrafts;
 using InvestmentLab.StrategyBuilder.Drafts.Application.ListInstruments;
 using InvestmentLab.StrategyBuilder.Drafts.Application.MoveNodes;
@@ -94,6 +95,7 @@ public sealed class StrategyBuilderModule : IModule
         services.AddScoped<CheckDraftHandler>();
         services.AddScoped<GetDraftRulesHandler>();
         services.AddScoped<ImportRulesHandler>();
+        services.AddScoped<ReplaceDraftRulesHandler>();
         services.AddScoped<DiscardDraftHandler>();
     }
 

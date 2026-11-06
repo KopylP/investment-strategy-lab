@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Investment Lab MCP",
+        "description": "Відкриває MCP add-on'а Investment Lab за адресою /api/investlab/mcp цього Home Assistant. Клієнти входять через Home Assistant."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Investment Lab MCP уже налаштовано."
+    }
+  }
+}

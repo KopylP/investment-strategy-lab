@@ -18,7 +18,7 @@ public static class SelfHosting
         if (app.Configuration.GetValue<bool>("HomeAssistant:IngressOnly"))
             app.Use((context, next) =>
             {
-                if (context.IsFromHomeAssistantIngress())
+                if (context.IsFromHomeAssistantIngress() || McpAccess.IsMcpRequest(context))
                     return next(context);
 
                 context.Response.StatusCode = StatusCodes.Status403Forbidden;

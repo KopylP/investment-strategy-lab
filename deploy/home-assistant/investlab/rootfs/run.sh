@@ -48,6 +48,20 @@ export HomeAssistant__IngressOnly="${HomeAssistant__IngressOnly:-true}"
 # lives at /hassio/ingress/<slug>; the container's hostname is the slug with "-" for "_" (local_investlab -> local-investlab).
 export Notifications__HomeAssistant__PanelPath="/hassio/ingress/${HOSTNAME/-/_}"
 
+# --- MCP: off unless the option is on ---------------------------------------------------------------------------
+# The integration in Home Assistant forwards /api/investlab/mcp here; the API trusts only Home Assistant's own answer
+# about the caller's token (asked at http://homeassistant:8123). The integration learns this add-on's address from
+# addon.json, written next to it on every start, and is replaced when the add-on is updated (restart HA to load it).
+if [ "$(option mcp_enabled)" = "true" ]; then
+  export Mcp__Enabled=true
+  export Identity__AccessTokens__Issuer=HomeAssistant
+  INTEGRATION=/homeassistant/custom_components/investlab
+  mkdir -p "$INTEGRATION"
+  cp -R /app/integration/investlab/. "$INTEGRATION/"
+  printf '{"url": "http://%s:8098"}\n' "$HOSTNAME" > "$INTEGRATION/addon.json"
+  echo "[investlab] MCP is on: integration installed in $INTEGRATION"
+fi
+
 cd /app/api
 dotnet InvestmentLab.Api.dll &
 API_PID=$!

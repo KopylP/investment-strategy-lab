@@ -60,6 +60,7 @@
     <Project Path="tests/InvestmentLab.IntegrationTests/InvestmentLab.IntegrationTests.csproj" />
   </Folder>
   <Folder Name="/tests/Modules/">
+    <Project Path="tests/Modules/InvestmentLab.Identity.Tests/InvestmentLab.Identity.Tests.csproj" />
     <Project Path="tests/Modules/InvestmentLab.MarketData.Tests/InvestmentLab.MarketData.Tests.csproj" />
     <Project Path="tests/Modules/InvestmentLab.Notifications.Tests/InvestmentLab.Notifications.Tests.csproj" />
     <Project Path="tests/Modules/InvestmentLab.Backtesting.Tests/InvestmentLab.Backtesting.Tests.csproj" />

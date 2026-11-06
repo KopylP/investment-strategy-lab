@@ -14,11 +14,14 @@ builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = 
         && context.HttpContext.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error is { } error)
         context.ProblemDetails.Detail = $"{error.GetType().Name}: {error.Message} {error.InnerException?.Message}";
 });
-builder.AddModules(Modules.All());
+var modules = Modules.All();
+builder.AddModules(modules);
 builder.AddSelfHosting();
+builder.AddMcpAccess(modules);
 
 var app = builder.Build();
 
+app.UseMcpForwarding();
 app.UseSelfHosting();
 
 app.UseRouting();
@@ -36,6 +39,7 @@ if (app.Environment.IsDevelopment())
 
 app.MapDefaultEndpoints();
 app.MapModules();
+app.MapMcpAccess();
 app.MapFrontend();
 
 app.Run();

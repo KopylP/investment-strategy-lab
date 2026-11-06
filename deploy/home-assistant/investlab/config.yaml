@@ -16,7 +16,14 @@ panel_icon: mdi:chart-line
 panel_title: Investment Lab
 # Notifications: a scheduled report is announced in Home Assistant (its Core API through the Supervisor).
 homeassistant_api: true
+# MCP (when mcp_enabled): the add-on installs its small integration into Home Assistant's config, which publishes
+# /api/investlab/mcp on Home Assistant's own origin and forwards to 8098; clients sign in with Home Assistant's OAuth.
+map:
+  - type: homeassistant_config
+    read_only: false
 options:
   timezone: Europe/Warsaw
+  mcp_enabled: false
 schema:
   timezone: str
+  mcp_enabled: bool

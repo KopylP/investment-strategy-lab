@@ -20,5 +20,10 @@ cp "$ROOT/strategy-engine/pyproject.toml" "$OUT/engine/"
 cp -R "$ROOT/strategy-engine/src" "$OUT/engine/src"
 find "$OUT/engine" -name __pycache__ -type d -prune -exec rm -rf {} + ; rm -rf "$OUT/engine/src/"*.egg-info
 
+echo "==> Home Assistant integration (MCP proxy)"
+mkdir -p "$OUT/integration"
+cp -R "$ROOT/deploy/home-assistant/integration/custom_components/investlab" "$OUT/integration/investlab"
+find "$OUT/integration" -name __pycache__ -type d -prune -exec rm -rf {} +
+
 du -sh "$OUT"
 echo "Done: $ROOT/deploy/home-assistant/investlab"

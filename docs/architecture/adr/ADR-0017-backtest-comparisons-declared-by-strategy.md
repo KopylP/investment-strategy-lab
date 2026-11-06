@@ -1,38 +1,24 @@
-# ADR-0017: З чим порівнюється бектест, оголошує тип стратегії
+# ADR-0017: The backtest is compared with what the strategy type declares
 
-- Статус: прийнято (2026-11-03)
-- Доповнює: ADR-0012, ADR-0016
+- Status: accepted (2026-11-03)
+- Complements: ADR-0012, ADR-0016
 
-## Контекст
-Бектест кожної стратегії показував три лінії: стратегію, бенчмарк і «порівну в усі фонди». Ці три лінії були
-прописані в enum, у податкових підсумках, у відповіді API й на екрані. Але не кожне порівняння щось каже про
-кожну стратегію:
+## Context
+The backtest of each strategy showed three lines: the strategy, the benchmark and "equal weight in all funds". These three lines were written into an enum, into the tax totals, into the API response and onto the screen. But not every comparison says something about every strategy:
 
-- «Порівну в набір» перевіряє, чи окупається вибір, тож має сенс для стратегій, що обирають із набору (моментум).
-  Buy-and-hold і є «порівну», тож ця лінія майже дублює саму стратегію. Для стратегії з фіксованими вагами
-  (60/40) чесне порівняння — ті самі ваги без правил, а не рівні.
-- Бенчмарк відповідає на питання «а якби просто купив ринок?» і пасує всім стратегіям на акціях.
-- Мета наших стратегій — більше доходу на одиницю ризику (ADR-0012). Звичайний бенчмарк цього не показує: потрібен
-  бенчмарк, розбавлений кешем до волатильності стратегії.
+- "Equal weight in the set" checks whether the selection pays off, so it makes sense for strategies that choose from a set (momentum). Buy-and-hold is itself "equal weight", so this line almost duplicates the strategy itself. For a strategy with fixed weights (60/40), the honest comparison is the same weights without rules, not equal weights.
+- The benchmark answers the question "what if I had simply bought the market?" and suits all equity strategies.
+- The goal of our strategies is more return per unit of risk (ADR-0012). An ordinary benchmark does not show this: a benchmark diluted with cash to the strategy's volatility is needed.
 
-## Рішення
-- Тип стратегії в рушії оголошує `backtestComparisons`: коди порівнянь у порядку показу. Моментум-стратегії
-  оголошують `benchmark`, `benchmark-at-equal-risk`, `universe-equal-weight`, а buy-and-hold лише перші два.
-- У `Backtesting` кожне порівняння — окремий блок `IReplayComparison` із кодом. Блок будує лінію з
-  `ReplayedHistory` (ціни, налаштування, зростання стратегії) і каже, як податок бачить її утримання. Податок після
-  продажу, Sharpe, просідання й «що було б із грошима» рахуються однаково для будь-якої лінії.
-- Нове порівняння — це новий клас і його реєстрація, без змін у прогоні, API чи екрані. Невідомий код зупиняє
-  бектест з помилкою `backtest.unknown_comparison` замість того, щоб тихо прибрати лінію.
-- Лінія в результаті має код і назву-повідомлення (`@backtest.series.…`). Екран малює стільки ліній, скільки
-  прийшло, і нічого не знає про конкретні порівняння.
-- `benchmark-at-equal-risk`: щодня частка `w = min(1, σ стратегії / σ бенчмарку)` у бенчмарку, а решта у
-  фонді кешу стратегії. `w` береться за весь період, тож це мірило, а не стратегія, яку можна було повторити.
-  Більше за весь бенчмарк, тобто в борг, лінія не бере.
-- Збережені бектести видаляються міграцією.
+## Decision
+- The strategy type in the engine declares `backtestComparisons`: the comparison codes in display order. Momentum strategies declare `benchmark`, `benchmark-at-equal-risk`, `universe-equal-weight`; buy-and-hold only the first two.
+- In `Backtesting`, each comparison is a separate `IReplayComparison` block with a code. The block builds its line from the `ReplayedHistory` (prices, settings, the growth of the strategy), and states how the tax sees the holding of it. The tax after sale, the Sharpe, the drawdown and "what would the money have been" are calculated the same way for any line.
+- A new comparison is a new class and its registration, without changes in the run, the API or the screen. An unknown code stops the backtest with the error `backtest.unknown_comparison` instead of silently dropping the line.
+- A line in the result has a code and a message-name (`@backtest.series.…`). The screen draws as many lines as it receives and knows nothing about the specific comparisons.
+- `benchmark-at-equal-risk`: each day, a share `w = min(1, σ of the strategy / σ of the benchmark)` is held in the benchmark, and the rest in the strategy's cash fund. `w` is taken over the whole period, so this is a yardstick, not a strategy that could be repeated. A line above the whole benchmark, that is, on borrowed money, is not taken.
+- The saved backtests are deleted by a migration.
 
-## Наслідки
-- Податок для `universe-equal-weight` і `benchmark-at-equal-risk` рахується як одна купівля на старті й один
-  продаж у кінці, хоча обидві лінії вирівнюються щодня. Вони трохи завищені.
-- Стратегія з фіксованими вагами матиме своє порівняння (ті самі ваги без правил), коли така стратегія з'явиться.
-- Бенчмарк лишається обов'язковим, бо моментум читає з нього режим ринку. Стратегія на інших інструментах
-  обере свій бенчмарк, наприклад індекс облігацій, і оголосить лише ті порівняння, що до неї пасують.
+## Consequences
+- The tax for `universe-equal-weight` and `benchmark-at-equal-risk` is counted as one purchase at the start and one sale at the end, although both lines are rebalanced daily. They are slightly overstated.
+- A strategy with fixed weights will have its own comparison (the same weights without rules) when such a strategy appears.
+- The benchmark remains mandatory, because momentum reads the market regime from it. A strategy on other instruments will choose its own benchmark, for example a bond index, and will declare only the comparisons that fit it.

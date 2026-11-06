@@ -16,6 +16,7 @@ using InvestmentLab.StrategyBuilder.Drafts.Application.ListDrafts;
 using InvestmentLab.StrategyBuilder.Drafts.Application.ListOwnSignals;
 using InvestmentLab.StrategyBuilder.Drafts.Application.ListInstruments;
 using InvestmentLab.StrategyBuilder.Drafts.Application.MoveNodes;
+using InvestmentLab.StrategyBuilder.Drafts.Application.ReplaceDraftRules;
 using InvestmentLab.StrategyBuilder.Drafts.Application.Shared;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -44,6 +45,7 @@ internal static class DraftEndpoints
         builder.MapPost("/drafts/{draftId:guid}/check", CheckDraft).WithName("CheckDraft");
         builder.MapPost("/drafts/{draftId:guid}/copy-entry-to-exit", CopyEntryToExit).WithName("CopyEntryToExit");
         builder.MapGet("/drafts/{draftId:guid}/rules", GetDraftRules).WithName("GetDraftRules");
+        builder.MapPut("/drafts/{draftId:guid}/rules", ReplaceDraftRules).WithName("ReplaceDraftRules");
         builder.MapDelete("/drafts/{draftId:guid}", DiscardDraft).WithName("DiscardDraft");
 
         return group;
@@ -156,6 +158,17 @@ internal static class DraftEndpoints
         var rules = await handler.Handle(draftId, cancellationToken);
 
         return rules.ToHttpResult();
+    }
+
+    private static async Task<IResult> ReplaceDraftRules(
+        Guid draftId,
+        ReplaceDraftRulesCommand body,
+        ReplaceDraftRulesHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var replaced = await handler.Handle(draftId, body, cancellationToken);
+
+        return replaced.ToHttpResult();
     }
 
     private static async Task<IResult> DiscardDraft(Guid draftId, DiscardDraftHandler handler, CancellationToken cancellationToken)

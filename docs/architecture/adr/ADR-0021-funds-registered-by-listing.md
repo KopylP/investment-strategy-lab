@@ -1,26 +1,20 @@
-# ADR-0021: Знайдений фонд реєструється за торговим символом
+# ADR-0021: A found fund is registered by its trading symbol
 
-- Статус: прийнято (2026-11-03)
-- Доповнює: ADR-0008
+- Status: accepted (2026-11-03)
+- Complements: ADR-0008
 
-## Контекст
-Конструктор знаходить ETF у постачальника котирувань, але результат пошуку не містить ISIN.
-Звичайна ручна реєстрація ETF вимагає ISIN. Без окремого способу реєстрації всі нові знайдені фонди відхилялися б.
+## Context
+The Strategy Builder finds ETFs at the quote provider, but the search result does not contain an ISIN.
+Ordinary manual registration of an ETF requires an ISIN. Without a separate way of registration, all newly found funds would be rejected.
 
-## Рішення
-- Instrument.FromFundListing створює ETF з обов’язковим торговим символом, назвою, біржею та валютою.
-  ISIN може бути невідомим. Звичайний Instrument.Register зберігає свою перевірку ISIN.
-- RegisterListedFund повторно використовує власника відомого символу. Реєстр інструментів спрямовує
-  знайдений ETF до цієї дії, після чого викликає наявне отримання опису.
-- Формат символу і визначення біржі залишаються в MarketData. Назви бірж, що перевищували довжину
-  колонки, замінено на їхні короткі коди MIC у конвенції символів.
-- Пошук не вгадує відсутню валюту, клас активів чи інвестиційний регіон.
+## Decision
+- `Instrument.FromFundListing` creates an ETF with a mandatory trading symbol, name, exchange and currency.
+  The ISIN may be unknown. The ordinary `Instrument.Register` keeps its ISIN check.
+- `RegisterListedFund` reuses the owner of a known symbol. The instrument registry routes a found ETF to this action, after which it calls the existing retrieval of the description.
+- The symbol format and the exchange detection stay in MarketData. Exchange names that exceeded the length of the column were replaced by their short MIC codes in the symbol convention.
+- The search does not guess a missing currency, asset class or investment region.
 
-## Наслідки
-ETF без ISIN може брати участь у стратегії за своїм торговим символом. Перевірка унікальності символу
-і наявна перевірка унікальності відомого ISIN лишаються в силі. Різні торгові символи одного фонду
-без ISIN ще не об’єднуються автоматично.
+## Consequences
+An ETF without an ISIN can take part in a strategy by its trading symbol. The symbol uniqueness check and the existing uniqueness check of a known ISIN remain in force. Different trading symbols of one fund without an ISIN are not yet merged automatically.
 
-Наявний DescribeInstruments отримує опис інструмента, але не визначає клас активів та інвестиційний регіон.
-План пошуку помилково припускав, що ця класифікація вже існує. Новий пошук викликає наявне отримання опису;
-відсутні дані експозиції залишаються невідомими. Автоматична класифікація потребує окремої реалізації.
+The existing DescribeInstruments retrieves the description of an instrument, but does not determine the asset class and the investment region. The search plan wrongly assumed that this classification already existed. The new search calls the existing description retrieval; missing exposure data remains unknown. Automatic classification requires a separate implementation.
