@@ -25,6 +25,34 @@ public sealed class StrategyReplayTests
     }
 
     [Fact]
+    public async Task A_shorter_replay_from_the_same_start_gives_the_summary_of_the_longer_one_cut_at_its_end()
+    {
+        var start = FirstDay.AddDays(30);
+        var shorterEnd = FirstDay.AddDays(300);
+        var full = await ExperimentReplayAsync(start, FirstDay.AddDays(Days - 1));
+        var shorter = await ExperimentReplayAsync(start, shorterEnd);
+
+        var cut = full.Trace!.SummaryBetween(start, shorterEnd)!;
+
+        var replayed = shorter.StrategySummary;
+        cut.Sharpe.ShouldBe(replayed.Sharpe, 1e-12);
+        cut.AnnualReturn.ShouldBe(replayed.AnnualReturn, 1e-12);
+        cut.Volatility.ShouldBe(replayed.Volatility, 1e-12);
+        cut.MaxDrawdown.ShouldBe(replayed.MaxDrawdown, 1e-12);
+        cut.TotalReturn.ShouldBe(replayed.TotalReturn, 1e-12);
+    }
+
+    private static async Task<ReplayResult> ExperimentReplayAsync(DateOnly start, DateOnly end)
+    {
+        var experiment = new ReplayExperiment(start, end, 100_000m, new TradingCosts(), RecordJournal: false);
+        var setup = SetupOf(ReplayCadence.Weekly) with { HistoryBars = 20, Experiment = experiment };
+
+        var replayed = await ReplayOf(new FakeAnswers(), new FakePrices(Days, jump: true)).RunAsync(setup, TestContext.Current.CancellationToken);
+
+        return replayed.Value;
+    }
+
+    [Fact]
     public async Task The_strategy_is_shown_next_to_exactly_the_comparisons_its_type_declares_in_their_order()
     {
         var replay = ReplayOf(new FakeAnswers());

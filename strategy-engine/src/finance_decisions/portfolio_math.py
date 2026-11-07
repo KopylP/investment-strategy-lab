@@ -8,12 +8,30 @@ TRADING_DAYS_PER_YEAR = 252
 
 
 def pairwise_correlation(prices: pd.DataFrame, first: str, second: str, window_days: int, min_days: int = 60) -> float:
-    recent = prices.tail(window_days + 1)
-    returns = recent[[first, second]].dropna().pct_change().dropna()
+    recent = prices[[first, second]].to_numpy(dtype=float)[-(window_days + 1):]
+    common = recent[~np.isnan(recent).any(axis=1)]
+    returns = _daily_returns(common)
     if len(returns) < min(min_days, window_days):
         return float("nan")
 
-    return float(returns[first].corr(returns[second]))
+    return _correlation(returns[:, 0], returns[:, 1])
+
+
+def _daily_returns(closes: np.ndarray) -> np.ndarray:
+    with np.errstate(divide="ignore", invalid="ignore"):
+        returns = closes[1:] / closes[:-1] - 1
+
+    return returns[~np.isnan(returns).any(axis=1)]
+
+
+def _correlation(first: np.ndarray, second: np.ndarray) -> float:
+    first_deviation = first - first.mean()
+    second_deviation = second - second.mean()
+    spread = np.sqrt((first_deviation ** 2).sum() * (second_deviation ** 2).sum())
+    if spread == 0:
+        return float("nan")
+
+    return float((first_deviation * second_deviation).sum() / spread)
 
 
 def portfolio_volatility(prices: pd.DataFrame, weights: dict[str, float], window_days: int, min_days: int = 5) -> float | None:
