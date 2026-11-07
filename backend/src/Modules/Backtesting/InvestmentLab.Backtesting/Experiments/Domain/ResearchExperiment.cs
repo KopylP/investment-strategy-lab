@@ -35,9 +35,25 @@ public sealed class ResearchExperiment : AggregateRoot<Guid>
         };
     }
 
-    public void Start()
+    public Result Start()
     {
+        if (Status is not (ExperimentStatus.Queued or ExperimentStatus.Running))
+            return ExperimentErrors.NotQueued();
+
         Status = ExperimentStatus.Running;
+
+        return SharedKernel.Result.Success();
+    }
+
+    public Result Cancel(DateTimeOffset now)
+    {
+        if (Status != ExperimentStatus.Queued)
+            return ExperimentErrors.NotQueued();
+
+        Status = ExperimentStatus.Cancelled;
+        FinishedAt = now;
+
+        return SharedKernel.Result.Success();
     }
 
     public void Complete(ResearchReport report, DateTimeOffset now)
@@ -50,6 +66,9 @@ public sealed class ResearchExperiment : AggregateRoot<Guid>
 
     public void Fail(string reason, DateTimeOffset now)
     {
+        if (Status == ExperimentStatus.Cancelled)
+            return;
+
         Status = ExperimentStatus.Failed;
         FailureReason = reason;
         FinishedAt = now;

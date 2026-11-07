@@ -12,6 +12,7 @@ internal static class BacktestStatuses
         "Running" => TrialStatus.Running,
         "Succeeded" => TrialStatus.Succeeded,
         "Failed" or NotSupported => TrialStatus.Failed,
+        "Cancelled" => TrialStatus.Cancelled,
         _ => throw new InvalidOperationException($"Unknown backtest status '{status}'."),
     };
 }

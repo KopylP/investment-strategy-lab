@@ -47,6 +47,7 @@ export class DraftTrialsPage {
     Running: 'Обчислюється',
     Succeeded: 'Готово',
     Failed: 'Помилка',
+    Cancelled: 'Скасовано',
   };
 
   constructor() {

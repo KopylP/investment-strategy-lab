@@ -15,7 +15,10 @@ public sealed class RunExperimentHandler(
         if (experiment is null)
             return;
 
-        experiment.Start();
+        var started = experiment.Start();
+        if (started.IsFailure)
+            return;
+
         await experiments.SaveAsync(cancellationToken);
 
         var result = await Run(experiment, cancellationToken);

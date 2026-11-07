@@ -1,7 +1,9 @@
 using InvestmentLab.Backtesting.Contracts;
 using InvestmentLab.Backtesting.Experiments.Api;
 using InvestmentLab.Backtesting.Experiments.Application.CheckExperiment;
+using InvestmentLab.Backtesting.Experiments.Application.CancelExperiment;
 using InvestmentLab.Backtesting.Experiments.Application.FailExperiment;
+using InvestmentLab.Backtesting.Experiments.Application.GetQueuePositions;
 using InvestmentLab.Backtesting.Experiments.Application.GetExperiment;
 using InvestmentLab.Backtesting.Experiments.Application.GetExperimentJournal;
 using InvestmentLab.Backtesting.Experiments.Application.GetExperimentStatus;
@@ -65,6 +67,8 @@ public sealed class BacktestingModule : IModule
         services.AddScoped<RequestExperimentHandler>();
         services.AddScoped<RunExperimentHandler>();
         services.AddScoped<FailExperimentHandler>();
+        services.AddScoped<CancelExperimentHandler>();
+        services.AddScoped<GetQueuePositionsHandler>();
         services.AddScoped<GetExperimentHandler>();
         services.AddScoped<GetExperimentStatusHandler>();
         services.AddScoped<GetExperimentJournalHandler>();

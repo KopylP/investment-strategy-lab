@@ -9,4 +9,8 @@ public interface ITrialExperiments
     Task<Result<Guid>> RequestAsync(TrialVersion version, TrialExperiment experiment, CancellationToken cancellationToken);
 
     Task<TrialSummary> SummaryOfAsync(Guid experimentId, CancellationToken cancellationToken);
+
+    Task<Result> CancelAsync(Guid experimentId, CancellationToken cancellationToken);
+
+    Task<IReadOnlyDictionary<Guid, int>> QueuePositionsAsync(IReadOnlyList<Guid> experimentIds, CancellationToken cancellationToken);
 }

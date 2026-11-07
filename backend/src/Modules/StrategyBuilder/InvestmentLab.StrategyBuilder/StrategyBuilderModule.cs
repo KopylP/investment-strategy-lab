@@ -14,6 +14,8 @@ using InvestmentLab.StrategyBuilder.Drafts.Application.PublishDraft;
 using InvestmentLab.StrategyBuilder.Drafts.Application.OpenPublishedStrategy;
 using InvestmentLab.StrategyBuilder.Drafts.Application.GetPublishedStrategy;
 using InvestmentLab.StrategyBuilder.Trials.Api;
+using InvestmentLab.StrategyBuilder.Trials.Application.CancelTrial;
+using InvestmentLab.StrategyBuilder.Trials.Application.ListTrialRows;
 using InvestmentLab.StrategyBuilder.Trials.Application.ListTrials;
 using InvestmentLab.StrategyBuilder.Trials.Application.Shared;
 using InvestmentLab.StrategyBuilder.Trials.Application.RunTrial;
@@ -67,6 +69,8 @@ public sealed class StrategyBuilderModule : IModule
         services.AddScoped<TrialRunSummaries>();
         services.AddScoped<RunTrialHandler>();
         services.AddScoped<ListTrialsHandler>();
+        services.AddScoped<ListTrialRowsHandler>();
+        services.AddScoped<CancelTrialHandler>();
         services.AddScoped<IPublishedLayoutRepository, PublishedLayoutRepository>();
         services.AddScoped<ITrialCleanupRepository, TrialCleanupRepository>();
         services.AddScoped<CleanUpTrialHandler>();

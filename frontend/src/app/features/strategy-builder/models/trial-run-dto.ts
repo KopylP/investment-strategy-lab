@@ -6,7 +6,7 @@ export interface TrialRunDto {
   version: number;
   label: string | null;
   ranAt: string;
-  status: 'Waiting' | 'Running' | 'Succeeded' | 'Failed';
+  status: 'Waiting' | 'Running' | 'Succeeded' | 'Failed' | 'Cancelled';
   failureReason: string | null;
   annualReturn: number | null;
   annualReturnAfterTax: number | null;

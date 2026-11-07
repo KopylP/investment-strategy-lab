@@ -34,6 +34,9 @@ public static class ExperimentErrors
     public static Error ParameterCheckFailed(string? reason) =>
         Error.Validation("research.parameter_check_failed", "The parameter check could not be completed.", new { reason });
 
+    public static Error NotQueued() =>
+        Error.Validation("research.not_queued", "Only a queued experiment can be cancelled; this one is running or finished.");
+
     public static Error NotSupported() =>
         Error.Validation("research.not_supported", "This strategy cannot be replayed.");
 }

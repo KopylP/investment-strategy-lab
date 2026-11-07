@@ -1,4 +1,4 @@
-export type BacktestStatus = 'Queued' | 'Running' | 'Succeeded' | 'Failed' | 'NotSupported';
+export type BacktestStatus = 'Queued' | 'Running' | 'Succeeded' | 'Failed' | 'Cancelled' | 'NotSupported';
 export const STRATEGY_SERIES = 'strategy';
 
 export interface ReplayPointDto {

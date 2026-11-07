@@ -47,6 +47,18 @@ internal sealed class TrialExperiments(IBacktestExperiments experiments) : ITria
             MaxDrawdown: summary?.MaxDrawdown);
     }
 
+    public async Task<Result> CancelAsync(Guid experimentId, CancellationToken cancellationToken)
+    {
+        var answer = await experiments.CancelAsync(experimentId, cancellationToken);
+        if (answer.ErrorCode is null)
+            return Result.Success();
+
+        return Error.Validation(answer.ErrorCode, "The experiment could not be cancelled.");
+    }
+
+    public Task<IReadOnlyDictionary<Guid, int>> QueuePositionsAsync(IReadOnlyList<Guid> experimentIds, CancellationToken cancellationToken) =>
+        experiments.QueuePositionsAsync(experimentIds, cancellationToken);
+
     private static Error Refused(ExperimentTicketDto ticket)
     {
         var code = ticket.ErrorCode ?? UnknownFailure;
