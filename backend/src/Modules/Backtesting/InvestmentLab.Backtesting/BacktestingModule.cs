@@ -7,6 +7,7 @@ using InvestmentLab.Backtesting.Experiments.Application.GetQueuePositions;
 using InvestmentLab.Backtesting.Experiments.Application.GetExperiment;
 using InvestmentLab.Backtesting.Experiments.Application.GetExperimentBrief;
 using InvestmentLab.Backtesting.Experiments.Application.GetExperimentOutcome;
+using InvestmentLab.Backtesting.Experiments.Application.GetExperimentHoldings;
 using InvestmentLab.Backtesting.Experiments.Application.GetExperimentJournal;
 using InvestmentLab.Backtesting.Experiments.Application.GetExperimentStatus;
 using InvestmentLab.Backtesting.Experiments.Application.RequestExperiment;
@@ -77,6 +78,7 @@ public sealed class BacktestingModule : IModule
         services.AddScoped<GetExperimentOutcomeHandler>();
         services.AddScoped<GetExperimentStatusHandler>();
         services.AddScoped<GetExperimentJournalHandler>();
+        services.AddScoped<GetExperimentHoldingsHandler>();
         services.AddScheduledJob<ExperimentsJob>(ExperimentsJob.Schedule);
         services.AddScoped<RunBacktestHandler>();
         services.AddScoped<CompareBacktestsHandler>();

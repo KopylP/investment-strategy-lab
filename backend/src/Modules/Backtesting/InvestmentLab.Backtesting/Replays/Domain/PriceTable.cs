@@ -68,21 +68,85 @@ public sealed class PriceTable
 
     public int? FirstDayToReplay(ReplaySetup setup)
     {
-        var needed = Math.Max(1, (int)Math.Round(setup.Universe.Count * ShareOfUniverseToStart));
+        var from = setup.Experiment?.Start ?? DateOnly.MinValue;
 
+        return FirstReadyDayFrom(setup, from);
+    }
+
+    public HistoryShortfall? ShortfallAt(ReplaySetup setup, DateOnly requestedStart)
+    {
+        var earliest = FirstReadyDayFrom(setup, DateOnly.MinValue);
+        if (earliest is null)
+            return null;
+
+        var requestedDay = FirstDayOnOrAfter(requestedStart) ?? Days.Count - 1;
+        var limit = LimitOn(setup, requestedDay);
+
+        return new HistoryShortfall(Days[earliest.Value], limit);
+    }
+
+    private int? FirstReadyDayFrom(ReplaySetup setup, DateOnly from)
+    {
         for (var dayIndex = 0; dayIndex < Days.Count - LeastReplayedDays; dayIndex++)
         {
-            if (setup.Experiment is { } experiment && Days[dayIndex] < experiment.Start)
-                continue;
-            var warmed = setup.Universe.Count(instrumentId => HasWarmedUp(instrumentId, dayIndex, setup.HistoryBars));
-
-            var references = (setup.ExtraSeries ?? []).Append(setup.Benchmark.InstrumentId);
-            if (warmed >= needed && references.All(id => HasWarmedUp(id, dayIndex, setup.HistoryBars)))
+            if (Days[dayIndex] >= from && IsReadyOn(setup, dayIndex))
                 return dayIndex;
         }
 
         return null;
     }
+
+    private bool IsReadyOn(ReplaySetup setup, int dayIndex)
+    {
+        var warmed = setup.Universe.Count(instrumentId => HasWarmedUp(instrumentId, dayIndex, setup.HistoryBars));
+        var referencesWarmed = ReferencesOf(setup).All(id => HasWarmedUp(id, dayIndex, setup.HistoryBars));
+
+        return warmed >= FundsNeededToStart(setup) && referencesWarmed;
+    }
+
+    private HistoryLimit LimitOn(ReplaySetup setup, int dayIndex)
+    {
+        var coldReferences = ReferencesOf(setup).Where(id => !HasWarmedUp(id, dayIndex, setup.HistoryBars)).ToList();
+        if (coldReferences.Count > 0)
+            return LatestWarmingOf(coldReferences, setup.HistoryBars);
+
+        var coldFunds = setup.Universe.Where(id => !HasWarmedUp(id, dayIndex, setup.HistoryBars)).ToList();
+        var warmed = setup.Universe.Count - coldFunds.Count;
+        var needed = FundsNeededToStart(setup);
+        if (warmed < needed)
+            return new FundsHistoryLimit(warmed, needed, coldFunds);
+
+        return new QuotesHistoryLimit(Days[dayIndex]);
+    }
+
+    private ReferenceHistoryLimit LatestWarmingOf(IReadOnlyList<Guid> references, int historyBars)
+    {
+        var warming = references
+            .Select(id => (Id: id, From: WarmedFrom(id, historyBars) ?? DateOnly.MaxValue))
+            .MaxBy(reference => reference.From);
+
+        return new ReferenceHistoryLimit(warming.Id, warming.From);
+    }
+
+    private DateOnly? WarmedFrom(Guid instrumentId, int historyBars)
+    {
+        var dayIndex = Enumerable.Range(0, Days.Count).FirstOrDefault(index => HasWarmedUp(instrumentId, index, historyBars), -1);
+
+        return dayIndex >= 0 ? Days[dayIndex] : null;
+    }
+
+    private int? FirstDayOnOrAfter(DateOnly day)
+    {
+        var dayIndex = Enumerable.Range(0, Days.Count).FirstOrDefault(index => Days[index] >= day, -1);
+
+        return dayIndex >= 0 ? dayIndex : null;
+    }
+
+    private static IEnumerable<Guid> ReferencesOf(ReplaySetup setup) =>
+        (setup.ExtraSeries ?? []).Append(setup.Benchmark.InstrumentId);
+
+    private static int FundsNeededToStart(ReplaySetup setup) =>
+        Math.Max(1, (int)Math.Round(setup.Universe.Count * ShareOfUniverseToStart));
 
     private bool HasWarmedUp(Guid instrumentId, int dayIndex, int historyBars) =>
         _observations.TryGetValue(instrumentId, out var seen) && seen[dayIndex] >= historyBars;

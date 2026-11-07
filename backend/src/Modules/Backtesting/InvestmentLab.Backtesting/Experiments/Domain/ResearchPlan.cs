@@ -53,7 +53,8 @@ public sealed class ResearchPlan(
             Studies: studies,
             ParametersHash: hash,
             EngineVersion: engineVersion,
-            InstrumentLabels: source.Setup.InstrumentLabels);
+            InstrumentLabels: source.Setup.InstrumentLabels,
+            CashInstrumentId: source.Setup.CashInstrumentId);
     }
 
     private static string? EngineVersionOf(ReplayResult result)

@@ -9,4 +9,5 @@ public sealed record ResearchReport(
     string EngineVersion,
     string SelectionMetric = "sharpe",
     string ReplayModel = "daily-close/v2",
-    IReadOnlyDictionary<Guid, string>? InstrumentLabels = null);
+    IReadOnlyDictionary<Guid, string>? InstrumentLabels = null,
+    Guid? CashInstrumentId = null);

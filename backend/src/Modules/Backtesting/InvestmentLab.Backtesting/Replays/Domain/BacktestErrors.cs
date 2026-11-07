@@ -2,8 +2,12 @@ namespace InvestmentLab.Backtesting.Replays.Domain;
 
 public static class BacktestErrors
 {
-    public static Error MissingExperimentHistory() =>
-        Error.Validation("research.history_missing", "The requested period has insufficient warmed-up price history.");
+    public static Error MissingExperimentHistory(string limit, DateOnly earliestStart) =>
+        Error.Validation("research.history_missing", "The requested period has insufficient warmed-up price history.",
+            new { limit, earliestStart = earliestStart.ToString("yyyy-MM-dd") });
+    public static Error HistoryEnds(DateOnly lastQuote, DateOnly requestedEnd) =>
+        Error.Validation("research.history_ends", "Quotes end before the requested period does.",
+            new { lastQuote = lastQuote.ToString("yyyy-MM-dd"), end = requestedEnd.ToString("yyyy-MM-dd") });
     public static Error InvalidCosts() =>
         Error.Validation("research.costs_invalid", "Execution costs are outside the allowed range.");
     public static Error UnsupportedSchedule(string schedule) =>

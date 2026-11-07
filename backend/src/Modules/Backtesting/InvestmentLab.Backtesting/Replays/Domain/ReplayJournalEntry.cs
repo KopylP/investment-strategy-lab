@@ -6,4 +6,9 @@ public sealed record ReplayJournalEntry(
     string Reason,
     ReplayFill? Fill = null,
     ReplayAllocation? Allocation = null,
-    ReplayExplanation? Explanation = null);
+    ReplayExplanation? Explanation = null,
+    bool? MarketFavorable = null)
+{
+    public ReplayJournalEntry WithoutCandidates() =>
+        Explanation is null ? this : this with { Explanation = Explanation with { Candidates = null } };
+}
