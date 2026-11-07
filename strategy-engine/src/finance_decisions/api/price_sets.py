@@ -15,8 +15,8 @@ from .catalog import find_strategy_type
 from .contracts import EvaluationContext, PriceSeries, PriceSetCreated, PriceSetUpload
 
 UNKNOWN_PRICE_SET = "price_set.unknown"
-KEPT_FOR_SECONDS = 30 * 60
-MOST_SETS = 16
+KEPT_FOR_SECONDS = 10 * 60
+MOST_SETS = 8
 
 router = APIRouter(prefix="/v1/strategies", tags=["strategies"])
 
