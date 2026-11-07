@@ -4,6 +4,7 @@ using InvestmentLab.StrategyBuilder.Trials.Application.CancelTrial;
 using InvestmentLab.StrategyBuilder.Trials.Application.ListTrialRows;
 using InvestmentLab.StrategyBuilder.Trials.Application.RunTrial;
 using InvestmentLab.StrategyBuilder.Trials.Application.Shared;
+using InvestmentLab.StrategyBuilder.Trials.Application.TrialTable;
 using ModelContextProtocol.Server;
 
 namespace InvestmentLab.StrategyBuilder.Trials.Api;
@@ -43,6 +44,25 @@ internal static class TrialTools
             LabelContains: labelContains,
             Status: status,
             Limit: limit ?? DefaultRows);
+
+        var rows = await handler.Handle(query, cancellationToken);
+
+        return rows.ValueOrThrow();
+    }
+
+    [McpServerTool(Name = "trial_table", ReadOnly = true)]
+    [Description("One row per experiment trial across the given drafts, newest first per draft, to compare variants: period, strategy results and horizon returns, out-of-sample Sharpe, the benchmark over the same period and the Sharpe of the benchmark at equal risk.")]
+    public static async Task<IReadOnlyList<TrialTableRowDto>> TrialTable(
+        Guid[] draftIds,
+        [Description("Only trials whose label contains this text, or null for all.")] string? labelContains,
+        [Description("False to add trials that are waiting, running, failed or cancelled; true or null shows only succeeded ones.")] bool? onlySucceeded,
+        TrialTableHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var query = new TrialTableQuery(
+            DraftIds: draftIds,
+            LabelContains: labelContains,
+            OnlySucceeded: onlySucceeded ?? true);
 
         var rows = await handler.Handle(query, cancellationToken);
 

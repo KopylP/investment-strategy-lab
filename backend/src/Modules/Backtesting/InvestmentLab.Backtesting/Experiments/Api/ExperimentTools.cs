@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using InvestmentLab.Backtesting.Experiments.Application.GetExperiment;
+using InvestmentLab.Backtesting.Experiments.Application.GetExperimentBrief;
 using InvestmentLab.Backtesting.Experiments.Application.GetExperimentJournal;
 using InvestmentLab.BuildingBlocks.Mcp;
 using ModelContextProtocol.Server;
@@ -12,10 +12,16 @@ internal static class ExperimentTools
     private const int DefaultJournalPage = 50;
 
     [McpServerTool(Name = "get_experiment", ReadOnly = true)]
-    [Description("A trial run as an experiment: its fixed conditions, status, result and robustness studies (out-of-sample, walk-forward, neighbouring parameter values).")]
-    public static async Task<ExperimentDto> GetExperiment(Guid experimentId, GetExperimentHandler handler, CancellationToken cancellationToken)
+    [Description("A trial run as an experiment: its fixed conditions, status, the summary and horizon returns (last 1/3/5 years, calendar years) of the strategy and each comparison, and the robustness studies (out-of-sample, walk-forward, neighbouring parameter values).")]
+    public static async Task<ExperimentBriefDto> GetExperiment(
+        Guid experimentId,
+        [Description("True to add the monthly points of every series; false or null keeps the reply short.")] bool? includePoints,
+        GetExperimentBriefHandler handler,
+        CancellationToken cancellationToken)
     {
-        var experiment = await handler.Handle(experimentId, cancellationToken);
+        var query = new GetExperimentBriefQuery(experimentId, includePoints ?? false);
+
+        var experiment = await handler.Handle(query, cancellationToken);
 
         return experiment.ValueOrThrow();
     }

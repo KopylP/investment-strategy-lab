@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using InvestmentLab.Backtesting.Replays.Application.CompareBacktests;
 using InvestmentLab.Backtesting.Replays.Application.EnsureBacktest;
-using InvestmentLab.Backtesting.Replays.Application.GetBacktest;
+using InvestmentLab.Backtesting.Replays.Application.GetBacktestBrief;
 using InvestmentLab.BuildingBlocks.Mcp;
 using ModelContextProtocol.Server;
 
@@ -11,18 +11,20 @@ namespace InvestmentLab.Backtesting.Replays.Api;
 internal static class BacktestTools
 {
     [McpServerTool(Name = "get_backtest", ReadOnly = true)]
-    [Description("The backtest of a strategy version: status, summary of the strategy and its comparisons, monthly points and its journal.")]
-    public static async Task<BacktestDto> GetBacktest(
+    [Description("The backtest of a strategy version: status and the summary and horizon returns (last 1/3/5 years, calendar years) of the strategy and each comparison.")]
+    public static async Task<BacktestBriefDto> GetBacktest(
         Guid strategyId,
         int version,
+        [Description("True to add the monthly points of every series; false or null keeps the reply short.")] bool? includePoints,
         EnsureBacktestHandler ensure,
-        GetBacktestHandler query,
+        GetBacktestBriefHandler brief,
         CancellationToken cancellationToken)
     {
         var ensured = await ensure.Handle(strategyId, version, cancellationToken);
         var ensuredVersion = ensured.ValueOrThrow();
 
-        var backtest = await query.Handle(strategyId, ensuredVersion, cancellationToken);
+        var query = new GetBacktestBriefQuery(strategyId, ensuredVersion, includePoints ?? false);
+        var backtest = await brief.Handle(query, cancellationToken);
 
         return backtest.ValueOrThrow();
     }
