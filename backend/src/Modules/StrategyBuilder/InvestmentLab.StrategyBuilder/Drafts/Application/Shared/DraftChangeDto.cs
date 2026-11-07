@@ -6,4 +6,5 @@ public sealed record DraftChangeDto(
     string? Description,
     DraftSetupDto? Setup,
     GraphDto? Graph,
-    IReadOnlyList<DraftReportDto>? Reports);
+    IReadOnlyList<DraftReportDto>? Reports,
+    DraftSetupPatchDto? SetupPatch = null);
