@@ -99,7 +99,9 @@ class EvaluationContext(ApiModel):
     parameters: dict[str, Any] = Field(default_factory=dict)
     universe: list[UniverseMember] = Field(min_length=1)
     cash_instrument_key: str | None = None
-    market_series: list[PriceSeries]
+    market_series: list[PriceSeries] = Field(default_factory=list)
+    price_set_id: str | None = Field(None, description="A price set uploaded for a replay, sent instead of marketSeries.")
+    history_from: date | None = Field(None, description="First day of the price set the call may look at; asOf is the last.")
     sub_portfolio: SubPortfolioSnapshot
     state: dict[str, Any] | None = None
     signals: list[SignalState] | None = Field(None, description="States of the user's market signals the parameters refer to.")
@@ -109,7 +111,26 @@ class EvaluationContext(ApiModel):
         keys = [series.key for series in self.market_series]
         if len(keys) != len(set(keys)):
             raise ValueError("marketSeries keys must be unique")
+        if self.price_set_id is not None and keys:
+            raise ValueError("send either marketSeries or priceSetId, not both")
         return self
+
+
+class PriceSetUpload(ApiModel):
+    """The prices of one replay, uploaded once and named by later calls."""
+
+    market_series: list[PriceSeries] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _unique_keys(self) -> "PriceSetUpload":
+        keys = [series.key for series in self.market_series]
+        if len(keys) != len(set(keys)):
+            raise ValueError("marketSeries keys must be unique")
+        return self
+
+
+class PriceSetCreated(ApiModel):
+    id: str
 
 
 class TargetWeight(ApiModel):

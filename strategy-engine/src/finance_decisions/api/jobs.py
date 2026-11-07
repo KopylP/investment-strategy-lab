@@ -21,6 +21,7 @@ from fastapi import APIRouter, HTTPException, status
 from finance_decisions.strategies.errors import ContextError
 from .catalog import find_strategy_type
 from .contracts import EvaluationContext, JobError, JobStatus, StrategyJob
+from .price_sets import with_prices
 
 JOB_RETENTION = timedelta(days=7)
 
@@ -92,7 +93,8 @@ def _submit(code: str, action: str, context: EvaluationContext) -> StrategyJob:
     strategy_type = find_strategy_type(code)
     parameters = strategy_type.parse_parameters(context.parameters)
     run = strategy_type.decide if action == "decide" else strategy_type.assess_risk
-    return get_job_store().submit(code, action, lambda: run(context, parameters))
+    priced = with_prices(context)
+    return get_job_store().submit(code, action, lambda: run(priced, parameters))
 
 
 @router.post("/strategies/{code}/decide/jobs", response_model=StrategyJob, status_code=status.HTTP_202_ACCEPTED)

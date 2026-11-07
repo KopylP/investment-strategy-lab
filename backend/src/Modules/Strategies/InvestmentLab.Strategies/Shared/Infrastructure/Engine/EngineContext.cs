@@ -11,4 +11,6 @@ public sealed record EngineContext(
     string? CashInstrumentKey,
     IReadOnlyList<EngineSeries> MarketSeries,
     EngineSubPortfolio SubPortfolio,
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<EngineSignalState>? Signals = null);
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<EngineSignalState>? Signals = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? PriceSetId = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] DateOnly? HistoryFrom = null);

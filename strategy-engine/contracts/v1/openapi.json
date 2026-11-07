@@ -135,6 +135,58 @@
         }
       }
     },
+    "/v1/strategies/{code}/price-sets": {
+      "post": {
+        "tags": [
+          "strategies"
+        ],
+        "summary": "Upload Price Set",
+        "operationId": "upload_price_set_v1_strategies__code__price_sets_post",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Code"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PriceSetUpload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceSetCreated"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/strategies/{code}/parameters/check": {
       "post": {
         "tags": [
@@ -544,6 +596,31 @@
             "type": "array",
             "title": "Marketseries"
           },
+          "priceSetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pricesetid",
+            "description": "A price set uploaded for a replay, sent instead of marketSeries."
+          },
+          "historyFrom": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Historyfrom",
+            "description": "First day of the price set the call may look at; asOf is the last."
+          },
           "subPortfolio": {
             "$ref": "#/components/schemas/SubPortfolioSnapshot"
           },
@@ -580,7 +657,6 @@
         "required": [
           "asOf",
           "universe",
-          "marketSeries",
           "subPortfolio"
         ],
         "title": "EvaluationContext",
@@ -1407,6 +1483,39 @@
         ],
         "title": "PriceSeries",
         "description": "Daily closes of one series, columnar. ``adjustedClose`` drives the signals."
+      },
+      "PriceSetCreated": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "PriceSetCreated"
+      },
+      "PriceSetUpload": {
+        "properties": {
+          "marketSeries": {
+            "items": {
+              "$ref": "#/components/schemas/PriceSeries"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Marketseries"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "marketSeries"
+        ],
+        "title": "PriceSetUpload",
+        "description": "The prices of one replay, uploaded once and named by later calls."
       },
       "PricesRequest": {
         "properties": {

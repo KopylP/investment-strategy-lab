@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException, status
 
 from finance_decisions.strategies.errors import ContextError
 from .catalog import find_strategy_type
+from .price_sets import with_prices
 from .contracts import EvaluationContext, RiskAssessment
 
 router = APIRouter(prefix="/v1/strategies", tags=["strategies"])
@@ -15,6 +16,7 @@ router = APIRouter(prefix="/v1/strategies", tags=["strategies"])
 def assess_risk(code: str, context: EvaluationContext) -> RiskAssessment:
     strategy_type = find_strategy_type(code)
     parameters = strategy_type.parse_parameters(context.parameters)
+    context = with_prices(context)
     try:
         return strategy_type.assess_risk(context, parameters)
     except ContextError as error:

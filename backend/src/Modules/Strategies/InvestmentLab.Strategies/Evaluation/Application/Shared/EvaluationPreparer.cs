@@ -12,6 +12,8 @@ public sealed class EvaluationPreparer(IStrategyReader strategies, IQuoteHistory
     IParameterChecks checks, IFxRates fxRates, IFxRateBackfill fxBackfill)
 {
     private const int HistoryDays = 2 * 365 + 14;
+    private const int SessionsToCalendarDays = 2;
+    private const int HolidayRoomDays = 30;
 
     public async Task<Result<PreparedEvaluation>> PrepareAsync(EvaluateStrategyRequest request, CancellationToken cancellationToken)
     {
@@ -28,14 +30,30 @@ public sealed class EvaluationPreparer(IStrategyReader strategies, IQuoteHistory
         var cashInstrumentId = request.CashInstrumentId ?? version.CashInstrumentId;
         var instrumentIds = InstrumentsToPrice(request, version, cashInstrumentId);
         var parameters = request.ParametersOverride ?? version.Parameters;
-        var check = await checks.CheckAsync(strategy.TypeCode, parameters, cancellationToken);
-        if (check.IsFailure)
-            return check.Error;
-        if (!check.Value.IsClean)
-            return StrategyErrors.ParametersRefused(check.Value.Problems);
-        // Observations are trading sessions; leave ample room for weekends and market holidays.
-        var historyDays = Math.Max(HistoryDays, checked(check.Value.HistoryBars * 2 + 30));
-        var series = await MarketSeriesAsync(instrumentIds, version, request.AsOf, historyDays, cancellationToken);
+        var historyDays = await HistoryDaysAsync(strategy.TypeCode, parameters, cancellationToken);
+        if (historyDays.IsFailure)
+            return historyDays.Error;
+
+        var historyFrom = request.AsOf.AddDays(-historyDays.Value);
+        if (request.PriceSetId is { } priceSetId)
+        {
+            var universeOfSet = await UniverseAsync(version, cancellationToken);
+            var named = new StrategyEvaluationContext(
+                AsOf: request.AsOf,
+                Parameters: parameters,
+                Universe: universeOfSet,
+                CashInstrumentId: cashInstrumentId,
+                MarketSeries: [],
+                SubPortfolio: request.SubPortfolio,
+                Contribution: request.Contribution,
+                Signals: signals.Value,
+                PriceSetId: priceSetId,
+                HistoryFrom: historyFrom);
+
+            return new PreparedEvaluation(strategy, version, named);
+        }
+
+        var series = await MarketSeriesAsync(instrumentIds, version, historyFrom, request.AsOf, cancellationToken);
         if (request.ValuationCurrency is { } currency)
         {
             if (!string.Equals(currency, request.SubPortfolio.Currency, StringComparison.OrdinalIgnoreCase))
@@ -58,6 +76,50 @@ public sealed class EvaluationPreparer(IStrategyReader strategies, IQuoteHistory
             signals.Value);
 
         return new PreparedEvaluation(strategy, version, context);
+    }
+
+    public async Task<Result<PreparedPriceSet>> PreparePriceSetAsync(UploadPriceSetRequest request, CancellationToken cancellationToken)
+    {
+        if (await strategies.FindAsync(StrategyId.Of(request.StrategyId), cancellationToken) is not { } strategy)
+            return StrategyErrors.NotFound(request.StrategyId);
+
+        if (strategy.Version(request.Version) is not { } version)
+            return StrategyErrors.VersionNotFound(request.StrategyId, request.Version!.Value);
+
+        var parameters = request.ParametersOverride ?? version.Parameters;
+        var historyDays = await HistoryDaysAsync(strategy.TypeCode, parameters, cancellationToken);
+        if (historyDays.IsFailure)
+            return historyDays.Error;
+
+        var instrumentIds = InstrumentsOfReplay(version);
+        var historyFrom = request.FirstAsOf.AddDays(-historyDays.Value);
+        var series = await MarketSeriesAsync(instrumentIds, version, historyFrom, request.LastAsOf, cancellationToken);
+        var valued = await WithValuationsAsync(series, instrumentIds.ToHashSet(), request.ValuationCurrency, request.LastAsOf, cancellationToken);
+        if (valued.IsFailure)
+            return valued.Error;
+
+        return new PreparedPriceSet(strategy.TypeCode, valued.Value);
+    }
+
+    private async Task<Result<int>> HistoryDaysAsync(string typeCode, string parameters, CancellationToken cancellationToken)
+    {
+        var check = await checks.CheckAsync(typeCode, parameters, cancellationToken);
+        if (check.IsFailure)
+            return check.Error;
+        if (!check.Value.IsClean)
+            return StrategyErrors.ParametersRefused(check.Value.Problems);
+
+        return HistoryDaysFor(check.Value.HistoryBars);
+    }
+
+    private static int HistoryDaysFor(int historyBars) =>
+        Math.Max(HistoryDays, checked(historyBars * SessionsToCalendarDays + HolidayRoomDays));
+
+    private static List<Guid> InstrumentsOfReplay(StrategyVersion version)
+    {
+        IEnumerable<Guid> cash = version.CashInstrumentId is { } id ? [id] : [];
+
+        return [.. version.Universe.Concat(cash).Distinct()];
     }
 
     private async Task<Result<IReadOnlyList<SignalState>>> SignalStatesAsync(
@@ -88,9 +150,9 @@ public sealed class EvaluationPreparer(IStrategyReader strategies, IQuoteHistory
     }
 
     private async Task<List<MarketSeries>> MarketSeriesAsync(
-        List<Guid> instrumentIds, StrategyVersion version, DateOnly asOf, int historyDays, CancellationToken cancellationToken)
+        List<Guid> instrumentIds, StrategyVersion version, DateOnly from, DateOnly to, CancellationToken cancellationToken)
     {
-        var history = await HistoryAsync(instrumentIds, version, asOf, historyDays, cancellationToken);
+        var history = await HistoryAsync(instrumentIds, version, from, to, cancellationToken);
         IReadOnlyList<MarketPoint> PointsOf(Guid id) => history.TryGetValue(id, out var points) ? points : [];
 
         var series = instrumentIds.Select(id => new MarketSeries(id, SeriesRole.Instrument, PointsOf(id))).ToList();
@@ -106,13 +168,13 @@ public sealed class EvaluationPreparer(IStrategyReader strategies, IQuoteHistory
     }
 
     private async Task<Dictionary<Guid, IReadOnlyList<MarketPoint>>> HistoryAsync(
-        List<Guid> instrumentIds, StrategyVersion version, DateOnly asOf, int historyDays, CancellationToken cancellationToken)
+        List<Guid> instrumentIds, StrategyVersion version, DateOnly from, DateOnly to, CancellationToken cancellationToken)
     {
         IEnumerable<Guid> volatilityIndex = version.VolatilityIndexInstrumentId is { } id ? [id] : [];
         var marketIds = volatilityIndex.Prepend(version.BenchmarkInstrumentId).Concat(version.ExtraSeries);
         Guid[] requestedIds = [.. instrumentIds.Concat(marketIds).Distinct()];
 
-        var history = await quotes.GetQuoteHistoryWithArchive(requestedIds, asOf.AddDays(-historyDays), asOf, cancellationToken);
+        var history = await quotes.GetQuoteHistoryWithArchive(requestedIds, from, to, cancellationToken);
 
         return history.ToDictionary(series => series.InstrumentId, series => MarketPointsOf(series.Points));
     }
