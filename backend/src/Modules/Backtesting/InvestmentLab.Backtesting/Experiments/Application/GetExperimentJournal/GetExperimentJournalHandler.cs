@@ -3,7 +3,7 @@ using InvestmentLab.Backtesting.Replays.Domain;
 
 namespace InvestmentLab.Backtesting.Experiments.Application.GetExperimentJournal;
 
-public sealed record GetExperimentJournalQuery(Guid ExperimentId, string? Kind, DateOnly? From, DateOnly? To, int Offset, int Limit);
+public sealed record GetExperimentJournalQuery(Guid ExperimentId, string? Kind, DateOnly? From, DateOnly? To, int Offset, int Limit, bool Detail = true);
 
 public sealed record ExperimentJournalDto(int Total, int Offset, IReadOnlyList<ReplayJournalEntry> Entries);
 
@@ -15,13 +15,15 @@ public sealed class GetExperimentJournalHandler(IExperimentRepository experiment
         if (experiment is null)
             return ExperimentErrors.NotFound(query.ExperimentId);
 
-        var entries = experiment.Result?.Baseline.Journal ?? [];
-        var journal = new ReplayJournal(entries);
+        var stored = experiment.Result?.Baseline.Journal ?? [];
+        var journal = new ReplayJournal(stored);
 
         var filter = new JournalFilter(query.Kind, query.From, query.To);
         var pagination = new JournalPage(query.Offset, query.Limit);
         var page = journal.Page(filter, pagination);
 
-        return new ExperimentJournalDto(page.Total, page.Offset, page.Entries);
+        var entries = query.Detail ? page.Entries : [.. page.Entries.Select(entry => entry.WithoutCandidates())];
+
+        return new ExperimentJournalDto(page.Total, page.Offset, entries);
     }
 }

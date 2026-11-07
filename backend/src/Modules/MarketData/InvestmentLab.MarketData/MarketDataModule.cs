@@ -22,6 +22,7 @@ using InvestmentLab.MarketData.Instruments.Application.Shared;
 using InvestmentLab.MarketData.Instruments.Domain;
 using InvestmentLab.MarketData.Instruments.Infrastructure;
 using InvestmentLab.MarketData.Instruments.Infrastructure.Seed;
+using InvestmentLab.MarketData.Quotes.Application.GetQuoteCoverage;
 using InvestmentLab.MarketData.Quotes.Api;
 using InvestmentLab.MarketData.Quotes.Application.CorrectQuote;
 using InvestmentLab.MarketData.Quotes.Application.IngestDailyQuotes;
@@ -70,6 +71,7 @@ public sealed class MarketDataModule : IModule
         services.AddScoped<RegisterListedFundHandler>();
         services.AddScoped<AssignProviderSymbolHandler>();
         services.AddScoped<GetInstrumentsHandler>();
+        services.AddScoped<GetQuoteCoverageHandler>();
         services.AddScoped<DescribeInstrumentsHandler>();
         services.AddScheduledJob<InstrumentDescriptionsJob>(InstrumentDescriptionsJob.Schedule, runAtStartup: true);
         services.AddScoped<IInstrumentCatalog, InstrumentCatalog>();
