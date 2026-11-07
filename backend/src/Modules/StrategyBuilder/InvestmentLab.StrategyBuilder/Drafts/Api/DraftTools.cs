@@ -72,10 +72,10 @@ internal static class DraftTools
     [Description("Starts a new strategy draft, empty or from a template.")]
     public static async Task<DraftReceiptDto> CreateDraft(
         string name,
-        [Description("Template code, or null for an empty draft.")] string? template,
         CreateDraftHandler handler,
         ICurrentUser user,
-        CancellationToken cancellationToken)
+        [Description("Template code, or null for an empty draft.")] string? template = null,
+        CancellationToken cancellationToken = default)
     {
         var command = new CreateDraftCommand(name, template);
 
@@ -121,11 +121,11 @@ internal static class DraftTools
     public static async Task<DraftReceiptDto> ChangeDraft(
         Guid draftId,
         [Description("The draft's current revision, from get_draft.")] int revision,
-        string? name,
-        string? description,
-        [Description("Setup fields to change; each field left null keeps its current value.")] DraftSetupPatchDto? setup,
         ChangeDraftHandler handler,
-        CancellationToken cancellationToken)
+        string? name = null,
+        string? description = null,
+        [Description("Setup fields to change; each field left null keeps its current value.")] DraftSetupPatchDto? setup = null,
+        CancellationToken cancellationToken = default)
     {
         var change = new DraftChangeDto(
             Revision: revision,
