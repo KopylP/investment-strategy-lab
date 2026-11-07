@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openPublishConfirmation } from './support/editor-menu';
 
 test('one canvas supports selection, zoom, drag and responsive steps', async ({ page }, testInfo) => {
   const errors: string[] = [];
@@ -101,7 +102,7 @@ test('one canvas supports selection, zoom, drag and responsive steps', async ({ 
     await route.fulfill({ json: body });
   });
   await page.goto('/strategy-builder/workspace');
-  await page.getByText('Схема', { exact: true }).click();
+  await page.getByRole('button', { name: 'Схема', exact: true }).click();
   await expect(page.locator('[data-block-canvas]')).toHaveCount(1);
   await expect(page.locator('app-graph-editor article')).toHaveCount(13);
   await page.getByRole('button', { name: 'Збільшити', exact: true }).click();
@@ -198,7 +199,7 @@ test('one canvas supports selection, zoom, drag and responsive steps', async ({ 
   await page.mouse.up();
   await expect.poll(() => draft.layout.positions['condition-0'].x).toBeGreaterThan(32);
   await assertEdgesMeetSockets();
-  await page.getByRole('button', { name: 'Опублікувати', exact: true }).click();
+  await openPublishConfirmation(page);
   await expect(page.getByText('Оберіть фонди', { exact: true }).first()).toBeVisible();
   failSave = true;
   await page.getByRole('textbox', { name: 'Назва чернетки' }).fill('Нова назва');
@@ -209,13 +210,17 @@ test('one canvas supports selection, zoom, drag and responsive steps', async ({ 
   await expect(page.getByText('Чернетка · збережено', { exact: true })).toBeVisible();
   for (const width of [1440, 1024, 390]) {
     await page.setViewportSize({ width, height: 900 });
-    await page.getByText('Кроки', { exact: true }).click();
+    await page.getByRole('button', { name: 'Кроки', exact: true }).click();
     await expect(page.getByRole('navigation', { name: 'Кроки стратегії' })).toBeVisible();
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
     ).toBeTruthy();
     await page.screenshot({ path: testInfo.outputPath(`workspace-steps-${width}.png`), fullPage: true });
-    await page.getByText('Схема', { exact: true }).click();
+    if (width < 576) {
+      await expect(page.getByRole('button', { name: 'Схема', exact: true })).toHaveCount(0);
+      continue;
+    }
+    await page.getByRole('button', { name: 'Схема', exact: true }).click();
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
     ).toBeTruthy();
@@ -234,7 +239,7 @@ test('one canvas supports selection, zoom, drag and responsive steps', async ({ 
   const download = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Завантажити локальну копію' }).click();
   expect((await download).suggestedFilename()).toContain('local-draft.json');
-  await page.getByRole('button', { name: 'Опублікувати', exact: true }).click();
+  await openPublishConfirmation(page);
   expect(publishRequests).toBe(0);
   expect(errors).toEqual([]);
 });

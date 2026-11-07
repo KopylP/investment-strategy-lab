@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { chooseFromEditorMenu } from './support/editor-menu';
 
 test('trend template saves an entire fund group and shows per-fund and shared evaluation after reload', async ({
   page,
@@ -32,7 +33,7 @@ test('trend template saves an entire fund group and shows per-fund and shared ev
   const draft = await created.json();
   try {
     await page.goto(`/strategy-builder/${draft.id}`);
-    await page.getByRole('button', { name: /Налаштування/ }).click();
+    await chooseFromEditorMenu(page, 'Стратегія', 'Фонди й ряди…');
     const setup = page.locator('[data-node-id="strategy-setup"]');
     await setup.locator('app-builder-fund-picker p-multiselect').click();
     const group = page.getByRole('checkbox', { name: 'Уся група «Тестова група»', exact: true });
@@ -80,7 +81,7 @@ test('trend template saves an entire fund group and shows per-fund and shared ev
       'data-iteration-count',
       '3',
     );
-    await page.getByRole('button', { name: /Налаштування/ }).click();
+    await chooseFromEditorMenu(page, 'Стратегія', 'Фонди й ряди…');
     await setup.locator('app-builder-fund-picker p-multiselect').click();
     await expect(group).toHaveAttribute('aria-checked', 'true');
     await expect(page.locator('.p-multiselect-overlay:visible')).toHaveCSS('opacity', '1');

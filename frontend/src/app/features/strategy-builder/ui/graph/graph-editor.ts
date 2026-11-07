@@ -83,13 +83,16 @@ export class GraphEditor implements AfterViewInit, OnDestroy {
   readonly layoutChange = output<LayoutDto>();
   readonly select = output<string | null>();
   private readonly workspace = viewChild.required<ElementRef<HTMLElement>>('workspace');
-  protected readonly isFullscreen = signal(false);
+  readonly isFullscreen = signal(false);
   protected readonly overlayContainer = signal<HTMLElement | 'body'>('body');
   private readonly canvas = viewChild.required<ElementRef<HTMLElement>>('canvas');
   private readonly injector = inject(Injector);
   protected readonly zoom = signal(1);
-  protected readonly helpVisible = signal(false);
-  protected readonly wireLegend = Object.entries(wireStyles).map(([type, style]) => ({ type, ...style }));
+  readonly helpVisible = signal(false);
+  protected readonly wireLegend = Object.entries(wireStyles).map(([type, style]) => ({
+    type,
+    ...style,
+  }));
 
   // Walk upstream and downstream independently: siblings sharing an input are not part of this branch.
   private branchNodes(graph: GraphDto, selected: string | null): Set<string> | null {
@@ -101,10 +104,19 @@ export class GraphEditor implements AfterViewInit, OnDestroy {
       while (queue.length) {
         const id = queue.pop()!;
         for (const link of graph.links) {
-          const next = direction === 'upstream'
-            ? link.to === id ? link.from : null
-            : link.from === id ? link.to : null;
-          if (next && !visited.has(next)) { visited.add(next); related.add(next); queue.push(next); }
+          const next =
+            direction === 'upstream'
+              ? link.to === id
+                ? link.from
+                : null
+              : link.from === id
+                ? link.to
+                : null;
+          if (next && !visited.has(next)) {
+            visited.add(next);
+            related.add(next);
+            queue.push(next);
+          }
         }
       }
     }
@@ -113,8 +125,8 @@ export class GraphEditor implements AfterViewInit, OnDestroy {
   protected readonly error = signal<string | null>(null);
   protected readonly connecting = signal(false);
   protected readonly paletteOpen = signal(false);
-  protected readonly canUndo = signal(false);
-  protected readonly canRedo = signal(false);
+  readonly canUndo = signal(false);
+  readonly canRedo = signal(false);
   private editor = new NodeEditor<Schemes>();
   private area?: AreaPlugin<Schemes, Extra>;
   private connection = new ConnectionPlugin<Schemes, Extra>();
@@ -477,7 +489,8 @@ export class GraphEditor implements AfterViewInit, OnDestroy {
   protected async focusDoubleClickedNode(event: MouseEvent): Promise<void> {
     const target = event.target;
     if (!(target instanceof Element) || !this.area) return;
-    if (target.closest('button, input, select, textarea, [role="combobox"], .parameters, .fields')) return;
+    if (target.closest('button, input, select, textarea, [role="combobox"], .parameters, .fields'))
+      return;
     const id = target.closest<HTMLElement>('[data-node-id]')?.dataset['nodeId'];
     const node = id ? this.editor.getNode(id) : undefined;
     if (node) await AreaExtensions.zoomAt(this.area, [node], { scale: 0.85 });
@@ -492,21 +505,28 @@ export class GraphEditor implements AfterViewInit, OnDestroy {
 
   protected async focusRole(block: string) {
     if (!this.area) return;
-    const result = this.editor.getNodes().find(
-      (node) => node.dto.kind.endsWith('Result') && node.dto.block === block,
-    );
+    const result = this.editor
+      .getNodes()
+      .find((node) => node.dto.kind.endsWith('Result') && node.dto.block === block);
     if (!result) return;
     const ids = dependenciesOf(this.graphValue, result.id);
-    const nodes = this.editor.getNodes()
-      .filter((node) => ids.has(node.id) && !['Setup', 'Cash', 'Portfolio'].includes(node.dto.kind)
-        && (!node.dto.kind.endsWith('Result') || node.id === result.id))
+    const nodes = this.editor
+      .getNodes()
+      .filter(
+        (node) =>
+          ids.has(node.id) &&
+          !['Setup', 'Cash', 'Portfolio'].includes(node.dto.kind) &&
+          (!node.dto.kind.endsWith('Result') || node.id === result.id),
+      )
       .sort((left, right) => {
         const a = this.layoutValue.positions[left.id] ?? { x: 0, y: 0 };
         const b = this.layoutValue.positions[right.id] ?? { x: 0, y: 0 };
         return a.x - b.x || a.y - b.y || left.id.localeCompare(right.id);
       });
-    const previous = this.roleNavigation?.block === block
-      ? nodes.findIndex((node) => node.id === this.roleNavigation!.nodeId) : -1;
+    const previous =
+      this.roleNavigation?.block === block
+        ? nodes.findIndex((node) => node.id === this.roleNavigation!.nodeId)
+        : -1;
     const node = nodes[(previous + 1) % nodes.length];
     if (!node) return;
     this.roleNavigation = { block, nodeId: node.id };
@@ -669,7 +689,7 @@ export class GraphEditor implements AfterViewInit, OnDestroy {
       }
     });
   }
-  protected async toggleFullscreen(): Promise<void> {
+  async toggleFullscreen(): Promise<void> {
     try {
       if (document.fullscreenElement === this.workspace().nativeElement) {
         await document.exitFullscreen();
@@ -691,11 +711,11 @@ export class GraphEditor implements AfterViewInit, OnDestroy {
       void this.area?.update('node', node.id);
     }
   }
-  protected async fit() {
+  async fit() {
     if (this.area && this.editor.getNodes().length)
       await AreaExtensions.zoomAt(this.area, this.editor.getNodes(), { scale: 0.85 });
   }
-  protected async setZoom(direction: number) {
+  async setZoom(direction: number) {
     if (!this.area) return;
     const canvas = this.canvas().nativeElement;
     const { x, y, k } = this.area.area.transform;
@@ -838,14 +858,14 @@ export class GraphEditor implements AfterViewInit, OnDestroy {
     this.canUndo.set(!!this.undoStack.length);
     this.canRedo.set(!!this.redoStack.length);
   }
-  protected undo() {
+  undo() {
     const s = this.undoStack.pop();
     if (s) {
       this.redoStack.push(this.snapshot());
       this.restore(s);
     }
   }
-  protected redo() {
+  redo() {
     const s = this.redoStack.pop();
     if (s) {
       this.undoStack.push(this.snapshot());
@@ -864,7 +884,7 @@ export class GraphEditor implements AfterViewInit, OnDestroy {
     this.emit();
     this.historyState();
   }
-  protected async arrangeAll() {
+  async arrangeAll() {
     this.remember();
     await this.measureNodes();
     const nodes = this.editor.getNodes();
@@ -969,7 +989,8 @@ export class GraphEditor implements AfterViewInit, OnDestroy {
     this.drawnPoints.set(connection.id, route.points);
     connection.selected = this.selectedEdge() === connection.id;
     const branch = this.branchNodes(this.graphValue, this.selectedNodeId());
-    connection.branchDimmed = !!branch && (!branch.has(connection.source) || !branch.has(connection.target));
+    connection.branchDimmed =
+      !!branch && (!branch.has(connection.source) || !branch.has(connection.target));
     connection.handleRadius = 6 / this.area!.area.transform.k;
     connection.handles = connection.selected ? edgeHandles(route.points) : [];
     return route.path;

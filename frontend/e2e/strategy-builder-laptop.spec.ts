@@ -6,7 +6,7 @@ test('Laptop strategy workspace leaves room for the canvas', async ({ page }, te
   page.on('pageerror', (e) => errors.push(e.message));
   await mockStrategyWorkspace(page);
   await page.goto('/strategy-builder/workspace');
-  await page.getByText('Схема', { exact: true }).click();
+  await page.getByRole('button', { name: 'Схема', exact: true }).click();
 
   await expect(page.locator('[data-block-canvas]')).toHaveCount(1);
   for (const [width, height] of [
@@ -53,7 +53,7 @@ test('Laptop strategy workspace leaves room for the canvas', async ({ page }, te
   await page.getByRole('button', { name: 'Меню', exact: true }).click();
   await expect(page.locator('.layout-wrapper')).toHaveClass(/layout-overlay-active/);
   await page.getByRole('button', { name: 'Меню', exact: true }).click();
-  await page.getByText('Кроки', { exact: true }).click();
+  await page.getByRole('button', { name: 'Кроки', exact: true }).click();
   await expect(page.locator('.layout-wrapper')).toHaveClass(/layout-static/);
   expect(errors).toEqual([]);
 });

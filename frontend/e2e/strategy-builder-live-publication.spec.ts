@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openPublishConfirmation } from './support/editor-menu';
 
 test('new strategy can be configured, saved, published and revised entirely through the UI', async ({ page }, testInfo) => {
   const errors: string[] = [];
@@ -44,14 +45,14 @@ test('new strategy can be configured, saved, published and revised entirely thro
   expect(saved.setup.funds).toHaveLength(3);
   expect(saved.setup.benchmarkId).toBeTruthy();
   expect(saved.setup.cashId).toBeTruthy();
-  await page.getByText('Схема', { exact: true }).click();
+  await page.getByRole('button', { name: 'Схема', exact: true }).click();
   await expect(page.locator('[data-block-canvas]')).toHaveCount(1);
   await page.screenshot({ path: testInfo.outputPath('real-strategy-graph.png'), fullPage: true });
-  await page.getByText('Кроки', { exact: true }).click();
+  await page.getByRole('button', { name: 'Кроки', exact: true }).click();
   await page.getByRole('button', { name: '9. Перевірка й бектест', exact: true }).click();
   await page.getByRole('button', { name: 'Перевірити', exact: true }).click();
   const publish = async () => {
-    await page.getByRole('button', { name: 'Опублікувати', exact: true }).click();
+    await openPublishConfirmation(page);
     const confirmation = page.getByRole('alertdialog', { name: 'Публікація стратегії' });
     await expect(confirmation).toBeVisible();
     await confirmation.getByRole('button', { name: 'Опублікувати', exact: true }).click();

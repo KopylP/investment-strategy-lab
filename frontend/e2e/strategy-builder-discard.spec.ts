@@ -1,4 +1,5 @@
 import { expect, Page, test } from '@playwright/test';
+import { chooseFromEditorMenu } from './support/editor-menu';
 import { mockStrategyWorkspace } from './support/strategy-workspace';
 
 async function listFixture(page: Page) {
@@ -94,7 +95,7 @@ test('discard from editor waits for an in-flight save and cancels queued autosav
   await name.fill('Зміна перед видаленням');
   await name.press('Tab');
   await expect.poll(() => events).toEqual(['save-start']);
-  await page.getByRole('button', { name: 'Видалити чернетку', exact: true }).click();
+  await chooseFromEditorMenu(page, 'Стратегія', 'Видалити чернетку…');
   await page
     .getByRole('alertdialog')
     .getByRole('button', { name: 'Видалити', exact: true })

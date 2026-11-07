@@ -147,7 +147,7 @@ test('review stays compact with a fixed close button, Escape and focus return', 
   });
   await page.setViewportSize({ width: 2560, height: 1440 });
   await page.goto('/strategy-builder/workspace');
-  const toggle = page.getByRole('button', { name: 'Зауважень: 0' });
+  const toggle = page.getByRole('button', { name: 'Без зауважень' });
   const panel = page.locator('#strategy-review');
   await toggle.click();
   await expect(panel).toBeVisible();
@@ -168,7 +168,8 @@ test('review stays compact with a fixed close button, Escape and focus return', 
   await expect(panel).toHaveCount(0);
   await expect(toggle).toBeFocused();
   await page.setViewportSize({ width: 390, height: 844 });
-  await toggle.click();
+  await page.getByRole('button', { name: 'Більше дій', exact: true }).click();
+  await page.getByRole('menuitem', { name: /Опис і перевірка/ }).click();
   await expect(panel).toBeVisible();
   await panel.locator('.review-content').evaluate((el) => (el.scrollTop = el.scrollHeight));
   await expect(panel.getByRole('button', { name: 'Закрити опис і перевірку' })).toBeInViewport();
@@ -176,11 +177,5 @@ test('review stays compact with a fixed close button, Escape and focus return', 
   await page.screenshot({ path: testInfo.outputPath('compact-review-mobile.png') });
   await panel.getByRole('button', { name: 'Закрити опис і перевірку' }).click();
   await expect(panel).toHaveCount(0);
-  await page.getByRole('button', {name:'Кроки', exact:true}).click();
-  const reopen=page.locator('.review-toggle');
-  await expect(reopen).toBeVisible();
-  await reopen.click();
-  await expect(panel).toBeVisible();
-  await panel.getByRole('button', {name:'Закрити опис і перевірку'}).click();
-  await expect(reopen).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Схема', exact: true })).toHaveCount(0);
 });

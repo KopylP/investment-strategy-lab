@@ -8,7 +8,7 @@ test('Rete workspace supports inline fields, palette drop, wires and navigation'
   page.on('pageerror', (e) => errors.push(e.message));
   const workspace = await mockStrategyWorkspace(page);
   await page.goto('/strategy-builder/workspace');
-  await page.getByText('Схема', { exact: true }).click();
+  await page.getByRole('button', { name: 'Схема', exact: true }).click();
 
   await expect(page.locator('[data-block-canvas]')).toHaveCount(1);
   const assertEdgesMeetSockets = async () => {
@@ -183,7 +183,7 @@ test('Rete workspace supports inline fields, palette drop, wires and navigation'
   await page.mouse.move(panBox.x + panBox.width - 96, panBox.y + panBox.height - 56, { steps: 5 });
   await page.mouse.up();
   await assertCenteredZoom();
-  for (const width of [1440, 2560, 3440, 1024, 390]) {
+  for (const width of [1440, 2560, 3440, 1024]) {
     await page.setViewportSize({ width, height: 900 });
     if (width < 992)
       await expect

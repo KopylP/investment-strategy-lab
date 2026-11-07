@@ -78,7 +78,7 @@ for (const dark of [false, true]) {
       page
         .getByRole('navigation', { name: 'Ролі стратегії' })
         .getByRole('button', { name: 'Вхід', exact: true }),
-      page.getByRole('button', { name: /Налаштування/ }),
+      page.locator('.editor-menubar').getByRole('menuitem', { name: 'Стратегія', exact: true }),
     ];
     for (const control of controls) {
       await control.hover();
