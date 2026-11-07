@@ -6,4 +6,5 @@ public enum ExperimentStatus
     Running,
     Succeeded,
     Failed,
+    Cancelled,
 }

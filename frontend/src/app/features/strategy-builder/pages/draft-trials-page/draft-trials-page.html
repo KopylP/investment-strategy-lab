@@ -69,7 +69,7 @@
   </p-table>
 </div>
 @if (store.selectedRuns(); as runs) {
-  @if (runs.length === 1 && runs[0].status !== 'Failed') {
+  @if (runs.length === 1 && store.canSelect(runs[0])) {
     @if (runs[0].experimentId) {
       <app-experiment-results />
     } @else {

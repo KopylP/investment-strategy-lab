@@ -60,6 +60,11 @@ public sealed class TrialRunScenarioTests : IClassFixture<StrategiesApiFactory>
         second.Version.ShouldBe(2);
         var afterChange = await client.GetFromJsonAsync<List<TrialRunDto>>($"/api/strategy-builder/drafts/{draft.Id}/trials", cancellationToken);
         afterChange!.Select(run => run.Version).ShouldBe([1, 2]);
+
+        var rerun = await RunAsync(client, draft.Id, cancellationToken, rerun: true);
+
+        rerun.Number.ShouldBe(3);
+        rerun.Version.ShouldBe(3);
     }
 
     private static async Task<DraftDto> ConfiguredDraftAsync(HttpClient client, CancellationToken cancellationToken)
@@ -82,9 +87,9 @@ public sealed class TrialRunScenarioTests : IClassFixture<StrategiesApiFactory>
         return (await changed.Content.ReadFromJsonAsync<DraftDto>(cancellationToken))!;
     }
 
-    private static async Task<TrialRunDto> RunAsync(HttpClient client, Guid draftId, CancellationToken cancellationToken)
+    private static async Task<TrialRunDto> RunAsync(HttpClient client, Guid draftId, CancellationToken cancellationToken, bool rerun = false)
     {
-        var response = await client.PostAsJsonAsync($"/api/strategy-builder/drafts/{draftId}/trials", new { label = "Trial" }, cancellationToken);
+        var response = await client.PostAsJsonAsync($"/api/strategy-builder/drafts/{draftId}/trials", new { label = "Trial", rerun }, cancellationToken);
         var detail = await response.Content.ReadAsStringAsync(cancellationToken);
         response.StatusCode.ShouldBe(HttpStatusCode.OK, detail);
 

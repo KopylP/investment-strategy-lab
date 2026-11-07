@@ -4,7 +4,7 @@ using InvestmentLab.StrategyBuilder.Trials.Domain;
 
 namespace InvestmentLab.StrategyBuilder.Trials.Application.RunTrial;
 
-public sealed record RunTrialCommand(Guid DraftId, string? Label, TrialExperiment? Experiment = null);
+public sealed record RunTrialCommand(Guid DraftId, string? Label, TrialExperiment? Experiment = null, bool Rerun = false);
 
 public sealed class RunTrialHandler(
     IDraftRepository drafts,
@@ -35,7 +35,7 @@ public sealed class RunTrialHandler(
             return experimentCheck.Error;
 
         var fingerprint = DraftFingerprint.Of(rules, draft.Setup, draft.Reports, command.Experiment);
-        if (await ReusableTrialAsync(draft, fingerprint, cancellationToken) is { } reused)
+        if (!command.Rerun && await ReusableTrialAsync(draft, fingerprint, cancellationToken) is { } reused)
             return reused;
 
         var executed = await Execute(draft, rules, command.Experiment, cancellationToken);

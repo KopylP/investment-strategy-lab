@@ -69,6 +69,12 @@ namespace InvestmentLab.Backtesting.Shared.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("strategy_version");
 
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id")
                         .HasName("pk_experiments");
 

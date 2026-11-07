@@ -16,7 +16,7 @@ export class TrialsStore {
   readonly loading = signal(false);
   readonly error = signal<unknown>(null);
   readonly selectedRuns = computed(() =>
-    this.trials().filter((run) => this.chosen().includes(run.number) && run.status !== 'Failed'),
+    this.trials().filter((run) => this.chosen().includes(run.number) && this.canSelect(run)),
   );
   readonly selected = computed(() => this.selectedRuns().map((run) => run.number));
   readonly waiting = computed(() =>
@@ -43,7 +43,7 @@ export class TrialsStore {
   }
 
   canSelect(run: TrialRunDto): boolean {
-    return run.status !== 'Failed';
+    return run.status !== 'Failed' && run.status !== 'Cancelled';
   }
 
   toggle(number: number): void {

@@ -1,5 +1,7 @@
 using InvestmentLab.Backtesting.Contracts;
+using InvestmentLab.Backtesting.Experiments.Application.CancelExperiment;
 using InvestmentLab.Backtesting.Experiments.Application.CheckExperiment;
+using InvestmentLab.Backtesting.Experiments.Application.GetQueuePositions;
 using InvestmentLab.Backtesting.Experiments.Application.GetExperimentStatus;
 using InvestmentLab.Backtesting.Experiments.Application.RequestExperiment;
 using InvestmentLab.Backtesting.Experiments.Domain;
@@ -10,7 +12,9 @@ namespace InvestmentLab.Backtesting.Experiments.Infrastructure;
 internal sealed class BacktestExperiments(
     RequestExperimentHandler requestExperiment,
     CheckExperimentHandler checkExperiment,
-    GetExperimentStatusHandler getStatus) : IBacktestExperiments
+    GetExperimentStatusHandler getStatus,
+    CancelExperimentHandler cancelExperiment,
+    GetQueuePositionsHandler getQueuePositions) : IBacktestExperiments
 {
     public async Task<ExperimentTicketDto> RequestAsync(
         Guid strategyId,
@@ -42,6 +46,16 @@ internal sealed class BacktestExperiments(
 
     public Task<ExperimentStatusDto?> GetStatusAsync(Guid experimentId, CancellationToken cancellationToken) =>
         getStatus.Handle(experimentId, cancellationToken);
+
+    public async Task<ExperimentTicketDto> CancelAsync(Guid experimentId, CancellationToken cancellationToken)
+    {
+        var cancelled = await cancelExperiment.Handle(experimentId, cancellationToken);
+
+        return cancelled.IsSuccess ? new ExperimentTicketDto(experimentId) : Refused(cancelled.Error);
+    }
+
+    public Task<IReadOnlyDictionary<Guid, int>> QueuePositionsAsync(IReadOnlyList<Guid> experimentIds, CancellationToken cancellationToken) =>
+        getQueuePositions.Handle(experimentIds, cancellationToken);
 
     private static ExperimentConditions ConditionsOf(ExperimentSettingsDto settings)
     {

@@ -10,6 +10,7 @@ internal static class ExperimentConfiguration
 {
     private const int StatusLength = 20;
     private const int FailureReasonLength = 2000;
+    private const string ConcurrencyVersion = "Version";
 
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
@@ -21,6 +22,7 @@ internal static class ExperimentConfiguration
         entity.Ignore(item => item.DomainEvents);
         entity.Property(item => item.Status).HasConversion<string>().HasMaxLength(StatusLength);
         entity.Property(item => item.FailureReason).HasMaxLength(FailureReasonLength);
+        entity.Property<uint>(ConcurrencyVersion).IsRowVersion();
         entity.HasIndex(item => new { item.StrategyId, item.StrategyVersion });
 
         entity.Property(item => item.Conditions)
