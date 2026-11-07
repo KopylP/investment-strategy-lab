@@ -6,12 +6,16 @@ import {
   input,
   untracked,
 } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
+import { DecimalPipe, NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { Message } from 'primeng/message';
 import { TableModule } from 'primeng/table';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
-import { DatePipe, DateTimePipe, PercentPipe } from '../../../../shared/pipes/format-pipes';
+import { DateTimePipe, PercentPipe } from '../../../../shared/pipes/format-pipes';
+import { formatDate } from '../../../../shared/pipes/format';
+import { Viewport } from '../../../../shared/ui/viewport';
+import { TrialRunDto } from '../../models/trial-run-dto';
+import { TrialStatusVm, trialStatuses } from '../../models/trial-status-vm';
 import { StrategyBacktest } from '../../../backtesting/ui/strategy-backtest/strategy-backtest';
 import { TrialsStore } from '../../data-access/trials-store';
 import { TrialComparison } from '../../ui/trial-comparison/trial-comparison';
@@ -22,6 +26,7 @@ import { ExperimentResults } from '../../ui/experiment-results/experiment-result
   selector: 'app-draft-trials-page',
   imports: [
     DecimalPipe,
+    NgTemplateOutlet,
     Message,
     TableModule,
     PageHeader,
@@ -30,7 +35,6 @@ import { ExperimentResults } from '../../ui/experiment-results/experiment-result
     StrategyBacktest,
     TrialComparison,
     ExperimentResults,
-    DatePipe,
   ],
   providers: [TrialsStore, ExperimentStore],
   templateUrl: './draft-trials-page.html',
@@ -42,13 +46,7 @@ export class DraftTrialsPage {
   protected readonly store = inject(TrialsStore);
   private readonly experiments = inject(ExperimentStore);
   private readonly route = inject(ActivatedRoute);
-  protected readonly statuses: Record<string, string> = {
-    Waiting: 'Очікує',
-    Running: 'Обчислюється',
-    Succeeded: 'Готово',
-    Failed: 'Помилка',
-    Cancelled: 'Скасовано',
-  };
+  protected readonly viewport = inject(Viewport);
 
   constructor() {
     effect(() => {
@@ -61,5 +59,20 @@ export class DraftTrialsPage {
       const run = Number(this.route.snapshot.queryParamMap.get('run'));
       untracked(() => this.store.show(id, run > 0 ? run : null));
     });
+  }
+
+  protected isSelected(run: TrialRunDto): boolean {
+    return this.store.selected().includes(run.number);
+  }
+
+  protected statusOf(run: TrialRunDto): TrialStatusVm {
+    return trialStatuses[run.status];
+  }
+
+  protected periodOf(run: TrialRunDto): string {
+    const period = run.experiment?.period;
+    if (!period) return 'Автоматичний період';
+
+    return `${formatDate(period.start)} – ${formatDate(period.end)}`;
   }
 }

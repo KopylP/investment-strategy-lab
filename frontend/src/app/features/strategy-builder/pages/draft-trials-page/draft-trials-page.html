@@ -6,68 +6,132 @@
 @if (store.error()) {
   <p-message severity="error" text="Не вдалося завантажити бектести" />
 }
-<div class="card min-w-0">
-  <p class="mb-4 text-muted-color">
-    Натисніть на рядок для перегляду. Оберіть другий готовий запуск, щоб порівняти результати.
-  </p>
-  <p-table
-    [value]="store.trials()"
-    [loading]="store.loading()"
-    [tableStyle]="{ 'min-width': '65rem' }"
-  >
-    <ng-template #header
-      ><tr>
-        <th>№</th>
-        <th>Мітка</th>
-        <th>Період</th>
-        <th>Час</th>
-        <th>Статус</th>
-        <th>Річна дохідність</th>
-        <th>Після податку</th>
-        <th>Волатильність</th>
-        <th>Sharpe</th>
-        <th>Найбільше падіння</th>
-      </tr></ng-template
-    >
-    <ng-template #body let-run
-      ><tr
-        class="trial-row"
-        [class.selected]="store.selected().includes(run.number)"
-        [class.unavailable]="!store.canSelect(run)"
-        [attr.tabindex]="store.canSelect(run) ? 0 : -1"
-        [attr.aria-selected]="store.selected().includes(run.number)"
-        [attr.aria-disabled]="!store.canSelect(run)"
-        [attr.data-trial-number]="run.number"
-        [attr.aria-label]="
-          'Запуск ' + run.number + (store.selected().includes(run.number) ? ', вибрано' : '')
-        "
-        (click)="store.toggle(run.number)"
-        (keydown.enter)="store.toggle(run.number)"
-        (keydown.space)="$event.preventDefault(); store.toggle(run.number)"
-      >
-        <td>{{ run.number }}</td>
-        <td>{{ run.label || '—' }}</td>
-        <td>@if (run.experiment) { {{ run.experiment.period.start | date }} – {{ run.experiment.period.end | date }} } @else { Автоматично }</td>
-        <td>{{ run.ranAt | dateTime }}</td>
-        <td>{{ statuses[run.status] }}</td>
-        @if (run.failureReason) {
-          <td colspan="5" class="failure-reason">{{ run.failureReason }}</td>
-        } @else {
-          <td>{{ run.annualReturn | percent }}</td>
-          <td>{{ run.annualReturnAfterTax | percent }}</td>
-          <td>{{ run.volatility | percent }}</td>
-          <td>{{ run.sharpe === null ? '—' : (run.sharpe | number: '1.2-2') }}</td>
-          <td>{{ run.maxDrawdown | percent }}</td>
-        }
-      </tr></ng-template
-    >
-    <ng-template #emptymessage
-      ><tr>
-        <td colspan="10">Запусків ще немає. Поверніться до чернетки й натисніть «Бектест».</td>
-      </tr></ng-template
-    >
-  </p-table>
-</div>
+<p class="trials-hint">Виберіть запуск, щоб побачити результати. Два готові запуски можна порівняти.</p>
+
+<ng-template #selectionMark let-run>
+  <span class="selection-mark" [class.checked]="isSelected(run)" aria-hidden="true">
+    @if (isSelected(run)) {
+      <i class="pi pi-check"></i>
+    }
+  </span>
+</ng-template>
+
+<ng-template #statusBadge let-run>
+  <span class="trial-status" [attr.data-tone]="statusOf(run).tone">
+    @if (run.status === 'Running') {
+      <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+    } @else {
+      <span class="status-dot" aria-hidden="true"></span>
+    }
+    {{ statusOf(run).label }}
+  </span>
+</ng-template>
+
+@if (viewport.phone()) {
+  <ul class="trial-list" aria-label="Запуски бектесту">
+    @for (run of store.trials(); track run.number) {
+      <li>
+        <button
+          type="button"
+          class="trial-item"
+          [class.selected]="isSelected(run)"
+          [disabled]="!store.canSelect(run)"
+          [attr.data-trial-number]="run.number"
+          [attr.aria-selected]="isSelected(run)"
+          [attr.aria-disabled]="!store.canSelect(run)"
+          (click)="store.toggle(run.number)"
+        >
+          <ng-container *ngTemplateOutlet="selectionMark; context: { $implicit: run }" />
+          <span class="trial-main">
+            <span class="trial-title">
+              Запуск {{ run.number }}
+              @if (run.label) {
+                <span class="trial-label">{{ run.label }}</span>
+              }
+            </span>
+            @if (run.failureReason) {
+              <span class="trial-failure">{{ run.failureReason }}</span>
+            } @else {
+              <span class="trial-meta">{{ periodOf(run) }}</span>
+            }
+          </span>
+          <span class="trial-figure">
+            @if (run.status === 'Succeeded') {
+              <span class="figure-value">{{ run.annualReturn | percent }}</span>
+              <span class="figure-caption">на рік</span>
+            } @else {
+              <ng-container *ngTemplateOutlet="statusBadge; context: { $implicit: run }" />
+            }
+          </span>
+        </button>
+      </li>
+    } @empty {
+      @if (!store.loading()) {
+        <li class="trial-empty">Запусків ще немає. Поверніться до чернетки й натисніть «Бектест».</li>
+      }
+    }
+  </ul>
+} @else {
+  <div class="card trials-card min-w-0">
+    <p-table [value]="store.trials()" [loading]="store.loading()" [tableStyle]="{ 'min-width': '56rem' }">
+      <ng-template #header>
+        <tr>
+          <th class="mark-column"><span class="sr-only">Вибір</span></th>
+          <th>Запуск</th>
+          <th>Період</th>
+          <th>Статус</th>
+          <th class="number">Річна дохідність</th>
+          <th class="number">Після податку</th>
+          <th class="number">Волатильність</th>
+          <th class="number">Sharpe</th>
+          <th class="number">Найбільше падіння</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-run>
+        <tr
+          class="trial-row"
+          [class.selected]="isSelected(run)"
+          [class.unavailable]="!store.canSelect(run)"
+          [attr.tabindex]="store.canSelect(run) ? 0 : -1"
+          [attr.aria-selected]="isSelected(run)"
+          [attr.aria-disabled]="!store.canSelect(run)"
+          [attr.data-trial-number]="run.number"
+          [attr.aria-label]="'Запуск ' + run.number + (isSelected(run) ? ', вибрано' : '')"
+          (click)="store.toggle(run.number)"
+          (keydown.enter)="store.toggle(run.number)"
+          (keydown.space)="$event.preventDefault(); store.toggle(run.number)"
+        >
+          <td class="mark-column">
+            @if (store.canSelect(run)) {
+              <ng-container *ngTemplateOutlet="selectionMark; context: { $implicit: run }" />
+            }
+          </td>
+          <td>
+            <span class="trial-title">Запуск {{ run.number }}</span>
+            <span class="trial-meta">{{ run.label || (run.ranAt | dateTime) }}</span>
+          </td>
+          <td class="whitespace-nowrap">{{ periodOf(run) }}</td>
+          <td><ng-container *ngTemplateOutlet="statusBadge; context: { $implicit: run }" /></td>
+          @if (run.failureReason) {
+            <td colspan="5" class="trial-failure">{{ run.failureReason }}</td>
+          } @else {
+            <td class="number">{{ run.annualReturn | percent }}</td>
+            <td class="number">{{ run.annualReturnAfterTax | percent }}</td>
+            <td class="number">{{ run.volatility | percent }}</td>
+            <td class="number">{{ run.sharpe === null ? '—' : (run.sharpe | number: '1.2-2') }}</td>
+            <td class="number">{{ run.maxDrawdown | percent }}</td>
+          }
+        </tr>
+      </ng-template>
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="9">Запусків ще немає. Поверніться до чернетки й натисніть «Бектест».</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+}
+
 @if (store.selectedRuns(); as runs) {
   @if (runs.length === 1 && store.canSelect(runs[0])) {
     @if (runs[0].experimentId) {
