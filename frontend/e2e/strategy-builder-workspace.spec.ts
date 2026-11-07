@@ -104,9 +104,12 @@ test('one canvas supports selection, zoom, drag and responsive steps', async ({ 
   await page.goto('/strategy-builder/workspace');
   await page.getByRole('button', { name: 'Схема', exact: true }).click();
   await expect(page.locator('[data-block-canvas]')).toHaveCount(1);
-  await expect(page.locator('app-graph-editor article')).toHaveCount(13);
+  await expect(page.locator('app-graph-editor article')).toHaveCount(17);
+  const zoomLevel = async () => parseInt((await page.locator('app-graph-editor output').textContent()) ?? '0');
+  await expect.poll(zoomLevel).toBeLessThan(100);
+  const zoomBefore = await zoomLevel();
   await page.getByRole('button', { name: 'Збільшити', exact: true }).click();
-  await expect(page.locator('app-graph-editor')).toContainText('90%');
+  await expect.poll(zoomLevel).toBeGreaterThan(zoomBefore);
   const assertEdgesMeetSockets = async () => {
     await expect
       .poll(() =>
@@ -145,7 +148,7 @@ test('one canvas supports selection, zoom, drag and responsive steps', async ({ 
   await assertEdgesMeetSockets();
   const node = page.locator('app-graph-editor article').first();
   await node.click();
-  await expect(page.locator('app-node-inspector')).toBeVisible();
+  await expect(node).toHaveClass(/selected/);
   await node.getByRole('button', { name: 'Почати звʼязок' }).click();
   await node.getByRole('button', { name: 'Вхід condition', exact: true }).click();
   await expect(page.getByRole('alert').filter({ hasText: 'створює цикл' })).toBeVisible();

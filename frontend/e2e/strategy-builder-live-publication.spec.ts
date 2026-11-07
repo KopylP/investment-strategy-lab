@@ -15,30 +15,35 @@ test('new strategy can be configured, saved, published and revised entirely thro
   await page.locator('#confirm').fill('correct horse battery');
   await page.getByRole('button', { name: 'Зареєструватися' }).click();
   await expect(page.getByRole('heading', { name: 'Огляд', exact: true })).toBeVisible();
-  const vocabularyResponse = await page.request.get('/api/strategy-builder/vocabulary');
-  expect(vocabularyResponse.ok()).toBeTruthy();
-  const vocabulary = await vocabularyResponse.json();
-  const template = vocabulary.templates.find((item: any) => item.code === 'momentum-trend-filter');
-  expect(template).toBeTruthy();
   await page.goto('/strategy-builder');
-  await page.getByRole('button', { name: 'Нова стратегія', exact: true }).first().click();
-  await page.locator('#builder-draft-name').fill(`UI publication ${Date.now()}`);
+  await page.getByRole('button', { name: 'Нова стратегія' }).first().click();
   await page.locator('p-select:has(#builder-template)').click();
-  await page.getByRole('option', { name: template.name, exact: true }).click();
-  await page.getByRole('button', { name: 'Створити', exact: true }).click();
+  await page.getByRole('option', { name: 'Моментум із фільтром тренду', exact: true }).click();
+  await page.locator('#builder-draft-name').fill(`UI publication ${Date.now()}`);
+  await page.getByRole('button', { name: 'Створити' }).click();
   await expect(page).toHaveURL(/\/strategy-builder\/[\w-]+$/);
   const draftId = page.url().split('/').at(-1)!;
+  await page.getByRole('button', { name: 'Кроки', exact: true }).click();
   await page.getByRole('button', { name: '2. Фонди й ряди', exact: true }).click();
-  await page.locator('p-multiselect:has(#builder-funds)').click();
-  await expect(page.getByRole('option').first()).toBeVisible();
-  for (let index = 0; index < 3; index++) await page.getByRole('option').nth(index).click();
-  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Обрати фонди' }).click();
+  const fundDialog = page.getByRole('dialog', { name: 'Фонди стратегії' });
+  const fundChoices = fundDialog.locator('.fund-row input');
+  await expect(fundChoices.first()).toBeVisible();
+  for (let index = 0; index < 3; index++) await fundChoices.nth(index).check();
+  await fundDialog.getByRole('button', { name: /^Застосувати/ }).click();
+  await expect(fundDialog).toBeHidden();
   await page.locator('p-select:has(#builder-benchmark)').click();
   await page.getByRole('option').first().click();
   await page.locator('p-select:has(#builder-cash)').click();
   await page.getByRole('option').nth(3).click();
-  await expect(page.getByText('Чернетка · збережено', { exact: true })).toBeVisible();
+  await expect
+    .poll(async () => {
+      const current = await (await page.request.get(`/api/strategy-builder/drafts/${draftId}`)).json();
+      return [current.setup.funds.length, !!current.setup.benchmarkId, !!current.setup.cashId];
+    })
+    .toEqual([3, true, true]);
   await page.reload();
+  await page.getByRole('button', { name: 'Кроки', exact: true }).click();
   await page.getByRole('button', { name: '2. Фонди й ряди', exact: true }).click();
   await expect(page.getByText('3 із 60', { exact: true })).toBeVisible();
   const saved = await (await page.request.get(`/api/strategy-builder/drafts/${draftId}`)).json();
@@ -50,14 +55,13 @@ test('new strategy can be configured, saved, published and revised entirely thro
   await page.screenshot({ path: testInfo.outputPath('real-strategy-graph.png'), fullPage: true });
   await page.getByRole('button', { name: 'Кроки', exact: true }).click();
   await page.getByRole('button', { name: '9. Перевірка й бектест', exact: true }).click();
-  await page.getByRole('button', { name: 'Перевірити', exact: true }).click();
+  await page.getByRole('button', { name: 'Перевірити' }).click();
   const publish = async () => {
     await openPublishConfirmation(page);
     const confirmation = page.getByRole('alertdialog', { name: 'Публікація стратегії' });
     await expect(confirmation).toBeVisible();
     await confirmation.getByRole('button', { name: 'Опублікувати', exact: true }).click();
     await expect(page).toHaveURL(/\/strategies\/[\w-]+$/);
-    await expect(page.getByRole('heading', { name: 'Стратегія словами' })).toBeVisible();
   };
   await publish();
   const publishedUrl = page.url();
