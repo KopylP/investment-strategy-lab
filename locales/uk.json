@@ -393,6 +393,8 @@
   "builder.words.exit": "Фонд продається, коли {condition}.",
   "builder.words.entry": "Фонд купується, коли {condition}.",
   "builder.words.selection": "Тримаємо до {top} фондів, кращі за: {rank}; з групи не більше {groupLimit}, кореляція не вище {correlation:percent}; гроші діляться {weights}.",
+  "builder.words.selection_volatility_target": "Тримаємо до {top} фондів, кращі за: {rank}; з групи не більше {groupLimit}, кореляція не вище {correlation:percent}; гроші діляться {weights}; частка у фондах зменшується до цілі волатильності {targetVolatility:percent}, решта чекає в {cash}.",
+  "builder.words.weights_capped": "{method}, не більше {cap:percent} в один фонд",
   "builder.words.universe_order": "порядок у списку фондів",
   "builder.words.risk": "Позиція продається, коли {limits:join: або }.",
   "builder.words.risk.stop": "збиток від собівартості досягає {limit:signedPercent}",

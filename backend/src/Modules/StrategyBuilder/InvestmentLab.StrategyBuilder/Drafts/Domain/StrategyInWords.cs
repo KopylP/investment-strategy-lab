@@ -49,16 +49,30 @@ public static class StrategyInWords
             var selector = PortfolioFlow.Selector(_graph);
             var parameters = selector?.Parameters ?? NodeParameters.Empty.With("top", Math.Max(1, draft.Setup.Funds.Count));
             var rank = selector is not null && InputNode(selector, NodeSockets.RankBy) is { } ranking ? Indicator(ranking) : Message.Of("builder.words.universe_order");
-            var sentence = Message.Of("builder.words.selection", new
+            var targetVolatility = result.Parameters.Number("targetVolatility");
+            var code = targetVolatility is null ? "builder.words.selection" : "builder.words.selection_volatility_target";
+
+            var sentence = Message.Of(code, new
             {
                 top = parameters.Integer("top"),
                 rank,
                 groupLimit = parameters.Integer("maxPerGroup"),
                 correlation = parameters.Number("maxCorrelation"),
-                weights = ChoiceLabel(vocabulary.BlockFields.GetValueOrDefault("method"), result.Parameters.Text("method")),
+                weights = Weights(result.Parameters),
+                targetVolatility,
+                cash = LabelOf(draft.Setup.CashId),
             });
 
             return new BlockWords(BlockKind.Selection, sentence);
+        }
+
+        private string? Weights(NodeParameters parameters)
+        {
+            var method = ChoiceLabel(vocabulary.BlockFields.GetValueOrDefault("method"), parameters.Text("method"));
+
+            return parameters.Number("maxPerFund") is { } cap and < 1
+                ? Message.Of("builder.words.weights_capped", new { method, cap })
+                : method;
         }
 
         public BlockWords? Risk()

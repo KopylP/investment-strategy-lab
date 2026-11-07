@@ -48,6 +48,43 @@ public sealed partial class StrategyInWordsTests
     }
 
     [Fact]
+    public void The_selection_sentence_names_the_cap_on_one_fund()
+    {
+        var selection = SelectionWords(NodeParameters.Empty.With("method", "inverseVolatility").With("maxPerFund", 0.6));
+
+        selection.ShouldStartWith("@builder.words.selection ");
+        var weights = ParametersOf(selection).GetProperty("weights").GetString()!;
+        weights.ShouldStartWith("@builder.words.weights_capped ");
+        ParametersOf(weights).GetProperty("cap").GetDouble().ShouldBe(0.6);
+    }
+
+    [Fact]
+    public void A_cap_of_the_whole_portfolio_is_not_mentioned()
+    {
+        var selection = SelectionWords(NodeParameters.Empty.With("method", "inverseVolatility").With("maxPerFund", 1.0));
+
+        ParametersOf(selection).GetProperty("weights").GetString()!.ShouldNotStartWith("@builder.words.weights_capped");
+    }
+
+    [Fact]
+    public void A_volatility_target_is_said_with_the_cash_fund_that_takes_the_rest()
+    {
+        var selection = SelectionWords(NodeParameters.Empty.With("method", "inverseVolatility").With("targetVolatility", 0.12));
+
+        selection.ShouldStartWith("@builder.words.selection_volatility_target ");
+        ParametersOf(selection).GetProperty("targetVolatility").GetDouble().ShouldBe(0.12);
+        ParametersOf(selection).GetProperty("cash").GetString().ShouldBe("IB01");
+    }
+
+    private static string SelectionWords(NodeParameters weights)
+    {
+        var graph = DraftTemplates.GraphOf(DraftTemplates.MomentumTrendFilter);
+        var result = graph.ResultOf(BlockKind.Selection) with { Parameters = weights };
+
+        return Words(graph.WithNode(result)).Single(words => words.Block == BlockKind.Selection).Sentence;
+    }
+
+    [Fact]
     public void Nested_conditions_become_nested_messages()
     {
         var signal = new GraphNode(new NodeId("sig"), NodeKind.Signal, BlockKind.Entry,
