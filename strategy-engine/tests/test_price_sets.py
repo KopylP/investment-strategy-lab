@@ -115,3 +115,22 @@ def test_a_set_unused_for_too_long_is_forgotten() -> None:
     set_id = store.add([])
 
     assert store.find(set_id) is None
+
+
+def test_the_store_holds_few_sets_for_minutes_not_hours() -> None:
+    from finance_decisions.api import price_sets
+
+    assert price_sets.MOST_SETS <= 8
+    assert price_sets.KEPT_FOR_SECONDS <= 10 * 60
+
+
+def test_the_least_recently_used_set_is_dropped_beyond_the_limit() -> None:
+    from finance_decisions.api.price_sets import PriceSetStore
+
+    store = PriceSetStore(most_sets=2)
+    first, second = store.add([]), store.add([])
+    store.find(first)
+    third = store.add([])
+
+    assert store.find(second) is None
+    assert store.find(first) is not None and store.find(third) is not None
