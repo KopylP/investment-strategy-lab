@@ -1,9 +1,10 @@
 using InvestmentLab.Backtesting.Contracts;
+using InvestmentLab.StrategyBuilder.Drafts.Domain;
 using InvestmentLab.StrategyBuilder.Trials.Domain;
 
 namespace InvestmentLab.StrategyBuilder.Trials.Infrastructure;
 
-internal sealed class TrialBacktests(IBacktestStatusQueries backtests) : ITrialBacktests
+internal sealed class TrialBacktests(IBacktestStatusQueries backtests, IBacktestRequests requests) : ITrialBacktests
 {
     public async Task<TrialSummary> SummaryOfAsync(Guid strategyId, int version, CancellationToken cancellationToken)
     {
@@ -21,4 +22,7 @@ internal sealed class TrialBacktests(IBacktestStatusQueries backtests) : ITrialB
             Sharpe: summary?.Sharpe,
             MaxDrawdown: summary?.MaxDrawdown);
     }
+
+    public Task RequestAsync(TrialVersion version, CancellationToken cancellationToken) =>
+        requests.EnsureAsync(version.StrategyId, version.Version, cancellationToken);
 }

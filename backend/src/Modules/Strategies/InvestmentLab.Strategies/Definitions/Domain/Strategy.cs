@@ -52,7 +52,7 @@ public sealed class Strategy : AggregateRoot<StrategyId>
         var id = StrategyId.New();
         var strategy = new Strategy(id, ownerId, TrialName(id), typeCode, createdAt) { Status = StrategyStatus.Trial };
         strategy._versions.Add(StrategyVersion.Create(1, setup, createdAt));
-        strategy.Raise(new StrategyReconfigured(id, ownerId, 1, createdAt));
+        strategy.Raise(new StrategyReconfigured(id, ownerId, 1, createdAt, IsTrial: true));
 
         return strategy;
     }
@@ -81,7 +81,7 @@ public sealed class Strategy : AggregateRoot<StrategyId>
         var version = StrategyVersion.Create(Latest.Number + 1, setup, reconfiguredAt);
         _versions.Add(version);
         DeletedSignalIds.RemoveAll(id => !ReferencesSignal(id));
-        Raise(new StrategyReconfigured(Id, OwnerId, version.Number, reconfiguredAt));
+        Raise(new StrategyReconfigured(Id, OwnerId, version.Number, reconfiguredAt, IsTrial));
 
         return version;
     }

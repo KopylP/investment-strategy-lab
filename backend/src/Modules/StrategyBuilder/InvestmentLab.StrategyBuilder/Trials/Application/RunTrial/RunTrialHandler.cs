@@ -11,6 +11,7 @@ public sealed class RunTrialHandler(
     IDraftChecks checker,
     IStrategyAuthoring authoring,
     ITrialExperiments experiments,
+    ITrialBacktests backtests,
     TrialRunSummaries summaries,
     ITrialRunGate gate,
     TimeProvider clock)
@@ -81,7 +82,11 @@ public sealed class RunTrialHandler(
             return AuthoringFailure(written.Error, rules, draft.Graph);
 
         if (experiment is null)
+        {
+            await backtests.RequestAsync(written.Value, cancellationToken);
+
             return new TrialExecution(written.Value);
+        }
 
         var requested = await experiments.RequestAsync(written.Value, experiment, cancellationToken);
         if (requested.IsFailure)

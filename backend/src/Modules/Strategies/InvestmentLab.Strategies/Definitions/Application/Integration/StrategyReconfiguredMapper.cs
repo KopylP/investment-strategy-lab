@@ -6,6 +6,10 @@ namespace InvestmentLab.Strategies.Definitions.Application.Integration;
 
 internal sealed class StrategyReconfiguredMapper : IDomainEventMapper<StrategyReconfigured, StrategyReconfiguredV1>
 {
-    public StrategyReconfiguredV1 Map(StrategyReconfigured reconfigured) =>
-        new(reconfigured.StrategyId.Value, reconfigured.OwnerId.Value, reconfigured.Version, reconfigured.OccurredAt);
+    public StrategyReconfiguredV1 Map(StrategyReconfigured reconfigured) => new(
+        StrategyId: reconfigured.StrategyId.Value,
+        OwnerId: reconfigured.OwnerId.Value,
+        Version: reconfigured.Version,
+        ReconfiguredAt: reconfigured.OccurredAt,
+        IsTrial: reconfigured.IsTrial);
 }

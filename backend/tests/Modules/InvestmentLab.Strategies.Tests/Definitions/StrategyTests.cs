@@ -92,6 +92,28 @@ public sealed class StrategyTests
         var reconfigured = Trial().DomainEvents.ShouldHaveSingleItem().ShouldBeOfType<StrategyReconfigured>();
 
         reconfigured.Version.ShouldBe(1);
+        reconfigured.IsTrial.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void A_new_trial_version_is_announced_as_a_trial()
+    {
+        var trial = Trial();
+        trial.ClearDomainEvents();
+
+        trial.ReconfigureTrial(Setup(Guid.CreateVersion7()), Now.AddDays(1));
+
+        trial.DomainEvents.ShouldHaveSingleItem().ShouldBeOfType<StrategyReconfigured>().IsTrial.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void A_new_version_of_a_regular_strategy_is_not_announced_as_a_trial()
+    {
+        var strategy = Strategy.Create(UserId.New(), "EU", "etf-momentum", Setup(Guid.CreateVersion7()), Now).Value;
+
+        strategy.Reconfigure(Setup(Guid.CreateVersion7()), Now.AddDays(1));
+
+        strategy.DomainEvents.ShouldHaveSingleItem().ShouldBeOfType<StrategyReconfigured>().IsTrial.ShouldBeFalse();
     }
 
     [Fact]

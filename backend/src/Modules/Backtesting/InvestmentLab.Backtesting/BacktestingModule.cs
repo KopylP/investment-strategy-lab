@@ -52,6 +52,7 @@ public sealed class BacktestingModule : IModule
         var services = builder.Services;
         services.AddScoped<IBacktestRepository, BacktestRepository>();
         services.AddScoped<IBacktestStatusQueries, BacktestStatusQueries>();
+        services.AddScoped<IBacktestRequests, BacktestRequests>();
         services.AddScoped<IReplayedStrategies, ReplayedStrategies>();
         services.AddScoped<IStrategyAnswers, StrategyAnswers>();
         services.AddScoped<ITargetTrades, TargetTrades>();
