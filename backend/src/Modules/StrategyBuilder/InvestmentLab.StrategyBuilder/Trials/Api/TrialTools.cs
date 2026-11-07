@@ -33,11 +33,11 @@ internal static class TrialTools
     [Description("A draft's trials, newest first, as compact rows: status, period, headline results, failure and queue position (0 = running). The strategy id and version open get_backtest, the experiment id get_experiment.")]
     public static async Task<IReadOnlyList<TrialRowDto>> ListTrials(
         Guid draftId,
-        [Description("Only trials whose label contains this text, or null for all.")] string? labelContains,
-        [Description("Only trials with this status (Waiting, Running, Succeeded, Failed or Cancelled), or null for all.")] string? status,
-        [Description("How many rows to return at most, or null for 30.")] int? limit,
         ListTrialRowsHandler handler,
-        CancellationToken cancellationToken)
+        [Description("Only trials whose label contains this text, or null for all.")] string? labelContains = null,
+        [Description("Only trials with this status (Waiting, Running, Succeeded, Failed or Cancelled), or null for all.")] string? status = null,
+        [Description("How many rows to return at most, or null for 30.")] int? limit = null,
+        CancellationToken cancellationToken = default)
     {
         var query = new TrialRowsQuery(
             DraftId: draftId,
@@ -54,10 +54,10 @@ internal static class TrialTools
     [Description("One row per experiment trial across the given drafts, newest first per draft, to compare variants: period, strategy results and horizon returns, out-of-sample Sharpe, the benchmark over the same period and the Sharpe of the benchmark at equal risk.")]
     public static async Task<IReadOnlyList<TrialTableRowDto>> TrialTable(
         Guid[] draftIds,
-        [Description("Only trials whose label contains this text, or null for all.")] string? labelContains,
-        [Description("False to add trials that are waiting, running, failed or cancelled; true or null shows only succeeded ones.")] bool? onlySucceeded,
         TrialTableHandler handler,
-        CancellationToken cancellationToken)
+        [Description("Only trials whose label contains this text, or null for all.")] string? labelContains = null,
+        [Description("False to add trials that are waiting, running, failed or cancelled; true or null shows only succeeded ones.")] bool? onlySucceeded = null,
+        CancellationToken cancellationToken = default)
     {
         var query = new TrialTableQuery(
             DraftIds: draftIds,

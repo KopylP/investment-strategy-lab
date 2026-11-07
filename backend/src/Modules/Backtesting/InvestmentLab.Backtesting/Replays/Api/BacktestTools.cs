@@ -15,10 +15,10 @@ internal static class BacktestTools
     public static async Task<BacktestBriefDto> GetBacktest(
         Guid strategyId,
         int version,
-        [Description("True to add the monthly points of every series; false or null keeps the reply short.")] bool? includePoints,
         EnsureBacktestHandler ensure,
         GetBacktestBriefHandler brief,
-        CancellationToken cancellationToken)
+        [Description("True to add the monthly points of every series; false or null keeps the reply short.")] bool? includePoints = null,
+        CancellationToken cancellationToken = default)
     {
         var ensured = await ensure.Handle(strategyId, version, cancellationToken);
         var ensuredVersion = ensured.ValueOrThrow();
