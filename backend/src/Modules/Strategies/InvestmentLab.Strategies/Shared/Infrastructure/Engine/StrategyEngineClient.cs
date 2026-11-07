@@ -40,6 +40,18 @@ public sealed class StrategyEngineClient(HttpClient http)
         return (answer, (int)response.StatusCode, null);
     }
 
+    public async Task<(string? Id, int StatusCode, string? Error)> PostPriceSetAsync(
+        string typeCode, IReadOnlyList<EngineSeries> series, CancellationToken cancellationToken)
+    {
+        var path = $"/v1/strategies/{Uri.EscapeDataString(typeCode)}/price-sets";
+        using var response = await http.PostAsJsonAsync(path, new { marketSeries = series }, Json, cancellationToken);
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+
+        return response.IsSuccessStatusCode
+            ? (JsonNode.Parse(body)?["id"]?.GetValue<string>(), (int)response.StatusCode, null)
+            : (null, (int)response.StatusCode, DetailOf(body));
+    }
+
     public async Task<(string? JobId, int StatusCode, string? Error)> SubmitJobAsync(
         string typeCode, string action, EngineContext context, CancellationToken cancellationToken)
     {

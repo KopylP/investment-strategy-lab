@@ -6,6 +6,8 @@ public interface IStrategyEvaluation
 
     Task<StrategyEvaluationResult<RiskAssessmentDto>> AssessRiskAsync(EvaluateStrategyRequest request, CancellationToken cancellationToken);
 
+    Task<StrategyEvaluationResult<PriceSetTicket>> UploadPriceSetAsync(UploadPriceSetRequest request, CancellationToken cancellationToken);
+
     Task<StrategyEvaluationResult<StrategyJobTicket>> SubmitAsync(
         StrategyTask task,
         EvaluateStrategyRequest request,

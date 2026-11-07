@@ -10,6 +10,9 @@ public static class EvaluationErrors
     public static Error StrategyFailed(string details) =>
         Error.Conflict("strategy.failed", $"The strategy failed: {details}", new { details });
 
+    public static Error PriceSetUnknown() =>
+        Error.Conflict(StrategyErrorCodes.PriceSetUnknown, "The strategy engine no longer holds this price set.");
+
     public static Error EngineRejected(string details) =>
         Error.Validation("strategy.engine_rejected", $"The strategy engine refused the context: {details}", new { details });
 }

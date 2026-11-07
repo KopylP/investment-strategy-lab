@@ -1,15 +1,19 @@
 using InvestmentLab.Backtesting.Replays.Domain;
 using InvestmentLab.Strategies.Contracts;
+using Microsoft.Extensions.Logging;
 
 namespace InvestmentLab.Backtesting.Replays.Infrastructure;
 
-internal sealed class StrategyAnswers(IStrategyEvaluation evaluation) : IStrategyAnswers
+internal sealed class StrategyAnswers(IStrategyEvaluation evaluation, TimeProvider clock, ILogger<StrategyAnswers> logger) : IStrategyAnswers
 {
     private const string ExitSignal = "exit";
 
+    private readonly Dictionary<ReplayWindow, string?> _priceSets = [];
+
     public async Task<Result<ReplayDecision>> DecideAsync(ReplaySetup setup, ReplayBook book, DateOnly day, IReadOnlyList<ReplaySignalState> states, CancellationToken cancellationToken)
     {
-        var answer = await evaluation.EvaluateAsync(RequestOf(setup, book, day, states), cancellationToken);
+        var request = RequestOf(setup, book, day, states);
+        var answer = await AskAsync(setup, request, evaluation.EvaluateAsync, cancellationToken);
         if (!answer.IsSuccess)
             return FailureOf(day, answer.ErrorMessage);
 
@@ -22,7 +26,8 @@ internal sealed class StrategyAnswers(IStrategyEvaluation evaluation) : IStrateg
 
     public async Task<Result<ReplayRiskDecision>> AssessAsync(ReplaySetup setup, ReplayBook book, DateOnly day, IReadOnlyList<ReplaySignalState> states, CancellationToken cancellationToken)
     {
-        var answer = await evaluation.AssessRiskAsync(RequestOf(setup, book, day, states), cancellationToken);
+        var request = RequestOf(setup, book, day, states);
+        var answer = await AskAsync(setup, request, evaluation.AssessRiskAsync, cancellationToken);
         if (!answer.IsSuccess)
             return FailureOf(day, answer.ErrorMessage);
 
@@ -31,6 +36,46 @@ internal sealed class StrategyAnswers(IStrategyEvaluation evaluation) : IStrateg
         var explanation = RiskExplanation(assessment);
 
         return new ReplayRiskDecision(exits, explanation);
+    }
+
+    private async Task<StrategyEvaluationResult<T>> AskAsync<T>(
+        ReplaySetup setup,
+        EvaluateStrategyRequest request,
+        Func<EvaluateStrategyRequest, CancellationToken, Task<StrategyEvaluationResult<T>>> ask,
+        CancellationToken cancellationToken) where T : class
+    {
+        var window = ReplayWindow.Of(setup);
+        if (!_priceSets.TryGetValue(window, out var priceSet))
+            priceSet = await UploadAsync(setup, window, request.AsOf, cancellationToken);
+
+        var answer = await ask(request with { PriceSetId = priceSet }, cancellationToken);
+        if (answer.ErrorCode != StrategyErrorCodes.PriceSetUnknown)
+            return answer;
+
+        var uploadedAgain = await UploadAsync(setup, window, request.AsOf, cancellationToken);
+
+        return await ask(request with { PriceSetId = uploadedAgain }, cancellationToken);
+    }
+
+    private async Task<string?> UploadAsync(ReplaySetup setup, ReplayWindow window, DateOnly firstDay, CancellationToken cancellationToken)
+    {
+        var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
+        var upload = new UploadPriceSetRequest(
+            StrategyId: setup.StrategyId,
+            Version: setup.Version,
+            FirstAsOf: firstDay,
+            LastAsOf: setup.Experiment?.End ?? today,
+            ValuationCurrency: setup.Currency,
+            ParametersOverride: setup.ParametersOverride);
+
+        var uploaded = await evaluation.UploadPriceSetAsync(upload, cancellationToken);
+        if (!uploaded.IsSuccess)
+            logger.LogWarning("Prices of strategy {Strategy} could not be uploaded ({Error}); its replay sends them with every call", setup.StrategyId, uploaded.ErrorMessage);
+
+        var priceSet = uploaded.Value?.Id;
+        _priceSets[window] = priceSet;
+
+        return priceSet;
     }
 
     private static ReplayExplanation DecisionExplanation(StrategyDecisionDto decided)

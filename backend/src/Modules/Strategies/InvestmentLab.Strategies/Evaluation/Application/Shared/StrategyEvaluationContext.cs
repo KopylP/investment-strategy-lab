@@ -11,4 +11,6 @@ public sealed record StrategyEvaluationContext(
     IReadOnlyList<MarketSeries> MarketSeries,
     SubPortfolioStateDto SubPortfolio,
     decimal Contribution,
-    IReadOnlyList<SignalState>? Signals = null);
+    IReadOnlyList<SignalState>? Signals = null,
+    string? PriceSetId = null,
+    DateOnly? HistoryFrom = null);

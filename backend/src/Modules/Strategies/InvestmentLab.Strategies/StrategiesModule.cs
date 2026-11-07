@@ -33,6 +33,7 @@ using InvestmentLab.Strategies.Evaluation.Application.PollStrategyDecision;
 using InvestmentLab.Strategies.Evaluation.Application.PollStrategyRisk;
 using InvestmentLab.Strategies.Evaluation.Application.Shared;
 using InvestmentLab.Strategies.Evaluation.Application.SubmitStrategyJob;
+using InvestmentLab.Strategies.Evaluation.Application.UploadPriceSet;
 using InvestmentLab.Strategies.Evaluation.Infrastructure;
 using InvestmentLab.Strategies.Shared.Infrastructure;
 using InvestmentLab.Strategies.Shared.Infrastructure.Engine;
@@ -116,6 +117,7 @@ public sealed class StrategiesModule : IModule
         services.AddScoped<EvaluationPreparer>();
         services.AddScoped<DecideStrategyHandler>();
         services.AddScoped<AssessStrategyRiskHandler>();
+        services.AddScoped<UploadPriceSetHandler>();
         services.AddScoped<SubmitStrategyJobHandler>();
         services.AddScoped<PollStrategyDecisionHandler>();
         services.AddScoped<PollStrategyRiskHandler>();

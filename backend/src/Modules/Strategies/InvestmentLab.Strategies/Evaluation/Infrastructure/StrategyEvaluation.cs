@@ -5,12 +5,14 @@ using InvestmentLab.Strategies.Evaluation.Application.PollStrategyDecision;
 using InvestmentLab.Strategies.Evaluation.Application.PollStrategyRisk;
 using InvestmentLab.Strategies.Evaluation.Application.Shared;
 using InvestmentLab.Strategies.Evaluation.Application.SubmitStrategyJob;
+using InvestmentLab.Strategies.Evaluation.Application.UploadPriceSet;
 
 namespace InvestmentLab.Strategies.Evaluation.Infrastructure;
 
 internal sealed class StrategyEvaluation(
     DecideStrategyHandler decide,
     AssessStrategyRiskHandler assessRisk,
+    UploadPriceSetHandler uploadPriceSet,
     SubmitStrategyJobHandler submit,
     PollStrategyDecisionHandler pollDecision,
     PollStrategyRiskHandler pollRisk) : IStrategyEvaluation
@@ -24,6 +26,11 @@ internal sealed class StrategyEvaluation(
         EvaluateStrategyRequest request,
         CancellationToken cancellationToken) =>
         ToContract(await assessRisk.Handle(request, cancellationToken));
+
+    public async Task<StrategyEvaluationResult<PriceSetTicket>> UploadPriceSetAsync(
+        UploadPriceSetRequest request,
+        CancellationToken cancellationToken) =>
+        ToContract(await uploadPriceSet.Handle(request, cancellationToken));
 
     public async Task<StrategyEvaluationResult<StrategyJobTicket>> SubmitAsync(
         StrategyTask task,
