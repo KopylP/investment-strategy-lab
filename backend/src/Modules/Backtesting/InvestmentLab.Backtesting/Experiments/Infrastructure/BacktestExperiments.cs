@@ -2,6 +2,7 @@ using InvestmentLab.Backtesting.Contracts;
 using InvestmentLab.Backtesting.Experiments.Application.CancelExperiment;
 using InvestmentLab.Backtesting.Experiments.Application.CheckExperiment;
 using InvestmentLab.Backtesting.Experiments.Application.GetQueuePositions;
+using InvestmentLab.Backtesting.Experiments.Application.GetExperimentOutcome;
 using InvestmentLab.Backtesting.Experiments.Application.GetExperimentStatus;
 using InvestmentLab.Backtesting.Experiments.Application.RequestExperiment;
 using InvestmentLab.Backtesting.Experiments.Domain;
@@ -13,6 +14,7 @@ internal sealed class BacktestExperiments(
     RequestExperimentHandler requestExperiment,
     CheckExperimentHandler checkExperiment,
     GetExperimentStatusHandler getStatus,
+    GetExperimentOutcomeHandler getOutcome,
     CancelExperimentHandler cancelExperiment,
     GetQueuePositionsHandler getQueuePositions) : IBacktestExperiments
 {
@@ -46,6 +48,9 @@ internal sealed class BacktestExperiments(
 
     public Task<ExperimentStatusDto?> GetStatusAsync(Guid experimentId, CancellationToken cancellationToken) =>
         getStatus.Handle(experimentId, cancellationToken);
+
+    public Task<ExperimentOutcomeDto?> GetOutcomeAsync(Guid experimentId, CancellationToken cancellationToken) =>
+        getOutcome.Handle(experimentId, cancellationToken);
 
     public async Task<ExperimentTicketDto> CancelAsync(Guid experimentId, CancellationToken cancellationToken)
     {

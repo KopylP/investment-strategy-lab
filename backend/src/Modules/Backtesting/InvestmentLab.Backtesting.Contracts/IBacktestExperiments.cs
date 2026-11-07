@@ -8,6 +8,8 @@ public interface IBacktestExperiments
 
     Task<ExperimentStatusDto?> GetStatusAsync(Guid experimentId, CancellationToken cancellationToken);
 
+    Task<ExperimentOutcomeDto?> GetOutcomeAsync(Guid experimentId, CancellationToken cancellationToken);
+
     Task<ExperimentTicketDto> CancelAsync(Guid experimentId, CancellationToken cancellationToken);
 
     Task<IReadOnlyDictionary<Guid, int>> QueuePositionsAsync(IReadOnlyList<Guid> experimentIds, CancellationToken cancellationToken);

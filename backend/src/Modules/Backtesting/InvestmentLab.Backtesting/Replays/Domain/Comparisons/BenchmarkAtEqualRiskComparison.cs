@@ -4,7 +4,9 @@ public sealed class BenchmarkAtEqualRiskComparison : IReplayComparison
 {
     private static readonly Guid MixedHolding = new("b8a3c1d2-4f6e-4a7b-9c0d-2e1f3a5b7c9d");
 
-    public string Code => "benchmark-at-equal-risk";
+    public const string SeriesCode = "benchmark-at-equal-risk";
+
+    public string Code => SeriesCode;
 
     public ComparedLine LineOf(ReplayedHistory history)
     {

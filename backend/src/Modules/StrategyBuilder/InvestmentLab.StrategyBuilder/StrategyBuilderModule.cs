@@ -19,6 +19,7 @@ using InvestmentLab.StrategyBuilder.Trials.Application.ListTrialRows;
 using InvestmentLab.StrategyBuilder.Trials.Application.ListTrials;
 using InvestmentLab.StrategyBuilder.Trials.Application.Shared;
 using InvestmentLab.StrategyBuilder.Trials.Application.RunTrial;
+using InvestmentLab.StrategyBuilder.Trials.Application.TrialTable;
 using InvestmentLab.StrategyBuilder.Trials.Domain;
 using InvestmentLab.StrategyBuilder.Trials.Infrastructure;
 using InvestmentLab.BuildingBlocks.Modules;
@@ -71,6 +72,7 @@ public sealed class StrategyBuilderModule : IModule
         services.AddScoped<ListTrialsHandler>();
         services.AddScoped<ListTrialRowsHandler>();
         services.AddScoped<CancelTrialHandler>();
+        services.AddScoped<TrialTableHandler>();
         services.AddScoped<IPublishedLayoutRepository, PublishedLayoutRepository>();
         services.AddScoped<ITrialCleanupRepository, TrialCleanupRepository>();
         services.AddScoped<CleanUpTrialHandler>();

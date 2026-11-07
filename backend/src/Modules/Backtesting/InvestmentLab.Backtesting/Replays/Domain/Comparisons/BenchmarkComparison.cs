@@ -2,7 +2,9 @@ namespace InvestmentLab.Backtesting.Replays.Domain.Comparisons;
 
 public sealed class BenchmarkComparison : IReplayComparison
 {
-    public string Code => "benchmark";
+    public const string SeriesCode = "benchmark";
+
+    public string Code => SeriesCode;
 
     public ComparedLine LineOf(ReplayedHistory history)
     {
