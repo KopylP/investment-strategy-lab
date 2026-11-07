@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openPublishConfirmation } from './support/editor-menu';
 
 test('trial comparison and publication preserve the draft lifecycle', async ({ page }) => {
   const errors: string[] = [];
@@ -139,7 +140,7 @@ test('trial comparison and publication preserve the draft lifecycle', async ({ p
   await expect(comparison).toBeVisible();
 
   await page.goto(`/strategy-builder/${draft.id}`);
-  await page.getByRole('button', { name: 'Опублікувати', exact: true }).click();
+  await openPublishConfirmation(page);
   await expect(page.getByRole('alertdialog', { name: 'Публікація стратегії' })).toContainText(
     'Опублікувати як нову стратегію',
   );
@@ -162,7 +163,7 @@ test('trial comparison and publication preserve the draft lifecycle', async ({ p
     await page.request.get(`/api/strategy-builder/drafts/${reopenedId}`)
   ).json();
   expect(reopened.graph).toEqual(draft.graph);
-  await page.getByRole('button', { name: 'Опублікувати', exact: true }).click();
+  await openPublishConfirmation(page);
   await expect(page.getByRole('alertdialog', { name: 'Публікація стратегії' })).toContainText(
     'Опублікувати версію 2',
   );
@@ -180,7 +181,7 @@ test('trial comparison and publication preserve the draft lifecycle', async ({ p
     data: { revision: duplicateDraft.revision, setup: draft.setup },
   });
   await page.goto(`/strategy-builder/${duplicateDraft.id}`);
-  await page.getByRole('button', { name: 'Опублікувати', exact: true }).click();
+  await openPublishConfirmation(page);
   await page
     .getByRole('alertdialog', { name: 'Публікація стратегії' })
     .getByRole('button', { name: 'Опублікувати', exact: true })

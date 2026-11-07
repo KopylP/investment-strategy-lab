@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { chooseFromEditorMenu } from './support/editor-menu';
 import { mockStrategyWorkspace } from './support/strategy-workspace';
 
 const ids = {
@@ -68,7 +69,7 @@ test('setup is permanent, each field has a socket, and bindings follow changed s
     )
     .toEqual(['benchmarkId']);
   await expect(row).toHaveAttribute('data-evaluation-scope', 'shared');
-  await page.getByRole('button', { name: /Налаштування/ }).click();
+  await chooseFromEditorMenu(page, 'Стратегія', 'Фонди й ряди…');
   await setup.getByRole('button', { name: 'Бенчмарк · benchmark', exact: true }).click();
   await page.getByRole('radio', { name: /^other/ }).check();
   await page.getByRole('button', { name: 'Застосувати', exact: true }).click();
@@ -118,7 +119,7 @@ test('group selection preserves other groups, supports mixed state and only togg
     route.fulfill({ json: funds }),
   );
   await page.goto('/strategy-builder/workspace');
-  await page.getByRole('button', { name: /Налаштування/ }).click();
+  await chooseFromEditorMenu(page, 'Стратегія', 'Фонди й ряди…');
   const setup = page.locator('[data-node-id="strategy-setup"]');
   await setup.getByRole('button', { name: 'Фонди · Змінити фонди', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Фонди стратегії' });

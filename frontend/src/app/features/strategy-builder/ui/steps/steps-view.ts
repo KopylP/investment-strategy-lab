@@ -2,14 +2,18 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
+  ElementRef,
   inject,
   output,
   signal,
+  viewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { DraftStore } from '../../data-access/draft-store';
+import { Viewport } from '../../../../shared/ui/viewport';
 import { resultsUsing } from '../../data-access/shared-graph';
 import { candidatePath } from '../../data-access/portfolio-flow';
 import { conditionRows } from '../../data-access/condition-rows-mapper';
@@ -41,6 +45,7 @@ import { ProblemsPanel } from '../problems-panel/problems-panel';
 })
 export class StepsView {
   protected readonly store = inject(DraftStore);
+  protected readonly viewport = inject(Viewport);
   readonly chooseProblem = output<DraftProblemDto>();
   readonly editSetup = output<void>();
   protected readonly guidance = [
@@ -56,6 +61,7 @@ export class StepsView {
   ];
   readonly editReports = output<void>();
   protected readonly step = signal(0);
+  private readonly stepNav = viewChild.required<ElementRef<HTMLElement>>('stepNav');
   protected readonly titles = [
     'Назва й опис',
     'Фонди й ряди',
@@ -85,13 +91,29 @@ export class StepsView {
   );
 
   constructor() {
-    const selected = this.store.selectedNodeId();
-    const node = this.store.draft()?.graph.nodes.find((node) => node.id === selected);
-    const context =
-      node && this.store.draft()
-        ? resultsUsing(this.store.draft()!.graph, node.id)[0]?.block
-        : node?.block;
+    this.showNode(this.store.selectedNodeId());
+    effect(() => this.revealStep(this.stepNav().nativeElement, this.step()));
+  }
+
+  private revealStep(nav: HTMLElement, step: number): void {
+    const chip = nav.children.item(step) as HTMLElement | null;
+    if (!chip) return;
+
+    const chipStart = chip.getBoundingClientRect().left - nav.getBoundingClientRect().left;
+    const centred = nav.scrollLeft + chipStart - (nav.clientWidth - chip.offsetWidth) / 2;
+    nav.scrollTo({ left: centred, behavior: 'smooth' });
+  }
+
+  showNode(nodeId: string | null): void {
+    const draft = this.store.draft();
+    const node = draft?.graph.nodes.find((candidate) => candidate.id === nodeId);
+    const context = node && draft ? resultsUsing(draft.graph, node.id)[0]?.block : node?.block;
     const index = blocks.findIndex((block) => block.kind === context);
+    if (index >= 0) this.step.set(index + 2);
+  }
+
+  showBlock(kind: string): void {
+    const index = blocks.findIndex((block) => block.kind === kind);
     if (index >= 0) this.step.set(index + 2);
   }
 

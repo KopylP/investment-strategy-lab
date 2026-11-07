@@ -10,24 +10,92 @@
       class="back-link"
       aria-label="До конструктора"
       title="До конструктора"
-      ><i class="pi pi-arrow-left"></i
+      ><i class="pi pi-chevron-left" aria-hidden="true"></i
     ></a>
-    <input
-      pInputText
-      class="draft-name"
-      [value]="draft.name"
-      [pTooltip]="draft.name"
-      tooltipPosition="bottom"
-      (change)="store.rename($any($event.target).value)"
-      [attr.aria-invalid]="!!store.nameError()"
-      aria-describedby="draft-name-error"
-      aria-label="Назва чернетки"
-    />
-    <span class="save-status">{{
-      store.saveError() ? 'Не збережено' : store.saving() === 'saved' ? 'Збережено' : 'Зберігаю…'
-    }}</span>
+    <div class="title-block">
+      <div class="title-line">
+        <input
+          pInputText
+          class="draft-name"
+          [value]="draft.name"
+          [attr.size]="nameWidth(draft.name)"
+          (change)="store.rename($any($event.target).value)"
+          [attr.aria-invalid]="!!store.nameError()"
+          aria-describedby="draft-name-error"
+          aria-label="Назва чернетки"
+        />
+        <span class="save-status" [attr.data-state]="saveStatus()" role="status">
+          <i [class]="saveStatuses[saveStatus()].icon" aria-hidden="true"></i>
+          <span class="save-text">{{ saveStatuses[saveStatus()].text }}</span>
+        </span>
+      </div>
+      @if (!viewport.phone()) {
+        <p-menubar [model]="menu()" breakpoint="0px" styleClass="editor-menubar" />
+      }
+    </div>
+    <div class="header-actions">
+      @if (viewport.phone()) {
+        <p-button
+          icon="pi pi-ellipsis-h"
+          ariaLabel="Більше дій"
+          severity="secondary"
+          [text]="true"
+          [rounded]="true"
+          (onClick)="phoneMenu.toggle($event)"
+        />
+        <p-menu #phoneMenu [model]="phoneMenuItems()" [popup]="true" appendTo="body" />
+      } @else {
+        <button
+          type="button"
+          class="review-button"
+          [class.has-problems]="draft.problems.length > 0"
+          [attr.aria-expanded]="store.reviewVisible()"
+          aria-controls="strategy-review"
+          (click)="store.reviewVisible.set(!store.reviewVisible())"
+        >
+          <i
+            [class]="draft.problems.length ? 'pi pi-exclamation-circle' : 'pi pi-check-circle'"
+            aria-hidden="true"
+          ></i>
+          {{ problemsLabel() }}
+        </button>
+        <p-selectbutton
+          [options]="modes()"
+          optionLabel="label"
+          optionValue="value"
+          size="small"
+          [ngModel]="store.mode()"
+          (ngModelChange)="changeMode($event)"
+          [allowEmpty]="false"
+          ariaLabel="Режим редактора"
+        />
+        <p-button
+          label="Бектест"
+          ariaLabel="Бектест"
+          icon="pi pi-play"
+          severity="secondary"
+          size="small"
+          [outlined]="true"
+          [disabled]="store.busy()"
+          (onClick)="runTrial()"
+        />
+      }
+      <p-splitbutton
+        label="Зберегти"
+        [buttonProps]="{ ariaLabel: 'Зберегти' }"
+        [model]="saveMenu"
+        size="small"
+        appendTo="body"
+        [disabled]="store.busy()"
+        [menuButtonProps]="{ ariaLabel: 'Інші дії зі збереженням' }"
+        (onClick)="save()"
+      />
+    </div>
+  </header>
+  @if (viewport.phone()) {
     <p-selectbutton
-      [options]="modes"
+      class="phone-modes"
+      [options]="modes()"
       optionLabel="label"
       optionValue="value"
       [ngModel]="store.mode()"
@@ -35,47 +103,7 @@
       [allowEmpty]="false"
       ariaLabel="Режим редактора"
     />
-    <div class="header-actions">
-      <p-button
-        icon="pi pi-trash"
-        ariaLabel="Видалити чернетку"
-        pTooltip="Видалити чернетку"
-        tooltipPosition="bottom"
-        severity="danger"
-        [text]="true"
-        size="small"
-        [disabled]="store.busy()"
-        (onClick)="confirmDiscard()"
-      />
-      <p-button
-        label="Історія бектестів"
-        ariaLabel="Історія бектестів"
-        icon="pi pi-history"
-        severity="secondary"
-        size="small"
-        [text]="true"
-        [routerLink]="['/strategy-builder', draft.id, 'trials']"
-      />
-      <p-button
-        label="Бектест"
-        ariaLabel="Бектест"
-        icon="pi pi-chart-line"
-        severity="secondary"
-        size="small"
-        [text]="true"
-        [disabled]="store.busy()"
-        (onClick)="runTrial()"
-      />
-      <p-button
-        label="Опублікувати"
-        ariaLabel="Опублікувати"
-        icon="pi pi-check-circle"
-        size="small"
-        [disabled]="store.busy()"
-        (onClick)="confirmPublish()"
-      />
-    </div>
-  </header>
+  }
   @if (store.saveError(); as error) {
     <div role="alert" class="mb-4 rounded-xl border border-red-300 p-4">
       <p>{{ error }}</p>
@@ -93,32 +121,7 @@
     <p id="draft-name-error" role="alert" class="mb-4 text-red-500">{{ error }}</p>
   }
 
-  @if (store.mode() === 'graph') {
-    <div class="setup-toolbar">
-      <button type="button" (click)="focusSetupNode()">
-        <i class="pi pi-sliders-h"></i> Налаштування
-        <span>{{ summary()?.fundCount ?? 0 }} фондів</span>
-      </button>
-      <button type="button" (click)="reportsVisible.set(true)">
-        <i class="pi pi-file"></i> Рапорти
-      </button>
-      <details class="strategy-actions">
-        <summary>Дії зі стратегією</summary>
-        <button type="button" (click)="copyEntryVisible.set(true)">
-          <i class="pi pi-copy"></i> Створити вихід з умов входу…
-        </button>
-      </details>
-      <button
-        class="review-button"
-        type="button"
-        (click)="store.reviewVisible.set(!store.reviewVisible())"
-        [attr.aria-expanded]="store.reviewVisible()"
-        aria-controls="strategy-review"
-      >
-        <i class="pi pi-check-circle"></i> Зауважень: {{ draft.problems.length }}
-      </button>
-    </div>
-  } @else if (summary(); as setupSummary) {
+  @if (store.mode() !== 'graph' && !viewport.phone() && summary(); as setupSummary) {
     <app-builder-setup-row
       [summary]="setupSummary"
       (editSetup)="setupVisible.set(true)"
@@ -191,18 +194,6 @@
           }
         </div>
       </section>
-    } @else if (store.mode() !== 'graph') {
-      <button
-        type="button"
-        class="review-toggle"
-        aria-expanded="false"
-        aria-controls="strategy-review"
-        (click)="store.reviewVisible.set(true)"
-      >
-        <i class="pi pi-chevron-down" aria-hidden="true"></i> Опис стратегії та перевірка ({{
-          draft.problems.length
-        }})
-      </button>
     }
   </div>
 

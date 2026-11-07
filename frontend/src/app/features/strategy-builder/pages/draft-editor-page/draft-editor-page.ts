@@ -13,15 +13,20 @@ import {
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { LayoutService } from '../../../../core/layout/layout-service';
-import { ConfirmationService } from 'primeng/api';
+import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
 import { FormsModule } from '@angular/forms';
 import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
+import { Menu } from 'primeng/menu';
+import { Menubar } from 'primeng/menubar';
 import { Message } from 'primeng/message';
 import { SelectButton } from 'primeng/selectbutton';
 import { Skeleton } from 'primeng/skeleton';
+import { SplitButton } from 'primeng/splitbutton';
 import { Tooltip } from 'primeng/tooltip';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
+import { Viewport } from '../../../../shared/ui/viewport';
+import { SaveStatus, saveStatuses } from '../../models/save-status-vm';
 import { DraftStore } from '../../data-access/draft-store';
 import { setupSummary } from '../../data-access/draft-mapper';
 import { graphWithNode } from '../../data-access/graph-mapper';
@@ -58,7 +63,10 @@ import { ProblemsPanel } from '../../ui/problems-panel/problems-panel';
     Message,
     SelectButton,
     Skeleton,
+    SplitButton,
     Tooltip,
+    Menu,
+    Menubar,
     PageHeader,
     ReportsDialog,
     GraphEditor,
@@ -76,13 +84,16 @@ import { ProblemsPanel } from '../../ui/problems-panel/problems-panel';
 export class DraftEditorPage {
   protected readonly store = inject(DraftStore);
   private readonly graphEditor = viewChild(GraphEditor);
+  private readonly stepsView = viewChild(StepsView);
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef);
+  protected readonly viewport = inject(Viewport);
+  private readonly messages = inject(MessageService);
+  protected readonly saveStatuses = saveStatuses;
+
   protected closeReview(): void {
     this.store.reviewVisible.set(false);
     requestAnimationFrame(() =>
-      this.element.nativeElement
-        .querySelector<HTMLButtonElement>('.review-button, .review-toggle')
-        ?.focus(),
+      this.element.nativeElement.querySelector<HTMLButtonElement>('.review-button')?.focus(),
     );
   }
   @HostListener('document:keydown.escape')
@@ -96,8 +107,13 @@ export class DraftEditorPage {
     )
       this.closeReview();
   }
-  protected focusSetupNode(): void {
-    void this.graphEditor()?.focusSetup();
+  @HostListener('document:keydown', ['$event'])
+  protected saveOnShortcut(event: KeyboardEvent): void {
+    const saveShortcut = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's';
+    if (!saveShortcut) return;
+
+    event.preventDefault();
+    void this.save();
   }
   private readonly router = inject(Router);
   private readonly appLayout = inject(LayoutService);
@@ -112,11 +128,61 @@ export class DraftEditorPage {
     const vocabulary = this.store.vocabulary();
     return vocabulary ? experimentParameters(this.experimentRules(), vocabulary) : [];
   });
-  protected readonly modes: { label: string; value: EditorMode }[] = [
+  private readonly allModes: { label: string; value: EditorMode }[] = [
     { label: 'Кроки', value: 'steps' },
     { label: 'Схема', value: 'graph' },
     { label: 'JSON', value: 'json' },
   ];
+  protected readonly modes = computed(() =>
+    this.viewport.phone() ? this.allModes.filter((mode) => mode.value !== 'graph') : this.allModes,
+  );
+  protected readonly saveStatus = computed<SaveStatus>(() => {
+    if (this.store.saveError()) return 'failed';
+
+    return this.store.saving() === 'saved' ? 'saved' : 'saving';
+  });
+  protected readonly problemsLabel = computed(() => {
+    const count = this.store.draft()?.problems.length ?? 0;
+
+    return count ? `Зауважень: ${count}` : 'Без зауважень';
+  });
+  protected readonly saveMenu: MenuItem[] = [
+    {
+      label: 'Опублікувати…',
+      icon: 'pi pi-check-circle',
+      command: () => void this.confirmPublish(),
+    },
+  ];
+  protected readonly menu = computed<MenuItem[]>(() => [
+    this.strategyMenu(),
+    this.editMenu(),
+    this.viewMenu(),
+    this.backtestMenu(),
+    this.helpMenu(),
+  ]);
+  protected readonly phoneMenuItems = computed<MenuItem[]>(() => [
+    {
+      label: 'Бектест…',
+      icon: 'pi pi-play',
+      disabled: this.store.busy(),
+      command: () => void this.runTrial(),
+    },
+    { label: 'Історія бектестів', icon: 'pi pi-history', command: () => this.openTrials() },
+    { separator: true },
+    { label: 'Рапорти…', icon: 'pi pi-file', command: () => this.reportsVisible.set(true) },
+    {
+      label: `Опис і перевірка (${this.store.draft()?.problems.length ?? 0})`,
+      icon: 'pi pi-check-circle',
+      command: () => this.store.reviewVisible.set(true),
+    },
+    { separator: true },
+    {
+      label: 'Видалити чернетку…',
+      icon: 'pi pi-trash',
+      styleClass: 'danger-item',
+      command: () => this.confirmDiscard(),
+    },
+  ]);
   protected readonly summary = computed(() => {
     const draft = this.store.draft();
     if (!draft) return null;
@@ -132,6 +198,9 @@ export class DraftEditorPage {
 
   constructor() {
     effect(() => void this.store.open(this.draftId()));
+    effect(() => {
+      if (this.viewport.phone() && this.store.mode() === 'graph') void this.store.setMode('steps');
+    });
     effect((onCleanup) => {
       if (this.store.mode() !== 'graph') return;
       const previousMode = untracked(() => this.appLayout.layoutConfig().menuMode);
@@ -141,6 +210,162 @@ export class DraftEditorPage {
         this.appLayout.layoutState.update((state) => ({ ...state, overlayMenuActive: false }));
       });
     });
+  }
+
+  protected nameWidth(name: string): number {
+    return Math.min(Math.max(name.length + 2, 12), 48);
+  }
+
+  protected async save(): Promise<void> {
+    await this.store.flush();
+    if (this.store.saveError()) return;
+
+    this.messages.add({ severity: 'success', summary: 'Чернетку збережено', life: 2000 });
+  }
+
+  private openTrials(): void {
+    void this.router.navigate(['/strategy-builder', this.draftId(), 'trials']);
+  }
+
+  private openSetup(): void {
+    if (this.store.mode() === 'graph') void this.graphEditor()?.focusSetup();
+    else this.setupVisible.set(true);
+  }
+
+  private strategyMenu(): MenuItem {
+    return {
+      label: 'Стратегія',
+      items: [
+        { label: 'Фонди й ряди…', icon: 'pi pi-sliders-h', command: () => this.openSetup() },
+        { label: 'Рапорти…', icon: 'pi pi-file', command: () => this.reportsVisible.set(true) },
+        {
+          label: 'Створити вихід з умов входу…',
+          icon: 'pi pi-copy',
+          command: () => this.copyEntryVisible.set(true),
+        },
+        { separator: true },
+        {
+          label: 'Зберегти',
+          icon: 'pi pi-save',
+          title: '⌘S / Ctrl+S',
+          command: () => void this.save(),
+        },
+        {
+          label: 'Опублікувати…',
+          icon: 'pi pi-check-circle',
+          disabled: this.store.busy(),
+          command: () => void this.confirmPublish(),
+        },
+        { separator: true },
+        {
+          label: 'Видалити чернетку…',
+          icon: 'pi pi-trash',
+          styleClass: 'danger-item',
+          disabled: this.store.busy(),
+          command: () => this.confirmDiscard(),
+        },
+      ],
+    };
+  }
+
+  private editMenu(): MenuItem {
+    const graph = this.graphEditor();
+
+    return {
+      label: 'Правка',
+      visible: !!graph,
+      items: [
+        {
+          label: 'Скасувати',
+          icon: 'pi pi-undo',
+          disabled: !graph?.canUndo(),
+          command: () => graph?.undo(),
+        },
+        {
+          label: 'Повторити',
+          icon: 'pi pi-refresh',
+          disabled: !graph?.canRedo(),
+          command: () => graph?.redo(),
+        },
+        { separator: true },
+        {
+          label: 'Упорядкувати схему',
+          icon: 'pi pi-sitemap',
+          command: () => void graph?.arrangeAll(),
+        },
+      ],
+    };
+  }
+
+  private viewMenu(): MenuItem {
+    const graph = this.graphEditor();
+    const modeItems = this.allModes.map((mode) => ({
+      label: mode.label,
+      icon: this.store.mode() === mode.value ? 'pi pi-check' : 'pi pi-fw',
+      command: () => this.changeMode(mode.value),
+    }));
+    const graphItems: MenuItem[] = graph
+      ? [
+          { separator: true },
+          {
+            label: 'Показати всю схему',
+            icon: 'pi pi-arrows-alt',
+            command: () => void graph.fit(),
+          },
+          { label: 'Збільшити', icon: 'pi pi-search-plus', command: () => void graph.setZoom(1) },
+          { label: 'Зменшити', icon: 'pi pi-search-minus', command: () => void graph.setZoom(-1) },
+          {
+            label: 'На весь екран',
+            icon: 'pi pi-expand',
+            command: () => void graph.toggleFullscreen(),
+          },
+        ]
+      : [];
+
+    return {
+      label: 'Вигляд',
+      items: [
+        ...modeItems,
+        ...graphItems,
+        { separator: true },
+        {
+          label: 'Опис і перевірка',
+          icon: 'pi pi-check-circle',
+          command: () => this.store.reviewVisible.set(true),
+        },
+      ],
+    };
+  }
+
+  private backtestMenu(): MenuItem {
+    return {
+      label: 'Бектест',
+      items: [
+        {
+          label: 'Запустити бектест…',
+          icon: 'pi pi-play',
+          disabled: this.store.busy(),
+          command: () => void this.runTrial(),
+        },
+        { label: 'Історія бектестів', icon: 'pi pi-history', command: () => this.openTrials() },
+      ],
+    };
+  }
+
+  private helpMenu(): MenuItem {
+    const graph = this.graphEditor();
+
+    return {
+      label: 'Довідка',
+      visible: !!graph,
+      items: [
+        {
+          label: 'Як працювати зі схемою',
+          icon: 'pi pi-question-circle',
+          command: () => graph?.helpVisible.set(true),
+        },
+      ],
+    };
   }
 
   protected confirmDiscard(): void {
@@ -206,6 +431,11 @@ export class DraftEditorPage {
       return;
     }
 
+    if (this.viewport.phone()) {
+      this.showProblemInSteps(problem);
+      return;
+    }
+
     await this.store.setMode('graph');
     const draft = this.store.draft();
     if (!draft) return;
@@ -219,6 +449,12 @@ export class DraftEditorPage {
       });
     }
     this.store.select(problem.nodeId);
+  }
+
+  private showProblemInSteps(problem: DraftProblemDto): void {
+    const steps = this.stepsView();
+    if (problem.nodeId) steps?.showNode(problem.nodeId);
+    else if (problem.block) steps?.showBlock(problem.block);
   }
 
   protected changeMode(mode: EditorMode): void {

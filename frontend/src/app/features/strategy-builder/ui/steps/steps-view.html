@@ -1,5 +1,6 @@
 <div class="grid min-w-0 gap-6 lg:grid-cols-[15rem_minmax(0,1fr)]">
   <nav
+    #stepNav
     class="flex gap-2 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible"
     aria-label="Кроки стратегії"
   >
@@ -68,13 +69,23 @@
             <p class="mb-0">{{ sentence() }}</p>
           </div>
           @if (rows() || block() === 'Selection') {
-            <p class="mb-2 text-sm text-muted-color">Тут можна змінити параметри правила. Щоб додати умови або змінити їх поєднання, відкрийте схему.</p>
-            <p-button
-              label="Змінити зв’язки на схемі"
-              severity="secondary"
-              [text]="true"
-              (onClick)="editGraph()"
-            />
+            @if (viewport.phone()) {
+              <p class="mb-2 text-sm text-muted-color">
+                Тут можна змінити параметри правила. Умови та їх поєднання змінюються на схемі на
+                комп’ютері.
+              </p>
+            } @else {
+              <p class="mb-2 text-sm text-muted-color">
+                Тут можна змінити параметри правила. Щоб додати умови або змінити їх поєднання,
+                відкрийте схему.
+              </p>
+              <p-button
+                label="Змінити зв’язки на схемі"
+                severity="secondary"
+                [text]="true"
+                (onClick)="editGraph()"
+              />
+            }
           }
           @if (step() === 6) {
             <p class="mb-3 text-sm text-muted-color">Необовʼязковий крок. Можна перейти далі.</p>
@@ -90,7 +101,11 @@
               (select)="store.select($event)"
             />
           } @else if (block() !== 'Selection') {
-            <app-readonly-condition [sentence]="sentence()" (edit)="editGraph()" />
+            <app-readonly-condition
+              [sentence]="sentence()"
+              [editable]="!viewport.phone()"
+              (edit)="editGraph()"
+            />
           }
           @if (block() === 'Selection' && selector(); as node) {
             <app-node-inspector

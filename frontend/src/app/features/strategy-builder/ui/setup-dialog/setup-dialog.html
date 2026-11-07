@@ -23,7 +23,7 @@
   </p-dialog>
 }
 <ng-template #fields>
-  <div class="flex flex-col gap-4">
+  <div class="flex min-w-0 flex-col gap-4">
     <div class="flex flex-col gap-2">
       <div class="flex items-center justify-between gap-3">
         <span class="font-medium">Фонди, з яких стратегія вибирає</span>
@@ -39,8 +39,8 @@
       />
     </div>
 
-    <div class="grid gap-4 md:grid-cols-2">
-      <div class="flex flex-col gap-2">
+    <div class="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <div class="flex min-w-0 flex-col gap-2">
         <label for="builder-benchmark" class="font-medium">Бенчмарк</label>
         <p-select
           inputId="builder-benchmark"
@@ -55,7 +55,7 @@
           fluid
         />
       </div>
-      <div class="flex flex-col gap-2">
+      <div class="flex min-w-0 flex-col gap-2">
         <label for="builder-cash" class="font-medium">Фонд для кешу</label>
         <p-select
           inputId="builder-cash"
@@ -70,7 +70,7 @@
           fluid
         />
       </div>
-      <div class="flex flex-col gap-2">
+      <div class="flex min-w-0 flex-col gap-2">
         <label for="builder-volatility" class="font-medium">Індекс волатильності</label>
         <p-select
           inputId="builder-volatility"
@@ -86,7 +86,7 @@
           fluid
         />
       </div>
-      <div class="flex flex-col gap-2">
+      <div class="flex min-w-0 flex-col gap-2">
         <label for="builder-extra" class="font-medium">Додаткові ряди</label>
         <p-multiselect
           inputId="builder-extra"
