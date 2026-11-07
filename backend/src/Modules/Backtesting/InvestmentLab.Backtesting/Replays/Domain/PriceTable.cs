@@ -121,11 +121,11 @@ public sealed class PriceTable
 
     private ReferenceHistoryLimit LatestWarmingOf(IReadOnlyList<Guid> references, int historyBars)
     {
-        var warming = references
+        var (Id, From) = references
             .Select(id => (Id: id, From: WarmedFrom(id, historyBars) ?? DateOnly.MaxValue))
             .MaxBy(reference => reference.From);
 
-        return new ReferenceHistoryLimit(warming.Id, warming.From);
+        return new ReferenceHistoryLimit(Id, From);
     }
 
     private DateOnly? WarmedFrom(Guid instrumentId, int historyBars)

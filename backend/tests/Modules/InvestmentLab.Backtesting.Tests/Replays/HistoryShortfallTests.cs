@@ -43,7 +43,7 @@ public sealed class HistoryShortfallTests
         var limit = shortfall.Limit.ShouldBeOfType<FundsHistoryLimit>();
         limit.Warmed.ShouldBe(3);
         limit.Needed.ShouldBe(4);
-        limit.NotWarmed.ShouldBe(funds.Skip(3).ToList(), ignoreOrder: true);
+        limit.NotWarmed.ShouldBe([.. funds.Skip(3)], ignoreOrder: true);
     }
 
     private static IReadOnlyList<PricedDay> QuotesFrom(int firstDay) =>
