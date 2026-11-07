@@ -9,3 +9,8 @@ export async function openPublishConfirmation(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Інші дії зі збереженням', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Опублікувати…', exact: true }).click();
 }
+
+export async function runBacktest(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Бектест', exact: true }).click();
+  await page.getByRole('button', { name: 'Запустити експеримент' }).click();
+}

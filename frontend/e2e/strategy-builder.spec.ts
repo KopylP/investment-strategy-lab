@@ -38,16 +38,17 @@ test('guided edits persist across modes and problems select their graph node', a
   expect(configured.ok()).toBeTruthy();
   draft = await configured.json();
   await page.goto(`/strategy-builder/${draft.id}`);
-  await expect(page.getByRole('heading', { name: 'Стратегія словами' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Що перевірити' })).toBeVisible();
-  await page.getByRole('button', { name: '5. Вхід', exact: true }).click();
-  const row = page.locator('app-condition-rows');
-  await expect(row).toBeVisible();
-  const numeric = row.locator('input[role="spinbutton"]').last();
+  await page.getByRole('button', { name: 'Кроки', exact: true }).click();
+  await page.getByRole('button', { name: '6. Відбір і ваги', exact: true }).click();
+  const inspector = page.locator('app-node-inspector').first();
+  await expect(inspector).toBeVisible();
+  const numeric = inspector.locator('input[role="spinbutton"]').first();
   await numeric.fill('2');
   await numeric.press('Tab');
-  await expect(page.getByText('Чернетка · збережено', { exact: true })).toBeVisible();
-  await page.getByText('Схема', { exact: true }).click();
+  await expect
+    .poll(async () => (await (await page.request.get(`/api/strategy-builder/drafts/${draft.id}`)).json()).revision)
+    .toBeGreaterThan(draft.revision);
+  await page.getByRole('button', { name: 'Схема', exact: true }).click();
   await expect(page.locator('app-graph-editor')).toBeVisible();
   await expect(page.locator('app-node-inspector').last()).toBeVisible();
   await page.screenshot({ path: 'test-results/builder-graph.png', fullPage: true });
@@ -55,8 +56,10 @@ test('guided edits persist across modes and problems select their graph node', a
   const saved = await (await page.request.get(`/api/strategy-builder/drafts/${draft.id}`)).json();
   expect(saved.revision).toBeGreaterThan(draft.revision);
 
+  await page.locator('.review-button').click();
+  await expect(page.locator('app-builder-words-panel')).toBeVisible();
   await expect(page.locator('app-builder-words-panel')).not.toContainText('@rule_based.');
-  await page.getByText('JSON', { exact: true }).click();
+  await page.getByRole('button', { name: 'JSON', exact: true }).click();
   const exportButton = page.getByRole('button', { name: /Експортувати/ });
   await expect(exportButton).toBeEnabled();
   const downloadReady = page.waitForEvent('download');
@@ -66,9 +69,7 @@ test('guided edits persist across modes and problems select their graph node', a
   const exported = JSON.parse(await readFile((await download.path())!, 'utf8'));
   await page.screenshot({ path: 'test-results/builder-json.png', fullPage: true });
 
-  const entryCompare = saved.graph.nodes.find(
-    (node: { block: string; kind: string }) => node.block === 'Entry' && node.kind === 'Compare',
-  );
+  const entryCompare = saved.graph.nodes.find((node: { id: string }) => node.id === 'e-mom-positive');
   const brokenGraph = {
     ...saved.graph,
     links: saved.graph.links.filter(
@@ -85,15 +86,16 @@ test('guided edits persist across modes and problems select their graph node', a
   );
   expect(problem).toBeTruthy();
   await page.reload();
+  await page.locator('.review-button').click();
   await page
     .locator('app-builder-problems-panel')
     .getByRole('button')
     .nth(broken.problems.indexOf(problem))
     .click();
-  await expect(page.locator('app-graph-editor article.border-primary')).toBeVisible();
-  await expect(page.locator('app-graph-editor article.border-primary')).toContainText('!');
+  await expect(page.locator('app-graph-editor article.selected')).toBeVisible();
+  await expect(page.locator('app-graph-editor article.selected')).toContainText('Під\'єднайте вхід');
   await page.setViewportSize({ width: 1024, height: 900 });
-  await page.getByText('Кроки', { exact: true }).click();
+  await page.getByRole('button', { name: 'Кроки', exact: true }).click();
   await page.screenshot({ path: 'test-results/builder-steps-1024.png', fullPage: true });
   const width = await page.evaluate(() => ({
     scroll: document.documentElement.scrollWidth,
@@ -114,10 +116,11 @@ test('guided edits persist across modes and problems select their graph node', a
   });
   expect(nested.ok()).toBeTruthy();
   await page.reload();
+  await page.getByRole('button', { name: 'Кроки', exact: true }).click();
   await page.getByRole('button', { name: '5. Вхід', exact: true }).click();
   await expect(page.locator('app-readonly-condition')).toBeVisible();
   await expect(page.locator('app-condition-rows')).toHaveCount(0);
-  await page.getByText('JSON', { exact: true }).click();
+  await page.getByRole('button', { name: 'JSON', exact: true }).click();
   const unknown = structuredClone(exported);
   unknown.selection.foo = 1;
   await page.locator('app-builder-json-view input[type="file"]').setInputFiles({

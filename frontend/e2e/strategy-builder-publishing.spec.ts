@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openPublishConfirmation } from './support/editor-menu';
+import { openPublishConfirmation, runBacktest } from './support/editor-menu';
 
 test('trial comparison and publication preserve the draft lifecycle', async ({ page }) => {
   const errors: string[] = [];
@@ -37,14 +37,14 @@ test('trial comparison and publication preserve the draft lifecycle', async ({ p
   expect(configured.ok()).toBeTruthy();
   draft = await configured.json();
   await page.goto(`/strategy-builder/${draft.id}`);
-  await page.getByRole('button', { name: 'Бектест', exact: true }).click();
+  await runBacktest(page);
   await expect(page).toHaveURL(new RegExp(`${draft.id}/trials`));
   const runs = await (
     await page.request.get(`/api/strategy-builder/drafts/${draft.id}/trials`)
   ).json();
   expect(runs).toHaveLength(1);
   await page.goto(`/strategy-builder/${draft.id}`);
-  await page.getByRole('button', { name: 'Бектест', exact: true }).click();
+  await runBacktest(page);
   await expect(page).toHaveURL(new RegExp(`${draft.id}/trials`));
   expect(
     await (await page.request.get(`/api/strategy-builder/drafts/${draft.id}/trials`)).json(),
@@ -61,7 +61,13 @@ test('trial comparison and publication preserve the draft lifecycle', async ({ p
   let reads = 0;
   await page.route(`**/api/strategy-builder/drafts/${draft.id}/trials`, (route) => {
     reads++;
-    const first = { ...runs[0], ...summary, status: reads === 1 ? 'Running' : 'Succeeded' };
+    const first = {
+      ...runs[0],
+      ...summary,
+      experimentId: null,
+      experiment: null,
+      status: reads === 1 ? 'Running' : 'Succeeded',
+    };
     return route.fulfill({
       json: [
         first,
@@ -106,6 +112,9 @@ test('trial comparison and publication preserve the draft lifecycle', async ({ p
       },
     });
   });
+  await page.route('**/api/backtesting/comparisons', (route) =>
+    route.fulfill({ json: { comparable: false, reason: null, difference: null } }),
+  );
   await page.route('**/money-outcomes?*', (route) =>
     route.fulfill({ json: { contributed: 0, years: 5, series: [] } }),
   );
