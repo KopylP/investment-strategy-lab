@@ -1,4 +1,6 @@
+using InvestmentLab.Backtesting.Experiments.Application.RunDueExperiments;
 using InvestmentLab.Backtesting.Experiments.Domain;
+using InvestmentLab.BuildingBlocks.Scheduling;
 using InvestmentLab.Backtesting.Replays.Domain;
 
 namespace InvestmentLab.Backtesting.Experiments.Application.RequestExperiment;
@@ -8,6 +10,7 @@ public sealed record RequestExperimentCommand(Guid StrategyId, int Version, Expe
 public sealed class RequestExperimentHandler(
     IExperimentRepository experiments,
     IResearchStrategies strategies,
+    IJobWakeUp wakeUp,
     TimeProvider clock)
 {
     public async Task<Result<Guid>> Handle(RequestExperimentCommand command, CancellationToken cancellationToken)
@@ -43,6 +46,7 @@ public sealed class RequestExperimentHandler(
 
         experiments.Add(requested.Value);
         await experiments.SaveAsync(cancellationToken);
+        wakeUp.Wake<ExperimentsJob>();
 
         return requested.Value.Id;
     }

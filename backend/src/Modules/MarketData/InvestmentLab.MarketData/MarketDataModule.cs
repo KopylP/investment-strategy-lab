@@ -105,6 +105,7 @@ public sealed class MarketDataModule : IModule
         services.AddScoped<GetLatestFxRatesHandler>();
         services.AddScheduledJob<DailyFxRatesJob>(DailyFxRatesJob.Schedule, runAtStartup: true);
         services.AddScoped<IFxRateBackfill, BackfillFxRatesHandler>();
+        services.AddSingleton<FxRateChecks>();
         services.AddHttpClient<NbpFxRateProvider>(http => http.BaseAddress = new Uri(NbpFxRateProvider.BaseAddress));
         services.AddScoped<IFxRateProvider>(provider => provider.GetRequiredService<NbpFxRateProvider>());
     }

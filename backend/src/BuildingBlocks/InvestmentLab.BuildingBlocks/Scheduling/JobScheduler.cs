@@ -11,7 +11,8 @@ internal sealed class JobScheduler(
     IServiceScopeFactory scopes,
     IConfiguration configuration,
     TimeProvider clock,
-    ILogger<JobScheduler> logger) : BackgroundService
+    ILogger<JobScheduler> logger,
+    JobWakeUps wakeUps) : BackgroundService
 {
     protected override Task ExecuteAsync(CancellationToken stoppingToken) =>
         Task.WhenAll(jobs.Select(job => RunForeverAsync(job, stoppingToken)));
@@ -29,17 +30,24 @@ internal sealed class JobScheduler(
             var next = job.Schedule.NextOccurrenceAfter(clock.GetUtcNow());
             logger.LogInformation("Job {Job} next runs at {NextRun:O}", job.JobType.Name, next);
 
-            try
-            {
-                await Task.Delay(next - clock.GetUtcNow(), clock, stoppingToken);
-            }
-            catch (OperationCanceledException)
-            {
+            await WaitForTurnAsync(job, next, stoppingToken);
+            if (stoppingToken.IsCancellationRequested)
                 return;
-            }
 
             await RunOnceAsync(job, stoppingToken);
         }
+    }
+
+    private async Task WaitForTurnAsync(ScheduledJobRegistration job, DateTimeOffset next, CancellationToken stoppingToken)
+    {
+        using var turn = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
+        var untilNext = next - clock.GetUtcNow();
+        var scheduled = Task.Delay(untilNext > TimeSpan.Zero ? untilNext : TimeSpan.Zero, clock, turn.Token);
+        var wokenUp = wakeUps.WaitAsync(job.JobType, turn.Token);
+
+        await Task.WhenAny(scheduled, wokenUp);
+        await turn.CancelAsync();
+        await Task.WhenAll(scheduled, wokenUp).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
     }
 
     private async Task RunOnceAsync(ScheduledJobRegistration job, CancellationToken stoppingToken)

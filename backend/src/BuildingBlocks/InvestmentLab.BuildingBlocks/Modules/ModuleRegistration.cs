@@ -24,6 +24,7 @@ public static class ModuleRegistration
 
         builder.Services.AddHostedService<DatabaseMigrator>();
         builder.Services.AddHostedService<OutboxDispatcher>();
+        builder.Services.TryAddSingleton<JobWakeUps>();
         builder.Services.AddHostedService<JobScheduler>();
 
         return builder;

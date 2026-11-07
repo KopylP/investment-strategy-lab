@@ -10,6 +10,7 @@ public sealed class BackfillFxRatesHandler(
     IFxRateStore store,
     IFxRateProvider provider,
     IngestFxRatesHandler ingest,
+    FxRateChecks checks,
     TimeProvider clock,
     ILogger<BackfillFxRatesHandler> logger) : IFxRateBackfill
 {
@@ -19,11 +20,8 @@ public sealed class BackfillFxRatesHandler(
 
         try
         {
-            foreach (var currency in IngestFxRatesHandler.Currencies)
-                await AddOlderRatesAsync(currency, from, cancellationToken);
-
-            await store.SaveChangesAsync(cancellationToken);
-            await ingest.Handle(cancellationToken);
+            await AddOlderRatesAsync(from, cancellationToken);
+            await AddNewRatesAsync(cancellationToken);
 
             return true;
         }
@@ -33,6 +31,27 @@ public sealed class BackfillFxRatesHandler(
 
             return false;
         }
+    }
+
+    private async Task AddOlderRatesAsync(DateOnly from, CancellationToken cancellationToken)
+    {
+        if (checks.OlderRatesCheckedFrom(from))
+            return;
+
+        foreach (var currency in IngestFxRatesHandler.Currencies)
+            await AddOlderRatesAsync(currency, from, cancellationToken);
+
+        await store.SaveChangesAsync(cancellationToken);
+        checks.RecordOlderRatesFrom(from);
+    }
+
+    private async Task AddNewRatesAsync(CancellationToken cancellationToken)
+    {
+        if (checks.NewRatesCheckedRecently())
+            return;
+
+        await ingest.Handle(cancellationToken);
+        checks.RecordNewRates();
     }
 
     private async Task AddOlderRatesAsync(Currency currency, DateOnly from, CancellationToken cancellationToken)
