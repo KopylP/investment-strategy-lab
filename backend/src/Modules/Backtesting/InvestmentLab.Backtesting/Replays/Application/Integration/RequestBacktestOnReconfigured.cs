@@ -6,6 +6,11 @@ namespace InvestmentLab.Backtesting.Replays.Application.Integration;
 
 internal sealed class RequestBacktestOnReconfigured(EnsureBacktestHandler ensure) : IIntegrationEventHandler<StrategyReconfiguredV1>
 {
-    public async Task Handle(StrategyReconfiguredV1 reconfigured, CancellationToken cancellationToken) =>
+    public async Task Handle(StrategyReconfiguredV1 reconfigured, CancellationToken cancellationToken)
+    {
+        if (reconfigured.IsTrial == true)
+            return;
+
         await ensure.Handle(reconfigured.StrategyId, reconfigured.Version, cancellationToken);
+    }
 }
