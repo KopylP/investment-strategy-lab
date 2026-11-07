@@ -11,6 +11,8 @@ public static class SchedulingRegistration
             where TJob : class, IScheduledJob
         {
             services.TryAddScoped<TJob>();
+            services.TryAddSingleton<JobWakeUps>();
+            services.TryAddSingleton<IJobWakeUp>(provider => provider.GetRequiredService<JobWakeUps>());
             services.AddSingleton(new ScheduledJobRegistration(typeof(TJob), schedule, runAtStartup));
 
             return services;

@@ -13,6 +13,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="InvestmentLab.BuildingBlocks.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Include="../../../../locales/uk.json" LogicalName="locales.uk.json" />
   </ItemGroup>
 
