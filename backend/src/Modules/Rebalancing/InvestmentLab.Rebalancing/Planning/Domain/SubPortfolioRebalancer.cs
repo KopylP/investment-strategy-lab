@@ -2,6 +2,8 @@ namespace InvestmentLab.Rebalancing.Planning.Domain;
 
 public static class SubPortfolioRebalancer
 {
+    private const decimal Cent = 0.01m;
+
     public static SubPortfolioPlan Plan(SubPortfolioSituation situation) => new PlanRun(situation).Plan();
 
     private sealed class PlanRun(SubPortfolioSituation situation)
@@ -153,7 +155,7 @@ public static class SubPortfolioRebalancer
 
         private (decimal Bought, List<Guid> Skipped) BuyGaps(Dictionary<Guid, decimal> kept, decimal investableTotal, decimal deployable)
         {
-            var gaps = _picks.ToDictionary(id => id, id => Math.Max(0m, investableTotal * _weights[id] - kept.GetValueOrDefault(id)));
+            var gaps = _picks.ToDictionary(id => id, id => GapOf(id, kept, investableTotal));
             var totalGap = gaps.Values.Sum();
             var scale = totalGap > 0m ? Math.Min(1m, deployable / totalGap) : 0m;
 
@@ -174,6 +176,13 @@ public static class SubPortfolioRebalancer
             }
 
             return (bought, skipped);
+        }
+
+        private decimal GapOf(Guid id, Dictionary<Guid, decimal> kept, decimal investableTotal)
+        {
+            var shortfall = investableTotal * _weights[id] - kept.GetValueOrDefault(id);
+
+            return shortfall < Cent ? 0m : shortfall;
         }
 
         private void ParkOrUnpark(decimal remaining)
