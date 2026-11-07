@@ -26,6 +26,7 @@ using InvestmentLab.BuildingBlocks.Modules;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.StrategyBuilder.Drafts.Api;
 using InvestmentLab.StrategyBuilder.Drafts.Application.ChangeDraft;
+using InvestmentLab.StrategyBuilder.Drafts.Application.ChangeDraftReportSchedule;
 using InvestmentLab.StrategyBuilder.Drafts.Application.CheckDraft;
 using InvestmentLab.StrategyBuilder.Drafts.Application.CreateDraft;
 using InvestmentLab.StrategyBuilder.Drafts.Application.CopyEntryToExit;
@@ -102,6 +103,7 @@ public sealed class StrategyBuilderModule : IModule
         services.AddScoped<GetDraftRulesHandler>();
         services.AddScoped<ImportRulesHandler>();
         services.AddScoped<ReplaceDraftRulesHandler>();
+        services.AddScoped<ChangeDraftReportScheduleHandler>();
         services.AddScoped<DiscardDraftHandler>();
     }
 

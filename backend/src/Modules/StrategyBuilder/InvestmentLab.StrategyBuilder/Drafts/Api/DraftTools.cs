@@ -3,6 +3,7 @@ using System.Text.Json;
 using InvestmentLab.BuildingBlocks.Mcp;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.StrategyBuilder.Drafts.Application.ChangeDraft;
+using InvestmentLab.StrategyBuilder.Drafts.Application.ChangeDraftReportSchedule;
 using InvestmentLab.StrategyBuilder.Drafts.Application.CheckDraft;
 using InvestmentLab.StrategyBuilder.Drafts.Application.CopyEntryToExit;
 using InvestmentLab.StrategyBuilder.Drafts.Application.CreateDraft;
@@ -137,6 +138,34 @@ internal static class DraftTools
             SetupPatch: setup);
 
         var changed = await handler.Handle(draftId, change, cancellationToken);
+
+        return DraftReceiptDto.Of(changed.ValueOrThrow());
+    }
+
+    [McpServerTool(Name = "change_draft_report_schedule")]
+    [Description("Changes when one of a draft's reports runs (get_draft lists them under reports). A backtest rebalances on the rebalance report's schedule: daily to quarterly at 20:00. Fields left null keep their current value.")]
+    public static async Task<DraftReceiptDto> ChangeDraftReportSchedule(
+        Guid draftId,
+        [Description("The draft's current revision, from get_draft.")] int revision,
+        [Description("The report's code, such as rebalance or risk-review.")] string reportCode,
+        [Description("off, hourly, daily, weekly, monthly or quarterly.")] string frequency,
+        ChangeDraftReportScheduleHandler handler,
+        [Description("Monthly: day of the month; quarterly: day of the quarter's first month (1-31), or null.")] int? day = null,
+        [Description("Weekly: monday … sunday, or null.")] string? weekday = null,
+        [Description("Local time HH:mm, or null.")] string? time = null,
+        [Description("Hourly: minute of the hour (0-59), or null.")] int? minute = null,
+        CancellationToken cancellationToken = default)
+    {
+        var command = new ChangeDraftReportScheduleCommand(
+            Revision: revision,
+            ReportCode: reportCode,
+            Frequency: frequency,
+            Day: day,
+            Weekday: weekday,
+            Time: time,
+            Minute: minute);
+
+        var changed = await handler.Handle(draftId, command, cancellationToken);
 
         return DraftReceiptDto.Of(changed.ValueOrThrow());
     }
