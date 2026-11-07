@@ -30,8 +30,8 @@ class SeriesBook:
         return cls(by_role, context.as_of, valuations)
 
     def is_fresh(self, prices: pd.Series) -> bool:
-        known = prices.dropna()
-        return bool(len(known) and (pd.Timestamp(self.as_of) - known.index[-1]).days <= MAX_PRICE_AGE_DAYS)
+        last_known = prices.last_valid_index()
+        return last_known is not None and (pd.Timestamp(self.as_of) - last_known).days <= MAX_PRICE_AGE_DAYS
 
     def valuation_fund(self, key: str) -> pd.Series:
         return self.valuations.get(key, self.fund(key))

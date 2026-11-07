@@ -22,6 +22,9 @@ public sealed class ResearchPlan(
     public IReadOnlyList<ResearchFold> WalkForwardTests =>
         conditions.Robustness.WalkForward?.FoldsFor(conditions.Period) ?? [];
 
+    public bool TrainingReadFromFullRuns(ExperimentPeriod training) =>
+        variants.Count == 1 || training.Start == conditions.Period.Start;
+
     public ReplaySetup ReplayFor(ParameterVariant variant, ExperimentPeriod period, bool journal)
     {
         var history = requiredHistory.Append(source.Setup.HistoryBars).Max();

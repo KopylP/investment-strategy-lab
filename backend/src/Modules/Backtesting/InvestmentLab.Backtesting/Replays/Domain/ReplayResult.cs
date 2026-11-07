@@ -5,6 +5,9 @@ namespace InvestmentLab.Backtesting.Replays.Domain;
 public sealed record ReplayResult(DateOnly Start, DateOnly End, string Currency, int Trades, int RiskExits, int SignalReports, IReadOnlyList<ReplaySeries> Series,
     IReadOnlyList<ReplayJournalEntry>? Journal = null, decimal InitialCapital = 100_000m)
 {
+    [JsonIgnore]
+    public ReplayTrace? Trace { get; init; }
+
     public decimal FinalCapital => InitialCapital * (1m + (decimal)StrategySummary.TotalReturn);
 
     [JsonIgnore]

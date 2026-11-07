@@ -37,9 +37,11 @@ public sealed class StrategyReplay(
         if (replayed.IsFailure)
             return replayed.Error;
 
-        var series = await Series(portfolio, firstDay.Value, comparisons.Value, cancellationToken);
+        var replayedHistory = new ReplayedHistory(portfolio.Prices, firstDay.Value, portfolio.Setup, portfolio.Growth);
+        var series = await Series(portfolio, replayedHistory, comparisons.Value, cancellationToken);
+        var trace = new ReplayTrace(portfolio.Growth, replayedHistory.CashGrowth);
 
-        return portfolio.ResultFrom(series);
+        return portfolio.ResultFrom(series) with { Trace = trace };
     }
 
     private async Task<Result> Replay(ReplayedPortfolio portfolio, int firstDay, CancellationToken cancellationToken)
@@ -110,11 +112,10 @@ public sealed class StrategyReplay(
 
     private async Task<IReadOnlyList<ReplaySeries>> Series(
         ReplayedPortfolio portfolio,
-        int firstDay,
+        ReplayedHistory history,
         IReadOnlyList<IReplayComparison> comparisons,
         CancellationToken cancellationToken)
     {
-        var history = new ReplayedHistory(portfolio.Prices, firstDay, portfolio.Setup, portfolio.Growth);
         var strategy = await StrategySeries(portfolio, history.RiskFreeRate, cancellationToken);
         var series = new List<ReplaySeries> { strategy };
 

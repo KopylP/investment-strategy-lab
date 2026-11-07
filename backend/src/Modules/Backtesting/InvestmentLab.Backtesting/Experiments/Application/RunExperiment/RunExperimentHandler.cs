@@ -44,9 +44,10 @@ public sealed class RunExperimentHandler(
         if (baseline.IsFailure)
             return baseline.Error;
 
-        var sensitivity = await Sensitivity(plan, baseline.Value, cancellationToken);
-        var independent = await TestWindows(plan, plan.IndependentTests, ResearchStudyKinds.OutOfSample, cancellationToken);
-        var walkForward = await TestWindows(plan, plan.WalkForwardTests, ResearchStudyKinds.WalkForward, cancellationToken);
+        var fullRuns = new Dictionary<ParameterVariant, ReplayResult> { [plan.Baseline] = baseline.Value };
+        var sensitivity = await Sensitivity(plan, fullRuns, cancellationToken);
+        var independent = await TestWindows(plan, plan.IndependentTests, ResearchStudyKinds.OutOfSample, fullRuns, cancellationToken);
+        var walkForward = await TestWindows(plan, plan.WalkForwardTests, ResearchStudyKinds.WalkForward, fullRuns, cancellationToken);
         var studies = sensitivity.Concat(independent).Concat(walkForward).ToList();
 
         return plan.ReportOf(baseline.Value, studies);
@@ -91,7 +92,7 @@ public sealed class RunExperimentHandler(
 
     private async Task<IReadOnlyList<ResearchStudy>> Sensitivity(
         ResearchPlan plan,
-        ReplayResult baseline,
+        Dictionary<ParameterVariant, ReplayResult> fullRuns,
         CancellationToken cancellationToken)
     {
         var studies = new List<ResearchStudy>();
@@ -99,10 +100,7 @@ public sealed class RunExperimentHandler(
 
         foreach (var candidate in plan.SensitivityVariants)
         {
-            var setup = plan.ReplayFor(candidate, window.Test, journal: false);
-            var result = candidate == plan.Baseline
-                ? Result<ReplayResult>.Success(baseline)
-                : await replay.RunAsync(setup, cancellationToken);
+            var result = await FullRunOf(plan, candidate, fullRuns, cancellationToken);
 
             studies.Add(StudyOf(ResearchStudyKinds.Sensitivity, window, candidate.Value, result));
         }
@@ -110,17 +108,35 @@ public sealed class RunExperimentHandler(
         return studies;
     }
 
+    private async Task<Result<ReplayResult>> FullRunOf(
+        ResearchPlan plan,
+        ParameterVariant candidate,
+        Dictionary<ParameterVariant, ReplayResult> fullRuns,
+        CancellationToken cancellationToken)
+    {
+        if (fullRuns.TryGetValue(candidate, out var known))
+            return known;
+
+        var setup = plan.ReplayFor(candidate, plan.Conditions.Period, journal: false);
+        var result = await replay.RunAsync(setup, cancellationToken);
+        if (result.IsSuccess)
+            fullRuns[candidate] = result.Value;
+
+        return result;
+    }
+
     private async Task<IReadOnlyList<ResearchStudy>> TestWindows(
         ResearchPlan plan,
         IReadOnlyList<ResearchFold> windows,
         string kind,
+        IReadOnlyDictionary<ParameterVariant, ReplayResult> fullRuns,
         CancellationToken cancellationToken)
     {
         var studies = new List<ResearchStudy>();
 
         foreach (var window in windows)
         {
-            var study = await TestWindow(plan, window, kind, cancellationToken);
+            var study = await TestWindow(plan, window, kind, fullRuns, cancellationToken);
             studies.Add(study);
         }
 
@@ -131,9 +147,10 @@ public sealed class RunExperimentHandler(
         ResearchPlan plan,
         ResearchFold window,
         string kind,
+        IReadOnlyDictionary<ParameterVariant, ReplayResult> fullRuns,
         CancellationToken cancellationToken)
     {
-        var training = await TrainingResults(plan, window.Training!, cancellationToken);
+        var training = await TrainingResults(plan, window.Training!, fullRuns, cancellationToken);
         var selected = TrainingSelection.HighestSharpe(training);
         if (selected is null)
             return FailedTraining(kind, window);
@@ -148,19 +165,45 @@ public sealed class RunExperimentHandler(
     private async Task<IReadOnlyList<TrainingResult>> TrainingResults(
         ResearchPlan plan,
         ExperimentPeriod period,
+        IReadOnlyDictionary<ParameterVariant, ReplayResult> fullRuns,
         CancellationToken cancellationToken)
     {
         var results = new List<TrainingResult>();
 
         foreach (var candidate in plan.Variants)
         {
-            var setup = plan.ReplayFor(candidate, period, journal: false);
-            var result = await replay.RunAsync(setup, cancellationToken);
-            if (result.IsSuccess)
-                results.Add(new TrainingResult(candidate, result.Value.StrategySummary));
+            var summary = await TrainingSummaryOf(plan, candidate, period, fullRuns, cancellationToken);
+            if (summary is not null)
+                results.Add(new TrainingResult(candidate, summary));
         }
 
         return results;
+    }
+
+    private async Task<ReplaySummary?> TrainingSummaryOf(
+        ResearchPlan plan,
+        ParameterVariant candidate,
+        ExperimentPeriod period,
+        IReadOnlyDictionary<ParameterVariant, ReplayResult> fullRuns,
+        CancellationToken cancellationToken)
+    {
+        if (plan.TrainingReadFromFullRuns(period) && CutOf(fullRuns, candidate, period) is { } cut)
+            return cut;
+
+        var setup = plan.ReplayFor(candidate, period, journal: false);
+        var result = await replay.RunAsync(setup, cancellationToken);
+
+        return result.IsSuccess ? result.Value.StrategySummary : null;
+    }
+
+    private static ReplaySummary? CutOf(
+        IReadOnlyDictionary<ParameterVariant, ReplayResult> fullRuns,
+        ParameterVariant candidate,
+        ExperimentPeriod period)
+    {
+        var trace = fullRuns.GetValueOrDefault(candidate)?.Trace;
+
+        return trace?.SummaryBetween(period.Start, period.End);
     }
 
     private static ResearchStudy StudyOf(
