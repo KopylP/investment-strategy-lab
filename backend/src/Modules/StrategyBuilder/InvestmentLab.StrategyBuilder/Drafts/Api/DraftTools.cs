@@ -70,7 +70,7 @@ internal static class DraftTools
 
     [McpServerTool(Name = "create_draft")]
     [Description("Starts a new strategy draft, empty or from a template.")]
-    public static async Task<DraftDto> CreateDraft(
+    public static async Task<DraftReceiptDto> CreateDraft(
         string name,
         [Description("Template code, or null for an empty draft.")] string? template,
         CreateDraftHandler handler,
@@ -81,12 +81,12 @@ internal static class DraftTools
 
         var created = await handler.Handle(user.RequiredId, command, cancellationToken);
 
-        return created.ValueOrThrow();
+        return DraftReceiptDto.Of(created.ValueOrThrow());
     }
 
     [McpServerTool(Name = "import_rules")]
     [Description("Creates a new draft from rules JSON (formatVersion 1).")]
-    public static async Task<DraftDto> ImportRules(
+    public static async Task<DraftReceiptDto> ImportRules(
         string name,
         [Description("The rules (formatVersion 1) as a JSON object.")] JsonElement rules,
         ImportRulesHandler handler,
@@ -97,12 +97,12 @@ internal static class DraftTools
 
         var imported = await handler.Handle(user.RequiredId, command, cancellationToken);
 
-        return imported.ValueOrThrow();
+        return DraftReceiptDto.Of(imported.ValueOrThrow());
     }
 
     [McpServerTool(Name = "replace_draft_rules")]
     [Description("Replaces an existing draft's rules from rules JSON, keeping its funds, reports and trials.")]
-    public static async Task<DraftDto> ReplaceDraftRules(
+    public static async Task<DraftReceiptDto> ReplaceDraftRules(
         Guid draftId,
         [Description("The draft's current revision, from get_draft.")] int revision,
         [Description("The rules (formatVersion 1) as a JSON object.")] JsonElement rules,
@@ -113,17 +113,17 @@ internal static class DraftTools
 
         var replaced = await handler.Handle(draftId, command, cancellationToken);
 
-        return replaced.ValueOrThrow();
+        return DraftReceiptDto.Of(replaced.ValueOrThrow());
     }
 
     [McpServerTool(Name = "change_draft")]
     [Description("Changes a draft's name, description or setup (funds, benchmark, cash, volatility index, extra series). Fields left null stay as they are.")]
-    public static async Task<DraftDto> ChangeDraft(
+    public static async Task<DraftReceiptDto> ChangeDraft(
         Guid draftId,
         [Description("The draft's current revision, from get_draft.")] int revision,
         string? name,
         string? description,
-        DraftSetupDto? setup,
+        [Description("Setup fields to change; each field left null keeps its current value.")] DraftSetupPatchDto? setup,
         ChangeDraftHandler handler,
         CancellationToken cancellationToken)
     {
@@ -131,18 +131,19 @@ internal static class DraftTools
             Revision: revision,
             Name: name,
             Description: description,
-            Setup: setup,
+            Setup: null,
             Graph: null,
-            Reports: null);
+            Reports: null,
+            SetupPatch: setup);
 
         var changed = await handler.Handle(draftId, change, cancellationToken);
 
-        return changed.ValueOrThrow();
+        return DraftReceiptDto.Of(changed.ValueOrThrow());
     }
 
     [McpServerTool(Name = "copy_entry_to_exit")]
     [Description("Builds the exit rule as the mirror of the entry rule with a margin.")]
-    public static async Task<DraftDto> CopyEntryToExit(
+    public static async Task<DraftReceiptDto> CopyEntryToExit(
         Guid draftId,
         [Description("The draft's current revision, from get_draft.")] int revision,
         [Description("Margin between entry and exit thresholds, as a fraction.")] double margin,
@@ -151,7 +152,7 @@ internal static class DraftTools
     {
         var copied = await handler.Handle(draftId, revision, margin, cancellationToken);
 
-        return copied.ValueOrThrow();
+        return DraftReceiptDto.Of(copied.ValueOrThrow());
     }
 
     [McpServerTool(Name = "check_draft", ReadOnly = true)]
@@ -202,7 +203,7 @@ internal static class DraftTools
 
     [McpServerTool(Name = "open_published_strategy")]
     [Description("Opens a published strategy version as a new draft to change it.")]
-    public static async Task<DraftDto> OpenPublishedStrategy(
+    public static async Task<DraftReceiptDto> OpenPublishedStrategy(
         Guid strategyId,
         int version,
         OpenPublishedStrategyHandler handler,
@@ -211,7 +212,7 @@ internal static class DraftTools
     {
         var draft = await handler.Handle(user.RequiredId, strategyId, version, cancellationToken);
 
-        return draft.ValueOrThrow();
+        return DraftReceiptDto.Of(draft.ValueOrThrow());
     }
 
     private static string RulesTextOf(JsonElement rules) =>
