@@ -407,6 +407,7 @@
   "builder.words.unknown": "невідома умова",
   "builder.draft.graph_invalid": "Схему не вдалося прочитати: {details}",
   "builder.draft.has_problems": "Спершу виправте проблеми чернетки.",
+  "builder.report.unknown": "У чернетці немає рапорту «{code}».",
   "builder.template.unknown": "Немає шаблону «{template}».",
   "builder.template.momentum-trend-filter.name": "Моментум із фільтром тренду",
   "builder.template.momentum-trend-filter.description": "Найсильніші фонди за змішаним моментумом, лише над 200-денною середньою; коли ринок нижче своєї середньої, у фондах лише 30%.",

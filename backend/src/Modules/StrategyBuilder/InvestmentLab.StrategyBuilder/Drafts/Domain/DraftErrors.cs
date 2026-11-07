@@ -18,6 +18,9 @@ public static class DraftErrors
     public static Error GraphInvalid(string details) =>
         Error.Validation("builder.draft.graph_invalid", $"The graph cannot be read: {details}", new { details });
 
+    public static Error ReportUnknown(string code) =>
+        Error.Validation("builder.report.unknown", $"The draft has no report '{code}'.", new { code });
+
     public static Error CopyMarginOutOfRange() =>
         Error.Validation("builder.copy.margin_out_of_range", "The entry-to-exit margin must be between 0 and 0.5.");
 

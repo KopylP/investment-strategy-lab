@@ -11,9 +11,12 @@ internal static class McpInstructions
         2. A rule can use a signal only after it exists: create it with create_signal (get_signals lists them).
         3. Write the strategy as rules JSON (formatVersion 1) and create a draft with import_rules, or change an existing one
            with replace_draft_rules. Set funds and the benchmark with add_funds and change_draft (it changes only the setup
-           fields you give). Run check_draft and fix every error it reports. The market filter's whenUnfavorable is
-           reduceHoldings (an unfavourable market scales every target weight by investWhenUnfavorable and parks the rest in
-           the cash fund) or newMoneyOnly (only new contributions are split; backtests have none, so it changes nothing there).
+           fields you give). change_draft_report_schedule sets how often a report runs; a backtest rebalances on the
+           rebalance report's schedule (daily to quarterly). Run check_draft and fix every error it reports. The market
+           filter's whenUnfavorable is reduceHoldings (an unfavourable market scales every target weight by
+           investWhenUnfavorable and parks the rest in the cash fund) or newMoneyOnly (held funds stay and only new
+           contributions are split). In both modes money already parked in the cash fund waits there until the market is
+           favourable again, so the filter matters in a backtest even without contributions.
         4. Before choosing a period, get_instrument_history shows from when each fund, the benchmark and the cash fund have
            quotes; indicators need their warm-up on top of that. If a period still lacks history, the error names what limits
            it and the earliest possible start.
