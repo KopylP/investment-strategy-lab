@@ -3,22 +3,26 @@
     <div class="flex flex-wrap items-start gap-2">
       <div class="w-full min-w-0">
         <div [class.hidden]="inline()" class="text-xs uppercase tracking-wide text-muted-color">
-          {{ guided() ? 'Параметри правила' : 'Вибраний вузол' }}
+          {{
+            guided()
+              ? ('builder.inspector.ruleParameters' | transloco)
+              : ('builder.inspector.selectedNode' | transloco)
+          }}
         </div>
         <h2 class="mt-1 break-words font-semibold" style="font-size: 1.125rem">{{ title() }}</h2>
       </div>
       @if (allowDuplicate() && !node().kind.endsWith('Result')) {
         <p-button
           icon="pi pi-copy"
-          [label]="inline() ? undefined : 'Дублювати'"
-          ariaLabel="Дублювати"
+          [label]="inline() ? undefined : ('builder.graph.node.duplicate' | transloco)"
+          [ariaLabel]="'builder.graph.node.duplicate' | transloco"
           size="small"
           [text]="true"
           (onClick)="duplicate.emit()"
         />
         <p-button
-          [label]="inline() ? undefined : 'Видалити вузол'"
-          ariaLabel="Видалити вузол"
+          [label]="inline() ? undefined : ('builder.graph.node.delete' | transloco)"
+          [ariaLabel]="'builder.graph.node.delete' | transloco"
           icon="pi pi-trash"
           severity="danger"
           [text]="true"
@@ -39,7 +43,7 @@
     <div class="parameter-groups">
       @if (node().kind === 'Signal') {
         <label class="flex flex-col gap-2 text-sm font-medium">
-          Мій сигнал
+          {{ 'builder.graph.node.mySignal' | transloco }}
           <p-select
             #nodeSelect
             [panelStyleClass]="inline() ? 'builder-node-select-panel' : undefined"
@@ -50,7 +54,7 @@
             optionValue="id"
             [ngModel]="node().parameters['signalId']"
             (ngModelChange)="changeSignal($event)"
-            placeholder="Оберіть ринковий сигнал"
+            [placeholder]="'builder.inspector.chooseSignal' | transloco"
             [filter]="true"
             [appendTo]="overlayContainer()"
             fluid
@@ -59,23 +63,32 @@
       }
       @if (node().kind === 'MarketResult') {
         <div class="market-pass">
-          <i class="pi pi-check"></i><span>Умова виконується → весь доступний бюджет</span>
+          <i class="pi pi-check"></i><span>{{ 'builder.inspector.wholeBudget' | transloco }}</span>
         </div>
       }
       @if (node().kind === 'RiskResult') {
         <div class="risk-state" [attr.data-active-risk-limits]="activeRiskLimits()">
           <strong>{{
-            activeRiskLimits() ? 'Активних лімітів: ' + activeRiskLimits() : 'Ліміти не задані'
+            activeRiskLimits()
+              ? ('builder.inspector.activeLimits' | transloco: { count: activeRiskLimits() })
+              : ('builder.inspector.noLimits' | transloco)
           }}</strong>
-          <p>Вкажіть відсоток падіння для продажу позиції. Порожнє поле — без цього ліміту.</p>
-          <p>Перевіряється під час рапорту «Перевірка ризику».</p>
+          <p>{{ 'builder.inspector.limitsHint' | transloco }}</p>
+          <p>{{ 'builder.inspector.checkedInRiskReview' | transloco }}</p>
         </div>
       }
       @if (node().kind === 'FundSelection') {
-        <div class="selection-flow" aria-label="Відбір кандидатів і розподіл грошей">
-          <span>Кандидати</span><i class="pi pi-arrow-right"></i
-          ><span>Топ {{ node().parameters['top'] ?? '?' }}</span
-          ><i class="pi pi-arrow-right"></i><span>До розподілу</span>
+        <div
+          class="selection-flow"
+          [attr.aria-label]="'builder.inspector.selectionLabel' | transloco"
+        >
+          <span>{{ 'builder.graph.visual.candidates' | transloco }}</span
+          ><i class="pi pi-arrow-right"></i
+          ><span>{{
+            'builder.inspector.top' | transloco: { top: node().parameters['top'] ?? '?' }
+          }}</span
+          ><i class="pi pi-arrow-right"></i
+          ><span>{{ 'builder.inspector.toAllocation' | transloco }}</span>
         </div>
       }
       @for (group of fieldGroups(); track group.title) {
@@ -101,10 +114,14 @@
       }
       @let share = marketShare();
       @if (node().kind === 'MarketResult' && share !== null) {
-        <div class="budget-preview" aria-label="Бюджет при невиконанні ринкової умови">
+        <div
+          class="budget-preview"
+          [attr.aria-label]="'builder.inspector.unfavorableBudget' | transloco"
+        >
           <div class="budget-bar"><span class="invested" [style.width.%]="share"></span></div>
           <div class="budget-labels">
-            <span>Фонди {{ share }}%</span><span>Кеш {{ 100 - share }}%</span>
+            <span>{{ 'builder.inspector.fundsShare' | transloco: { share: share } }}</span
+            ><span>{{ 'builder.inspector.cashShare' | transloco: { share: 100 - share } }}</span>
           </div>
         </div>
       }
@@ -112,7 +129,7 @@
   }
   @if (!inline() && !guided() && links().length) {
     <div class="mt-5 border-t border-surface pt-4">
-      <div class="mb-2 text-sm font-medium">Звʼязки</div>
+      <div class="mb-2 text-sm font-medium">{{ 'builder.inspector.links' | transloco }}</div>
       <ul class="flex flex-col gap-1 text-xs text-muted-color">
         @for (link of links(); track link) {
           <li>{{ link }}</li>

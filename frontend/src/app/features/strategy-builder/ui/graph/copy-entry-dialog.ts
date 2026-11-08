@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, model, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Button } from 'primeng/button';
@@ -6,10 +7,10 @@ import { InputNumber } from 'primeng/inputnumber';
 
 @Component({
   selector: 'app-copy-entry-dialog',
-  imports: [FormsModule, Button, Dialog, InputNumber],
+  imports: [TranslocoPipe, FormsModule, Button, Dialog, InputNumber],
   template: `
     <p-dialog
-      header="Створити вихід з умов входу"
+      [header]="'builder.graph.copyEntry.title' | transloco"
       [modal]="true"
       [visible]="visible()"
       (visibleChange)="visible.set($event)"
@@ -18,12 +19,11 @@ import { InputNumber } from 'primeng/inputnumber';
       (onShow)="margin.set(2)"
     >
       <p class="mb-4 text-sm text-muted-color">
-        Умови входу буде перетворено на протилежні умови виходу. Запас зменшує зайві продажі біля
-        самої межі.
+        {{ 'builder.graph.copyEntry.hint' | transloco }}
       </p>
-      <p class="mb-4 text-sm">Поточне правило виходу буде замінено. Умови входу залишаться без змін.</p>
+      <p class="mb-4 text-sm">{{ 'builder.graph.copyEntry.replaceHint' | transloco }}</p>
       <div class="flex flex-col gap-2">
-        <label for="copy-entry-margin" class="font-medium">Запас</label>
+        <label for="copy-entry-margin" class="font-medium">{{ 'builder.graph.copyEntry.margin' | transloco }}</label>
         <p-inputnumber
           inputId="copy-entry-margin"
           [ngModel]="margin()"
@@ -37,12 +37,12 @@ import { InputNumber } from 'primeng/inputnumber';
       </div>
       <ng-template #footer>
         <p-button
-          label="Скасувати"
+          [label]="'common.cancel' | transloco"
           [text]="true"
           severity="secondary"
           (onClick)="visible.set(false)"
         />
-        <p-button label="Замінити правило виходу" icon="pi pi-copy" (onClick)="copy.emit(margin() / 100)" />
+        <p-button [label]="'builder.graph.copyEntry.replace' | transloco" icon="pi pi-copy" (onClick)="copy.emit(margin() / 100)" />
       </ng-template>
     </p-dialog>
   `,

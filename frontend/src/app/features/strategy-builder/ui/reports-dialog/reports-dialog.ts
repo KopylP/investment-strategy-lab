@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { OwnSignalDto } from '../../models/own-signal-dto';
 import { MultiSelect } from 'primeng/multiselect';
 import { Tooltip } from 'primeng/tooltip';
@@ -24,6 +25,7 @@ import { ReportKindDto } from '../../models/vocabulary-dto';
 @Component({
   selector: 'app-builder-reports-dialog',
   imports: [
+    TranslocoPipe,
     NgTemplateOutlet,
     FormsModule,
     Button,

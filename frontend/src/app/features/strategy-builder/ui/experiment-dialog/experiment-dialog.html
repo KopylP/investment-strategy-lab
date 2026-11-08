@@ -1,5 +1,5 @@
 <p-dialog
-  header="Експеримент зі стратегією"
+  [header]="'builder.experimentDialog.title' | transloco"
   [modal]="true"
   [visible]="visible()"
   (visibleChange)="visible.set($event)"
@@ -8,97 +8,98 @@
 >
   <div class="flex flex-col gap-6">
     <p class="m-0 text-sm text-muted-color">
-      Для порівняння стратегій використовуйте однаковий період, капітал і витрати.
-      Налаштування збережуться разом із результатом.
+      {{ 'builder.experimentDialog.hint' | transloco }}
     </p>
     @if (error()) { <p-message severity="error" [text]="error()!" /> }
     <label class="flex flex-col gap-2">
-      Мітка запуску
-      <input pInputText [ngModel]="form().label" (ngModelChange)="patch({ label: $event })" placeholder="Наприклад, базовий варіант" />
+      {{ 'builder.experimentDialog.label' | transloco }}
+      <input pInputText [ngModel]="form().label" (ngModelChange)="patch({ label: $event })" [placeholder]="'builder.experimentDialog.labelPlaceholder' | transloco" />
     </label>
     <fieldset class="rounded-xl border border-surface p-4">
-      <legend class="px-2 font-semibold">Період і капітал</legend>
+      <legend class="px-2 font-semibold">{{ 'builder.experimentDialog.periodAndCapital' | transloco }}</legend>
       <div class="grid gap-4 sm:grid-cols-3">
-        <label class="flex min-w-0 flex-col gap-2">Початок
-          <input pInputText type="date" [ngModel]="form().start" (ngModelChange)="patch({ start: $event })" aria-label="Початок експерименту" />
+        <label class="flex min-w-0 flex-col gap-2">{{ 'builder.experimentDialog.start' | transloco }}
+          <input pInputText type="date" [ngModel]="form().start" (ngModelChange)="patch({ start: $event })" [attr.aria-label]="'builder.experimentDialog.startLabel' | transloco" />
         </label>
-        <label class="flex min-w-0 flex-col gap-2">Кінець
-          <input pInputText type="date" [ngModel]="form().end" (ngModelChange)="patch({ end: $event })" aria-label="Кінець експерименту" />
+        <label class="flex min-w-0 flex-col gap-2">{{ 'builder.experimentDialog.end' | transloco }}
+          <input pInputText type="date" [ngModel]="form().end" (ngModelChange)="patch({ end: $event })" [attr.aria-label]="'builder.experimentDialog.endLabel' | transloco" />
         </label>
-        <label class="flex min-w-0 flex-col gap-2">Початковий капітал
-          <p-inputnumber [ngModel]="form().initialCapital" (ngModelChange)="patch({ initialCapital: $event ?? 0 })" [min]="100" [minFractionDigits]="0" fluid ariaLabel="Початковий капітал" />
+        <label class="flex min-w-0 flex-col gap-2">{{ 'builder.experiment.startingCapital' | transloco }}
+          <p-inputnumber [ngModel]="form().initialCapital" (ngModelChange)="patch({ initialCapital: $event ?? 0 })" [min]="100" [minFractionDigits]="0" fluid [ariaLabel]="'builder.experiment.startingCapital' | transloco" />
         </label>
       </div>
-      <p class="mb-0 text-xs text-muted-color">Капітал і фіксована комісія — у валюті бектесту, зазначеній у результаті.</p>
+      <p class="mb-0 text-xs text-muted-color">{{ 'builder.experimentDialog.capitalHint' | transloco }}</p>
     </fieldset>
     <fieldset class="rounded-xl border border-surface p-4">
-      <legend class="px-2 font-semibold">Витрати виконання</legend>
+      <legend class="px-2 font-semibold">{{ 'builder.experimentDialog.costs' | transloco }}</legend>
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <label class="flex min-w-0 flex-col gap-2">Комісія, %
-          <p-inputnumber [ngModel]="form().commissionPercent" (ngModelChange)="patch({ commissionPercent: $event ?? 0 })" [min]="0" [maxFractionDigits]="4" suffix=" %" fluid ariaLabel="Комісія у відсотках" />
+        <label class="flex min-w-0 flex-col gap-2">{{ 'builder.experimentDialog.commission' | transloco }}
+          <p-inputnumber [ngModel]="form().commissionPercent" (ngModelChange)="patch({ commissionPercent: $event ?? 0 })" [min]="0" [maxFractionDigits]="4" suffix=" %" fluid [ariaLabel]="'builder.experimentDialog.commissionLabel' | transloco" />
         </label>
-        <label class="flex min-w-0 flex-col gap-2">Плата за угоду
-          <p-inputnumber [ngModel]="form().feePerTrade" (ngModelChange)="patch({ feePerTrade: $event ?? 0 })" [min]="0" [maxFractionDigits]="2" fluid ariaLabel="Плата за угоду" />
+        <label class="flex min-w-0 flex-col gap-2">{{ 'builder.experimentDialog.tradeFee' | transloco }}
+          <p-inputnumber [ngModel]="form().feePerTrade" (ngModelChange)="patch({ feePerTrade: $event ?? 0 })" [min]="0" [maxFractionDigits]="2" fluid [ariaLabel]="'builder.experimentDialog.tradeFee' | transloco" />
         </label>
-        <label class="flex min-w-0 flex-col gap-2">Повний spread, б.п.
-          <p-inputnumber [ngModel]="form().spreadBps" (ngModelChange)="patch({ spreadBps: $event ?? 0 })" [min]="0" [maxFractionDigits]="2" fluid ariaLabel="Spread у базисних пунктах" />
+        <label class="flex min-w-0 flex-col gap-2">{{ 'builder.experimentDialog.spread' | transloco }}
+          <p-inputnumber [ngModel]="form().spreadBps" (ngModelChange)="patch({ spreadBps: $event ?? 0 })" [min]="0" [maxFractionDigits]="2" fluid [ariaLabel]="'builder.experimentDialog.spreadLabel' | transloco" />
         </label>
-        <label class="flex min-w-0 flex-col gap-2">Slippage, б.п.
-          <p-inputnumber [ngModel]="form().slippageBps" (ngModelChange)="patch({ slippageBps: $event ?? 0 })" [min]="0" [maxFractionDigits]="2" fluid ariaLabel="Slippage у базисних пунктах" />
+        <label class="flex min-w-0 flex-col gap-2">{{ 'builder.experimentDialog.slippage' | transloco }}
+          <p-inputnumber [ngModel]="form().slippageBps" (ngModelChange)="patch({ slippageBps: $event ?? 0 })" [min]="0" [maxFractionDigits]="2" fluid [ariaLabel]="'builder.experimentDialog.slippageLabel' | transloco" />
         </label>
       </div>
-      <p class="mb-0 text-xs text-muted-color">1 базисний пункт = 0,01%. До кожного виконання застосовуються половина spread і повний slippage.</p>
+      <p class="mb-0 text-xs text-muted-color">{{ 'builder.experimentDialog.bpHint' | transloco }}</p>
     </fieldset>
     <fieldset class="flex flex-col gap-4 rounded-xl border border-surface p-4">
-      <legend class="px-2 font-semibold">Перевірка стійкості</legend>
+      <legend class="px-2 font-semibold">{{ 'builder.experimentDialog.robustness' | transloco }}</legend>
       <label class="flex items-center gap-2">
         <p-checkbox [binary]="true" [ngModel]="form().independent" (ngModelChange)="patch({ independent: $event })" inputId="experiment-independent" />
-        Незалежний тестовий період
+        {{ 'builder.experimentDialog.holdout' | transloco }}
       </label>
       @if (form().independent) {
-        <label class="flex max-w-64 flex-col gap-2 pl-8">Початок незалежного тесту
-          <input pInputText type="date" [ngModel]="form().outOfSampleStart" (ngModelChange)="patch({ outOfSampleStart: $event })" aria-label="Початок незалежного тесту" />
+        <label class="flex max-w-64 flex-col gap-2 pl-8">{{ 'builder.experimentDialog.holdoutStart' | transloco }}
+          <input pInputText type="date" [ngModel]="form().outOfSampleStart" (ngModelChange)="patch({ outOfSampleStart: $event })" [attr.aria-label]="'builder.experimentDialog.holdoutStart' | transloco" />
         </label>
       }
       <label class="flex items-center gap-2">
         <p-checkbox [binary]="true" [ngModel]="form().walkForward" (ngModelChange)="patch({ walkForward: $event })" inputId="experiment-walk-forward" />
-        Walk-forward: послідовні навчальні й тестові вікна
+        {{ 'builder.experimentDialog.walkForward' | transloco }}
       </label>
       @if (form().walkForward) {
         <div class="grid gap-4 pl-8 sm:grid-cols-2">
-          <label class="flex min-w-0 flex-col gap-2">Навчальне вікно, місяців
-            <p-inputnumber [ngModel]="form().trainingMonths" (ngModelChange)="patch({ trainingMonths: $event ?? 0 })" [min]="3" fluid ariaLabel="Навчальне вікно у місяцях" />
+          <label class="flex min-w-0 flex-col gap-2">{{ 'builder.experimentDialog.trainingMonths' | transloco }}
+            <p-inputnumber [ngModel]="form().trainingMonths" (ngModelChange)="patch({ trainingMonths: $event ?? 0 })" [min]="3" fluid [ariaLabel]="'builder.experimentDialog.trainingMonthsLabel' | transloco" />
           </label>
-          <label class="flex min-w-0 flex-col gap-2">Тестове вікно, місяців
-            <p-inputnumber [ngModel]="form().testMonths" (ngModelChange)="patch({ testMonths: $event ?? 0 })" [min]="1" fluid ariaLabel="Тестове вікно у місяцях" />
+          <label class="flex min-w-0 flex-col gap-2">{{ 'builder.experimentDialog.testMonths' | transloco }}
+            <p-inputnumber [ngModel]="form().testMonths" (ngModelChange)="patch({ testMonths: $event ?? 0 })" [min]="1" fluid [ariaLabel]="'builder.experimentDialog.testMonthsLabel' | transloco" />
           </label>
         </div>
       }
       <label class="flex items-center gap-2">
         <p-checkbox [binary]="true" [ngModel]="form().sensitivity" (ngModelChange)="patch({ sensitivity: $event })" inputId="experiment-sensitivity" />
-        Перевірити сусідні значення параметра
+        {{ 'builder.experimentDialog.neighbours' | transloco }}
       </label>
       @if (form().sensitivity) {
         <div class="grid gap-4 pl-8 sm:grid-cols-2">
-          <label class="flex min-w-0 flex-col gap-2">Параметр
-            <p-select [options]="parameters()" optionLabel="label" optionValue="path" [ngModel]="form().parameterPath" (ngModelChange)="patch({ parameterPath: $event })" [filter]="true" appendTo="body" fluid ariaLabel="Параметр для перевірки стійкості" />
+          <label class="flex min-w-0 flex-col gap-2">{{ 'builder.experimentDialog.parameter' | transloco }}
+            <p-select [options]="parameters()" optionLabel="label" optionValue="path" [ngModel]="form().parameterPath" (ngModelChange)="patch({ parameterPath: $event })" [filter]="true" appendTo="body" fluid [ariaLabel]="'builder.experimentDialog.parameterLabel' | transloco" />
           </label>
-          <label class="flex min-w-0 flex-col gap-2">Значення через крапку з комою
-            <input pInputText [ngModel]="form().parameterValues" (ngModelChange)="patch({ parameterValues: $event })" placeholder="150; 200; 250" aria-label="Сусідні значення параметра" />
+          <label class="flex min-w-0 flex-col gap-2">{{ 'builder.experimentDialog.values' | transloco }}
+            <input pInputText [ngModel]="form().parameterValues" (ngModelChange)="patch({ parameterValues: $event })" placeholder="150; 200; 250" [attr.aria-label]="'builder.experimentDialog.valuesLabel' | transloco" />
           </label>
         </div>
         @if (parameter()) {
-          <p class="m-0 pl-8 text-xs text-muted-color">Поточне значення: {{ currentParameter() }}. Воно теж буде перевірене. @if (parameter()!.percent) { Введіть значення у відсотках. }</p>
+          <p class="m-0 pl-8 text-xs text-muted-color">{{ 'builder.experimentDialog.currentValue' | transloco: { value: currentParameter() } }}
+            @if (parameter()!.percent) {
+              {{ 'builder.experimentDialog.percentHint' | transloco }}
+            }</p>
         }
       }
       <p class="m-0 text-sm text-muted-color">
-        Для незалежних тестів значення обирається за Sharpe лише на навчальних даних.
-        Без списку сусідніх значень перевіряються поточні параметри. Додаткові прогони можуть тривати довше.
+        {{ 'builder.experimentDialog.robustnessHint' | transloco }}
       </p>
     </fieldset>
   </div>
   <ng-template #footer>
-    <p-button label="Скасувати" severity="secondary" [text]="true" (onClick)="visible.set(false)" [disabled]="busy()" />
-    <p-button label="Запустити експеримент" icon="pi pi-play" [loading]="busy()" [disabled]="!canSubmit() || busy()" (onClick)="submit()" />
+    <p-button [label]="'common.cancel' | transloco" severity="secondary" [text]="true" (onClick)="visible.set(false)" [disabled]="busy()" />
+    <p-button [label]="'builder.experimentDialog.run' | transloco" icon="pi pi-play" [loading]="busy()" [disabled]="!canSubmit() || busy()" (onClick)="submit()" />
   </ng-template>
 </p-dialog>

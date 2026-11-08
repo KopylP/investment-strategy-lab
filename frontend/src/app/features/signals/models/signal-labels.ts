@@ -5,38 +5,41 @@ import { SignalConditionDto, SignalMetric, SignalTargetKind } from './signal-dto
 import { activeLocale } from '../../../core/i18n/language';
 
 export const metricLabels: Record<SignalMetric, string> = {
-  DrawdownFromPeak: translate('metric.DrawdownFromPeak'),
-  DayFall: translate('metric.DayFall'),
-  LossFromCost: translate('metric.LossFromCost'),
-  Level: translate('metric.Level'),
+  DrawdownFromPeak: translate('signals.labels.metric.DrawdownFromPeak'),
+  DayFall: translate('signals.labels.metric.DayFall'),
+  LossFromCost: translate('signals.labels.metric.LossFromCost'),
+  Level: translate('signals.labels.metric.Level'),
 };
 
 export const builtInSignalKindLabels: Record<string, string> = {
-  'volatility-index': translate('builtIn.volatilityIndex'),
-  'account-drawdown': translate('builtIn.accountDrawdown'),
-  'position-drawdown': translate('builtIn.positionDrawdown'),
+  'volatility-index': translate('signals.labels.builtIn.volatilityIndex'),
+  'account-drawdown': translate('signals.labels.builtIn.accountDrawdown'),
+  'position-drawdown': translate('signals.labels.builtIn.positionDrawdown'),
 };
 
 export const targetChoices: { label: string; value: SignalTargetKind }[] = [
-  { label: translate('target.Instrument'), value: 'Instrument' },
-  { label: translate('target.EachPosition'), value: 'EachPosition' },
-  { label: translate('target.SubPortfolio'), value: 'SubPortfolio' },
-  { label: translate('target.Account'), value: 'Account' },
+  { label: translate('signals.labels.target.Instrument'), value: 'Instrument' },
+  { label: translate('signals.labels.target.EachPosition'), value: 'EachPosition' },
+  { label: translate('signals.labels.target.SubPortfolio'), value: 'SubPortfolio' },
+  { label: translate('signals.labels.target.Account'), value: 'Account' },
 ];
 
 const clearReasonLabels: Record<string, string> = {
-  Recovered: translate('cleared.Recovered'),
-  PositionClosed: translate('cleared.PositionClosed'),
-  Reconfigured: translate('cleared.Reconfigured'),
-  Disabled: translate('cleared.Disabled'),
-  Deleted: translate('cleared.Deleted'),
+  Recovered: translate('signals.labels.cleared.Recovered'),
+  PositionClosed: translate('signals.labels.cleared.PositionClosed'),
+  Reconfigured: translate('signals.labels.cleared.Reconfigured'),
+  Disabled: translate('signals.labels.cleared.Disabled'),
+  Deleted: translate('signals.labels.cleared.Deleted'),
 };
 
 const afterNewDataLabel = translate('signals.editor.frequency.off');
 
 export function conditionLabel(condition: SignalConditionDto): string {
   if (condition.metric === 'Level') {
-    const direction = condition.direction === 'Above' ? translate('signals.labels.above') : translate('signals.labels.below');
+    const direction =
+      condition.direction === 'Above'
+        ? translate('signals.labels.above')
+        : translate('signals.labels.below');
 
     return `${direction} ${condition.threshold}`;
   }

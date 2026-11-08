@@ -12,7 +12,10 @@
         ><tr>
           <th>{{ 'taxes.losses.year' | transloco }}</th>
           <th class="text-right">{{ 'taxes.losses.loss' | transloco }}</th>
-          <th class="text-right">{{ 'taxes.losses.used' | transloco }}<span class="hidden sm:inline"> {{ 'taxes.losses.earlier' | transloco }}</span></th>
+          <th class="text-right">
+            {{ 'taxes.losses.used' | transloco
+            }}<span class="hidden sm:inline"> {{ 'taxes.losses.earlier' | transloco }}</span>
+          </th>
           <th class="w-12"></th></tr
       ></ng-template>
       <ng-template #body let-loss>
@@ -36,7 +39,9 @@
   @if (regime.currency(); as currency) {
     <div class="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end">
       <div class="flex flex-col gap-2">
-        <label for="loss-year" class="font-medium text-sm">{{ 'taxes.losses.year' | transloco }}</label>
+        <label for="loss-year" class="font-medium text-sm">{{
+          'taxes.losses.year' | transloco
+        }}</label>
         <p-inputnumber
           inputId="loss-year"
           [ngModel]="lossYear()"
@@ -48,7 +53,9 @@
         />
       </div>
       <div class="flex flex-col gap-2">
-        <label for="loss-amount" class="font-medium text-sm">{{ 'taxes.losses.loss' | transloco }}</label>
+        <label for="loss-amount" class="font-medium text-sm">{{
+          'taxes.losses.loss' | transloco
+        }}</label>
         <p-inputnumber
           inputId="loss-amount"
           [ngModel]="lossAmount()"
@@ -61,7 +68,9 @@
         />
       </div>
       <div class="flex flex-col gap-2">
-        <label for="loss-used" class="font-medium text-sm">{{ 'taxes.losses.alreadyUsed' | transloco }}</label>
+        <label for="loss-used" class="font-medium text-sm">{{
+          'taxes.losses.alreadyUsed' | transloco
+        }}</label>
         <p-inputnumber
           inputId="loss-used"
           [ngModel]="lossUsed()"

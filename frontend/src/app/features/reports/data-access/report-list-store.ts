@@ -201,7 +201,10 @@ export class ReportListStore {
       return;
     }
 
-    this.messages.add({ severity: 'success', summary: translate('reports.list.readyNamed', { name: request.title }) });
+    this.messages.add({
+      severity: 'success',
+      summary: translate('reports.list.readyNamed', { name: request.title }),
+    });
 
     if (awaited && request.reportId) void this.router.navigate(['/reports', request.reportId]);
   }

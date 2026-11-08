@@ -24,13 +24,28 @@ const decisions: Record<
   RowDecision,
   { label: string; severity: 'success' | 'secondary' | 'warn' | 'info' | 'danger' | 'contrast' }
 > = {
-  New: { label: translate('decision.New'), severity: 'success' },
-  AlreadyImported: { label: translate('decision.AlreadyImported'), severity: 'secondary' },
-  Differs: { label: translate('decision.Differs'), severity: 'warn' },
-  MatchesExisting: { label: translate('decision.MatchesExisting'), severity: 'info' },
-  OutOfScope: { label: translate('decision.OutOfScope'), severity: 'secondary' },
-  Unsupported: { label: translate('decision.Unsupported'), severity: 'contrast' },
-  NeedsMapping: { label: translate('decision.NeedsMapping'), severity: 'danger' },
+  New: { label: translate('transactions.rows.decisionLabel.New'), severity: 'success' },
+  AlreadyImported: {
+    label: translate('transactions.rows.decisionLabel.AlreadyImported'),
+    severity: 'secondary',
+  },
+  Differs: { label: translate('transactions.rows.decisionLabel.Differs'), severity: 'warn' },
+  MatchesExisting: {
+    label: translate('transactions.rows.decisionLabel.MatchesExisting'),
+    severity: 'info',
+  },
+  OutOfScope: {
+    label: translate('transactions.rows.decisionLabel.OutOfScope'),
+    severity: 'secondary',
+  },
+  Unsupported: {
+    label: translate('transactions.rows.decisionLabel.Unsupported'),
+    severity: 'contrast',
+  },
+  NeedsMapping: {
+    label: translate('transactions.rows.decisionLabel.NeedsMapping'),
+    severity: 'danger',
+  },
 };
 
 const kinds: Record<string, string> = {
@@ -44,7 +59,8 @@ const kinds: Record<string, string> = {
 
 @Component({
   selector: 'app-statement-rows-card',
-  imports: [TranslocoPipe, 
+  imports: [
+    TranslocoPipe,
     FormsModule,
     RouterLink,
     Button,
@@ -103,7 +119,9 @@ export class StatementRowsCard {
 
     return [
       translate('transactions.rows.unmappedRows', { count: unmapped.length }),
-      ...[...reasons].map(([reason, count]) => translate('transactions.rows.reasonRows', { reason, count })),
+      ...[...reasons].map(([reason, count]) =>
+        translate('transactions.rows.reasonRows', { reason, count }),
+      ),
     ];
   });
 
@@ -121,7 +139,9 @@ export class StatementRowsCard {
       : translate('transactions.rows.confirmMessage', { count: current.counts.toRecord });
 
     this.confirmation.confirm({
-      header: dangerous ? translate('transactions.rows.reverseAndImportQuestion') : translate('transactions.rows.importQuestion'),
+      header: dangerous
+        ? translate('transactions.rows.reverseAndImportQuestion')
+        : translate('transactions.rows.importQuestion'),
       message,
       icon: dangerous ? 'pi pi-exclamation-triangle' : 'pi pi-upload',
       acceptLabel: translate('transactions.rows.importAction'),

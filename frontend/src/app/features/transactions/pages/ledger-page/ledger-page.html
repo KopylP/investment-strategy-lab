@@ -4,20 +4,32 @@
 >
   @if (store.account()) {
     <p-button
-      [label]="viewport.phone() ? ('transactions.ledger.import' | transloco) : ('routes.revolutImport' | transloco)"
+      [label]="
+        viewport.phone()
+          ? ('transactions.ledger.import' | transloco)
+          : ('routes.revolutImport' | transloco)
+      "
       icon="pi pi-file-import"
       severity="secondary"
       [outlined]="true"
       routerLink="/transactions/import"
     />
     <p-button
-      [label]="viewport.phone() ? ('transactions.ledger.cash' | transloco) : ('transactions.ledger.filter.cash' | transloco)"
+      [label]="
+        viewport.phone()
+          ? ('transactions.ledger.cash' | transloco)
+          : ('transactions.ledger.filter.cash' | transloco)
+      "
       icon="pi pi-money-bill"
       severity="secondary"
       [outlined]="true"
       (onClick)="cashVisible.set(true)"
     />
-    <p-button [label]="'transactions.ledger.trade' | transloco" icon="pi pi-plus" (onClick)="tradeVisible.set(true)" />
+    <p-button
+      [label]="'transactions.ledger.trade' | transloco"
+      icon="pi pi-plus"
+      (onClick)="tradeVisible.set(true)"
+    />
   }
 </app-page-header>
 
@@ -68,7 +80,9 @@
           <th class="hidden sm:table-cell">{{ 'taxes.date' | transloco }}</th>
           <th class="hidden sm:table-cell">{{ 'transactions.rows.operation' | transloco }}</th>
           <th>{{ 'transactions.ledger.details' | transloco }}</th>
-          <th class="hidden sm:table-cell">{{ 'transactions.ledger.subPortfolios' | transloco }}</th>
+          <th class="hidden sm:table-cell">
+            {{ 'transactions.ledger.subPortfolios' | transloco }}
+          </th>
           <th class="text-right">{{ 'transactions.ledger.money' | transloco }}</th>
           <th class="hidden sm:table-cell">{{ 'transactions.ledger.source' | transloco }}</th>
           <th class="w-12"></th>
@@ -82,7 +96,11 @@
           <td class="hidden sm:table-cell">
             <p-tag [value]="transaction.kindLabel" [severity]="transaction.severity" />
             @if (transaction.isReversed) {
-              <p-tag [value]="'transactions.ledger.reversedTag' | transloco" severity="secondary" styleClass="ml-1" />
+              <p-tag
+                [value]="'transactions.ledger.reversedTag' | transloco"
+                severity="secondary"
+                styleClass="ml-1"
+              />
             }
           </td>
           <td>

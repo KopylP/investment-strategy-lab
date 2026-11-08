@@ -38,11 +38,7 @@
   }
 
   @if (store.staleQuotes()) {
-    <p-message
-      severity="warn"
-      styleClass="mb-4"
-      [text]="'holdings.staleQuotes' | transloco"
-    />
+    <p-message severity="warn" styleClass="mb-4" [text]="'holdings.staleQuotes' | transloco" />
   }
 
   @for (sleeve of store.sleeves(); track sleeve.id) {

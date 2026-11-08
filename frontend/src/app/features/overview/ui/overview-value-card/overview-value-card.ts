@@ -15,7 +15,8 @@ import { OverviewStore } from '../../data-access/overview-store';
 
 @Component({
   selector: 'app-overview-value-card',
-  imports: [TranslocoPipe, 
+  imports: [
+    TranslocoPipe,
     FormsModule,
     SelectButton,
     Skeleton,
@@ -38,11 +39,11 @@ export class OverviewValueCard {
   protected readonly viewport = inject(Viewport);
 
   protected readonly periods = computed(() => [
-    { label: translate('period.1M'), value: '1M' },
-    { label: translate('period.3M'), value: '3M' },
-    { label: translate('period.6M'), value: '6M' },
-    { label: translate('period.1Y'), value: '1Y' },
-    { label: this.viewport.phone() ? 'YTD' : translate('period.ytd'), value: 'YTD' },
-    { label: translate('period.all'), value: 'ALL' },
+    { label: translate('overview.value.period.1M'), value: '1M' },
+    { label: translate('overview.value.period.3M'), value: '3M' },
+    { label: translate('overview.value.period.6M'), value: '6M' },
+    { label: translate('overview.value.period.1Y'), value: '1Y' },
+    { label: this.viewport.phone() ? 'YTD' : translate('overview.value.period.ytd'), value: 'YTD' },
+    { label: translate('overview.value.period.all'), value: 'ALL' },
   ]);
 }

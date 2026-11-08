@@ -33,7 +33,9 @@ export class StrategiesStore {
 
       this.messages.add({
         severity: 'success',
-        summary: created.length ? translate('strategies.created') : translate('strategies.alreadyExist'),
+        summary: created.length
+          ? translate('strategies.created')
+          : translate('strategies.alreadyExist'),
         detail: created.map((strategy) => strategy.name).join(', '),
       });
       this.listResource.reload();
@@ -99,8 +101,7 @@ export class StrategyDetailStore {
       this.messages.add({
         severity: 'success',
         summary: translate('strategies.savedAsVersion', { version: saved.latestVersion }),
-        detail:
-          translate('strategies.savedHint'),
+        detail: translate('strategies.savedHint'),
       });
       this.versionNumber.set(undefined);
       this.strategyResource.reload();

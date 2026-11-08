@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -19,7 +20,7 @@ import { WordsPanel } from '../words-panel/words-panel';
 
 @Component({
   selector: 'app-published-strategy-panel',
-  imports: [Button, Message, WordsPanel],
+  imports: [TranslocoPipe, Button, Message, WordsPanel],
   templateUrl: './published-strategy-panel.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -57,7 +58,7 @@ export class PublishedStrategyPanel {
     } catch (error) {
       this.messages.add({
         severity: 'error',
-        summary: 'Не вдалося відкрити конструктор',
+        summary: translate('builder.published.openFailed'),
         detail: toProblemMessage(error),
       });
     } finally {

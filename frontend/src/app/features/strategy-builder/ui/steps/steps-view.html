@@ -2,7 +2,7 @@
   <nav
     #stepNav
     class="flex gap-2 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible"
-    aria-label="Кроки стратегії"
+    [attr.aria-label]="'builder.steps.label' | transloco"
   >
     @for (title of titles; track title) {
       <button
@@ -18,18 +18,20 @@
     }
   </nav>
   <section class="min-w-0">
-    <p class="mb-2 text-sm text-muted-color">Крок {{ step() + 1 }} із {{ titles.length }}</p>
+    <p class="mb-2 text-sm text-muted-color">
+      {{ 'builder.steps.stepOf' | transloco: { step: step() + 1, titles: titles.length } }}
+    </p>
     <h2 class="mb-2 text-lg font-semibold">{{ titles[step()] }}</h2>
     <p class="mb-5 text-sm text-muted-color">{{ guidance[step()] }}</p>
     @if (store.draft(); as draft) {
       @switch (step()) {
         @case (0) {
           <label class="mb-3 flex flex-col gap-2"
-            >Назва
+            >{{ 'signals.editor.name' | transloco }}
             <input pInputText [ngModel]="draft.name" (ngModelChange)="store.rename($event)" />
           </label>
           <label class="flex flex-col gap-2"
-            >Опис
+            >{{ 'builder.steps.description' | transloco }}
             <textarea
               pInputText
               rows="4"
@@ -57,7 +59,11 @@
           />
         }
         @case (8) {
-          <p-button label="Перевірити" icon="pi pi-check" (onClick)="store.check()" />
+          <p-button
+            [label]="'builder.steps.check' | transloco"
+            icon="pi pi-check"
+            (onClick)="store.check()"
+          />
           <app-builder-problems-panel
             [problems]="draft.problems"
             (choose)="chooseProblem.emit($event)"
@@ -65,22 +71,20 @@
         }
         @default {
           <div class="mb-4 rounded-lg bg-surface-50 p-4 dark:bg-surface-900">
-            <strong>Як працює правило</strong>
+            <strong>{{ 'builder.steps.howRuleWorks' | transloco }}</strong>
             <p class="mb-0">{{ sentence() }}</p>
           </div>
           @if (rows() || block() === 'Selection') {
             @if (viewport.phone()) {
               <p class="mb-2 text-sm text-muted-color">
-                Тут можна змінити параметри правила. Умови та їх поєднання змінюються на схемі на
-                комп’ютері.
+                {{ 'builder.steps.desktopOnly' | transloco }}
               </p>
             } @else {
               <p class="mb-2 text-sm text-muted-color">
-                Тут можна змінити параметри правила. Щоб додати умови або змінити їх поєднання,
-                відкрийте схему.
+                {{ 'builder.steps.openDiagram' | transloco }}
               </p>
               <p-button
-                label="Змінити зв’язки на схемі"
+                [label]="'builder.steps.editLinks' | transloco"
                 severity="secondary"
                 [text]="true"
                 (onClick)="editGraph()"
@@ -88,7 +92,7 @@
             }
           }
           @if (step() === 6) {
-            <p class="mb-3 text-sm text-muted-color">Необовʼязковий крок. Можна перейти далі.</p>
+            <p class="mb-3 text-sm text-muted-color">{{ 'builder.steps.optional' | transloco }}</p>
           }
           @if (rows(); as condition) {
             <app-condition-rows
@@ -136,13 +140,13 @@
     }
     <div class="mt-5 flex justify-between gap-3">
       <p-button
-        label="Назад"
+        [label]="'common.back' | transloco"
         severity="secondary"
         [disabled]="step() === 0"
         (onClick)="step.set(step() - 1)"
       />
       <p-button
-        label="Далі"
+        [label]="'common.next' | transloco"
         [disabled]="step() === titles.length - 1"
         (onClick)="step.set(step() + 1)"
       />

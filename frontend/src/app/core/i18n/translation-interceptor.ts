@@ -14,7 +14,12 @@ export const translationInterceptor: HttpInterceptorFn = (request, next) => {
 
   return next(request).pipe(
     switchMap((event) => {
-      if (!(event instanceof HttpResponse) || !isJsonBody(event.body) || request.url.endsWith(strategyMessagesUrl)) return of(event);
+      if (
+        !(event instanceof HttpResponse) ||
+        !isJsonBody(event.body) ||
+        request.url.endsWith(strategyMessagesUrl)
+      )
+        return of(event);
 
       const ready = hasUnknownMessage(event.body) ? strategyMessages(http) : of(null);
 
@@ -41,5 +46,11 @@ function strategyMessages(http: HttpClient): Observable<unknown> {
 }
 
 function isJsonBody(body: unknown): boolean {
-  return Array.isArray(body) || (body !== null && typeof body === 'object' && !(body instanceof Blob) && !(body instanceof ArrayBuffer));
+  return (
+    Array.isArray(body) ||
+    (body !== null &&
+      typeof body === 'object' &&
+      !(body instanceof Blob) &&
+      !(body instanceof ArrayBuffer))
+  );
 }

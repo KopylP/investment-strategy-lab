@@ -43,7 +43,12 @@ export const appConfig: ApplicationConfig = {
     provideEnvironmentInitializer(() => inject(NavigationHistory)),
     provideHttpClient(
       withFetch(),
-      withInterceptors([languageInterceptor, basePathInterceptor, unauthorizedInterceptor, translationInterceptor]),
+      withInterceptors([
+        languageInterceptor,
+        basePathInterceptor,
+        unauthorizedInterceptor,
+        translationInterceptor,
+      ]),
     ),
     providePrimeNG({
       theme: {

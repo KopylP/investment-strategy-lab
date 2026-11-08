@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 import { computed, inject, Injectable, resource, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { toProblemMessage } from '../../../core/api/api-client';
@@ -26,7 +27,7 @@ export class DraftsStore {
 
       return draft;
     } catch (error) {
-      this.reportFailure('Не вдалося створити чернетку', error);
+      this.reportFailure(translate('builder.drafts.createFailed'), error);
 
       return null;
     } finally {
@@ -43,7 +44,7 @@ export class DraftsStore {
 
       return draft;
     } catch (error) {
-      this.reportFailure('Не вдалося імпортувати правила', error);
+      this.reportFailure(translate('builder.drafts.importFailed'), error);
 
       return null;
     } finally {
@@ -57,11 +58,11 @@ export class DraftsStore {
     try {
       await this.api.discard(id);
       this.draftsResource.reload();
-      this.messages.add({ severity: 'success', summary: 'Чернетку видалено' });
+      this.messages.add({ severity: 'success', summary: translate('builder.drafts.deleted') });
 
       return true;
     } catch (error) {
-      this.reportFailure('Не вдалося видалити чернетку', error);
+      this.reportFailure(translate('builder.drafts.deleteFailed'), error);
 
       return false;
     } finally {

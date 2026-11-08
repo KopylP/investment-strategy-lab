@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 import { OwnSignalDto } from '../models/own-signal-dto';
 import { PublishedVersionDto } from '../models/published-version-dto';
 import { TrialRunDto } from '../models/trial-run-dto';
@@ -99,7 +100,7 @@ export class DraftStore {
     try {
       this.currentInstruments.set(await this.api.instruments());
     } catch (error) {
-      this.reportFailure('Не вдалося оновити список фондів', error);
+      this.reportFailure(translate('builder.draft.fundsFailed'), error);
     }
   }
 
@@ -169,10 +170,10 @@ export class DraftStore {
       this.rulesDirty = false;
       this.layoutDirty = false;
       this.currentDraft.set(null);
-      this.messages.add({ severity: 'success', summary: 'Чернетку видалено' });
+      this.messages.add({ severity: 'success', summary: translate('builder.drafts.deleted') });
       return true;
     } catch (error) {
-      this.reportFailure('Не вдалося видалити чернетку', error);
+      this.reportFailure(translate('builder.drafts.deleteFailed'), error);
       return false;
     } finally {
       this.discarding = false;
@@ -198,7 +199,7 @@ export class DraftStore {
 
       return check.isClean;
     } catch (error) {
-      this.reportFailure('Не вдалося перевірити чернетку', error);
+      this.reportFailure(translate('builder.draft.checkFailed'), error);
 
       return false;
     }
@@ -217,7 +218,7 @@ export class DraftStore {
     } catch (error) {
       this.trialError.set(toProblemMessage(error));
       this.placeProblems(error);
-      this.reportFailure('Не вдалося запустити бектест', error);
+      this.reportFailure(translate('builder.draft.trialFailed'), error);
 
       return null;
     } finally {
@@ -239,7 +240,7 @@ export class DraftStore {
     } catch (error) {
       this.placeProblems(error);
       if (problemCode(error) === 'strategy.name_taken') this.nameError.set(toProblemMessage(error));
-      this.reportFailure('Не вдалося опублікувати стратегію', error);
+      this.reportFailure(translate('builder.draft.publishFailed'), error);
 
       return null;
     } finally {
@@ -273,11 +274,11 @@ export class DraftStore {
       const copied = await this.api.copyEntryToExit(draft.id, draft.revision, margin);
       this.currentDraft.set(copied);
       this.currentSelection.set(null);
-      this.messages.add({ severity: 'success', summary: 'Правила виходу скопійовано' });
+      this.messages.add({ severity: 'success', summary: translate('builder.draft.exitCopied') });
 
       return true;
     } catch (error) {
-      this.reportFailure('Не вдалося скопіювати правила виходу', error);
+      this.reportFailure(translate('builder.draft.exitCopyFailed'), error);
 
       return false;
     }
@@ -293,7 +294,7 @@ export class DraftStore {
     try {
       return await this.api.rules(draft.id);
     } catch (error) {
-      this.reportFailure('Не вдалося згенерувати JSON', error);
+      this.reportFailure(translate('builder.draft.jsonFailed'), error);
 
       return null;
     }
@@ -386,14 +387,14 @@ export class DraftStore {
         this.rulesDirty = true;
         this.saveConflict.set(true);
         this.saveError.set(
-          'Чернетку змінили в іншому вікні. Ваші зміни залишилися тут. Збережіть локальну копію перед відкриттям серверної версії.',
+          translate('builder.draft.stale'),
         );
         return false;
       } else {
         this.rulesDirty = true;
-        this.saveError.set('Не вдалося зберегти зміни. Перевірте з’єднання та спробуйте ще раз.');
+        this.saveError.set(translate('builder.draft.saveFailed'));
         this.placeProblems(error);
-        this.reportFailure('Чернетку не збережено', error);
+        this.reportFailure(translate('builder.draft.notSaved'), error);
         return false;
       }
     } finally {
@@ -442,8 +443,8 @@ export class DraftStore {
       this.saveError.set(null);
     } catch (error) {
       this.layoutDirty = true;
-      this.saveError.set('Не вдалося зберегти розташування схеми. Спробуйте ще раз.');
-      this.reportFailure('Розташування схеми не збережено', error);
+      this.saveError.set(translate('builder.draft.layoutFailed'));
+      this.reportFailure(translate('builder.draft.layoutNotSaved'), error);
       return false;
     } finally {
       this.updateSaveState();

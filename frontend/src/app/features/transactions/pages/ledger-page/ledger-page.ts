@@ -32,7 +32,8 @@ import { Money } from '../../../../shared/ui/money/money';
 import { TapTooltip } from '../../../../shared/ui/tap-tooltip';
 @Component({
   selector: 'app-ledger-page',
-  imports: [TranslocoPipe, 
+  imports: [
+    TranslocoPipe,
     Money,
     FormsModule,
     RouterLink,
@@ -70,12 +71,12 @@ export class LedgerPage {
   protected readonly search = signal('');
 
   protected readonly kindOptions = [
-    { label: translate('filter.trades'), value: 'trade' },
-    { label: translate('filter.cash'), value: 'cash' },
-    { label: translate('filter.contributions'), value: 'Contribution' },
-    { label: translate('filter.withdrawals'), value: 'Withdrawal' },
-    { label: translate('filter.transfers'), value: 'InternalTransfer' },
-    { label: translate('filter.reversals'), value: 'Reversal' },
+    { label: translate('transactions.ledger.filter.trades'), value: 'trade' },
+    { label: translate('transactions.ledger.filter.cash'), value: 'cash' },
+    { label: translate('transactions.ledger.filter.contributions'), value: 'Contribution' },
+    { label: translate('transactions.ledger.filter.withdrawals'), value: 'Withdrawal' },
+    { label: translate('transactions.ledger.filter.transfers'), value: 'InternalTransfer' },
+    { label: translate('transactions.ledger.filter.reversals'), value: 'Reversal' },
   ];
   protected readonly instrumentOptions = computed(() =>
     this.catalog.etfs().map((etf) => ({ label: `${etf.label} · ${etf.name}`, value: etf.id })),
@@ -128,7 +129,8 @@ export class LedgerPage {
       rejectLabel: translate('common.cancel'),
       acceptButtonProps: { severity: 'danger' },
       rejectButtonProps: { severity: 'secondary', text: true },
-      accept: () => void this.store.reverse(transaction, translate('transactions.ledger.cancelledByUser')),
+      accept: () =>
+        void this.store.reverse(transaction, translate('transactions.ledger.cancelledByUser')),
     });
   }
 }

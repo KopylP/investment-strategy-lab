@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { OwnSignalDto } from '../../models/own-signal-dto';
 import { GraphDto, NodeDto } from '../../models/draft-dto';
@@ -8,11 +9,15 @@ import { Inspector } from '../inspector/inspector';
 
 @Component({
   selector: 'app-condition-rows',
-  imports: [Inspector],
+  imports: [TranslocoPipe, Inspector],
   template: `<div class="flex flex-col gap-3">
     @if (rows().junction; as junction) {
       <p class="font-medium">
-        {{ junction.kind === 'All' ? 'Усі умови (І)' : 'Будь-яка умова (АБО)' }}
+        {{
+          junction.kind === 'All'
+            ? ('builder.steps.allAnd' | transloco)
+            : ('builder.steps.anyOr' | transloco)
+        }}
       </p>
     }
     @for (node of editableNodes(); track node.id) {

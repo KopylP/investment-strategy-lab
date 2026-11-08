@@ -19,7 +19,8 @@ import { OverviewDetailsGrid } from '../../ui/overview-details-grid/overview-det
 
 @Component({
   selector: 'app-overview-page',
-  imports: [TranslocoPipe, 
+  imports: [
+    TranslocoPipe,
     TaxMoneyPipe,
     OverviewDetailsGrid,
     OverviewTaxProgress,

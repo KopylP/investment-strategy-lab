@@ -1,21 +1,27 @@
 <div class="card py-4">
   <div class="app-tiles">
     <div class="px-1 sm:px-4 lg:border-r border-surface">
-      <div class="text-muted-color text-xs uppercase tracking-wide">{{ 'holdings.tiles.invested' | transloco }}</div>
+      <div class="text-muted-color text-xs uppercase tracking-wide">
+        {{ 'holdings.tiles.invested' | transloco }}
+      </div>
       <div class="text-xl font-semibold mt-1">
         <app-money [amount]="totals().invested" [currency]="store.currency()" />
       </div>
       <div class="text-xs text-muted-color">{{ 'holdings.tiles.investedHint' | transloco }}</div>
     </div>
     <div class="px-1 sm:px-4 lg:border-r border-surface">
-      <div class="text-muted-color text-xs uppercase tracking-wide">{{ 'holdings.tiles.cost' | transloco }}</div>
+      <div class="text-muted-color text-xs uppercase tracking-wide">
+        {{ 'holdings.tiles.cost' | transloco }}
+      </div>
       <div class="text-xl font-semibold mt-1">
         <app-money [amount]="totals().costBasis" [currency]="store.currency()" />
       </div>
       <div class="text-xs text-muted-color">{{ 'holdings.tiles.costHint' | transloco }}</div>
     </div>
     <div class="px-1 sm:px-4 lg:border-r border-surface">
-      <div class="text-muted-color text-xs uppercase tracking-wide">{{ 'holdings.tiles.freeCash' | transloco }}</div>
+      <div class="text-muted-color text-xs uppercase tracking-wide">
+        {{ 'holdings.tiles.freeCash' | transloco }}
+      </div>
       <div class="text-xl font-semibold mt-1">
         <app-money [amount]="totals().cash" [currency]="store.currency()" />
       </div>
@@ -33,9 +39,13 @@
       }
     </div>
     <div class="px-1 sm:px-4">
-      <div class="text-muted-color text-xs uppercase tracking-wide">{{ 'holdings.tiles.positions' | transloco }}</div>
+      <div class="text-muted-color text-xs uppercase tracking-wide">
+        {{ 'holdings.tiles.positions' | transloco }}
+      </div>
       <div class="text-xl font-semibold mt-1">{{ store.positionCount() }}</div>
-      <div class="text-xs text-muted-color">{{ 'holdings.tiles.inSleeves' | transloco: { count: store.sleeves().length } }}</div>
+      <div class="text-xs text-muted-color">
+        {{ 'holdings.tiles.inSleeves' | transloco: { count: store.sleeves().length } }}
+      </div>
     </div>
   </div>
 </div>

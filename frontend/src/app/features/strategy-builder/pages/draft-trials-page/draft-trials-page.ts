@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -27,7 +28,7 @@ const tableLayoutMinimumWidth = 672;
 
 @Component({
   selector: 'app-draft-trials-page',
-  imports: [
+  imports: [TranslocoPipe, 
     DecimalPipe,
     NgTemplateOutlet,
     Message,
@@ -75,7 +76,7 @@ export class DraftTrialsPage {
 
   protected periodOf(run: TrialRunDto): string {
     const period = run.experiment?.period;
-    if (!period) return 'Автоматичний період';
+    if (!period) return translate('builder.trials.autoPeriod');
 
     return `${formatDate(period.start)} – ${formatDate(period.end)}`;
   }

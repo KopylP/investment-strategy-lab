@@ -6,7 +6,9 @@
           'overview.value.title'
             | transloco
               : {
-                  scope: (store.isAll() ? 'overview.value.allAccounts' : 'overview.value.portfolio') | transloco,
+                  scope:
+                    (store.isAll() ? 'overview.value.allAccounts' : 'overview.value.portfolio')
+                    | transloco,
                   date: dashboard().asOf | date,
                 }
         }}
@@ -84,9 +86,7 @@
             />
             <i
               class="pi pi-info-circle text-xs ml-1"
-              [pTooltip]="
-                'overview.value.gainOnAssetsHint' | transloco
-              "
+              [pTooltip]="'overview.value.gainOnAssetsHint' | transloco"
             ></i>
           </span>
         </div>

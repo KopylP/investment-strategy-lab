@@ -60,7 +60,7 @@ export class SignalsStore {
     const report = this.reportsOf(rule.accountId).find((each) => each.code === rule.reportCode);
     const account = this.accounts().find((each) => each.id === rule.accountId);
 
-    return `${report?.name ?? rule.reportCode} · ${account?.name ?? translate('signals.accountFallback')}`;
+    return `${report?.name ?? rule.reportCode} · ${account?.name ?? translate<string>('signals.accountFallback')}`;
   }
 
   targetLabel(signal: SignalDto): string {
@@ -70,7 +70,7 @@ export class SignalsStore {
       case 'Instrument':
         return this.catalog.symbol(signal.instrumentId);
       case 'InstrumentGroup':
-        return signal.groupName ?? translate('signals.subject.group');
+        return signal.groupName ?? translate<string>('signals.subject.group');
       case 'SubPortfolio':
         return (
           account?.subPortfolios.find((sub) => sub.id === signal.subPortfolioId)?.name ??
@@ -78,10 +78,10 @@ export class SignalsStore {
         );
       case 'EachPosition':
         return translate('signals.eachPosition', {
-          account: account?.name ?? translate('signals.accountFallback'),
+          account: account?.name ?? translate<string>('signals.accountFallback'),
         });
       default:
-        return account?.name ?? translate('signals.editor.account');
+        return account?.name ?? translate<string>('signals.editor.account');
     }
   }
 
@@ -105,7 +105,9 @@ export class SignalsStore {
   }
 
   delete(signalId: string): Promise<boolean> {
-    return this.run(translate('signals.deleted'), translate('signals.notDeleted'), () => this.api.delete(signalId));
+    return this.run(translate('signals.deleted'), translate('signals.notDeleted'), () =>
+      this.api.delete(signalId),
+    );
   }
 
   check(signalId: string): Promise<boolean> {
@@ -115,20 +117,26 @@ export class SignalsStore {
   }
 
   addReportRule(signalId: string, accountId: string, reportCode: string): Promise<boolean> {
-    return this.run(translate('signals.reportConnected'), translate('signals.reportNotConnected'), () =>
-      this.api.addReportRule(signalId, accountId, reportCode),
+    return this.run(
+      translate('signals.reportConnected'),
+      translate('signals.reportNotConnected'),
+      () => this.api.addReportRule(signalId, accountId, reportCode),
     );
   }
 
   removeReportRule(ruleId: string): Promise<boolean> {
-    return this.run(translate('signals.reportDisconnected'), translate('signals.reportNotDisconnected'), () =>
-      this.api.removeReportRule(ruleId),
+    return this.run(
+      translate('signals.reportDisconnected'),
+      translate('signals.reportNotDisconnected'),
+      () => this.api.removeReportRule(ruleId),
     );
   }
 
   setNotify(signalId: string, notify: boolean): Promise<boolean> {
-    return this.run(notify ? translate('signals.notificationsOn') : translate('signals.notificationsOff'), translate('profile.notSaved'), () =>
-      this.api.setNotify(signalId, notify),
+    return this.run(
+      notify ? translate('signals.notificationsOn') : translate('signals.notificationsOff'),
+      translate('profile.notSaved'),
+      () => this.api.setNotify(signalId, notify),
     );
   }
 

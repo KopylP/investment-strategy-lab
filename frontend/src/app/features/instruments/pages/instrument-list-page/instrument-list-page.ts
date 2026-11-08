@@ -31,7 +31,8 @@ import { InstrumentAbout } from '../../../../shared/ui/instrument-about';
 
 @Component({
   selector: 'app-instrument-list-page',
-  imports: [TranslocoPipe, 
+  imports: [
+    TranslocoPipe,
     FormsModule,
     Button,
     IconField,

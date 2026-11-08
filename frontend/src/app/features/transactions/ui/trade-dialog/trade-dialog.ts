@@ -26,7 +26,17 @@ export interface Option {
 
 @Component({
   selector: 'app-trade-dialog',
-  imports: [TranslocoPipe, FormsModule, Button, DatePicker, Dialog, InputNumber, Select, SelectButton, MoneyPipe],
+  imports: [
+    TranslocoPipe,
+    FormsModule,
+    Button,
+    DatePicker,
+    Dialog,
+    InputNumber,
+    Select,
+    SelectButton,
+    MoneyPipe,
+  ],
   templateUrl: './trade-dialog.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

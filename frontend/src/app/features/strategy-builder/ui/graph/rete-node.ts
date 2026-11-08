@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { Component, Input, OnChanges } from '@angular/core';
 import { KeyValuePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -13,7 +14,7 @@ import { evaluationScope } from '../../data-access/evaluation-scope';
 
 @Component({
   selector: 'app-strategy-rete-node',
-  imports: [RefDirective, KeyValuePipe, Inspector, FormsModule, Select],
+  imports: [TranslocoPipe, RefDirective, KeyValuePipe, Inspector, FormsModule, Select],
   host: { '[style.width.px]': 'data.width' },
   template: `
     <article
@@ -45,16 +46,16 @@ import { evaluationScope } from '../../data-access/evaluation-scope';
           >
             <button
               type="button"
-              aria-label="Дублювати"
-              title="Дублювати"
+              [attr.aria-label]="'builder.graph.node.duplicate' | transloco"
+              [title]="'builder.graph.node.duplicate' | transloco"
               (click)="data.duplicate()"
             >
               <i class="pi pi-copy"></i>
             </button>
             <button
               type="button"
-              aria-label="Видалити вузол"
-              title="Видалити вузол"
+              [attr.aria-label]="'builder.graph.node.delete' | transloco"
+              [title]="'builder.graph.node.delete' | transloco"
               (click)="data.remove()"
             >
               <i class="pi pi-trash"></i>
@@ -76,11 +77,11 @@ import { evaluationScope } from '../../data-access/evaluation-scope';
         <span>{{
           scope === 'per-fund'
             ? data.dto.kind === 'RiskResult'
-              ? 'Кожна утримувана позиція'
-              : 'Кожен фонд'
+              ? ('builder.graph.node.eachHeld' | transloco)
+              : ('builder.graph.node.eachFund' | transloco)
             : scope === 'portfolio'
               ? portfolioScopeLabel
-              : 'Спільне для всіх'
+              : ('builder.graph.node.sharedForAll' | transloco)
         }}</span>
         @if (scope === 'per-fund' && data.dto.kind !== 'RiskResult') {
           <b>×{{ data.setup.funds.length }}</b>
@@ -102,7 +103,7 @@ import { evaluationScope } from '../../data-access/evaluation-scope';
                 type="button"
                 class="port"
                 [class.compatible]="data.connecting && data.compatible.includes(input.key)"
-                [attr.aria-label]="'Вхід ' + input.key"
+                [attr.aria-label]="'builder.graph.node.input' | transloco: { name: input.key }"
                 [attr.data-socket-key]="data.id + ':input:' + input.key"
                 (click)="ifKeyboardInput($event, input.key); $event.stopPropagation()"
                 refComponent
@@ -128,7 +129,9 @@ import { evaluationScope } from '../../data-access/evaluation-scope';
                 type="button"
                 class="port"
                 [attr.aria-label]="
-                  output.key === 'output' ? 'Почати звʼязок' : 'Вихід ' + outputLabel(output.key)
+                  output.key === 'output'
+                    ? ('builder.graph.node.startLink' | transloco)
+                    : ('builder.graph.node.output' | transloco: { name: outputLabel(output.key) })
                 "
                 [attr.data-socket-key]="
                   data.id + ':output' + (output.key === 'output' ? '' : ':' + output.key)
@@ -157,15 +160,16 @@ import { evaluationScope } from '../../data-access/evaluation-scope';
       >
         @if (data.dto.kind === 'Portfolio') {
           <div class="portfolio-summary" data-portfolio-summary>
-            <strong>Фонди + кеш = 100%</strong>
+            <strong>{{ 'builder.graph.node.fundsPlusCash' | transloco }}</strong>
             <p>
-              Відібрані фонди отримують розраховані ваги. Невикористана частина бюджету залишається
-              в кеші.
+              {{ 'builder.graph.node.weightsHint' | transloco }}
             </p>
-            <p>Налаштування ризику застосовуються до утримуваних позицій між ребалансуваннями.</p>
+            <p>{{ 'builder.graph.node.riskHint' | transloco }}</p>
           </div>
         } @else if (data.dto.kind === 'Cash') {
-          <label class="cash-label" [for]="data.id + '-instrument'">Залишок вкладати у</label>
+          <label class="cash-label" [for]="data.id + '-instrument'">{{
+            'builder.graph.node.investRemainderIn' | transloco
+          }}</label>
           <p-select
             #nodeSelect
             panelStyleClass="builder-node-select-panel"
@@ -179,11 +183,11 @@ import { evaluationScope } from '../../data-access/evaluation-scope';
             (ngModelChange)="changeCash($event ?? null)"
             [filter]="true"
             [showClear]="true"
-            placeholder="Фонд для кешу"
+            [placeholder]="'builder.graph.node.series.cash' | transloco"
             [appendTo]="data.overlayContainer"
             fluid
           />
-          <p class="cash-hint">Отримує гроші, що залишилися після відбору, обмежень і розподілу.</p>
+          <p class="cash-hint">{{ 'builder.graph.node.cashHint' | transloco }}</p>
         } @else {
           <app-node-inspector
             [inline]="true"
@@ -404,22 +408,30 @@ export class ReteNode implements OnChanges {
   }
   get portfolioScopeLabel() {
     return this.data.dto.kind === 'Portfolio'
-      ? 'Фінальний розподіл'
+      ? translate('builder.graph.node.finalAllocation')
       : this.data.dto.kind === 'Cash'
-        ? 'Залишок бюджету'
+        ? translate('builder.graph.node.budgetRemainder')
         : this.data.dto.kind === 'FundSelection'
-          ? 'Спільний відбір'
-          : 'Спільний розподіл';
+          ? translate('builder.graph.node.sharedSelection')
+          : translate('builder.graph.node.sharedAllocation');
   }
   outputLabel(key: string) {
-    if (this.data.dto.kind === 'Cash') return key === 'series' ? 'Ряд кешу' : 'У кеші';
-    if (this.data.dto.kind === 'RiskResult') return 'Контроль';
+    if (this.data.dto.kind === 'Cash')
+      return key === 'series'
+        ? translate('builder.graph.socket.cashSeries')
+        : translate('builder.graph.socket.inCash');
+    if (this.data.dto.kind === 'RiskResult') return translate('builder.graph.socket.control');
     if (this.data.dto.kind === 'SelectionResult')
-      return key === 'cash' ? 'Залишок' : 'Фонди й ваги';
-    if (this.data.dto.kind === 'MarketResult') return 'Бюджет';
-    if (this.data.dto.kind === 'FundSelection') return 'Відібрані';
-    if (['EntryResult', 'ExitResult'].includes(this.data.dto.kind)) return 'Кандидати';
-    return this.data.outputs[key]?.socket.name === 'Number' ? 'Число' : 'Так / ні';
+      return key === 'cash'
+        ? translate('builder.graph.socket.remainder')
+        : translate('builder.graph.node.fundsAndWeights');
+    if (this.data.dto.kind === 'MarketResult') return translate('builder.graph.visual.budget');
+    if (this.data.dto.kind === 'FundSelection') return translate('builder.graph.node.selected');
+    if (['EntryResult', 'ExitResult'].includes(this.data.dto.kind))
+      return translate('builder.graph.visual.candidates');
+    return this.data.outputs[key]?.socket.name === 'Number'
+      ? translate('builder.graph.visual.number')
+      : translate('builder.graph.node.yesNoShort');
   }
   get scope() {
     return evaluationScope(this.data.dto, this.data.graph, this.data.setup);
@@ -427,15 +439,13 @@ export class ReteNode implements OnChanges {
   get scopeTitle() {
     if (this.scope === 'per-fund')
       return this.data.dto.kind === 'RiskResult'
-        ? 'Окрема перевірка кожної утримуваної позиції'
-        : `Окреме обчислення для кожного з ${this.data.setup.funds.length} вибраних фондів`;
-    if (this.data.dto.kind === 'Portfolio')
-      return 'Поєднує ваги фондів, кеш і налаштування контролю ризику';
-    if (this.data.dto.kind === 'Cash')
-      return 'Отримує невикористаний бюджет після розподілу ваг фондів';
+        ? translate('builder.graph.node.eachHeldHint')
+        : translate('builder.graph.node.perFund', { count: this.data.setup.funds.length });
+    if (this.data.dto.kind === 'Portfolio') return translate('builder.graph.node.portfolioHint');
+    if (this.data.dto.kind === 'Cash') return translate('builder.graph.node.remainderHint');
     return this.scope === 'portfolio'
-      ? 'Збирає оцінки фондів, порівнює їх між собою та розподіляє ваги'
-      : 'Один результат, спільний для всіх вибраних фондів';
+      ? translate('builder.graph.node.selectionHint')
+      : translate('builder.graph.node.sharedHint');
   }
   get style() {
     return nodeStyle(this.data.dto);
@@ -445,10 +455,13 @@ export class ReteNode implements OnChanges {
       return (
         this.data.vocabulary.indicators.find(
           (i) => i.code === this.data.dto.parameters['indicator'],
-        )?.label ?? 'Індикатор'
+        )?.label ?? translate<string>('builder.graph.visual.indicator')
       );
     if (this.data.dto.kind.endsWith('Result'))
-      return blocks.find((b) => b.kind === this.data.dto.block)?.result ?? 'Результат';
+      return (
+        blocks.find((b) => b.kind === this.data.dto.block)?.result ??
+        translate<string>('builder.graph.visual.result')
+      );
     return (
       this.data.vocabulary.conditions.find((c) => c.code === this.data.dto.kind.toLowerCase())
         ?.label ?? this.style.label
@@ -459,48 +472,53 @@ export class ReteNode implements OnChanges {
   }
   get shortRole() {
     const roles = this.resultBlocks;
-    if (roles.length > 1) return 'Спільний';
+    if (roles.length > 1) return translate('builder.graph.node.shared');
     return (
       (
         {
-          MarketFilter: 'Ринок',
-          Entry: 'Вхід',
-          Exit: 'Вихід',
-          Selection: 'Ваги',
-          Risk: 'Ризик',
+          MarketFilter: translate('builder.graph.node.role.market'),
+          Entry: translate('builder.graph.node.role.entry'),
+          Exit: translate('builder.graph.node.role.exit'),
+          Selection: translate('builder.graph.node.role.weights'),
+          Risk: translate('builder.graph.node.role.risk'),
         } as Record<string, string>
       )[roles[0] ?? ''] ?? ''
     );
   }
   get role() {
-    if (this.data.dto.kind === 'Portfolio') return 'Підсумок стратегії';
-    if (this.data.dto.kind === 'Cash') return 'Кеш портфеля';
+    if (this.data.dto.kind === 'Portfolio') return translate('builder.graph.node.strategySummary');
+    if (this.data.dto.kind === 'Cash') return translate('builder.graph.node.portfolioCash');
     return (
       this.resultBlocks
         .map((kind) => blocks.find((block) => block.kind === kind)?.title)
         .filter(Boolean)
-        .join(' · ') || 'Ще не підключено'
+        .join(' · ') || translate('builder.graph.node.notConnected')
     );
   }
   inputLabel(key: string) {
-    if (key === 'condition' && this.data.dto.kind === 'EntryResult') return 'Умова купівлі';
-    if (key === 'condition' && this.data.dto.kind === 'ExitResult') return 'Умова продажу';
-    if (key === 'rankBy') return 'Оцінка фонду';
-    if (key === 'funds') return this.data.dto.kind === 'Portfolio' ? 'Фонди й ваги' : 'Кандидати';
-    if (key === 'cash') return 'Кеш';
-    if (key === 'risk') return 'Ризик';
-    if (key === 'budget') return 'Бюджет';
-    if (key === 'remainder') return 'Залишок';
+    if (key === 'condition' && this.data.dto.kind === 'EntryResult')
+      return translate('builder.graph.node.buyCondition');
+    if (key === 'condition' && this.data.dto.kind === 'ExitResult')
+      return translate('builder.graph.node.sellCondition');
+    if (key === 'rankBy') return translate('builder.graph.node.fundScore');
+    if (key === 'funds')
+      return this.data.dto.kind === 'Portfolio'
+        ? translate('builder.graph.node.fundsAndWeights')
+        : translate('builder.graph.visual.candidates');
+    if (key === 'cash') return translate('common.cash');
+    if (key === 'risk') return translate('builder.graph.node.role.risk');
+    if (key === 'budget') return translate('builder.graph.visual.budget');
+    if (key === 'remainder') return translate('builder.graph.socket.remainder');
     return (
       (
         {
-          of: 'Ряд',
-          condition: 'Умова',
-          left: 'Значення',
-          right: 'Порівняти з',
-          value: 'Значення',
-          conditions: 'Умови',
-          funds: 'Фонди',
+          of: translate('builder.graph.socket.series'),
+          condition: translate('builder.graph.visual.condition'),
+          left: translate('builder.graph.node.value'),
+          right: translate('builder.graph.node.compareWith'),
+          value: translate('builder.graph.node.value'),
+          conditions: translate('builder.graph.node.conditions'),
+          funds: translate('builder.graph.node.funds'),
         } as Record<string, string>
       )[key] ?? key
     );

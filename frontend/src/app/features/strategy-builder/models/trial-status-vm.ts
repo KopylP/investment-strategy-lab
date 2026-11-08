@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 import { TrialRunDto } from './trial-run-dto';
 
 export interface TrialStatusVm {
@@ -6,9 +7,9 @@ export interface TrialStatusVm {
 }
 
 export const trialStatuses: Record<TrialRunDto['status'], TrialStatusVm> = {
-  Waiting: { label: 'Очікує', tone: 'neutral' },
-  Running: { label: 'Обчислюється', tone: 'progress' },
-  Succeeded: { label: 'Готово', tone: 'success' },
-  Failed: { label: 'Помилка', tone: 'danger' },
-  Cancelled: { label: 'Скасовано', tone: 'neutral' },
+  Waiting: { label: translate('builder.trialStatus.Pending'), tone: 'neutral' },
+  Running: { label: translate('builder.trialStatus.Running'), tone: 'progress' },
+  Succeeded: { label: translate('builder.trialStatus.Finished'), tone: 'success' },
+  Failed: { label: translate('builder.trialStatus.Failed'), tone: 'danger' },
+  Cancelled: { label: translate('builder.trialStatus.Cancelled'), tone: 'neutral' },
 };

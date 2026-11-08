@@ -19,10 +19,10 @@ export class SkipDialog {
     .action;
 
   protected readonly presets = [
-    translate('reasons.tooSmall'),
-    translate('reasons.noCash'),
-    translate('reasons.wait'),
-    translate('reasons.broker'),
+    translate('reports.skip.reasons.tooSmall'),
+    translate('reports.skip.reasons.noCash'),
+    translate('reports.skip.reasons.wait'),
+    translate('reports.skip.reasons.broker'),
   ].map((label) => ({ label, value: label }));
   protected readonly reason = signal('');
 

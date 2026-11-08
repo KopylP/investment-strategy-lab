@@ -30,7 +30,10 @@ specs yet; verify UI changes by building and, when a stack is running, in the br
   Check phone layout: pages switch on `Viewport.phone()`.
 - A page below a list gives `app-page-header` its parent (`backLink`, `backLabel`); «back» itself follows where the
   user came from (`core/layout/navigation-history.ts`), so a programmatic step that should not be returned to uses `replaceUrl`.
-- All user-facing text is Ukrainian; dates as `dd.MM.yyyy`, money through the `money` pipe.
+- User-facing text is never written into code: it is a key in `src/i18n/uk.json` and `src/i18n/en.json` (Transloco, ICU
+  messageformat: `{name}`, `{count, plural, one {…} other {…}}`), used with the `transloco` pipe in templates and `translate()`
+  in code. Add every key to both files. Numbers and dates follow `activeLocale` (`core/i18n/language.ts`); money through the
+  `money` pipe. The language is fixed for a page load: changing it in the profile reloads the page.
 - When the API changes, update the DTO in `models/*-dto.ts` and the mapper together.
 - No business logic here: the backend decides and calculates, and the frontend formats what it receives in mappers and
   shows it. No tax rates, policy codes, provider names or symbol formats (see Modularity in `../CLAUDE.md`).

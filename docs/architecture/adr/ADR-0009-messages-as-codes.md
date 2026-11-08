@@ -16,4 +16,4 @@ Warnings, reasons, notes and errors were composed in Ukrainian directly in the b
 - There are three implementations of the templates: TypeScript, C# and Python. The C# formatting is checked by golden tests: they compare the rebalancer's texts with the fixtures of `plan.py`.
 - `LocalizationTests` and `test_messages.py` fail on Cyrillic in code, or on a code without a text in the catalog. The engine's HTML report templates, the strategy's TOML configs and the groups in instrument seeds are data, not code, so Cyrillic remains there.
 - A token glued to text is not translated. An end-to-end test checks that the report page contains no raw codes.
-- A new language means a new catalog, but at present there is one language and no choice.
+- A new language means a new catalog per owner; ADR-0027 adds English and the choice of language.

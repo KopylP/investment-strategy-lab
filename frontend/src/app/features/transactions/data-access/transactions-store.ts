@@ -101,10 +101,10 @@ const kinds: Record<
 };
 
 const sources: Record<TransactionDto['source'], string> = {
-  ReportAction: translate('source.report'),
-  Manual: translate('source.manual'),
-  Reconciliation: translate('source.reconciliation'),
-  Import: translate('source.import'),
+  ReportAction: translate('transactions.source.report'),
+  Manual: translate('transactions.source.manual'),
+  Reconciliation: translate('transactions.source.reconciliation'),
+  Import: translate('transactions.source.import'),
 };
 
 @Injectable()
@@ -245,7 +245,9 @@ export class TransactionsStore {
   ): TransactionDetails {
     const symbol = this.instruments.symbol(trade.instrumentId);
     const size = `${formatQuantity(trade.quantity)} × ${formatMoney(trade.price, currency)}`;
-    const fee = trade.fee ? translate('transactions.feeDetail', { fee: formatMoney(trade.fee, currency) }) : '';
+    const fee = trade.fee
+      ? translate('transactions.feeDetail', { fee: formatMoney(trade.fee, currency) })
+      : '';
     const allocation = trade.allocations
       .map((part) => `${sub(part.subPortfolioId)}: ${formatQuantity(part.quantity)}`)
       .join(', ');
@@ -330,6 +332,8 @@ function settled(entry: {
   settledCurrency?: string | null;
 }): string {
   return entry.settledAmount && entry.settledCurrency
-    ? translate('transactions.atBroker', { amount: formatMoney(entry.settledAmount, entry.settledCurrency) })
+    ? translate('transactions.atBroker', {
+        amount: formatMoney(entry.settledAmount, entry.settledCurrency),
+      })
     : '';
 }

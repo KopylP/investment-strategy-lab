@@ -29,7 +29,16 @@ function scopeOf(route: ActivatedRouteSnapshot): AccountScope {
 
 @Component({
   selector: 'app-topbar',
-  imports: [TranslocoPipe, RouterLink, FormsModule, Select, SelectButton, Tooltip, TapTooltip, Menu],
+  imports: [
+    TranslocoPipe,
+    RouterLink,
+    FormsModule,
+    Select,
+    SelectButton,
+    Tooltip,
+    TapTooltip,
+    Menu,
+  ],
   templateUrl: './app-topbar.html',
   host: { '(window:scroll)': 'closeMenu()' },
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -54,7 +63,10 @@ export class AppTopbar {
 
   protected readonly accountOptions = computed(() =>
     this.scope() === 'all'
-      ? [{ id: allAccounts, name: translate('layout.topbar.allAccounts') }, ...this.accounts.accounts()]
+      ? [
+          { id: allAccounts, name: translate('layout.topbar.allAccounts') },
+          ...this.accounts.accounts(),
+        ]
       : this.accounts.accounts(),
   );
 
@@ -85,7 +97,9 @@ export class AppTopbar {
     const themeItems: MenuItem[] = phone
       ? [
           {
-            label: translate(this.layout.isDarkTheme() ? 'layout.topbar.lightTheme' : 'layout.topbar.darkTheme'),
+            label: translate(
+              this.layout.isDarkTheme() ? 'layout.topbar.lightTheme' : 'layout.topbar.darkTheme',
+            ),
             icon: this.layout.isDarkTheme() ? 'pi pi-sun' : 'pi pi-moon',
             command: () => this.toggleDarkMode(),
           },
@@ -104,7 +118,11 @@ export class AppTopbar {
         ? []
         : [
             { separator: true },
-            { label: translate('layout.topbar.signOut'), icon: 'pi pi-sign-out', command: () => void this.signOut() },
+            {
+              label: translate('layout.topbar.signOut'),
+              icon: 'pi pi-sign-out',
+              command: () => void this.signOut(),
+            },
           ]),
     ];
   });

@@ -1,7 +1,8 @@
 <div class="flex flex-col gap-5 pt-1">
   <section class="flex flex-col gap-3">
     <div class="font-medium">
-      {{ 'reports.load.step1' | transloco }} <span class="text-muted-color font-normal">{{ 'reports.load.optional' | transloco }}</span>
+      {{ 'reports.load.step1' | transloco }}
+      <span class="text-muted-color font-normal">{{ 'reports.load.optional' | transloco }}</span>
     </div>
     <p class="m-0 text-sm text-muted-color">
       {{ 'reports.load.step1Hint' | transloco }}
@@ -76,7 +77,11 @@
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <span class="font-medium">{{ match.action?.title ?? match.actionKind }}</span>
                 <p-tag
-                  [value]="match.completes ? ('reports.load.fully' | transloco) : ('reports.load.partly' | transloco)"
+                  [value]="
+                    match.completes
+                      ? ('reports.load.fully' | transloco)
+                      : ('reports.load.partly' | transloco)
+                  "
                   [severity]="match.completes ? 'success' : 'warn'"
                 />
               </div>
@@ -96,17 +101,19 @@
                             }
                     }}
                   }
-                  · {{ operation.source === 'Import' ? ('reports.load.fromStatement' | transloco) : ('transactions.source.manual' | transloco) }}
+                  ·
+                  {{
+                    operation.source === 'Import'
+                      ? ('reports.load.fromStatement' | transloco)
+                      : ('transactions.source.manual' | transloco)
+                  }}
                 </div>
               }
             </li>
           }
         </ul>
       } @else {
-        <p-message
-          severity="info"
-          [text]="'reports.load.noMatches' | transloco"
-        />
+        <p-message severity="info" [text]="'reports.load.noMatches' | transloco" />
       }
 
       @if (preview.unmatched.length) {
@@ -132,7 +139,12 @@
   }
 
   <div class="flex justify-end gap-2">
-    <p-button [label]="'common.close' | transloco" [text]="true" severity="secondary" (onClick)="close()" />
+    <p-button
+      [label]="'common.close' | transloco"
+      [text]="true"
+      severity="secondary"
+      (onClick)="close()"
+    />
     <p-button
       [label]="'reports.load.markCount' | transloco: { count: matches().length }"
       icon="pi pi-check"

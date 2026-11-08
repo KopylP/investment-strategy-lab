@@ -1,11 +1,17 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { BlockWordsDto } from '../../models/draft-dto';
 import { blocks } from '../../models/draft-vm';
 
 @Component({
   selector: 'app-builder-words-panel',
-  template: `<section class="card mb-0" aria-label="Стратегія словами" [class.compact]="compact()">
-    <h2 class="mb-4 text-lg font-semibold">Стратегія словами</h2>
+  imports: [TranslocoPipe],
+  template: `<section
+    class="card mb-0"
+    [attr.aria-label]="'builder.words.title' | transloco"
+    [class.compact]="compact()"
+  >
+    <h2 class="mb-4 text-lg font-semibold">{{ 'builder.words.title' | transloco }}</h2>
     @for (block of blocks; track block.kind) {
       <div class="word-block">
         <h3 class="mt-3 font-medium">{{ block.title }}</h3>
@@ -60,6 +66,9 @@ export class WordsPanel {
   protected readonly blocks = blocks;
 
   protected sentence(block: string): string {
-    return this.words().find((words) => words.block === block)?.sentence ?? 'Не налаштовано';
+    return (
+      this.words().find((words) => words.block === block)?.sentence ??
+      translate<string>('builder.words.notSet')
+    );
   }
 }

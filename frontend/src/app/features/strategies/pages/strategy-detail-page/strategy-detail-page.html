@@ -1,7 +1,9 @@
 @if (store.isLoading() && !store.strategy()) {
   <div class="card"><p-skeleton height="12rem" /></div>
 } @else if (store.loadError()) {
-  <div class="card"><p-message severity="error" [text]="'strategies.detail.notFound' | transloco" /></div>
+  <div class="card">
+    <p-message severity="error" [text]="'strategies.detail.notFound' | transloco" />
+  </div>
 } @else if (store.strategy(); as strategy) {
   <app-page-header
     backLink="/strategies"
@@ -27,12 +29,12 @@
       <ng-template #selectedItem let-number>{{
         'strategies.detail.version' | transloco: { number }
       }}</ng-template>
-      <ng-template #item let-number
-        >{{
-          (number === strategy.latestVersion ? 'strategies.detail.latestVersion' : 'strategies.detail.version')
-            | transloco: { number }
-        }}</ng-template
-      >
+      <ng-template #item let-number>{{
+        (number === strategy.latestVersion
+          ? 'strategies.detail.latestVersion'
+          : 'strategies.detail.version'
+        ) | transloco: { number }
+      }}</ng-template>
     </p-select>
     @if (strategy.status === 'Active' && !editing()) {
       @if (builderEditable() === false) {
@@ -72,7 +74,10 @@
     <div class="grid gap-4 lg:grid-cols-3">
       <div class="card mb-0 lg:col-span-2">
         <h2 class="text-lg font-semibold mb-3">
-          {{ 'strategies.detail.universeCount' | transloco: { count: strategy.version.universe.length } }}
+          {{
+            'strategies.detail.universeCount'
+              | transloco: { count: strategy.version.universe.length }
+          }}
         </h2>
         <div class="flex flex-wrap gap-2">
           @for (id of strategy.version.universe; track id) {
@@ -81,14 +86,18 @@
         </div>
       </div>
       <div class="card mb-0">
-        <h2 class="text-lg font-semibold mb-3">{{ 'strategies.detail.marketAndCash' | transloco }}</h2>
+        <h2 class="text-lg font-semibold mb-3">
+          {{ 'strategies.detail.marketAndCash' | transloco }}
+        </h2>
         <div class="flex flex-col gap-2 text-sm">
           <div class="flex justify-between">
             <span class="text-muted-color">{{ 'strategies.detail.benchmark' | transloco }}</span
             ><span>{{ store.instruments.symbol(strategy.version.benchmarkInstrumentId) }}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-muted-color">{{ 'strategies.detail.volatilityIndex' | transloco }}</span
+            <span class="text-muted-color">{{
+              'strategies.detail.volatilityIndex' | transloco
+            }}</span
             ><span>{{
               store.instruments.symbol(strategy.version.volatilityIndexInstrumentId)
             }}</span>
@@ -104,7 +113,9 @@
             </div>
           }
           <div class="flex justify-between">
-            <span class="text-muted-color">{{ 'strategies.detail.versionCreated' | transloco }}</span
+            <span class="text-muted-color">{{
+              'strategies.detail.versionCreated' | transloco
+            }}</span
             ><span>{{ strategy.version.createdAt | dateTime }}</span>
           </div>
         </div>
@@ -119,7 +130,9 @@
     @if (builderEditable() === false) {
       @if (store.type(); as type) {
         <div class="card mt-4">
-          <h2 class="text-lg font-semibold mb-3">{{ 'strategies.detail.parameters' | transloco }}</h2>
+          <h2 class="text-lg font-semibold mb-3">
+            {{ 'strategies.detail.parameters' | transloco }}
+          </h2>
           <app-schema-form
             [schema]="$any(type.parametersSchema)"
             [value]="strategy.version.parameters"
@@ -130,10 +143,14 @@
     }
   } @else {
     <div class="card">
-      <h2 class="text-lg font-semibold mb-3">{{ 'strategies.detail.universeAndMarket' | transloco }}</h2>
+      <h2 class="text-lg font-semibold mb-3">
+        {{ 'strategies.detail.universeAndMarket' | transloco }}
+      </h2>
       <div class="grid gap-4 md:grid-cols-3">
         <div class="flex flex-col gap-2 md:col-span-3">
-          <label class="font-medium" for="universe">{{ 'strategies.detail.universe' | transloco }}</label>
+          <label class="font-medium" for="universe">{{
+            'strategies.detail.universe' | transloco
+          }}</label>
           <p-multiselect
             inputId="universe"
             [options]="etfOptions()"
@@ -149,7 +166,9 @@
           />
         </div>
         <div class="flex flex-col gap-2">
-          <label class="font-medium" for="cash">{{ 'strategies.detail.parkingEtf' | transloco }}</label>
+          <label class="font-medium" for="cash">{{
+            'strategies.detail.parkingEtf' | transloco
+          }}</label>
           <p-select
             inputId="cash"
             [options]="etfOptions()"
@@ -164,7 +183,9 @@
           />
         </div>
         <div class="flex flex-col gap-2">
-          <label class="font-medium" for="benchmark">{{ 'strategies.detail.benchmarkTrend' | transloco }}</label>
+          <label class="font-medium" for="benchmark">{{
+            'strategies.detail.benchmarkTrend' | transloco
+          }}</label>
           <p-select
             inputId="benchmark"
             [options]="etfOptions()"

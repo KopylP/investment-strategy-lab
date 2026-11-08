@@ -20,7 +20,12 @@
     fluid
   ></textarea>
   <div class="flex justify-end gap-2">
-    <p-button [label]="'common.cancel' | transloco" [text]="true" severity="secondary" (onClick)="cancel()" />
+    <p-button
+      [label]="'common.cancel' | transloco"
+      [text]="true"
+      severity="secondary"
+      (onClick)="cancel()"
+    />
     <p-button
       [label]="'reports.skip.skip' | transloco"
       icon="pi pi-forward"

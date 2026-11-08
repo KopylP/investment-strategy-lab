@@ -64,7 +64,7 @@ export function toProblemMessage(error: unknown): string {
 
     if (error.status === 0) return translate('common.serverUnavailable');
 
-    return problem?.title ?? translate('common.errorStatus', { status: error.status });
+    return problem?.title ?? translate<string>('common.errorStatus', { status: error.status });
   }
 
   return error instanceof Error ? error.message : translate('common.unknownError');

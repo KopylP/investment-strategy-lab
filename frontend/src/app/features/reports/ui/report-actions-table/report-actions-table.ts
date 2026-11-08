@@ -26,7 +26,8 @@ import { InstrumentAbout } from '../../../../shared/ui/instrument-about';
 import { InstrumentCatalog } from '../../../../core/context/instrument-catalog';
 @Component({
   selector: 'app-report-actions-table',
-  imports: [TranslocoPipe, 
+  imports: [
+    TranslocoPipe,
     Money,
     NgTemplateOutlet,
     TableModule,

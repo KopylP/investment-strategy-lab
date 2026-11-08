@@ -1,15 +1,15 @@
-<section class="card min-w-0" aria-label="Порівняння запусків">
-  <h2 class="mb-4 text-lg font-semibold">Порівняння запусків</h2>
+<section class="card min-w-0" [attr.aria-label]="'builder.comparison.title' | transloco">
+  <h2 class="mb-4 text-lg font-semibold">{{ 'builder.comparison.title' | transloco }}</h2>
   @if (comparisonReason()) { <p-message severity="warn" [text]="comparisonReason()!" /> }
-  @if (comparisonError()) { <p-message severity="error" text="Не вдалося перевірити умови порівняння." /> }
+  @if (comparisonError()) { <p-message severity="error" [text]="'builder.comparison.checkFailed' | transloco" /> }
   <div class="overflow-x-auto">
     <table class="w-full text-left">
       <thead>
         <tr>
-          <th class="p-2">Показник</th>
-          <th class="p-2">Запуск A · №{{ first().number }}</th>
-          <th class="p-2">Запуск B · №{{ second().number }}</th>
-          <th class="p-2">Різниця B - A</th>
+          <th class="p-2">{{ 'builder.comparison.metric' | transloco }}</th>
+          <th class="p-2">{{ 'builder.comparison.runA' | transloco: { number: first().number } }}</th>
+          <th class="p-2">{{ 'builder.comparison.runB' | transloco: { number: second().number } }}</th>
+          <th class="p-2">{{ 'builder.comparison.difference' | transloco }}</th>
         </tr>
       </thead>
       <tbody>
@@ -25,11 +25,10 @@
     </table>
   </div>
   <p class="my-3 text-sm text-muted-color">
-    Графік показує зростання 100 одиниць від початку кожного запуску. Різниця показників доступна
-    лише за однакових дат, валюти, капіталу й витрат. Різницю дохідності наведено у відсоткових пунктах.
+    {{ 'builder.comparison.hint' | transloco }}
   </p>
   @if (error()) {
-    <p-message severity="error" text="Не вдалося завантажити графік" />
+    <p-message severity="error" [text]="'builder.comparison.chartFailed' | transloco" />
   } @else {
     <app-chart-legend [lines]="legend()" (toggled)="hiddenLines.toggle($event)" /><app-live-chart
       [data]="data()"

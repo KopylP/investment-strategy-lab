@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 import { DraftDto } from '../models/draft-dto';
 import { SetupSummaryVm } from '../models/draft-vm';
 import { InstrumentChoiceDto } from '../models/instrument-dto';
@@ -10,7 +11,8 @@ export function setupSummary(
   reportNames: Record<string, string>,
 ): SetupSummaryVm {
   const labels = new Map(instruments.map((instrument) => [instrument.id, instrument.label]));
-  const labelOf = (id: string | null) => (id ? (labels.get(id) ?? '—') : 'не обрано');
+  const labelOf = (id: string | null) =>
+    id ? (labels.get(id) ?? '—') : translate('builder.graph.node.notChosen');
   const funds = draft.setup.funds.map((id) => labels.get(id) ?? '—');
 
   return {
@@ -20,6 +22,7 @@ export function setupSummary(
     benchmark: labelOf(draft.setup.benchmarkId),
     cash: labelOf(draft.setup.cashId),
     reports:
-      draft.reports.map((report) => reportNames[report.code] ?? report.code).join(', ') || 'немає',
+      draft.reports.map((report) => reportNames[report.code] ?? report.code).join(', ') ||
+      translate('builder.mapper.none'),
   };
 }

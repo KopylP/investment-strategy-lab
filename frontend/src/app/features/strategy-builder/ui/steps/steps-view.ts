@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -30,6 +31,7 @@ import { ProblemsPanel } from '../problems-panel/problems-panel';
 @Component({
   selector: 'app-builder-steps-view',
   imports: [
+    TranslocoPipe,
     FormsModule,
     Button,
     InputText,
@@ -49,25 +51,25 @@ export class StepsView {
   readonly chooseProblem = output<DraftProblemDto>();
   readonly editSetup = output<void>();
   protected readonly guidance = [
-    'Дайте стратегії зрозумілу назву та опишіть інвестиційну ідею. Зміни зберігаються автоматично.',
-    'Оберіть доступні для торгівлі фонди, бенчмарк для порівняння та фонд для вільних коштів.',
-    'Визначте, за яких ринкових умов стратегія може інвестувати.',
-    'Визначте, коли продавати фонд, який уже є в портфелі.',
-    'Визначте, коли фонд може стати кандидатом на купівлю.',
-    'Оберіть, як ранжувати кандидатів і розподіляти ваги портфеля.',
-    'За потреби додайте умови позачергового виходу між ребалансуваннями.',
-    'Оберіть звіти та частоту їх отримання.',
-    'Перевірте правила та виправте помилки. Потім запустіть бектест або опублікуйте стратегію кнопками вгорі.',
+    translate('builder.steps.hint.name'),
+    translate('builder.steps.hint.setup'),
+    translate('builder.steps.hint.market'),
+    translate('builder.steps.hint.exit'),
+    translate('builder.steps.hint.entry'),
+    translate('builder.steps.hint.selection'),
+    translate('builder.steps.hint.risk'),
+    translate('builder.steps.hint.reports'),
+    translate('builder.steps.hint.check'),
   ];
   readonly editReports = output<void>();
   protected readonly step = signal(0);
   private readonly stepNav = viewChild.required<ElementRef<HTMLElement>>('stepNav');
   protected readonly titles = [
-    'Назва й опис',
-    'Фонди й ряди',
+    translate('builder.steps.title.name'),
+    translate('builder.graph.visual.setup'),
     ...blocks.map((block) => block.title),
-    'Рапорти',
-    'Перевірка й бектест',
+    translate('routes.reports'),
+    translate('builder.steps.title.check'),
   ];
   protected readonly block = computed(() => blocks[this.step() - 2]?.kind ?? null);
   protected readonly rows = computed(() => {
@@ -87,7 +89,7 @@ export class StepsView {
   protected readonly sentence = computed(
     () =>
       this.store.draft()?.words.find((words) => words.block === this.block())?.sentence ??
-      'Не налаштовано',
+      translate('builder.words.notSet'),
   );
 
   constructor() {

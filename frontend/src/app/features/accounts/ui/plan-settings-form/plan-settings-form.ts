@@ -20,7 +20,15 @@ export interface PlanSettingsVm {
 
 @Component({
   selector: 'app-plan-settings-form',
-  imports: [TranslocoPipe, FormsModule, InputNumber, SelectButton, ToggleSwitch, Tooltip, TapTooltip],
+  imports: [
+    TranslocoPipe,
+    FormsModule,
+    InputNumber,
+    SelectButton,
+    ToggleSwitch,
+    Tooltip,
+    TapTooltip,
+  ],
   templateUrl: './plan-settings-form.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -30,8 +38,8 @@ export class PlanSettingsForm {
   readonly showPolicy = input(true);
 
   protected readonly policies = [
-    { label: translate('policy.laggard'), value: 'FillUnderweight' },
-    { label: translate('policy.proportional'), value: 'FixedSplit' },
+    { label: translate('accounts.plan.policy.laggard'), value: 'FillUnderweight' },
+    { label: translate('accounts.plan.policy.proportional'), value: 'FixedSplit' },
   ];
 
   protected set<K extends keyof PlanSettingsVm>(key: K, value: PlanSettingsVm[K]): void {

@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -26,7 +27,16 @@ const conditionCodes: Record<string, string> = {
 
 @Component({
   selector: 'app-node-inspector',
-  imports: [NgTemplateOutlet, FormsModule, Button, InputNumber, InputText, Select, GateOutcome],
+  imports: [
+    TranslocoPipe,
+    NgTemplateOutlet,
+    FormsModule,
+    Button,
+    InputNumber,
+    InputText,
+    Select,
+    GateOutcome,
+  ],
   templateUrl: './inspector.html',
   styles: [
     `
@@ -218,10 +228,10 @@ export class Inspector {
       .map((link) => `${link.to} · ${link.input}`),
   ]);
   protected readonly seriesOptions = computed(() => [
-    { label: 'Цей фонд', value: 'fund' },
-    { label: 'Бенчмарк', value: 'benchmark' },
-    { label: 'Фонд для кешу', value: 'cash' },
-    { label: 'Індекс волатильності', value: 'volatilityIndex' },
+    { label: translate('builder.inspector.fund'), value: 'fund' },
+    { label: translate('strategies.detail.benchmark'), value: 'benchmark' },
+    { label: translate('builder.graph.node.series.cash'), value: 'cash' },
+    { label: translate('strategies.detail.volatilityIndex'), value: 'volatilityIndex' },
     ...this.instruments().map((instrument) => ({
       label: instrument.label,
       value: `extra:${instrument.id}`,
@@ -249,13 +259,16 @@ export class Inspector {
   protected choiceOptions(field: VocabularyFieldDto): { label: string; value: string }[] {
     if (field.name === 'order')
       return [
-        { label: 'Найвищі спочатку', value: 'desc' },
-        { label: 'Найнижчі спочатку', value: 'asc' },
+        { label: translate('builder.inspector.order.desc'), value: 'desc' },
+        { label: translate('builder.inspector.order.asc'), value: 'asc' },
       ];
     if (field.name === 'method')
       return [
-        { label: 'Порівну', value: 'equal' },
-        { label: 'Більше менш мінливим фондам', value: 'inverseVolatility' },
+        { label: translate('builder.inspector.method.equal'), value: 'equal' },
+        {
+          label: translate('builder.inspector.method.inverseVolatility'),
+          value: 'inverseVolatility',
+        },
       ];
     return Object.entries(field.choiceLabels).map(([value, label]) => ({ label, value }));
   }
@@ -269,8 +282,8 @@ export class Inspector {
   protected placeholder(field: VocabularyFieldDto): string | undefined {
     return !field.required
       ? isLossLimit(field.name)
-        ? 'Вкажіть відсоток'
-        : 'Без обмеження'
+        ? translate('builder.inspector.enterPercent')
+        : translate('builder.inspector.noLimit')
       : undefined;
   }
 
@@ -291,7 +304,7 @@ export class Inspector {
   }
 
   protected title(): string {
-    if (this.node().kind === 'FundSelection') return 'Відібрати фонди';
+    if (this.node().kind === 'FundSelection') return translate('builder.graph.visual.selectFunds');
     return (
       this.definition()?.label ??
       (this.node().kind.endsWith('Result')

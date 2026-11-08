@@ -267,7 +267,10 @@ export class TaxesStore {
   }
 
   async removeLoss(loss: LossCarryforward): Promise<boolean> {
-    return this.change(() => this.api.delete(`/api/taxation/losses/${loss.id}`), translate('taxes.lossRemoved'));
+    return this.change(
+      () => this.api.delete(`/api/taxation/losses/${loss.id}`),
+      translate('taxes.lossRemoved'),
+    );
   }
 
   async uploadBrokerStatement(file: File): Promise<boolean> {

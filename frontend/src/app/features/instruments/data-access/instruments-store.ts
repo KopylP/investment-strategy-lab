@@ -285,7 +285,10 @@ export class InstrumentsStore {
       const counts = { added: report.quotesAdded, updated: report.quotesUpdated };
 
       return report.missingSymbols.length
-        ? translate('instruments.quotesIngestedMissing', { ...counts, missing: report.missingSymbols.join(', ') })
+        ? translate('instruments.quotesIngestedMissing', {
+            ...counts,
+            missing: report.missingSymbols.join(', '),
+          })
         : translate('instruments.quotesIngested', counts);
     });
   }

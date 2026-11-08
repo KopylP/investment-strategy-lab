@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -13,18 +14,23 @@ interface JsonToken {
 
 @Component({
   selector: 'app-builder-json-view',
-  imports: [Button],
+  imports: [TranslocoPipe, Button],
   template: `<div class="mb-4 flex flex-wrap gap-2">
-      <p-button label="Копіювати" icon="pi pi-copy" [disabled]="!json()" (onClick)="copy()" />
       <p-button
-        label="Експортувати"
+        [label]="'builder.json.copy' | transloco"
+        icon="pi pi-copy"
+        [disabled]="!json()"
+        (onClick)="copy()"
+      />
+      <p-button
+        [label]="'builder.json.export' | transloco"
         icon="pi pi-download"
         severity="secondary"
         [disabled]="!json()"
         (onClick)="download()"
       />
       <p-button
-        label="Імпортувати"
+        [label]="'transactions.rows.importAction' | transloco"
         icon="pi pi-upload"
         severity="secondary"
         [disabled]="importing()"
@@ -39,14 +45,14 @@ interface JsonToken {
       />
     </div>
     @if (loading()) {
-      <p role="status">Готую JSON…</p>
+      <p role="status">{{ 'builder.json.preparing' | transloco }}</p>
     }
     @if (error()) {
       <p role="alert" class="mb-3 whitespace-pre-wrap text-red-500">{{ error() }}</p>
     }
     <pre
       class="max-h-[70vh] overflow-auto rounded border border-surface p-4 text-sm"
-      aria-label="JSON правил"
+      [attr.aria-label]="'builder.json.label' | transloco"
     ><code>@for (token of tokens(); track $index) {<span [class.text-blue-500]="token.kind === 'key'" [class.text-green-600]="token.kind === 'string'" [class.text-amber-600]="token.kind === 'literal'">{{ token.text }}</span>}</code></pre>`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -71,16 +77,16 @@ export class JsonView {
       const formatted = JSON.stringify(JSON.parse(rules.json), null, 2);
       this.json.set(formatted);
       this.tokens.set(colourise(formatted));
-    } else this.error.set('Не вдалося отримати JSON. Перевірте проблеми чернетки.');
+    } else this.error.set(translate('builder.json.loadFailed'));
     this.loading.set(false);
   }
 
   protected async copy(): Promise<void> {
     try {
       await navigator.clipboard.writeText(this.json());
-      this.messages.add({ severity: 'success', summary: 'JSON скопійовано' });
+      this.messages.add({ severity: 'success', summary: translate('builder.json.copied') });
     } catch {
-      this.error.set('Не вдалося скопіювати JSON. Скористайтеся експортом.');
+      this.error.set(translate('builder.json.copyFailed'));
     }
   }
 
@@ -89,7 +95,7 @@ export class JsonView {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = `${this.store.draft()?.name ?? 'Стратегія'}.json`;
+    anchor.download = `${this.store.draft()?.name ?? translate<string>('routes.strategy')}.json`;
     anchor.click();
     URL.revokeObjectURL(url);
   }
@@ -104,7 +110,7 @@ export class JsonView {
     this.error.set('');
     try {
       await this.store.flush();
-      const name = file.name.replace(/\.json$/i, '') || 'Імпортована стратегія';
+      const name = file.name.replace(/\.json$/i, '') || translate('builder.json.imported');
       const draft = await this.api.importRules(name, await file.text());
       await this.router.navigate(['/strategy-builder', draft.id]);
     } catch (error) {

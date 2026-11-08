@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { Component, Input, OnChanges } from '@angular/core';
 import { ClassicPreset } from 'rete';
 import { StrategyConnection } from './rete-model';
@@ -49,13 +50,14 @@ export class ReteSocket implements OnChanges {
 }
 @Component({
   selector: 'app-rete-connection',
+  imports: [TranslocoPipe],
   template: `<svg [class.selected]="data.selected" [style.opacity]="data.branchDimmed ? 0.2 : 1">
     <path
       class="hit"
       [attr.d]="path"
       tabindex="0"
       role="button"
-      aria-label="Вибрати зв’язок"
+      [attr.aria-label]="'builder.graph.chooseLink' | transloco"
       [attr.aria-pressed]="!!data.selected"
       [attr.data-edge-hit]="data.id"
       (pointerdown)="$event.stopPropagation()"
@@ -64,7 +66,7 @@ export class ReteSocket implements OnChanges {
       (keydown.space)="choose($event)"
       (dblclick)="remove()"
     >
-      <title>Двічі натисніть, щоб видалити зв’язок</title>
+      <title>{{ 'builder.graph.deleteLinkHint' | transloco }}</title>
     </path>
     @if (data.selected) {
       <path class="selection-glow" [attr.d]="path" />
@@ -94,9 +96,10 @@ export class ReteSocket implements OnChanges {
           tabindex="0"
           role="slider"
           [attr.aria-label]="
-            handle.axis === 'x'
-              ? 'Перемістити сегмент ліворуч або праворуч'
-              : 'Перемістити сегмент вгору або вниз'
+            (handle.axis === 'x'
+              ? 'builder.graph.moveSegmentHorizontal'
+              : 'builder.graph.moveSegmentVertical'
+            ) | transloco
           "
           [attr.aria-valuenow]="handle[handle.axis]"
           [attr.aria-orientation]="handle.axis === 'x' ? 'horizontal' : 'vertical'"

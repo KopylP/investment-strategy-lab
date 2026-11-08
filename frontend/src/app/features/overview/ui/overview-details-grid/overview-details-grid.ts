@@ -21,7 +21,8 @@ import { OverviewStore } from '../../data-access/overview-store';
 
 @Component({
   selector: 'app-overview-details-grid',
-  imports: [TranslocoPipe, 
+  imports: [
+    TranslocoPipe,
     RouterLink,
     Button,
     Skeleton,

@@ -1,10 +1,15 @@
 <div class="card">
   <p-message severity="secondary" styleClass="mb-5">
     <div>
-      <b>{{ 'accounts.wizard.sleeves.subPortfolio' | transloco }}</b> {{ 'accounts.wizard.sleeves.subPortfolioHint' | transloco }} <b>{{ 'routes.strategy' | transloco }}</b> {{ 'accounts.wizard.sleeves.strategyHint' | transloco }}
+      <b>{{ 'accounts.wizard.sleeves.subPortfolio' | transloco }}</b>
+      {{ 'accounts.wizard.sleeves.subPortfolioHint' | transloco }}
+      <b>{{ 'routes.strategy' | transloco }}</b>
+      {{ 'accounts.wizard.sleeves.strategyHint' | transloco }}
     </div>
     <div class="mt-2">
-      <i class="pi pi-pencil mr-1"></i>{{ 'accounts.wizard.sleeves.changeLater' | transloco }}<b>{{ 'accounts.settingsAccounts' | transloco }}</b>).
+      <i class="pi pi-pencil mr-1"></i>{{ 'accounts.wizard.sleeves.changeLater' | transloco
+      }}<b>{{ 'accounts.settingsAccounts' | transloco }}</b
+      >).
     </div>
   </p-message>
 
@@ -17,7 +22,9 @@
       [class.border-surface]="draft.preset() !== 'simple'"
       (click)="draft.choosePreset('simple')"
     >
-      <div class="font-semibold"><i class="pi pi-circle mr-2"></i>{{ 'accounts.wizard.sleeves.simple' | transloco }}</div>
+      <div class="font-semibold">
+        <i class="pi pi-circle mr-2"></i>{{ 'accounts.wizard.sleeves.simple' | transloco }}
+      </div>
       <div class="text-sm text-muted-color mt-1">
         {{ 'accounts.wizard.sleeves.simpleHint' | transloco }}
       </div>
@@ -29,7 +36,9 @@
       [class.border-surface]="draft.preset() !== 'balanced'"
       (click)="draft.choosePreset('balanced')"
     >
-      <div class="font-semibold"><i class="pi pi-chart-pie mr-2"></i>{{ 'accounts.wizard.sleeves.europeUs' | transloco }}</div>
+      <div class="font-semibold">
+        <i class="pi pi-chart-pie mr-2"></i>{{ 'accounts.wizard.sleeves.europeUs' | transloco }}
+      </div>
       <div class="text-sm text-muted-color mt-1">
         {{ 'accounts.wizard.sleeves.europeUsHint' | transloco }}
       </div>
@@ -41,8 +50,12 @@
       [class.border-surface]="draft.preset() !== 'custom'"
       (click)="draft.choosePreset('custom')"
     >
-      <div class="font-semibold"><i class="pi pi-sliders-h mr-2"></i>{{ 'accounts.wizard.sleeves.custom' | transloco }}</div>
-      <div class="text-sm text-muted-color mt-1">{{ 'accounts.wizard.sleeves.customHint' | transloco }}</div>
+      <div class="font-semibold">
+        <i class="pi pi-sliders-h mr-2"></i>{{ 'accounts.wizard.sleeves.custom' | transloco }}
+      </div>
+      <div class="text-sm text-muted-color mt-1">
+        {{ 'accounts.wizard.sleeves.customHint' | transloco }}
+      </div>
     </button>
   </div>
 
@@ -55,7 +68,9 @@
       <div class="border border-surface rounded-border p-4">
         <div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto] items-end">
           <div class="flex flex-col gap-2">
-            <label class="font-medium" [for]="'sleeve-' + sleeve.key">{{ 'accounts.wizard.sleeves.partName' | transloco }}</label>
+            <label class="font-medium" [for]="'sleeve-' + sleeve.key">{{
+              'accounts.wizard.sleeves.partName' | transloco
+            }}</label>
             <input
               pInputText
               [id]="'sleeve-' + sleeve.key"
@@ -64,7 +79,10 @@
             />
           </div>
           <div class="flex flex-col gap-2">
-            <span class="font-medium">{{ 'accounts.wizard.sleeves.accountShare' | transloco: { targetSharePercent: sleeve.targetSharePercent } }}</span>
+            <span class="font-medium">{{
+              'accounts.wizard.sleeves.accountShare'
+                | transloco: { targetSharePercent: sleeve.targetSharePercent }
+            }}</span>
             <p-slider
               [ngModel]="sleeve.targetSharePercent"
               (ngModelChange)="draft.update(sleeve.key, { targetSharePercent: $event })"
@@ -83,7 +101,9 @@
             [ariaLabel]="'accounts.wizard.sleeves.remove' | transloco"
           />
         </div>
-        <div class="font-medium mt-4 mb-2">{{ 'accounts.wizard.sleeves.strategyFor' | transloco: { name: sleeve.name } }}</div>
+        <div class="font-medium mt-4 mb-2">
+          {{ 'accounts.wizard.sleeves.strategyFor' | transloco: { name: sleeve.name } }}
+        </div>
         <app-strategy-picker
           [strategies]="draft.strategies()"
           [value]="sleeve.strategyId"

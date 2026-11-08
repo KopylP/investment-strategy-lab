@@ -42,7 +42,10 @@
     @if (broker.statements.length) {
       <div class="flex flex-wrap gap-2 mb-3">
         <p-tag
-          [value]="'taxes.brokerStatements.matchedSales' | transloco: { matched: broker.matchedSales, total: broker.sales }"
+          [value]="
+            'taxes.brokerStatements.matchedSales'
+              | transloco: { matched: broker.matchedSales, total: broker.sales }
+          "
           [severity]="broker.matchedSales === broker.sales ? 'success' : 'warn'"
         />
         <p-tag
@@ -53,9 +56,9 @@
           [severity]="broker.matchedDividends === broker.dividends ? 'success' : 'warn'"
         />
         @if (broker.matchedSales < broker.sales || broker.matchedDividends < broker.dividends) {
-          <span class="text-xs text-muted-color self-center"
-            >{{ 'taxes.brokerStatements.unmatched' | transloco }}</span
-          >
+          <span class="text-xs text-muted-color self-center">{{
+            'taxes.brokerStatements.unmatched' | transloco
+          }}</span>
         }
       </div>
       @for (statement of broker.statements; track statement.id) {
@@ -63,7 +66,17 @@
           <div class="min-w-0">
             <div class="font-medium truncate">{{ statement.fileName }}</div>
             <div class="text-xs text-muted-color">
-              {{ 'taxes.brokerStatements.statementLine' | transloco: { from: (statement.from | date), to: (statement.to | date), sales: statement.sales, dividends: statement.dividends, uploadedAt: (statement.uploadedAt | dateTime) } }}
+              {{
+                'taxes.brokerStatements.statementLine'
+                  | transloco
+                    : {
+                        from: (statement.from | date),
+                        to: (statement.to | date),
+                        sales: statement.sales,
+                        dividends: statement.dividends,
+                        uploadedAt: (statement.uploadedAt | dateTime),
+                      }
+              }}
             </div>
             @for (warning of statement.warnings; track $index) {
               <div class="text-xs mt-1" style="color: var(--p-finance-tax)">{{ warning }}</div>

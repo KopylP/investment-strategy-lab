@@ -12,7 +12,16 @@ import { DashboardDto } from '../../data-access/dashboard-api';
 
 @Component({
   selector: 'app-allocation-card',
-  imports: [TranslocoPipe, RouterLink, UIChart, TableModule, Money, PercentPipe, SignedPercentPipe, SignedValue],
+  imports: [
+    TranslocoPipe,
+    RouterLink,
+    UIChart,
+    TableModule,
+    Money,
+    PercentPipe,
+    SignedPercentPipe,
+    SignedValue,
+  ],
   templateUrl: './allocation-card.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

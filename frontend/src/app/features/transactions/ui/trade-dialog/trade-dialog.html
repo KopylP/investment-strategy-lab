@@ -31,7 +31,9 @@
     </div>
     <div class="grid gap-4 sm:grid-cols-2">
       <div class="flex flex-col gap-2">
-        <label for="trade-quantity" class="font-medium">{{ 'transactions.trade.quantity' | transloco }}</label>
+        <label for="trade-quantity" class="font-medium">{{
+          'transactions.trade.quantity' | transloco
+        }}</label>
         <p-inputnumber
           inputId="trade-quantity"
           [ngModel]="quantity()"
@@ -42,7 +44,9 @@
         />
       </div>
       <div class="flex flex-col gap-2">
-        <label for="trade-price" class="font-medium">{{ 'transactions.trade.price' | transloco }}</label>
+        <label for="trade-price" class="font-medium">{{
+          'transactions.trade.price' | transloco
+        }}</label>
         <p-inputnumber
           inputId="trade-price"
           [ngModel]="price()"
@@ -55,7 +59,9 @@
         />
       </div>
       <div class="flex flex-col gap-2">
-        <label for="trade-fee" class="font-medium">{{ 'transactions.trade.fee' | transloco }}</label>
+        <label for="trade-fee" class="font-medium">{{
+          'transactions.trade.fee' | transloco
+        }}</label>
         <p-inputnumber
           inputId="trade-fee"
           [ngModel]="fee()"
@@ -80,7 +86,9 @@
       </div>
     </div>
     <div class="flex flex-col gap-2">
-      <label for="trade-sub" class="font-medium">{{ 'transactions.trade.subPortfolio' | transloco }}</label>
+      <label for="trade-sub" class="font-medium">{{
+        'transactions.trade.subPortfolio' | transloco
+      }}</label>
       <p-select
         inputId="trade-sub"
         [options]="subPortfolios()"
@@ -93,14 +101,17 @@
         appendTo="body"
         fluid
       />
-      <small class="text-muted-color"
-        >{{ 'transactions.trade.autoSplitHint' | transloco }}</small
-      >
+      <small class="text-muted-color">{{ 'transactions.trade.autoSplitHint' | transloco }}</small>
     </div>
     <div class="text-right text-lg font-semibold">{{ total() | money: currency() }}</div>
   </div>
   <ng-template #footer>
-    <p-button [label]="'common.cancel' | transloco" [text]="true" severity="secondary" (onClick)="visible.set(false)" />
+    <p-button
+      [label]="'common.cancel' | transloco"
+      [text]="true"
+      severity="secondary"
+      (onClick)="visible.set(false)"
+    />
     <p-button
       [label]="'transactions.trade.record' | transloco"
       icon="pi pi-check"
