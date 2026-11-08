@@ -5,7 +5,7 @@ namespace InvestmentLab.BuildingBlocks.Tests.Localization;
 
 public sealed class MessageLocalizerTests
 {
-    private static readonly MessageLocalizer Localizer = new(new Dictionary<string, string>
+    private static readonly MessageLocalizer Localizer = new(Language.Ukrainian, new Dictionary<string, string>
     {
         ["test.plain"] = "Просто текст",
         ["test.value"] = "Назва: {name}",
@@ -88,6 +88,22 @@ public sealed class MessageLocalizerTests
     [Fact]
     public void The_global_catalog_is_embedded()
     {
-        MessageLocalizer.Default.Render(Message.Of("month.1")).ShouldBe("січень");
+        MessageLocalizer.In(Language.Ukrainian).Render(Message.Of("month.1")).ShouldBe("січень");
+    }
+
+    [Fact]
+    public void Each_language_has_its_own_catalog()
+    {
+        MessageLocalizer.In(Language.English).Render(Message.Of("month.1")).ShouldBe("January");
+    }
+
+    [Fact]
+    public void English_counts_have_one_form_for_one_and_another_for_the_rest()
+    {
+        var localizer = new MessageLocalizer(Language.English, new Dictionary<string, string> { ["test.count"] = "{count} {count:plural:action|actions}" });
+
+        localizer.Render(Message.Of("test.count", new { count = 1 })).ShouldBe("1 action");
+        localizer.Render(Message.Of("test.count", new { count = 11 })).ShouldBe("11 actions");
+        localizer.Render(Message.Of("test.count", new { count = 21 })).ShouldBe("21 actions");
     }
 }

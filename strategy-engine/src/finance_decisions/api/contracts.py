@@ -364,7 +364,9 @@ class StrategyTypeDescriptor(ApiModel):
         default_factory=list,
         description="What a backtest of this type is shown next to, in this order: only the comparisons that answer a question about it.",
     )
-    messages: dict[str, str] = Field(default_factory=dict, description="The texts of this type's message codes, in Ukrainian.")
+    messages: dict[str, dict[str, str]] = Field(
+        default_factory=dict, description="The texts of this type's message codes by language code (uk, en)."
+    )
 
 
 class ParametersCheckRequest(ApiModel):

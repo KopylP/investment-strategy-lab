@@ -16,7 +16,7 @@ from finance_decisions.api.contracts import (
     Weekday,
 )
 from finance_decisions.helpers import latest_value
-from finance_decisions.messages import catalog_of, msg
+from finance_decisions.messages import catalogs_of, msg
 from finance_decisions.strategies.errors import ContextError
 from .conditions import ConditionReader
 from .parameters import RuleParameters
@@ -26,7 +26,7 @@ from .series_book import SeriesBook
 from .weights import WeightPlan, weights_for
 
 STRATEGY_CODE = "rule-based"
-MESSAGES = catalog_of(Path(__file__).resolve().parent)
+MESSAGES = catalogs_of(Path(__file__).resolve().parent)
 
 REPORTS = (
     ReportDefinition(

@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using InvestmentLab.BuildingBlocks.Localization;
+using InvestmentLab.BuildingBlocks.Mcp;
 using InvestmentLab.Identity.Users.Domain;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -48,7 +49,7 @@ internal sealed class AccessTokenEvents(UserManager<User> users, SignInManager<U
     private static async Task RespondNotLinkedAsync(HttpContext http)
     {
         var error = AccessTokenErrors.NotLinked();
-        var localized = MessageLocalizer.Default.Render(error.AsMessage());
+        var localized = MessageLocalizer.In(McpReply.Language).Render(error.AsMessage());
 
         var problem = TypedResults.Problem(
             detail: localized,

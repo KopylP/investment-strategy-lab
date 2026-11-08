@@ -4,7 +4,18 @@ using InvestmentLab.Identity.Users.Domain;
 
 namespace InvestmentLab.Identity.Profiles.Application.UpdateProfile;
 
-public sealed record UpdateProfileCommand(string DisplayCurrency, string Locale, string TimeZone);
+public sealed record UpdateProfileCommand(string DisplayCurrency, string? Language, string TimeZone)
+{
+    public Result<Language?> ChosenLanguage()
+    {
+        if (string.IsNullOrWhiteSpace(Language))
+            return Result<Language?>.Success(null);
+
+        var language = SharedKernel.Language.TryOf(Language);
+
+        return language.IsSuccess ? language.Value : language.Error;
+    }
+}
 
 public sealed class UpdateProfileHandler(IUserProfileRepository profiles)
 {
@@ -17,7 +28,11 @@ public sealed class UpdateProfileHandler(IUserProfileRepository profiles)
         if (currency.IsFailure)
             return currency.Error;
 
-        var updated = profile.Update(currency.Value, command.Locale, command.TimeZone);
+        var language = command.ChosenLanguage();
+        if (language.IsFailure)
+            return language.Error;
+
+        var updated = profile.Update(currency.Value, language.Value, command.TimeZone);
         if (updated.IsFailure)
             return updated.Error;
 

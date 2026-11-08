@@ -29,5 +29,5 @@ uv run python tools/export_golden_fixtures.py             # after changing etf_m
 - `etf_momentum/plan.py` is ported to .NET (`SubPortfolioRebalancer`); its golden fixtures live in
   `../backend/tests/InvestmentLab.GoldenTests/Fixtures/` — regenerate them and run the golden tests after a change.
 - Strategies must ignore data after the request's `asOf`; prices come in the request, not from the network.
-- No Ukrainian in Python: `msg(code, **parameters)` makes a token and the words live in `locales/uk.json` next to the strategy, sent to the backend with the type's descriptor. The command-line reports render tokens themselves with `render`; a test fails on Cyrillic in `.py` files or a code missing from a catalog.
+- No Ukrainian in Python: `msg(code, **parameters)` makes a token and the words live in `locales/uk.json` and `locales/en.json` next to the strategy (the same codes in each), sent to the backend by language with the type's descriptor. The command-line reports render tokens themselves with `render`, in Ukrainian; a test fails on Cyrillic in `.py` files or a code missing from a catalog.
 - `plan.py` fixtures hold the rendered words, so the golden tests also prove the wording of the .NET rebalancer.

@@ -6,7 +6,7 @@ namespace InvestmentLab.BuildingBlocks.Tests.Mcp;
 
 public sealed class McpReplyTests
 {
-    private static readonly MessageLocalizer Localizer = new(new Dictionary<string, string>
+    private static readonly MessageLocalizer Localizer = new(InvestmentLab.SharedKernel.Language.Ukrainian, new Dictionary<string, string>
     {
         ["test.market"] = "Якщо {condition}, у фонди йде все",
         ["test.compare"] = "{left} вище за {right}",

@@ -20,11 +20,11 @@ internal sealed class StrategyTypeConfiguration : IEntityTypeConfiguration<Strat
         type.Property(t => t.DefaultParameters).HasColumnType("jsonb");
         type.Property(t => t.Messages).HasColumnType("jsonb").HasConversion(
             messages => JsonSerializer.Serialize(messages, JsonSerializerOptions.Web),
-            json => JsonSerializer.Deserialize<Dictionary<string, string>>(json, JsonSerializerOptions.Web) ?? new Dictionary<string, string>(),
-            new ValueComparer<Dictionary<string, string>>(
-                (a, b) => a!.Count == b!.Count && !a.Except(b).Any(),
+            json => JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(json, JsonSerializerOptions.Web) ?? new Dictionary<string, Dictionary<string, string>>(),
+            new ValueComparer<Dictionary<string, Dictionary<string, string>>>(
+                (a, b) => JsonSerializer.Serialize(a, JsonSerializerOptions.Web) == JsonSerializer.Serialize(b, JsonSerializerOptions.Web),
                 messages => messages.Count,
-                messages => new Dictionary<string, string>(messages)));
+                messages => messages.ToDictionary(language => language.Key, language => new Dictionary<string, string>(language.Value))));
         type.Property(t => t.Reports).HasColumnType("jsonb").HasConversion(
             reports => JsonSerializer.Serialize(reports, JsonSerializerOptions.Web),
             json => JsonSerializer.Deserialize<List<ReportDefinition>>(json, JsonSerializerOptions.Web) ?? new List<ReportDefinition>(),

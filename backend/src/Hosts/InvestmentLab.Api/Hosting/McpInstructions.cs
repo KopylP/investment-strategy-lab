@@ -3,7 +3,7 @@ namespace InvestmentLab.Api.Hosting;
 internal static class McpInstructions
 {
     public const string Text = """
-        Investment Lab manages the user's investment accounts, strategies and signals. Texts you read are in Ukrainian.
+        Investment Lab manages the user's investment accounts, strategies and signals. Texts you read are in English.
 
         To research a strategy:
         1. Look around: get_vocabulary (blocks, indicators, parameters of strategy rules), list_instruments, search_funds,

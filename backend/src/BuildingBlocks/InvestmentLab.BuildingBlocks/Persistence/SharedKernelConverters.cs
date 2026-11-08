@@ -7,6 +7,8 @@ public static class SharedKernelConverters
 {
     public sealed class CurrencyConverter() : ValueConverter<Currency, string>(currency => currency.Code, code => Currency.Of(code));
 
+    public sealed class LanguageConverter() : ValueConverter<Language, string>(language => language.Code, code => Language.Of(code));
+
     public sealed class IsinConverter() : ValueConverter<Isin, string>(isin => isin.Value, value => Isin.Of(value));
 
     public sealed class UserIdConverter() : ValueConverter<UserId, Guid>(id => id.Value, value => UserId.Of(value));

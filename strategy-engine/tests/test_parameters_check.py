@@ -83,4 +83,5 @@ def test_the_exported_rule_schema_is_fresh() -> None:
 def test_every_type_sends_the_texts_of_parameter_problems(client: TestClient) -> None:
     types = client.get("/v1/strategies").json()
 
-    assert all("engine.parameters.float_type" in item["messages"] for item in types)
+    assert all("engine.parameters.float_type" in texts for item in types for texts in item["messages"].values())
+    assert all(set(item["messages"]) == {"uk", "en"} for item in types)

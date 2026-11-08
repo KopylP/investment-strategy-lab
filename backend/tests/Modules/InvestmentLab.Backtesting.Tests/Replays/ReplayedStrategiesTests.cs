@@ -45,6 +45,6 @@ public sealed class ReplayedStrategiesTests
                 [new StrategyReportDto("rebalance", "Rebalance", "", StrategyReportDto.Rebalance, new(frequency, day, weekday, time, 0), [], [])],
                 [], HistoryBars: 1009, ExtraSeries: [Extra]));
         public Task<IReadOnlyList<StrategySummaryDto>> GetStrategies(CancellationToken cancellationToken) => throw new NotSupportedException();
-        public Task<IReadOnlyDictionary<string, string>> GetMessages(CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<IReadOnlyDictionary<string, string>> GetMessages(string languageCode, CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 }

@@ -28,15 +28,15 @@ public static class McpReplyLocalization
     private static async Task<MessageLocalizer> LocalizerAsync(IServiceProvider? services, CancellationToken cancellationToken)
     {
         if (services?.GetService<IStrategyDirectory>() is not { } strategies)
-            return MessageLocalizer.Default;
+            return MessageLocalizer.In(McpReply.Language);
 
         try
         {
-            return new MessageLocalizer(await strategies.GetMessages(cancellationToken));
+            return new MessageLocalizer(McpReply.Language, await strategies.GetMessages(McpReply.Language.Code, cancellationToken));
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            return MessageLocalizer.Default;
+            return MessageLocalizer.In(McpReply.Language);
         }
     }
 }

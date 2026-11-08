@@ -77,7 +77,7 @@ public sealed class NoStrategies : IStrategyDirectory
     public Task<StrategyReplaySetupDto?> GetReplaySetup(Guid strategyId, int? version, CancellationToken cancellationToken) =>
         Task.FromResult<StrategyReplaySetupDto?>(null);
 
-    public Task<IReadOnlyDictionary<string, string>> GetMessages(CancellationToken cancellationToken) =>
+    public Task<IReadOnlyDictionary<string, string>> GetMessages(string languageCode, CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyDictionary<string, string>>(new Dictionary<string, string>());
 }
 

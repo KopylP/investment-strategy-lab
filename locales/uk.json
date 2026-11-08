@@ -19,7 +19,6 @@
   "user.PasswordTooShort": "Пароль має містити щонайменше 10 символів.",
   "profile.not_found": "Профіль не знайдено.",
   "profile.currency_unsupported": "Підсумки можна показувати в EUR, USD або PLN.",
-  "profile.locale_unknown": "Невідома мова.",
   "profile.time_zone_unknown": "Невідомий часовий пояс.",
   "isin.invalid": "Некоректний ISIN.",
   "currency.invalid": "Некоректний код валюти.",
@@ -486,5 +485,6 @@
   "research.journal.expired": "Строк наказу минув без придатного котирування.",
   "research.journal.target": "Наказ для досягнення цільової ваги.",
   "research.journal.risk_cash": "Паркування коштів після виходу за ризиком.",
-  "research.risk.actions": "{actions:join:; }"
+  "research.risk.actions": "{actions:join:; }",
+  "language.unsupported": "Сервіс не має такої мови."
 }

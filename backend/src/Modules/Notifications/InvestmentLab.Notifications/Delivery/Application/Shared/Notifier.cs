@@ -8,14 +8,28 @@ public sealed class Notifier(
     IEnumerable<INotificationChannel> channels,
     INotificationPreferencesRepository preferences,
     IHomeAssistantUsers homeAssistantUsers,
+    IUserLanguages languages,
     ILogger<Notifier> logger)
 {
     public IReadOnlyList<INotificationChannel> Channels { get; } = [.. channels];
 
-    public async Task<Recipient> RecipientAsync(Guid userId, CancellationToken cancellationToken) => new(
-        userId,
-        await homeAssistantUsers.FindHomeAssistantUserIdAsync(userId, cancellationToken),
-        (await preferences.FindAsync(UserId.Of(userId), cancellationToken))?.Destinations);
+    public async Task<Recipient> RecipientAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var homeAssistantUserId = await homeAssistantUsers.FindHomeAssistantUserIdAsync(userId, cancellationToken);
+        var destinations = (await preferences.FindAsync(UserId.Of(userId), cancellationToken))?.Destinations;
+        var language = await ChosenLanguageAsync(userId, cancellationToken);
+
+        return new Recipient(userId, homeAssistantUserId, destinations, language);
+    }
+
+    private async Task<Language?> ChosenLanguageAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var code = await languages.FindChosenLanguageAsync(userId, cancellationToken);
+        if (code is null)
+            return null;
+
+        return Language.Of(code);
+    }
 
     public async Task<IReadOnlyList<string>> SendAsync(Notification notification, CancellationToken cancellationToken)
     {

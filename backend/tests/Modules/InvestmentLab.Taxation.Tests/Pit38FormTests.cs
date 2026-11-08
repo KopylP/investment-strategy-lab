@@ -10,7 +10,7 @@ public sealed class Pit38FormTests
         Eurobond = Guid.NewGuid();
     private static readonly Pit38Form Form = new();
 
-    private static string Rendered(string text) => MessageLocalizer.Default.Render(text);
+    private static string Rendered(string text) => MessageLocalizer.In(InvestmentLab.SharedKernel.Language.Ukrainian).Render(text);
     private static readonly ITaxPolicy Belka = new BelkaTaxPolicy(), Ike = TaxPolicies.For("PL-IKE");
 
     private static TaxYearSummary Year(int year, decimal revenue, decimal costs, decimal dividends = 0m, decimal credit = 0m) =>

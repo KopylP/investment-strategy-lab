@@ -1,3 +1,4 @@
+using System.Globalization;
 using InvestmentLab.Taxation.Assessments.Domain;
 using InvestmentLab.Taxation.Declarations.Domain;
 using InvestmentLab.Taxation.Declarations.Infrastructure;
@@ -25,11 +26,36 @@ public sealed class DeclarationSummaryPrinterTests
         return string.Join("\n", document.GetPages().Select(page => ContentOrderTextExtractor.GetText(page)));
     }
 
+    private static byte[] PrintIn(string language, TaxDeclaration declaration)
+    {
+        var previous = CultureInfo.CurrentUICulture;
+        CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(language);
+
+        try
+        {
+            return new DeclarationSummaryPrinter().Print(declaration);
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previous;
+        }
+    }
+
+    [Fact]
+    public void The_summary_speaks_the_language_of_the_request_and_keeps_the_forms_own_polish_words()
+    {
+        var text = Text(PrintIn("en", Declaration()));
+
+        text.ShouldContain("PIT-38 for 2025");
+        text.ShouldContain("Before filing");
+        text.ShouldContain("Stany Zjednoczone Ameryki");
+    }
+
     [Fact]
     public void Lists_the_tax_due_and_every_amount_to_type_or_check_in_the_forms_order_without_the_zeros()
     {
         var declaration = Declaration();
-        var pdf = new DeclarationSummaryPrinter().Print(declaration);
+        var pdf = PrintIn("uk", declaration);
 
         if (Environment.GetEnvironmentVariable("PIT38_SUMMARY_SAMPLE") is { Length: > 0 } sample)
             File.WriteAllBytes(sample, pdf);

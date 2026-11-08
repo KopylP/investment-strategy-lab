@@ -71,6 +71,7 @@ public abstract class ModuleDbContext(DbContextOptions options) : DbContext(opti
         configurationBuilder.Properties<decimal>().HavePrecision(20, 8);
 
         configurationBuilder.Properties<Currency>().HaveConversion<SharedKernelConverters.CurrencyConverter>().HaveMaxLength(3);
+        configurationBuilder.Properties<Language>().HaveConversion<SharedKernelConverters.LanguageConverter>().HaveMaxLength(8);
         configurationBuilder.Properties<Isin>().HaveConversion<SharedKernelConverters.IsinConverter>().HaveMaxLength(12);
         configurationBuilder.Properties<UserId>().HaveConversion<SharedKernelConverters.UserIdConverter>();
         configurationBuilder.Properties<YearMonth>().HaveConversion<SharedKernelConverters.YearMonthConverter>().HaveMaxLength(7);

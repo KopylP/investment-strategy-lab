@@ -6,5 +6,5 @@ public interface IStrategyDirectory
 
     Task<StrategyReplaySetupDto?> GetReplaySetup(Guid strategyId, int? version, CancellationToken cancellationToken);
 
-    Task<IReadOnlyDictionary<string, string>> GetMessages(CancellationToken cancellationToken);
+    Task<IReadOnlyDictionary<string, string>> GetMessages(string languageCode, CancellationToken cancellationToken);
 }

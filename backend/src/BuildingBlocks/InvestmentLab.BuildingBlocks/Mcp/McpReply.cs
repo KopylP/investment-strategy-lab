@@ -1,12 +1,15 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using InvestmentLab.BuildingBlocks.Localization;
+using InvestmentLab.SharedKernel;
 
 namespace InvestmentLab.BuildingBlocks.Mcp;
 
 public static class McpReply
 {
     private const int FractionDigits = 4;
+
+    public static Language Language { get; } = Language.English;
 
     public static string Rendered(string reply, MessageLocalizer localizer)
     {

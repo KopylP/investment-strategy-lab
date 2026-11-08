@@ -54,7 +54,7 @@ public sealed class DeclarationSummaryPrinter : IDeclarationPrinter
         sheet.Heading(Text("tax.summary.facts"));
 
         foreach (var fact in facts)
-            sheet.Row(null, MessageLocalizer.Default.Render(fact.Label), $"{Amount(fact.Amount)} zł", computed: false);
+            sheet.Row(null, MessageLocalizer.Current.Render(fact.Label), $"{Amount(fact.Amount)} zł", computed: false);
     }
 
     private static void PrintActions(Sheet sheet, TaxDeclaration declaration)
@@ -66,10 +66,10 @@ public sealed class DeclarationSummaryPrinter : IDeclarationPrinter
         sheet.Heading(Text("tax.summary.before_filing"));
 
         foreach (var action in actions)
-            sheet.Bullet(MessageLocalizer.Default.Render(action));
+            sheet.Bullet(MessageLocalizer.Current.Render(action));
     }
 
-    private static string Text(string code, object? parameters = null) => MessageLocalizer.Default.Render(code, parameters);
+    private static string Text(string code, object? parameters = null) => MessageLocalizer.Current.Render(code, parameters);
 
     private static IReadOnlyList<DeclarationField> Shown(IReadOnlyList<DeclarationField> fields) =>
         [.. fields.Where(field => field.Amount is null || field.Amount != 0m)];
@@ -84,7 +84,7 @@ public sealed class DeclarationSummaryPrinter : IDeclarationPrinter
     {
         private const double Width = 595.28, Height = 841.89, Margin = 48, PositionX = Margin, LabelX = Margin + 48, ValueRight = Width - Margin;
         private const double LineHeight = 13, RowGap = 16, MarkGap = 8;
-        private static readonly string ComputedMark = MessageLocalizer.Default.Render("tax.summary.computed_mark", null);
+        private static string ComputedMark => MessageLocalizer.Current.Render("tax.summary.computed_mark", null);
         private static readonly (byte R, byte G, byte B) Ink = (15, 23, 42), Grey = (100, 116, 139), Rule = (226, 232, 240), Accent = (79, 70, 229);
 
         private PdfPageBuilder? _page;
