@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Step, StepList, StepPanel, StepPanels, Stepper } from 'primeng/stepper';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
@@ -11,7 +12,7 @@ import { NewAccountStepDone } from '../../ui/new-account-step-done/new-account-s
 
 @Component({
   selector: 'app-account-new-page',
-  imports: [
+  imports: [TranslocoPipe, 
     Stepper,
     StepList,
     Step,

@@ -1,16 +1,16 @@
 <div class="card text-center">
   <i class="pi pi-check-circle text-5xl text-primary"></i>
-  <h2 class="text-xl font-semibold">Рахунок готовий</h2>
-  <p class="text-muted-color">Звідки почати?</p>
+  <h2 class="text-xl font-semibold">{{ 'accounts.wizard.done.title' | transloco }}</h2>
+  <p class="text-muted-color">{{ 'accounts.wizard.done.whereToStart' | transloco }}</p>
   <div class="grid gap-3 md:grid-cols-3 text-left mt-4">
     <button
       type="button"
       class="rounded-border border border-surface p-4 bg-transparent cursor-pointer text-color hover:border-primary text-left"
       (click)="draft.go(['/transactions/import'])"
     >
-      <div class="font-semibold"><i class="pi pi-upload mr-2"></i>У мене вже є інвестиції</div>
+      <div class="font-semibold"><i class="pi pi-upload mr-2"></i>{{ 'accounts.wizard.done.haveInvestments' | transloco }}</div>
       <div class="text-sm text-muted-color mt-1">
-        Завантажте виписку Revolut (CSV) — історія операцій, позиції й кеш з’являться автоматично.
+        {{ 'accounts.wizard.done.haveInvestmentsHint' | transloco }}
       </div>
     </button>
     <button
@@ -18,9 +18,9 @@
       class="rounded-border border border-surface p-4 bg-transparent cursor-pointer text-color hover:border-primary text-left"
       (click)="draft.go(['/draft.reports'])"
     >
-      <div class="font-semibold"><i class="pi pi-bolt mr-2"></i>Починаю з нуля</div>
+      <div class="font-semibold"><i class="pi pi-bolt mr-2"></i>{{ 'accounts.wizard.done.fromScratch' | transloco }}</div>
       <div class="text-sm text-muted-color mt-1">
-        Згенеруйте перший рапорт: скільки внести і які ETF купити.
+        {{ 'accounts.wizard.done.fromScratchHint' | transloco }}
       </div>
     </button>
     <button
@@ -28,9 +28,9 @@
       class="rounded-border border border-surface p-4 bg-transparent cursor-pointer text-color hover:border-primary text-left"
       (click)="draft.go(['/accounts', draft.createdId() ?? ''])"
     >
-      <div class="font-semibold"><i class="pi pi-wallet mr-2"></i>Подивитись рахунок</div>
+      <div class="font-semibold"><i class="pi pi-wallet mr-2"></i>{{ 'accounts.wizard.done.viewAccount' | transloco }}</div>
       <div class="text-sm text-muted-color mt-1">
-        Частки, стратегії, розклад рапортів — усе можна змінити пізніше.
+        {{ 'accounts.wizard.done.viewAccountHint' | transloco }}
       </div>
     </button>
   </div>

@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -19,7 +20,7 @@ import { AccountDetailStore } from '../../data-access/account-detail-store';
 
 @Component({
   selector: 'app-import-positions-dialog',
-  imports: [FormsModule, Button, DatePicker, Dialog, Message, Select, FileDrop],
+  imports: [TranslocoPipe, FormsModule, Button, DatePicker, Dialog, Message, Select, FileDrop],
   templateUrl: './import-positions-dialog.html',
   host: { class: 'contents' },
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -56,13 +57,13 @@ export class ImportPositionsDialog {
 
     try {
       const json = JSON.parse(await file.text()) as { positions?: unknown[] };
-      if (!Array.isArray(json.positions)) throw new Error('У файлі немає масиву positions');
+      if (!Array.isArray(json.positions)) throw new Error(translate('accounts.importPositions.noPositions'));
 
       this.importJson.set(json);
       this.importError.set(null);
     } catch (error) {
       this.importJson.set(null);
-      this.importError.set(error instanceof Error ? error.message : 'Не JSON');
+      this.importError.set(error instanceof Error ? error.message : translate('accounts.importPositions.notJson'));
     }
   }
 

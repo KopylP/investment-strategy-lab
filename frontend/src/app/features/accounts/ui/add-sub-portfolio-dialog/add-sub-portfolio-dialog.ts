@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -27,7 +28,7 @@ interface SubPortfolioDraft {
 
 @Component({
   selector: 'app-add-sub-portfolio-dialog',
-  imports: [StrategyPicker, FormsModule, Button, Dialog, InputNumber, InputText, Select],
+  imports: [TranslocoPipe, StrategyPicker, FormsModule, Button, Dialog, InputNumber, InputText, Select],
   templateUrl: './add-sub-portfolio-dialog.html',
   host: { class: 'contents' },
   changeDetection: ChangeDetectionStrategy.OnPush,

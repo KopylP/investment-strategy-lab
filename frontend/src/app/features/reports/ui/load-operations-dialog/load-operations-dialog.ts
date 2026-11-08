@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -35,7 +36,7 @@ interface StatementUpload {
 
 @Component({
   selector: 'app-load-operations-dialog',
-  imports: [
+  imports: [TranslocoPipe, 
     RouterLink,
     Button,
     Message,
@@ -80,7 +81,7 @@ export class LoadOperationsDialog implements OnInit {
 
   protected operationLabel(operation: MatchedOperationDto): string {
     return (
-      { Buy: 'Купівля', Sell: 'Продаж', Contribution: 'Поповнення' }[operation.kind] ??
+      { Buy: translate('chart.buy'), Sell: translate('chart.sell'), Contribution: translate('transactions.rows.kind.Contribution') }[operation.kind] ??
       operation.kind
     );
   }

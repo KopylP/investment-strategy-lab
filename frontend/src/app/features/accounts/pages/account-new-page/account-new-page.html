@@ -1,18 +1,18 @@
 <app-page-header
   backLink="/accounts"
-  backLabel="Рахунки"
-  title="Новий рахунок"
-  subtitle="Кілька кроків — і сервіс щомісяця підказуватиме, що купити в брокера"
+  [backLabel]="'routes.accounts' | transloco"
+  [title]="'routes.newAccount' | transloco"
+  [subtitle]="'accounts.wizard.subtitle' | transloco"
 />
 
 <p-stepper [value]="draft.step()" (valueChange)="draft.step.set($any($event))" [linear]="true">
   <p-step-list>
-    <p-step [value]="1">Рахунок</p-step>
-    <p-step [value]="2">Як розділити гроші</p-step>
-    <p-step [value]="3">Внески</p-step>
-    <p-step [value]="4">Рапорти</p-step>
-    <p-step [value]="5">Перевірка</p-step>
-    <p-step [value]="6">Готово</p-step>
+    <p-step [value]="1">{{ 'step.account' | transloco }}</p-step>
+    <p-step [value]="2">{{ 'step.sleeves' | transloco }}</p-step>
+    <p-step [value]="3">{{ 'step.contributions' | transloco }}</p-step>
+    <p-step [value]="4">{{ 'step.reports' | transloco }}</p-step>
+    <p-step [value]="5">{{ 'step.review' | transloco }}</p-step>
+    <p-step [value]="6">{{ 'step.done' | transloco }}</p-step>
   </p-step-list>
 
   <p-step-panels>

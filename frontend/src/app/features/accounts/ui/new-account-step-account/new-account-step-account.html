@@ -1,14 +1,12 @@
 <div class="card">
   <p-message severity="secondary" styleClass="mb-5">
     <div>
-      <b>Рахунок</b> — це ваш реальний брокерський рахунок (наприклад, у Revolut). Сервіс не
-      підключається до брокера: він рахує план, а ви виконуєте його в застосунку брокера й
-      відмічаєте тут (або завантажуєте виписку).
+      <b>{{ 'accounts.wizard.account.account' | transloco }}</b> {{ 'accounts.wizard.account.accountHint' | transloco }}
     </div>
   </p-message>
   <div class="grid gap-5 md:grid-cols-2">
     <div class="flex flex-col gap-2">
-      <label for="name" class="font-medium">Як назвати</label>
+      <label for="name" class="font-medium">{{ 'accounts.wizard.account.name' | transloco }}</label>
       <input
         pInputText
         id="name"
@@ -17,7 +15,7 @@
       />
     </div>
     <div class="flex flex-col gap-2">
-      <span class="font-medium">Брокер</span>
+      <span class="font-medium">{{ 'accounts.wizard.account.broker' | transloco }}</span>
       <p-selectbutton
         [options]="draft.brokers"
         optionLabel="label"
@@ -29,7 +27,7 @@
       />
     </div>
     <div class="flex flex-col gap-2">
-      <span class="font-medium">Валюта рахунку</span>
+      <span class="font-medium">{{ 'accounts.wizard.account.currency' | transloco }}</span>
       <p-selectbutton
         [options]="draft.currencies"
         optionLabel="label"
@@ -39,12 +37,11 @@
         [allowEmpty]="false"
       />
       <small class="text-muted-color"
-        >У ній рахуються план, кеш і вартість. ETF в інших валютах перераховуються за офіційним курсом.
-        Показувати суми можна в будь-якій валюті (перемикач угорі).</small
+        >{{ 'accounts.wizard.account.currencyHint' | transloco }}</small
       >
     </div>
     <div class="flex flex-col gap-2">
-      <span class="font-medium">Тип рахунку для податків</span>
+      <span class="font-medium">{{ 'accounts.wizard.account.taxType' | transloco }}</span>
       <p-selectbutton
         [options]="draft.taxPolicies()"
         optionLabel="label"
@@ -59,7 +56,7 @@
   </div>
   <div class="flex justify-end mt-6">
     <p-button
-      label="Далі"
+      [label]="'common.next' | transloco"
       icon="pi pi-arrow-right"
       iconPos="right"
       [disabled]="!draft.accountValid()"

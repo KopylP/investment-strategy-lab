@@ -1,5 +1,5 @@
 <p-dialog
-  header="Імпорт positions.json"
+  [header]="'accounts.importPositions.title' | transloco"
   [modal]="true"
   [visible]="visible()"
   (visibleChange)="visible.set($event)"
@@ -8,11 +8,10 @@
 >
   <div class="flex flex-col gap-4">
     <p class="m-0 text-muted-color">
-      Файл Python-флоу: позиції стануть операціями журналу (внесок на всю вартість і купівлі за
-      ціною входу). Повторний імпорт нічого не дублює.
+      {{ 'accounts.importPositions.hint' | transloco }}
     </p>
     <div class="flex flex-col gap-2">
-      <label for="import-sleeve" class="font-medium">Під-портфель</label>
+      <label for="import-sleeve" class="font-medium">{{ 'transactions.trade.subPortfolio' | transloco }}</label>
       <p-select
         inputId="import-sleeve"
         [options]="store.active()"
@@ -25,7 +24,7 @@
       />
     </div>
     <div class="flex flex-col gap-2">
-      <label for="import-date" class="font-medium">Дата позицій</label>
+      <label for="import-date" class="font-medium">{{ 'accounts.importPositions.date' | transloco }}</label>
       <p-datepicker
         inputId="import-date"
         [ngModel]="importDate()"
@@ -37,13 +36,13 @@
       />
     </div>
     <div class="flex flex-col gap-2">
-      <span class="font-medium">Файл</span>
+      <span class="font-medium">{{ 'transactions.history.file' | transloco }}</span>
       <label
         appFileDrop
         class="p-button p-button-outlined p-button-secondary justify-center cursor-pointer"
       >
         <i class="pi pi-file mr-2"></i
-        >{{ importFileName() || 'Вибрати або перетягнути positions.json' }}
+        >{{ importFileName() || ('accounts.importPositions.drop' | transloco) }}
         <input
           type="file"
           accept=".json,application/json"
@@ -57,9 +56,9 @@
     </div>
   </div>
   <ng-template #footer>
-    <p-button label="Скасувати" [text]="true" severity="secondary" (onClick)="visible.set(false)" />
+    <p-button [label]="'common.cancel' | transloco" [text]="true" severity="secondary" (onClick)="visible.set(false)" />
     <p-button
-      label="Імпортувати"
+      [label]="'transactions.rows.importAction' | transloco"
       icon="pi pi-upload"
       [disabled]="!importJson() || !importSleeve()"
       [loading]="store.busy() === 'import'"

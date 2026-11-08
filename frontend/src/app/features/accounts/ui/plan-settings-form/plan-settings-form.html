@@ -1,6 +1,6 @@
 <div class="grid gap-5 md:grid-cols-2">
   <div class="flex flex-col gap-2">
-    <label for="contribution" class="font-medium">Щомісячний внесок</label>
+    <label for="contribution" class="font-medium">{{ 'accounts.plan.monthlyContribution' | transloco }}</label>
     <p-inputnumber
       inputId="contribution"
       [ngModel]="settings().monthlyContribution"
@@ -12,12 +12,12 @@
       fluid
     />
     <small class="text-muted-color"
-      >Пропонується в кожному щомісячному рапорті; суму можна змінити при генерації.</small
+      >{{ 'accounts.plan.monthlyContributionHint' | transloco }}</small
     >
   </div>
   @if (showPolicy()) {
     <div class="flex flex-col gap-2">
-      <span class="font-medium">Як ділити внесок між під-портфелями</span>
+      <span class="font-medium">{{ 'accounts.plan.splitHow' | transloco }}</span>
       <p-selectbutton
         [options]="policies"
         optionLabel="label"
@@ -27,16 +27,16 @@
         [allowEmpty]="false"
       />
       <small class="text-muted-color"
-        >«Тому, хто відстає» тримає частки без продажів; «За частками» — завжди однаково.</small
+        >{{ 'accounts.plan.splitHint' | transloco }}</small
       >
     </div>
   }
   <div class="flex flex-col gap-2">
     <label for="minTrade" class="font-medium flex items-center gap-1">
-      Мінімальна угода
+      {{ 'accounts.plan.minTrade' | transloco }}
       <i
         class="pi pi-info-circle text-xs text-muted-color"
-        pTooltip="Дрібніші покупки пропускаються, гроші паркуються"
+        [pTooltip]="'accounts.plan.minTradeHint' | transloco"
       ></i>
     </label>
     <p-inputnumber
@@ -52,10 +52,10 @@
   </div>
   <div class="flex flex-col gap-2">
     <label for="trimBand" class="font-medium flex items-center gap-1">
-      Поріг зменшення переможця, %
+      {{ 'accounts.plan.trimBand' | transloco }}
       <i
         class="pi pi-info-circle text-xs text-muted-color"
-        pTooltip="Позицію в плюсі продають до цілі, лише коли вона перевищує ціль більше, ніж на стільки відсотків портфеля"
+        [pTooltip]="'accounts.plan.trimBandHint' | transloco"
       ></i>
     </label>
     <p-inputnumber
@@ -71,10 +71,10 @@
   @if (showPolicy()) {
     <div class="flex flex-col gap-2">
       <label for="drift" class="font-medium flex items-center gap-1">
-        Допустиме відхилення часток, %
+        {{ 'accounts.plan.driftBand' | transloco }}
         <i
           class="pi pi-info-circle text-xs text-muted-color"
-          pTooltip="Більше відхилення — рапорт підкаже внутрішній переказ між під-портфелями"
+          [pTooltip]="'accounts.plan.driftBandHint' | transloco"
         ></i>
       </label>
       <p-inputnumber
@@ -95,7 +95,7 @@
         [ngModel]="settings().allowFractionalShares"
         (ngModelChange)="set('allowFractionalShares', $event)"
       />
-      <span>Дробові акції (брокер дозволяє купувати частину ETF)</span>
+      <span>{{ 'accounts.plan.fractional' | transloco }}</span>
     </label>
     <label class="flex items-center gap-3">
       <p-toggleswitch
@@ -104,8 +104,7 @@
         (ngModelChange)="set('levelByPurchasesOnly', $event)"
       />
       <span
-        >Вирівнювати лише докупками: без продажу надлишку й переказів між під-портфелями. Фонди, що
-        випали зі стратегії, продаються й далі</span
+        >{{ 'accounts.plan.buyOnly' | transloco }}</span
       >
     </label>
     <label class="flex items-center gap-3">
@@ -114,7 +113,7 @@
         [ngModel]="settings().generateOnSchedule"
         (ngModelChange)="set('generateOnSchedule', $event)"
       />
-      <span>Рапорти автоматично за розкладом</span>
+      <span>{{ 'accounts.plan.autoReports' | transloco }}</span>
     </label>
   </div>
 </div>

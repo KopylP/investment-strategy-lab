@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { ConfirmationService, MenuItem } from 'primeng/api';
@@ -27,7 +28,7 @@ import { SkipDialog } from '../../ui/skip-dialog/skip-dialog';
 
 @Component({
   selector: 'app-report-detail-page',
-  imports: [
+  imports: [TranslocoPipe, 
     RouterLink,
     Button,
     Menu,
@@ -69,7 +70,7 @@ export class ReportDetailPage {
       ...(this.store.canMark()
         ? [
             {
-              label: 'Довантажити операції',
+              label: translate('reports.detail.loadOperations'),
               icon: 'pi pi-download',
               command: () => this.openLoadOperations(),
             },
@@ -78,7 +79,7 @@ export class ReportDetailPage {
       ...(report && report.summary.status !== 'Superseded'
         ? [
             {
-              label: 'Згенерувати заново',
+              label: translate('reports.detail.regenerate'),
               icon: 'pi pi-refresh',
               disabled: busy === 'regenerate',
               command: () => this.confirmRegenerate(),
@@ -88,7 +89,7 @@ export class ReportDetailPage {
       ...(this.store.canMark()
         ? [
             {
-              label: 'Закрити рапорт',
+              label: translate('reports.detail.close'),
               icon: 'pi pi-lock',
               disabled: busy === 'close',
               command: () => this.confirmClose(),
@@ -113,7 +114,7 @@ export class ReportDetailPage {
   protected openSkip(action: ReportActionVm): void {
     this.dialogs
       .open(SkipDialog, {
-        header: `Пропустити · ${action.title}`,
+        header: translate('reports.detail.skipTitle', { title: action.title }),
         modal: true,
         width: '32rem',
         closable: true,
@@ -137,7 +138,7 @@ export class ReportDetailPage {
 
     this.dialogs
       .open(LoadOperationsDialog, {
-        header: 'Довантажити операції',
+        header: translate('reports.detail.loadOperations'),
         modal: true,
         width: '40rem',
         closable: true,
@@ -152,15 +153,15 @@ export class ReportDetailPage {
     const linkedOnly = action.fills.length > 0 && action.fills.every((fill) => fill.linked);
 
     this.confirm.confirm({
-      header: 'Скасувати відмітку?',
+      header: translate('reports.detail.undoQuestion'),
       message: linkedOnly
-        ? 'Дія знову стане очікуваною. Операції з виписки лишаться в журналі — їх лише буде відв’язано від плану.'
+        ? translate('reports.detail.undoStatementHint')
         : action.fills.length
-          ? 'Дія знову стане очікуваною, а операції в журналі буде сторновано.'
-          : 'Дія знову стане очікуваною.',
+          ? translate('reports.detail.undoReverseHint')
+          : translate('reports.detail.undoHint'),
       icon: 'pi pi-undo',
-      acceptLabel: 'Скасувати відмітку',
-      rejectLabel: 'Залишити',
+      acceptLabel: translate('reports.actions.undoMark'),
+      rejectLabel: translate('reports.detail.keep'),
       acceptButtonProps: { severity: 'danger' },
       rejectButtonProps: { severity: 'secondary', text: true },
       accept: () => void this.store.undo(action),
@@ -169,12 +170,12 @@ export class ReportDetailPage {
 
   protected confirmClose(): void {
     this.confirm.confirm({
-      header: 'Закрити рапорт?',
+      header: translate('reports.detail.closeQuestion'),
       message:
-        'Дії без відмітки буде позначено як пропущені («закрито без відмітки»). Відмітки можна буде скасувати й пізніше.',
+        translate('reports.detail.closeHint'),
       icon: 'pi pi-lock',
-      acceptLabel: 'Закрити',
-      rejectLabel: 'Скасувати',
+      acceptLabel: translate('common.close'),
+      rejectLabel: translate('common.cancel'),
       rejectButtonProps: { severity: 'secondary', text: true },
       accept: () => void this.store.close(),
     });
@@ -182,12 +183,12 @@ export class ReportDetailPage {
 
   protected confirmRegenerate(): void {
     this.confirm.confirm({
-      header: 'Згенерувати заново?',
+      header: translate('reports.detail.regenerateQuestion'),
       message:
-        'Новий план рахується від фактичних позицій і кешу; цей рапорт буде замінено. Уже зроблені відмітки лишаються в журналі.',
+        translate('reports.detail.regenerateHint'),
       icon: 'pi pi-refresh',
-      acceptLabel: 'Згенерувати',
-      rejectLabel: 'Скасувати',
+      acceptLabel: translate('reports.list.generate'),
+      rejectLabel: translate('common.cancel'),
       rejectButtonProps: { severity: 'secondary', text: true },
       accept: async () => {
         const requestId = await this.store.regenerate();
@@ -204,7 +205,7 @@ export class ReportDetailPage {
   ): void {
     this.dialogs
       .open(FillDialog, {
-        header: `${mode === 'partial' ? 'Частково виконано' : 'Виконано'} · ${action.title}`,
+        header: `${mode === 'partial' ? translate('reports.actions.partlyDone') : translate('reports.actionStatus.Executed')} · ${action.title}`,
         modal: true,
         width: '36rem',
         closable: true,

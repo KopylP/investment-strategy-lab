@@ -1,17 +1,14 @@
 <div class="card">
   <p-message severity="secondary" styleClass="mb-5">
     <div>
-      <b>Під-портфель</b> — частина рахунку зі своєю метою: цільовою часткою й стратегією. Гроші
-      лежать на одному рахунку, а сервіс віртуально ділить їх і стежить, щоб кожна частина трималась
-      своєї частки. <b>Стратегія</b> щоразу вирішує, які ETF тримати в під-портфелі.
+      <b>{{ 'accounts.wizard.sleeves.subPortfolio' | transloco }}</b> {{ 'accounts.wizard.sleeves.subPortfolioHint' | transloco }} <b>{{ 'routes.strategy' | transloco }}</b> {{ 'accounts.wizard.sleeves.strategyHint' | transloco }}
     </div>
     <div class="mt-2">
-      <i class="pi pi-pencil mr-1"></i>Частки й стратегії потім можна змінити, а частини — додати чи
-      вивести, на сторінці рахунку (<b>Налаштування → Рахунки</b>).
+      <i class="pi pi-pencil mr-1"></i>{{ 'accounts.wizard.sleeves.changeLater' | transloco }}<b>{{ 'accounts.settingsAccounts' | transloco }}</b>).
     </div>
   </p-message>
 
-  <div class="font-medium mb-3">Оберіть основу</div>
+  <div class="font-medium mb-3">{{ 'accounts.wizard.sleeves.chooseBase' | transloco }}</div>
   <div class="grid gap-3 md:grid-cols-3 mb-6">
     <button
       type="button"
@@ -20,9 +17,9 @@
       [class.border-surface]="draft.preset() !== 'simple'"
       (click)="draft.choosePreset('simple')"
     >
-      <div class="font-semibold"><i class="pi pi-circle mr-2"></i>Просто</div>
+      <div class="font-semibold"><i class="pi pi-circle mr-2"></i>{{ 'accounts.wizard.sleeves.simple' | transloco }}</div>
       <div class="text-sm text-muted-color mt-1">
-        Один під-портфель, одна стратегія. Найкраще для початку.
+        {{ 'accounts.wizard.sleeves.simpleHint' | transloco }}
       </div>
     </button>
     <button
@@ -32,9 +29,9 @@
       [class.border-surface]="draft.preset() !== 'balanced'"
       (click)="draft.choosePreset('balanced')"
     >
-      <div class="font-semibold"><i class="pi pi-chart-pie mr-2"></i>Європа 70 / США 30</div>
+      <div class="font-semibold"><i class="pi pi-chart-pie mr-2"></i>{{ 'accounts.wizard.sleeves.europeUs' | transloco }}</div>
       <div class="text-sm text-muted-color mt-1">
-        Дві частини з різними наборами ETF — більше диверсифікації.
+        {{ 'accounts.wizard.sleeves.europeUsHint' | transloco }}
       </div>
     </button>
     <button
@@ -44,13 +41,13 @@
       [class.border-surface]="draft.preset() !== 'custom'"
       (click)="draft.choosePreset('custom')"
     >
-      <div class="font-semibold"><i class="pi pi-sliders-h mr-2"></i>Свій варіант</div>
-      <div class="text-sm text-muted-color mt-1">Будь-яка кількість частин і стратегій.</div>
+      <div class="font-semibold"><i class="pi pi-sliders-h mr-2"></i>{{ 'accounts.wizard.sleeves.custom' | transloco }}</div>
+      <div class="text-sm text-muted-color mt-1">{{ 'accounts.wizard.sleeves.customHint' | transloco }}</div>
     </button>
   </div>
 
   @if (draft.strategiesLoading() && !draft.strategies().length) {
-    <div class="text-muted-color">Готуємо стандартні стратегії…</div>
+    <div class="text-muted-color">{{ 'accounts.wizard.sleeves.preparing' | transloco }}</div>
   }
 
   <div class="flex flex-col gap-4">
@@ -58,7 +55,7 @@
       <div class="border border-surface rounded-border p-4">
         <div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto] items-end">
           <div class="flex flex-col gap-2">
-            <label class="font-medium" [for]="'sleeve-' + sleeve.key">Назва частини</label>
+            <label class="font-medium" [for]="'sleeve-' + sleeve.key">{{ 'accounts.wizard.sleeves.partName' | transloco }}</label>
             <input
               pInputText
               [id]="'sleeve-' + sleeve.key"
@@ -67,7 +64,7 @@
             />
           </div>
           <div class="flex flex-col gap-2">
-            <span class="font-medium">Частка рахунку: {{ sleeve.targetSharePercent }}%</span>
+            <span class="font-medium">{{ 'accounts.wizard.sleeves.accountShare' | transloco: { targetSharePercent: sleeve.targetSharePercent } }}</span>
             <p-slider
               [ngModel]="sleeve.targetSharePercent"
               (ngModelChange)="draft.update(sleeve.key, { targetSharePercent: $event })"
@@ -83,10 +80,10 @@
             severity="danger"
             [disabled]="draft.sleeves().length === 1"
             (onClick)="draft.remove(sleeve.key)"
-            ariaLabel="Прибрати"
+            [ariaLabel]="'accounts.wizard.sleeves.remove' | transloco"
           />
         </div>
-        <div class="font-medium mt-4 mb-2">Стратегія для «{{ sleeve.name }}»</div>
+        <div class="font-medium mt-4 mb-2">{{ 'accounts.wizard.sleeves.strategyFor' | transloco: { name: sleeve.name } }}</div>
         <app-strategy-picker
           [strategies]="draft.strategies()"
           [value]="sleeve.strategyId"
@@ -98,7 +95,7 @@
 
   <div class="flex flex-wrap items-center justify-between gap-3 mt-4">
     <p-button
-      label="Додати частину"
+      [label]="'accounts.wizard.sleeves.addPart' | transloco"
       icon="pi pi-plus"
       severity="secondary"
       [outlined]="true"
@@ -109,11 +106,11 @@
       <span
         [class.text-primary]="draft.total() === 100"
         [class.text-red-500]="draft.total() !== 100"
-        >Разом {{ draft.total() }}%</span
+        >{{ 'accounts.wizard.sleeves.total' | transloco: { total: draft.total() } }}</span
       >
       @if (draft.total() !== 100) {
         <p-button
-          label="Вирівняти до 100%"
+          [label]="'accounts.wizard.sleeves.normalize' | transloco"
           size="small"
           [text]="true"
           (onClick)="draft.balance()"
@@ -124,14 +121,14 @@
 
   <div class="flex justify-between mt-6">
     <p-button
-      label="Назад"
+      [label]="'common.back' | transloco"
       icon="pi pi-arrow-left"
       severity="secondary"
       [text]="true"
       (onClick)="draft.step.set(1)"
     />
     <p-button
-      label="Далі"
+      [label]="'common.next' | transloco"
       icon="pi pi-arrow-right"
       iconPos="right"
       [disabled]="!draft.sleevesValid()"

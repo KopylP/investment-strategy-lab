@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 import { computed, inject, Injectable, resource, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { toProblemMessage } from '../../../core/api/api-client';
@@ -74,7 +75,7 @@ export class AccountDetailStore {
     return this.run(
       'shares',
       () => this.api.changeTargetShares(this.requireId(), sharesPercent),
-      'Цільові частки змінено',
+      translate('accounts.detail.sharesChanged'),
     );
   }
 
@@ -82,7 +83,7 @@ export class AccountDetailStore {
     return this.run(
       `strategy-${subPortfolioId}`,
       () => this.api.assignStrategy(this.requireId(), subPortfolioId, strategyId, null),
-      'Стратегію призначено',
+      translate('accounts.detail.strategyAssigned'),
     );
   }
 
@@ -103,7 +104,7 @@ export class AccountDetailStore {
     return this.run(
       'add',
       () => this.api.addSubPortfolio(this.requireId(), input, others),
-      'Під-портфель додано',
+      translate('accounts.detail.subAdded'),
     );
   }
 
@@ -111,7 +112,7 @@ export class AccountDetailStore {
     return this.run(
       `rename-${subPortfolioId}`,
       () => this.api.renameSubPortfolio(this.requireId(), subPortfolioId, name),
-      'Назву змінено',
+      translate('accounts.detail.renamed'),
     );
   }
 
@@ -125,7 +126,7 @@ export class AccountDetailStore {
     return this.run(
       `retire-${subPortfolioId}`,
       () => this.api.retire(this.requireId(), subPortfolioId, normalizeToHundred(remaining)),
-      'Під-портфель виведено',
+      translate('accounts.detail.subRetired'),
     );
   }
 
@@ -137,7 +138,7 @@ export class AccountDetailStore {
     try {
       this.accountResource.set(await this.persistPlan(id, settings));
       this.settingsResource.reload();
-      this.messages.add({ severity: 'success', summary: 'План збережено' });
+      this.messages.add({ severity: 'success', summary: translate('accounts.detail.planSaved') });
 
       return true;
     } catch (error) {
@@ -169,7 +170,7 @@ export class AccountDetailStore {
   private reportPlanNotSaved(error: unknown): void {
     this.messages.add({
       severity: 'error',
-      summary: 'План не збережено',
+      summary: translate('accounts.detail.planNotSaved'),
       detail: toProblemMessage(error),
     });
   }
@@ -181,15 +182,15 @@ export class AccountDetailStore {
       await this.api.importPositions(this.requireId(), subPortfolioId, json, asOf);
       this.messages.add({
         severity: 'success',
-        summary: 'Позиції імпортовано',
-        detail: 'Повторний імпорт того самого файлу нічого не змінить',
+        summary: translate('accounts.detail.positionsImported'),
+        detail: translate('accounts.detail.reimportHint'),
       });
 
       return true;
     } catch (error) {
       this.messages.add({
         severity: 'error',
-        summary: 'Імпорт не вдався',
+        summary: translate('accounts.detail.importFailed'),
         detail: toProblemMessage(error),
         life: 10000,
       });
@@ -216,7 +217,7 @@ export class AccountDetailStore {
     } catch (error) {
       this.messages.add({
         severity: 'error',
-        summary: 'Не вдалося зберегти',
+        summary: translate('accounts.detail.saveFailed'),
         detail: toProblemMessage(error),
         life: 8000,
       });

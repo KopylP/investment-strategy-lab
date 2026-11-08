@@ -1,5 +1,5 @@
 <p-dialog
-  header="Новий під-портфель"
+  [header]="'accounts.addSub.title' | transloco"
   [modal]="true"
   [visible]="visible()"
   (visibleChange)="visible.set($event)"
@@ -8,7 +8,7 @@
 >
   <div class="flex flex-col gap-4">
     <div class="flex flex-col gap-2">
-      <label for="sub-name" class="font-medium">Назва</label>
+      <label for="sub-name" class="font-medium">{{ 'signals.editor.name' | transloco }}</label>
       <input
         pInputText
         id="sub-name"
@@ -17,7 +17,7 @@
       />
     </div>
     <div class="flex flex-col gap-2">
-      <label for="sub-share" class="font-medium">Цільова частка, %</label>
+      <label for="sub-share" class="font-medium">{{ 'accounts.addSub.targetShare' | transloco }}</label>
       <p-inputnumber
         inputId="sub-share"
         [ngModel]="draft().share"
@@ -27,10 +27,10 @@
         [max]="99"
         fluid
       />
-      <small class="text-muted-color">Частки інших під-портфелів пропорційно зменшаться.</small>
+      <small class="text-muted-color">{{ 'accounts.addSub.targetShareHint' | transloco }}</small>
     </div>
     <div class="flex flex-col gap-2">
-      <label for="sub-strategy" class="font-medium">Стратегія</label>
+      <label for="sub-strategy" class="font-medium">{{ 'routes.strategy' | transloco }}</label>
       <app-strategy-picker
         [strategies]="store.strategies()"
         [value]="draft().strategyId"
@@ -39,7 +39,7 @@
       />
     </div>
     <div class="flex flex-col gap-2">
-      <label for="sub-cash" class="font-medium">ETF для паркування</label>
+      <label for="sub-cash" class="font-medium">{{ 'strategies.detail.parkingEtf' | transloco }}</label>
       <p-select
         inputId="sub-cash"
         [options]="cashOptions()"
@@ -49,16 +49,16 @@
         (ngModelChange)="patchDraft({ cashInstrumentId: $event })"
         [showClear]="true"
         [filter]="true"
-        placeholder="Як у стратегії"
+        [placeholder]="'accounts.asInStrategyLabel' | transloco"
         appendTo="body"
         fluid
       />
     </div>
   </div>
   <ng-template #footer>
-    <p-button label="Скасувати" [text]="true" severity="secondary" (onClick)="visible.set(false)" />
+    <p-button [label]="'common.cancel' | transloco" [text]="true" severity="secondary" (onClick)="visible.set(false)" />
     <p-button
-      label="Додати"
+      [label]="'common.add' | transloco"
       icon="pi pi-plus"
       [disabled]="!draft().name.trim()"
       [loading]="store.busy() === 'add'"

@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -18,7 +19,7 @@ export interface FillDialogData {
 
 @Component({
   selector: 'app-fill-dialog',
-  imports: [
+  imports: [TranslocoPipe, 
     ReactiveFormsModule,
     Button,
     DatePicker,

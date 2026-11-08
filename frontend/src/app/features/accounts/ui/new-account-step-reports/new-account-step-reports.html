@@ -1,17 +1,14 @@
 <div class="card">
   <p-message severity="secondary" styleClass="mb-5">
     <div>
-      <b>Рапорт</b> — список дій для брокера: скільки внести, що купити й продати. Які рапорти
-      бувають, задає стратегія, і в неї є свій час. Але коли рапорт приходить, вирішуєте ви:
-      наприклад, якщо зарплата 10-го, поставте ребаланс на 10-те — гроші вже будуть на рахунку.
-      Змінити можна будь-коли в блоці «Розклад рапортів» на сторінці рахунку (<b
-        >Налаштування → Рахунки</b
+      <b>{{ 'accounts.wizard.reports.report' | transloco }}</b> {{ 'accounts.wizard.reports.hint' | transloco }}<b
+        >{{ 'accounts.settingsAccounts' | transloco }}</b
       >).
     </div>
   </p-message>
   @if (!draft.reports().length) {
     <div class="text-muted-color">
-      Обрані стратегії не роблять рапортів за розкладом — їх можна згенерувати вручну.
+      {{ 'accounts.wizard.reports.noScheduled' | transloco }}
     </div>
   }
   <div class="flex flex-col gap-4">
@@ -24,7 +21,7 @@
             </div>
             <div class="text-sm text-muted-color mt-1">{{ report.description }}</div>
             <div class="text-sm mt-1">
-              Стратегія: {{ draft.scheduleLabel(report.strategyTiming) }}
+              {{ 'accounts.wizard.reports.strategyTiming' | transloco: { strategyTiming: draft.scheduleLabel(report.strategyTiming) } }}
             </div>
           </div>
           <p-selectbutton
@@ -51,14 +48,14 @@
   </div>
   <div class="flex justify-between mt-6">
     <p-button
-      label="Назад"
+      [label]="'common.back' | transloco"
       icon="pi pi-arrow-left"
       severity="secondary"
       [text]="true"
       (onClick)="draft.step.set(3)"
     />
     <p-button
-      label="Далі"
+      [label]="'common.next' | transloco"
       icon="pi pi-arrow-right"
       iconPos="right"
       [disabled]="!draft.scheduleValid()"

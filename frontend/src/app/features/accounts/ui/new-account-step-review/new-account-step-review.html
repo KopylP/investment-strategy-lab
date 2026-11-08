@@ -11,7 +11,7 @@
           <div class="text-sm text-muted-color">{{ row.blurb }}</div>
         </div>
         <div class="text-right">
-          <div class="text-muted-color text-sm">щомісяця</div>
+          <div class="text-muted-color text-sm">{{ 'accounts.wizard.review.monthly' | transloco }}</div>
           <div class="font-semibold">≈ {{ row.contribution }}</div>
         </div>
       </div>
@@ -26,7 +26,7 @@
           >
           <span class="font-medium"
             >{{ draft.scheduleLabel(report.timing)
-            }}{{ report.own ? '' : ' (як у стратегії)' }}</span
+            }}{{ report.own ? '' : ('accounts.wizard.review.asInStrategy' | transloco) }}</span
           >
         </div>
       }
@@ -34,33 +34,31 @@
   }
   <p-message severity="info" styleClass="mt-5">
     <div>
-      Що буде далі: у цей час з’явиться <b>рапорт</b> — список дій для брокера. Виконайте їх у
-      застосунку брокера й натисніть «Виконано» або «Довантажити операції» з виписки.
+      {{ 'accounts.wizard.review.whatNext' | transloco }} <b>{{ 'accounts.wizard.review.report' | transloco }}</b> {{ 'accounts.wizard.review.whatNextHint' | transloco }}
     </div>
   </p-message>
   <div class="mt-5 border border-surface rounded-border p-4">
     <div class="font-semibold mb-2">
-      <i class="pi pi-pencil mr-2"></i>Якщо захочете щось змінити потім
+      <i class="pi pi-pencil mr-2"></i>{{ 'accounts.wizard.review.changeLater' | transloco }}
     </div>
     <ul class="m-0 pl-5 flex flex-col gap-1 text-sm">
       <li>
-        <b>Частки, стратегії, додати чи вивести частину</b> — сторінка рахунку, блок «Під-портфелі»
-        (Налаштування → Рахунки).
+        <b>{{ 'accounts.wizard.review.changeShares' | transloco }}</b> {{ 'accounts.wizard.review.changeSharesWhere' | transloco }}
       </li>
-      <li><b>Внесок і додаткові налаштування</b> — там само, блок «План».</li>
-      <li><b>Коли приходять рапорти</b> — там само, блок «Розклад рапортів».</li>
+      <li><b>{{ 'accounts.wizard.review.changePlan' | transloco }}</b> {{ 'accounts.wizard.review.changePlanWhere' | transloco }}</li>
+      <li><b>{{ 'accounts.wizard.review.changeSchedule' | transloco }}</b> {{ 'accounts.wizard.review.changeScheduleWhere' | transloco }}</li>
     </ul>
   </div>
   <div class="flex justify-between mt-6">
     <p-button
-      label="Назад"
+      [label]="'common.back' | transloco"
       icon="pi pi-arrow-left"
       severity="secondary"
       [text]="true"
       (onClick)="draft.step.set(4)"
     />
     <p-button
-      label="Відкрити рахунок"
+      [label]="'accounts.wizard.review.openAccount' | transloco"
       icon="pi pi-check"
       [loading]="draft.saving()"
       (onClick)="draft.save()"

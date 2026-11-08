@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, input, model } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { InputNumber } from 'primeng/inputnumber';
@@ -19,7 +20,7 @@ export interface PlanSettingsVm {
 
 @Component({
   selector: 'app-plan-settings-form',
-  imports: [FormsModule, InputNumber, SelectButton, ToggleSwitch, Tooltip, TapTooltip],
+  imports: [TranslocoPipe, FormsModule, InputNumber, SelectButton, ToggleSwitch, Tooltip, TapTooltip],
   templateUrl: './plan-settings-form.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -29,8 +30,8 @@ export class PlanSettingsForm {
   readonly showPolicy = input(true);
 
   protected readonly policies = [
-    { label: 'Тому, хто відстає', value: 'FillUnderweight' },
-    { label: 'За частками', value: 'FixedSplit' },
+    { label: translate('policy.laggard'), value: 'FillUnderweight' },
+    { label: translate('policy.proportional'), value: 'FixedSplit' },
   ];
 
   protected set<K extends keyof PlanSettingsVm>(key: K, value: PlanSettingsVm[K]): void {

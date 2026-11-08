@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Button } from 'primeng/button';
@@ -19,7 +20,7 @@ const palette = [
 
 @Component({
   selector: 'app-account-list-page',
-  imports: [RouterLink, Button, MeterGroup, Skeleton, Tag, PageHeader, EmptyState],
+  imports: [TranslocoPipe, RouterLink, Button, MeterGroup, Skeleton, Tag, PageHeader, EmptyState],
   templateUrl: './account-list-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

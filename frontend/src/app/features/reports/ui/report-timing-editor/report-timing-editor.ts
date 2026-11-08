@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, input, model } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { InputNumber } from 'primeng/inputnumber';
@@ -7,11 +8,11 @@ import { frequencyOptions, ReportTiming, weekdayOptions } from '../../models/rep
 
 @Component({
   selector: 'app-report-timing-editor',
-  imports: [FormsModule, InputNumber, InputText, Select],
+  imports: [TranslocoPipe, FormsModule, InputNumber, InputText, Select],
   template: `
     <div class="grid gap-3" [class]="columns()">
       <div class="flex flex-col gap-1">
-        <label class="text-sm font-medium" [attr.for]="id() + '-frequency'">Як часто</label>
+        <label class="text-sm font-medium" [attr.for]="id() + '-frequency'">{{ 'reports.timing.howOften' | transloco }}</label>
         <p-select
           [inputId]="id() + '-frequency'"
           [options]="frequencies()"
@@ -25,7 +26,7 @@ import { frequencyOptions, ReportTiming, weekdayOptions } from '../../models/rep
       @switch (timing().frequency) {
         @case ('hourly') {
           <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium" [attr.for]="id() + '-minute'">Хвилина</label>
+            <label class="text-sm font-medium" [attr.for]="id() + '-minute'">{{ 'reports.timing.minute' | transloco }}</label>
             <p-inputnumber
               [inputId]="id() + '-minute'"
               [ngModel]="timing().minute"
@@ -39,7 +40,7 @@ import { frequencyOptions, ReportTiming, weekdayOptions } from '../../models/rep
         }
         @case ('weekly') {
           <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium" [attr.for]="id() + '-weekday'">День тижня</label>
+            <label class="text-sm font-medium" [attr.for]="id() + '-weekday'">{{ 'reports.timing.weekday' | transloco }}</label>
             <p-select
               [inputId]="id() + '-weekday'"
               [options]="weekdays"
@@ -56,7 +57,7 @@ import { frequencyOptions, ReportTiming, weekdayOptions } from '../../models/rep
         <div class="flex flex-col gap-1">
           <label class="text-sm font-medium" [attr.for]="id() + '-day'">
             {{
-              timing().frequency === 'quarterly' ? 'День першого місяця кварталу' : 'День місяця'
+              timing().frequency === 'quarterly' ? ('reports.timing.quarterDay' | transloco) : ('reports.timing.monthDay' | transloco)
             }}
           </label>
           <p-inputnumber
@@ -72,7 +73,7 @@ import { frequencyOptions, ReportTiming, weekdayOptions } from '../../models/rep
       }
       @if (timing().frequency !== 'off' && timing().frequency !== 'hourly') {
         <div class="flex flex-col gap-1">
-          <label class="text-sm font-medium" [attr.for]="id() + '-time'">Час</label>
+          <label class="text-sm font-medium" [attr.for]="id() + '-time'">{{ 'reports.timing.time' | transloco }}</label>
           <input
             pInputText
             type="time"
@@ -85,7 +86,7 @@ import { frequencyOptions, ReportTiming, weekdayOptions } from '../../models/rep
     </div>
     @if (timing().frequency === 'monthly' || timing().frequency === 'quarterly') {
       <div class="text-xs text-muted-color mt-2">
-        У коротшому місяці — його останній день (31-го → 30 листопада).
+        {{ 'reports.timing.shortMonthHint' | transloco }}
       </div>
     }
   `,

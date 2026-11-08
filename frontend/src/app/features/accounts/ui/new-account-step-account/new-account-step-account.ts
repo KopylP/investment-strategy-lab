@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Button } from 'primeng/button';
@@ -8,7 +9,7 @@ import { NewAccountDraft } from '../../data-access/new-account-draft';
 
 @Component({
   selector: 'app-new-account-step-account',
-  imports: [FormsModule, Button, InputText, Message, SelectButton],
+  imports: [TranslocoPipe, FormsModule, Button, InputText, Message, SelectButton],
   templateUrl: './new-account-step-account.html',
   host: { class: 'contents' },
   changeDetection: ChangeDetectionStrategy.OnPush,

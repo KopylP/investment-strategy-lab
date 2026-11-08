@@ -1,18 +1,17 @@
 <div class="flex flex-col gap-5 pt-1">
   <section class="flex flex-col gap-3">
     <div class="font-medium">
-      1. Нова виписка Revolut <span class="text-muted-color font-normal">(необов’язково)</span>
+      {{ 'reports.load.step1' | transloco }} <span class="text-muted-color font-normal">{{ 'reports.load.optional' | transloco }}</span>
     </div>
     <p class="m-0 text-sm text-muted-color">
-      Якщо ви вже виконали план у Revolut, завантажте свіжу виписку (CSV): нові операції потраплять
-      у журнал, а вже імпортовані не задублюються.
+      {{ 'reports.load.step1Hint' | transloco }}
     </p>
     <div class="flex flex-wrap items-center gap-3">
       <label
         appFileDrop
         class="p-button p-button-outlined p-button-secondary p-button-sm cursor-pointer"
       >
-        <i class="pi pi-upload mr-2"></i>Вибрати або перетягнути CSV
+        <i class="pi pi-upload mr-2"></i>{{ 'reports.load.drop' | transloco }}
         <input
           type="file"
           accept=".csv,text/csv"
@@ -22,32 +21,32 @@
         />
       </label>
       @if (busy() === 'upload') {
-        <span class="text-sm text-muted-color">Розбираю виписку…</span>
+        <span class="text-sm text-muted-color">{{ 'reports.load.parsing' | transloco }}</span>
       }
     </div>
     @if (upload(); as upload) {
       @if (upload.status === 'Confirmed') {
-        <p-message severity="success" text="Виписку імпортовано в журнал." />
+        <p-message severity="success" [text]="'reports.load.imported' | transloco" />
       } @else if (upload.counts.needsMapping > 0) {
         <p-message severity="warn">
-          <span>Деякі тікери треба зіставити з інструментами чи під-портфелями. </span>
+          <span>{{ 'reports.load.needsMapping' | transloco }} </span>
           <a
             [routerLink]="['/transactions/import']"
             [queryParams]="{ importId: upload.id }"
             class="font-medium underline"
             (click)="close()"
-            >Відкрити майстер імпорту</a
+            >{{ 'reports.load.openWizard' | transloco }}</a
           >
         </p-message>
       } @else if (upload.counts.toRecord === 0) {
-        <p-message severity="info" text="Нових операцій у виписці немає — усе вже в журналі." />
+        <p-message severity="info" [text]="'reports.load.nothingNew' | transloco" />
       } @else {
         <div class="flex flex-wrap items-center gap-3">
           <span
-            >Нових операцій: <b>{{ upload.counts.toRecord }}</b></span
+            >{{ 'reports.load.newCount' | transloco }} <b>{{ upload.counts.toRecord }}</b></span
           >
           <p-button
-            label="Імпортувати в журнал"
+            [label]="'reports.load.importToJournal' | transloco"
             icon="pi pi-download"
             size="small"
             [loading]="busy() === 'import'"
@@ -58,7 +57,7 @@
             [queryParams]="{ importId: upload.id }"
             class="text-sm underline"
             (click)="close()"
-            >переглянути детально</a
+            >{{ 'reports.load.viewDetails' | transloco }}</a
           >
         </div>
       }
@@ -66,7 +65,7 @@
   </section>
 
   <section class="flex flex-col gap-3">
-    <div class="font-medium">2. Що з журналу виконує цей план</div>
+    <div class="font-medium">{{ 'reports.load.step2' | transloco }}</div>
     @if (busy() === 'preview' && !preview()) {
       <p-skeleton height="5rem" />
     } @else if (preview(); as preview) {
@@ -77,7 +76,7 @@
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <span class="font-medium">{{ match.action?.title ?? match.actionKind }}</span>
                 <p-tag
-                  [value]="match.completes ? 'виконано повністю' : 'частково'"
+                  [value]="match.completes ? ('reports.load.fully' | transloco) : ('reports.load.partly' | transloco)"
                   [severity]="match.completes ? 'success' : 'warn'"
                 />
               </div>
@@ -87,10 +86,17 @@
                   @if (operation.kind === 'Contribution') {
                     {{ operation.quantity | money: data.currency }}
                   } @else {
-                    {{ symbol(operation.instrumentId) }} {{ operation.quantity | quantity }} шт. ×
-                    {{ operation.price | money: data.currency }}
+                    {{
+                      'reports.load.operationLine'
+                        | transloco
+                          : {
+                              symbol: symbol(operation.instrumentId),
+                              quantity: operation.quantity | quantity,
+                              price: operation.price | money: data.currency,
+                            }
+                    }}
                   }
-                  · {{ operation.source === 'Import' ? 'з виписки' : 'вручну' }}
+                  · {{ operation.source === 'Import' ? ('reports.load.fromStatement' | transloco) : ('transactions.source.manual' | transloco) }}
                 </div>
               }
             </li>
@@ -99,14 +105,14 @@
       } @else {
         <p-message
           severity="info"
-          text="У журналі немає операцій після цього рапорту, які збігаються з планом."
+          [text]="'reports.load.noMatches' | transloco"
         />
       }
 
       @if (preview.unmatched.length) {
         <details class="text-sm">
           <summary class="cursor-pointer text-muted-color">
-            Поза планом: {{ preview.unmatched.length }} операцій
+            {{ 'reports.load.unmatched' | transloco: { unmatched: preview.unmatched.length } }}
           </summary>
           <ul class="mt-2 mb-0 pl-4">
             @for (operation of preview.unmatched; track operation.transactionId) {
@@ -126,9 +132,9 @@
   }
 
   <div class="flex justify-end gap-2">
-    <p-button label="Закрити" [text]="true" severity="secondary" (onClick)="close()" />
+    <p-button [label]="'common.close' | transloco" [text]="true" severity="secondary" (onClick)="close()" />
     <p-button
-      [label]="'Відмітити ' + matches().length + ' дій'"
+      [label]="'reports.load.markCount' | transloco: { count: matches().length }"
       icon="pi pi-check"
       [disabled]="!matches().length"
       [loading]="busy() === 'apply'"

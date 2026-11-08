@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -25,7 +26,7 @@ import { InstrumentAbout } from '../../../../shared/ui/instrument-about';
 import { InstrumentCatalog } from '../../../../core/context/instrument-catalog';
 @Component({
   selector: 'app-report-actions-table',
-  imports: [
+  imports: [TranslocoPipe, 
     Money,
     NgTemplateOutlet,
     TableModule,
@@ -61,13 +62,13 @@ export class ReportActionsTable {
           action.id,
           [
             {
-              label: 'Частково виконано',
+              label: translate('reports.actions.partlyDone'),
               icon: 'pi pi-percentage',
               disabled: !action.canPartiallyFill,
               command: () => this.partialFill.emit(action),
             },
             {
-              label: 'Пропустити',
+              label: translate('reports.skip.skip'),
               icon: 'pi pi-forward',
               disabled: !action.canSkip,
               command: () => this.skip.emit(action),

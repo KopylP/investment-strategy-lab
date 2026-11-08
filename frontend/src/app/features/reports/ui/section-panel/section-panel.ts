@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { Message } from 'primeng/message';
@@ -17,7 +18,7 @@ import { TapTooltip } from '../../../../shared/ui/tap-tooltip';
 
 @Component({
   selector: 'app-section-panel',
-  imports: [
+  imports: [TranslocoPipe, 
     TableModule,
     Tag,
     Message,
