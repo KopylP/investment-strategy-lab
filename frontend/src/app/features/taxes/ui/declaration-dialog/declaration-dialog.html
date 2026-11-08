@@ -1,5 +1,9 @@
 <p-dialog
-  [header]="declaration() ? declaration()!.form + ' за ' + declaration()!.year : 'Декларація'"
+  [header]="
+    declaration()
+      ? ('taxes.formOfYear' | transloco: { form: declaration()!.form, year: declaration()!.year })
+      : ('taxes.declaration.title' | transloco)
+  "
   [modal]="true"
   [visible]="visible()"
   (visibleChange)="!$event && closed.emit()"
@@ -14,31 +18,31 @@
     <p-skeleton height="20rem" />
   } @else if (declaration(); as d) {
     <div class="text-sm text-muted-color mb-3">
-      {{ d.title }} · подати з 15 лютого до {{ d.deadline | date }}
+      {{ 'taxes.declaration.subtitle' | transloco: { title: d.title, deadline: (d.deadline | date) } }}
     </div>
     <div class="flex flex-wrap gap-2 mb-3">
       <p-button
-        label="Шпаргалка PDF"
+        [label]="'taxes.declaration.cheatSheet' | transloco"
         icon="pi pi-file-pdf"
         size="small"
         [loading]="pdfLoading() === 'summary'"
         (onClick)="pdf.emit('summary')"
-        pTooltip="Одна сторінка: що куди вписати в e-Urząd, з номерами poz."
+        [pTooltip]="'taxes.declaration.cheatSheetHint' | transloco"
         tooltipPosition="bottom"
       />
       <p-button
-        label="PDF на бланку"
+        [label]="'taxes.declaration.onForm' | transloco"
         icon="pi pi-file"
         size="small"
         severity="secondary"
         [outlined]="true"
         [loading]="pdfLoading() === 'form'"
         (onClick)="pdf.emit('form')"
-        pTooltip="Офіційна форма PIT-38 і PIT/ZG з вписаними сумами — для паперу"
+        [pTooltip]="'taxes.declaration.onFormHint' | transloco"
         tooltipPosition="bottom"
       />
       <p-button
-        label="Копіювати все"
+        [label]="'taxes.declaration.copyAll' | transloco"
         icon="pi pi-copy"
         size="small"
         severity="secondary"
@@ -50,13 +54,13 @@
     <p-message
       severity="secondary"
       styleClass="mb-3"
-      text="Чернетка для e-Urząd Skarbowy / Twój e-PIT. Звірте суми з PIT-8C і звітами брокерів; за спірних випадків — з податковим консультантом."
+      [text]="'taxes.declaration.draftHint' | transloco"
     />
     @for (warning of warnings(); track $index) {
       <p-message severity="warn" styleClass="mb-2" [text]="warning" />
     }
 
-    <h3 class="text-base font-semibold mt-4 mb-2">Рахунки</h3>
+    <h3 class="text-base font-semibold mt-4 mb-2">{{ 'taxes.declaration.accounts' | transloco }}</h3>
     <div class="flex flex-col mb-2">
       @for (a of d.accounts; track a.accountId) {
         <div
@@ -71,7 +75,7 @@
             @if (a.takesPit8C) {
               @if (a.pit8CCoveredBy) {
                 <div class="text-xs mt-1 text-muted-color">
-                  PIT-8C — один на брокера, введено на «{{ a.pit8CCoveredBy }}»
+                  {{ 'taxes.declaration.pit8cCoveredBy' | transloco: { pit8CCoveredBy: a.pit8CCoveredBy } }}
                 </div>
               } @else if (a.pit8C) {
                 <div class="text-xs mt-1">
@@ -81,14 +85,14 @@
                     class="p-0 ml-1 border-0 bg-transparent text-primary cursor-pointer"
                     (click)="edit(a)"
                   >
-                    змінити
+                    {{ 'taxes.declaration.change' | transloco }}
                   </button>
                   <button
                     type="button"
                     class="p-0 ml-1 border-0 bg-transparent text-muted-color cursor-pointer"
                     (click)="pit8cRemoved.emit(a.accountId)"
                   >
-                    прибрати
+                    {{ 'taxes.declaration.remove' | transloco }}
                   </button>
                 </div>
               } @else {
@@ -97,22 +101,22 @@
                   class="p-0 border-0 bg-transparent text-xs text-primary cursor-pointer"
                   (click)="edit(a)"
                 >
-                  Ввести суми з PIT-8C
+                  {{ 'taxes.declaration.enterPit8c' | transloco }}
                 </button>
               }
             }
           </div>
           <div class="text-right text-sm tabular-nums whitespace-nowrap">
             <div>
-              {{ a.revenue | taxMoney }} <span class="text-muted-color text-xs">виручка</span>
+              {{ a.revenue | taxMoney }} <span class="text-muted-color text-xs">{{ 'taxes.declaration.proceeds' | transloco }}</span>
             </div>
             <div>
-              {{ a.costs | taxMoney }} <span class="text-muted-color text-xs">витрати</span>
+              {{ a.costs | taxMoney }} <span class="text-muted-color text-xs">{{ 'taxes.declaration.costs' | transloco }}</span>
             </div>
             @if (a.dividendsGross) {
               <div>
                 {{ a.dividendsGross | taxMoney }}
-                <span class="text-muted-color text-xs">дивіденди</span>
+                <span class="text-muted-color text-xs">{{ 'taxes.declaration.dividends' | transloco }}</span>
               </div>
             }
           </div>
@@ -153,14 +157,14 @@
             </div>
             <div class="col-span-2 flex gap-2 justify-end">
               <p-button
-                label="Скасувати"
+                [label]="'common.cancel' | transloco"
                 size="small"
                 severity="secondary"
                 [text]="true"
                 (onClick)="editing.set(null)"
               />
               <p-button
-                label="Зберегти"
+                [label]="'common.save' | transloco"
                 size="small"
                 [loading]="saving()"
                 [disabled]="editing()!.revenue === null || editing()!.costs === null"
@@ -182,7 +186,7 @@
     }
 
     @if (d.facts?.length) {
-      <h3 class="text-base font-semibold mt-5 mb-2">Довідково</h3>
+      <h3 class="text-base font-semibold mt-5 mb-2">{{ 'taxes.declaration.forReference' | transloco }}</h3>
       @for (fact of d.facts; track fact.label) {
         <div class="flex justify-between gap-3 text-sm py-1">
           <span>{{ fact.label }}</span
@@ -192,7 +196,7 @@
     }
 
     @if (d.notes.length) {
-      <h3 class="text-base font-semibold mt-5 mb-2">Що варто знати</h3>
+      <h3 class="text-base font-semibold mt-5 mb-2">{{ 'taxes.declaration.worthKnowing' | transloco }}</h3>
       <ul class="m-0 pl-5 text-sm flex flex-col gap-1">
         @for (note of d.notes; track $index) {
           <li [class.font-medium]="note.action">{{ note.text }}</li>
@@ -211,7 +215,7 @@
           <div class="text-sm">
             {{ field.label }}
             @if (field.computed) {
-              <span class="text-xs text-muted-color">· рахує форма</span>
+              <span class="text-xs text-muted-color">{{ 'taxes.declaration.computedByForm' | transloco }}</span>
             }
           </div>
           @if (field.hint) {
@@ -229,7 +233,7 @@
           [rounded]="true"
           size="small"
           severity="secondary"
-          [ariaLabel]="'Копіювати poz. ' + field.position"
+          [ariaLabel]="'taxes.declaration.copyField' | transloco: { position: field.position }"
           (onClick)="copy(field)"
         />
       </div>

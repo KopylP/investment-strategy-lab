@@ -1,5 +1,5 @@
-<app-page-header title="Сигнали" subtitle="Стежать за ринком і вашим портфелем та кажуть, коли умова спрацювала">
-  <p-button label="Новий сигнал" icon="pi pi-plus" (onClick)="create()" />
+<app-page-header [title]="'routes.signals' | transloco" [subtitle]="'signals.subtitle' | transloco">
+  <p-button [label]="'signals.editor.newSignal' | transloco" icon="pi pi-plus" (onClick)="create()" />
 </app-page-header>
 
 @if (store.loadError(); as error) {
@@ -12,7 +12,7 @@
 } @else {
   <div>
     <section class="card p-0 overflow-hidden">
-      <h2 class="text-lg font-semibold m-0 p-3 sm:p-4">Зараз спрацювали</h2>
+      <h2 class="text-lg font-semibold m-0 p-3 sm:p-4">{{ 'signals.activeNow' | transloco }}</h2>
 
       @for (occurrence of store.active(); track occurrence.id) {
         <app-signal-row
@@ -27,14 +27,14 @@
         </app-signal-row>
       } @empty {
         <p class="m-0 px-3 sm:px-4 pb-4 text-muted-color">
-          <i class="pi pi-check-circle mr-2" aria-hidden="true"></i>Жоден сигнал зараз не спрацював.
+          <i class="pi pi-check-circle mr-2" aria-hidden="true"></i>{{ 'signals.noneActive' | transloco }}
         </p>
       }
     </section>
 
     @if (store.recent().length) {
       <section class="card p-0 overflow-hidden">
-        <h2 class="text-lg font-semibold m-0 p-3 sm:p-4">Останні події</h2>
+        <h2 class="text-lg font-semibold m-0 p-3 sm:p-4">{{ 'signals.recentEvents' | transloco }}</h2>
 
         @for (occurrence of store.recent(); track occurrence.id) {
           <app-signal-row
@@ -53,7 +53,7 @@
     }
 
     <section class="card p-0 overflow-hidden">
-      <h2 class="text-lg font-semibold m-0 p-3 sm:p-4">Мої сигнали</h2>
+      <h2 class="text-lg font-semibold m-0 p-3 sm:p-4">{{ 'signals.mine' | transloco }}</h2>
 
       @for (item of store.signals(); track item.id) {
         <app-signal-row
@@ -65,15 +65,15 @@
           (pick)="edit(item)"
         >
           @if (!item.enabled) {
-            <p-tag value="Вимкнено" severity="secondary" />
+            <p-tag [value]="'signals.disabled' | transloco" severity="secondary" />
           } @else if (item.activeCount) {
-            <p-tag [value]="'Спрацював: ' + item.activeCount" severity="danger" />
+            <p-tag [value]="'signals.firing' | transloco: { count: item.activeCount }" severity="danger" />
           } @else {
-            <p-tag value="Зведений" severity="success" />
+            <p-tag [value]="'signals.armed' | transloco" severity="success" />
           }
         </app-signal-row>
       } @empty {
-        <p class="m-0 px-3 sm:px-4 pb-4 text-muted-color">Вбудовані сигнали з'являться, щойно буде рахунок. Можна також створити свій.</p>
+        <p class="m-0 px-3 sm:px-4 pb-4 text-muted-color">{{ 'signals.emptyHint' | transloco }}</p>
       }
     </section>
   </div>

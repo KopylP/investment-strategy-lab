@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Button } from 'primeng/button';
 import { Message } from 'primeng/message';
@@ -21,7 +22,7 @@ const targetIcons: Record<SignalTargetKind, string> = {
 
 @Component({
   selector: 'app-signals-page',
-  imports: [Button, Message, Skeleton, Tag, DatePipe, PageHeader, SignalEditor, SignalRow],
+  imports: [TranslocoPipe, Button, Message, Skeleton, Tag, DatePipe, PageHeader, SignalEditor, SignalRow],
   providers: [SignalsStore],
   templateUrl: './signals-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -68,8 +69,8 @@ export class SignalsPage {
     const parts = [signalScheduleLabel(item.schedule)];
     const reports = this.store.rulesOf(item.id).length;
 
-    if (reports) parts.push(`рапортів: ${reports}`);
-    if (!this.store.notifies(item.id)) parts.push('без сповіщень');
+    if (reports) parts.push(translate('signals.reportCount', { count: reports }));
+    if (!this.store.notifies(item.id)) parts.push(translate('signals.noNotifications'));
 
     return parts.join(' · ');
   }

@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 import { computed, inject, Injectable, resource, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { toProblemMessage } from '../../../core/api/api-client';
@@ -59,7 +60,7 @@ export class SignalsStore {
     const report = this.reportsOf(rule.accountId).find((each) => each.code === rule.reportCode);
     const account = this.accounts().find((each) => each.id === rule.accountId);
 
-    return `${report?.name ?? rule.reportCode} · ${account?.name ?? 'рахунок'}`;
+    return `${report?.name ?? rule.reportCode} · ${account?.name ?? translate('signals.accountFallback')}`;
   }
 
   targetLabel(signal: SignalDto): string {
@@ -69,21 +70,23 @@ export class SignalsStore {
       case 'Instrument':
         return this.catalog.symbol(signal.instrumentId);
       case 'InstrumentGroup':
-        return signal.groupName ?? 'Група';
+        return signal.groupName ?? translate('signals.subject.group');
       case 'SubPortfolio':
         return (
           account?.subPortfolios.find((sub) => sub.id === signal.subPortfolioId)?.name ??
-          'Під-портфель'
+          translate('signals.editor.subPortfolio')
         );
       case 'EachPosition':
-        return `Кожна позиція · ${account?.name ?? 'рахунок'}`;
+        return translate('signals.eachPosition', {
+          account: account?.name ?? translate('signals.accountFallback'),
+        });
       default:
-        return account?.name ?? 'Рахунок';
+        return account?.name ?? translate('signals.editor.account');
     }
   }
 
   create(form: SignalForm): Promise<boolean> {
-    return this.run('Сигнал створено', 'Сигнал не створено', () =>
+    return this.run(translate('signals.created'), translate('signals.notCreated'), () =>
       this.api.create(createBodyOf(form)),
     );
   }
@@ -96,35 +99,35 @@ export class SignalsStore {
       enabled: form.enabled,
     };
 
-    return this.run('Сигнал збережено', 'Сигнал не збережено', () =>
+    return this.run(translate('signals.saved'), translate('signals.notSaved'), () =>
       this.api.change(signalId, body),
     );
   }
 
   delete(signalId: string): Promise<boolean> {
-    return this.run('Сигнал видалено', 'Сигнал не видалено', () => this.api.delete(signalId));
+    return this.run(translate('signals.deleted'), translate('signals.notDeleted'), () => this.api.delete(signalId));
   }
 
   check(signalId: string): Promise<boolean> {
-    return this.run('Сигнал перевірено', 'Не вдалося перевірити сигнал', () =>
+    return this.run(translate('signals.checked'), translate('signals.checkFailed'), () =>
       this.api.check(signalId),
     );
   }
 
   addReportRule(signalId: string, accountId: string, reportCode: string): Promise<boolean> {
-    return this.run('Рапорт під’єднано', 'Рапорт не під’єднано', () =>
+    return this.run(translate('signals.reportConnected'), translate('signals.reportNotConnected'), () =>
       this.api.addReportRule(signalId, accountId, reportCode),
     );
   }
 
   removeReportRule(ruleId: string): Promise<boolean> {
-    return this.run('Рапорт від’єднано', 'Рапорт не від’єднано', () =>
+    return this.run(translate('signals.reportDisconnected'), translate('signals.reportNotDisconnected'), () =>
       this.api.removeReportRule(ruleId),
     );
   }
 
   setNotify(signalId: string, notify: boolean): Promise<boolean> {
-    return this.run(notify ? 'Сповіщення ввімкнено' : 'Сповіщення вимкнено', 'Не збережено', () =>
+    return this.run(notify ? translate('signals.notificationsOn') : translate('signals.notificationsOff'), translate('profile.notSaved'), () =>
       this.api.setNotify(signalId, notify),
     );
   }

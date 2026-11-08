@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 import { Strategy } from './strategy';
 
 export interface StrategyBlurb {
@@ -15,6 +16,14 @@ function read(parameters: unknown, ...path: string[]): unknown {
   return node;
 }
 
+function regionOf(currencies: Set<string | undefined>): string {
+  if (currencies.size !== 1) return '';
+
+  const [currency] = currencies;
+
+  return currency === 'EUR' || currency === 'USD' ? translate(`strategies.blurb.region.${currency}`) : '';
+}
+
 export function describeStrategy(
   strategy: Strategy,
   symbol: (id: string | null) => string,
@@ -23,14 +32,7 @@ export function describeStrategy(
   const version = strategy.version;
   const count = version.universe.length;
   const currencies = new Set(version.universe.map(currencyOf).filter(Boolean));
-  const region =
-    currencies.size === 1
-      ? currencies.has('EUR')
-        ? 'європейських'
-        : currencies.has('USD')
-          ? 'американських'
-          : ''
-      : '';
+  const region = regionOf(currencies);
   const topN = read(version.parameters, 'scanner', 'topN');
   const weak = read(version.parameters, 'weakMarketInvestPct');
   const sellsPositions = read(version.parameters, 'risk', 'sellOnPositionExit') !== false;
@@ -39,27 +41,37 @@ export function describeStrategy(
 
   const headline =
     typeof topN === 'number'
-      ? `Обирає ${topN} найсильніших із ${count} ${region} ETF і тримає їх порівну`
-      : `Тримає ${count} ${region} ETF порівну, незалежно від ринку`;
+      ? translate('strategies.blurb.picks', { topN, count, region })
+      : translate('strategies.blurb.holds', { count, region });
 
-  const points = ['Рапорт з купівлями й продажами — коли вам зручно: розклад задаєте в рахунку'];
+  const points = [translate('strategies.blurb.reportPoint')];
   if (read(version.parameters, 'risk'))
     points.push(
       sellsPositions
-        ? 'Між ребалансами перевіряє ризик: продає лише за сигналом виходу'
-        : 'Між ребалансами перевіряє ризик: окремі позиції лише попереджають, а продаж усього портфеля лишається',
+        ? translate('strategies.blurb.riskSells')
+        : translate('strategies.blurb.riskWarns'),
     );
   if (typeof maxCorrelation === 'number' && maxCorrelation < 1)
     points.push(
-      `Не бере фонд, що рухається надто схоже на вже обраний (кореляція понад ${maxCorrelation})`,
+      translate('strategies.blurb.correlation', { limit: maxCorrelation }),
     );
   if (typeof targetVolatility === 'number' && targetVolatility < 1)
     points.push(
-      `Коли обрані фонди коливаються сильніше за ${Math.round(targetVolatility * 100)}% на рік, частину грошей тримає${version.cashInstrumentId ? ` в ${symbol(version.cashInstrumentId)}` : ' в кеші'}`,
+      version.cashInstrumentId
+        ? translate('strategies.blurb.volatilityCash', {
+            target: Math.round(targetVolatility * 100),
+            cash: symbol(version.cashInstrumentId),
+          })
+        : translate('strategies.blurb.volatilityNoCash', { target: Math.round(targetVolatility * 100) }),
     );
   if (typeof weak === 'number')
     points.push(
-      `Слабкий ринок: інвестує ${Math.round(weak * 100)}% внеску${version.cashInstrumentId ? `, решта — в ${symbol(version.cashInstrumentId)}` : ''}`,
+      version.cashInstrumentId
+        ? translate('strategies.blurb.weakMarketCash', {
+            share: Math.round(weak * 100),
+            cash: symbol(version.cashInstrumentId),
+          })
+        : translate('strategies.blurb.weakMarket', { share: Math.round(weak * 100) }),
     );
 
   return { headline: headline.replace(/\s+/g, ' '), points, region };

@@ -1,57 +1,53 @@
 <div class="card mt-4">
   <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
-    <h2 class="text-lg font-semibold m-0">Як стратегія поводилась у минулому</h2>
+    <h2 class="text-lg font-semibold m-0">{{ 'backtest.title' | transloco }}</h2>
     @if (store.isCalculating()) {
       <span class="flex items-center gap-2 text-sm text-muted-color">
-        <p-progress-spinner styleClass="w-4! h-4!" strokeWidth="6" ariaLabel="Рахується" />
-        Рахується у фоні, це може зайняти кілька хвилин
+        <p-progress-spinner styleClass="w-4! h-4!" strokeWidth="6" [ariaLabel]="'backtest.computing' | transloco" />
+        {{ 'backtest.computingHint' | transloco }}
       </span>
     }
   </div>
 
   @switch (store.backtest()?.status) {
     @case ('NotSupported') {
-      <p-message severity="secondary" text="Ця стратегія не підтримує перевірку на історії." />
+      <p-message severity="secondary" [text]="'backtest.notSupported' | transloco" />
     }
     @case ('Failed') {
       <p-message
         severity="warn"
-        [text]="store.backtest()?.failureReason ?? 'Не вдалося порахувати бектест.'"
+        [text]="store.backtest()?.failureReason ?? ('backtest.failed' | transloco)"
       />
     }
   }
 
   @if (store.loadError()) {
-    <p-message severity="error" text="Не вдалося завантажити бектест." />
+    <p-message severity="error" [text]="'backtest.loadFailed' | transloco" />
   }
 
   @if (result(); as replay) {
     <p class="text-sm text-muted-color mt-0 mb-4">
-      За ваших параметрів, {{ replay.start | date }} – {{ replay.end | date }}. Це минулі
-      результати, а не прогноз: за сьогоднішнім списком інструментів, тому реальний результат,
-      імовірно, буде гіршим. Колонка «Після податку» рахує податок за типовою податковою політикою:
-      стратегія платить його щороку з прибутку від продажів, а порівняння — один раз, коли все
-      продано в кінці. Податок з дивідендів не враховано.
+      {{ 'backtest.disclaimer' | transloco: { start: replay.start | date, end: replay.end | date } }}
     </p>
 
     @if (strategySummary(); as summary) {
       <div class="flex flex-wrap gap-x-8 gap-y-3 mb-5">
         <div>
-          <div class="text-sm text-muted-color">Заробила за весь період</div>
+          <div class="text-sm text-muted-color">{{ 'backtest.earnedTotal' | transloco }}</div>
           <div class="text-3xl font-bold">{{ summary.totalReturn | signedPercent: 0 }}</div>
         </div>
         <div>
-          <div class="text-sm text-muted-color">У середньому на рік</div>
+          <div class="text-sm text-muted-color">{{ 'backtest.averagePerYear' | transloco }}</div>
           <div class="text-3xl font-bold">{{ summary.annualReturn | signedPercent }}</div>
         </div>
         @if (summary.annualReturnAfterTax !== null) {
           <div>
-            <div class="text-sm text-muted-color">На рік після податку</div>
+            <div class="text-sm text-muted-color">{{ 'backtest.perYearAfterTax' | transloco }}</div>
             <div class="text-3xl font-bold">{{ summary.annualReturnAfterTax | signedPercent }}</div>
           </div>
         }
         <div>
-          <div class="text-sm text-muted-color">Найбільше падіння</div>
+          <div class="text-sm text-muted-color">{{ 'backtest.largestFall' | transloco }}</div>
           <div class="text-3xl font-bold">{{ summary.maxDrawdown | percent }}</div>
         </div>
       </div>
@@ -63,14 +59,14 @@
       (toggled)="hiddenLines.toggle($event)"
     />
 
-    <h3 class="text-base font-medium mb-2">Зростання 100 одиниць</h3>
+    <h3 class="text-base font-medium mb-2">{{ 'backtest.growthOf100' | transloco }}</h3>
     <app-live-chart
       [data]="growthData()"
       [options]="growthOptions()"
       [height]="viewport.phone() ? '15rem' : '20rem'"
     />
 
-    <h3 class="text-base font-medium mt-5 mb-2">Найгірше просідання за місяць</h3>
+    <h3 class="text-base font-medium mt-5 mb-2">{{ 'backtest.worstMonth' | transloco }}</h3>
     <app-live-chart
       [data]="drawdownData()"
       [options]="drawdownOptions()"
@@ -90,15 +86,15 @@
             </div>
             <dl class="m-0 grid grid-cols-3 gap-x-3 gap-y-2 text-sm">
               <div>
-                <dt class="text-xs text-muted-color">За весь період</dt>
+                <dt class="text-xs text-muted-color">{{ 'backtest.wholePeriod' | transloco }}</dt>
                 <dd class="m-0">{{ line.summary.totalReturn | signedPercent: 0 }}</dd>
               </div>
               <div>
-                <dt class="text-xs text-muted-color">На рік</dt>
+                <dt class="text-xs text-muted-color">{{ 'backtest.perYear' | transloco }}</dt>
                 <dd class="m-0">{{ line.summary.annualReturn | percent }}</dd>
               </div>
               <div>
-                <dt class="text-xs text-muted-color">Після податку</dt>
+                <dt class="text-xs text-muted-color">{{ 'backtest.afterTax' | transloco }}</dt>
                 <dd class="m-0">
                   {{
                     line.summary.annualReturnAfterTax === null
@@ -108,7 +104,7 @@
                 </dd>
               </div>
               <div>
-                <dt class="text-xs text-muted-color">Волатильність</dt>
+                <dt class="text-xs text-muted-color">{{ 'backtest.volatility' | transloco }}</dt>
                 <dd class="m-0">{{ line.summary.volatility | percent }}</dd>
               </div>
               <div>
@@ -116,7 +112,7 @@
                 <dd class="m-0">{{ line.summary.sharpe.toFixed(2) }}</dd>
               </div>
               <div>
-                <dt class="text-xs text-muted-color">Просідання</dt>
+                <dt class="text-xs text-muted-color">{{ 'backtest.drawdown' | transloco }}</dt>
                 <dd class="m-0">{{ line.summary.maxDrawdown | percent }}</dd>
               </div>
             </dl>
@@ -129,12 +125,12 @@
           <thead>
             <tr class="text-left text-muted-color">
               <th class="font-normal py-1"></th>
-              <th class="font-normal py-1 text-right">За весь період</th>
-              <th class="font-normal py-1 text-right">Дохідність на рік</th>
-              <th class="font-normal py-1 text-right">Після податку</th>
-              <th class="font-normal py-1 text-right">Волатильність</th>
+              <th class="font-normal py-1 text-right">{{ 'backtest.wholePeriod' | transloco }}</th>
+              <th class="font-normal py-1 text-right">{{ 'backtest.returnPerYear' | transloco }}</th>
+              <th class="font-normal py-1 text-right">{{ 'backtest.afterTax' | transloco }}</th>
+              <th class="font-normal py-1 text-right">{{ 'backtest.volatility' | transloco }}</th>
               <th class="font-normal py-1 text-right">Sharpe</th>
-              <th class="font-normal py-1 text-right">Найбільше просідання</th>
+              <th class="font-normal py-1 text-right">{{ 'backtest.largestDrawdown' | transloco }}</th>
             </tr>
           </thead>
           <tbody>
@@ -168,17 +164,17 @@
       </div>
     }
     <div class="text-xs text-muted-color mt-2">
-      Угод за весь період: {{ replay.trades }}
+      {{ 'backtest.trades' | transloco: { count: replay.trades } }}
       @if (replay.signalReports > 0) {
-        · Рапортів, що прийшли за сигналами: {{ replay.signalReports }}
+        {{ 'backtest.signalReports' | transloco: { count: replay.signalReports } }}
       }
     </div>
 
     @if (!this.replay()) {
-    <h3 class="text-base font-medium mt-6 mb-2">Що було б із вашими грошима</h3>
+    <h3 class="text-base font-medium mt-6 mb-2">{{ 'backtest.yourMoney' | transloco }}</h3>
     <div class="flex flex-wrap items-end gap-4 mb-4">
       <div class="flex flex-col gap-1">
-        <label for="backtest-start" class="text-sm">На старті</label>
+        <label for="backtest-start" class="text-sm">{{ 'backtest.atStart' | transloco }}</label>
         <p-inputnumber
           inputId="backtest-start"
           [ngModel]="store.start()"
@@ -188,7 +184,7 @@
         />
       </div>
       <div class="flex flex-col gap-1">
-        <label for="backtest-contribution" class="text-sm">Внесок на місяць</label>
+        <label for="backtest-contribution" class="text-sm">{{ 'backtest.monthlyContribution' | transloco }}</label>
         <p-inputnumber
           inputId="backtest-contribution"
           [ngModel]="store.contribution()"
@@ -204,7 +200,7 @@
         [ngModel]="store.years()"
         (ngModelChange)="$event && store.years.set($event)"
         [allowEmpty]="false"
-        ariaLabel="Тривалість"
+        [ariaLabel]="'backtest.duration' | transloco"
       />
     </div>
 
@@ -212,7 +208,7 @@
       @if (!strategyOutcomes()?.periods) {
         <p-message
           severity="secondary"
-          [text]="'Історії замало для відрізків у ' + outcomes.years + ' років.'"
+          [text]="'backtest.tooLittleHistory' | transloco: { count: outcomes.years }"
         />
       } @else {
         @if (viewport.phone()) {
@@ -228,17 +224,17 @@
                 </div>
                 <dl class="m-0 grid grid-cols-3 gap-x-3 text-sm">
                   <div>
-                    <dt class="text-xs text-muted-color">Гірший</dt>
+                    <dt class="text-xs text-muted-color">{{ 'backtest.worse' | transloco }}</dt>
                     <dd class="m-0">{{ row.outcomes.worst?.final | money: currency() : 0 }}</dd>
                   </div>
                   <div>
-                    <dt class="text-xs text-muted-color">Типовий</dt>
+                    <dt class="text-xs text-muted-color">{{ 'backtest.typical' | transloco }}</dt>
                     <dd class="m-0 font-medium">
                       {{ row.outcomes.typical?.final | money: currency() : 0 }}
                     </dd>
                   </div>
                   <div>
-                    <dt class="text-xs text-muted-color">Кращий</dt>
+                    <dt class="text-xs text-muted-color">{{ 'backtest.better' | transloco }}</dt>
                     <dd class="m-0">{{ row.outcomes.best?.final | money: currency() : 0 }}</dd>
                   </div>
                 </dl>
@@ -251,9 +247,9 @@
               <thead>
                 <tr class="text-left text-muted-color">
                   <th class="font-normal py-1"></th>
-                  <th class="font-normal py-1 text-right">Гірший відрізок</th>
-                  <th class="font-normal py-1 text-right">Типовий</th>
-                  <th class="font-normal py-1 text-right">Кращий</th>
+                  <th class="font-normal py-1 text-right">{{ 'backtest.worseSegment' | transloco }}</th>
+                  <th class="font-normal py-1 text-right">{{ 'backtest.typical' | transloco }}</th>
+                  <th class="font-normal py-1 text-right">{{ 'backtest.better' | transloco }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -284,10 +280,16 @@
           </div>
         }
         <div class="text-xs text-muted-color mt-2">
-          Внесено {{ outcomes.contributed | money: currency() : 0 }}. Порівняно
-          {{ strategyOutcomes()?.periods }} відрізків, що перекриваються.
+          {{
+            'backtest.contributed'
+              | transloco
+                : {
+                    amount: outcomes.contributed | money: currency() : 0,
+                    periods: strategyOutcomes()?.periods,
+                  }
+          }}
           @if ((strategyOutcomes()?.periods ?? 0) < fewPeriods) {
-            Їх мало, тому діапазон може бути надто вузьким.
+            {{ 'backtest.fewPeriods' | transloco }}
           }
         </div>
       }

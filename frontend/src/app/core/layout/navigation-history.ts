@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 import { Location } from '@angular/common';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { ActivatedRouteSnapshot, NavigationEnd, NavigationStart, Router } from '@angular/router';
@@ -59,6 +60,8 @@ export class NavigationHistory {
   }
 
   private titleOf(route: ActivatedRouteSnapshot): string {
-    return route.firstChild ? this.titleOf(route.firstChild) : (route.title ?? '');
+    if (route.firstChild) return this.titleOf(route.firstChild);
+
+    return route.title ? translate(route.title) : '';
   }
 }

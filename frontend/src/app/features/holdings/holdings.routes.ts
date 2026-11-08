@@ -4,7 +4,7 @@ export const holdingsRoutes: Routes = [
   {
     path: '',
     loadComponent: () => import('./pages/holdings-page/holdings-page').then((m) => m.HoldingsPage),
-    title: 'Позиції',
+    title: 'routes.holdings',
     data: { accountScope: 'all' },
   },
 ];

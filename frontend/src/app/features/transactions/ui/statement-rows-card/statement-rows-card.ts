@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -23,27 +24,27 @@ const decisions: Record<
   RowDecision,
   { label: string; severity: 'success' | 'secondary' | 'warn' | 'info' | 'danger' | 'contrast' }
 > = {
-  New: { label: 'нова', severity: 'success' },
-  AlreadyImported: { label: 'вже є', severity: 'secondary' },
-  Differs: { label: 'відрізняється', severity: 'warn' },
-  MatchesExisting: { label: 'збіг з журналом', severity: 'info' },
-  OutOfScope: { label: 'до дати', severity: 'secondary' },
-  Unsupported: { label: 'не імпортується', severity: 'contrast' },
-  NeedsMapping: { label: 'потрібне зіставлення', severity: 'danger' },
+  New: { label: translate('decision.New'), severity: 'success' },
+  AlreadyImported: { label: translate('decision.AlreadyImported'), severity: 'secondary' },
+  Differs: { label: translate('decision.Differs'), severity: 'warn' },
+  MatchesExisting: { label: translate('decision.MatchesExisting'), severity: 'info' },
+  OutOfScope: { label: translate('decision.OutOfScope'), severity: 'secondary' },
+  Unsupported: { label: translate('decision.Unsupported'), severity: 'contrast' },
+  NeedsMapping: { label: translate('decision.NeedsMapping'), severity: 'danger' },
 };
 
 const kinds: Record<string, string> = {
-  Buy: 'Купівля',
-  Sell: 'Продаж',
-  Contribution: 'Поповнення',
-  Withdrawal: 'Вивід',
-  Dividend: 'Дивіденд',
-  Unsupported: 'Інше',
+  Buy: translate('chart.buy'),
+  Sell: translate('chart.sell'),
+  Contribution: translate('transactions.rows.kind.Contribution'),
+  Withdrawal: translate('transactions.cash.kind.Withdrawal'),
+  Dividend: translate('transactions.cash.kind.Dividend'),
+  Unsupported: translate('transactions.rows.kind.Unsupported'),
 };
 
 @Component({
   selector: 'app-statement-rows-card',
-  imports: [
+  imports: [TranslocoPipe, 
     FormsModule,
     RouterLink,
     Button,
@@ -90,16 +91,19 @@ export class StatementRowsCard {
     if (!current || this.store.canConfirm()) return null;
 
     const unmapped = current.rows.filter((row) => row.decision === 'NeedsMapping');
-    if (unmapped.length === 0) return ['У виписці немає нових операцій: усе вже в журналі.'];
+    if (unmapped.length === 0) return [translate('transactions.rows.nothingNew')];
 
     const reasons = new Map<string, number>();
 
-    for (const row of unmapped)
-      reasons.set(row.note ?? 'не зіставлено', (reasons.get(row.note ?? 'не зіставлено') ?? 0) + 1);
+    for (const row of unmapped) {
+      const reason = row.note ?? translate<string>('transactions.rows.unmapped');
+
+      reasons.set(reason, (reasons.get(reason) ?? 0) + 1);
+    }
 
     return [
-      `Рядків без зіставлення: ${unmapped.length}.`,
-      ...[...reasons].map(([reason, count]) => `${reason} (рядків: ${count})`),
+      translate('transactions.rows.unmappedRows', { count: unmapped.length }),
+      ...[...reasons].map(([reason, count]) => translate('transactions.rows.reasonRows', { reason, count })),
     ];
   });
 
@@ -109,14 +113,19 @@ export class StatementRowsCard {
 
     const dangerous = current.mode === 'Replace' || current.mode === 'FromScratch';
     const toReverse = current.counts.toReverse;
-    const reversals = toReverse ? `, сторновано ${toReverse}` : '';
+    const message = toReverse
+      ? translate('transactions.rows.confirmMessageWithReversals', {
+          count: current.counts.toRecord,
+          reversed: toReverse,
+        })
+      : translate('transactions.rows.confirmMessage', { count: current.counts.toRecord });
 
     this.confirmation.confirm({
-      header: dangerous ? 'Сторнувати й імпортувати заново?' : 'Імпортувати виписку?',
-      message: `Буде записано ${current.counts.toRecord} операцій${reversals}. Імпорт можна скасувати одним кроком.`,
+      header: dangerous ? translate('transactions.rows.reverseAndImportQuestion') : translate('transactions.rows.importQuestion'),
+      message,
       icon: dangerous ? 'pi pi-exclamation-triangle' : 'pi pi-upload',
-      acceptLabel: 'Імпортувати',
-      rejectLabel: 'Скасувати',
+      acceptLabel: translate('transactions.rows.importAction'),
+      rejectLabel: translate('common.cancel'),
       acceptButtonProps: dangerous ? { severity: 'danger' } : undefined,
       rejectButtonProps: { severity: 'secondary', text: true },
       accept: () => void this.store.confirm(),

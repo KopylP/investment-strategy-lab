@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { Tag } from 'primeng/tag';
 import { InstrumentCatalog } from '../../../../core/context/instrument-catalog';
@@ -6,7 +7,7 @@ import { describeStrategy } from '../../models/strategy-summary';
 
 @Component({
   selector: 'app-strategy-picker',
-  imports: [Tag],
+  imports: [TranslocoPipe, Tag],
   template: `
     <div class="grid gap-3" [class.md:grid-cols-2]="!compact()">
       @for (card of cards(); track card.id) {
@@ -49,9 +50,9 @@ import { describeStrategy } from '../../models/strategy-summary';
           [class.border-primary]="value() === null"
           [class.border-surface]="value() !== null"
         >
-          <div class="font-semibold">Без стратегії</div>
+          <div class="font-semibold">{{ 'strategies.picker.none' | transloco }}</div>
           <div class="text-sm text-muted-color mt-1">
-            Під-портфель просто тримає те, що є; рапорти його не чіпають.
+            {{ 'strategies.picker.noneHint' | transloco }}
           </div>
         </button>
       }

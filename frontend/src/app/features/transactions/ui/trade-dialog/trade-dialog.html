@@ -1,5 +1,5 @@
 <p-dialog
-  header="Записати угоду"
+  [header]="'transactions.trade.title' | transloco"
   [modal]="true"
   [visible]="visible()"
   (visibleChange)="visible.set($event)"
@@ -31,7 +31,7 @@
     </div>
     <div class="grid gap-4 sm:grid-cols-2">
       <div class="flex flex-col gap-2">
-        <label for="trade-quantity" class="font-medium">Кількість</label>
+        <label for="trade-quantity" class="font-medium">{{ 'transactions.trade.quantity' | transloco }}</label>
         <p-inputnumber
           inputId="trade-quantity"
           [ngModel]="quantity()"
@@ -42,7 +42,7 @@
         />
       </div>
       <div class="flex flex-col gap-2">
-        <label for="trade-price" class="font-medium">Ціна</label>
+        <label for="trade-price" class="font-medium">{{ 'transactions.trade.price' | transloco }}</label>
         <p-inputnumber
           inputId="trade-price"
           [ngModel]="price()"
@@ -55,7 +55,7 @@
         />
       </div>
       <div class="flex flex-col gap-2">
-        <label for="trade-fee" class="font-medium">Комісія</label>
+        <label for="trade-fee" class="font-medium">{{ 'transactions.trade.fee' | transloco }}</label>
         <p-inputnumber
           inputId="trade-fee"
           [ngModel]="fee()"
@@ -67,7 +67,7 @@
         />
       </div>
       <div class="flex flex-col gap-2">
-        <label for="trade-date" class="font-medium">Дата</label>
+        <label for="trade-date" class="font-medium">{{ 'taxes.date' | transloco }}</label>
         <p-datepicker
           inputId="trade-date"
           [ngModel]="executedOn()"
@@ -80,7 +80,7 @@
       </div>
     </div>
     <div class="flex flex-col gap-2">
-      <label for="trade-sub" class="font-medium">Під-портфель</label>
+      <label for="trade-sub" class="font-medium">{{ 'transactions.trade.subPortfolio' | transloco }}</label>
       <p-select
         inputId="trade-sub"
         [options]="subPortfolios()"
@@ -89,21 +89,20 @@
         [ngModel]="subPortfolioId()"
         (ngModelChange)="subPortfolioId.set($event)"
         [showClear]="true"
-        placeholder="Розподілити автоматично"
+        [placeholder]="'transactions.trade.autoSplit' | transloco"
         appendTo="body"
         fluid
       />
       <small class="text-muted-color"
-        >Без вибору: купівля ділиться за цільовими частками, продаж — за утримуваними
-        штуками.</small
+        >{{ 'transactions.trade.autoSplitHint' | transloco }}</small
       >
     </div>
     <div class="text-right text-lg font-semibold">{{ total() | money: currency() }}</div>
   </div>
   <ng-template #footer>
-    <p-button label="Скасувати" [text]="true" severity="secondary" (onClick)="visible.set(false)" />
+    <p-button [label]="'common.cancel' | transloco" [text]="true" severity="secondary" (onClick)="visible.set(false)" />
     <p-button
-      label="Записати"
+      [label]="'transactions.trade.record' | transloco"
       icon="pi pi-check"
       [disabled]="!valid()"
       [loading]="busy()"

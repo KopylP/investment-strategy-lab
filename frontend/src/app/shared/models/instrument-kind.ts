@@ -1,10 +1,8 @@
-const kindLabels: Record<string, string> = {
-  Etf: 'ETF',
-  Stock: 'Акція',
-  Index: 'Індекс',
-  FxPair: 'Валюта',
-};
+import { translate } from '@jsverse/transloco';
+const translatedKinds = ['Stock', 'Index', 'FxPair'];
 
 export function instrumentKindLabel(kind: string): string {
-  return kindLabels[kind] ?? kind;
+  if (kind === 'Etf') return 'ETF';
+
+  return translatedKinds.includes(kind) ? translate(`instrumentKind.${kind}`) : kind;
 }

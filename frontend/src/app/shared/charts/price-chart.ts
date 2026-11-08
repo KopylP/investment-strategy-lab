@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { ChartLegend } from './chart-legend/chart-legend';
 import { dateAxis } from './date-axis';
@@ -83,7 +84,7 @@ export class PriceChart {
       labels: points.map((point) => formatDate(point.date)),
       datasets: [
         {
-          label: 'Ціна закриття',
+          label: translate('chart.closingPrice'),
           data: points.map((point) => point.close),
           borderColor: this.color(),
           backgroundColor: withAlpha(this.color(), 0.12),
@@ -97,7 +98,7 @@ export class PriceChart {
         ...(byIndex.size
           ? [
               {
-                label: 'Купівля',
+                label: translate('chart.buy'),
                 data: markers('Buy'),
                 showLine: false,
                 pointStyle: 'triangle',
@@ -109,7 +110,7 @@ export class PriceChart {
                 order: 0,
               },
               {
-                label: 'Продаж',
+                label: translate('chart.sell'),
                 data: markers('Sell'),
                 showLine: false,
                 pointStyle: 'triangle',
@@ -205,8 +206,12 @@ export class PriceChart {
                 .filter((trade) => trade.side === side)
                 .map(
                   (trade) =>
-                    `${side === 'Buy' ? 'Купівля' : 'Продаж'} ${formatQuantity(trade.quantity)} шт. × ` +
-                    `${formatMoney(trade.price, trade.currency)} (${formatDate(trade.date)})`,
+                    translate('chart.tradeTooltip', {
+                      side: translate(side === 'Buy' ? 'chart.buy' : 'chart.sell'),
+                      quantity: formatQuantity(trade.quantity),
+                      price: formatMoney(trade.price, trade.currency),
+                      date: formatDate(trade.date),
+                    }),
                 );
             },
           },

@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -27,7 +28,7 @@ type PickerTab = WatchedSubject['target'];
 
 @Component({
   selector: 'app-watched-subject-picker',
-  imports: [FormsModule, Dialog, IconField, InputIcon, InputText, SelectButton],
+  imports: [TranslocoPipe, FormsModule, Dialog, IconField, InputIcon, InputText, SelectButton],
   templateUrl: './watched-subject-picker.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -38,8 +39,8 @@ export class WatchedSubjectPicker {
   readonly picked = output<WatchedSubject>();
 
   protected readonly tabs: { label: string; value: PickerTab }[] = [
-    { label: 'Інструмент', value: 'Instrument' },
-    { label: 'Група', value: 'InstrumentGroup' },
+    { label: translate('signals.subject.instrument'), value: 'Instrument' },
+    { label: translate('signals.subject.group'), value: 'InstrumentGroup' },
   ];
   protected readonly tab = signal<PickerTab>('Instrument');
   protected readonly search = signal('');

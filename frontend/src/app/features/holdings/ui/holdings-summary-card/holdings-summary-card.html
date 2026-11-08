@@ -2,14 +2,18 @@
   <div class="grid gap-4 sm:gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-start">
     <div>
       <div class="text-muted-color text-sm flex items-center gap-1">
-        Вартість · {{ store.asOf() ? 'на вибрану дату' : 'за останніми котируваннями' }}
+        {{
+          'holdings.summary.value'
+            | transloco
+              : {
+                  basis:
+                    (store.asOf() ? 'holdings.summary.onDate' : 'holdings.summary.latestQuotes')
+                    | transloco,
+                }
+        }}
         <i
           class="pi pi-info-circle text-xs"
-          [pTooltip]="
-            'Ціни — закриття біржі за останній торговий день, валюти — офіційний курс. Застосунок брокера ' +
-            '(Revolut) показує поточну ціну й свій ринковий курс, тож сума може відрізнятися на кілька ' +
-            'десятих відсотка.'
-          "
+          [pTooltip]="'holdings.summary.priceHint' | transloco"
           tooltipPosition="bottom"
         ></i>
       </div>
@@ -41,13 +45,13 @@
             · {{ totals().pnlPct | signedPercent }}
           }
         </span>
-        <span class="text-sm text-muted-color">нереалізований результат відкритих позицій</span>
+        <span class="text-sm text-muted-color">{{ 'holdings.summary.unrealizedHint' | transloco }}</span>
       </div>
     </div>
 
     <div>
-      <div class="text-muted-color text-sm mb-2">Склад</div>
-      <div class="flex gap-0.5 -my-2" role="img" aria-label="Частки інструментів">
+      <div class="text-muted-color text-sm mb-2">{{ 'holdings.summary.composition' | transloco }}</div>
+      <div class="flex gap-0.5 -my-2" role="img" [attr.aria-label]="'holdings.summary.shares' | transloco">
         @for (slice of store.composition(); track slice.label; let first = $first, last = $last) {
           <div
             class="py-2 min-w-0"

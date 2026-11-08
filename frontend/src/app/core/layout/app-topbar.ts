@@ -1,3 +1,5 @@
+import { TranslocoPipe } from '@jsverse/transloco';
+import { translate } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, inject, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -27,7 +29,7 @@ function scopeOf(route: ActivatedRouteSnapshot): AccountScope {
 
 @Component({
   selector: 'app-topbar',
-  imports: [RouterLink, FormsModule, Select, SelectButton, Tooltip, TapTooltip, Menu],
+  imports: [TranslocoPipe, RouterLink, FormsModule, Select, SelectButton, Tooltip, TapTooltip, Menu],
   templateUrl: './app-topbar.html',
   host: { '(window:scroll)': 'closeMenu()' },
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -52,7 +54,7 @@ export class AppTopbar {
 
   protected readonly accountOptions = computed(() =>
     this.scope() === 'all'
-      ? [{ id: allAccounts, name: 'Усі рахунки' }, ...this.accounts.accounts()]
+      ? [{ id: allAccounts, name: translate('layout.topbar.allAccounts') }, ...this.accounts.accounts()]
       : this.accounts.accounts(),
   );
 
@@ -67,7 +69,7 @@ export class AppTopbar {
       phone && accounts.length > 1
         ? [
             {
-              label: 'Рахунок',
+              label: translate('layout.topbar.account'),
               items: this.accountOptions().map((account) => ({
                 label:
                   'baseCurrency' in account
@@ -83,7 +85,7 @@ export class AppTopbar {
     const themeItems: MenuItem[] = phone
       ? [
           {
-            label: this.layout.isDarkTheme() ? 'Світла тема' : 'Темна тема',
+            label: translate(this.layout.isDarkTheme() ? 'layout.topbar.lightTheme' : 'layout.topbar.darkTheme'),
             icon: this.layout.isDarkTheme() ? 'pi pi-sun' : 'pi pi-moon',
             command: () => this.toggleDarkMode(),
           },
@@ -93,7 +95,7 @@ export class AppTopbar {
     return [
       ...accountItems,
       {
-        label: 'Профіль',
+        label: translate('layout.menu.profile'),
         icon: 'pi pi-user',
         command: () => void this.router.navigate(['/profile']),
       },
@@ -102,7 +104,7 @@ export class AppTopbar {
         ? []
         : [
             { separator: true },
-            { label: 'Вийти', icon: 'pi pi-sign-out', command: () => void this.signOut() },
+            { label: translate('layout.topbar.signOut'), icon: 'pi pi-sign-out', command: () => void this.signOut() },
           ]),
     ];
   });

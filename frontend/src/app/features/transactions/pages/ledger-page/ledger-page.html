@@ -1,23 +1,23 @@
 <app-page-header
-  title="Журнал операцій"
-  subtitle="Позиції й кеш похідні з цих записів; записи не змінюються — помилку виправляє сторно"
+  [title]="'routes.transactions' | transloco"
+  [subtitle]="'transactions.ledger.subtitle' | transloco"
 >
   @if (store.account()) {
     <p-button
-      [label]="viewport.phone() ? 'Імпорт' : 'Імпорт з Revolut'"
+      [label]="viewport.phone() ? ('transactions.ledger.import' | transloco) : ('routes.revolutImport' | transloco)"
       icon="pi pi-file-import"
       severity="secondary"
       [outlined]="true"
       routerLink="/transactions/import"
     />
     <p-button
-      [label]="viewport.phone() ? 'Кошти' : 'Рух коштів'"
+      [label]="viewport.phone() ? ('transactions.ledger.cash' | transloco) : ('transactions.ledger.filter.cash' | transloco)"
       icon="pi pi-money-bill"
       severity="secondary"
       [outlined]="true"
       (onClick)="cashVisible.set(true)"
     />
-    <p-button label="Угода" icon="pi pi-plus" (onClick)="tradeVisible.set(true)" />
+    <p-button [label]="'transactions.ledger.trade' | transloco" icon="pi pi-plus" (onClick)="tradeVisible.set(true)" />
   }
 </app-page-header>
 
@@ -25,12 +25,12 @@
   @if (store.isLoading() && !store.transactions().length) {
     <p-skeleton height="10rem" />
   } @else if (store.loadError()) {
-    <p-message severity="error" text="Не вдалося завантажити журнал" />
+    <p-message severity="error" [text]="'transactions.ledger.loadFailed' | transloco" />
   } @else if (!store.transactions().length) {
     <app-empty-state
       icon="pi pi-book"
-      title="Журнал порожній"
-      text="Операції з’являються, коли ви відмічаєте дії в рапорті, імпортуєте positions.json або записуєте угоду вручну."
+      [title]="'transactions.ledger.empty' | transloco"
+      [text]="'transactions.ledger.emptyHint' | transloco"
     />
   } @else {
     <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 mb-3 sm:mb-4">
@@ -39,7 +39,7 @@
         <input
           pInputText
           type="text"
-          placeholder="Пошук"
+          [placeholder]="'common.search' | transloco"
           [ngModel]="search()"
           (ngModelChange)="search.set($event)"
           class="w-full"
@@ -52,7 +52,7 @@
         [ngModel]="kindFilter()"
         (ngModelChange)="kindFilter.set($event)"
         [showClear]="true"
-        placeholder="Усі операції"
+        [placeholder]="'transactions.ledger.allOperations' | transloco"
         styleClass="w-full sm:w-auto"
       />
     </div>
@@ -65,12 +65,12 @@
     >
       <ng-template #header>
         <tr>
-          <th class="hidden sm:table-cell">Дата</th>
-          <th class="hidden sm:table-cell">Операція</th>
-          <th>Деталі</th>
-          <th class="hidden sm:table-cell">Під-портфелі</th>
-          <th class="text-right">Гроші</th>
-          <th class="hidden sm:table-cell">Джерело</th>
+          <th class="hidden sm:table-cell">{{ 'taxes.date' | transloco }}</th>
+          <th class="hidden sm:table-cell">{{ 'transactions.rows.operation' | transloco }}</th>
+          <th>{{ 'transactions.ledger.details' | transloco }}</th>
+          <th class="hidden sm:table-cell">{{ 'transactions.ledger.subPortfolios' | transloco }}</th>
+          <th class="text-right">{{ 'transactions.ledger.money' | transloco }}</th>
+          <th class="hidden sm:table-cell">{{ 'transactions.ledger.source' | transloco }}</th>
           <th class="w-12"></th>
         </tr>
       </ng-template>
@@ -82,7 +82,7 @@
           <td class="hidden sm:table-cell">
             <p-tag [value]="transaction.kindLabel" [severity]="transaction.severity" />
             @if (transaction.isReversed) {
-              <p-tag value="сторновано" severity="secondary" styleClass="ml-1" />
+              <p-tag [value]="'transactions.ledger.reversedTag' | transloco" severity="secondary" styleClass="ml-1" />
             }
           </td>
           <td>
@@ -96,7 +96,7 @@
             <div class="sm:hidden text-xs text-muted-color">
               {{ transaction.allocation }}
               @if (transaction.isReversed) {
-                · сторновано
+                {{ 'transactions.ledger.reversedNote' | transloco }}
               }
             </div>
           </td>
@@ -121,19 +121,19 @@
                 icon="pi pi-replay"
                 [text]="true"
                 severity="secondary"
-                pTooltip="Сторнувати"
-                ariaLabel="Сторнувати"
+                [pTooltip]="'transactions.ledger.reverse' | transloco"
+                [ariaLabel]="'transactions.ledger.reverse' | transloco"
                 [disabled]="store.busy()"
                 (onClick)="confirmReverse(transaction)"
               />
             } @else if (
-              transaction.sourceLabel === 'з рапорту' &&
+              transaction.sourceLabel === ('transactions.source.report' | transloco) &&
               !transaction.isReversed &&
               transaction.kind !== 'Reversal'
             ) {
               <i
                 class="pi pi-info-circle text-muted-color text-center w-(--p-button-icon-only-width)"
-                pTooltip="Скасовується відміткою в рапорті"
+                [pTooltip]="'transactions.ledger.undoneByReport' | transloco"
               ></i>
             }
           </td>

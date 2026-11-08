@@ -1,10 +1,13 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import { activeLanguage } from '../../core/i18n/language';
 
 const shortLength = 240;
 const shortSentences = 2;
 
 @Component({
   selector: 'app-instrument-about',
+  imports: [TranslocoPipe],
   template: `
     @if (parts(); as parts) {
       <div class="text-sm text-muted-color leading-relaxed" lang="en">
@@ -13,10 +16,10 @@ const shortSentences = 2;
           <button
             type="button"
             class="p-0 border-0 bg-transparent text-primary cursor-pointer whitespace-nowrap"
-            lang="uk"
+            [lang]="language"
             (click)="expandedText.set(expanded() ? null : (text() ?? null))"
           >
-            {{ expanded() ? 'Згорнути' : 'Детальніше' }}
+            {{ (expanded() ? 'common.collapse' : 'common.more') | transloco }}
           </button>
         }
       </div>
@@ -26,6 +29,8 @@ const shortSentences = 2;
 })
 export class InstrumentAbout {
   readonly text = input<string | null | undefined>(null);
+
+  protected readonly language = activeLanguage;
 
   protected readonly expandedText = signal<string | null>(null);
   protected readonly expanded = computed(

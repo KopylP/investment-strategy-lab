@@ -4,7 +4,7 @@ export const overviewRoutes: Routes = [
   {
     path: '',
     loadComponent: () => import('./pages/overview-page/overview-page').then((m) => m.OverviewPage),
-    title: 'Огляд',
+    title: 'routes.overview',
     data: { accountScope: 'all' },
   },
 ];

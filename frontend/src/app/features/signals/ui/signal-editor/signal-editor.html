@@ -1,5 +1,5 @@
 <p-dialog
-  [header]="isEditing() ? 'Сигнал' : 'Новий сигнал'"
+  [header]="isEditing() ? ('signals.editor.signal' | transloco) : ('signals.editor.newSignal' | transloco)"
   [modal]="true"
   [(visible)]="visible"
   [style]="{ width: '40rem' }"
@@ -7,7 +7,7 @@
 >
   <div class="flex flex-col gap-4">
     <div class="flex flex-col gap-1">
-      <label class="text-sm font-medium" for="signal-name">Назва</label>
+      <label class="text-sm font-medium" for="signal-name">{{ 'signals.editor.name' | transloco }}</label>
       <input
         pInputText
         id="signal-name"
@@ -19,7 +19,7 @@
 
     <div class="grid gap-3 sm:grid-cols-2">
       <div class="flex flex-col gap-1">
-        <label class="text-sm font-medium" for="signal-target">За чим стежить</label>
+        <label class="text-sm font-medium" for="signal-target">{{ 'signals.editor.watches' | transloco }}</label>
         <p-select
           inputId="signal-target"
           [options]="targets"
@@ -35,11 +35,11 @@
       @if (watchesMarket()) {
         <div class="flex flex-col gap-1">
           <label class="text-sm font-medium" for="signal-watched-subject">
-            {{ form().target === 'InstrumentGroup' ? 'Група' : 'Інструмент' }}
+            {{ form().target === 'InstrumentGroup' ? ('signals.subject.group' | transloco) : ('signals.subject.instrument' | transloco) }}
           </label>
           <p-button
             buttonId="signal-watched-subject"
-            [label]="watchedLabel() ?? 'Вибрати'"
+            [label]="watchedLabel() ?? ('signals.editor.choose' | transloco)"
             icon="pi pi-search"
             severity="secondary"
             [outlined]="true"
@@ -50,7 +50,7 @@
         </div>
       } @else {
         <div class="flex flex-col gap-1">
-          <label class="text-sm font-medium" for="signal-account">Рахунок</label>
+          <label class="text-sm font-medium" for="signal-account">{{ 'signals.editor.account' | transloco }}</label>
           <p-select
             inputId="signal-account"
             [options]="accounts()"
@@ -66,7 +66,7 @@
 
       @if (form().target === 'SubPortfolio') {
         <div class="flex flex-col gap-1">
-          <label class="text-sm font-medium" for="signal-sub-portfolio">Під-портфель</label>
+          <label class="text-sm font-medium" for="signal-sub-portfolio">{{ 'signals.editor.subPortfolio' | transloco }}</label>
           <p-select
             inputId="signal-sub-portfolio"
             [options]="subPortfolios()"
@@ -75,7 +75,7 @@
             [ngModel]="form().subPortfolioId"
             (ngModelChange)="patch({ subPortfolioId: $event })"
             [disabled]="isEditing()"
-            placeholder="Виберіть"
+            [placeholder]="'signals.editor.choosePlaceholder' | transloco"
             fluid
           />
         </div>
@@ -84,7 +84,7 @@
 
     <div class="grid gap-3 sm:grid-cols-2">
       <div class="flex flex-col gap-1">
-        <label class="text-sm font-medium" for="signal-metric">Умова</label>
+        <label class="text-sm font-medium" for="signal-metric">{{ 'signals.editor.condition' | transloco }}</label>
         <p-select
           inputId="signal-metric"
           [options]="metrics()"
@@ -98,7 +98,7 @@
 
       @if (isLevel()) {
         <div class="flex flex-col gap-1">
-          <label class="text-sm font-medium" for="signal-direction">Напрямок</label>
+          <label class="text-sm font-medium" for="signal-direction">{{ 'signals.editor.direction' | transloco }}</label>
           <p-select
             inputId="signal-direction"
             [options]="directions"
@@ -112,7 +112,7 @@
       }
 
       <div class="flex flex-col gap-1">
-        <label class="text-sm font-medium" for="signal-threshold">Поріг</label>
+        <label class="text-sm font-medium" for="signal-threshold">{{ 'signals.editor.threshold' | transloco }}</label>
         <p-inputnumber
           inputId="signal-threshold"
           [ngModel]="form().threshold"
@@ -125,7 +125,7 @@
       </div>
 
       <div class="flex flex-col gap-1">
-        <label class="text-sm font-medium" for="signal-rearm">Зводиться знову при</label>
+        <label class="text-sm font-medium" for="signal-rearm">{{ 'signals.editor.rearmAt' | transloco }}</label>
         <p-inputnumber
           inputId="signal-rearm"
           [ngModel]="form().rearmAt"
@@ -133,20 +133,20 @@
           [suffix]="unit()"
           [min]="0"
           [maxFractionDigits]="2"
-          placeholder="Автоматично"
+          [placeholder]="'signals.editor.automatic' | transloco"
           fluid
         />
       </div>
 
       @if (form().metric === 'DrawdownFromPeak') {
         <div class="flex flex-col gap-1">
-          <label class="text-sm font-medium" for="signal-window">Шукати пік за, днів</label>
+          <label class="text-sm font-medium" for="signal-window">{{ 'signals.editor.peakWindow' | transloco }}</label>
           <p-inputnumber
             inputId="signal-window"
             [ngModel]="form().windowDays"
             (ngModelChange)="patch({ windowDays: $event })"
             [min]="2"
-            placeholder="Уся історія"
+            [placeholder]="'signals.editor.wholeHistory' | transloco"
             fluid
           />
         </div>
@@ -162,7 +162,7 @@
     />
 
     <p class="m-0 text-xs text-muted-color">
-      Котирування оновлюються раз на день о 22:30, тому частіша перевірка побачить ті самі дані.
+      {{ 'signals.editor.quotesDaily' | transloco }}
     </p>
 
     @if (isEditing()) {
@@ -172,7 +172,7 @@
           [ngModel]="form().enabled"
           (ngModelChange)="patch({ enabled: $event })"
         />
-        Сигнал увімкнено
+        {{ 'signals.editor.enabled' | transloco }}
       </label>
     }
 
@@ -184,18 +184,18 @@
           (ngModelChange)="store.setNotify(current.id, $event)"
           [disabled]="store.saving()"
         />
-        Надсилати сповіщення
+        {{ 'signals.editor.notify' | transloco }}
       </label>
 
       <div class="flex flex-col gap-2">
-        <div class="font-semibold" role="heading" aria-level="3">Рапорти, які запускає сигнал</div>
+        <div class="font-semibold" role="heading" aria-level="3">{{ 'signals.editor.reports' | transloco }}</div>
 
         @for (rule of rules(); track rule.id) {
           <div class="flex items-center justify-between gap-2">
             <span class="min-w-0">
               <i class="pi pi-file mr-2"></i>{{ store.ruleLabel(rule) }}
               @if (rule.fromStrategy) {
-                <span class="text-xs text-muted-color ml-1">· від стратегії</span>
+                <span class="text-xs text-muted-color ml-1">{{ 'signals.editor.fromStrategy' | transloco }}</span>
               }
             </span>
             <p-button
@@ -203,7 +203,7 @@
               severity="secondary"
               [text]="true"
               size="small"
-              ariaLabel="Від’єднати рапорт"
+              [ariaLabel]="'signals.editor.disconnect' | transloco"
               [disabled]="store.saving()"
               (onClick)="store.removeReportRule(rule.id)"
             />
@@ -213,7 +213,7 @@
           }
         } @empty {
           <p class="m-0 text-sm text-muted-color">
-            Поки жодного. Стратегії не знають про сигнал: це той самий рапорт, лише раніше.
+            {{ 'signals.editor.noReports' | transloco }}
           </p>
         }
 
@@ -224,7 +224,7 @@
             optionValue="value"
             [ngModel]="ruleAccountId()"
             (ngModelChange)="ruleAccountId.set($event); ruleReportCode.set(null)"
-            ariaLabel="Рахунок"
+            [ariaLabel]="'signals.editor.account' | transloco"
             fluid
           />
           <p-select
@@ -233,12 +233,12 @@
             optionValue="value"
             [ngModel]="ruleReportCode()"
             (ngModelChange)="ruleReportCode.set($event)"
-            placeholder="Рапорт"
-            ariaLabel="Рапорт"
+            [placeholder]="'signals.editor.report' | transloco"
+            [ariaLabel]="'signals.editor.report' | transloco"
             fluid
           />
           <p-button
-            label="Під’єднати"
+            [label]="'signals.editor.connect' | transloco"
             icon="pi pi-plus"
             severity="secondary"
             [disabled]="!ruleReportCode() || store.saving()"
@@ -248,7 +248,7 @@
       </div>
     } @else {
       <p class="m-0 text-sm text-muted-color">
-        Сповіщення ввімкнуться самі. Рапорти можна під’єднати, коли сигнал буде створено.
+        {{ 'signals.editor.afterCreate' | transloco }}
       </p>
     }
   </div>
@@ -256,7 +256,7 @@
   <ng-template #footer>
     @if (editedSignal(); as current) {
       <p-button
-        label="Перевірити зараз"
+        [label]="'signals.editor.checkNow' | transloco"
         icon="pi pi-refresh"
         severity="secondary"
         [text]="true"
@@ -265,7 +265,7 @@
       />
       @if (!current.builtIn) {
         <p-button
-          label="Видалити"
+          [label]="'common.delete' | transloco"
           icon="pi pi-trash"
           severity="danger"
           [text]="true"
@@ -274,9 +274,9 @@
         />
       }
     }
-    <p-button label="Скасувати" severity="secondary" [text]="true" (onClick)="visible.set(false)" />
+    <p-button [label]="'common.cancel' | transloco" severity="secondary" [text]="true" (onClick)="visible.set(false)" />
     <p-button
-      label="Зберегти"
+      [label]="'common.save' | transloco"
       icon="pi pi-check"
       [disabled]="!isComplete() || store.saving()"
       [loading]="store.saving()"

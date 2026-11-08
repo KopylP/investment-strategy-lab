@@ -1,12 +1,13 @@
 <app-page-header
-  title="Інструменти й котирування"
+  [title]="'instruments.title' | transloco"
   [subtitle]="
-    'Ціни закриття щоночі о 22:30 (пн–пт)' +
-    (store.lastQuoteDate() ? ' · останні — ' + (store.lastQuoteDate() | date) : '')
+    store.lastQuoteDate()
+      ? ('instruments.subtitleWithLast' | transloco: { date: store.lastQuoteDate() | date })
+      : ('instruments.subtitle' | transloco)
   "
 >
   <p-button
-    label="Курси валют"
+    [label]="'instruments.fxRates' | transloco"
     icon="pi pi-euro"
     severity="secondary"
     [outlined]="true"
@@ -14,7 +15,7 @@
     (onClick)="store.ingestFxRates()"
   />
   <p-button
-    [label]="viewport.phone() ? 'Котирування' : 'Оновити котирування'"
+    [label]="(viewport.phone() ? 'instruments.quotes' : 'instruments.updateQuotes') | transloco"
     icon="pi pi-cloud-download"
     [loading]="store.busy() === 'quotes'"
     (onClick)="store.ingestQuotes()"
@@ -29,7 +30,7 @@
         <input
           pInputText
           type="search"
-          placeholder="Тікер, назва або ISIN"
+          [placeholder]="'instruments.search' | transloco"
           [ngModel]="store.search()"
           (ngModelChange)="store.search.set($event)"
           class="w-full"
@@ -78,7 +79,7 @@
                 <div class="font-semibold flex items-center gap-2">
                   {{ row.symbol }}
                   @if (row.held) {
-                    <i class="pi pi-wallet text-xs text-primary" title="Є в портфелі"></i>
+                    <i class="pi pi-wallet text-xs text-primary" [title]="'instruments.inPortfolioHint' | transloco"></i>
                   }
                 </div>
                 <div class="text-xs text-muted-color truncate">{{ row.name }}</div>
@@ -89,13 +90,17 @@
                   {{ row.price ? (row.price.close | money: row.currency) : '—' }}
                 </div>
                 <div class="text-xs" [appSignedValue]="row.change1m">
-                  {{ row.change1m === null ? '' : (row.change1m | signedPercent) + ' міс.' }}
+                  {{
+                    row.change1m === null
+                      ? ''
+                      : ('instruments.perMonth' | transloco: { change: row.change1m | signedPercent })
+                  }}
                 </div>
               </div>
             </button>
           </li>
         } @empty {
-          <li class="p-4 text-muted-color">Нічого не знайдено.</li>
+          <li class="p-4 text-muted-color">{{ 'common.nothingFound' | transloco }}</li>
         }
       </ul>
     }
@@ -110,7 +115,7 @@
             class="lg:hidden mb-3 p-0 border-0 bg-transparent text-primary cursor-pointer"
             (click)="toggle(row.id)"
           >
-            <i class="pi pi-arrow-left mr-1"></i>До списку
+            <i class="pi pi-arrow-left mr-1"></i>{{ 'instruments.backToList' | transloco }}
           </button>
           <div class="flex flex-wrap items-center gap-2">
             <h2 class="text-2xl font-bold m-0">{{ row.symbol }}</h2>
@@ -122,7 +127,7 @@
               <p-tag [value]="row.isAccumulating ? 'Acc' : 'Dist'" severity="contrast" />
             }
             @if (row.held) {
-              <p-tag value="у портфелі" severity="success" />
+              <p-tag [value]="'instruments.inPortfolio' | transloco" severity="success" />
             }
           </div>
           <div class="text-muted-color mt-1">{{ row.name }}</div>
@@ -133,7 +138,7 @@
           [text]="true"
           [rounded]="true"
           severity="secondary"
-          ariaLabel="Закрити"
+          [ariaLabel]="'common.close' | transloco"
           class="hidden lg:block"
           (onClick)="store.select(row.id)"
         />
@@ -149,12 +154,14 @@
               <span [appSignedValue]="stats.change" class="font-semibold">{{
                 stats.change | signedPercent
               }}</span>
-              <span class="text-muted-color"> за період</span>
+              <span class="text-muted-color"> {{ 'instruments.forPeriod' | transloco }}</span>
             }
             @if (row.price) {
-              <span class="text-muted-color"> · закриття {{ row.price.date | date }}</span>
+              <span class="text-muted-color">{{
+                'instruments.closeOn' | transloco: { date: row.price.date | date }
+              }}</span>
               @if (row.price.isStale) {
-                <p-tag value="застаріле" severity="warn" styleClass="ml-2" />
+                <p-tag [value]="'instruments.stale' | transloco" severity="warn" styleClass="ml-2" />
               }
             }
           </div>
@@ -181,11 +188,11 @@
           />
         } @else if (store.detailError()) {
           <div class="h-72 flex items-center justify-center text-muted-color">
-            Не вдалося завантажити історію котирувань.
+            {{ 'instruments.historyFailed' | transloco }}
           </div>
         } @else {
           <div class="h-72 flex items-center justify-center text-muted-color">
-            Котирувань за період немає — оновіть котирування.
+            {{ 'instruments.noQuotes' | transloco }}
           </div>
         }
       </div>
@@ -193,22 +200,24 @@
       @if (store.detailStats(); as stats) {
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 pt-4 border-t border-surface">
           <div>
-            <div class="text-xs text-muted-color uppercase">Максимум</div>
+            <div class="text-xs text-muted-color uppercase">{{ 'instruments.maximum' | transloco }}</div>
             <div class="font-semibold">{{ stats.high | money: row.currency }}</div>
           </div>
           <div>
-            <div class="text-xs text-muted-color uppercase">Мінімум</div>
+            <div class="text-xs text-muted-color uppercase">{{ 'instruments.minimum' | transloco }}</div>
             <div class="font-semibold">{{ stats.low | money: row.currency }}</div>
           </div>
           <div>
-            <div class="text-xs text-muted-color uppercase">Найбільше падіння</div>
+            <div class="text-xs text-muted-color uppercase">{{ 'instruments.largestFall' | transloco }}</div>
             <div class="font-semibold" [appSignedValue]="stats.maxDrawdown">
               {{ stats.maxDrawdown | signedPercent }}
             </div>
           </div>
           <div>
-            <div class="text-xs text-muted-color uppercase">Волатильність</div>
-            <div class="font-semibold">{{ stats.volatility | percent }} річних</div>
+            <div class="text-xs text-muted-color uppercase">{{ 'instruments.volatility' | transloco }}</div>
+            <div class="font-semibold">{{
+              'instruments.yearly' | transloco: { volatility: stats.volatility | percent }
+            }}</div>
           </div>
         </div>
       }
@@ -219,15 +228,15 @@
           <div>{{ row.isin ?? '—' }}</div>
         </div>
         <div>
-          <div class="text-xs text-muted-color uppercase">Біржа</div>
+          <div class="text-xs text-muted-color uppercase">{{ 'instruments.exchange' | transloco }}</div>
           <div>{{ row.exchange }}</div>
         </div>
         <div>
-          <div class="text-xs text-muted-color uppercase">Валюта</div>
+          <div class="text-xs text-muted-color uppercase">{{ 'instruments.currency' | transloco }}</div>
           <div>{{ row.currency }}</div>
         </div>
         <div class="hidden sm:block">
-          <div class="text-xs text-muted-color uppercase">Котирування з позначками</div>
+          <div class="text-xs text-muted-color uppercase">{{ 'instruments.quoteSymbols' | transloco }}</div>
           <div>{{ store.detailStats()?.flagged ?? 0 }}</div>
         </div>
       </div>
@@ -237,9 +246,9 @@
       class="card mb-0 hidden lg:flex flex-col items-center justify-center text-center text-muted-color min-h-96"
     >
       <i class="pi pi-chart-line text-4xl mb-3"></i>
-      <div class="font-medium text-color">Оберіть інструмент</div>
+      <div class="font-medium text-color">{{ 'instruments.chooseInstrument' | transloco }}</div>
       <div class="text-sm mt-1">
-        Графік ціни, зміна за період, максимум, мінімум і волатильність.
+        {{ 'instruments.chooseInstrumentHint' | transloco }}
       </div>
     </div>
   }

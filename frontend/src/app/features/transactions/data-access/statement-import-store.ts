@@ -1,3 +1,5 @@
+import { translateCode } from '../../../core/i18n/translate';
+import { translate } from '@jsverse/transloco';
 import { computed, effect, inject, Injectable, resource, signal, untracked } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { ApiClient, toProblemMessage } from '../../../core/api/api-client';
@@ -231,13 +233,17 @@ export class StatementImportStore {
       );
 
       this.current.set(result);
-      const recorded = result.rows.filter((row) => row.result === 'записано').length;
-      const failed = result.rows.filter((row) => row.result?.startsWith('не ')).length;
+      const recordedText = translateCode('statement.row.recorded');
+      const notRecordedText = translateCode('statement.row.not_recorded', { error: '' });
+      const recorded = result.rows.filter((row) => row.result === recordedText).length;
+      const failed = result.rows.filter((row) => row.result?.startsWith(notRecordedText)).length;
 
       this.messages.add({
         severity: failed ? 'warn' : 'success',
-        summary: 'Імпорт завершено',
-        detail: `Записано ${recorded}${failed ? `, не вдалося ${failed} — див. таблицю` : ''}`,
+        summary: translate('transactions.import.done'),
+        detail: failed
+          ? translate('transactions.import.recordedAndFailed', { recorded, failed })
+          : translate('transactions.import.recordedCount', { recorded }),
         life: 8000,
       });
       this.historyResource.reload();
@@ -256,8 +262,8 @@ export class StatementImportStore {
 
       this.messages.add({
         severity: 'success',
-        summary: 'Імпорт скасовано',
-        detail: 'Записані ним операції сторновано',
+        summary: translate('transactions.import.cancelled'),
+        detail: translate('transactions.import.cancelledHint'),
       });
       this.historyResource.reload();
     });
@@ -278,7 +284,7 @@ export class StatementImportStore {
     } catch (error) {
       this.messages.add({
         severity: 'error',
-        summary: 'Не вдалося',
+        summary: translate('transactions.import.failed'),
         detail: toProblemMessage(error),
         life: 10000,
       });

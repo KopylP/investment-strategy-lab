@@ -2,10 +2,10 @@
   <div class="app-tiles">
     <div class="px-1 sm:px-4 lg:border-r border-surface">
       <div class="text-muted-color text-xs uppercase tracking-wide flex items-center gap-1">
-        Дохідність TWR
+        {{ 'overview.metrics.twr' | transloco }}
         <i
           class="pi pi-info-circle text-xs"
-          pTooltip="Як працювала стратегія, без впливу того, коли й скільки ви вносили. Для порівняння з індексами й фондами."
+          [pTooltip]="'overview.metrics.twrHint' | transloco"
         ></i>
       </div>
       <div class="text-xl font-semibold mt-1" [appSignedValue]="dashboard().twr">
@@ -14,42 +14,42 @@
       <div class="text-xs text-muted-color">
         {{
           dashboard().twrAnnualized === null
-            ? 'за період'
-            : (dashboard().twrAnnualized | signedPercent) + ' річних'
+            ? ('overview.metrics.forPeriod' | transloco)
+            : ('overview.metrics.annualized' | transloco: { value: dashboard().twrAnnualized | signedPercent })
         }}
       </div>
     </div>
     <div class="px-1 sm:px-4 lg:border-r border-surface">
       <div class="text-muted-color text-xs uppercase tracking-wide flex items-center gap-1">
-        Ваша дохідність XIRR
+        {{ 'overview.metrics.xirr' | transloco }}
         <i
           class="pi pi-info-circle text-xs"
-          pTooltip="Річна дохідність саме ваших грошей — з урахуванням дат і сум внесків та виводів."
+          [pTooltip]="'overview.metrics.xirrHint' | transloco"
         ></i>
       </div>
       <div class="text-xl font-semibold mt-1" [appSignedValue]="dashboard().xirr">
         {{ dashboard().xirr === null ? '—' : (dashboard().xirr | signedPercent) }}
       </div>
-      <div class="text-xs text-muted-color">річних</div>
+      <div class="text-xs text-muted-color">{{ 'overview.metrics.perYear' | transloco }}</div>
     </div>
     <div class="px-1 sm:px-4 lg:border-r border-surface">
       <div class="text-muted-color text-xs uppercase tracking-wide flex items-center gap-1">
-        Просідання
+        {{ 'overview.metrics.drawdown' | transloco }}
         <i
           class="pi pi-info-circle text-xs"
-          pTooltip="Наскільки вартість зараз нижча за найвищий пік (без впливу внесків)."
+          [pTooltip]="'overview.metrics.drawdownHint' | transloco"
         ></i>
       </div>
       <div class="text-xl font-semibold mt-1" [appSignedValue]="dashboard().currentDrawdown">
         {{ dashboard().currentDrawdown | signedPercent }}
       </div>
       <div class="text-xs text-muted-color">
-        найбільше {{ dashboard().maxDrawdown | signedPercent }}
+        {{ 'overview.metrics.largest' | transloco: { maxDrawdown: (dashboard().maxDrawdown | signedPercent) } }}
       </div>
     </div>
     <div class="px-1 sm:px-4">
       <div class="text-muted-color text-xs uppercase tracking-wide flex items-center gap-1">
-        Податок {{ store.taxYear }}
+        {{ 'overview.metrics.taxOfYear' | transloco: { taxYear: store.taxYear } }}
         <i
           class="pi pi-info-circle text-xs"
           [pTooltip]="regime.regime()?.overviewHint ?? ''"
@@ -58,7 +58,7 @@
       @if (store.tax(); as tax) {
         @if (!tax.taxedAccounts) {
           <div class="text-xl font-semibold mt-1">—</div>
-          <div class="text-xs text-muted-color">рахунки не оподатковуються (IKE/IKZE)</div>
+          <div class="text-xs text-muted-color">{{ 'overview.metrics.untaxed' | transloco }}</div>
         } @else {
           <div class="text-xl font-semibold mt-1 flex items-center gap-1">
             {{ tax.taxDue | taxMoney: 0 }}
@@ -66,28 +66,28 @@
               <i
                 class="pi pi-exclamation-triangle text-sm"
                 [style.color]="'var(--p-finance-loss)'"
-                pTooltip="Понад поріг"
+                [pTooltip]="'overview.metrics.aboveThreshold' | transloco"
               ></i>
             }
           </div>
           <div class="text-xs text-muted-color">
             @if (tax.points.length) {
-              зиск <span [appSignedValue]="tax.gain">{{ tax.gain | taxMoney: 0 }}</span>
+              {{ 'overview.metrics.gain' | transloco }} <span [appSignedValue]="tax.gain">{{ tax.gain | taxMoney: 0 }}</span>
               @if (tax.dividends) {
-                · дивіденди {{ tax.dividends | taxMoney: 0 }}
+                {{ 'overview.metrics.dividends' | transloco: { amount: (tax.dividends | taxMoney: 0) } }}
               }
             } @else {
-              продажів і дивідендів ще не було
+              {{ 'overview.metrics.noTaxableYet' | transloco }}
             }
             @if (tax.taxedAccounts > 1) {
-              · {{ tax.taxedAccounts }} рахунки
+              {{ 'overview.metrics.taxedAccounts' | transloco: { count: tax.taxedAccounts } }}
             }
           </div>
         }
       } @else {
         <div class="text-xl font-semibold mt-1">—</div>
       }
-      <a routerLink="/taxes" class="text-xs text-primary">деталі →</a>
+      <a routerLink="/taxes" class="text-xs text-primary">{{ 'overview.metrics.details' | transloco }}</a>
     </div>
   </div>
 </div>

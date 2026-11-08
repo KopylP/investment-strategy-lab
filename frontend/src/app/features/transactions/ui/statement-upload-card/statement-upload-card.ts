@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -7,7 +8,7 @@ import { StatementImportStore } from '../../data-access/statement-import-store';
 
 @Component({
   selector: 'app-statement-upload-card',
-  imports: [FormsModule, RouterLink, Select, FileDrop],
+  imports: [TranslocoPipe, FormsModule, RouterLink, Select, FileDrop],
   templateUrl: './statement-upload-card.html',
   host: { class: 'contents' },
   changeDetection: ChangeDetectionStrategy.OnPush,

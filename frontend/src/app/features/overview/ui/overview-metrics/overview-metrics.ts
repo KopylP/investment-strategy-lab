@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { TaxRegime } from '../../../../core/context/tax-regime';
 import { TaxMoneyPipe } from '../../../../core/context/tax-money-pipe';
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
@@ -11,7 +12,7 @@ import { OverviewStore } from '../../data-access/overview-store';
 
 @Component({
   selector: 'app-overview-metrics',
-  imports: [TaxMoneyPipe, RouterLink, Tooltip, TapTooltip, SignedValue, MoneyPipe, SignedPercentPipe],
+  imports: [TranslocoPipe, TaxMoneyPipe, RouterLink, Tooltip, TapTooltip, SignedValue, MoneyPipe, SignedPercentPipe],
   templateUrl: './overview-metrics.html',
   host: { class: 'contents' },
   changeDetection: ChangeDetectionStrategy.OnPush,

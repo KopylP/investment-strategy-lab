@@ -8,11 +8,14 @@
       }
       <h2 class="text-lg font-semibold m-0">{{ sleeve().name }}</h2>
       <div class="text-sm text-muted-color">
-        частка {{ sleeve().accountName ? 'в рахунку ' : ''
-        }}{{ sleeve().actualShare | percent }} при цілі {{ sleeve().targetShare | percent: 0 }}
+        {{
+          (sleeve().accountName ? 'holdings.sleeve.shareInAccount' : 'holdings.sleeve.share')
+            | transloco
+              : { actual: sleeve().actualShare | percent, target: sleeve().targetShare | percent: 0 }
+        }}
       </div>
       <div class="text-sm text-muted-color">
-        кеш <app-money [amount]="sleeve().cash" [currency]="store.currency()" [inline]="true" />
+        {{ 'holdings.sleeve.cash' | transloco }} <app-money [amount]="sleeve().cash" [currency]="store.currency()" [inline]="true" />
         @if (sleeve().cashParts.length > 1) {
           <span class="text-xs ml-1"
             >(
@@ -47,12 +50,12 @@
         <tr>
           <th class="w-10"></th>
           <th>ETF</th>
-          <th class="text-right hidden sm:table-cell">Штук</th>
-          <th class="text-right hidden sm:table-cell">Середня ціна</th>
-          <th class="text-right hidden sm:table-cell">Ціна</th>
-          <th class="text-right">Вартість</th>
-          <th class="text-right hidden sm:table-cell">Вага</th>
-          <th class="text-right hidden sm:table-cell">Результат</th>
+          <th class="text-right hidden sm:table-cell">{{ 'holdings.sleeve.units' | transloco }}</th>
+          <th class="text-right hidden sm:table-cell">{{ 'holdings.sleeve.averagePrice' | transloco }}</th>
+          <th class="text-right hidden sm:table-cell">{{ 'holdings.sleeve.price' | transloco }}</th>
+          <th class="text-right">{{ 'holdings.sleeve.value' | transloco }}</th>
+          <th class="text-right hidden sm:table-cell">{{ 'holdings.sleeve.weight' | transloco }}</th>
+          <th class="text-right hidden sm:table-cell">{{ 'holdings.sleeve.result' | transloco }}</th>
         </tr>
       </ng-template>
       <ng-template #body let-position let-expanded="expanded">
@@ -64,14 +67,16 @@
               [rounded]="true"
               severity="secondary"
               [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
-              ariaLabel="Лоти"
+              [ariaLabel]="'holdings.sleeve.lots' | transloco"
             />
           </td>
           <td>
             <div class="font-medium">{{ position.symbol }}</div>
             <div class="hidden sm:block text-xs text-muted-color">{{ position.name }}</div>
             <div class="sm:hidden text-xs text-muted-color">
-              <span class="whitespace-nowrap">{{ position.quantity | quantity }} шт.</span> ·
+              <span class="whitespace-nowrap">{{
+                'common.units' | transloco: { quantity: position.quantity | quantity }
+              }}</span> ·
               <span class="whitespace-nowrap">{{ position.weight | percent }}</span>
             </div>
           </td>
@@ -88,7 +93,7 @@
             @if (position.isStale) {
               <i
                 class="pi pi-exclamation-triangle text-xs"
-                [pTooltip]="'Котирування на ' + (position.priceDate | date)"
+                [pTooltip]="'holdings.sleeve.quoteOn' | transloco: { date: position.priceDate | date }"
               ></i>
             }
           </td>
@@ -123,14 +128,14 @@
             <div class="app-row-detail">
               <div class="sm:hidden flex flex-wrap gap-x-4 gap-y-1 text-sm mb-3">
                 <span class="inline-flex gap-1"
-                  ><span class="text-muted-color">Середня ціна</span
+                  ><span class="text-muted-color">{{ 'holdings.sleeve.averagePrice' | transloco }}</span
                   ><app-money
                     [amount]="position.averageCost"
                     [currency]="store.currency()"
                     [inline]="true"
                 /></span>
                 <span class="inline-flex gap-1"
-                  ><span class="text-muted-color">Ціна</span>
+                  ><span class="text-muted-color">{{ 'holdings.sleeve.price' | transloco }}</span>
                   @if (position.quotedPrice === null) {
                     —
                   } @else {
@@ -147,8 +152,8 @@
                 <app-instrument-about [text]="position.description" class="block mb-4 max-w-4xl" />
               }
               <div class="font-medium text-sm mb-2">
-                Ціна й ваші угоди
-                <span class="text-muted-color font-normal">(▲ купівля, ▼ продаж)</span>
+                {{ 'holdings.sleeve.priceAndTrades' | transloco }}
+                <span class="text-muted-color font-normal">{{ 'holdings.sleeve.tradeMarks' | transloco }}</span>
               </div>
               <div class="mb-4 max-w-4xl">
                 <app-position-chart
@@ -156,12 +161,12 @@
                   [currency]="position.quoteCurrency"
                 />
               </div>
-              <div class="font-medium text-sm mb-2">Лоти (FIFO)</div>
+              <div class="font-medium text-sm mb-2">{{ 'holdings.sleeve.lotsFifo' | transloco }}</div>
               @for (lot of position.lots; track $index) {
                 <div class="flex flex-wrap justify-between gap-x-4 text-sm py-1 max-w-xl">
                   <span>{{ lot.openedOn | date }}</span>
                   <span class="text-right ml-auto"
-                    >{{ lot.quantity | quantity }} шт. ×
+                    >{{ 'common.units' | transloco: { quantity: lot.quantity | quantity } }} ×
                     <app-money
                       [amount]="lot.unitCost"
                       [currency]="store.currency()"
@@ -176,6 +181,8 @@
       </ng-template>
     </p-table>
   } @else {
-    <div class="text-muted-color">Позицій немає{{ sleeve().cash ? ' — лише кеш' : '' }}.</div>
+    <div class="text-muted-color">{{
+        (sleeve().cash ? 'holdings.sleeve.noPositionsCashOnly' : 'holdings.sleeve.noPositions') | transloco
+      }}</div>
   }
 </div>

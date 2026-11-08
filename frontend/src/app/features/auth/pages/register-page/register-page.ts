@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import {
   AbstractControl,
@@ -16,7 +17,7 @@ import { AuthStore } from '../../../../core/auth/auth-store';
 
 @Component({
   selector: 'app-register-page',
-  imports: [ReactiveFormsModule, RouterLink, Button, InputText, Password, Message],
+  imports: [TranslocoPipe, ReactiveFormsModule, RouterLink, Button, InputText, Password, Message],
   templateUrl: './register-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

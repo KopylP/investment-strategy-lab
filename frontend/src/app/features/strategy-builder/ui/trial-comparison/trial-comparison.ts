@@ -24,6 +24,7 @@ import { TrialMetric } from '../../models/trial-metric';
 import { ExperimentsApi } from '../../data-access/experiments-api';
 import { experimentBacktest } from '../../data-access/experiment-result-mapper';
 import { BacktestComparisonDto } from '../../models/backtest-comparison-dto';
+import { activeLocale } from '../../../../core/i18n/language';
 const metrics: { key: TrialMetric; label: string }[] = [
   { key: 'annualReturn', label: 'Річна дохідність' },
   { key: 'annualReturnAfterTax', label: 'Після податку' },
@@ -141,7 +142,7 @@ export class TrialComparison {
     if (value === null) return '—';
 
     return metric === 'sharpe'
-      ? value.toLocaleString('uk-UA', { maximumFractionDigits: 2 })
+      ? value.toLocaleString(activeLocale, { maximumFractionDigits: 2 })
       : formatPercent(value);
   }
 }

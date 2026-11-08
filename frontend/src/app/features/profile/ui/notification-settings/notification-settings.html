@@ -1,21 +1,19 @@
 <div class="card max-w-2xl">
-  <h2 class="text-lg font-semibold mb-1">Сповіщення</h2>
+  <h2 class="text-lg font-semibold mb-1">{{ 'profile.notifications.title' | transloco }}</h2>
   <p class="text-muted-color mb-4">
-    Коли за розкладом готовий рапорт, на ці телефони прийде push (застосунок Home Assistant
-    Companion).
+    {{ 'profile.notifications.hint' | transloco }}
   </p>
 
   @if (error(); as message) {
     <p-message severity="error" [text]="message" />
   } @else if (settings(); as current) {
     @if (current.channels.length === 0) {
-      <p>Сповіщення працюють, коли застосунок запущено як add-on Home Assistant.</p>
+      <p>{{ 'profile.notifications.addonOnly' | transloco }}</p>
     } @else {
       <div class="flex flex-col gap-4">
         @if (current.destinations.length === 0) {
           <p>
-            У Home Assistant немає жодного телефона з Companion. Встановіть застосунок і увійдіть у
-            ньому — телефон з'явиться тут.
+            {{ 'profile.notifications.noPhones' | transloco }}
           </p>
         } @else {
           @if (own().length > 0) {
@@ -26,20 +24,19 @@
             </ul>
           } @else {
             <p class="m-0">
-              Вашого телефона не знайдено: його немає у вашій людині в Home Assistant (Налаштування
-              → Люди). Додайте його туди або виберіть серед інших пристроїв.
+              {{ 'profile.notifications.ownPhoneMissing' | transloco }}
             </p>
           }
 
           @if (current.automatic) {
             <p class="text-sm text-muted-color m-0">
-              Вибрано автоматично: телефони вашої людини в Home Assistant.
+              {{ 'profile.notifications.automatic' | transloco }}
             </p>
           } @else {
             <p class="text-sm text-muted-color m-0">
-              Вибрано вручну.
+              {{ 'profile.notifications.manual' | transloco }}
               <p-button
-                label="Повернути автоматичний вибір"
+                [label]="'profile.notifications.backToAutomatic' | transloco"
                 [link]="true"
                 size="small"
                 (onClick)="backToAutomatic()"
@@ -52,10 +49,10 @@
             <div>
               <p-button
                 [label]="
-                  (showOthers() ? 'Сховати інші пристрої' : 'Інші пристрої в Home Assistant') +
-                  ' (' +
-                  others().length +
-                  ')'
+                  (showOthers()
+                    ? 'profile.notifications.hideOthers'
+                    : 'profile.notifications.showOthers'
+                  ) | transloco: { count: others().length }
                 "
                 [icon]="showOthers() ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
                 [link]="true"
@@ -74,7 +71,7 @@
         }
         <div class="flex justify-end">
           <p-button
-            label="Надіслати тестове сповіщення"
+            [label]="'profile.notifications.sendTest' | transloco"
             icon="pi pi-send"
             severity="secondary"
             [loading]="testing()"
@@ -99,7 +96,7 @@
     />
     <label [for]="destination.id" class="flex-1">{{ destination.label }}</label>
     @if (destination.suggested) {
-      <p-tag value="ваш" severity="info" />
+      <p-tag [value]="'profile.notifications.yours' | transloco" severity="info" />
     }
   </li>
 </ng-template>

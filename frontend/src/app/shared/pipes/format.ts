@@ -1,4 +1,6 @@
-const locale = 'uk-UA';
+import { activeLocale } from '../../core/i18n/language';
+
+const locale = activeLocale;
 
 export function formatMoney(
   amount: number | null | undefined,

@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { PercentPipe } from '../../../../shared/pipes/format-pipes';
 import { ExposureBreakdown } from '../../models/exposure-vm';
@@ -5,7 +6,7 @@ import { RegionMap } from '../region-map/region-map';
 
 @Component({
   selector: 'app-holdings-exposure-card',
-  imports: [PercentPipe, RegionMap],
+  imports: [TranslocoPipe, PercentPipe, RegionMap],
   templateUrl: './holdings-exposure-card.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

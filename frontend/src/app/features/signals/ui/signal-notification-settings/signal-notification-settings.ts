@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Checkbox } from 'primeng/checkbox';
@@ -6,12 +7,12 @@ import { SignalsStore } from '../../data-access/signals-store';
 
 @Component({
   selector: 'app-signal-notification-settings',
-  imports: [FormsModule, Checkbox, Skeleton],
+  imports: [TranslocoPipe, FormsModule, Checkbox, Skeleton],
   providers: [SignalsStore],
   template: `
     <div class="card max-w-2xl">
-      <h2 class="text-lg font-semibold mb-1">Про які сигнали сповіщати</h2>
-      <p class="text-muted-color mb-4">Новий сигнал сповіщає сам, поки його тут не вимкнете.</p>
+      <h2 class="text-lg font-semibold mb-1">{{ 'signals.notifications.title' | transloco }}</h2>
+      <p class="text-muted-color mb-4">{{ 'signals.notifications.hint' | transloco }}</p>
 
       @if (store.isLoading() && !store.signals().length) {
         <p-skeleton height="4rem" />
@@ -29,7 +30,7 @@ import { SignalsStore } from '../../data-access/signals-store';
               <label [for]="'notify-' + item.id" class="flex-1">{{ item.name }}</label>
             </li>
           } @empty {
-            <li class="text-muted-color">Сигналів поки немає.</li>
+            <li class="text-muted-color">{{ 'signals.notifications.empty' | transloco }}</li>
           }
         </ul>
       }

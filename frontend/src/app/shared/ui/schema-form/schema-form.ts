@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, inject, input, model } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Fieldset } from 'primeng/fieldset';
@@ -84,7 +85,7 @@ export class SchemaForm {
     const value = this.read(field.path);
     if (value === null) return '—';
 
-    if (field.kind === 'boolean') return value ? 'так' : 'ні';
+    if (field.kind === 'boolean') return translate(value ? 'common.yes' : 'common.no');
 
     if (field.kind === 'enum')
       return field.options?.find((option) => option.value === value)?.label ?? String(value);
@@ -99,7 +100,7 @@ export class SchemaForm {
 
 function toGroups(root: SchemaNode): GroupVm[] {
   const definitions = (root as { $defs?: Record<string, SchemaNode> }).$defs ?? {};
-  const general: GroupVm = { title: 'Загальні', fields: [] };
+  const general: GroupVm = { title: translate('common.generalGroup'), fields: [] };
   const groups: GroupVm[] = [general];
 
   collectFields(root, [], general, groups, definitions);

@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { Tooltip } from 'primeng/tooltip';
 import { TapTooltip } from '../../../../shared/ui/tap-tooltip';
@@ -8,7 +9,7 @@ import { HoldingsStore } from '../../data-access/holdings-store';
 
 @Component({
   selector: 'app-holdings-summary-card',
-  imports: [Tooltip, TapTooltip, SignedValue, Money, PercentPipe, SignedPercentPipe],
+  imports: [TranslocoPipe, Tooltip, TapTooltip, SignedValue, Money, PercentPipe, SignedPercentPipe],
   templateUrl: './holdings-summary-card.html',
   host: { class: 'contents' },
   changeDetection: ChangeDetectionStrategy.OnPush,

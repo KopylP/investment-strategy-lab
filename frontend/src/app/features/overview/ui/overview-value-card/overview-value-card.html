@@ -2,7 +2,14 @@
   <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-4">
     <div>
       <div class="text-muted-color text-sm">
-        Вартість {{ store.isAll() ? 'усіх рахунків' : 'портфеля' }} · {{ dashboard().asOf | date }}
+        {{
+          'overview.value.title'
+            | transloco
+              : {
+                  scope: (store.isAll() ? 'overview.value.allAccounts' : 'overview.value.portfolio') | transloco,
+                  date: dashboard().asOf | date,
+                }
+        }}
       </div>
       <div class="text-4xl sm:text-5xl font-bold tracking-tight mt-1 leading-tight">
         <app-money [amount]="dashboard().value" [currency]="dashboard().currency" [digits]="0" />
@@ -34,7 +41,7 @@
           }
         </span>
         <span class="text-sm text-muted-color"
-          >прибуток понад внесене · внесено
+          >{{ 'overview.value.gainOverContributed' | transloco }}
           <app-money
             [amount]="dashboard().netContributions"
             [currency]="dashboard().currency"
@@ -68,7 +75,7 @@
             · {{ held.pct | signedPercent }}
           </span>
           <span class="text-sm text-muted-color"
-            >прибуток на активах · заплачено за них
+            >{{ 'overview.value.gainOnAssets' | transloco }}
             <app-money
               [amount]="held.costBasis"
               [currency]="dashboard().currency"
@@ -78,9 +85,7 @@
             <i
               class="pi pi-info-circle text-xs ml-1"
               [pTooltip]="
-                'Скільки зараз коштують активи, які ви тримаєте, понад те, що за них заплачено з ' +
-                'комісіями. Вільний кеш і вже продане сюди не входять — це той самий результат, що на ' +
-                'сторінці «Позиції».'
+                'overview.value.gainOnAssetsHint' | transloco
               "
             ></i>
           </span>
@@ -105,13 +110,13 @@
   }
   @if (store.planGap(); as gap) {
     <div class="text-sm mt-2">
-      План vs факт:
+      {{ 'overview.value.planVsActual' | transloco }}
       <span [appSignedValue]="gap"
         >{{ gap >= 0 ? '+' : ''
         }}<app-money [amount]="gap" [currency]="dashboard().currency" [digits]="0" [inline]="true"
       /></span>
       <span class="hidden sm:inline text-muted-color">
-        — різниця з «якби все за планом». Точки на лінії — дні рапортів.</span
+        {{ 'overview.value.planVsActualHint' | transloco }}</span
       >
     </div>
   }

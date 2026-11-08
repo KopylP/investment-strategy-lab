@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -25,7 +26,7 @@ export interface Option {
 
 @Component({
   selector: 'app-trade-dialog',
-  imports: [FormsModule, Button, DatePicker, Dialog, InputNumber, Select, SelectButton, MoneyPipe],
+  imports: [TranslocoPipe, FormsModule, Button, DatePicker, Dialog, InputNumber, Select, SelectButton, MoneyPipe],
   templateUrl: './trade-dialog.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -38,8 +39,8 @@ export class TradeDialog {
   readonly save = output<NewTrade>();
 
   protected readonly sides = [
-    { label: 'Купівля', value: 'Buy' },
-    { label: 'Продаж', value: 'Sell' },
+    { label: translate('chart.buy'), value: 'Buy' },
+    { label: translate('chart.sell'), value: 'Sell' },
   ];
   protected readonly instrumentId = signal<string | null>(null);
   protected readonly side = signal<'Buy' | 'Sell'>('Buy');

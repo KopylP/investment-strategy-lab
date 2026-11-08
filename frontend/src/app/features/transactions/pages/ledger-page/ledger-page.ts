@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -31,7 +32,7 @@ import { Money } from '../../../../shared/ui/money/money';
 import { TapTooltip } from '../../../../shared/ui/tap-tooltip';
 @Component({
   selector: 'app-ledger-page',
-  imports: [
+  imports: [TranslocoPipe, 
     Money,
     FormsModule,
     RouterLink,
@@ -69,12 +70,12 @@ export class LedgerPage {
   protected readonly search = signal('');
 
   protected readonly kindOptions = [
-    { label: 'Угоди', value: 'trade' },
-    { label: 'Рух коштів', value: 'cash' },
-    { label: 'Внески', value: 'Contribution' },
-    { label: 'Виводи', value: 'Withdrawal' },
-    { label: 'Перекази', value: 'InternalTransfer' },
-    { label: 'Сторно', value: 'Reversal' },
+    { label: translate('filter.trades'), value: 'trade' },
+    { label: translate('filter.cash'), value: 'cash' },
+    { label: translate('filter.contributions'), value: 'Contribution' },
+    { label: translate('filter.withdrawals'), value: 'Withdrawal' },
+    { label: translate('filter.transfers'), value: 'InternalTransfer' },
+    { label: translate('filter.reversals'), value: 'Reversal' },
   ];
   protected readonly instrumentOptions = computed(() =>
     this.catalog.etfs().map((etf) => ({ label: `${etf.label} · ${etf.name}`, value: etf.id })),
@@ -120,14 +121,14 @@ export class LedgerPage {
 
   protected confirmReverse(transaction: TransactionVm): void {
     this.confirm.confirm({
-      header: 'Сторнувати операцію?',
-      message: 'Оригінал лишиться в журналі, а сторно скасує його вплив на позиції, кеш і податки.',
+      header: translate('transactions.ledger.reverseQuestion'),
+      message: translate('transactions.ledger.reverseHint'),
       icon: 'pi pi-replay',
-      acceptLabel: 'Сторнувати',
-      rejectLabel: 'Скасувати',
+      acceptLabel: translate('transactions.ledger.reverse'),
+      rejectLabel: translate('common.cancel'),
       acceptButtonProps: { severity: 'danger' },
       rejectButtonProps: { severity: 'secondary', text: true },
-      accept: () => void this.store.reverse(transaction, 'скасовано користувачем'),
+      accept: () => void this.store.reverse(transaction, translate('transactions.ledger.cancelledByUser')),
     });
   }
 }

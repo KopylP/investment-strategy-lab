@@ -1,5 +1,5 @@
 <p-dialog
-  header="Записати рух коштів"
+  [header]="'transactions.cash.title' | transloco"
   [modal]="true"
   [visible]="visible()"
   (visibleChange)="visible.set($event)"
@@ -8,7 +8,7 @@
 >
   <div class="flex flex-col gap-4">
     <div class="flex flex-col gap-2">
-      <label for="cash-kind" class="font-medium">Що сталося</label>
+      <label for="cash-kind" class="font-medium">{{ 'transactions.cash.what' | transloco }}</label>
       <p-select
         inputId="cash-kind"
         [options]="kinds"
@@ -38,7 +38,7 @@
     }
     <div class="grid gap-4 sm:grid-cols-2">
       <div class="flex flex-col gap-2">
-        <label for="cash-amount" class="font-medium">Сума</label>
+        <label for="cash-amount" class="font-medium">{{ 'transactions.cash.amount' | transloco }}</label>
         <p-inputnumber
           inputId="cash-amount"
           [ngModel]="amount()"
@@ -50,7 +50,7 @@
         />
       </div>
       <div class="flex flex-col gap-2">
-        <label for="cash-date" class="font-medium">Дата</label>
+        <label for="cash-date" class="font-medium">{{ 'taxes.date' | transloco }}</label>
         <p-datepicker
           inputId="cash-date"
           [ngModel]="occurredOn()"
@@ -63,7 +63,7 @@
       </div>
     </div>
     <div class="flex flex-col gap-2">
-      <label for="cash-sub" class="font-medium">Під-портфель</label>
+      <label for="cash-sub" class="font-medium">{{ 'transactions.trade.subPortfolio' | transloco }}</label>
       <p-select
         inputId="cash-sub"
         [options]="subPortfolios()"
@@ -72,16 +72,16 @@
         [ngModel]="subPortfolioId()"
         (ngModelChange)="subPortfolioId.set($event)"
         [showClear]="true"
-        placeholder="Розподілити автоматично"
+        [placeholder]="'transactions.trade.autoSplit' | transloco"
         appendTo="body"
         fluid
       />
     </div>
   </div>
   <ng-template #footer>
-    <p-button label="Скасувати" [text]="true" severity="secondary" (onClick)="visible.set(false)" />
+    <p-button [label]="'common.cancel' | transloco" [text]="true" severity="secondary" (onClick)="visible.set(false)" />
     <p-button
-      label="Записати"
+      [label]="'transactions.trade.record' | transloco"
       icon="pi pi-check"
       [disabled]="!valid()"
       [loading]="busy()"

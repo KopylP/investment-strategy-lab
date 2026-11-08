@@ -2,15 +2,15 @@
   @if (tax.taxedAccounts) {
     <div class="card">
       <div class="mb-3">
-        <h2 class="text-lg font-semibold m-0">Податок</h2>
+        <h2 class="text-lg font-semibold m-0">{{ 'overview.tax.title' | transloco }}</h2>
         <div class="text-sm text-muted-color mt-1">
-          зараз {{ tax.taxDue | taxMoney: 0 }} · за 30 днів
+          {{ 'overview.tax.nowAndIn30Days' | transloco: { taxDue: (tax.taxDue | taxMoney: 0) } }}
           <span [appSignedValue]="-store.taxLast30Days()"
             >{{ store.taxLast30Days() >= 0 ? '+' : ''
             }}{{ store.taxLast30Days() | taxMoney: 0 }}</span
           >
           @if (store.taxAlert(); as alert) {
-            · {{ alert.ratio | percent }} вартості рахунків
+            {{ 'overview.tax.ofAccountsValue' | transloco: { ratio: (alert.ratio | percent) } }}
           }
         </div>
       </div>
@@ -19,7 +19,7 @@
           severity="warn"
           size="small"
           styleClass="mb-2"
-          [text]="message + ' — сума може бути заниженою'"
+          [text]="'overview.tax.mayBeUnderstated' | transloco: { message }"
         />
       }
       @defer (on idle) {
@@ -30,7 +30,7 @@
       <div class="text-xs text-muted-color mt-2">
         {{ regime.regime()?.progressNote }}
         @if (tax.alertShare !== null) {
-          Червоним — понад поріг: {{ tax.alertShare | percent }} поточної вартості всіх рахунків.
+          {{ 'overview.tax.redAboveThreshold' | transloco: { share: (tax.alertShare | percent) } }}
         }
       </div>
     </div>

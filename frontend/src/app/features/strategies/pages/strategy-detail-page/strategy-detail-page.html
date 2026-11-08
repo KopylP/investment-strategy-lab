@@ -1,18 +1,20 @@
 @if (store.isLoading() && !store.strategy()) {
   <div class="card"><p-skeleton height="12rem" /></div>
 } @else if (store.loadError()) {
-  <div class="card"><p-message severity="error" text="Стратегію не знайдено" /></div>
+  <div class="card"><p-message severity="error" [text]="'strategies.detail.notFound' | transloco" /></div>
 } @else if (store.strategy(); as strategy) {
   <app-page-header
     backLink="/strategies"
-    backLabel="Стратегії"
+    [backLabel]="'routes.strategies' | transloco"
     [title]="strategy.name"
     [subtitle]="
-      (store.type()?.name ?? strategy.typeCode) +
-      ' · рушій ' +
-      (store.type()?.engine ?? '') +
-      ' ' +
-      (store.type()?.engineVersion ?? '')
+      'strategies.detail.subtitle'
+        | transloco
+          : {
+              type: store.type()?.name ?? strategy.typeCode,
+              engine: store.type()?.engine ?? '',
+              version: store.type()?.engineVersion ?? '',
+            }
     "
   >
     <p-select
@@ -22,15 +24,20 @@
       [disabled]="editing()"
       size="small"
     >
-      <ng-template #selectedItem let-number>Версія {{ number }}</ng-template>
+      <ng-template #selectedItem let-number>{{
+        'strategies.detail.version' | transloco: { number }
+      }}</ng-template>
       <ng-template #item let-number
-        >Версія {{ number }}{{ number === strategy.latestVersion ? ' (остання)' : '' }}</ng-template
+        >{{
+          (number === strategy.latestVersion ? 'strategies.detail.latestVersion' : 'strategies.detail.version')
+            | transloco: { number }
+        }}</ng-template
       >
     </p-select>
     @if (strategy.status === 'Active' && !editing()) {
       @if (builderEditable() === false) {
         <p-button
-          label="Змінити"
+          [label]="'strategies.detail.change' | transloco"
           icon="pi pi-pencil"
           [disabled]="!isLatest()"
           (onClick)="startEditing()"
@@ -40,12 +47,12 @@
         icon="pi pi-box"
         severity="secondary"
         [text]="true"
-        ariaLabel="Архівувати"
+        [ariaLabel]="'strategies.detail.archive' | transloco"
         (onClick)="confirmArchive()"
       />
     }
     @if (strategy.status === 'Archived') {
-      <p-tag value="архів" severity="secondary" />
+      <p-tag [value]="'strategies.archived' | transloco" severity="secondary" />
     }
   </app-page-header>
 
@@ -53,7 +60,7 @@
     <p-message
       severity="warn"
       styleClass="mb-4"
-      text="Стратегія спирається на видалений сигнал. Змініть її в конструкторі; рапорти, правила яких використовують цей сигнал, не будуються."
+      [text]="'strategies.detail.signalDeleted' | transloco"
     />
   }
 
@@ -65,7 +72,7 @@
     <div class="grid gap-4 lg:grid-cols-3">
       <div class="card mb-0 lg:col-span-2">
         <h2 class="text-lg font-semibold mb-3">
-          Універсум · {{ strategy.version.universe.length }} ETF
+          {{ 'strategies.detail.universeCount' | transloco: { count: strategy.version.universe.length } }}
         </h2>
         <div class="flex flex-wrap gap-2">
           @for (id of strategy.version.universe; track id) {
@@ -74,20 +81,20 @@
         </div>
       </div>
       <div class="card mb-0">
-        <h2 class="text-lg font-semibold mb-3">Ринок і кеш</h2>
+        <h2 class="text-lg font-semibold mb-3">{{ 'strategies.detail.marketAndCash' | transloco }}</h2>
         <div class="flex flex-col gap-2 text-sm">
           <div class="flex justify-between">
-            <span class="text-muted-color">Бенчмарк</span
+            <span class="text-muted-color">{{ 'strategies.detail.benchmark' | transloco }}</span
             ><span>{{ store.instruments.symbol(strategy.version.benchmarkInstrumentId) }}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-muted-color">Індекс волатильності</span
+            <span class="text-muted-color">{{ 'strategies.detail.volatilityIndex' | transloco }}</span
             ><span>{{
               store.instruments.symbol(strategy.version.volatilityIndexInstrumentId)
             }}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-muted-color">Паркування</span
+            <span class="text-muted-color">{{ 'strategies.detail.parking' | transloco }}</span
             ><span>{{ store.instruments.symbol(strategy.version.cashInstrumentId) }}</span>
           </div>
           @for (report of reports(); track report.code) {
@@ -97,7 +104,7 @@
             </div>
           }
           <div class="flex justify-between">
-            <span class="text-muted-color">Версія створена</span
+            <span class="text-muted-color">{{ 'strategies.detail.versionCreated' | transloco }}</span
             ><span>{{ strategy.version.createdAt | dateTime }}</span>
           </div>
         </div>
@@ -112,7 +119,7 @@
     @if (builderEditable() === false) {
       @if (store.type(); as type) {
         <div class="card mt-4">
-          <h2 class="text-lg font-semibold mb-3">Параметри</h2>
+          <h2 class="text-lg font-semibold mb-3">{{ 'strategies.detail.parameters' | transloco }}</h2>
           <app-schema-form
             [schema]="$any(type.parametersSchema)"
             [value]="strategy.version.parameters"
@@ -123,10 +130,10 @@
     }
   } @else {
     <div class="card">
-      <h2 class="text-lg font-semibold mb-3">Універсум і ринок</h2>
+      <h2 class="text-lg font-semibold mb-3">{{ 'strategies.detail.universeAndMarket' | transloco }}</h2>
       <div class="grid gap-4 md:grid-cols-3">
         <div class="flex flex-col gap-2 md:col-span-3">
-          <label class="font-medium" for="universe">ETF, з яких стратегія вибирає</label>
+          <label class="font-medium" for="universe">{{ 'strategies.detail.universe' | transloco }}</label>
           <p-multiselect
             inputId="universe"
             [options]="etfOptions()"
@@ -136,13 +143,13 @@
             (ngModelChange)="universe.set($event)"
             display="chip"
             [filter]="true"
-            filterPlaceholder="Пошук"
+            [filterPlaceHolder]="'common.search' | transloco"
             appendTo="body"
             fluid
           />
         </div>
         <div class="flex flex-col gap-2">
-          <label class="font-medium" for="cash">ETF для паркування</label>
+          <label class="font-medium" for="cash">{{ 'strategies.detail.parkingEtf' | transloco }}</label>
           <p-select
             inputId="cash"
             [options]="etfOptions()"
@@ -157,7 +164,7 @@
           />
         </div>
         <div class="flex flex-col gap-2">
-          <label class="font-medium" for="benchmark">Бенчмарк (фільтр тренду)</label>
+          <label class="font-medium" for="benchmark">{{ 'strategies.detail.benchmarkTrend' | transloco }}</label>
           <p-select
             inputId="benchmark"
             [options]="etfOptions()"
@@ -174,19 +181,19 @@
     </div>
     @if (store.type(); as type) {
       <div class="card mt-4">
-        <h2 class="text-lg font-semibold mb-3">Параметри</h2>
+        <h2 class="text-lg font-semibold mb-3">{{ 'strategies.detail.parameters' | transloco }}</h2>
         <app-schema-form [schema]="$any(type.parametersSchema)" [(value)]="parameters" />
       </div>
     }
     <div class="flex justify-end gap-2 mt-4">
       <p-button
-        label="Скасувати"
+        [label]="'common.cancel' | transloco"
         [text]="true"
         severity="secondary"
         (onClick)="editing.set(false)"
       />
       <p-button
-        label="Зберегти як нову версію"
+        [label]="'strategies.detail.saveAsNewVersion' | transloco"
         icon="pi pi-save"
         [loading]="store.saving()"
         [disabled]="!universe().length"

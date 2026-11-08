@@ -1,14 +1,14 @@
 @if (store.history().length) {
   <div class="card">
-    <h2 class="text-lg font-semibold mb-4">Попередні імпорти</h2>
+    <h2 class="text-lg font-semibold mb-4">{{ 'transactions.history.title' | transloco }}</h2>
     <p-table [value]="store.history()" size="small">
       <ng-template #header
         ><tr>
-          <th>Файл</th>
-          <th class="hidden sm:table-cell">Завантажено</th>
-          <th class="hidden sm:table-cell">Режим</th>
-          <th>Стан</th>
-          <th class="text-right hidden sm:table-cell">Записано</th>
+          <th>{{ 'transactions.history.file' | transloco }}</th>
+          <th class="hidden sm:table-cell">{{ 'transactions.history.uploaded' | transloco }}</th>
+          <th class="hidden sm:table-cell">{{ 'transactions.history.mode' | transloco }}</th>
+          <th>{{ 'transactions.history.state' | transloco }}</th>
+          <th class="text-right hidden sm:table-cell">{{ 'transactions.history.recorded' | transloco }}</th>
           <th></th></tr
       ></ng-template>
       <ng-template #body let-item>
@@ -22,7 +22,7 @@
               {{ item.fileName }}
             </button>
             <div class="sm:hidden text-xs text-muted-color">
-              {{ item.uploadedAt | dateTime }} · записано {{ item.recorded }}
+              {{ 'transactions.history.uploadedLine' | transloco: { uploadedAt: (item.uploadedAt | dateTime), recorded: item.recorded } }}
             </div>
           </td>
           <td class="hidden sm:table-cell">{{ item.uploadedAt | dateTime }}</td>
@@ -31,10 +31,10 @@
             <p-tag
               [value]="
                 item.status === 'Confirmed'
-                  ? 'імпортовано'
+                  ? ('transactions.history.imported' | transloco)
                   : item.status === 'Undone'
-                    ? 'скасовано'
-                    : 'чернетка'
+                    ? ('transactions.history.cancelled' | transloco)
+                    : ('transactions.history.draft' | transloco)
               "
               [severity]="item.status === 'Confirmed' ? 'success' : 'secondary'"
             />
@@ -43,12 +43,12 @@
           <td class="text-right">
             @if (item.status === 'Confirmed') {
               <p-button
-                [label]="viewport.phone() ? undefined : 'Скасувати'"
+                [label]="viewport.phone() ? undefined : ('common.cancel' | transloco)"
                 icon="pi pi-undo"
                 size="small"
                 [text]="true"
                 severity="danger"
-                ariaLabel="Скасувати імпорт"
+                [ariaLabel]="'transactions.history.cancelImport' | transloco"
                 [loading]="store.busy() === 'undo'"
                 (onClick)="undo.emit(item.id)"
               />

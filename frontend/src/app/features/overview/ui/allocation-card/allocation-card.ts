@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { UIChart } from 'primeng/chart';
@@ -11,7 +12,7 @@ import { DashboardDto } from '../../data-access/dashboard-api';
 
 @Component({
   selector: 'app-allocation-card',
-  imports: [RouterLink, UIChart, TableModule, Money, PercentPipe, SignedPercentPipe, SignedValue],
+  imports: [TranslocoPipe, RouterLink, UIChart, TableModule, Money, PercentPipe, SignedPercentPipe, SignedValue],
   templateUrl: './allocation-card.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -29,12 +30,12 @@ export class AllocationCard {
       labels: subs.map((sub) => sub.name),
       datasets: [
         {
-          label: 'Факт',
+          label: translate('overview.allocation.actual'),
           data: subs.map((sub) => sub.actualShare * 100),
           backgroundColor: palette.series,
         },
         {
-          label: 'Ціль',
+          label: translate('overview.allocation.target'),
           data: subs.map((sub) => sub.targetShare * 100),
           backgroundColor: palette.series.map((color) => withAlpha(color, 0.35)),
         },

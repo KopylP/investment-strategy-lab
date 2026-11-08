@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { TaxMoneyPipe } from '../../../../core/context/tax-money-pipe';
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { TableModule } from 'primeng/table';
@@ -7,7 +8,7 @@ import { TaxesStore } from '../../data-access/taxes-store';
 
 @Component({
   selector: 'app-tax-dividends-card',
-  imports: [TaxMoneyPipe, TableModule, MoneyPipe, DatePipe],
+  imports: [TranslocoPipe, TaxMoneyPipe, TableModule, MoneyPipe, DatePipe],
   templateUrl: './tax-dividends-card.html',
   host: { class: 'contents' },
   changeDetection: ChangeDetectionStrategy.OnPush,

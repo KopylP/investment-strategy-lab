@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 import { HttpErrorResponse } from '@angular/common/http';
 import { computed, inject, Injectable, resource, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
@@ -182,14 +183,14 @@ export class TaxesStore {
   async setPit8C(accountId: string, amounts: Pit8CAmounts): Promise<boolean> {
     return this.change(
       () => this.api.put(`/api/taxation/declarations/${this.year()}/pit-8c/${accountId}`, amounts),
-      'Суми PIT-8C збережено',
+      translate('taxes.pit8cSaved'),
     );
   }
 
   async removePit8C(accountId: string): Promise<boolean> {
     return this.change(
       () => this.api.delete(`/api/taxation/declarations/${this.year()}/pit-8c/${accountId}`),
-      'Суми PIT-8C видалено',
+      translate('taxes.pit8cRemoved'),
     );
   }
 
@@ -212,7 +213,7 @@ export class TaxesStore {
 
       this.messages.add({
         severity: 'error',
-        summary: 'PDF не створено',
+        summary: translate('taxes.pdfFailed'),
         detail: toProblemMessage(problem),
       });
     } finally {
@@ -261,12 +262,12 @@ export class TaxesStore {
   async addLoss(year: number, amount: number, alreadyUsed: number): Promise<boolean> {
     return this.change(
       () => this.api.post('/api/taxation/losses', { year, amount, alreadyUsed }),
-      'Збиток додано',
+      translate('taxes.lossAdded'),
     );
   }
 
   async removeLoss(loss: LossCarryforward): Promise<boolean> {
-    return this.change(() => this.api.delete(`/api/taxation/losses/${loss.id}`), 'Збиток видалено');
+    return this.change(() => this.api.delete(`/api/taxation/losses/${loss.id}`), translate('taxes.lossRemoved'));
   }
 
   async uploadBrokerStatement(file: File): Promise<boolean> {
@@ -282,7 +283,7 @@ export class TaxesStore {
           fileName: file.name,
           contentBase64: btoa(binary),
         }),
-      'Звіт брокера враховано',
+      translate('taxes.statementApplied'),
     );
   }
 
@@ -292,7 +293,7 @@ export class TaxesStore {
         this.api.delete(
           `/api/taxation/accounts/${this.requireAccount()}/broker-statements/${statement.id}`,
         ),
-      'Звіт брокера видалено',
+      translate('taxes.statementRemoved'),
     );
   }
 
@@ -308,7 +309,7 @@ export class TaxesStore {
     } catch (error) {
       this.messages.add({
         severity: 'error',
-        summary: 'Не збережено',
+        summary: translate('profile.notSaved'),
         detail: toProblemMessage(error),
       });
 

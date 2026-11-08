@@ -1,40 +1,42 @@
+import { translate } from '@jsverse/transloco';
 import { formatPercent } from '../../../shared/pipes/format';
 import { ReportTiming, scheduleLabel } from '../../reports/models/report-schedule';
 import { SignalConditionDto, SignalMetric, SignalTargetKind } from './signal-dto';
+import { activeLocale } from '../../../core/i18n/language';
 
 export const metricLabels: Record<SignalMetric, string> = {
-  DrawdownFromPeak: 'Просадка від піку',
-  DayFall: 'Падіння за день',
-  LossFromCost: 'Збиток від ціни купівлі',
-  Level: 'Рівень значення',
+  DrawdownFromPeak: translate('metric.DrawdownFromPeak'),
+  DayFall: translate('metric.DayFall'),
+  LossFromCost: translate('metric.LossFromCost'),
+  Level: translate('metric.Level'),
 };
 
 export const builtInSignalKindLabels: Record<string, string> = {
-  'volatility-index': 'Індекс волатильності',
-  'account-drawdown': 'Просадка рахунку',
-  'position-drawdown': 'Просадка позиції',
+  'volatility-index': translate('builtIn.volatilityIndex'),
+  'account-drawdown': translate('builtIn.accountDrawdown'),
+  'position-drawdown': translate('builtIn.positionDrawdown'),
 };
 
 export const targetChoices: { label: string; value: SignalTargetKind }[] = [
-  { label: 'Інструмент або група', value: 'Instrument' },
-  { label: 'Кожна позиція рахунку', value: 'EachPosition' },
-  { label: 'Під-портфель', value: 'SubPortfolio' },
-  { label: 'Рахунок', value: 'Account' },
+  { label: translate('target.Instrument'), value: 'Instrument' },
+  { label: translate('target.EachPosition'), value: 'EachPosition' },
+  { label: translate('target.SubPortfolio'), value: 'SubPortfolio' },
+  { label: translate('target.Account'), value: 'Account' },
 ];
 
 const clearReasonLabels: Record<string, string> = {
-  Recovered: 'відновилось',
-  PositionClosed: 'позицію закрито',
-  Reconfigured: 'правило змінено',
-  Disabled: 'сигнал вимкнено',
-  Deleted: 'сигнал видалено',
+  Recovered: translate('cleared.Recovered'),
+  PositionClosed: translate('cleared.PositionClosed'),
+  Reconfigured: translate('cleared.Reconfigured'),
+  Disabled: translate('cleared.Disabled'),
+  Deleted: translate('cleared.Deleted'),
 };
 
-const afterNewDataLabel = 'Після оновлення даних';
+const afterNewDataLabel = translate('signals.editor.frequency.off');
 
 export function conditionLabel(condition: SignalConditionDto): string {
   if (condition.metric === 'Level') {
-    const direction = condition.direction === 'Above' ? 'вище' : 'нижче';
+    const direction = condition.direction === 'Above' ? translate('signals.labels.above') : translate('signals.labels.below');
 
     return `${direction} ${condition.threshold}`;
   }
@@ -47,7 +49,7 @@ export function valueLabel(metric: SignalMetric, value: number): string {
 }
 
 function levelLabel(value: number): string {
-  return new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 2 }).format(value);
+  return new Intl.NumberFormat(activeLocale, { maximumFractionDigits: 2 }).format(value);
 }
 
 function percentLabel(fraction: number): string {

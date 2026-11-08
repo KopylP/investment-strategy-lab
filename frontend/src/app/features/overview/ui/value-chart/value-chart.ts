@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ToggleSwitch } from 'primeng/toggleswitch';
@@ -23,19 +24,17 @@ const showHeldKey = 'overview.valueChart.showHeld';
 
 @Component({
   selector: 'app-value-chart',
-  imports: [FormsModule, ChartLegend, LiveChart, ToggleSwitch],
+  imports: [TranslocoPipe, FormsModule, ChartLegend, LiveChart, ToggleSwitch],
   template: ` <div
       class="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 mb-2 text-sm text-muted-color"
     >
       @if (hasPlan() && !showHeld()) {
         <label class="flex items-center gap-2">
-          <p-toggleswitch [ngModel]="showPlan()" (ngModelChange)="setShowPlan($event)" /> якби все
-          за планом
+          <p-toggleswitch [ngModel]="showPlan()" (ngModelChange)="setShowPlan($event)" /> {{ 'overview.chart.ifToPlan' | transloco }}
         </label>
       }
       <label class="flex items-center gap-2">
-        <p-toggleswitch [ngModel]="showHeld()" (ngModelChange)="setShowHeld($event)" /> прибуток на
-        активах
+        <p-toggleswitch [ngModel]="showHeld()" (ngModelChange)="setShowHeld($event)" /> {{ 'overview.chart.gainOnAssets' | transloco }}
       </label>
     </div>
     <app-chart-legend
@@ -94,7 +93,7 @@ export class ValueChart {
       labels: series.map((point) => formatDate(point.date)),
       datasets: [
         {
-          label: held ? 'Вартість активів' : 'Вартість',
+          label: held ? translate('overview.chart.assetsValue') : translate('overview.chart.value'),
           data: series.map((point) => scaled(held ? point.positionsValue : point.value)),
           borderColor: palette.primary,
           backgroundColor: palette.primarySoft,
@@ -106,7 +105,7 @@ export class ValueChart {
           pointHoverRadius: 6,
         },
         {
-          label: held ? 'Заплачено за активи' : 'Внесено',
+          label: held ? translate('overview.chart.paidForAssets') : translate('overview.chart.contributed'),
           data: series.map((point) => scaled(held ? point.costBasis : point.netContributions)),
           borderColor: palette.neutral,
           borderDash: [6, 4],
@@ -118,7 +117,7 @@ export class ValueChart {
         ...(this.hasPlan() && this.showPlan() && !held
           ? [
               {
-                label: 'Вартість за планом',
+                label: translate('overview.chart.valueToPlan'),
                 data: series.map((point) => scaled(point.planValue)),
                 borderColor: plan,
                 pointRadius: 0,
@@ -127,7 +126,7 @@ export class ValueChart {
                 fill: false,
               },
               {
-                label: 'Внесено за планом',
+                label: translate('overview.chart.contributedToPlan'),
                 data: series.map((point) => scaled(point.planNetContributions)),
                 borderColor: withAlpha(plan, 0.7),
                 borderDash: [2, 3],
@@ -176,11 +175,18 @@ export class ValueChart {
                 ...(gain === null
                   ? []
                   : [
-                      `Прибуток на активах: ${gain >= 0 ? '+' : ''}${formatMoney(gain, currency, 0)}`,
+                      translate('overview.chart.gainOnAssetsTooltip', {
+                        gain: `${gain >= 0 ? '+' : ''}${formatMoney(gain, currency, 0)}`,
+                      }),
                     ]),
                 ...(report
                   ? [
-                      `Рапорт: ${report.kind === 'RiskReview' ? 'ризик-рев’ю' : formatPeriod(report.period)}`,
+                      translate('overview.chart.report', {
+                        report:
+                          report.kind === 'RiskReview'
+                            ? translate('overview.chart.riskReview')
+                            : formatPeriod(report.period),
+                      }),
                     ]
                   : []),
               ];

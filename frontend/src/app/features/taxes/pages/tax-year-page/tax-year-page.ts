@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { TaxRegime } from '../../../../core/context/tax-regime';
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -28,7 +29,7 @@ import { LossCarryforwardsCard } from '../../ui/loss-carryforwards-card/loss-car
 
 @Component({
   selector: 'app-tax-year-page',
-  imports: [
+  imports: [TranslocoPipe, 
     LossCarryforwardsCard,
     BrokerStatementsCard,
     TaxOpenLotsCard,
@@ -60,11 +61,11 @@ export class TaxYearPage {
   );
   protected confirmRemovePit8C(accountId: string): void {
     this.confirm.confirm({
-      header: 'Прибрати суми PIT-8C?',
+      header: translate('taxes.removePit8cQuestion'),
       message:
-        'Виручка й витрати брокера в декларації знову рахуватимуться з ваших операцій, а не з його PIT-8C.',
-      acceptLabel: 'Прибрати',
-      rejectLabel: 'Скасувати',
+        translate('taxes.removePit8cHint'),
+      acceptLabel: translate('taxes.removeAction'),
+      rejectLabel: translate('common.cancel'),
       acceptButtonProps: { severity: 'danger' },
       rejectButtonProps: { severity: 'secondary', text: true },
       accept: () => void this.store.removePit8C(accountId),

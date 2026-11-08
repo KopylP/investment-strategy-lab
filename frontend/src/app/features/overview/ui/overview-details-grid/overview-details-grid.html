@@ -1,7 +1,7 @@
 <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
   @if (store.isAll()) {
     <div class="card mb-0">
-      <h2 class="text-lg font-semibold mb-4">Рахунки</h2>
+      <h2 class="text-lg font-semibold mb-4">{{ 'overview.details.accounts' | transloco }}</h2>
       <p-table
         [value]="dashboard().accounts"
         size="small"
@@ -10,9 +10,9 @@
       >
         <ng-template #header>
           <tr>
-            <th>Рахунок</th>
-            <th class="text-right">Вартість</th>
-            <th class="text-right hidden sm:table-cell">Частка</th>
+            <th>{{ 'overview.details.account' | transloco }}</th>
+            <th class="text-right">{{ 'overview.details.value' | transloco }}</th>
+            <th class="text-right hidden sm:table-cell">{{ 'overview.details.share' | transloco }}</th>
             <th class="text-right hidden sm:table-cell">TWR</th>
           </tr>
         </ng-template>
@@ -20,7 +20,7 @@
           <tr
             class="cursor-pointer"
             (click)="store.showAccount(account.id)"
-            pTooltip="Відкрити огляд цього рахунку"
+            [pTooltip]="'overview.details.openAccountOverview' | transloco"
             tooltipPosition="left"
           >
             <td>
@@ -49,18 +49,17 @@
         </ng-template>
       </p-table>
       <div class="text-xs text-muted-color mt-3">
-        Суми — у {{ dashboard().currency }} за офіційним курсом кожного дня; TWR рахунку — у його власній
-        валюті.
+        {{ 'overview.details.currencyHint' | transloco: { currency: dashboard().currency } }}
       </div>
     </div>
   } @else {
     <div class="card mb-0">
-      <h2 class="text-lg font-semibold mb-4">Під-портфелі: факт і ціль</h2>
+      <h2 class="text-lg font-semibold mb-4">{{ 'overview.details.subPortfolios' | transloco }}</h2>
       <app-allocation-card [dashboard]="dashboard()" />
     </div>
   }
   <div class="card mb-0">
-    <h2 class="text-lg font-semibold mb-4">Просідання від піку</h2>
+    <h2 class="text-lg font-semibold mb-4">{{ 'overview.details.drawdownFromPeak' | transloco }}</h2>
     @defer (on idle) {
       <app-drawdown-chart [dashboard]="dashboard()" />
     } @placeholder {
@@ -69,16 +68,16 @@
     @if (!store.isAll() && store.latestRisk(); as risk) {
       <div class="flex flex-wrap items-center justify-between gap-2 mt-4">
         <span class="text-sm text-muted-color"
-          >Остання перевірка ризику: {{ risk.generatedAt | dateTime }}</span
+          >{{ 'overview.details.lastRiskReview' | transloco: { generatedAt: (risk.generatedAt | dateTime) } }}</span
         >
         <div class="flex items-center gap-2">
           @if (risk.actionsTotal) {
-            <p-tag [value]="risk.actionsTotal + ' сигналів виходу'" severity="danger" />
+            <p-tag [value]="'overview.details.exitSignals' | transloco: { count: risk.actionsTotal }" severity="danger" />
           } @else {
-            <p-tag value="без сигналів виходу" severity="success" />
+            <p-tag [value]="'overview.details.noExitSignals' | transloco" severity="success" />
           }
           <p-button
-            label="Відкрити"
+            [label]="'overview.details.open' | transloco"
             size="small"
             [text]="true"
             [routerLink]="['/reports', risk.id]"

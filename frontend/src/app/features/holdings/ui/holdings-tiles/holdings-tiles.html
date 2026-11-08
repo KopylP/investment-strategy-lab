@@ -1,41 +1,41 @@
 <div class="card py-4">
   <div class="app-tiles">
     <div class="px-1 sm:px-4 lg:border-r border-surface">
-      <div class="text-muted-color text-xs uppercase tracking-wide">Інвестовано</div>
+      <div class="text-muted-color text-xs uppercase tracking-wide">{{ 'holdings.tiles.invested' | transloco }}</div>
       <div class="text-xl font-semibold mt-1">
         <app-money [amount]="totals().invested" [currency]="store.currency()" />
       </div>
-      <div class="text-xs text-muted-color">вартість позицій</div>
+      <div class="text-xs text-muted-color">{{ 'holdings.tiles.investedHint' | transloco }}</div>
     </div>
     <div class="px-1 sm:px-4 lg:border-r border-surface">
-      <div class="text-muted-color text-xs uppercase tracking-wide">Собівартість</div>
+      <div class="text-muted-color text-xs uppercase tracking-wide">{{ 'holdings.tiles.cost' | transloco }}</div>
       <div class="text-xl font-semibold mt-1">
         <app-money [amount]="totals().costBasis" [currency]="store.currency()" />
       </div>
-      <div class="text-xs text-muted-color">скільки заплачено за них</div>
+      <div class="text-xs text-muted-color">{{ 'holdings.tiles.costHint' | transloco }}</div>
     </div>
     <div class="px-1 sm:px-4 lg:border-r border-surface">
-      <div class="text-muted-color text-xs uppercase tracking-wide">Вільний кеш</div>
+      <div class="text-muted-color text-xs uppercase tracking-wide">{{ 'holdings.tiles.freeCash' | transloco }}</div>
       <div class="text-xl font-semibold mt-1">
         <app-money [amount]="totals().cash" [currency]="store.currency()" />
       </div>
       @if (totals().hasForeignCash) {
         <div
           class="text-xs text-muted-color"
-          pTooltip="Брокер тримає кеш окремо в кожній валюті; інші валюти тут — за поточним офіційним курсом"
+          [pTooltip]="'holdings.tiles.freeCashHint' | transloco"
         >
           @for (part of totals().cashParts; track part.currency; let last = $last) {
             {{ part.amount | money: part.currency }}{{ last ? '' : ' · ' }}
           }
         </div>
       } @else {
-        <div class="text-xs text-muted-color">ще не вкладено</div>
+        <div class="text-xs text-muted-color">{{ 'holdings.tiles.freeCashNote' | transloco }}</div>
       }
     </div>
     <div class="px-1 sm:px-4">
-      <div class="text-muted-color text-xs uppercase tracking-wide">Позицій</div>
+      <div class="text-muted-color text-xs uppercase tracking-wide">{{ 'holdings.tiles.positions' | transloco }}</div>
       <div class="text-xl font-semibold mt-1">{{ store.positionCount() }}</div>
-      <div class="text-xs text-muted-color">у {{ store.sleeves().length }} під-портфелях</div>
+      <div class="text-xs text-muted-color">{{ 'holdings.tiles.inSleeves' | transloco: { count: store.sleeves().length } }}</div>
     </div>
   </div>
 </div>

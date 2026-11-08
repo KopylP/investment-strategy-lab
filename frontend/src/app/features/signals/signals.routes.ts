@@ -4,6 +4,6 @@ export const signalsRoutes: Routes = [
   {
     path: '',
     loadComponent: () => import('./pages/signals-page/signals-page').then((m) => m.SignalsPage),
-    title: 'Сигнали',
+    title: 'routes.signals',
   },
 ];

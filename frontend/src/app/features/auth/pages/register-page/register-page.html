@@ -2,9 +2,9 @@
   <div class="w-full max-w-md bg-surface-0 dark:bg-surface-900 rounded-2xl shadow-sm p-8 sm:p-10">
     <div class="text-center mb-8">
       <i class="pi pi-chart-scatter text-primary text-4xl mb-4"></i>
-      <h1 class="text-2xl font-semibold m-0">Новий обліковий запис</h1>
+      <h1 class="text-2xl font-semibold m-0">{{ 'register.title' | transloco }}</h1>
       <p class="text-muted-color mt-2 mb-0">
-        Пароль — від 10 символів; фраза з кількох слів підходить найкраще
+        {{ 'register.hint' | transloco }}
       </p>
     </div>
 
@@ -21,7 +21,7 @@
         />
       </div>
       <div class="flex flex-col gap-2">
-        <label for="password" class="font-medium">Пароль</label>
+        <label for="password" class="font-medium">{{ 'auth.password' | transloco }}</label>
         <p-password
           inputId="password"
           formControlName="password"
@@ -30,11 +30,11 @@
           fluid
         />
         @if (form.controls.password.touched && form.controls.password.hasError('minlength')) {
-          <p-message severity="error" size="small" variant="simple" text="Щонайменше 10 символів" />
+          <p-message severity="error" size="small" variant="simple" [text]="'register.passwordTooShort' | transloco" />
         }
       </div>
       <div class="flex flex-col gap-2">
-        <label for="confirm" class="font-medium">Ще раз</label>
+        <label for="confirm" class="font-medium">{{ 'register.confirm' | transloco }}</label>
         <p-password
           inputId="confirm"
           formControlName="confirm"
@@ -44,7 +44,7 @@
           fluid
         />
         @if (form.controls.confirm.touched && form.hasError('mismatch')) {
-          <p-message severity="error" size="small" variant="simple" text="Паролі не збігаються" />
+          <p-message severity="error" size="small" variant="simple" [text]="'register.passwordsDiffer' | transloco" />
         }
       </div>
 
@@ -54,14 +54,14 @@
 
       <p-button
         type="submit"
-        label="Зареєструватися"
+        [label]="'auth.signUp' | transloco"
         icon="pi pi-user-plus"
         [loading]="busy()"
         fluid
       />
       <div class="text-center text-sm">
-        Уже є обліковий запис?
-        <a routerLink="/auth/login" class="text-primary font-medium">Увійти</a>
+        {{ 'register.haveAccount' | transloco }}
+        <a routerLink="/auth/login" class="text-primary font-medium">{{ 'auth.signIn' | transloco }}</a>
       </div>
     </form>
   </div>

@@ -1,5 +1,5 @@
 <div class="card">
-  <h2 class="text-lg font-semibold mb-4">Реалізації (продажі)</h2>
+  <h2 class="text-lg font-semibold mb-4">{{ 'taxes.realizations.title' | transloco }}</h2>
   @if (details().realizations.length) {
     <p-table
       [value]="details().realizations"
@@ -10,16 +10,16 @@
       <ng-template #header>
         <tr>
           <th class="w-10"></th>
-          <th class="hidden sm:table-cell">Дата</th>
+          <th class="hidden sm:table-cell">{{ 'taxes.date' | transloco }}</th>
           <th>ETF</th>
           @if (store.showAccount()) {
-            <th class="hidden sm:table-cell">Рахунок</th>
+            <th class="hidden sm:table-cell">{{ 'taxes.account' | transloco }}</th>
           }
-          <th class="text-right hidden sm:table-cell">Штук</th>
-          <th class="text-right hidden sm:table-cell">Виручка</th>
-          <th class="text-right hidden sm:table-cell">Витрати</th>
-          <th class="text-right">Зиск</th>
-          <th class="hidden sm:table-cell">Курс</th>
+          <th class="text-right hidden sm:table-cell">{{ 'taxes.units' | transloco }}</th>
+          <th class="text-right hidden sm:table-cell">{{ 'taxes.realizations.proceeds' | transloco }}</th>
+          <th class="text-right hidden sm:table-cell">{{ 'taxes.realizations.costs' | transloco }}</th>
+          <th class="text-right">{{ 'taxes.realizations.gain' | transloco }}</th>
+          <th class="hidden sm:table-cell">{{ 'taxes.rate' | transloco }}</th>
         </tr>
       </ng-template>
       <ng-template #body let-r let-expanded="expanded">
@@ -31,7 +31,7 @@
               [rounded]="true"
               severity="secondary"
               [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
-              ariaLabel="Лоти"
+              [ariaLabel]="'holdings.sleeve.lots' | transloco"
             />
           </td>
           <td class="hidden sm:table-cell whitespace-nowrap">{{ r.soldOn | date }}</td>
@@ -63,8 +63,8 @@
                 [style.color]="off ? 'var(--p-finance-tax)' : 'var(--p-text-muted-color)'"
                 [pTooltip]="
                   off
-                    ? 'Revolut рахує ' + (r.brokerGainInTaxCurrency | taxMoney)
-                    : 'Збігається зі звітом Revolut'
+                    ? ('taxes.realizations.revolutCounts' | transloco: { amount: r.brokerGainInTaxCurrency | taxMoney })
+                    : ('taxes.realizations.matchesRevolut' | transloco)
                 "
               ></i>
             }
@@ -80,42 +80,39 @@
           <td [attr.colspan]="store.showAccount() ? 9 : 8">
             <div class="app-row-detail">
               <div class="sm:hidden grid grid-cols-2 gap-x-4 gap-y-1 text-sm mb-3">
-                <span class="text-muted-color">Штук</span
+                <span class="text-muted-color">{{ 'taxes.units' | transloco }}</span
                 ><span class="text-right">{{ r.quantity | quantity }}</span>
-                <span class="text-muted-color">Виручка</span
+                <span class="text-muted-color">{{ 'taxes.realizations.proceeds' | transloco }}</span
                 ><span class="text-right">{{ r.proceedsInTaxCurrency | taxMoney }}</span>
-                <span class="text-muted-color">Витрати</span
+                <span class="text-muted-color">{{ 'taxes.realizations.costs' | transloco }}</span
                 ><span class="text-right">{{ r.costInTaxCurrency | taxMoney }}</span>
-                <span class="text-muted-color">Курс</span
+                <span class="text-muted-color">{{ 'taxes.rate' | transloco }}</span
                 ><span class="text-right">{{ r.fxRate }} · {{ r.fxRateDate | date }}</span>
               </div>
-              <div class="font-medium text-sm mb-2">Закриті лоти (FIFO)</div>
+              <div class="font-medium text-sm mb-2">{{ 'taxes.realizations.closedLots' | transloco }}</div>
               @for (lot of r.lots; track $index) {
                 <div class="flex flex-wrap justify-between gap-x-4 text-sm py-1 max-w-xl">
                   <span
-                    >куплено {{ lot.acquiredOn | date }}
+                    >{{ 'taxes.openLots.boughtOn' | transloco: { acquiredOn: lot.acquiredOn | date } }}
                     @if (lot.fromBroker) {
-                      <span class="text-muted-color"> · собівартість зі звіту брокера</span>
+                      <span class="text-muted-color"> {{ 'taxes.realizations.brokerCost' | transloco }}</span>
                     }
                   </span>
                   <span class="text-right ml-auto"
-                    >{{ lot.quantity | quantity }} шт. · витрати
-                    {{ lot.costInTaxCurrency | taxMoney }}</span
+                    >{{ 'taxes.realizations.lotLine' | transloco: { quantity: (lot.quantity | quantity), costInTaxCurrency: (lot.costInTaxCurrency | taxMoney) } }}</span
                   >
                 </div>
               }
               @if (r.brokerGainInTaxCurrency !== null && brokerDifference(r)) {
                 <div class="text-sm mt-2 max-w-xl" style="color: var(--p-finance-tax)">
-                  Revolut рахує зиск {{ r.brokerGainInTaxCurrency | taxMoney }} (різниця
-                  {{ r.gainInTaxCurrency - r.brokerGainInTaxCurrency | taxMoney }}): у нього свій курс і округлення,
-                  у нас — офіційний курс дня перед угодою.
+                  {{ 'taxes.realizations.revolutDiffers' | transloco: { brokerGainInTaxCurrency: (r.brokerGainInTaxCurrency | taxMoney), brokerGainInTaxCurrency2: (r.gainInTaxCurrency - r.brokerGainInTaxCurrency | taxMoney) } }}
                 </div>
               }
               @if (r.unmatchedQuantity > 0) {
                 <p-message
                   severity="warn"
                   size="small"
-                  [text]="r.unmatchedQuantity + ' шт. без купівлі в журналі — собівартість нульова'"
+                  [text]="'taxes.realizations.withoutPurchase' | transloco: { quantity: r.unmatchedQuantity }"
                 />
               }
             </div>
@@ -124,6 +121,6 @@
       </ng-template>
     </p-table>
   } @else {
-    <div class="text-muted-color">Продажів цього року немає.</div>
+    <div class="text-muted-color">{{ 'taxes.realizations.empty' | transloco }}</div>
   }
 </div>

@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Button } from 'primeng/button';
@@ -11,7 +12,7 @@ import { TaxesStore } from '../../data-access/taxes-store';
 
 @Component({
   selector: 'app-broker-statements-card',
-  imports: [FormsModule, Button, Select, Tag, FileDrop, DatePipe, DateTimePipe],
+  imports: [TranslocoPipe, FormsModule, Button, Select, Tag, FileDrop, DatePipe, DateTimePipe],
   templateUrl: './broker-statements-card.html',
   host: { class: 'contents' },
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -32,11 +33,11 @@ export class BrokerStatementsCard {
 
   protected confirmRemoveBroker(statement: BrokerStatement): void {
     this.confirm.confirm({
-      header: 'Видалити звіт брокера?',
+      header: translate('taxes.brokerStatements.deleteQuestion'),
       message:
-        'Податок з дивідендів знову рахуватиметься без зарахування утриманого за кордоном, а собівартість зі звіту більше не братиметься.',
-      acceptLabel: 'Видалити',
-      rejectLabel: 'Скасувати',
+        translate('taxes.brokerStatements.deleteHint'),
+      acceptLabel: translate('common.delete'),
+      rejectLabel: translate('common.cancel'),
       acceptButtonProps: { severity: 'danger' },
       rejectButtonProps: { severity: 'secondary', text: true },
       accept: () => void this.store.removeBrokerStatement(statement),

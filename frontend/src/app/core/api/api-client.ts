@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
@@ -61,12 +62,12 @@ export function toProblemMessage(error: unknown): string {
 
     if (problem?.detail) return problem.detail;
 
-    if (error.status === 0) return 'Сервер недоступний. Перевірте, чи запущено API.';
+    if (error.status === 0) return translate('common.serverUnavailable');
 
-    return problem?.title ?? `Помилка ${error.status}`;
+    return problem?.title ?? translate('common.errorStatus', { status: error.status });
   }
 
-  return error instanceof Error ? error.message : 'Невідома помилка';
+  return error instanceof Error ? error.message : translate('common.unknownError');
 }
 
 export function problemCode(error: unknown): string | undefined {

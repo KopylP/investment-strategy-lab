@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { TaxRegime } from '../../../../core/context/tax-regime';
 import { TaxMoneyPipe } from '../../../../core/context/tax-money-pipe';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
@@ -12,7 +13,7 @@ import { TaxesStore } from '../../data-access/taxes-store';
 
 @Component({
   selector: 'app-loss-carryforwards-card',
-  imports: [TaxMoneyPipe, FormsModule, Button, InputNumber, TableModule, MoneyPipe],
+  imports: [TranslocoPipe, TaxMoneyPipe, FormsModule, Button, InputNumber, TableModule, MoneyPipe],
   templateUrl: './loss-carryforwards-card.html',
   host: { class: 'contents' },
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,10 +38,10 @@ export class LossCarryforwardsCard {
 
   protected confirmRemove(loss: LossCarryforward): void {
     this.confirm.confirm({
-      header: 'Видалити збиток?',
-      message: `Збиток ${loss.year} року більше не зменшуватиме податок.`,
-      acceptLabel: 'Видалити',
-      rejectLabel: 'Скасувати',
+      header: translate('taxes.losses.deleteQuestion'),
+      message: translate('taxes.losses.deleteHint', { year: loss.year }),
+      acceptLabel: translate('common.delete'),
+      rejectLabel: translate('common.cancel'),
       acceptButtonProps: { severity: 'danger' },
       rejectButtonProps: { severity: 'secondary', text: true },
       accept: () => void this.store.removeLoss(loss),

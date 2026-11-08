@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 import { TaxRegime } from '../../../../core/context/tax-regime';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { ChartTheme, withAlpha } from '../../../../shared/charts/chart-theme';
@@ -57,7 +58,7 @@ export class TaxProgressChart {
       labels: days.map((day) => formatDate(day.date)),
       datasets: [
         {
-          label: 'Податок',
+          label: translate('overview.tax.title'),
           data: days.map((day) => day.tax),
           borderColor: aboveThreshold(threshold, palette.tax, palette.loss),
           backgroundColor: aboveThreshold(

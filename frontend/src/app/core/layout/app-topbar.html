@@ -3,7 +3,7 @@
     <button
       class="layout-menu-button layout-topbar-action"
       (click)="layout.onMenuToggle()"
-      aria-label="Меню"
+      [attr.aria-label]="'layout.topbar.menu' | transloco"
     >
       <i class="pi pi-bars"></i>
     </button>
@@ -22,7 +22,7 @@
         [ngModel]="selectedAccount()"
         (ngModelChange)="chooseAccount($event)"
         size="small"
-        ariaLabel="Рахунок"
+        [ariaLabel]="'layout.topbar.account' | transloco"
         class="hidden sm:flex self-center min-w-48"
       />
     } @else if (accounts.current(); as account) {
@@ -38,8 +38,8 @@
         (ngModelChange)="chooseCurrency($event)"
         [allowEmpty]="false"
         size="small"
-        ariaLabel="Валюта відображення"
-        pTooltip="Валюта відображення сум (за офіційним курсом)"
+        [ariaLabel]="'layout.topbar.displayCurrency' | transloco"
+        [pTooltip]="'layout.topbar.displayCurrencyHint' | transloco"
         tooltipPosition="bottom"
         class="self-center"
       />
@@ -50,7 +50,7 @@
         type="button"
         class="layout-topbar-action"
         (click)="toggleDarkMode()"
-        [attr.aria-label]="layout.isDarkTheme() ? 'Світла тема' : 'Темна тема'"
+        [attr.aria-label]="(layout.isDarkTheme() ? 'layout.topbar.lightTheme' : 'layout.topbar.darkTheme') | transloco"
       >
         <i
           class="pi"
