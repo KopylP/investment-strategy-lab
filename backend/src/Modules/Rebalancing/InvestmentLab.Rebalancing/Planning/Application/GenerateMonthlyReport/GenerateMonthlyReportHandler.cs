@@ -96,8 +96,7 @@ public sealed class GenerateMonthlyReportHandler(
         IPlanningSubPortfolio sub, MonthlyPlan plan, decimal share, StrategyTargets targets, StrategyDecision decision)
     {
         var snapshot = plan.Snapshots.GetValueOrDefault(sub.Id);
-        var positions = (snapshot?.Positions ?? [])
-            .Select(position => new SubPortfolioPosition(position.InstrumentId, Quantity.Of(position.Quantity), position.AverageCost));
+        var positions = (snapshot?.Positions ?? []).Select(position => PositionInAccountCurrency(position, plan.Prices));
 
         return new SubPortfolioSituation(
             Strategy: targets,
@@ -109,6 +108,14 @@ public sealed class GenerateMonthlyReportHandler(
             Policy: plan.PlanSettings.Policy,
             Currency: plan.Currency,
             Labels: plan.Labels);
+    }
+
+    private static SubPortfolioPosition PositionInAccountCurrency(IHeldPosition position, Dictionary<Guid, IInstrumentPrice> prices)
+    {
+        var price = prices.GetValueOrDefault(position.InstrumentId);
+        var averageCost = price?.FromQuoteCurrency(position.AverageCost);
+
+        return new SubPortfolioPosition(position.InstrumentId, Quantity.Of(position.Quantity), averageCost);
     }
 
     private static void AddReportWarnings(MonthlyPlan plan, List<SubPortfolioOutcome> outcomes, ReportRequest request)

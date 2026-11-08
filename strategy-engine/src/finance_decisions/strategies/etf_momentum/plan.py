@@ -3,12 +3,13 @@
 Rules (the same for the text report, Telegram and HTML):
 1. Sell every risk position that is no longer selected.
 2. Market OK: invest the whole contribution plus any parked cash.
-   Market weak: invest ``weak_market_invest_pct`` of the contribution and park the rest.
-   Sale proceeds are always reinvested into the current picks.
-3. Each pick targets 1/top_n of the invested portfolio. Unfilled slots stay parked.
+   Market weak: invest ``weak_market_invest_pct`` of the contribution and park the rest;
+   money already parked waits. Sale proceeds are always reinvested into the current picks.
+3. Each pick targets 1/top_n of the whole sub-portfolio after the contribution. Unfilled slots stay parked.
 4. Top up underweight picks. Trim a pick only when it is in profit and more than
    ``trim_band`` over target; losing positions shrink as new money flows to the others.
-5. Orders smaller than ``min_trade`` are skipped; whatever is not invested goes to the cash ETF.
+5. Orders smaller than ``min_trade`` or than one whole share are skipped; whatever is not
+   invested goes to the cash ETF. Every skipped order is named in a note.
 """
 
 from __future__ import annotations
@@ -53,6 +54,14 @@ class AllocationRow:
     weight_before: float
     weight_after: float
     target_weight: float | None
+
+
+@dataclass(frozen=True)
+class Skips:
+    small_buys: list[str]
+    below_one_share: list[str]
+    unpriced: list[str]
+    trims_at_loss: list[str]
 
 
 @dataclass(frozen=True)
@@ -149,18 +158,23 @@ def build_plan(
     # 2. Money to invest this month.
     invest_pct = 1.0 if scan.market_ok else settings.weak_market_invest_pct
     deployable = contribution * invest_pct + proceeds + (parked_before if scan.market_ok else 0.0)
-    investable_total = sum(kept.values()) + deployable
-    target_value = investable_total * target_weight
+    total_after = total_before + contribution
+    target_value = total_after * target_weight
 
     # 3. Trim winners that grew far above target.
     trims = 0.0
+    trims_at_loss = []
     for ticker, value in kept.items():
         excess = value - target_value
-        in_profit = price(ticker) > cost_basis.get(ticker, 0.0)
-        if in_profit and excess > settings.trim_band * investable_total and excess >= settings.min_trade:
-            sold = add_order("sell", KIND_TRIM, ticker, excess, msg("etf_momentum.plan.trim", target=f"{target_weight:.0%}", band=f"{settings.trim_band:.0%}"))
-            kept[ticker] = value - sold
-            trims += sold
+        if excess <= settings.trim_band * total_after or excess < settings.min_trade:
+            continue
+        if price(ticker) <= cost_basis.get(ticker, 0.0):
+            trims_at_loss.append(ticker)
+            continue
+        reason = msg("etf_momentum.plan.trim", weight=f"{value / total_after:.0%}", target=f"{target_weight:.0%}", band=f"{settings.trim_band:.0%}")
+        sold = add_order("sell", KIND_TRIM, ticker, excess, reason)
+        kept[ticker] = value - sold
+        trims += sold
     deployable += trims
 
     # 4. Top up underweight picks, scaled down if money is short.
@@ -168,6 +182,8 @@ def build_plan(
     total_gap = sum(gaps.values())
     scale = min(1.0, deployable / total_gap) if total_gap > 0 else 0.0
     skipped = []
+    below_one_share = []
+    unpriced = []
     bought = 0.0
     for ticker in picks:
         amount = gaps[ticker] * scale
@@ -175,6 +191,13 @@ def build_plan(
             continue
         if amount < settings.min_trade:
             skipped.append(ticker)
+            continue
+        latest = price(ticker)
+        if latest is None:
+            unpriced.append(ticker)
+            continue
+        if not settings.fractional_shares and amount < latest:
+            below_one_share.append(ticker)
             continue
         bought += add_order("buy", KIND_BUY, ticker, amount, _buy_reason(scan, ticker, ticker in kept, target_weight))
 
@@ -190,14 +213,14 @@ def build_plan(
 
     orders.sort(key=lambda order: _ORDER_SEQUENCE[order.kind])
 
-    total_after = total_before + contribution
     after = {ticker: kept.get(ticker, 0.0) for ticker in picks}
     for order in orders:
         if order.kind == KIND_BUY:
             after[order.ticker] = after.get(order.ticker, 0.0) + order.amount
     parked_after = total_after - sum(after.values())
 
-    notes.extend(_notes(scan, picks, top_n, contribution, invest_pct, parked_before, cash_etf, currency, skipped, settings))
+    skips = Skips(small_buys=skipped, below_one_share=below_one_share, unpriced=unpriced, trims_at_loss=trims_at_loss)
+    notes.extend(_notes(scan, picks, top_n, contribution, invest_pct, parked_before, cash_etf, currency, skips, settings))
 
     allocation = _allocation(values, after, picks, cash_etf, parked_before, parked_after, total_before, total_after, target_weight, name)
     return MonthlyPlan(
@@ -243,7 +266,7 @@ def _notes(
     parked_before: float,
     cash_etf: str | None,
     currency: str,
-    skipped: list[str],
+    skips: Skips,
     settings: PlanSettings,
 ) -> list[str]:
     from finance_decisions.helpers import money
@@ -252,25 +275,27 @@ def _notes(
     notes = []
     if contribution <= 0:
         notes.append(msg("etf_momentum.plan.zero_contribution"))
-    if not scan.market_ok:
-        notes.append(
-            msg(
-                "etf_momentum.plan.weak_market",
-                share=f"{invest_pct:.0%}",
-                invested=money(contribution * invest_pct, currency),
-                rest=money(contribution * (1 - invest_pct), currency),
-                parking=parking,
-            )
-        )
-    elif parked_before >= settings.min_trade:
-        notes.append(msg("etf_momentum.plan.market_recovered", parked=money(parked_before, currency)))
+    if scan.market_ok:
+        if parked_before >= settings.min_trade:
+            notes.append(msg("etf_momentum.plan.market_recovered", parked=money(parked_before, currency)))
+    else:
+        if invest_pct < 1 and contribution > 0:
+            invested = money(contribution * invest_pct, currency)
+            rest = money(contribution * (1 - invest_pct), currency)
+            notes.append(msg("etf_momentum.plan.weak_market", share=f"{invest_pct:.0%}", invested=invested, rest=rest, parking=parking))
+        if parked_before >= settings.min_trade:
+            notes.append(msg("etf_momentum.plan.parked_waits", parked=money(parked_before, currency), parking=parking))
     if not picks:
         notes.append(msg("etf_momentum.plan.nothing_picked", parking=parking))
-    elif len(picks) < top_n:
-        empty = top_n - len(picks)
-        notes.append(msg("etf_momentum.plan.empty_slots", found=len(picks), slots=top_n, empty=empty, share=f"{empty / top_n:.0%}", parking=parking))
-    if skipped:
-        notes.append(msg("etf_momentum.plan.small_buys_skipped", minimum=money(settings.min_trade, currency), tickers=", ".join(skipped)))
+    elif round(len(picks) / top_n, 2) < 1:
+        notes.append(msg("etf_momentum.plan.partial_targets", total=f"{len(picks) / top_n:.0%}", parking=parking))
+    if skips.small_buys:
+        notes.append(msg("etf_momentum.plan.small_buys_skipped", minimum=money(settings.min_trade, currency), tickers=skips.small_buys))
+    if skips.below_one_share:
+        notes.append(msg("etf_momentum.plan.buys_below_one_share", tickers=skips.below_one_share, parking=parking))
+    notes.extend(msg("etf_momentum.plan.no_price", ticker=ticker) for ticker in skips.unpriced)
+    if skips.trims_at_loss:
+        notes.append(msg("etf_momentum.plan.trims_skipped_at_loss", tickers=skips.trims_at_loss))
     return notes
 
 

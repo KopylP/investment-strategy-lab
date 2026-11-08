@@ -58,9 +58,8 @@ public sealed class ReplayedPortfolio(ReplaySetup setup, PriceTable prices, Repl
     {
         _orders.Rebalance(trades, session.Date, decision.Explanation);
 
-        var targets = BudgetedTargets(decision);
         var reason = session.RebalanceBySignal ? "research.journal.signal" : "research.journal.schedule";
-        RecordDecision(session, "rebalance", reason, targets, decision.Explanation, decision.MarketIsFavorable);
+        RecordDecision(session, "rebalance", reason, decision.Targets, decision.Explanation, decision.MarketIsFavorable);
     }
 
     public void ReviewRisk(ReplaySession session, ReplayRiskDecision assessment)
@@ -218,10 +217,5 @@ public sealed class ReplayedPortfolio(ReplaySetup setup, PriceTable prices, Repl
 
         var entry = new ReplayJournalEntry(day, "expired", Message.Of("research.journal.expired"));
         _journal.Add(entry);
-    }
-
-    private static IReadOnlyList<ReplayTarget> BudgetedTargets(ReplayDecision decision)
-    {
-        return [.. decision.Targets.Select(target => target with { Weight = target.Weight * decision.InvestFraction })];
     }
 }

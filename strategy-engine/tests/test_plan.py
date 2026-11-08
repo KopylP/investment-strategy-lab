@@ -55,7 +55,7 @@ def test_unfilled_slots_are_parked_not_concentrated() -> None:
 
     assert _amounts(plan, "buy") == {"AAA": 100.0, "BBB": 100.0}
     assert _amounts(plan, "park") == {"CASHX": 200.0}
-    assert any("2 з 4" in render(note) for note in plan.notes)
+    assert any("займають 50% портфеля" in render(note) for note in plan.notes)
 
 
 def test_weak_market_invests_half_and_parks_the_rest() -> None:
@@ -114,3 +114,25 @@ def test_whole_shares_mode_rounds_down() -> None:
     buy = plan.buys[0]
     assert buy.shares == 2
     assert buy.amount == pytest.approx(100.0)
+
+
+def test_weak_market_keeps_holdings_next_to_parked_money() -> None:
+    holdings = {"AAA": 50.0, "BBB": 25.0, "CASHX": 10.0}  # €500 + €500 held, €1000 parked
+    plan = _plan(_scan(["AAA", "BBB"], market_ok=False), holdings=holdings, cost_basis={"AAA": 5.0, "BBB": 10.0}, contribution=0.0)
+
+    assert not plan.sells
+    assert any("лишаються в CASHX, доки ринок не відновиться" in render(note) for note in plan.notes)
+
+
+def test_losing_overweight_position_is_named_in_a_note() -> None:
+    plan = _plan(_scan(["AAA", "BBB", "CCC", "DDD"]), holdings={"AAA": 40.0}, cost_basis={"AAA": 12.0})
+
+    assert any("у збитку" in render(note) and "AAA" in render(note) for note in plan.notes)
+
+
+def test_buy_smaller_than_one_share_is_named_in_a_note() -> None:
+    settings = PlanSettings(monthly_contribution=40.0, fractional_shares=False)
+    plan = _plan(_scan(["CCC"]), settings=settings, top_n=1, contribution=40.0)
+
+    assert not plan.buys
+    assert any("На одну штуку не вистачає" in render(note) and "CCC" in render(note) for note in plan.notes)

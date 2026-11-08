@@ -163,7 +163,6 @@ export interface ContributionVm {
   total: number;
   splitLabel: string;
   parts: { name: string; amount: number }[];
-  transfer: { from: string; to: string; amount: number } | null;
 }
 
 export interface TaxImpactVm {

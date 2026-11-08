@@ -1,6 +1,6 @@
 # ADR-0024: Market filter modes
 
-- Status: accepted (2026-11-07)
+- Status: accepted (2026-11-07); the base of target weights is amended by ADR-0026
 
 ## Context
 

@@ -6,6 +6,8 @@ public sealed record StrategyTargets(
     IReadOnlyList<TargetWeight> Targets,
     IReadOnlyList<InstrumentScore> Scores)
 {
+    private const int PercentDigits = 2;
+
     public static StrategyTargets Of(bool marketIsFavorable, decimal investFraction, IReadOnlyList<TargetWeight> targets, IReadOnlyList<InstrumentScore> scores) => new(
         MarketIsFavorable: marketIsFavorable,
         InvestFraction: Percentage.Of(Math.Clamp(investFraction, 0m, 1m)),
@@ -18,10 +20,7 @@ public sealed record StrategyTargets(
 
     public InstrumentScore? ScoreOf(Guid instrumentId) => Scores.FirstOrDefault(score => score.InstrumentId == instrumentId);
 
-    public int? Slots =>
-        Targets is [{ Weight: > 0m } first, ..] && Targets.All(target => target.Weight == first.Weight)
-            ? (int)decimal.Round(1m / first.Weight)
-            : null;
+    public bool CoversLessThanWhole => decimal.Round(TotalWeight, PercentDigits) < 1m;
 
     public StrategyTargets WithTargets(IReadOnlyList<TargetWeight> targets) => this with { Targets = targets };
 }

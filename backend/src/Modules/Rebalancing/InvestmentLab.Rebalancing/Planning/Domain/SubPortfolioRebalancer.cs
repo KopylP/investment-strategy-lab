@@ -16,37 +16,30 @@ public static class SubPortfolioRebalancer
         private readonly Dictionary<Guid, SubPortfolioPosition> _holdings = situation.Positions.ToDictionary(position => position.InstrumentId);
         private readonly List<string> _notes = [];
         private readonly List<PlannedOrder> _orders = [];
+        private readonly SkippedTrades _skipped = new();
 
         public SubPortfolioPlan Plan()
         {
             var values = PricedPositions();
             var parkedBefore = TakeOutParked(values) + situation.Cash;
             var totalBefore = values.Sum(entry => entry.Value) + parkedBefore;
+            var totalAfter = totalBefore + situation.Contribution;
 
             var proceeds = ExitDropped(values);
+            var kept = KeptPicks(values);
 
-            var valueOf = values.ToDictionary(entry => entry.Id, entry => entry.Value);
-            var kept = _picks.Where(valueOf.ContainsKey).ToDictionary(id => id, id => valueOf[id]);
-
-            var investFraction = _strategy.InvestFraction.Value;
-            var deployable = situation.Contribution * investFraction + proceeds + (_strategy.MarketIsFavorable ? parkedBefore : 0m);
-            var investableTotal = kept.Values.Sum() + deployable;
-
-            var trims = TrimOverweight(kept, investableTotal);
-            deployable += trims;
-
-            var (bought, skipped) = BuyGaps(kept, investableTotal, deployable);
+            var trims = TrimOverweight(kept, totalAfter);
+            var deployable = Deployable(proceeds, parkedBefore) + trims;
+            var bought = BuyGaps(kept, totalAfter, deployable);
 
             var remaining = situation.Cash + situation.Contribution + proceeds + trims - bought;
             ParkOrUnpark(remaining);
 
             var sorted = _orders.OrderBy(order => order.Kind).ToList();
-
-            var totalAfter = totalBefore + situation.Contribution;
             var after = ValuesAfter(kept, sorted);
             var parkedAfter = totalAfter - after.Values.Sum();
 
-            _notes.AddRange(Notes(situation, _picks, investFraction, parkedBefore, skipped, Label));
+            _notes.AddRange(Notes(parkedBefore));
 
             return new SubPortfolioPlan(
                 _strategy.MarketIsFavorable,
@@ -92,6 +85,21 @@ public static class SubPortfolioRebalancer
             return parked;
         }
 
+        private Dictionary<Guid, decimal> KeptPicks(List<(Guid Id, decimal Value)> values)
+        {
+            var valueOf = values.ToDictionary(entry => entry.Id, entry => entry.Value);
+
+            return _picks.Where(valueOf.ContainsKey).ToDictionary(id => id, id => valueOf[id]);
+        }
+
+        private decimal Deployable(decimal proceeds, decimal parkedBefore)
+        {
+            var investedContribution = situation.Contribution * _strategy.InvestFraction.Value;
+            var unparked = _strategy.MarketIsFavorable ? parkedBefore : 0m;
+
+            return investedContribution + proceeds + unparked;
+        }
+
         private decimal AddOrder(OrderKind kind, Guid id, decimal amount, string reason, decimal? quantity = null)
         {
             if (PriceOf(id) is not { } latest || amount <= 0m)
@@ -126,19 +134,13 @@ public static class SubPortfolioRebalancer
             return proceeds;
         }
 
-        private decimal TrimOverweight(Dictionary<Guid, decimal> kept, decimal investableTotal)
+        private decimal TrimOverweight(Dictionary<Guid, decimal> kept, decimal totalAfter)
         {
             var trims = 0m;
 
             foreach (var id in kept.Keys.ToList())
             {
-                var excess = kept[id] - investableTotal * _weights[id];
-
-                if (!ShouldTrim(id, excess, investableTotal))
-                    continue;
-
-                var reason = Message.Of("report.reason.trim", new { target = _weights[id], band = _policy.TrimBand.Value });
-                var sold = AddOrder(OrderKind.Trim, id, excess, reason);
+                var sold = TrimOne(id, kept[id], totalAfter);
 
                 kept[id] -= sold;
                 trims += sold;
@@ -147,42 +149,81 @@ public static class SubPortfolioRebalancer
             return trims;
         }
 
-        private bool ShouldTrim(Guid id, decimal excess, decimal investableTotal) =>
-            !_policy.LevelByPurchasesOnly
-            && PriceOf(id) > _holdings[id].AverageCost
-            && excess > _policy.TrimBand.Value * investableTotal
-            && excess >= _policy.MinTrade;
-
-        private (decimal Bought, List<Guid> Skipped) BuyGaps(Dictionary<Guid, decimal> kept, decimal investableTotal, decimal deployable)
+        private decimal TrimOne(Guid id, decimal value, decimal totalAfter)
         {
-            var gaps = _picks.ToDictionary(id => id, id => GapOf(id, kept, investableTotal));
-            var totalGap = gaps.Values.Sum();
-            var scale = totalGap > 0m ? Math.Min(1m, deployable / totalGap) : 0m;
+            var excess = value - totalAfter * _weights[id];
 
-            var skipped = new List<Guid>();
+            if (!IsBeyondTrimBand(excess, totalAfter))
+                return 0m;
+
+            if (_policy.LevelByPurchasesOnly)
+            {
+                _skipped.TrimsBySetting.Add(id);
+                return 0m;
+            }
+
+            if (!IsInProfit(id))
+            {
+                _skipped.TrimsAtLoss.Add(id);
+                return 0m;
+            }
+
+            var reason = Message.Of("report.reason.trim", new { weight = value / totalAfter, target = _weights[id], band = _policy.TrimBand.Value });
+
+            return AddOrder(OrderKind.Trim, id, excess, reason);
+        }
+
+        private bool IsBeyondTrimBand(decimal excess, decimal totalAfter) =>
+            excess > _policy.TrimBand.Value * totalAfter && excess >= _policy.MinTrade;
+
+        private bool IsInProfit(Guid id) => _holdings[id].AverageCost is { } cost && PriceOf(id) > cost;
+
+        private decimal BuyGaps(Dictionary<Guid, decimal> kept, decimal totalAfter, decimal deployable)
+        {
+            var gaps = _picks.ToDictionary(id => id, id => GapOf(id, kept, totalAfter));
+            var scale = AffordableShareOfGaps(gaps.Values.Sum(), deployable);
             var bought = 0m;
 
             foreach (var id in _picks)
-            {
-                var amount = gaps[id] * scale;
+                bought += BuyOne(id, gaps[id] * scale, kept.ContainsKey(id));
 
-                if (amount <= 0m)
-                    continue;
-
-                if (amount < _policy.MinTrade)
-                    skipped.Add(id);
-                else
-                    bought += AddOrder(OrderKind.Buy, id, amount, BuyReason(_strategy, id, kept.ContainsKey(id), _weights[id]));
-            }
-
-            return (bought, skipped);
+            return bought;
         }
 
-        private decimal GapOf(Guid id, Dictionary<Guid, decimal> kept, decimal investableTotal)
+        private decimal GapOf(Guid id, Dictionary<Guid, decimal> kept, decimal totalAfter)
         {
-            var shortfall = investableTotal * _weights[id] - kept.GetValueOrDefault(id);
+            var shortfall = totalAfter * _weights[id] - kept.GetValueOrDefault(id);
 
             return shortfall < Cent ? 0m : shortfall;
+        }
+
+        private static decimal AffordableShareOfGaps(decimal totalGap, decimal deployable) =>
+            totalGap > 0m ? Math.Min(1m, deployable / totalGap) : 0m;
+
+        private decimal BuyOne(Guid id, decimal amount, bool held)
+        {
+            if (amount <= 0m)
+                return 0m;
+
+            if (amount < _policy.MinTrade)
+            {
+                _skipped.SmallBuys.Add(id);
+                return 0m;
+            }
+
+            if (PriceOf(id) is not { } price)
+            {
+                _skipped.UnpricedBuys.Add(id);
+                return 0m;
+            }
+
+            if (!_policy.AllowFractionalShares && amount < price)
+            {
+                _skipped.BuysBelowOneShare.Add(id);
+                return 0m;
+            }
+
+            return AddOrder(OrderKind.Buy, id, amount, BuyReason(_strategy, id, held, _weights[id]));
         }
 
         private void ParkOrUnpark(decimal remaining)
@@ -215,6 +256,20 @@ public static class SubPortfolioRebalancer
 
             return after;
         }
+
+        private IEnumerable<string> Notes(decimal parkedBefore)
+        {
+            var parking = situation.CashInstrumentId is { } cashEtf ? Label(cashEtf) : Message.Of("report.parking.cash");
+            var notes = new PlanNotes(situation, parking, Label);
+
+            return
+            [
+                .. notes.OfContribution(),
+                .. notes.OfMarket(parkedBefore),
+                .. notes.OfTargets(_picks.Count),
+                .. notes.OfSkipped(_skipped),
+            ];
+        }
     }
 
     private static string ExitReason(StrategyTargets strategy, Guid id) =>
@@ -233,41 +288,6 @@ public static class SubPortfolioRebalancer
         var code = held ? "report.reason.buy_more" : "report.reason.buy_new";
 
         return Message.Of(code, new { weight, detail });
-    }
-
-    private static IEnumerable<string> Notes(
-        SubPortfolioSituation situation, List<Guid> picks, decimal investFraction, decimal parkedBefore, List<Guid> skipped, Func<Guid, string> label)
-    {
-        var (contribution, currency, policy) = (situation.Contribution, situation.Currency.Code, situation.Policy);
-        var parking = situation.CashInstrumentId is { } cashEtf ? label(cashEtf) : Message.Of("report.parking.cash");
-
-        if (contribution <= 0m)
-            yield return Message.Of("report.note.zero_contribution");
-
-        if (!situation.Strategy.MarketIsFavorable)
-            yield return Message.Of("report.note.weak_market", new
-            {
-                fraction = investFraction,
-                invested = contribution * investFraction,
-                rest = contribution * (1m - investFraction),
-                currency,
-                parking,
-            });
-        else if (parkedBefore >= policy.MinTrade)
-            yield return Message.Of("report.note.market_recovered", new { parked = parkedBefore, currency });
-
-        if (picks.Count == 0)
-            yield return Message.Of("report.note.nothing_picked", new { parking });
-        else if (situation.Strategy.Slots is { } slots && picks.Count < slots)
-        {
-            var empty = slots - picks.Count;
-            yield return Message.Of("report.note.empty_slots", new { found = picks.Count, slots, empty, share = (decimal)empty / slots, parking });
-        }
-        else if (situation.Strategy.Slots is null && situation.Strategy.TotalWeight < 1m)
-            yield return Message.Of("report.note.partial_targets", new { total = situation.Strategy.TotalWeight, parking });
-
-        if (skipped.Count > 0)
-            yield return Message.Of("report.note.small_buys_skipped", new { minimum = policy.MinTrade, currency, labels = string.Join(", ", skipped.Select(label)) });
     }
 
     private static List<AllocationRow> Allocation(

@@ -22,7 +22,6 @@ import {
   TaxImpactVm,
 } from '../models/report-vm';
 
-
 const kindLabels: Record<ReportSummaryDto['kind'], string> = {
   Monthly: 'внесок, купівлі й продажі',
   Recalculation: 'перерахунок',
@@ -92,15 +91,8 @@ function toContributionVm(
     name: subName(part.subPortfolioId),
     amount: part.amount,
   }));
-  const transfer = plan.transfer
-    ? {
-        from: subName(plan.transfer.fromSubPortfolioId),
-        to: subName(plan.transfer.toSubPortfolioId),
-        amount: plan.transfer.amount,
-      }
-    : null;
 
-  return { total: plan.total, splitLabel, parts, transfer };
+  return { total: plan.total, splitLabel, parts };
 }
 
 export function toReportVm(report: ReportDetailsDto): ReportVm {
@@ -138,7 +130,10 @@ function signedTax(change: number, currency: string): string {
   return `${sign}${formatMoney(Math.abs(change), currency, 0)}`;
 }
 
-function toTaxImpactVm(estimate: TaxEstimateDto | null, actions: ReportActionVm[]): TaxImpactVm | null {
+function toTaxImpactVm(
+  estimate: TaxEstimateDto | null,
+  actions: ReportActionVm[],
+): TaxImpactVm | null {
   if (!estimate?.isTaxed || !estimate.taxCurrency) return null;
 
   const currency = estimate.taxCurrency;
@@ -162,17 +157,23 @@ function toTaxImpactVm(estimate: TaxEstimateDto | null, actions: ReportActionVm[
     change: `≈ податок ${signedTax(estimate.taxChange, currency)}`,
     yearChange: `за ${estimate.year}: ${formatMoney(before, currency, 0)} → ${formatMoney(after, currency, 0)}`,
     carriedLoss: carriedLossLabel(estimate.carriedLoss, currency),
-    rowsNote: salesCount > 1 ? 'У рядках — вплив, якщо продати лише цю позицію; разом вони можуть давати іншу суму.' : null,
+    rowsNote:
+      salesCount > 1
+        ? 'У рядках — вплив, якщо продати лише цю позицію; разом вони можуть давати іншу суму.'
+        : null,
     notes,
   };
 }
 
 function carriedLossLabel(carriedLoss: number | null, currency: string): string | null {
-  return carriedLoss ? `збиток ${formatMoney(carriedLoss, currency, 0)} перейде на наступні роки` : null;
+  return carriedLoss
+    ? `збиток ${formatMoney(carriedLoss, currency, 0)} перейде на наступні роки`
+    : null;
 }
 
 function saleTaxLabel(action: ReportActionDto, estimate: TaxEstimateDto | null): string | null {
-  if (action.estimatedTaxChange === null || !estimate?.isTaxed || !estimate.taxCurrency) return null;
+  if (action.estimatedTaxChange === null || !estimate?.isTaxed || !estimate.taxCurrency)
+    return null;
 
   const currency = estimate.taxCurrency;
   const gain = action.estimatedGain ?? 0;
@@ -181,7 +182,10 @@ function saleTaxLabel(action: ReportActionDto, estimate: TaxEstimateDto | null):
     return `≈ податок ${formatMoney(action.estimatedTaxChange, currency, 0)} (зиск ${formatMoney(gain, currency, 0)})`;
   }
 
-  const outcome = gain < 0 ? `збиток ${formatMoney(-gain, currency, 0)}` : `зиск ${formatMoney(gain, currency, 0)}`;
+  const outcome =
+    gain < 0
+      ? `збиток ${formatMoney(-gain, currency, 0)}`
+      : `зиск ${formatMoney(gain, currency, 0)}`;
   const carriedLoss = action.estimatedCarriedLoss;
   const details = carriedLoss
     ? `${outcome}, з них ${formatMoney(carriedLoss, currency, 0)} перейде на наступні роки`
