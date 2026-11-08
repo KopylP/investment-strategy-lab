@@ -27,7 +27,7 @@
   </span>
 </ng-template>
 
-@if (viewport.phone()) {
+@if (listLayout()) {
   <ul class="trial-list" aria-label="Запуски бектесту">
     @for (run of store.trials(); track run.number) {
       <li>
@@ -49,11 +49,7 @@
                 <span class="trial-label">{{ run.label }}</span>
               }
             </span>
-            @if (run.failureReason) {
-              <span class="trial-failure">{{ run.failureReason }}</span>
-            } @else {
-              <span class="trial-meta">{{ periodOf(run) }}</span>
-            }
+            <span class="trial-meta">{{ periodOf(run) }}</span>
           </span>
           <span class="trial-figure">
             @if (run.status === 'Succeeded') {
@@ -63,6 +59,9 @@
               <ng-container *ngTemplateOutlet="statusBadge; context: { $implicit: run }" />
             }
           </span>
+          @if (run.failureReason) {
+            <span class="trial-failure">{{ run.failureReason }}</span>
+          }
         </button>
       </li>
     } @empty {
@@ -73,13 +72,11 @@
   </ul>
 } @else {
   <div class="card trials-card min-w-0">
-    <p-table [value]="store.trials()" [loading]="store.loading()" [tableStyle]="{ 'min-width': '56rem' }">
+    <p-table [value]="store.trials()" [loading]="store.loading()" [tableStyle]="{ 'min-width': '40rem' }">
       <ng-template #header>
         <tr>
           <th class="mark-column"><span class="sr-only">Вибір</span></th>
           <th>Запуск</th>
-          <th>Період</th>
-          <th>Статус</th>
           <th class="number">Річна дохідність</th>
           <th class="number">Після податку</th>
           <th class="number">Волатильність</th>
@@ -106,26 +103,30 @@
               <ng-container *ngTemplateOutlet="selectionMark; context: { $implicit: run }" />
             }
           </td>
-          <td>
+          <td class="run-column">
             <span class="trial-title">Запуск {{ run.number }}</span>
-            <span class="trial-meta">{{ run.label || (run.ranAt | dateTime) }}</span>
+            <span class="trial-meta trial-label-line" [attr.title]="run.label">{{ run.label || (run.ranAt | dateTime) }}</span>
+            <span class="trial-meta trial-period">{{ periodOf(run) }}</span>
           </td>
-          <td class="whitespace-nowrap">{{ periodOf(run) }}</td>
-          <td><ng-container *ngTemplateOutlet="statusBadge; context: { $implicit: run }" /></td>
-          @if (run.failureReason) {
-            <td colspan="5" class="trial-failure">{{ run.failureReason }}</td>
-          } @else {
+          @if (run.status === 'Succeeded') {
             <td class="number">{{ run.annualReturn | percent }}</td>
             <td class="number">{{ run.annualReturnAfterTax | percent }}</td>
             <td class="number">{{ run.volatility | percent }}</td>
             <td class="number">{{ run.sharpe === null ? '—' : (run.sharpe | number: '1.2-2') }}</td>
             <td class="number">{{ run.maxDrawdown | percent }}</td>
+          } @else {
+            <td colspan="5" class="run-state">
+              <ng-container *ngTemplateOutlet="statusBadge; context: { $implicit: run }" />
+              @if (run.failureReason) {
+                <span class="trial-failure">{{ run.failureReason }}</span>
+              }
+            </td>
           }
         </tr>
       </ng-template>
       <ng-template #emptymessage>
         <tr>
-          <td colspan="9">Запусків ще немає. Поверніться до чернетки й натисніть «Бектест».</td>
+          <td colspan="7">Запусків ще немає. Поверніться до чернетки й натисніть «Бектест».</td>
         </tr>
       </ng-template>
     </p-table>

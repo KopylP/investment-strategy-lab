@@ -34,7 +34,7 @@ test('trial rows select by any cell or keyboard and switch between a running run
   const row = (number: number) => page.locator(`[data-trial-number="${number}"]`);
   await expect(row(2)).toHaveAttribute('aria-selected', 'true');
   await expect(page.locator('input[type=checkbox]')).toHaveCount(0);
-  await row(1).getByText('Готово', { exact: true }).click();
+  await row(1).locator('td').nth(2).click();
   await expect(row(1)).toHaveAttribute('aria-selected', 'true');
   await expect(row(2)).toHaveAttribute('aria-selected', 'false');
   await row(3).locator('td').nth(4).click();
