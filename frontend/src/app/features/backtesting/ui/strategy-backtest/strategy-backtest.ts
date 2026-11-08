@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { InputNumber } from 'primeng/inputnumber';
@@ -31,7 +32,7 @@ const COMPARISON_LINE_WIDTH = 1.5;
 
 @Component({
   selector: 'app-strategy-backtest',
-  imports: [
+  imports: [TranslocoPipe, 
     FormsModule,
     InputNumber,
     Message,
@@ -59,11 +60,8 @@ export class StrategyBacktest {
 
   protected readonly fewPeriods = FEW_PERIODS;
   protected readonly periodOptions = [
-    { label: '5 років', value: 5 },
-    { label: '10 років', value: 10 },
-    { label: '15 років', value: 15 },
-    { label: '20 років', value: 20 },
-  ];
+    5, 10, 15, 20,
+  ].map((years) => ({ label: translate('backtest.years', { count: years }), value: years }));
 
   protected readonly result = computed(() => this.replay() ?? this.store.backtest()?.result ?? null);
   protected readonly currency = computed(() => this.result()?.currency ?? '');

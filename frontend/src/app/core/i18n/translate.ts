@@ -1,10 +1,18 @@
-import catalog from '../../../../../locales/uk.json';
+import english from '../../../../../locales/en.json';
+import ukrainian from '../../../../../locales/uk.json';
+import { activeLanguage, activeLocale, Language } from './language';
 
 type Parameters = Record<string, unknown>;
 
 const tokenPattern = /^@([A-Za-z0-9_.-]+)(?: (\{.*\}))?$/s;
 const placeholderPattern = /\{([A-Za-z0-9_]+)(?::([A-Za-z]+)(?::([^}]*))?)?\}/g;
-const globalMessages: Record<string, string> = catalog;
+const catalogs: Record<Language, Record<string, string>> = { uk: ukrainian, en: english };
+const globalMessages = catalogs[activeLanguage];
+const pluralCategories: Record<Language, Intl.LDMLPluralRule[]> = {
+  uk: ['one', 'few', 'many'],
+  en: ['one', 'other'],
+};
+const pluralRules = new Intl.PluralRules(activeLocale);
 
 let strategyMessages: Record<string, string> = {};
 
@@ -148,13 +156,9 @@ function money(amount: number, currency: string): string {
 }
 
 function plural(count: number, forms: string): string {
-  const [one, few, many] = forms.split('|');
-  const whole = Math.trunc(Math.abs(count));
-  const lastTwo = whole % 100;
-  const last = whole % 10;
+  const options = forms.split('|');
+  const category = pluralRules.select(Math.trunc(Math.abs(count)));
+  const index = pluralCategories[activeLanguage].indexOf(category);
 
-  if (lastTwo >= 11 && lastTwo <= 14) return many;
-  if (last === 1) return one;
-
-  return last >= 2 && last <= 4 ? few : many;
+  return options[index < 0 ? options.length - 1 : index];
 }

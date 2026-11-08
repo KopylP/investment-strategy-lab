@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -19,7 +20,7 @@ import { Option } from '../trade-dialog/trade-dialog';
 
 @Component({
   selector: 'app-cash-dialog',
-  imports: [FormsModule, Button, DatePicker, Dialog, InputNumber, Select],
+  imports: [TranslocoPipe, FormsModule, Button, DatePicker, Dialog, InputNumber, Select],
   templateUrl: './cash-dialog.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -32,11 +33,11 @@ export class CashDialog {
   readonly save = output<NewCashMovement>();
 
   protected readonly kinds: { label: string; value: NewCashMovement['kind'] }[] = [
-    { label: 'Внесок', value: 'Contribution' },
-    { label: 'Вивід', value: 'Withdrawal' },
-    { label: 'Дивіденд', value: 'Dividend' },
-    { label: 'Комісія брокера', value: 'Fee' },
-    { label: 'Сплата податку', value: 'TaxPayment' },
+    { label: translate('kind.Contribution'), value: 'Contribution' },
+    { label: translate('kind.Withdrawal'), value: 'Withdrawal' },
+    { label: translate('kind.Dividend'), value: 'Dividend' },
+    { label: translate('kind.BrokerFee'), value: 'Fee' },
+    { label: translate('kind.TaxPayment'), value: 'TaxPayment' },
   ];
   protected readonly kind = signal<NewCashMovement['kind']>('Contribution');
   protected readonly amount = signal<number | null>(null);

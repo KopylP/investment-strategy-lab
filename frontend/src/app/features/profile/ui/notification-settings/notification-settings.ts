@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -33,7 +34,7 @@ export interface NotificationSettings {
 
 @Component({
   selector: 'app-notification-settings',
-  imports: [FormsModule, NgTemplateOutlet, Button, Checkbox, Message, Skeleton, Tag],
+  imports: [TranslocoPipe, FormsModule, NgTemplateOutlet, Button, Checkbox, Message, Skeleton, Tag],
   templateUrl: './notification-settings.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -83,13 +84,13 @@ export class NotificationSettingsCard {
       await this.api.post('/api/notifications/test');
       this.messages.add({
         severity: 'success',
-        summary: 'Тестове сповіщення надіслано',
-        detail: 'Перевірте телефон і сповіщення в Home Assistant.',
+        summary: translate('profile.notifications.testSent'),
+        detail: translate('profile.notifications.testSentHint'),
       });
     } catch (error) {
       this.messages.add({
         severity: 'error',
-        summary: 'Не надіслано',
+        summary: translate('profile.notifications.notSent'),
         detail: toProblemMessage(error),
       });
     } finally {
@@ -107,7 +108,7 @@ export class NotificationSettingsCard {
     } catch (error) {
       this.messages.add({
         severity: 'error',
-        summary: 'Не збережено',
+        summary: translate('profile.notSaved'),
         detail: toProblemMessage(error),
       });
       this.settingsResource.reload();

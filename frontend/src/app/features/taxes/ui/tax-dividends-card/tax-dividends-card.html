@@ -1,24 +1,23 @@
 @if (details().dividends.length) {
   <div class="card">
-    <h2 class="text-lg font-semibold mb-4">Дивіденди</h2>
+    <h2 class="text-lg font-semibold mb-4">{{ 'taxes.dividends.title' | transloco }}</h2>
     @if (!store.broker()?.matchedDividends) {
       <p class="text-sm text-muted-color mt-0 mb-3">
-        Податок, утриманий за кордоном, невідомий, тож податок рахується з отриманої суми без
-        зарахування. Завантажте звіт P&amp;L брокера нижче.
+        {{ 'taxes.dividends.withholdingUnknown' | transloco }}
       </p>
     }
     <p-table [value]="details().dividends" size="small">
       <ng-template #header>
         <tr>
-          <th>Дата</th>
+          <th>{{ 'taxes.date' | transloco }}</th>
           <th>ETF</th>
           @if (store.showAccount()) {
-            <th class="hidden sm:table-cell">Рахунок</th>
+            <th class="hidden sm:table-cell">{{ 'taxes.account' | transloco }}</th>
           }
-          <th class="text-right hidden sm:table-cell">Отримано</th>
-          <th class="text-right">Брутто, PLN</th>
-          <th class="text-right">Утримано<span class="hidden sm:inline"> за кордоном</span></th>
-          <th class="hidden sm:table-cell">Курс</th>
+          <th class="text-right hidden sm:table-cell">{{ 'taxes.dividends.received' | transloco }}</th>
+          <th class="text-right">{{ 'taxes.dividends.grossPln' | transloco }}</th>
+          <th class="text-right">{{ 'taxes.dividends.withheld' | transloco }}<span class="hidden sm:inline"> {{ 'taxes.dividends.abroad' | transloco }}</span></th>
+          <th class="hidden sm:table-cell">{{ 'taxes.rate' | transloco }}</th>
         </tr>
       </ng-template>
       <ng-template #body let-d>

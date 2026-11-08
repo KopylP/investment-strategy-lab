@@ -1,11 +1,11 @@
 <app-page-header
-  title="Огляд"
+  [title]="'routes.overview' | transloco"
   [subtitle]="
     store.isAll()
-      ? 'Усі рахунки · ' + store.allAccounts().length
+      ? ('overview.subtitleAll' | transloco: { count: store.allAccounts().length })
       : store.account()
         ? store.account()!.name + ' · ' + store.account()!.broker
-        : 'Почнімо з налаштування'
+        : ('overview.setupFirst' | transloco)
   "
 >
 </app-page-header>
@@ -15,14 +15,13 @@
     <div class="flex flex-col md:flex-row md:items-center gap-6">
       <i class="pi pi-compass text-5xl text-primary"></i>
       <div class="flex-1">
-        <h2 class="text-xl font-semibold m-0">Почнімо: налаштуйте свій рахунок</h2>
+        <h2 class="text-xl font-semibold m-0">{{ 'overview.setupTitle' | transloco }}</h2>
         <p class="text-muted-color mt-2 mb-0">
-          За кілька кроків: який у вас брокер, як розділити гроші, яку стратегію обрати і скільки
-          вкладати щомісяця. Стандартні стратегії вже готові — кожен крок пояснює, що і навіщо.
+          {{ 'overview.setupHint' | transloco }}
         </p>
       </div>
       <p-button
-        label="Почати налаштування"
+        [label]="'overview.startSetup' | transloco"
         icon="pi pi-arrow-right"
         iconPos="right"
         routerLink="/accounts/new"
@@ -34,10 +33,13 @@
     <p-message severity="warn" styleClass="mb-4">
       <div class="flex flex-wrap items-center justify-between gap-3 w-full">
         <span
-          >{{ store.isAll() ? account.name + ': ж' : 'Ж' }}одному під-портфелю не призначено
-          стратегію — рапорти не знатимуть, що купувати.</span
+          >{{
+            store.isAll()
+              ? ('overview.noStrategyOfAccount' | transloco: { account: account.name })
+              : ('overview.noStrategy' | transloco)
+          }}</span
         >
-        <p-button label="Обрати стратегію" size="small" [routerLink]="['/accounts', account.id]" />
+        <p-button [label]="'overview.chooseStrategy' | transloco" size="small" [routerLink]="['/accounts', account.id]" />
       </div>
     </p-message>
   }
@@ -51,11 +53,14 @@
           @if (store.isAll()) {
             <span class="font-medium">{{ store.accountName(report.accountId) }}:</span>
           }
-          Рапорт за {{ report.period | period }}: {{ report.actionsOpen }} з
-          {{ report.actionsTotal }} дій чекають на відмітку.</span
+          {{
+            'overview.reportWaiting'
+              | transloco
+                : { period: report.period | period, open: report.actionsOpen, total: report.actionsTotal }
+          }}</span
         >
         <p-button
-          label="Відкрити рапорт"
+          [label]="'overview.openReport' | transloco"
           icon="pi pi-arrow-right"
           iconPos="right"
           size="small"
@@ -70,11 +75,9 @@
       <p-message severity="warn" styleClass="mb-4">
         <div class="flex flex-wrap items-center justify-between gap-3 w-full">
           <span
-            >Податок {{ store.taxYear }} — {{ store.tax()!.taxDue | taxMoney: 0 }}, це
-            {{ alert.ratio | percent }} вартості всіх рахунків: понад поріг
-            {{ alert.share | percent }} ({{ alert.limit | taxMoney: 0 }}).</span
+            >{{ 'overview.taxAlert' | transloco: { taxYear: store.taxYear, taxDue: (store.tax()!.taxDue | taxMoney: 0), ratio: (alert.ratio | percent), share: (alert.share | percent), limit: (alert.limit | taxMoney: 0) } }}</span
           >
-          <p-button label="Податки" size="small" [text]="true" routerLink="/taxes" />
+          <p-button [label]="'layout.menu.taxes' | transloco" size="small" [text]="true" routerLink="/taxes" />
         </div>
       </p-message>
     }
@@ -83,17 +86,16 @@
   @if (store.isLoading() && !store.dashboard()) {
     <div class="card"><p-skeleton height="20rem" /></div>
   } @else if (store.loadError()) {
-    <div class="card"><p-message severity="error" text="Не вдалося побудувати дашборд" /></div>
+    <div class="card"><p-message severity="error" [text]="'overview.loadFailed' | transloco" /></div>
   } @else if (store.dashboard(); as d) {
     @if (!store.hasHistory()) {
       <div class="card">
         <div class="text-muted-color">
-          Графіки з’являться з першою операцією в журналі: імпортуйте позиції або відмітьте внесок у
-          рапорті.
+          {{ 'overview.noTransactions' | transloco }}
         </div>
         @if (!store.openReports().length) {
           <p-button
-            label="До рапортів"
+            [label]="'overview.toReports' | transloco"
             icon="pi pi-bolt"
             size="small"
             routerLink="/reports"
@@ -108,8 +110,8 @@
 
       @if (store.taxError(); as error) {
         <div class="card">
-          <h2 class="text-lg font-semibold mb-3">Податок</h2>
-          <p-message severity="warn" [text]="'Не вдалося порахувати податок: ' + error" />
+          <h2 class="text-lg font-semibold mb-3">{{ 'overview.tax.title' | transloco }}</h2>
+          <p-message severity="warn" [text]="'overview.taxFailed' | transloco: { error }" />
         </div>
       }
       <app-overview-tax-progress />

@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -22,7 +23,7 @@ import { HoldingsSleeveCard } from '../../ui/holdings-sleeve-card/holdings-sleev
 
 @Component({
   selector: 'app-holdings-page',
-  imports: [
+  imports: [TranslocoPipe, 
     HoldingsSleeveCard,
     HoldingsTiles,
     HoldingsExposureCard,

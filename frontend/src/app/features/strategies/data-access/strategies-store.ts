@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 import { computed, inject, Injectable, resource, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { toProblemMessage } from '../../../core/api/api-client';
@@ -32,14 +33,14 @@ export class StrategiesStore {
 
       this.messages.add({
         severity: 'success',
-        summary: created.length ? 'Стратегії створено' : 'Стандартні стратегії вже є',
+        summary: created.length ? translate('strategies.created') : translate('strategies.alreadyExist'),
         detail: created.map((strategy) => strategy.name).join(', '),
       });
       this.listResource.reload();
     } catch (error) {
       this.messages.add({
         severity: 'error',
-        summary: 'Не вдалося створити стратегії',
+        summary: translate('strategies.createFailed'),
         detail: toProblemMessage(error),
         life: 8000,
       });
@@ -97,9 +98,9 @@ export class StrategyDetailStore {
 
       this.messages.add({
         severity: 'success',
-        summary: `Збережено як версію ${saved.latestVersion}`,
+        summary: translate('strategies.savedAsVersion', { version: saved.latestVersion }),
         detail:
-          'Під-портфелі, що йдуть за останньою версією, використовують її з наступного рапорту',
+          translate('strategies.savedHint'),
       });
       this.versionNumber.set(undefined);
       this.strategyResource.reload();
@@ -117,7 +118,7 @@ export class StrategyDetailStore {
   private reportNotSaved(error: unknown): void {
     this.messages.add({
       severity: 'error',
-      summary: 'Параметри не збережено',
+      summary: translate('strategies.notSaved'),
       detail: toProblemMessage(error),
       life: 10000,
     });
@@ -129,12 +130,12 @@ export class StrategyDetailStore {
 
     try {
       await this.api.archive(id);
-      this.messages.add({ severity: 'success', summary: 'Стратегію архівовано' });
+      this.messages.add({ severity: 'success', summary: translate('strategies.archivedDone') });
       this.strategyResource.reload();
     } catch (error) {
       this.messages.add({
         severity: 'error',
-        summary: 'Не вдалося архівувати',
+        summary: translate('strategies.archiveFailed'),
         detail: toProblemMessage(error),
       });
     }

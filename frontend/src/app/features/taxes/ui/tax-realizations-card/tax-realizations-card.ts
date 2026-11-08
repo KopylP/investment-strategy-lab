@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { TaxMoneyPipe } from '../../../../core/context/tax-money-pipe';
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { Button } from 'primeng/button';
@@ -12,7 +13,7 @@ import { TaxesStore } from '../../data-access/taxes-store';
 
 @Component({
   selector: 'app-tax-realizations-card',
-  imports: [
+  imports: [TranslocoPipe, 
     TaxMoneyPipe,
     Button,
     Message,

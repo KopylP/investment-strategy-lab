@@ -1,5 +1,6 @@
 import { Instrument } from '../../../shared/models/api';
 import { SignalForm } from './signal-form';
+import { activeLocale } from '../../../core/i18n/language';
 
 export type WatchedSubject =
   | { target: 'Instrument'; instrumentId: string }
@@ -29,7 +30,7 @@ export function instrumentGroupsOf(instruments: Instrument[]): InstrumentGroupSu
 
   const groups = [...counts].map(([name, instrumentCount]) => ({ name, instrumentCount }));
 
-  return groups.sort((left, right) => left.name.localeCompare(right.name, 'uk'));
+  return groups.sort((left, right) => left.name.localeCompare(right.name, activeLocale));
 }
 
 export function instrumentMatches(instrument: Instrument, search: string): boolean {

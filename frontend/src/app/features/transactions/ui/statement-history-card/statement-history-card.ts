@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, inject, output } from '@angular/core';
 import { Button } from 'primeng/button';
 import { TableModule } from 'primeng/table';
@@ -8,7 +9,7 @@ import { Viewport } from '../../../../shared/ui/viewport';
 
 @Component({
   selector: 'app-statement-history-card',
-  imports: [Button, TableModule, Tag, DateTimePipe],
+  imports: [TranslocoPipe, Button, TableModule, Tag, DateTimePipe],
   templateUrl: './statement-history-card.html',
   host: { class: 'contents' },
   changeDetection: ChangeDetectionStrategy.OnPush,

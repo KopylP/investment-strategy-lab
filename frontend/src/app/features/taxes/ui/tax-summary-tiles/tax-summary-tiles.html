@@ -1,39 +1,38 @@
 <div class="card py-4">
   <div class="app-tiles">
     <div class="px-1 sm:px-4 lg:border-r border-surface">
-      <div class="text-muted-color text-xs uppercase tracking-wide">Дохід (зиск)</div>
+      <div class="text-muted-color text-xs uppercase tracking-wide">{{ 'taxes.tiles.income' | transloco }}</div>
       <div class="text-xl font-semibold mt-1" [appSignedValue]="summary().gain">
         {{ summary().gain | taxMoney }}
       </div>
       <div class="text-xs text-muted-color">
-        виручка {{ summary().revenue | taxMoney: 0 }} − витрати
-        {{ summary().costs | taxMoney: 0 }}
+        {{ 'taxes.tiles.incomeBreakdown' | transloco: { revenue: (summary().revenue | taxMoney: 0), costs: (summary().costs | taxMoney: 0) } }}
       </div>
     </div>
     <div class="px-1 sm:px-4 lg:border-r border-surface">
-      <div class="text-muted-color text-xs uppercase tracking-wide">Податкова база</div>
+      <div class="text-muted-color text-xs uppercase tracking-wide">{{ 'taxes.tiles.base' | transloco }}</div>
       <div class="text-xl font-semibold mt-1">{{ summary().taxBase | taxMoney: 0 }}</div>
       <div class="text-xs text-muted-color">
         {{
           summary().carryforwardUsed
-            ? 'мінус збитки минулих років ' + (summary().carryforwardUsed | taxMoney: 0)
-            : 'без збитків минулих років'
+            ? ('taxes.tiles.minusLosses' | transloco: { amount: summary().carryforwardUsed | taxMoney: 0 })
+            : ('taxes.tiles.withoutLosses' | transloco)
         }}
       </div>
     </div>
     <div class="px-1 sm:px-4 lg:border-r border-surface">
-      <div class="text-muted-color text-xs uppercase tracking-wide">Дивіденди брутто</div>
+      <div class="text-muted-color text-xs uppercase tracking-wide">{{ 'taxes.tiles.grossDividends' | transloco }}</div>
       <div class="text-xl font-semibold mt-1">{{ summary().dividendIncome | taxMoney }}</div>
       <div class="text-xs text-muted-color">
-        утримано за кордоном {{ summary().dividendTaxCredit | taxMoney }}
+        {{ 'taxes.tiles.withheldAbroad' | transloco: { dividendTaxCredit: (summary().dividendTaxCredit | taxMoney) } }}
       </div>
     </div>
     <div class="px-1 sm:px-4">
-      <div class="text-muted-color text-xs uppercase tracking-wide">Збиток до перенесення</div>
+      <div class="text-muted-color text-xs uppercase tracking-wide">{{ 'taxes.tiles.lossToCarry' | transloco }}</div>
       <div class="text-xl font-semibold mt-1">
         {{ summary().lossToCarry ? (summary().lossToCarry | taxMoney) : '—' }}
       </div>
-      <div class="text-xs text-muted-color">5 років, до 50% на рік</div>
+      <div class="text-xs text-muted-color">{{ 'taxes.tiles.lossRule' | transloco }}</div>
     </div>
   </div>
 </div>

@@ -1,11 +1,9 @@
 <app-page-header
   backLink="/transactions"
-  backLabel="Журнал операцій"
-  title="Імпорт з Revolut"
+  [backLabel]="'routes.transactions' | transloco"
+  [title]="'routes.revolutImport' | transloco"
   [subtitle]="
-    'Виписка операцій (CSV) стає записами журналу рахунку «' +
-    (store.account()?.name ?? '') +
-    '»: угоди, поповнення, виводи, дивіденди'
+    'transactions.import.subtitle' | transloco: { account: store.account()?.name ?? '' }
   "
 />
 
@@ -22,18 +20,17 @@
   @if (current.status === 'Preview') {
     <div class="card">
       <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-        <h2 class="text-lg font-semibold m-0">1. Інструменти й під-портфелі</h2>
+        <h2 class="text-lg font-semibold m-0">{{ 'transactions.import.step1' | transloco }}</h2>
         <span class="text-sm text-muted-color"
-          >{{ current.fileName }} · {{ current.rows.length }} рядків · рахунок у
-          {{ current.accountCurrency }}</span
+          >{{ 'transactions.import.fileLine' | transloco: { fileName: current.fileName, rows: current.rows.length, accountCurrency: current.accountCurrency } }}</span
         >
       </div>
       <p-table [value]="current.mappings" tableStyleClass="sm:min-w-[52rem]" size="small">
         <ng-template #header
           ><tr>
-            <th>Тікер<span class="hidden sm:inline"> у виписці</span></th>
-            <th>Інструмент<span class="sm:hidden"> і під-портфель</span></th>
-            <th class="hidden sm:table-cell">Під-портфель</th>
+            <th>{{ 'transactions.rows.ticker' | transloco }}<span class="hidden sm:inline"> {{ 'transactions.import.inStatement' | transloco }}</span></th>
+            <th>{{ 'transactions.import.instrument' | transloco }}<span class="sm:hidden"> {{ 'transactions.import.andSubPortfolio' | transloco }}</span></th>
+            <th class="hidden sm:table-cell">{{ 'transactions.trade.subPortfolio' | transloco }}</th>
           </tr></ng-template
         >
         <ng-template #body let-mapping>
@@ -41,7 +38,7 @@
             <td>
               <div class="font-medium">{{ mapping.ticker }}</div>
               <div class="text-xs text-muted-color">
-                {{ mapping.currency }} · рядків: {{ mapping.rows }}
+                {{ 'transactions.import.mappingLine' | transloco: { currency: mapping.currency, rows: mapping.rows } }}
               </div>
             </td>
             <td>
@@ -53,13 +50,13 @@
                   [ngModel]="instrumentValue(mapping)"
                   (ngModelChange)="chooseInstrument(mapping, $event)"
                   [filter]="true"
-                  placeholder="Вибрати"
+                  [placeholder]="'signals.editor.choose' | transloco"
                   appendTo="body"
                   styleClass="w-full"
                 />
                 @if (mapping.instrumentId === null && mapping.registerAs !== null) {
                   <div class="flex flex-wrap items-center gap-2">
-                    <span class="text-xs text-muted-color whitespace-nowrap">Біржовий символ</span>
+                    <span class="text-xs text-muted-color whitespace-nowrap">{{ 'transactions.import.symbol' | transloco }}</span>
                     <input
                       pInputText
                       [ngModel]="mapping.registerAs"
@@ -69,12 +66,11 @@
                     @if (mapping.instrumentName) {
                       <span class="text-xs text-muted-color"
                         ><i class="pi pi-check-circle text-green-500 mr-1"></i
-                        >{{ mapping.instrumentName }} · котирування підтягнуться вночі</span
+                        >{{ 'transactions.import.newInstrumentLine' | transloco: { instrumentName: mapping.instrumentName } }}</span
                       >
                     } @else {
                       <span class="text-xs text-muted-color"
-                        ><i class="pi pi-exclamation-circle text-orange-500 mr-1"></i>Символ не
-                        знайдено — перевірте його</span
+                        ><i class="pi pi-exclamation-circle text-orange-500 mr-1"></i>{{ 'transactions.import.symbolNotFound' | transloco }}</span
                       >
                     }
                   </div>
@@ -85,7 +81,7 @@
                   optionValue="id"
                   [ngModel]="mapping.subPortfolioId"
                   (ngModelChange)="chooseSub(mapping, $event)"
-                  placeholder="Під-портфель"
+                  [placeholder]="'transactions.trade.subPortfolio' | transloco"
                   appendTo="body"
                   class="sm:hidden"
                   styleClass="w-full"
@@ -99,7 +95,7 @@
                 optionValue="id"
                 [ngModel]="mapping.subPortfolioId"
                 (ngModelChange)="chooseSub(mapping, $event)"
-                placeholder="Вибрати"
+                [placeholder]="'signals.editor.choose' | transloco"
                 appendTo="body"
                 styleClass="w-full"
               />
@@ -109,20 +105,20 @@
       </p-table>
       @if (store.unmappedCount() > 1) {
         <div class="flex flex-wrap items-center gap-3 mt-4">
-          <span class="font-medium">Усім без під-портфеля ({{ store.unmappedCount() }})</span>
+          <span class="font-medium">{{ 'transactions.import.allUnmapped' | transloco: { unmappedCount: store.unmappedCount() } }}</span>
           <p-select
             [options]="current.subPortfolios"
             optionLabel="name"
             optionValue="id"
             [ngModel]="null"
             (ngModelChange)="$event && store.assignUnmappedTo($event)"
-            placeholder="Вибрати під-портфель"
+            [placeholder]="'transactions.import.chooseSubPortfolio' | transloco"
             appendTo="body"
           />
         </div>
       }
       <div class="flex flex-wrap items-center gap-3 mt-4">
-        <span class="font-medium">Поповнення й виводи йдуть у</span>
+        <span class="font-medium">{{ 'transactions.import.cashGoesTo' | transloco }}</span>
         <p-select
           [options]="current.subPortfolios"
           optionLabel="name"
@@ -135,7 +131,7 @@
     </div>
 
     <div class="card">
-      <h2 class="text-lg font-semibold mb-4">2. Режим</h2>
+      <h2 class="text-lg font-semibold mb-4">{{ 'transactions.import.step2' | transloco }}</h2>
       <div class="flex flex-wrap items-center gap-4">
         <p-selectbutton
           [options]="modes"
@@ -146,14 +142,14 @@
           [allowEmpty]="false"
         />
         <div class="flex items-center gap-2">
-          <span class="text-sm">Імпортувати з дати</span>
+          <span class="text-sm">{{ 'transactions.import.fromDate' | transloco }}</span>
           <p-datepicker
             [ngModel]="fromDate()"
             (ngModelChange)="setFromDate($event)"
             dateFormat="dd.mm.yy"
             [showIcon]="true"
             [showClear]="true"
-            placeholder="від початку"
+            [placeholder]="'transactions.import.fromStart' | transloco"
             appendTo="body"
           />
         </div>

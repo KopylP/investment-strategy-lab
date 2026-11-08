@@ -1,31 +1,30 @@
 <div class="card">
   <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
     <h2 class="text-lg font-semibold m-0">
-      {{ current().status === 'Preview' ? '3. Що зміниться' : 'Результат імпорту' }}
+      {{ current().status === 'Preview' ? ('transactions.rows.whatChanges' | transloco) : ('transactions.rows.result' | transloco) }}
     </h2>
     <div class="flex flex-wrap gap-2">
-      <p-tag [value]="'нових: ' + current().counts.new" severity="success" />
-      <p-tag [value]="'вже є: ' + current().counts.alreadyImported" severity="secondary" />
+      <p-tag [value]="'transactions.rows.count.new' | transloco: { count: current().counts.new }" severity="success" />
+      <p-tag [value]="'transactions.rows.count.alreadyImported' | transloco: { count: current().counts.alreadyImported }" severity="secondary" />
       @if (current().counts.differs) {
-        <p-tag [value]="'відрізняються: ' + current().counts.differs" severity="warn" />
+        <p-tag [value]="'transactions.rows.count.differs' | transloco: { count: current().counts.differs }" severity="warn" />
       }
       @if (current().counts.matchesExisting) {
-        <p-tag [value]="'збіги з журналом: ' + current().counts.matchesExisting" severity="info" />
+        <p-tag [value]="'transactions.rows.count.matchesExisting' | transloco: { count: current().counts.matchesExisting }" severity="info" />
       }
       @if (current().counts.toReverse) {
-        <p-tag [value]="'буде сторновано: ' + current().counts.toReverse" severity="danger" />
+        <p-tag [value]="'transactions.rows.count.toReverse' | transloco: { count: current().counts.toReverse }" severity="danger" />
       }
       @if (current().counts.needsMapping) {
-        <p-tag [value]="'без зіставлення: ' + current().counts.needsMapping" severity="danger" />
+        <p-tag [value]="'transactions.rows.count.needsMapping' | transloco: { count: current().counts.needsMapping }" severity="danger" />
       }
       @if (current().counts.unsupported) {
-        <p-tag [value]="'не імпортуються: ' + current().counts.unsupported" severity="contrast" />
+        <p-tag [value]="'transactions.rows.count.unsupported' | transloco: { count: current().counts.unsupported }" severity="contrast" />
       }
     </div>
   </div>
   <label class="flex items-center gap-2 mb-3 text-sm">
-    <p-toggleswitch [ngModel]="onlyChanges()" (ngModelChange)="onlyChanges.set($event)" /> лише те,
-    що зміниться
+    <p-toggleswitch [ngModel]="onlyChanges()" (ngModelChange)="onlyChanges.set($event)" /> {{ 'transactions.rows.changesOnly' | transloco }}
   </label>
   <p-table
     [value]="rows()"
@@ -36,13 +35,13 @@
   >
     <ng-template #header>
       <tr>
-        <th>Дата</th>
-        <th class="hidden sm:table-cell">Операція</th>
-        <th>Тікер</th>
-        <th class="text-right hidden sm:table-cell">Кількість</th>
-        <th class="text-right">Сума</th>
-        <th class="text-right hidden sm:table-cell">У {{ current().accountCurrency }}</th>
-        <th>Рішення</th>
+        <th>{{ 'taxes.date' | transloco }}</th>
+        <th class="hidden sm:table-cell">{{ 'transactions.rows.operation' | transloco }}</th>
+        <th>{{ 'transactions.rows.ticker' | transloco }}</th>
+        <th class="text-right hidden sm:table-cell">{{ 'transactions.trade.quantity' | transloco }}</th>
+        <th class="text-right">{{ 'transactions.cash.amount' | transloco }}</th>
+        <th class="text-right hidden sm:table-cell">{{ 'transactions.rows.inCurrency' | transloco: { accountCurrency: current().accountCurrency } }}</th>
+        <th>{{ 'transactions.rows.decision' | transloco }}</th>
       </tr>
     </ng-template>
     <ng-template #body let-row>
@@ -55,7 +54,7 @@
         <td>
           <div class="font-medium">{{ row.ticker ?? '—' }}</div>
           @if (row.quantity !== null) {
-            <div class="sm:hidden text-xs text-muted-color">{{ row.quantity | quantity }} шт.</div>
+            <div class="sm:hidden text-xs text-muted-color">{{ 'common.units' | transloco: { quantity: (row.quantity | quantity) } }}</div>
           }
         </td>
         <td class="text-right hidden sm:table-cell">
@@ -85,7 +84,7 @@
   @if (current().status === 'Preview' && blockers(); as why) {
     <p-message severity="warn" styleClass="mt-4">
       <div>
-        <div class="font-medium">Імпорт поки неможливий</div>
+        <div class="font-medium">{{ 'transactions.rows.blocked' | transloco }}</div>
         @for (reason of why; track reason) {
           <div class="text-sm">{{ reason }}</div>
         }
@@ -94,9 +93,9 @@
   }
   <div class="flex flex-wrap justify-end gap-2 mt-4">
     @if (current().status === 'Preview') {
-      <p-button label="Інший файл" [text]="true" severity="secondary" (onClick)="store.reset()" />
+      <p-button [label]="'transactions.rows.otherFile' | transloco" [text]="true" severity="secondary" (onClick)="store.reset()" />
       <p-button
-        label="Імпортувати"
+        [label]="'transactions.rows.importAction' | transloco"
         icon="pi pi-check"
         [disabled]="!store.canConfirm()"
         [loading]="store.busy() === 'confirm'"
@@ -104,7 +103,7 @@
       />
     } @else {
       <p-button
-        label="Ще одна виписка"
+        [label]="'transactions.rows.anotherStatement' | transloco"
         icon="pi pi-upload"
         [text]="true"
         severity="secondary"
@@ -112,7 +111,7 @@
       />
       @if (current().status === 'Confirmed') {
         <p-button
-          label="Скасувати цей імпорт"
+          [label]="'transactions.rows.cancelThis' | transloco"
           icon="pi pi-undo"
           severity="danger"
           [outlined]="true"
@@ -120,7 +119,7 @@
           (onClick)="undo.emit(current().id)"
         />
       }
-      <p-button label="До журналу" icon="pi pi-book" routerLink="/transactions" />
+      <p-button [label]="'transactions.rows.toJournal' | transloco" icon="pi pi-book" routerLink="/transactions" />
     }
   </div>
 </div>

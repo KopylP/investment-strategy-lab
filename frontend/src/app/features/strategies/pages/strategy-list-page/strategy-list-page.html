@@ -1,16 +1,16 @@
 <app-page-header
-  title="Стратегії"
-  subtitle="Стратегія вирішує, які ETF тримати в під-портфелі й як часто переглядати; що купити й продати рахує сервіс"
+  [title]="'routes.strategies' | transloco"
+  [subtitle]="'strategies.list.subtitle' | transloco"
 >
   <p-button
-    label="Нова власна стратегія"
+    [label]="'strategies.list.newOwn' | transloco"
     icon="pi pi-plus"
     routerLink="/strategy-builder"
     [queryParams]="{ new: 1 }"
   />
   @if (store.strategies().length) {
     <p-button
-      label="Додати стандартні"
+      [label]="'strategies.list.addDefaults' | transloco"
       icon="pi pi-plus"
       severity="secondary"
       [outlined]="true"
@@ -23,19 +23,16 @@
 @if (store.isLoading() && !store.strategies().length) {
   <div class="card"><p-skeleton height="10rem" /></div>
 } @else if (store.loadError()) {
-  <div class="card"><p-message severity="error" text="Не вдалося завантажити стратегії" /></div>
+  <div class="card"><p-message severity="error" [text]="'strategies.list.loadFailed' | transloco" /></div>
 } @else if (!store.strategies().length) {
   <div class="card">
     <app-empty-state
       icon="pi pi-sliders-h"
-      title="У вас ще немає стратегій"
-      [text]="
-        'Почніть зі стандартних: адаптивний моментум і утримання індексу для європейських ETF і для ' +
-        'американських. Параметри можна змінити будь-коли, кожна зміна — нова версія.'
-      "
+      [title]="'strategies.list.empty' | transloco"
+      [text]="'strategies.list.emptyHint' | transloco"
     >
       <p-button
-        label="Створити стандартні стратегії"
+        [label]="'strategies.list.createDefaults' | transloco"
         icon="pi pi-bolt"
         [loading]="store.creatingDefaults()"
         (onClick)="store.createDefaults()"
@@ -52,7 +49,7 @@
   @if (archived().length) {
     <details class="mt-6">
       <summary class="cursor-pointer text-muted-color">
-        Архівні стратегії: {{ archived().length }}
+        {{ 'strategies.list.archivedCount' | transloco: { count: archived().length } }}
       </summary>
       <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3 mt-4 opacity-75">
         @for (strategy of archived(); track strategy.id) {

@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { ChartTheme, withAlpha } from '../../../../shared/charts/chart-theme';
 import { LiveChart } from '../../../../shared/charts/live-chart';
@@ -32,7 +33,7 @@ export class DrawdownChart {
       labels: series.map((point) => formatDate(point.date)),
       datasets: [
         {
-          label: 'Просідання',
+          label: translate('overview.chart.drawdown'),
           data: series.map((point) => point.drawdown),
           borderColor: palette.loss,
           backgroundColor: withAlpha(palette.loss, 0.2),

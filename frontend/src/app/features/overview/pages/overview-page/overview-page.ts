@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { TaxMoneyPipe } from '../../../../core/context/tax-money-pipe';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -18,7 +19,7 @@ import { OverviewDetailsGrid } from '../../ui/overview-details-grid/overview-det
 
 @Component({
   selector: 'app-overview-page',
-  imports: [
+  imports: [TranslocoPipe, 
     TaxMoneyPipe,
     OverviewDetailsGrid,
     OverviewTaxProgress,

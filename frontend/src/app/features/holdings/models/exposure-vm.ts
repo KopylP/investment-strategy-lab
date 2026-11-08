@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 export interface ExposureHolding {
   value: number;
   assetClass: string | null;
@@ -25,31 +26,35 @@ interface Bucket {
   value: number;
 }
 
-const UNKNOWN = 'Не вказано';
 const UNKNOWN_KEY = 'Unknown';
-const CASH = 'Кеш';
 const CASH_KEY = 'Cash';
-const MIXED_CURRENCIES = 'Кілька валют';
 
-const ASSET_CLASSES: Record<string, string> = {
-  Equity: 'Акції',
-  Bond: 'Облігації',
-  Commodity: 'Сировина',
-  RealEstate: 'Нерухомість',
-  Cash: CASH,
-};
+const ASSET_CLASSES = ['Equity', 'Bond', 'Commodity', 'RealEstate'];
+const REGIONS = [
+  'UnitedStates',
+  'Eurozone',
+  'Japan',
+  'DevelopedExUnitedStates',
+  'EmergingMarkets',
+  'Global',
+];
 
-const REGIONS: Record<string, string> = {
-  UnitedStates: 'США',
-  Eurozone: 'Єврозона',
-  Japan: 'Японія',
-  DevelopedExUnitedStates: 'Розвинені поза США',
-  EmergingMarkets: 'Ринки, що розвиваються',
-  Global: 'Світ',
-};
+function unknownLabel(): string {
+  return translate('holdings.exposure.unknown');
+}
+
+function cashLabel(): string {
+  return translate('common.cash');
+}
 
 function assetClassLabel(holding: ExposureHolding): string {
-  return holding.assetClass ? (ASSET_CLASSES[holding.assetClass] ?? holding.assetClass) : UNKNOWN;
+  const assetClass = holding.assetClass;
+  if (!assetClass) return unknownLabel();
+  if (assetClass === CASH_KEY) return cashLabel();
+
+  return ASSET_CLASSES.includes(assetClass)
+    ? translate(`holdings.exposure.assetClass.${assetClass}`)
+    : assetClass;
 }
 
 function regionKey(holding: ExposureHolding): string {
@@ -57,13 +62,16 @@ function regionKey(holding: ExposureHolding): string {
 }
 
 function regionLabel(holding: ExposureHolding): string {
-  return holding.region ? (REGIONS[holding.region] ?? holding.region) : UNKNOWN;
+  const region = holding.region;
+  if (!region) return unknownLabel();
+
+  return REGIONS.includes(region) ? translate(`holdings.exposure.region.${region}`) : region;
 }
 
 function currencyLabel(holding: ExposureHolding): string {
   if (holding.assetCurrency) return holding.assetCurrency;
 
-  return holding.assetClass ? MIXED_CURRENCIES : UNKNOWN;
+  return holding.assetClass ? translate('holdings.exposure.mixedCurrencies') : unknownLabel();
 }
 
 function addTo(buckets: Map<string, Bucket>, key: string, label: string, value: number): void {
@@ -99,13 +107,13 @@ export function exposureBreakdownsOf(
     addTo(currencies, currency, currency, holding.value);
   }
 
-  addTo(classes, CASH, CASH, cash);
-  addTo(regions, CASH_KEY, CASH, cash);
+  addTo(classes, cashLabel(), cashLabel(), cash);
+  addTo(regions, CASH_KEY, cashLabel(), cash);
   for (const part of cashByCurrency) addTo(currencies, part.currency, part.currency, part.value);
 
   return [
-    { title: 'Клас активів', view: 'bars', rows: rowsOf(classes, total) },
-    { title: 'Валюта активів', view: 'bars', rows: rowsOf(currencies, total) },
-    { title: 'Регіон', view: 'map', rows: rowsOf(regions, total) },
+    { title: translate('holdings.exposure.byAssetClass'), view: 'bars', rows: rowsOf(classes, total) },
+    { title: translate('holdings.exposure.byCurrency'), view: 'bars', rows: rowsOf(currencies, total) },
+    { title: translate('holdings.exposure.byRegion'), view: 'map', rows: rowsOf(regions, total) },
   ];
 }

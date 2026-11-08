@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ConfirmationService } from 'primeng/api';
@@ -25,7 +26,7 @@ const newInstrument = '__new';
 
 @Component({
   selector: 'app-statement-import-page',
-  imports: [
+  imports: [TranslocoPipe, 
     StatementRowsCard,
     StatementHistoryCard,
     StatementUploadCard,
@@ -58,10 +59,10 @@ export class StatementImportPage {
   }
 
   protected readonly modes: { label: string; value: ImportMode }[] = [
-    { label: 'Доповнити', value: 'Merge' },
-    { label: 'Оновити імпортоване', value: 'UpdateImported' },
-    { label: 'Перезаписати', value: 'Replace' },
-    { label: 'З нуля', value: 'FromScratch' },
+    { label: translate('mode.Append'), value: 'Merge' },
+    { label: translate('mode.Update'), value: 'UpdateImported' },
+    { label: translate('mode.Overwrite'), value: 'Replace' },
+    { label: translate('mode.FromScratch'), value: 'FromScratch' },
   ];
 
   protected readonly modeHelp: Record<
@@ -70,26 +71,24 @@ export class StatementImportPage {
   > = {
     Merge: {
       severity: 'info',
-      text: 'Додаються тільки нові рядки. Повторне завантаження тієї самої чи свіжішої виписки нічого не дублює.',
+      text: translate('mode.AppendHint'),
     },
     UpdateImported: {
       severity: 'info',
-      text: 'Як «Доповнити», а рядки, імпортовані раніше з іншими цифрами, перезаписуються за випискою (сторно + новий запис).',
+      text: translate('mode.UpdateHint'),
     },
     Replace: {
       severity: 'warn',
-      text:
-        'Усі попередні імпорти (виписки й positions.json) буде сторновано, і виписку імпортовано заново. ' +
-        'Ручні операції й відмітки з рапортів лишаються.',
+      text: translate('transactions.import.mode.OverwriteHint'),
     },
     FromScratch: {
       severity: 'error',
-      text: 'Увесь журнал рахунку буде сторновано, потім імпортовано виписку. Використовуйте, якщо починаєте облік заново.',
+      text: translate('mode.FromScratchHint'),
     },
   };
 
   protected readonly instrumentOptions = computed(() => [
-    { label: '➕ Новий інструмент (додати в каталог)', value: newInstrument },
+    { label: translate('transactions.import.newInstrument'), value: newInstrument },
     ...this.catalog
       .instruments()
       .filter((instrument) => instrument.kind !== 'Index' && instrument.kind !== 'FxPair')
@@ -144,11 +143,11 @@ export class StatementImportPage {
 
   protected confirmUndo(importId: string): void {
     this.confirmation.confirm({
-      header: 'Скасувати імпорт?',
-      message: 'Усі операції, записані цим імпортом, буде сторновано.',
+      header: translate('transactions.import.cancelQuestion'),
+      message: translate('transactions.import.cancelHint'),
       icon: 'pi pi-undo',
-      acceptLabel: 'Скасувати імпорт',
-      rejectLabel: 'Скасувати',
+      acceptLabel: translate('transactions.history.cancelImport'),
+      rejectLabel: translate('common.cancel'),
       acceptButtonProps: { severity: 'danger' },
       rejectButtonProps: { severity: 'secondary', text: true },
       accept: () => void this.store.undo(importId),

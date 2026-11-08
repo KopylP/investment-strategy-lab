@@ -11,7 +11,7 @@ export interface CurrentUser {
 
 export interface UserProfile {
   displayCurrency: string;
-  locale: string;
+  language: string | null;
   timeZone: string;
 }
 

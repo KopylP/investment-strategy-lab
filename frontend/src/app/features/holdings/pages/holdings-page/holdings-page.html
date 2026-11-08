@@ -1,15 +1,15 @@
 <app-page-header
-  title="Позиції"
+  [title]="'holdings.title' | transloco"
   [subtitle]="
     store.isAll()
-      ? 'Усі рахунки разом у ' + store.currency() + ' (офіційний курс) · лоти FIFO по під-портфелях'
-      : 'Віртуальні лоти FIFO по під-портфелях за останніми котируваннями'
+      ? ('holdings.subtitleAll' | transloco: { currency: store.currency() })
+      : ('holdings.subtitle' | transloco)
   "
 >
   <p-datepicker
     [ngModel]="store.asOf()"
     (ngModelChange)="store.asOf.set($event)"
-    placeholder="Сьогодні"
+    [placeholder]="'holdings.today' | transloco"
     dateFormat="dd.mm.yy"
     [showIcon]="true"
     [showClear]="true"
@@ -20,11 +20,11 @@
 @if (store.isLoading() && !store.sleeves().length) {
   <div class="card"><p-skeleton height="12rem" /></div>
 } @else if (store.loadError()) {
-  <div class="card"><p-message severity="error" text="Не вдалося завантажити позиції" /></div>
+  <div class="card"><p-message severity="error" [text]="'holdings.loadFailed' | transloco" /></div>
 } @else if (!store.account()) {
   <div class="card">
-    <app-empty-state icon="pi pi-wallet" title="Немає рахунку"
-      ><p-button label="Відкрити рахунок" routerLink="/accounts/new"
+    <app-empty-state icon="pi pi-wallet" [title]="'holdings.noAccount' | transloco"
+      ><p-button [label]="'holdings.openAccount' | transloco" routerLink="/accounts/new"
     /></app-empty-state>
   </div>
 } @else {
@@ -41,7 +41,7 @@
     <p-message
       severity="warn"
       styleClass="mb-4"
-      text="Частина котирувань застаріла або відсутня — вартість таких позицій може бути неточною."
+      [text]="'holdings.staleQuotes' | transloco"
     />
   }
 
@@ -51,8 +51,8 @@
     <div class="card">
       <app-empty-state
         icon="pi pi-chart-pie"
-        title="Позицій ще немає"
-        text="Імпортуйте positions.json на сторінці рахунку або відмітьте виконання в рапорті."
+        [title]="'holdings.empty' | transloco"
+        [text]="'holdings.emptyHint' | transloco"
       />
     </div>
   }

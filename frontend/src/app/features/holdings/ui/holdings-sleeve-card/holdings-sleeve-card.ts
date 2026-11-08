@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { Button } from 'primeng/button';
 import { TableModule } from 'primeng/table';
@@ -20,7 +21,7 @@ import { Viewport } from '../../../../shared/ui/viewport';
 
 @Component({
   selector: 'app-holdings-sleeve-card',
-  imports: [
+  imports: [TranslocoPipe, 
     Button,
     TableModule,
     Tooltip,

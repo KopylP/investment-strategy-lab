@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Button } from 'primeng/button';
@@ -30,7 +31,7 @@ import { InstrumentAbout } from '../../../../shared/ui/instrument-about';
 
 @Component({
   selector: 'app-instrument-list-page',
-  imports: [
+  imports: [TranslocoPipe, 
     FormsModule,
     Button,
     IconField,
@@ -66,7 +67,7 @@ export class InstrumentListPage {
     '1Y',
     '3Y',
   ].map((value) => ({
-    label: value.replace('M', 'М').replace('Y', 'Р'),
+    label: translate(`instruments.period.${value.slice(-1)}`, { count: value.slice(0, -1) }),
     value: value as ChartPeriod,
   }));
 
@@ -74,12 +75,12 @@ export class InstrumentListPage {
     counts: Record<InstrumentFilter, number>,
   ): { label: string; value: InstrumentFilter }[] {
     const all: { label: string; value: InstrumentFilter }[] = [
-      { label: `Усі ${counts.all}`, value: 'all' },
-      { label: `Мої ${counts.mine}`, value: 'mine' },
+      { label: translate('instruments.filter.all', { count: counts.all }), value: 'all' },
+      { label: translate('instruments.filter.mine', { count: counts.mine }), value: 'mine' },
       { label: `EU ETF ${counts.eu}`, value: 'eu' },
       { label: `US ETF ${counts.us}`, value: 'us' },
-      { label: `Акції ${counts.stocks}`, value: 'stocks' },
-      { label: `Інше ${counts.other}`, value: 'other' },
+      { label: translate('instruments.filter.stocks', { count: counts.stocks }), value: 'stocks' },
+      { label: translate('instruments.filter.other', { count: counts.other }), value: 'other' },
     ];
 
     return all.filter((filter) => filter.value === 'all' || counts[filter.value] > 0);

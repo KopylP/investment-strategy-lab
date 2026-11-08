@@ -5,10 +5,10 @@
       <h1 class="text-2xl font-semibold m-0">Investment Lab</h1>
       @if (inHomeAssistantPanel) {
         <p class="text-muted-color mt-2 mb-0">
-          Увійдіть один раз — далі Home Assistant входитиме за вас
+          {{ 'login.homeAssistantHint' | transloco }}
         </p>
       } @else {
-        <p class="text-muted-color mt-2 mb-0">Увійдіть, щоб побачити рапорт місяця</p>
+        <p class="text-muted-color mt-2 mb-0">{{ 'login.hint' | transloco }}</p>
       }
     </div>
 
@@ -25,7 +25,7 @@
         />
       </div>
       <div class="flex flex-col gap-2">
-        <label for="password" class="font-medium">Пароль</label>
+        <label for="password" class="font-medium">{{ 'auth.password' | transloco }}</label>
         <p-password
           inputId="password"
           formControlName="password"
@@ -40,10 +40,10 @@
         <p-message severity="error" [text]="error()!" />
       }
 
-      <p-button type="submit" label="Увійти" icon="pi pi-sign-in" [loading]="busy()" fluid />
+      <p-button type="submit" [label]="'auth.signIn' | transloco" icon="pi pi-sign-in" [loading]="busy()" fluid />
       <div class="text-center text-sm">
-        Немає облікового запису?
-        <a routerLink="/auth/register" class="text-primary font-medium">Зареєструватися</a>
+        {{ 'login.noAccount' | transloco }}
+        <a routerLink="/auth/register" class="text-primary font-medium">{{ 'auth.signUp' | transloco }}</a>
       </div>
     </form>
   </div>

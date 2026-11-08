@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Button } from 'primeng/button';
@@ -20,7 +21,7 @@ import { OverviewStore } from '../../data-access/overview-store';
 
 @Component({
   selector: 'app-overview-details-grid',
-  imports: [
+  imports: [TranslocoPipe, 
     RouterLink,
     Button,
     Skeleton,

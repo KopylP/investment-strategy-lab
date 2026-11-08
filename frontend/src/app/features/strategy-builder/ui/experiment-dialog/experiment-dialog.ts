@@ -11,6 +11,7 @@ import { defaultExperimentForm, experimentFromForm, valuesAreNumbers } from '../
 import { ExperimentFormVm } from '../../models/experiment-form-vm';
 import { ExperimentParameterVm } from '../../models/experiment-parameter-vm';
 import { ExperimentRequestVm } from '../../models/experiment-request-vm';
+import { activeLocale } from '../../../../core/i18n/language';
 
 const storageKey = 'strategy-builder.experiment-form';
 
@@ -35,7 +36,7 @@ export class ExperimentDialog {
     if (!parameter) return '';
     const value = parameter.percent ? parameter.currentValue * 100 : parameter.currentValue;
 
-    return value.toLocaleString('uk-UA', { maximumFractionDigits: 6 }) + (parameter.percent ? ' %' : '');
+    return value.toLocaleString(activeLocale, { maximumFractionDigits: 6 }) + (parameter.percent ? ' %' : '');
   });
 
   protected patch(change: Partial<ExperimentFormVm>): void {

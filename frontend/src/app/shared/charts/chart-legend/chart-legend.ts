@@ -1,12 +1,14 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { LegendLine } from '../legend-line';
 
 @Component({
   selector: 'app-chart-legend',
+  imports: [TranslocoPipe],
   template: `<div
     class="flex flex-wrap gap-x-4 gap-y-1 text-sm"
     role="group"
-    aria-label="Лінії на графіку"
+    [attr.aria-label]="'common.chartLines' | transloco"
   >
     @for (line of lines(); track line.label) {
       <button

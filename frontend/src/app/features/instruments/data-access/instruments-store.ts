@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 import { computed, inject, Injectable, linkedSignal, resource, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { ApiClient, toProblemMessage } from '../../../core/api/api-client';
@@ -281,11 +282,11 @@ export class InstrumentsStore {
       this.pricesResource.reload();
       this.monthResource.reload();
       this.detailResource.reload();
-      const missing = report.missingSymbols.length
-        ? `; без даних: ${report.missingSymbols.join(', ')}`
-        : '';
+      const counts = { added: report.quotesAdded, updated: report.quotesUpdated };
 
-      return `Нових котирувань: ${report.quotesAdded}, оновлено: ${report.quotesUpdated}${missing}`;
+      return report.missingSymbols.length
+        ? translate('instruments.quotesIngestedMissing', { ...counts, missing: report.missingSymbols.join(', ') })
+        : translate('instruments.quotesIngested', counts);
     });
   }
 
@@ -293,7 +294,7 @@ export class InstrumentsStore {
     await this.run('fx', async () => {
       await this.api.post('/api/market-data/fx-rates/ingest');
 
-      return 'Курси валют оновлено';
+      return translate('instruments.fxUpdated');
     });
   }
 
@@ -305,7 +306,7 @@ export class InstrumentsStore {
     } catch (error) {
       this.messages.add({
         severity: 'error',
-        summary: 'Не вдалося оновити',
+        summary: translate('instruments.updateFailed'),
         detail: toProblemMessage(error),
         life: 8000,
       });

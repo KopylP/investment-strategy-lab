@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Tag } from 'primeng/tag';
@@ -8,7 +9,7 @@ import { describeStrategy } from '../../models/strategy-summary';
 
 @Component({
   selector: 'app-strategy-card',
-  imports: [RouterLink, Tag, DatePipe],
+  imports: [TranslocoPipe, RouterLink, Tag, DatePipe],
   templateUrl: './strategy-card.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

@@ -5,7 +5,7 @@ export const strategyBuilderRoutes: Routes = [
     path: '',
     loadComponent: () =>
       import('./pages/draft-list-page/draft-list-page').then((module) => module.DraftListPage),
-    title: 'Конструктор',
+    title: 'routes.builder',
   },
   {
     path: ':draftId/trials',
@@ -13,7 +13,7 @@ export const strategyBuilderRoutes: Routes = [
       import('./pages/draft-trials-page/draft-trials-page').then(
         (module) => module.DraftTrialsPage,
       ),
-    title: 'Бектести чернетки',
+    title: 'routes.draftTrials',
   },
   {
     path: ':draftId',
@@ -21,6 +21,6 @@ export const strategyBuilderRoutes: Routes = [
       import('./pages/draft-editor-page/draft-editor-page').then(
         (module) => module.DraftEditorPage,
       ),
-    title: 'Чернетка',
+    title: 'routes.draft',
   },
 ];

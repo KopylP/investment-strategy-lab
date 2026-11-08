@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 import { Directive, ElementRef, inject, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
 
@@ -70,8 +71,8 @@ export class FileDrop {
 
     this.messages.add({
       severity: 'warn',
-      summary: 'Не той файл',
-      detail: `Потрібен файл ${extensions.join(' або ')}`,
+      summary: translate('common.wrongFile'),
+      detail: translate('common.fileNeeded', { extensions: extensions.join(translate('common.or')) }),
     });
   }
 

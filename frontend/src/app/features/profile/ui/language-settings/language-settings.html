@@ -1,0 +1,20 @@
+<div class="card max-w-2xl">
+  <h2 class="text-lg font-semibold mb-1">{{ 'profile.language.title' | transloco }}</h2>
+  <p class="text-muted-color mb-4">{{ 'profile.language.hint' | transloco }}</p>
+
+  @if (selected(); as current) {
+    <p-select
+      inputId="language"
+      [options]="options"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="current"
+      (ngModelChange)="choose($event)"
+      [disabled]="saving()"
+      [ariaLabel]="'profile.language.title' | transloco"
+      class="w-full sm:w-80"
+    />
+  } @else {
+    <p-skeleton height="2.5rem" width="20rem" />
+  }
+</div>

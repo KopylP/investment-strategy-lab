@@ -5,6 +5,6 @@ export const instrumentsRoutes: Routes = [
     path: '',
     loadComponent: () =>
       import('./pages/instrument-list-page/instrument-list-page').then((m) => m.InstrumentListPage),
-    title: 'Інструменти',
+    title: 'routes.instruments',
   },
 ];

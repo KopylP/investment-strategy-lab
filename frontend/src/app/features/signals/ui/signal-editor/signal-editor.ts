@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -40,15 +41,15 @@ import { WatchedSubject, watchedSubjectOf } from '../../models/watched-subject';
 import { WatchedSubjectPicker } from '../watched-subject-picker/watched-subject-picker';
 
 const signalFrequencyOptions = [
-  { label: 'Після оновлення даних', value: 'off' },
-  { label: 'Щогодини', value: 'hourly' },
-  { label: 'Щодня', value: 'daily' },
-  { label: 'Щотижня', value: 'weekly' },
+  { label: translate('frequency.off'), value: 'off' },
+  { label: translate('frequency.hourly'), value: 'hourly' },
+  { label: translate('frequency.daily'), value: 'daily' },
+  { label: translate('frequency.weekly'), value: 'weekly' },
 ];
 
 @Component({
   selector: 'app-signal-editor',
-  imports: [
+  imports: [TranslocoPipe, 
     FormsModule,
     Button,
     Dialog,
@@ -76,8 +77,8 @@ export class SignalEditor {
 
   protected readonly frequencies = signalFrequencyOptions;
   protected readonly directions = [
-    { label: 'Вище порога', value: 'Above' },
-    { label: 'Нижче порога', value: 'Below' },
+    { label: translate('signals.editor.above'), value: 'Above' },
+    { label: translate('signals.editor.below'), value: 'Below' },
   ];
   protected readonly targets = targetChoices;
   protected readonly pickerVisible = signal(false);
@@ -154,11 +155,11 @@ export class SignalEditor {
 
   protected confirmDelete(signalId: string): void {
     this.confirmation.confirm({
-      header: 'Видалити сигнал?',
-      message: 'Разом із ним зникне його історія, а під’єднані рапорти більше не запускатимуться.',
+      header: translate('signals.editor.deleteQuestion'),
+      message: translate('signals.editor.deleteHint'),
       icon: 'pi pi-trash',
-      acceptLabel: 'Видалити',
-      rejectLabel: 'Скасувати',
+      acceptLabel: translate('common.delete'),
+      rejectLabel: translate('common.cancel'),
       acceptButtonProps: { severity: 'danger' },
       rejectButtonProps: { severity: 'secondary', text: true },
       accept: () => void this.delete(signalId),

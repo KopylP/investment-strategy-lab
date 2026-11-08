@@ -25,6 +25,7 @@ import { FoundFundDto } from '../../models/found-fund-dto';
 import { InstrumentPickerVm } from '../../models/instrument-picker-vm';
 import { fundPicker } from '../../data-access/setup-pickers';
 import { toProblemMessage } from '../../../../core/api/api-client';
+import { activeLocale } from '../../../../core/i18n/language';
 
 @Component({
   selector: 'app-fund-selection-dialog',
@@ -86,7 +87,7 @@ export class FundSelectionDialog {
       groups.set(group, [...(groups.get(group) ?? []), item]);
     }
     return [...groups]
-      .sort(([a], [b]) => a.localeCompare(b, 'uk'))
+      .sort(([a], [b]) => a.localeCompare(b, activeLocale))
       .map(([label, items]) => ({ label, items }));
   });
   protected readonly external = computed(() => this.store.funds() ?? []);

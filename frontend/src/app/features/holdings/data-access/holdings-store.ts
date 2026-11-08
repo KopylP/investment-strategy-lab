@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 import { computed, inject, Injectable, resource, signal } from '@angular/core';
 import { ApiClient } from '../../../core/api/api-client';
 import { AccountContext } from '../../../core/context/account-context';
@@ -252,7 +253,7 @@ export class HoldingsStore {
     const cash = this.totals().cash;
 
     return cash > 0
-      ? [...slices, { label: 'Кеш', name: '', weight: cash / total, color: palette.neutral }]
+      ? [...slices, { label: translate('common.cash'), name: '', weight: cash / total, color: palette.neutral }]
       : slices;
   });
 

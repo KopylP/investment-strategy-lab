@@ -1,7 +1,7 @@
 <div class="card">
-  <h2 class="text-lg font-semibold mb-2">Збитки минулих років</h2>
+  <h2 class="text-lg font-semibold mb-2">{{ 'taxes.losses.title' | transloco }}</h2>
   <p class="text-sm text-muted-color mt-0 mb-2">
-    Ваші, а не рахунку: один запис на рік для всіх брокерів.
+    {{ 'taxes.losses.hint' | transloco }}
   </p>
   <p class="text-sm sm:text-base text-muted-color mt-0 mb-4">
     {{ regime.regime()?.lossesNote }}
@@ -10,9 +10,9 @@
     <p-table [value]="store.losses()" size="small" styleClass="mb-4">
       <ng-template #header
         ><tr>
-          <th>Рік</th>
-          <th class="text-right">Збиток</th>
-          <th class="text-right">Використано<span class="hidden sm:inline"> раніше</span></th>
+          <th>{{ 'taxes.losses.year' | transloco }}</th>
+          <th class="text-right">{{ 'taxes.losses.loss' | transloco }}</th>
+          <th class="text-right">{{ 'taxes.losses.used' | transloco }}<span class="hidden sm:inline"> {{ 'taxes.losses.earlier' | transloco }}</span></th>
           <th class="w-12"></th></tr
       ></ng-template>
       <ng-template #body let-loss>
@@ -25,7 +25,7 @@
               icon="pi pi-trash"
               [text]="true"
               severity="danger"
-              ariaLabel="Видалити"
+              [ariaLabel]="'common.delete' | transloco"
               (onClick)="confirmRemove(loss)"
             />
           </td>
@@ -36,7 +36,7 @@
   @if (regime.currency(); as currency) {
     <div class="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end">
       <div class="flex flex-col gap-2">
-        <label for="loss-year" class="font-medium text-sm">Рік</label>
+        <label for="loss-year" class="font-medium text-sm">{{ 'taxes.losses.year' | transloco }}</label>
         <p-inputnumber
           inputId="loss-year"
           [ngModel]="lossYear()"
@@ -48,7 +48,7 @@
         />
       </div>
       <div class="flex flex-col gap-2">
-        <label for="loss-amount" class="font-medium text-sm">Збиток</label>
+        <label for="loss-amount" class="font-medium text-sm">{{ 'taxes.losses.loss' | transloco }}</label>
         <p-inputnumber
           inputId="loss-amount"
           [ngModel]="lossAmount()"
@@ -61,7 +61,7 @@
         />
       </div>
       <div class="flex flex-col gap-2">
-        <label for="loss-used" class="font-medium text-sm">Уже використано</label>
+        <label for="loss-used" class="font-medium text-sm">{{ 'taxes.losses.alreadyUsed' | transloco }}</label>
         <p-inputnumber
           inputId="loss-used"
           [ngModel]="lossUsed()"
@@ -74,7 +74,7 @@
         />
       </div>
       <p-button
-        label="Додати"
+        [label]="'common.add' | transloco"
         icon="pi pi-plus"
         [disabled]="!lossYear() || !lossAmount()"
         [loading]="store.saving()"

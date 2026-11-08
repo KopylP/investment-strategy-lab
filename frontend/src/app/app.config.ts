@@ -21,10 +21,13 @@ import { routes } from './app.routes';
 import { basePathInterceptor } from './core/api/base-path-interceptor';
 import { reloadWithNewIngressSession } from './core/auth/ingress-session';
 import { unauthorizedInterceptor } from './core/auth/unauthorized-interceptor';
+import { activeLanguage, activeLocale } from './core/i18n/language';
+import { languageInterceptor } from './core/i18n/language-interceptor';
+import { provideI18n } from './core/i18n/provide-i18n';
 import { translationInterceptor } from './core/i18n/translation-interceptor';
 import { NavigationHistory } from './core/layout/navigation-history';
 import { InvestmentLabPreset } from './core/theme/investment-lab.preset';
-import { ukTranslation } from './core/theme/uk-translation';
+import { primeNgTranslations } from './core/theme/primeng-translations';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -40,7 +43,7 @@ export const appConfig: ApplicationConfig = {
     provideEnvironmentInitializer(() => inject(NavigationHistory)),
     provideHttpClient(
       withFetch(),
-      withInterceptors([basePathInterceptor, unauthorizedInterceptor, translationInterceptor]),
+      withInterceptors([languageInterceptor, basePathInterceptor, unauthorizedInterceptor, translationInterceptor]),
     ),
     providePrimeNG({
       theme: {
@@ -50,10 +53,11 @@ export const appConfig: ApplicationConfig = {
           cssLayer: { name: 'primeng', order: 'theme, base, primeng' },
         },
       },
-      translation: ukTranslation,
+      translation: primeNgTranslations[activeLanguage],
       overlayAppendTo: 'body',
     }),
-    { provide: LOCALE_ID, useValue: 'uk' },
+    provideI18n(),
+    { provide: LOCALE_ID, useValue: activeLocale },
     MessageService,
     ConfirmationService,
     DialogService,

@@ -4,7 +4,7 @@ export const transactionsRoutes: Routes = [
   {
     path: '',
     loadComponent: () => import('./pages/ledger-page/ledger-page').then((m) => m.LedgerPage),
-    title: 'Журнал операцій',
+    title: 'routes.transactions',
   },
   {
     path: 'import',
@@ -12,6 +12,6 @@ export const transactionsRoutes: Routes = [
       import('./pages/statement-import-page/statement-import-page').then(
         (m) => m.StatementImportPage,
       ),
-    title: 'Імпорт з Revolut',
+    title: 'routes.revolutImport',
   },
 ];

@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { PublishedStrategyPanel } from '../../../strategy-builder/ui/published-strategy-panel/published-strategy-panel';
 import { StrategyBacktest } from '../../../backtesting/ui/strategy-backtest/strategy-backtest';
 import {
@@ -25,7 +26,7 @@ import { StrategyDetailStore } from '../../data-access/strategies-store';
 
 @Component({
   selector: 'app-strategy-detail-page',
-  imports: [
+  imports: [TranslocoPipe, 
     FormsModule,
     Button,
     Message,
@@ -58,7 +59,7 @@ export class StrategyDetailPage {
   protected readonly reports = computed(() =>
     (this.store.strategy()?.reports ?? []).map((report) => ({
       ...report,
-      when: report.schedule ? scheduleLabel(report.schedule) : 'лише вручну',
+      when: report.schedule ? scheduleLabel(report.schedule) : translate('strategies.detail.manualOnly'),
     })),
   );
 
@@ -109,11 +110,11 @@ export class StrategyDetailPage {
 
   protected confirmArchive(): void {
     this.confirm.confirm({
-      header: 'Архівувати стратегію?',
-      message: 'Нові версії створювати не можна буде; рапорти, що на неї посилаються, лишаються.',
+      header: translate('strategies.detail.archiveQuestion'),
+      message: translate('strategies.detail.archiveHint'),
       icon: 'pi pi-box',
-      acceptLabel: 'Архівувати',
-      rejectLabel: 'Скасувати',
+      acceptLabel: translate('strategies.detail.archive'),
+      rejectLabel: translate('common.cancel'),
       acceptButtonProps: { severity: 'danger' },
       rejectButtonProps: { severity: 'secondary', text: true },
       accept: () => void this.store.archive(),

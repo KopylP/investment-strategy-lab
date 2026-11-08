@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SelectButton } from 'primeng/selectbutton';
@@ -14,7 +15,7 @@ import { OverviewStore } from '../../data-access/overview-store';
 
 @Component({
   selector: 'app-overview-value-card',
-  imports: [
+  imports: [TranslocoPipe, 
     FormsModule,
     SelectButton,
     Skeleton,
@@ -37,11 +38,11 @@ export class OverviewValueCard {
   protected readonly viewport = inject(Viewport);
 
   protected readonly periods = computed(() => [
-    { label: '1М', value: '1M' },
-    { label: '3М', value: '3M' },
-    { label: '6М', value: '6M' },
-    { label: '1Р', value: '1Y' },
-    { label: this.viewport.phone() ? 'YTD' : 'З початку року', value: 'YTD' },
-    { label: 'Усе', value: 'ALL' },
+    { label: translate('period.1M'), value: '1M' },
+    { label: translate('period.3M'), value: '3M' },
+    { label: translate('period.6M'), value: '6M' },
+    { label: translate('period.1Y'), value: '1Y' },
+    { label: this.viewport.phone() ? 'YTD' : translate('period.ytd'), value: 'YTD' },
+    { label: translate('period.all'), value: 'ALL' },
   ]);
 }

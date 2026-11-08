@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 import { FormsModule } from '@angular/forms';
 import { MultiSelect } from 'primeng/multiselect';
 import { InstrumentChoiceDto } from '../../models/instrument-dto';
+import { activeLocale } from '../../../../core/i18n/language';
 
 interface FundGroup {
   label: string;
@@ -180,7 +181,7 @@ export class FundPicker {
       groups.set(label, [...(groups.get(label) ?? []), item]);
     }
     return [...groups]
-      .sort(([a], [b]) => a.localeCompare(b, 'uk'))
+      .sort(([a], [b]) => a.localeCompare(b, activeLocale))
       .map(([label, items]) => ({ label, items }));
   });
   protected selectedIn(group: FundGroup): number {

@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { TaxMoneyPipe } from '../../../../core/context/tax-money-pipe';
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
@@ -21,7 +22,7 @@ import { TapTooltip } from '../../../../shared/ui/tap-tooltip';
 
 @Component({
   selector: 'app-declaration-dialog',
-  imports: [
+  imports: [TranslocoPipe, 
     TaxMoneyPipe,
     NgTemplateOutlet,
     FormsModule,
@@ -81,12 +82,12 @@ export class DeclarationDialog {
   protected readonly formValue = formValue;
 
   protected async copy(field: DeclarationField): Promise<void> {
-    await this.write(formValue(field), `poz. ${field.position} скопійовано`);
+    await this.write(formValue(field), translate('taxes.declaration.fieldCopied', { position: field.position }));
   }
 
   protected async copyAll(declaration: TaxDeclaration): Promise<void> {
     const lines = [
-      `${declaration.form} за ${declaration.year}`,
+      translate('taxes.formOfYear', { form: declaration.form, year: declaration.year }),
       ...declaration.sections.flatMap((section) => [
         `${section.code}. ${section.title}`,
         ...section.fields.map(
@@ -101,7 +102,7 @@ export class DeclarationDialog {
       ]),
     ];
 
-    await this.write(lines.join('\n'), 'Усі позиції скопійовано');
+    await this.write(lines.join('\n'), translate('taxes.declaration.copiedAll'));
   }
 
   private async write(text: string, summary: string): Promise<void> {
@@ -109,7 +110,7 @@ export class DeclarationDialog {
       await navigator.clipboard.writeText(text);
       this.messages.add({ severity: 'success', summary, life: 1500 });
     } catch {
-      this.messages.add({ severity: 'warn', summary: 'Не вдалося скопіювати', detail: text });
+      this.messages.add({ severity: 'warn', summary: translate('taxes.declaration.copyFailed'), detail: text });
     }
   }
 }

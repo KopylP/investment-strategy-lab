@@ -1,19 +1,19 @@
 @if (details().openLots.length) {
   <div class="card">
     <h2 class="text-lg font-semibold mb-4">
-      Відкриті лоти<span class="hidden sm:inline"> (собівартість для майбутніх продажів)</span>
+      {{ 'taxes.openLots.title' | transloco }}<span class="hidden sm:inline"> {{ 'taxes.openLots.hint' | transloco }}</span>
     </h2>
     <p-table [value]="details().openLots" size="small" tableStyleClass="sm:min-w-[40rem]">
       <ng-template #header
         ><tr>
-          <th class="hidden sm:table-cell">Куплено</th>
+          <th class="hidden sm:table-cell">{{ 'taxes.openLots.bought' | transloco }}</th>
           <th>ETF</th>
           @if (store.showAccount()) {
-            <th class="hidden sm:table-cell">Рахунок</th>
+            <th class="hidden sm:table-cell">{{ 'taxes.account' | transloco }}</th>
           }
-          <th class="text-right hidden sm:table-cell">Штук</th>
-          <th class="text-right">Витрати, PLN</th>
-          <th class="hidden sm:table-cell">Курс</th>
+          <th class="text-right hidden sm:table-cell">{{ 'taxes.units' | transloco }}</th>
+          <th class="text-right">{{ 'taxes.openLots.costsPln' | transloco }}</th>
+          <th class="hidden sm:table-cell">{{ 'taxes.rate' | transloco }}</th>
         </tr></ng-template
       >
       <ng-template #body let-lot>
@@ -22,10 +22,10 @@
           <td class="font-medium">
             {{ store.symbol(lot.instrumentId) }}
             <div class="sm:hidden text-xs text-muted-color font-normal">
-              куплено {{ lot.acquiredOn | date }}
+              {{ 'taxes.openLots.boughtOn' | transloco: { acquiredOn: (lot.acquiredOn | date) } }}
             </div>
             <div class="sm:hidden text-xs text-muted-color font-normal whitespace-nowrap">
-              {{ lot.quantity | quantity }} шт.
+              {{ 'common.units' | transloco: { quantity: (lot.quantity | quantity) } }}
             </div>
           </td>
           @if (store.showAccount()) {

@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 import { computed, inject, Injectable, resource, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { ApiClient, toProblemMessage } from '../../../core/api/api-client';
@@ -88,22 +89,22 @@ const kinds: Record<
   TransactionDto['kind'],
   { label: string; severity: TransactionVm['severity'] }
 > = {
-  Buy: { label: 'Купівля', severity: 'success' },
-  Sell: { label: 'Продаж', severity: 'danger' },
-  Contribution: { label: 'Внесок', severity: 'info' },
-  Withdrawal: { label: 'Вивід', severity: 'warn' },
-  Fee: { label: 'Комісія', severity: 'warn' },
-  TaxPayment: { label: 'Податок', severity: 'warn' },
-  Dividend: { label: 'Дивіденд', severity: 'success' },
-  InternalTransfer: { label: 'Переказ', severity: 'secondary' },
-  Reversal: { label: 'Сторно', severity: 'contrast' },
+  Buy: { label: translate('chart.buy'), severity: 'success' },
+  Sell: { label: translate('chart.sell'), severity: 'danger' },
+  Contribution: { label: translate('transactions.cash.kind.Contribution'), severity: 'info' },
+  Withdrawal: { label: translate('transactions.cash.kind.Withdrawal'), severity: 'warn' },
+  Fee: { label: translate('transactions.trade.fee'), severity: 'warn' },
+  TaxPayment: { label: translate('transactions.kind.Tax'), severity: 'warn' },
+  Dividend: { label: translate('transactions.cash.kind.Dividend'), severity: 'success' },
+  InternalTransfer: { label: translate('transactions.kind.Transfer'), severity: 'secondary' },
+  Reversal: { label: translate('transactions.kind.Reversal'), severity: 'contrast' },
 };
 
 const sources: Record<TransactionDto['source'], string> = {
-  ReportAction: 'з рапорту',
-  Manual: 'вручну',
-  Reconciliation: 'звірка',
-  Import: 'імпорт',
+  ReportAction: translate('source.report'),
+  Manual: translate('source.manual'),
+  Reconciliation: translate('source.reconciliation'),
+  Import: translate('source.import'),
 };
 
 @Injectable()
@@ -151,7 +152,7 @@ export class TransactionsStore {
           ? [{ subPortfolioId: trade.subPortfolioId, quantity: trade.quantity }]
           : null,
       },
-      'Угоду записано',
+      translate('transactions.tradeRecorded'),
     );
   }
 
@@ -167,7 +168,7 @@ export class TransactionsStore {
           : null,
         instrumentId: movement.instrumentId,
       },
-      'Рух коштів записано',
+      translate('transactions.cashRecorded'),
     );
   }
 
@@ -175,7 +176,7 @@ export class TransactionsStore {
     return this.command(
       `transactions/${transaction.id}/reverse`,
       { reason },
-      'Операцію сторновано',
+      translate('transactions.reversed'),
     );
   }
 
@@ -213,7 +214,7 @@ export class TransactionsStore {
   private reportNotRecorded(error: unknown): void {
     this.messages.add({
       severity: 'error',
-      summary: 'Не записано',
+      summary: translate('transactions.notRecorded'),
       detail: toProblemMessage(error),
       life: 8000,
     });
@@ -244,7 +245,7 @@ export class TransactionsStore {
   ): TransactionDetails {
     const symbol = this.instruments.symbol(trade.instrumentId);
     const size = `${formatQuantity(trade.quantity)} × ${formatMoney(trade.price, currency)}`;
-    const fee = trade.fee ? ` · комісія ${formatMoney(trade.fee, currency)}` : '';
+    const fee = trade.fee ? translate('transactions.feeDetail', { fee: formatMoney(trade.fee, currency) }) : '';
     const allocation = trade.allocations
       .map((part) => `${sub(part.subPortfolioId)}: ${formatQuantity(part.quantity)}`)
       .join(', ');
@@ -329,6 +330,6 @@ function settled(entry: {
   settledCurrency?: string | null;
 }): string {
   return entry.settledAmount && entry.settledCurrency
-    ? ` · у брокера ${formatMoney(entry.settledAmount, entry.settledCurrency)}`
+    ? translate('transactions.atBroker', { amount: formatMoney(entry.settledAmount, entry.settledCurrency) })
     : '';
 }

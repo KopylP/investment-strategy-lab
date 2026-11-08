@@ -1,5 +1,5 @@
 <app-page-header
-  title="Податки"
+  [title]="'routes.taxes' | transloco"
   [subtitle]="regime.regime()?.summary ?? ''"
 >
   @if (yearOptions().length > 1) {
@@ -40,10 +40,10 @@
     @for (account of store.taxedAccounts(); track account.id) {
       <p-tag [value]="account.name" severity="secondary" />
     } @empty {
-      <span class="text-muted-color">жодного рахунку</span>
+      <span class="text-muted-color">{{ 'taxes.noAccount' | transloco }}</span>
     }
     @if (store.untaxedAccounts().length) {
-      <span class="text-muted-color ml-2">не оподатковуються:</span>
+      <span class="text-muted-color ml-2">{{ 'taxes.untaxed' | transloco }}</span>
       @for (account of store.untaxedAccounts(); track account.id) {
         <p-tag [value]="account.name + ' · ' + account.policyCode" severity="info" />
       }
@@ -54,13 +54,13 @@
 @if (store.isLoading() && !store.details() && !store.years().length) {
   <div class="card"><p-skeleton height="12rem" /></div>
 } @else if (store.loadError()) {
-  <div class="card"><p-message severity="error" text="Не вдалося порахувати податки" /></div>
+  <div class="card"><p-message severity="error" [text]="'taxes.loadFailed' | transloco" /></div>
 } @else if (!store.years().length) {
   <div class="card">
     <app-empty-state
       icon="pi pi-percentage"
-      title="Оподатковуваних подій ще немає"
-      text="Податок з’являється з першим продажем або дивідендом. Купівлі вже формують лоти FIFO."
+      [title]="'taxes.empty' | transloco"
+      [text]="'taxes.emptyHint' | transloco"
     />
   </div>
 } @else if (store.details(); as details) {
@@ -79,7 +79,7 @@
   <app-tax-open-lots-card [details]="details" />
 
   <div class="text-sm text-muted-color mb-4">
-    {{ details.fxRule }} · пораховано {{ details.computedAt | dateTime }}
+    {{ 'taxes.computedLine' | transloco: { fxRule: details.fxRule, computedAt: (details.computedAt | dateTime) } }}
   </div>
 }
 

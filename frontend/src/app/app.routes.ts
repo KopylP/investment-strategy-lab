@@ -68,7 +68,7 @@ export const routes: Routes = [
         path: 'profile',
         loadComponent: () =>
           import('./features/profile/pages/profile-page/profile-page').then((m) => m.ProfilePage),
-        title: 'Профіль',
+        title: 'routes.profile',
       },
     ],
   },

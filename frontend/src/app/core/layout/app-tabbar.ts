@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { OpenActionsBadge } from '../notifications/open-actions-badge';
@@ -11,8 +12,8 @@ interface Tab {
 
 @Component({
   selector: 'app-tabbar',
-  imports: [RouterLink, RouterLinkActive],
-  template: `<nav class="layout-tabbar" aria-label="Розділи">
+  imports: [TranslocoPipe, RouterLink, RouterLinkActive],
+  template: `<nav class="layout-tabbar" [attr.aria-label]="'layout.menu.sections' | transloco">
     @for (tab of tabs; track tab.link) {
       <a
         class="layout-tabbar-item"
@@ -27,7 +28,7 @@ interface Tab {
             <span class="layout-tabbar-badge">{{ count }}</span>
           }
         </span>
-        <span>{{ tab.label }}</span>
+        <span>{{ tab.label | transloco }}</span>
       </a>
     }
   </nav>`,
@@ -37,10 +38,10 @@ export class AppTabbar {
   protected readonly openActions = inject(OpenActionsBadge);
 
   protected readonly tabs: Tab[] = [
-    { label: 'Огляд', icon: 'pi pi-home', link: '/', exact: true },
-    { label: 'Рапорти', icon: 'pi pi-list-check', link: '/reports', exact: false },
-    { label: 'Позиції', icon: 'pi pi-chart-pie', link: '/holdings', exact: false },
-    { label: 'Журнал', icon: 'pi pi-book', link: '/transactions', exact: false },
-    { label: 'Податки', icon: 'pi pi-percentage', link: '/taxes', exact: false },
+    { label: 'layout.menu.overview', icon: 'pi pi-home', link: '/', exact: true },
+    { label: 'layout.menu.reports', icon: 'pi pi-list-check', link: '/reports', exact: false },
+    { label: 'layout.menu.holdings', icon: 'pi pi-chart-pie', link: '/holdings', exact: false },
+    { label: 'layout.menu.journal', icon: 'pi pi-book', link: '/transactions', exact: false },
+    { label: 'layout.menu.taxes', icon: 'pi pi-percentage', link: '/taxes', exact: false },
   ];
 }

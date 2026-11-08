@@ -1,5 +1,5 @@
 <p-dialog
-  header="За чим стежити"
+  [header]="'signals.subject.header' | transloco"
   [modal]="true"
   [(visible)]="visible"
   [style]="{ width: '32rem' }"
@@ -21,8 +21,8 @@
       <input
         pInputText
         type="search"
-        aria-label="Пошук"
-        [placeholder]="isInstrumentTab() ? 'Тікер, назва або ISIN' : 'Назва групи'"
+        [attr.aria-label]="'common.search' | transloco"
+        [placeholder]="isInstrumentTab() ? ('instruments.search' | transloco) : ('signals.subject.groupName' | transloco)"
         [ngModel]="search()"
         (ngModelChange)="search.set($event)"
         class="w-full"
@@ -51,7 +51,7 @@
             </button>
           </li>
         } @empty {
-          <li class="p-3 text-muted-color">Нічого не знайдено.</li>
+          <li class="p-3 text-muted-color">{{ 'common.nothingFound' | transloco }}</li>
         }
       } @else {
         @for (group of visibleGroups(); track group.name) {
@@ -65,12 +65,12 @@
             >
               <span class="font-semibold">{{ group.name }}</span>
               <span class="block text-xs text-muted-color">
-                Інструментів: {{ group.instrumentCount }}
+                {{ 'signals.subject.instrumentCount' | transloco: { instrumentCount: group.instrumentCount } }}
               </span>
             </button>
           </li>
         } @empty {
-          <li class="p-3 text-muted-color">Нічого не знайдено.</li>
+          <li class="p-3 text-muted-color">{{ 'common.nothingFound' | transloco }}</li>
         }
       }
     </ul>
