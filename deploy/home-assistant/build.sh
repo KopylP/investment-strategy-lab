@@ -9,7 +9,7 @@ OUT="$ROOT/deploy/home-assistant/investlab/rootfs/app"
 rm -rf "$OUT" && mkdir -p "$OUT/api" "$OUT/engine"
 
 echo "==> Angular"
-(cd "$ROOT/frontend" && npx ng build --configuration production)
+(cd "$ROOT/frontend" && npm ci --no-audit --no-fund && npx ng build --configuration production)
 
 echo "==> .NET API (framework-dependent, runs on arm64 and amd64)"
 dotnet publish "$ROOT/backend/src/Hosts/InvestmentLab.Api" -c Release -o "$OUT/api" -p:UseAppHost=false
