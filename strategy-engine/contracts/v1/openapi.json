@@ -2266,11 +2266,14 @@
           },
           "messages": {
             "additionalProperties": {
-              "type": "string"
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
             },
             "type": "object",
             "title": "Messages",
-            "description": "The texts of this type's message codes, in Ukrainian."
+            "description": "The texts of this type's message codes by language code (uk, en)."
           }
         },
         "additionalProperties": false,

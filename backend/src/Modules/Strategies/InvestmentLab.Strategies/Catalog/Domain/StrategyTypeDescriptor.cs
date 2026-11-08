@@ -18,7 +18,7 @@ public sealed class StrategyTypeDescriptor
 
     public List<ReportDefinition> Reports { get; private set; }
 
-    public Dictionary<string, string> Messages { get; private set; } = [];
+    public Dictionary<string, Dictionary<string, string>> Messages { get; private set; } = [];
 
     public DateTimeOffset SyncedAt { get; private set; }
 
@@ -46,7 +46,7 @@ public sealed class StrategyTypeDescriptor
         string? defaultParameters,
         IEnumerable<ReportDefinition> reports,
         DateTimeOffset syncedAt,
-        IReadOnlyDictionary<string, string>? messages = null,
+        IReadOnlyDictionary<string, Dictionary<string, string>>? messages = null,
         bool supportsBacktest = true,
         IEnumerable<string>? backtestComparisons = null) =>
         new(
@@ -62,7 +62,7 @@ public sealed class StrategyTypeDescriptor
             [.. reports],
             syncedAt)
         {
-            Messages = messages is null ? [] : new Dictionary<string, string>(messages),
+            Messages = messages is null ? [] : new Dictionary<string, Dictionary<string, string>>(messages),
             SupportsBacktest = supportsBacktest,
             BacktestComparisons = [.. backtestComparisons ?? []],
         };
@@ -80,7 +80,9 @@ public sealed class StrategyTypeDescriptor
         ParametersSchema = published.ParametersSchema;
         DefaultParameters = published.DefaultParameters;
         Reports = [.. published.Reports];
-        Messages = new Dictionary<string, string>(published.Messages);
+        Messages = new Dictionary<string, Dictionary<string, string>>(published.Messages);
         SyncedAt = published.SyncedAt;
     }
+
+    public IReadOnlyDictionary<string, string> MessagesIn(string languageCode) => Messages.GetValueOrDefault(languageCode) ?? [];
 }

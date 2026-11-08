@@ -23,7 +23,7 @@ public static class ToolFailures
     private static McpException Explained(Error error)
     {
         var token = error.AsMessage();
-        var rendered = MessageLocalizer.Default.Render(token);
+        var rendered = MessageLocalizer.In(McpReply.Language).Render(token);
         var explanation = rendered == token ? error.Message : rendered;
 
         return new McpException($"{explanation} [{error.Code}]");

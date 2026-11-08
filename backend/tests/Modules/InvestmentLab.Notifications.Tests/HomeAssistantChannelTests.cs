@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using InvestmentLab.Notifications.Delivery.Domain;
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Notifications.Delivery.Infrastructure;
 
 namespace InvestmentLab.Notifications.Tests;
@@ -71,9 +72,36 @@ public sealed class HomeAssistantChannelTests
         _homeAssistant.Posts.ShouldNotContain(post => post.Contains("notify/"));
     }
 
+    [Fact]
+    public async Task A_user_who_follows_the_browser_gets_notifications_in_the_language_of_home_assistant()
+    {
+        _homeAssistant.Language = "uk";
+
+        await Channel().SendAsync(Test(Guid.NewGuid()), new Recipient(Guid.NewGuid(), "ha-olena", null), CancellationToken.None);
+
+        _homeAssistant.Titles.ShouldBe(["Investment Lab: тестове сповіщення"]);
+    }
+
+    [Fact]
+    public async Task A_user_who_chose_a_language_gets_notifications_in_it()
+    {
+        _homeAssistant.Language = "uk";
+
+        await Channel().SendAsync(Test(Guid.NewGuid()), new Recipient(Guid.NewGuid(), "ha-olena", null, Language.English), CancellationToken.None);
+
+        _homeAssistant.Titles.ShouldBe(["Investment Lab: test notification"]);
+    }
+
+    private static Notification Test(Guid recipient) =>
+        new(recipient, "test", "investlab_test", Message.Of("notification.test.title"), Message.Of("notification.test.message"), new Dictionary<string, object?>());
+
     private sealed class FakeHomeAssistant : HttpMessageHandler
     {
         public List<string> Posts { get; } = [];
+
+        public List<string> Titles { get; } = [];
+
+        public string Language { get; set; } = "en";
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
@@ -82,10 +110,14 @@ public sealed class HomeAssistantChannelTests
             if (request.Method == HttpMethod.Post)
                 Posts.Add(path);
 
+            if (path == "core/api/services/persistent_notification/create")
+                Titles.Add(System.Text.Json.JsonDocument.Parse(request.Content!.ReadAsStringAsync(cancellationToken).Result).RootElement.GetProperty("title").GetString()!);
+
             var body = path switch
             {
                 "core/api/services" when request.Method == HttpMethod.Get => Services,
                 "core/api/states" => States,
+                "core/api/config" => $$"""{"language":"{{Language}}"}""",
                 _ => "[]",
             };
 
@@ -102,6 +134,6 @@ internal sealed class NoStrategyMessages : InvestmentLab.Strategies.Contracts.IS
     public Task<InvestmentLab.Strategies.Contracts.StrategyReplaySetupDto?> GetReplaySetup(Guid strategyId, int? version, CancellationToken cancellationToken) =>
         Task.FromResult<InvestmentLab.Strategies.Contracts.StrategyReplaySetupDto?>(null);
 
-    public Task<IReadOnlyDictionary<string, string>> GetMessages(CancellationToken cancellationToken) =>
+    public Task<IReadOnlyDictionary<string, string>> GetMessages(string languageCode, CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyDictionary<string, string>>(new Dictionary<string, string>());
 }

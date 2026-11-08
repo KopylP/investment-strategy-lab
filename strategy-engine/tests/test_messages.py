@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import re
 
-from finance_decisions.messages import _all_messages, _plural, msg, render, render_deep, t
+from finance_decisions.messages import LANGUAGES, _all_messages, _plural, catalog_of, msg, render, render_deep, t
 
 SOURCE = Path(__file__).resolve().parents[1] / "src" / "finance_decisions"
 CYRILLIC = re.compile(r"[Ѐ-ӿ]")
@@ -61,3 +61,15 @@ def test_no_message_is_glued_into_a_joined_text() -> None:
     offenders = [str(path) for path in _python_sources() if glued.search(path.read_text(encoding="utf-8"))]
 
     assert offenders == []
+
+
+def test_every_catalog_has_the_same_codes_in_every_language() -> None:
+    folders = {path.parent for path in SOURCE.rglob("locales/*.json")}
+
+    mismatched = [
+        str(folder)
+        for folder in folders
+        if len({frozenset(catalog_of(folder.parent, language)) for language in LANGUAGES}) != 1
+    ]
+
+    assert mismatched == []

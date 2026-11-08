@@ -45,10 +45,11 @@ internal sealed class StrategyDirectory(IStrategyRepository strategies, CatalogS
             ExtraSeries: chosen.ExtraSeries);
     }
 
-    public async Task<IReadOnlyDictionary<string, string>> GetMessages(CancellationToken cancellationToken)
+    public async Task<IReadOnlyDictionary<string, string>> GetMessages(string languageCode, CancellationToken cancellationToken)
     {
         var types = await catalog.ListFromEngineAsync(cancellationToken);
+        var messages = types.SelectMany(type => type.MessagesIn(languageCode));
 
-        return types.SelectMany(type => type.Messages).DistinctBy(message => message.Key).ToDictionary();
+        return messages.DistinctBy(message => message.Key).ToDictionary();
     }
 }

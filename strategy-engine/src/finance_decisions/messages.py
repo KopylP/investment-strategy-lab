@@ -9,7 +9,8 @@ import re
 from typing import Any
 
 _PACKAGE_DIR = Path(__file__).resolve().parent
-_CATALOG_GLOB = "**/locales/uk.json"
+LANGUAGES = ("uk", "en")
+_COMMAND_LINE_LANGUAGE = "uk"
 _TOKEN = re.compile(r"^@(?P<code>[A-Za-z0-9_.\-]+)(?: (?P<parameters>\{.*\}))?$", re.DOTALL)
 _PLACEHOLDER = re.compile(r"\{(?P<name>[A-Za-z0-9_]+)(?::(?P<format>[A-Za-z]+)(?::(?P<argument>[^}]*))?)?\}")
 
@@ -20,21 +21,25 @@ def msg(code: str, **parameters: Any) -> str:
     return f"@{code} {json.dumps(parameters, ensure_ascii=False)}"
 
 
-def catalog_of(directory: Path) -> dict[str, str]:
-    """The texts one strategy (or the engine itself) keeps in its own locales folder."""
-    return json.loads((directory / "locales" / "uk.json").read_text(encoding="utf-8"))
+def catalog_of(directory: Path, language: str) -> dict[str, str]:
+    """The texts one strategy (or the engine itself) keeps in its own locales folder, in one language."""
+    return json.loads((directory / "locales" / f"{language}.json").read_text(encoding="utf-8"))
 
 
-@lru_cache(maxsize=1)
-def _all_messages() -> dict[str, str]:
+def catalogs_of(directory: Path) -> dict[str, dict[str, str]]:
+    return {language: catalog_of(directory, language) for language in LANGUAGES}
+
+
+@lru_cache(maxsize=len(LANGUAGES))
+def _all_messages(language: str = _COMMAND_LINE_LANGUAGE) -> dict[str, str]:
     merged: dict[str, str] = {}
-    for path in _PACKAGE_DIR.glob(_CATALOG_GLOB):
+    for path in _PACKAGE_DIR.glob(f"**/locales/{language}.json"):
         merged.update(json.loads(path.read_text(encoding="utf-8")))
     return merged
 
 
 def render(text: Any) -> Any:
-    """Words for what the engine prints itself: its command-line reports. The service never calls this."""
+    """Words for what the engine prints itself: its command-line reports, in Ukrainian. The service never calls this."""
     if not isinstance(text, str):
         return text
     token = _TOKEN.match(text)

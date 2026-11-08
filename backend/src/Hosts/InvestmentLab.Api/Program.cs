@@ -17,6 +17,7 @@ builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = 
 var modules = Modules.All();
 builder.AddModules(modules);
 builder.AddSelfHosting();
+builder.AddRequestLanguage();
 builder.AddMcpAccess(modules);
 
 var app = builder.Build();
@@ -25,6 +26,7 @@ app.UseMcpForwarding();
 app.UseSelfHosting();
 
 app.UseRouting();
+app.UseRequestLocalization();
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();

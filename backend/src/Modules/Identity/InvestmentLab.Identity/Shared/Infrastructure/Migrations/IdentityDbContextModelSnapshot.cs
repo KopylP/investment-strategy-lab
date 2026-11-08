@@ -79,11 +79,10 @@ namespace InvestmentLab.Identity.Shared.Infrastructure.Migrations
                         .HasColumnType("character varying(3)")
                         .HasColumnName("display_currency");
 
-                    b.Property<string>("Locale")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("locale");
+                    b.Property<string>("Language")
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasColumnName("language");
 
                     b.Property<string>("TimeZone")
                         .IsRequired()

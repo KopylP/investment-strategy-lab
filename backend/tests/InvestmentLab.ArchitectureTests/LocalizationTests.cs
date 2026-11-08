@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using InvestmentLab.SharedKernel;
 
 namespace InvestmentLab.ArchitectureTests;
 
@@ -32,9 +33,24 @@ public sealed partial class LocalizationTests
         missing.ShouldBeEmpty();
     }
 
-    private static HashSet<string> Catalog()
+    [Fact]
+    public void Every_language_has_a_text_for_every_code()
     {
-        var path = Path.Combine(RepositoryFolder.Backend().Parent!.FullName, "locales", "uk.json");
+        var ukrainian = Catalog(Language.Ukrainian);
+
+        var mismatched = Language.All
+            .Where(language => !Catalog(language).SetEquals(ukrainian))
+            .Select(language => language.Code)
+            .ToList();
+
+        mismatched.ShouldBeEmpty();
+    }
+
+    private static HashSet<string> Catalog() => Catalog(Language.Ukrainian);
+
+    private static HashSet<string> Catalog(Language language)
+    {
+        var path = Path.Combine(RepositoryFolder.Backend().Parent!.FullName, "locales", $"{language.Code}.json");
         var entries = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(path))!;
 
         return [.. entries.Keys];

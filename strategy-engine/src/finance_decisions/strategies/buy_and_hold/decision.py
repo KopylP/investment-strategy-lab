@@ -18,11 +18,11 @@ from finance_decisions.api.contracts import (
     TargetWeight,
     UniverseMember,
 )
-from finance_decisions.messages import catalog_of, msg
+from finance_decisions.messages import catalogs_of, msg
 from .parameters import BuyAndHoldParameters
 
 STRATEGY_CODE = "buy-and-hold"
-MESSAGES = catalog_of(Path(__file__).resolve().parent)
+MESSAGES = catalogs_of(Path(__file__).resolve().parent)
 STATUS_SELECTED = "selected"
 RISK_STATUS_OK = "ok"
 

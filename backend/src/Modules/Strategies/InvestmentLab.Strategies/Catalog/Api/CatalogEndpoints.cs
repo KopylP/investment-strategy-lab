@@ -1,3 +1,4 @@
+using InvestmentLab.BuildingBlocks.Localization;
 using InvestmentLab.Strategies.Catalog.Application.GetStrategyCatalog;
 using InvestmentLab.Strategies.Catalog.Application.Shared;
 using InvestmentLab.Strategies.Contracts;
@@ -33,7 +34,7 @@ internal static class CatalogEndpoints
 
     private static async Task<Ok<IReadOnlyDictionary<string, string>>> GetStrategyMessages(
         IStrategyDirectory directory, CancellationToken cancellationToken) =>
-        TypedResults.Ok(await directory.GetMessages(cancellationToken));
+        TypedResults.Ok(await directory.GetMessages(MessageLocalizer.CurrentLanguage.Code, cancellationToken));
 
     private static async Task<Ok<SyncedStrategyCatalogResponse>> SyncStrategyCatalog(
         IStrategyCatalog catalog, CancellationToken cancellationToken)

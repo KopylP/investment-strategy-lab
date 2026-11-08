@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Reflection;
 using System.Text.Json;
@@ -6,17 +7,18 @@ using InvestmentLab.SharedKernel;
 
 namespace InvestmentLab.BuildingBlocks.Localization;
 
-public sealed partial class MessageLocalizer(IReadOnlyDictionary<string, string>? extraMessages = null)
+public sealed partial class MessageLocalizer(Language language, IReadOnlyDictionary<string, string>? extraMessages = null)
 {
-    private const string CatalogResource = "locales.uk.json";
     private const string ListSeparator = " ";
 
-    private static readonly Lazy<IReadOnlyDictionary<string, string>> Catalog = new(LoadCatalog);
+    private static readonly ConcurrentDictionary<Language, IReadOnlyDictionary<string, string>> Catalogs = new();
     private static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
 
-    public static MessageLocalizer Default { get; } = new();
+    public static MessageLocalizer In(Language language) => new(language);
 
-    public static IReadOnlyDictionary<string, string> GlobalCatalog => Catalog.Value;
+    public static MessageLocalizer Current => In(CurrentLanguage);
+
+    public static Language CurrentLanguage => Language.OfCultureOrDefault(CultureInfo.CurrentUICulture.Name);
 
     public string Render(string? text)
     {
@@ -44,7 +46,7 @@ public sealed partial class MessageLocalizer(IReadOnlyDictionary<string, string>
         if (extraMessages is not null && extraMessages.TryGetValue(code, out var own))
             return own;
 
-        return Catalog.Value.GetValueOrDefault(code);
+        return CatalogOf(language).GetValueOrDefault(code);
     }
 
     private static Dictionary<string, JsonElement> ParametersOf(string json) =>
@@ -65,7 +67,7 @@ public sealed partial class MessageLocalizer(IReadOnlyDictionary<string, string>
             "signedPercent" => SignedPercent(value.GetDecimal()),
             "money" => Money(value.GetDecimal(), TextOf(parameters.GetValueOrDefault(argument))),
             "amount" => Amount(value.GetDecimal()),
-            "plural" => Plural(value.GetDecimal(), argument),
+            "plural" => PluralForms.Choose(language, value.GetDecimal(), argument),
             "join" => string.Join(argument, value.EnumerateArray().Select(item => Render(TextOf(item)))),
             _ when value.ValueKind == JsonValueKind.Array => string.Join(ListSeparator, value.EnumerateArray().Select(item => Render(TextOf(item)))),
             _ => Render(TextOf(value)),
@@ -109,28 +111,13 @@ public sealed partial class MessageLocalizer(IReadOnlyDictionary<string, string>
 
     private static string Amount(decimal amount) => amount.ToString("0.00", Invariant);
 
-    private static string Plural(decimal count, string forms)
-    {
-        var options = forms.Split('|');
-        var whole = (long)Math.Abs(count);
-        var lastTwo = whole % 100;
-        var last = whole % 10;
+    private static IReadOnlyDictionary<string, string> CatalogOf(Language language) => Catalogs.GetOrAdd(language, LoadCatalog);
 
-        if (lastTwo is >= 11 and <= 14)
-            return options[2];
-
-        return last switch
-        {
-            1 => options[0],
-            >= 2 and <= 4 => options[1],
-            _ => options[2],
-        };
-    }
-
-    private static IReadOnlyDictionary<string, string> LoadCatalog()
+    private static IReadOnlyDictionary<string, string> LoadCatalog(Language language)
     {
         var assembly = Assembly.GetExecutingAssembly();
-        var resource = assembly.GetManifestResourceNames().Single(name => name.EndsWith(CatalogResource, StringComparison.Ordinal));
+        var resourceName = $"locales.{language.Code}.json";
+        var resource = assembly.GetManifestResourceNames().Single(name => name.EndsWith(resourceName, StringComparison.Ordinal));
 
         using var stream = assembly.GetManifestResourceStream(resource)!;
 

@@ -41,7 +41,8 @@ internal sealed class HomeAssistantChannel(HttpClient http, HomeAssistantChannel
 
     public async Task SendAsync(Notification notification, Recipient recipient, CancellationToken cancellationToken)
     {
-        var localizer = new MessageLocalizer(await StrategyMessagesAsync(cancellationToken));
+        var language = recipient.ChosenLanguage ?? await HomeAssistantLanguageAsync(cancellationToken);
+        var localizer = new MessageLocalizer(language, await StrategyMessagesAsync(language, cancellationToken));
         var title = localizer.Render(notification.Title);
         var message = localizer.Render(notification.Message);
 
@@ -78,11 +79,18 @@ internal sealed class HomeAssistantChannel(HttpClient http, HomeAssistantChannel
             await PostAsync($"core/api/services/notify/{phone}", new { message = "clear_notification", data = new { tag } }, cancellationToken);
     }
 
-    private async Task<IReadOnlyDictionary<string, string>?> StrategyMessagesAsync(CancellationToken cancellationToken)
+    private async Task<Language> HomeAssistantLanguageAsync(CancellationToken cancellationToken)
+    {
+        var config = await http.GetFromJsonAsync<HomeAssistantConfig>("core/api/config", cancellationToken);
+
+        return Language.OfCultureOrDefault(config?.Language ?? "");
+    }
+
+    private async Task<IReadOnlyDictionary<string, string>?> StrategyMessagesAsync(Language language, CancellationToken cancellationToken)
     {
         try
         {
-            return await strategies.GetMessages(cancellationToken);
+            return await strategies.GetMessages(language.Code, cancellationToken);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -105,6 +113,8 @@ internal sealed class HomeAssistantChannel(HttpClient http, HomeAssistantChannel
         using var response = await http.PostAsJsonAsync(path, body, cancellationToken);
         response.EnsureSuccessStatusCode();
     }
+
+    private sealed record HomeAssistantConfig(string? Language);
 
     private sealed record ServiceDomain(string Domain, Dictionary<string, JsonElement> Services);
 

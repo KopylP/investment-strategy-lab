@@ -23,7 +23,7 @@ from finance_decisions.api.contracts import (
     TargetWeight,
 )
 from finance_decisions.helpers import latest_moving_average, latest_value
-from finance_decisions.messages import catalog_of, msg
+from finance_decisions.messages import catalogs_of, msg
 from finance_decisions.strategies.errors import ContextError
 from .exposure import Exposure, exposure_for
 from .fund_reading import FundReading, read_fund
@@ -31,7 +31,7 @@ from .parameters import AdaptiveMomentumParameters
 from .selection import Verdict, select
 
 STRATEGY_CODE = "adaptive-momentum"
-MESSAGES = catalog_of(Path(__file__).resolve().parent)
+MESSAGES = catalogs_of(Path(__file__).resolve().parent)
 RISK_STATUS_OK = "ok"
 BENCHMARK_TREND_DAYS = 200
 

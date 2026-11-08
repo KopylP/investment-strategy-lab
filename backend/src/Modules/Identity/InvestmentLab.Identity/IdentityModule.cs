@@ -158,6 +158,7 @@ public sealed class IdentityModule : IModule
         services.AddScoped<GetCurrentUserHandler>();
 
         services.AddScoped<IUserProfileRepository, UserProfileRepository>();
+        services.AddScoped<IUserLanguages, UserLanguages>();
         services.AddScoped<GetProfileHandler>();
         services.AddScoped<UpdateProfileHandler>();
     }

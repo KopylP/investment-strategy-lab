@@ -43,7 +43,7 @@ public sealed class SubPortfolioRebalancerGoldenTests
             actual.Amount.ShouldBe(order.GetProperty("amount").GetDecimal(), Cent, Describe(actual));
             actual.Quantity.ShouldBe(order.GetProperty("shares").GetDecimal(), ShareTolerance, Describe(actual));
             actual.Price.ShouldBe(order.GetProperty("price").GetDecimal());
-            MessageLocalizer.Default.Render(actual.Reason).ShouldBe(order.GetProperty("reason").GetString());
+            MessageLocalizer.In(InvestmentLab.SharedKernel.Language.Ukrainian).Render(actual.Reason).ShouldBe(order.GetProperty("reason").GetString());
         }
 
         plan.TotalBefore.ShouldBe(expected.GetProperty("totalBefore").GetDecimal(), Cent);
@@ -73,7 +73,7 @@ public sealed class SubPortfolioRebalancerGoldenTests
 
         var notes = expected.GetProperty("notes").EnumerateArray()
             .Select(note => note.GetString()!.Replace(" Вкажіть monthly_contribution у config або передайте --contribution.", ""));
-        plan.Notes.Select(note => MessageLocalizer.Default.Render(note)).ShouldBe(notes);
+        plan.Notes.Select(note => MessageLocalizer.In(InvestmentLab.SharedKernel.Language.Ukrainian).Render(note)).ShouldBe(notes);
     }
 
     private static SubPortfolioSituation InputOf(JsonElement root)

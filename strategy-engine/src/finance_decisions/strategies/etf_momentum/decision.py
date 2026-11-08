@@ -34,7 +34,7 @@ from finance_decisions.api.contracts import (
     Weekday,
 )
 from finance_decisions.helpers import holdings_by_value, is_na, latest_value
-from finance_decisions.messages import catalog_of, msg
+from finance_decisions.messages import catalogs_of, msg
 from finance_decisions.models import Position
 from finance_decisions.strategies.errors import ContextError
 from .parameters import EtfMomentumParameters
@@ -43,7 +43,7 @@ from finance_decisions.market_data import BENCHMARK_SYMBOL, MARKET_SYMBOLS, VOLA
 from .scanner import STATUS_FAILED, scan_etfs
 
 STRATEGY_CODE = "etf-momentum"
-MESSAGES = catalog_of(Path(__file__).resolve().parent)
+MESSAGES = catalogs_of(Path(__file__).resolve().parent)
 
 # The reports the service makes for a sub-portfolio with this strategy, at these times unless the user sets their own for the account.
 REPORTS = (

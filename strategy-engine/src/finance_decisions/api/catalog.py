@@ -11,7 +11,7 @@ from pydantic import BaseModel, ValidationError
 
 from pathlib import Path
 
-from finance_decisions.messages import catalog_of, msg
+from finance_decisions.messages import catalogs_of, msg
 from finance_decisions.strategies.adaptive_momentum import decision as adaptive_momentum
 from finance_decisions.strategies.adaptive_momentum.parameters import AdaptiveMomentumParameters
 from finance_decisions.strategies.buy_and_hold import decision as buy_and_hold
@@ -39,7 +39,8 @@ router = APIRouter(prefix="/v1", tags=["catalog"])
 
 PARAMETER_PROBLEM_PREFIX = "engine.parameters."
 PARAMETER_PROBLEM_TEXTS = {
-    code: text for code, text in catalog_of(Path(__file__).resolve().parents[1]).items() if code.startswith(PARAMETER_PROBLEM_PREFIX)
+    language: {code: text for code, text in catalog.items() if code.startswith(PARAMETER_PROBLEM_PREFIX)}
+    for language, catalog in catalogs_of(Path(__file__).resolve().parents[1]).items()
 }
 
 
@@ -48,7 +49,7 @@ class StrategyType:
     code: str
     name: str
     description: str
-    messages: dict[str, str]
+    messages: dict[str, dict[str, str]]
     parameters: type[BaseModel]
     decide: Callable[[EvaluationContext, Any], StrategyDecision]
     assess_risk: Callable[[EvaluationContext, Any], RiskAssessment]
@@ -77,7 +78,7 @@ class StrategyType:
             reports=list(self.reports),
             supports_backtest=self.supports_backtest,
             backtest_comparisons=list(self.backtest_comparisons),
-            messages={**PARAMETER_PROBLEM_TEXTS, **self.messages},
+            messages={language: {**PARAMETER_PROBLEM_TEXTS[language], **texts} for language, texts in self.messages.items()},
         )
 
     def parse_parameters(self, raw: dict[str, Any]) -> Any:

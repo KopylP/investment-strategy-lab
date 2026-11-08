@@ -8,7 +8,7 @@ public sealed class ReportNotificationTests
 {
     private static readonly DateTimeOffset Generated = new(2026, 10, 23, 18, 0, 0, TimeSpan.Zero);
 
-    private static string Rendered(string text) => MessageLocalizer.Default.Render(text);
+    private static string Rendered(string text) => MessageLocalizer.In(InvestmentLab.SharedKernel.Language.Ukrainian).Render(text);
 
     private static ReportGeneratedV1 Report(string kind = "Monthly", string? trigger = "Scheduled", int actions = 3, TimeSpan? thought = null) =>
         new(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "2026-10", kind, new DateOnly(2026, 10, 23), "PLN", Generated,

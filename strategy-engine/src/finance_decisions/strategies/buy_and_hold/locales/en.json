@@ -1,0 +1,9 @@
+{
+  "buy_and_hold.description": "Always holds the chosen funds in equal shares, with no signals and no move to cash; contributions top up whatever lags behind. The risk is the market's own: the S&P 500 fell as far as −54% in 2008–2009.",
+  "buy_and_hold.report.rebalance.name": "Monthly contribution",
+  "buy_and_hold.report.rebalance.description": "Says what to buy with the contribution so the funds stay in equal shares.",
+  "buy_and_hold.rationale.title": "What we hold",
+  "buy_and_hold.rationale.summary": "The strategy holds all chosen funds whatever the market does.",
+  "buy_and_hold.score.held": "is one of the chosen funds",
+  "buy_and_hold.market.ignored": "The strategy ignores the state of the market."
+}
