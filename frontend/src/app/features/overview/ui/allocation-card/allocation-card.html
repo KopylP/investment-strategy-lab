@@ -34,9 +34,14 @@
           ></div>
         </div>
         <div class="flex justify-between gap-2 text-xs text-muted-color mt-1.5">
-          <span
-            >{{ 'overview.allocation.actualAndTarget' | transloco: { actualShare: (sub.actualShare | percent), targetShare: (sub.targetShare | percent: 0) } }}</span
-          >
+          <span>{{
+            'overview.allocation.actualAndTarget'
+              | transloco
+                : {
+                    actualShare: (sub.actualShare | percent),
+                    targetShare: (sub.targetShare | percent: 0),
+                  }
+          }}</span>
           <span
             >TWR <span [appSignedValue]="sub.twr">{{ sub.twr | signedPercent }}</span></span
           >
@@ -48,7 +53,10 @@
   @if (dashboard().subPortfolios.length <= 1) {
     <p class="text-sm text-muted-color mt-0 mb-3">
       {{ 'overview.allocation.singleHint' | transloco }}
-      <a routerLink="/holdings" class="text-primary">{{ 'overview.allocation.holdingsLink' | transloco }}</a>.
+      <a routerLink="/holdings" class="text-primary">{{
+        'overview.allocation.holdingsLink' | transloco
+      }}</a
+      >.
     </p>
   }
   <div class="flex flex-col 2xl:flex-row gap-6 items-center">

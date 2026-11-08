@@ -1,7 +1,7 @@
+import { translate } from '@jsverse/transloco';
 import { ConfirmationService } from 'primeng/api';
 
-export const publishedStrategiesNotice =
-  'Опублікованими стратегіями можна керувати у вкладці «Стратегії». Видалення чернетки не впливає на них.';
+export const publishedStrategiesNotice = translate('builder.discard.hint');
 
 export function confirmDiscardDraft(
   confirmation: ConfirmationService,
@@ -9,11 +9,11 @@ export function confirmDiscardDraft(
   accept: () => void,
 ): void {
   confirmation.confirm({
-    header: 'Видалити чернетку?',
-    message: `Чернетку «${name}» та її схему буде повністю видалено без можливості відновлення. ${publishedStrategiesNotice}`,
+    header: translate('builder.discard.question'),
+    message: translate('builder.discard.message', { name, notice: publishedStrategiesNotice }),
     icon: 'pi pi-trash',
-    acceptLabel: 'Видалити',
-    rejectLabel: 'Скасувати',
+    acceptLabel: translate('common.delete'),
+    rejectLabel: translate('common.cancel'),
     acceptButtonProps: { severity: 'danger' },
     rejectButtonProps: { severity: 'secondary', text: true },
     defaultFocus: 'reject',

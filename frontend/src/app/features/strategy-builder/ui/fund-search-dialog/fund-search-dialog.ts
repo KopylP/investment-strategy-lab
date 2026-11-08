@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { DecimalPipe, PercentPipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -23,6 +24,7 @@ import { FundSearchStore } from '../../data-access/fund-search-store';
 @Component({
   selector: 'app-builder-fund-search-dialog',
   imports: [
+    TranslocoPipe,
     DecimalPipe,
     PercentPipe,
     FormsModule,

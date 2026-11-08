@@ -48,7 +48,8 @@ import { ReportTimingEditor } from '../../../reports/ui/report-timing-editor/rep
                   <div class="text-xs text-muted-color mt-1">
                     {{
                       report.own
-                        ? ('accounts.schedule.ownTime' | transloco: { strategy: label(report.strategySchedule) })
+                        ? ('accounts.schedule.ownTime'
+                          | transloco: { strategy: label(report.strategySchedule) })
                         : ('accounts.schedule.strategyTime' | transloco)
                     }}
                     · {{ report.strategies.join(' · ') }}
@@ -114,7 +115,9 @@ import { ReportTimingEditor } from '../../../reports/ui/report-timing-editor/rep
       }
       <div class="text-xs text-muted-color mt-3">
         {{ 'accounts.schedule.hint' | transloco: { timeZone: schedule.timeZone } }}
-        <a routerLink="/strategies" class="text-primary">{{ 'accounts.schedule.strategiesLink' | transloco }}</a>
+        <a routerLink="/strategies" class="text-primary">{{
+          'accounts.schedule.strategiesLink' | transloco
+        }}</a>
       </div>
     }
   `,

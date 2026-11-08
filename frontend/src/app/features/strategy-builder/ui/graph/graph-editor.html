@@ -1,4 +1,4 @@
-<div #workspace class="workspace" tabindex="0" aria-label="Редактор схеми стратегії">
+<div #workspace class="workspace" tabindex="0" [attr.aria-label]="'builder.graph.editor.label' | transloco">
   <aside class="palette" [class.mobile-open]="paletteOpen()">
     <app-node-palette
       [indicators]="vocabulary().indicators"
@@ -15,49 +15,49 @@
         (click)="paletteOpen.set(!paletteOpen())"
         [attr.aria-expanded]="paletteOpen()"
       >
-        <i class="pi pi-th-large"></i> Елементи
+        <i class="pi pi-th-large"></i> {{ 'builder.graph.editor.elements' | transloco }}
       </button>
-      <strong>Схема стратегії</strong>
+      <strong>{{ 'builder.graph.editor.title' | transloco }}</strong>
       <div class="tools">
-        <button type="button" (click)="helpVisible.set(!helpVisible())" [attr.aria-expanded]="helpVisible()" aria-controls="graph-help" title="Як працювати зі схемою" aria-label="Як працювати зі схемою"><i class="pi pi-question-circle"></i></button>
+        <button type="button" (click)="helpVisible.set(!helpVisible())" [attr.aria-expanded]="helpVisible()" aria-controls="graph-help" [title]="'builder.graph.editor.help' | transloco" [attr.aria-label]="'builder.graph.editor.help' | transloco"><i class="pi pi-question-circle"></i></button>
         @if (selectedEdge()) {
           <button
             type="button"
             (click)="removeSelectedEdge()"
-            aria-label="Видалити зв’язок"
-            title="Видалити зв’язок (Delete)"
+            [attr.aria-label]="'builder.graph.editor.deleteLink' | transloco"
+            [title]="'builder.graph.editor.deleteLinkHint' | transloco"
           >
             <i class="pi pi-trash"></i>
           </button>
           <button
             type="button"
             (click)="resetEdgeRoute()"
-            aria-label="Автоматичний маршрут"
-            title="Відновити автоматичний маршрут"
+            [attr.aria-label]="'builder.graph.editor.autoRoute' | transloco"
+            [title]="'builder.graph.editor.restoreRoute' | transloco"
           >
             <i class="pi pi-replay"></i>
           </button>
         }
-        <button type="button" aria-label="Скасувати дію" [disabled]="!canUndo()" (click)="undo()">
+        <button type="button" [attr.aria-label]="'builder.graph.editor.undo' | transloco" [disabled]="!canUndo()" (click)="undo()">
           <i class="pi pi-undo"></i>
         </button>
-        <button type="button" aria-label="Повторити дію" [disabled]="!canRedo()" (click)="redo()">
+        <button type="button" [attr.aria-label]="'builder.graph.editor.redo' | transloco" [disabled]="!canRedo()" (click)="redo()">
           <i class="pi pi-refresh"></i>
         </button>
-        <button type="button" (click)="arrangeAll()">Упорядкувати</button>
+        <button type="button" (click)="arrangeAll()">{{ 'builder.graph.editor.arrange' | transloco }}</button>
         <button
           type="button"
           (click)="fit()"
-          aria-label="Показати всю схему"
-          title="Показати всю схему"
+          [attr.aria-label]="'builder.graph.editor.fitAll' | transloco"
+          [title]="'builder.graph.editor.fitAll' | transloco"
         >
           <i class="pi pi-arrows-alt" aria-hidden="true"></i>
         </button>
         <button
           type="button"
           (click)="toggleFullscreen()"
-          [attr.aria-label]="isFullscreen() ? 'Вийти з повноекранного режиму' : 'На весь екран'"
-          [attr.title]="isFullscreen() ? 'Вийти з повноекранного режиму (Esc)' : 'На весь екран'"
+          [attr.aria-label]="isFullscreen() ? ('builder.graph.editor.exitFullscreen' | transloco) : ('builder.graph.editor.fullscreen' | transloco)"
+          [attr.title]="isFullscreen() ? ('builder.graph.editor.exitFullscreenEsc' | transloco) : ('builder.graph.editor.fullscreen' | transloco)"
           [attr.aria-pressed]="isFullscreen()"
         >
           <i
@@ -65,23 +65,21 @@
             aria-hidden="true"
           ></i>
         </button>
-        <button type="button" aria-label="Зменшити" (click)="setZoom(-1)">−</button>
+        <button type="button" [attr.aria-label]="'builder.graph.editor.zoomOut' | transloco" (click)="setZoom(-1)">−</button>
         <output>{{ (zoom() * 100).toFixed(0) }}%</output>
-        <button type="button" aria-label="Збільшити" (click)="setZoom(1)">+</button>
+        <button type="button" [attr.aria-label]="'builder.graph.editor.zoomIn' | transloco" (click)="setZoom(1)">+</button>
       </div>
     </div>
-    <nav class="role-nav" aria-label="Ролі стратегії">
-      <button type="button" (click)="focusSetup()">Фонди й ряди</button>
+    <nav class="role-nav" [attr.aria-label]="'builder.graph.editor.roles' | transloco">
+      <button type="button" (click)="focusSetup()">{{ 'builder.graph.visual.setup' | transloco }}</button>
       @for (role of roles; track role.kind) {
-        <button type="button" (click)="focusRole(role.kind)" title="Перейти до наступного вузла розділу">{{ role.title }}</button>
+        <button type="button" (click)="focusRole(role.kind)" [title]="'builder.graph.editor.nextNode' | transloco">{{ role.title }}</button>
       }
     </nav>
     @if (helpVisible()) {
       <div id="graph-help" class="graph-help">
-        Додайте елемент із панелі зліва. Тягніть від виходу до сумісного входу, щоб з’єднати вузли.
-        Тягніть фон для навігації, коліщатко змінює масштаб. Виберіть вузол, щоб простежити його гілку. Подвійний клік по вузлу наближає його; натисніть на фон, щоб показати все.
-        Esc скасовує зв’язок, Delete видаляє вибраний елемент.
-        <button type="button" (click)="helpVisible.set(false)" aria-label="Закрити підказку">✕</button>
+        {{ 'builder.graph.editor.helpText' | transloco }}
+        <button type="button" (click)="helpVisible.set(false)" [attr.aria-label]="'builder.graph.editor.closeHint' | transloco">✕</button>
       </div>
     }
     @if (error() || connecting()) {
@@ -89,14 +87,14 @@
         @if (error(); as message) {
           <span role="alert">{{ message }}</span>
         } @else if (connecting()) {
-          <span>Оберіть підсвічений вхід тієї самої ролі.</span>
+          <span>{{ 'builder.graph.editor.chooseInput' | transloco }}</span>
         } @else {
           <span
-            >Перетягніть елемент зліва · тягніть фон для навігації · коліщатко для масштабу</span
+            >{{ 'builder.graph.editor.dragHint' | transloco }}</span
           >
         }
         @if (connecting() || error()) {
-          <button type="button" (click)="cancelWire()">Скасувати</button>
+          <button type="button" (click)="cancelWire()">{{ 'common.cancel' | transloco }}</button>
         }
       </div>
     }
@@ -104,7 +102,7 @@
       #canvas
       data-block-canvas
       class="canvas"
-      aria-label="Полотно стратегії"
+      [attr.aria-label]="'builder.graph.editor.canvas' | transloco"
       (dblclick)="focusDoubleClickedNode($event)"
       (dragover)="$event.preventDefault()"
       (drop)="drop($event)"

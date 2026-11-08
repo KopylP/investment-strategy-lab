@@ -29,7 +29,8 @@ import { LossCarryforwardsCard } from '../../ui/loss-carryforwards-card/loss-car
 
 @Component({
   selector: 'app-tax-year-page',
-  imports: [TranslocoPipe, 
+  imports: [
+    TranslocoPipe,
     LossCarryforwardsCard,
     BrokerStatementsCard,
     TaxOpenLotsCard,
@@ -62,8 +63,7 @@ export class TaxYearPage {
   protected confirmRemovePit8C(accountId: string): void {
     this.confirm.confirm({
       header: translate('taxes.removePit8cQuestion'),
-      message:
-        translate('taxes.removePit8cHint'),
+      message: translate('taxes.removePit8cHint'),
       acceptLabel: translate('taxes.removeAction'),
       rejectLabel: translate('common.cancel'),
       acceptButtonProps: { severity: 'danger' },

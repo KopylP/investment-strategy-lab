@@ -22,7 +22,8 @@ import { TapTooltip } from '../../../../shared/ui/tap-tooltip';
 
 @Component({
   selector: 'app-declaration-dialog',
-  imports: [TranslocoPipe, 
+  imports: [
+    TranslocoPipe,
     TaxMoneyPipe,
     NgTemplateOutlet,
     FormsModule,
@@ -82,7 +83,10 @@ export class DeclarationDialog {
   protected readonly formValue = formValue;
 
   protected async copy(field: DeclarationField): Promise<void> {
-    await this.write(formValue(field), translate('taxes.declaration.fieldCopied', { position: field.position }));
+    await this.write(
+      formValue(field),
+      translate('taxes.declaration.fieldCopied', { position: field.position }),
+    );
   }
 
   protected async copyAll(declaration: TaxDeclaration): Promise<void> {
@@ -110,7 +114,11 @@ export class DeclarationDialog {
       await navigator.clipboard.writeText(text);
       this.messages.add({ severity: 'success', summary, life: 1500 });
     } catch {
-      this.messages.add({ severity: 'warn', summary: translate('taxes.declaration.copyFailed'), detail: text });
+      this.messages.add({
+        severity: 'warn',
+        summary: translate('taxes.declaration.copyFailed'),
+        detail: text,
+      });
     }
   }
 }

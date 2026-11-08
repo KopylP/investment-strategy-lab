@@ -1,30 +1,72 @@
 <div class="card">
   <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
     <h2 class="text-lg font-semibold m-0">
-      {{ current().status === 'Preview' ? ('transactions.rows.whatChanges' | transloco) : ('transactions.rows.result' | transloco) }}
+      {{
+        current().status === 'Preview'
+          ? ('transactions.rows.whatChanges' | transloco)
+          : ('transactions.rows.result' | transloco)
+      }}
     </h2>
     <div class="flex flex-wrap gap-2">
-      <p-tag [value]="'transactions.rows.count.new' | transloco: { count: current().counts.new }" severity="success" />
-      <p-tag [value]="'transactions.rows.count.alreadyImported' | transloco: { count: current().counts.alreadyImported }" severity="secondary" />
+      <p-tag
+        [value]="'transactions.rows.count.new' | transloco: { count: current().counts.new }"
+        severity="success"
+      />
+      <p-tag
+        [value]="
+          'transactions.rows.count.alreadyImported'
+            | transloco: { count: current().counts.alreadyImported }
+        "
+        severity="secondary"
+      />
       @if (current().counts.differs) {
-        <p-tag [value]="'transactions.rows.count.differs' | transloco: { count: current().counts.differs }" severity="warn" />
+        <p-tag
+          [value]="
+            'transactions.rows.count.differs' | transloco: { count: current().counts.differs }
+          "
+          severity="warn"
+        />
       }
       @if (current().counts.matchesExisting) {
-        <p-tag [value]="'transactions.rows.count.matchesExisting' | transloco: { count: current().counts.matchesExisting }" severity="info" />
+        <p-tag
+          [value]="
+            'transactions.rows.count.matchesExisting'
+              | transloco: { count: current().counts.matchesExisting }
+          "
+          severity="info"
+        />
       }
       @if (current().counts.toReverse) {
-        <p-tag [value]="'transactions.rows.count.toReverse' | transloco: { count: current().counts.toReverse }" severity="danger" />
+        <p-tag
+          [value]="
+            'transactions.rows.count.toReverse' | transloco: { count: current().counts.toReverse }
+          "
+          severity="danger"
+        />
       }
       @if (current().counts.needsMapping) {
-        <p-tag [value]="'transactions.rows.count.needsMapping' | transloco: { count: current().counts.needsMapping }" severity="danger" />
+        <p-tag
+          [value]="
+            'transactions.rows.count.needsMapping'
+              | transloco: { count: current().counts.needsMapping }
+          "
+          severity="danger"
+        />
       }
       @if (current().counts.unsupported) {
-        <p-tag [value]="'transactions.rows.count.unsupported' | transloco: { count: current().counts.unsupported }" severity="contrast" />
+        <p-tag
+          [value]="
+            'transactions.rows.count.unsupported'
+              | transloco: { count: current().counts.unsupported }
+          "
+          severity="contrast"
+        />
       }
     </div>
   </div>
   <label class="flex items-center gap-2 mb-3 text-sm">
-    <p-toggleswitch [ngModel]="onlyChanges()" (ngModelChange)="onlyChanges.set($event)" /> {{ 'transactions.rows.changesOnly' | transloco }}
+    <p-toggleswitch [ngModel]="onlyChanges()" (ngModelChange)="onlyChanges.set($event)" />
+    {{ 'transactions.rows.changesOnly' | transloco }}
   </label>
   <p-table
     [value]="rows()"
@@ -38,9 +80,16 @@
         <th>{{ 'taxes.date' | transloco }}</th>
         <th class="hidden sm:table-cell">{{ 'transactions.rows.operation' | transloco }}</th>
         <th>{{ 'transactions.rows.ticker' | transloco }}</th>
-        <th class="text-right hidden sm:table-cell">{{ 'transactions.trade.quantity' | transloco }}</th>
+        <th class="text-right hidden sm:table-cell">
+          {{ 'transactions.trade.quantity' | transloco }}
+        </th>
         <th class="text-right">{{ 'transactions.cash.amount' | transloco }}</th>
-        <th class="text-right hidden sm:table-cell">{{ 'transactions.rows.inCurrency' | transloco: { accountCurrency: current().accountCurrency } }}</th>
+        <th class="text-right hidden sm:table-cell">
+          {{
+            'transactions.rows.inCurrency'
+              | transloco: { accountCurrency: current().accountCurrency }
+          }}
+        </th>
         <th>{{ 'transactions.rows.decision' | transloco }}</th>
       </tr>
     </ng-template>
@@ -54,7 +103,9 @@
         <td>
           <div class="font-medium">{{ row.ticker ?? '—' }}</div>
           @if (row.quantity !== null) {
-            <div class="sm:hidden text-xs text-muted-color">{{ 'common.units' | transloco: { quantity: (row.quantity | quantity) } }}</div>
+            <div class="sm:hidden text-xs text-muted-color">
+              {{ 'common.units' | transloco: { quantity: (row.quantity | quantity) } }}
+            </div>
           }
         </td>
         <td class="text-right hidden sm:table-cell">
@@ -93,7 +144,12 @@
   }
   <div class="flex flex-wrap justify-end gap-2 mt-4">
     @if (current().status === 'Preview') {
-      <p-button [label]="'transactions.rows.otherFile' | transloco" [text]="true" severity="secondary" (onClick)="store.reset()" />
+      <p-button
+        [label]="'transactions.rows.otherFile' | transloco"
+        [text]="true"
+        severity="secondary"
+        (onClick)="store.reset()"
+      />
       <p-button
         [label]="'transactions.rows.importAction' | transloco"
         icon="pi pi-check"
@@ -119,7 +175,11 @@
           (onClick)="undo.emit(current().id)"
         />
       }
-      <p-button [label]="'transactions.rows.toJournal' | transloco" icon="pi pi-book" routerLink="/transactions" />
+      <p-button
+        [label]="'transactions.rows.toJournal' | transloco"
+        icon="pi pi-book"
+        routerLink="/transactions"
+      />
     }
   </div>
 </div>

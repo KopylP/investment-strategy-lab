@@ -12,7 +12,8 @@ import { NewAccountStepDone } from '../../ui/new-account-step-done/new-account-s
 
 @Component({
   selector: 'app-account-new-page',
-  imports: [TranslocoPipe, 
+  imports: [
+    TranslocoPipe,
     Stepper,
     StepList,
     Step,

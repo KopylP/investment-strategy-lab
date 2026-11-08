@@ -26,7 +26,8 @@ import { StrategyDetailStore } from '../../data-access/strategies-store';
 
 @Component({
   selector: 'app-strategy-detail-page',
-  imports: [TranslocoPipe, 
+  imports: [
+    TranslocoPipe,
     FormsModule,
     Button,
     Message,
@@ -59,7 +60,9 @@ export class StrategyDetailPage {
   protected readonly reports = computed(() =>
     (this.store.strategy()?.reports ?? []).map((report) => ({
       ...report,
-      when: report.schedule ? scheduleLabel(report.schedule) : translate('strategies.detail.manualOnly'),
+      when: report.schedule
+        ? scheduleLabel(report.schedule)
+        : translate('strategies.detail.manualOnly'),
     })),
   );
 

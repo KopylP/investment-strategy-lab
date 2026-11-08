@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 import { ClassicPreset, GetSchemes } from 'rete';
 import { NodeDto, DraftProblemDto, DraftSetupDto } from '../../models/draft-dto';
 import { VocabularyDto } from '../../models/vocabulary-dto';
@@ -49,7 +50,11 @@ export class StrategyNode extends ClassicPreset.Node {
     if (dto.kind === 'Indicator' && !this.inputs['of'])
       this.addInput(
         'of',
-        new ClassicPreset.Input(new ClassicPreset.Socket('Series'), 'Ряд', false),
+        new ClassicPreset.Input(
+          new ClassicPreset.Socket('Series'),
+          translate('builder.graph.socket.series'),
+          false,
+        ),
       );
     if (dto.kind === 'Portfolio')
       for (const [name, type] of [
@@ -62,23 +67,35 @@ export class StrategyNode extends ClassicPreset.Node {
     if (dto.kind === 'Cash')
       this.addOutput(
         'output',
-        new ClassicPreset.Output(new ClassicPreset.Socket('Budget'), 'У кеші'),
+        new ClassicPreset.Output(
+          new ClassicPreset.Socket('Budget'),
+          translate('builder.graph.socket.inCash'),
+        ),
       );
     if (dto.kind === 'RiskResult' && !kind?.output)
       this.addOutput(
         'output',
-        new ClassicPreset.Output(new ClassicPreset.Socket('RiskPolicy'), 'Контроль'),
+        new ClassicPreset.Output(
+          new ClassicPreset.Socket('RiskPolicy'),
+          translate('builder.graph.socket.control'),
+        ),
       );
     if (dto.kind === 'Setup') this.updateSetupOutputs();
     if (dto.kind === 'Cash')
       this.addOutput(
         'series',
-        new ClassicPreset.Output(new ClassicPreset.Socket('Series'), 'Ряд кешу'),
+        new ClassicPreset.Output(
+          new ClassicPreset.Socket('Series'),
+          translate('builder.graph.socket.cashSeries'),
+        ),
       );
     if (dto.kind === 'SelectionResult')
       this.addOutput(
         'cash',
-        new ClassicPreset.Output(new ClassicPreset.Socket('Budget'), 'Залишок'),
+        new ClassicPreset.Output(
+          new ClassicPreset.Socket('Budget'),
+          translate('builder.graph.socket.remainder'),
+        ),
       );
     if (kind?.output)
       this.addOutput(

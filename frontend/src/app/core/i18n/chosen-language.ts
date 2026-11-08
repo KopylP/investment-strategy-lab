@@ -1,6 +1,13 @@
 import { computed, DOCUMENT, effect, inject, Injectable, resource } from '@angular/core';
 import { AuthStore } from '../auth/auth-store';
-import { activeLanguage, isLanguage, Language, languageFor, rememberedLanguage, rememberLanguage } from './language';
+import {
+  activeLanguage,
+  isLanguage,
+  Language,
+  languageFor,
+  rememberedLanguage,
+  rememberLanguage,
+} from './language';
 
 @Injectable({ providedIn: 'root' })
 export class ChosenLanguage {
@@ -28,7 +35,7 @@ export class ChosenLanguage {
   }
 
   async choose(choice: Language | null): Promise<void> {
-    const profile = this.profileResource.value() ?? (await this.auth.getProfile());
+    const profile = await this.auth.getProfile();
     const saved = await this.auth.updateProfile({ ...profile, language: choice });
 
     this.profileResource.set(saved);

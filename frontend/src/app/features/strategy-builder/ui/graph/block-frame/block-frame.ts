@@ -1,9 +1,10 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { Button } from 'primeng/button';
 
 @Component({
   selector: 'app-block-frame',
-  imports: [Button],
+  imports: [TranslocoPipe, Button],
   template: `
     <section
       class="mb-4 overflow-hidden rounded-2xl border border-surface bg-surface-0 dark:bg-surface-900"
@@ -20,7 +21,7 @@ import { Button } from 'primeng/button';
         </div>
         @if (!collapsed()) {
           <p-button
-            label="Впорядкувати"
+            [label]="'builder.graph.block.arrange' | transloco"
             icon="pi pi-sort-alt"
             size="small"
             [text]="true"
@@ -30,7 +31,11 @@ import { Button } from 'primeng/button';
         }
         <p-button
           [icon]="collapsed() ? 'pi pi-chevron-down' : 'pi pi-chevron-up'"
-          [ariaLabel]="collapsed() ? 'Розгорнути блок' : 'Згорнути блок'"
+          [ariaLabel]="
+            collapsed()
+              ? ('builder.graph.block.expand' | transloco)
+              : ('builder.graph.block.collapse' | transloco)
+          "
           size="small"
           [text]="true"
           severity="secondary"
@@ -39,7 +44,7 @@ import { Button } from 'primeng/button';
       </header>
       @if (collapsed()) {
         <div class="px-4 py-3 text-sm text-muted-color">
-          {{ sentence() || 'Правила ще не задано' }}
+          {{ sentence() || ('builder.graph.block.empty' | transloco) }}
         </div>
       } @else {
         <ng-content />

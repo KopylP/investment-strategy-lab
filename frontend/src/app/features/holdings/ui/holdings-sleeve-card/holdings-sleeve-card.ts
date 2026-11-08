@@ -21,7 +21,8 @@ import { Viewport } from '../../../../shared/ui/viewport';
 
 @Component({
   selector: 'app-holdings-sleeve-card',
-  imports: [TranslocoPipe, 
+  imports: [
+    TranslocoPipe,
     Button,
     TableModule,
     Tooltip,

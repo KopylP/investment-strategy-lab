@@ -36,8 +36,9 @@ cd frontend && npx ng build
 
 ## Conventions
 
-- Everything the user sees is in **Ukrainian** (UI, report texts, notifications, add-on docs). Code, identifiers and
-  code comments are in English. A report is «рапорт» in the UI.
+- Everything the user sees is in **Ukrainian and English** (UI, report texts, notifications); the user picks the language in
+  the profile, the browser's language is the default (ADR-0027). Add-on docs stay Ukrainian. MCP replies are always English.
+  Code, identifiers and code comments are in English. A report is «рапорт» in the Ukrainian UI.
 - **No text in the user's language in backend or engine code.** See Language below.
 - Commit messages and code follow the code rules below; the why of a decision goes in an ADR, not in a comment.
   ADRs (`docs/architecture/adr/`) are written in English.
@@ -91,16 +92,20 @@ The backend and the engine speak in codes; the texts live in catalogs and are ch
   token `@report.warning.turnover {"turnover":0.4,"limit":0.2}`. It travels and is stored as a plain string. Pass raw values
   (fractions, amounts, a currency code) and let the template format them; a parameter may itself be a message.
 - **An error is a code too:** `Error.Validation(code, englishDetail, parameters)`. The English detail is for logs and developers.
-- **Texts live in catalogs:** `locales/uk.json` for the service, and a strategy's own catalog in the engine for its texts.
+- **Texts live in catalogs, one per language with the same codes:** `locales/{uk,en}.json` for the service, and a strategy's
+  own `locales/{uk,en}.json` in the engine for its texts. A new text goes into every language in the same change.
   Templates use `{name}`, `{x:percent}`, `{x:signedPercent}`, `{x:money:currencyParam}`, `{x:amount}`, `{x:plural:one|few|many}`,
   `{x:join:separator}`. Never glue a message into other text (`$"{name}: {note}"`, `"; ".join(...)`): it would show as a raw code. Pass it as a parameter.
-- **The frontend localizes:** `core/i18n/translation-interceptor.ts` translates every token in every API response, so a screen
-  shows the backend's strings without knowing about codes. A string without a known code is shown as it is, so older
+- **The frontend localizes:** `core/i18n/translation-interceptor.ts` translates every token in every API response into the
+  active language, so a screen shows the backend's strings without knowing about codes. The screens' own texts are Transloco
+  keys in `frontend/src/i18n/{uk,en}.json` (ICU syntax), and every API request carries `Accept-Language`. A string without a known code is shown as it is, so older
   stored texts and what the user typed keep working.
 - **The backend renders only what never reaches the frontend:** Home Assistant notifications and generated PDFs go through
-  `MessageLocalizer`, in the adapter or printer, reading the same catalog.
+  `MessageLocalizer`, in the adapter or printer, reading the same catalogs: a PDF in the request's language (ASP.NET Core
+  request localization), a notification in the user's chosen language or Home Assistant's, MCP replies in English.
 - **Official names stay:** Polish field names on a PIT form are the form's own words, not translations.
-- Enforced by `LocalizationTests`: no Cyrillic in backend code, and every code the backend sends exists in the catalog.
+- Enforced by `LocalizationTests`: no Cyrillic in backend or frontend code (PrimeNG's own Ukrainian texts excepted), every code
+  the backend sends exists in the catalog, and every language of a catalog has the same codes.
 
 ## Modularity
 

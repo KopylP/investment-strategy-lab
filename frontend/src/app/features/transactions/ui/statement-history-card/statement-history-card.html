@@ -8,7 +8,9 @@
           <th class="hidden sm:table-cell">{{ 'transactions.history.uploaded' | transloco }}</th>
           <th class="hidden sm:table-cell">{{ 'transactions.history.mode' | transloco }}</th>
           <th>{{ 'transactions.history.state' | transloco }}</th>
-          <th class="text-right hidden sm:table-cell">{{ 'transactions.history.recorded' | transloco }}</th>
+          <th class="text-right hidden sm:table-cell">
+            {{ 'transactions.history.recorded' | transloco }}
+          </th>
           <th></th></tr
       ></ng-template>
       <ng-template #body let-item>
@@ -22,7 +24,10 @@
               {{ item.fileName }}
             </button>
             <div class="sm:hidden text-xs text-muted-color">
-              {{ 'transactions.history.uploadedLine' | transloco: { uploadedAt: (item.uploadedAt | dateTime), recorded: item.recorded } }}
+              {{
+                'transactions.history.uploadedLine'
+                  | transloco: { uploadedAt: (item.uploadedAt | dateTime), recorded: item.recorded }
+              }}
             </div>
           </td>
           <td class="hidden sm:table-cell">{{ item.uploadedAt | dateTime }}</td>

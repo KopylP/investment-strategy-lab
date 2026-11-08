@@ -8,7 +8,13 @@ import { NotificationSettingsCard } from '../../ui/notification-settings/notific
 
 @Component({
   selector: 'app-profile-page',
-  imports: [TranslocoPipe, PageHeader, LanguageSettingsCard, NotificationSettingsCard, SignalNotificationSettings],
+  imports: [
+    TranslocoPipe,
+    PageHeader,
+    LanguageSettingsCard,
+    NotificationSettingsCard,
+    SignalNotificationSettings,
+  ],
   templateUrl: './profile-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

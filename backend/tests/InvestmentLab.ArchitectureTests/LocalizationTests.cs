@@ -7,6 +7,7 @@ namespace InvestmentLab.ArchitectureTests;
 public sealed partial class LocalizationTests
 {
     private const string MigrationsFolder = "Migrations";
+    private const string PrimeNgUkrainianTexts = "uk-translation.ts";
 
     private static readonly string[] BuildFolders = ["bin", "obj", MigrationsFolder];
 
@@ -46,7 +47,48 @@ public sealed partial class LocalizationTests
         mismatched.ShouldBeEmpty();
     }
 
+    [Fact]
+    public void Frontend_code_holds_no_text_in_a_users_language()
+    {
+        var offenders = FrontendSources().Where(file => CyrillicText().IsMatch(File.ReadAllText(file))).ToList();
+
+        offenders.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Every_language_of_the_frontend_has_a_text_for_every_key()
+    {
+        var ukrainian = FrontendCatalog(Language.Ukrainian);
+
+        var mismatched = Language.All
+            .Where(language => !FrontendCatalog(language).SetEquals(ukrainian))
+            .Select(language => language.Code)
+            .ToList();
+
+        mismatched.ShouldBeEmpty();
+    }
+
     private static HashSet<string> Catalog() => Catalog(Language.Ukrainian);
+
+    private static string FrontendSourceFolder() => Path.Combine(RepositoryFolder.Backend().Parent!.FullName, "frontend", "src");
+
+    private static IEnumerable<string> FrontendSources() =>
+        Directory.EnumerateFiles(Path.Combine(FrontendSourceFolder(), "app"), "*.*", SearchOption.AllDirectories)
+            .Where(file => file.EndsWith(".ts", StringComparison.Ordinal) || file.EndsWith(".html", StringComparison.Ordinal))
+            .Where(file => Path.GetFileName(file) != PrimeNgUkrainianTexts);
+
+    private static HashSet<string> FrontendCatalog(Language language)
+    {
+        var path = Path.Combine(FrontendSourceFolder(), "i18n", $"{language.Code}.json");
+        using var document = JsonDocument.Parse(File.ReadAllText(path));
+
+        return [.. KeysOf(document.RootElement, prefix: "")];
+    }
+
+    private static IEnumerable<string> KeysOf(JsonElement node, string prefix) =>
+        node.EnumerateObject().SelectMany(property => property.Value.ValueKind == JsonValueKind.Object
+            ? KeysOf(property.Value, $"{prefix}{property.Name}.")
+            : [$"{prefix}{property.Name}"]);
 
     private static HashSet<string> Catalog(Language language)
     {

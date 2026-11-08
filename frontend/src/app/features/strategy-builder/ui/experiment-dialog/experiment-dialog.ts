@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, input, model, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Button } from 'primeng/button';
@@ -17,7 +18,7 @@ const storageKey = 'strategy-builder.experiment-form';
 
 @Component({
   selector: 'app-experiment-dialog',
-  imports: [FormsModule, Button, Checkbox, Dialog, InputNumber, InputText, Message, Select],
+  imports: [TranslocoPipe, FormsModule, Button, Checkbox, Dialog, InputNumber, InputText, Message, Select],
   templateUrl: './experiment-dialog.html',
   host: { class: 'contents' },
   changeDetection: ChangeDetectionStrategy.OnPush,

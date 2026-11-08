@@ -1,15 +1,17 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { DraftProblemDto } from '../../models/draft-dto';
 
 @Component({
   selector: 'app-builder-problems-panel',
+  imports: [TranslocoPipe],
   template: `<section
     class="card mb-0"
-    aria-label="Що перевірити"
+    [attr.aria-label]="'builder.problems.title' | transloco"
     [class.compact]="compact()"
     aria-live="polite"
   >
-    <h2 class="mb-3 text-lg font-semibold">Що перевірити</h2>
+    <h2 class="mb-3 text-lg font-semibold">{{ 'builder.problems.title' | transloco }}</h2>
     @for (problem of problems(); track $index) {
       <button
         type="button"
@@ -27,7 +29,7 @@ import { DraftProblemDto } from '../../models/draft-dto';
         <span>{{ problem.message }}</span>
       </button>
     } @empty {
-      <p class="text-sm text-muted-color">Проблем не виявлено.</p>
+      <p class="text-sm text-muted-color">{{ 'builder.problems.none' | transloco }}</p>
     }
   </section>`,
   styles: `

@@ -7,12 +7,12 @@
 
 <p-stepper [value]="draft.step()" (valueChange)="draft.step.set($any($event))" [linear]="true">
   <p-step-list>
-    <p-step [value]="1">{{ 'step.account' | transloco }}</p-step>
-    <p-step [value]="2">{{ 'step.sleeves' | transloco }}</p-step>
-    <p-step [value]="3">{{ 'step.contributions' | transloco }}</p-step>
-    <p-step [value]="4">{{ 'step.reports' | transloco }}</p-step>
-    <p-step [value]="5">{{ 'step.review' | transloco }}</p-step>
-    <p-step [value]="6">{{ 'step.done' | transloco }}</p-step>
+    <p-step [value]="1">{{ 'accounts.wizard.step.account' | transloco }}</p-step>
+    <p-step [value]="2">{{ 'accounts.wizard.step.sleeves' | transloco }}</p-step>
+    <p-step [value]="3">{{ 'accounts.wizard.step.contributions' | transloco }}</p-step>
+    <p-step [value]="4">{{ 'accounts.wizard.step.reports' | transloco }}</p-step>
+    <p-step [value]="5">{{ 'accounts.wizard.step.review' | transloco }}</p-step>
+    <p-step [value]="6">{{ 'accounts.wizard.step.done' | transloco }}</p-step>
   </p-step-list>
 
   <p-step-panels>

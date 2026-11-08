@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -62,7 +63,7 @@ interface Snapshot {
 type Extra = AngularArea2D<Schemes>;
 @Component({
   selector: 'app-graph-editor',
-  imports: [Palette],
+  imports: [TranslocoPipe, Palette],
   templateUrl: './graph-editor.html',
   styleUrl: './graph-editor.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -371,7 +372,7 @@ export class GraphEditor implements AfterViewInit, OnDestroy {
       })
       .catch((error) => {
         console.error('Strategy graph', error);
-        this.error.set('Не вдалося оновити схему. Спробуйте ще раз.');
+        this.error.set(translate('builder.graph.editor.updateFailed'));
       });
   }
   private async sync(
@@ -542,7 +543,7 @@ export class GraphEditor implements AfterViewInit, OnDestroy {
   ): string | null {
     const source = this.editor.getNode(from),
       target = this.editor.getNode(to);
-    if (!source || !target) return 'Оберіть вихід та вхід вузла.';
+    if (!source || !target) return translate('builder.graph.editor.chooseSockets');
     if (
       source.outputs[output]?.socket.name !== target.inputs[key]?.socket.name &&
       !(
@@ -551,12 +552,12 @@ export class GraphEditor implements AfterViewInit, OnDestroy {
         target.inputs[key]?.socket.name === 'Candidates'
       )
     )
-      return 'Цей вхід очікує інший тип даних. Оберіть підсвічений вхід.';
+      return translate('builder.graph.editor.wrongType');
     const pending = [to],
       seen = new Set<string>();
     while (pending.length && !(source.dto.kind === 'Cash' && output === 'series')) {
       const id = pending.pop()!;
-      if (id === from) return 'Цей зв’язок створює цикл. Оберіть інший вхід.';
+      if (id === from) return translate('builder.graph.editor.cycle');
       if (seen.has(id)) continue;
       seen.add(id);
       pending.push(
@@ -576,25 +577,25 @@ export class GraphEditor implements AfterViewInit, OnDestroy {
       ],
     };
     if (candidatePath(candidate).filter((node) => node.kind === 'FundSelection').length > 1)
-      return 'У потоці портфеля може бути один модуль відбору. Поєднуйте додаткові критерії в його оцінці.';
+      return translate('builder.graph.editor.oneSelection');
     if (
       target.dto.kind === 'Cash' &&
       key === 'remainder' &&
       !(source.dto.kind === 'SelectionResult' && output === 'cash')
     )
-      return 'Кеш отримує вихід «Залишок» після розподілу грошей.';
+      return translate('builder.graph.editor.cashGetsRemainder');
     if (
       target.dto.kind === 'SelectionResult' &&
       key === 'budget' &&
       source.dto.kind !== 'MarketResult'
     )
-      return 'Бюджет задає ринковий фільтр.';
+      return translate('builder.graph.editor.budgetFromMarket');
     if (
       target.dto.kind === 'Portfolio' &&
       key === 'cash' &&
       !(source.dto.kind === 'Cash' && output === 'output')
     )
-      return 'Портфель отримує кеш після розподілу залишку.';
+      return translate('builder.graph.editor.portfolioGetsCash');
     const market = candidate.nodes.find((node) => node.kind === 'MarketResult');
     if (market) {
       const ids = dependenciesOf(candidate, market.id);
@@ -611,7 +612,7 @@ export class GraphEditor implements AfterViewInit, OnDestroy {
             }),
         )
       )
-        return 'Ринковий фільтр оцінює ринок загалом. Оберіть бенчмарк або конкретний інструмент замість «цього фонду».';
+        return translate('builder.graph.editor.marketNotFund');
     }
     return null;
   }
@@ -697,7 +698,7 @@ export class GraphEditor implements AfterViewInit, OnDestroy {
         await this.workspace().nativeElement.requestFullscreen();
       }
     } catch {
-      this.error.set('Не вдалося відкрити повноекранний режим. Спробуйте ще раз.');
+      this.error.set(translate('builder.graph.editor.fullscreenFailed'));
     }
   }
   @HostListener('document:fullscreenchange')
@@ -763,7 +764,7 @@ export class GraphEditor implements AfterViewInit, OnDestroy {
         y: (event.clientY - bounds.top - t.y) / t.k - 24,
       });
     } catch {
-      this.error.set('Не вдалося додати вузол. Оберіть його зі списку.');
+      this.error.set(translate('builder.graph.editor.addFailed'));
     }
   }
   private updateNode(node: NodeDto) {
@@ -914,7 +915,7 @@ export class GraphEditor implements AfterViewInit, OnDestroy {
       this.refreshConnections();
     } catch (error) {
       console.error('Strategy layout', error);
-      this.error.set('Не вдалося впорядкувати схему. Спробуйте ще раз.');
+      this.error.set(translate('builder.graph.editor.arrangeFailed'));
       return;
     }
     this.persistPositions();

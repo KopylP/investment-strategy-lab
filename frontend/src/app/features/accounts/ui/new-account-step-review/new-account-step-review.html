@@ -11,7 +11,9 @@
           <div class="text-sm text-muted-color">{{ row.blurb }}</div>
         </div>
         <div class="text-right">
-          <div class="text-muted-color text-sm">{{ 'accounts.wizard.review.monthly' | transloco }}</div>
+          <div class="text-muted-color text-sm">
+            {{ 'accounts.wizard.review.monthly' | transloco }}
+          </div>
           <div class="font-semibold">≈ {{ row.contribution }}</div>
         </div>
       </div>
@@ -34,7 +36,9 @@
   }
   <p-message severity="info" styleClass="mt-5">
     <div>
-      {{ 'accounts.wizard.review.whatNext' | transloco }} <b>{{ 'accounts.wizard.review.report' | transloco }}</b> {{ 'accounts.wizard.review.whatNextHint' | transloco }}
+      {{ 'accounts.wizard.review.whatNext' | transloco }}
+      <b>{{ 'accounts.wizard.review.report' | transloco }}</b>
+      {{ 'accounts.wizard.review.whatNextHint' | transloco }}
     </div>
   </p-message>
   <div class="mt-5 border border-surface rounded-border p-4">
@@ -43,10 +47,17 @@
     </div>
     <ul class="m-0 pl-5 flex flex-col gap-1 text-sm">
       <li>
-        <b>{{ 'accounts.wizard.review.changeShares' | transloco }}</b> {{ 'accounts.wizard.review.changeSharesWhere' | transloco }}
+        <b>{{ 'accounts.wizard.review.changeShares' | transloco }}</b>
+        {{ 'accounts.wizard.review.changeSharesWhere' | transloco }}
       </li>
-      <li><b>{{ 'accounts.wizard.review.changePlan' | transloco }}</b> {{ 'accounts.wizard.review.changePlanWhere' | transloco }}</li>
-      <li><b>{{ 'accounts.wizard.review.changeSchedule' | transloco }}</b> {{ 'accounts.wizard.review.changeScheduleWhere' | transloco }}</li>
+      <li>
+        <b>{{ 'accounts.wizard.review.changePlan' | transloco }}</b>
+        {{ 'accounts.wizard.review.changePlanWhere' | transloco }}
+      </li>
+      <li>
+        <b>{{ 'accounts.wizard.review.changeSchedule' | transloco }}</b>
+        {{ 'accounts.wizard.review.changeScheduleWhere' | transloco }}
+      </li>
     </ul>
   </div>
   <div class="flex justify-between mt-6">

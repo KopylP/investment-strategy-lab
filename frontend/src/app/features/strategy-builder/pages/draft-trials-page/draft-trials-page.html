@@ -1,12 +1,12 @@
 <app-page-header
-  title="Бектести чернетки"
+  [title]="'routes.draftTrials' | transloco"
   [backLink]="'/strategy-builder/' + draftId()"
-  backLabel="Чернетка"
+  [backLabel]="'routes.draft' | transloco"
 />
 @if (store.error()) {
-  <p-message severity="error" text="Не вдалося завантажити бектести" />
+  <p-message severity="error" [text]="'builder.trials.loadFailed' | transloco" />
 }
-<p class="trials-hint">Виберіть запуск, щоб побачити результати. Два готові запуски можна порівняти.</p>
+<p class="trials-hint">{{ 'builder.trials.hint' | transloco }}</p>
 
 <ng-template #selectionMark let-run>
   <span class="selection-mark" [class.checked]="isSelected(run)" aria-hidden="true">
@@ -28,7 +28,7 @@
 </ng-template>
 
 @if (listLayout()) {
-  <ul class="trial-list" aria-label="Запуски бектесту">
+  <ul class="trial-list" [attr.aria-label]="'builder.trials.runs' | transloco">
     @for (run of store.trials(); track run.number) {
       <li>
         <button
@@ -44,7 +44,7 @@
           <ng-container *ngTemplateOutlet="selectionMark; context: { $implicit: run }" />
           <span class="trial-main">
             <span class="trial-title">
-              Запуск {{ run.number }}
+              {{ 'builder.trials.runNumber' | transloco: { number: run.number } }}
               @if (run.label) {
                 <span class="trial-label">{{ run.label }}</span>
               }
@@ -54,7 +54,7 @@
           <span class="trial-figure">
             @if (run.status === 'Succeeded') {
               <span class="figure-value">{{ run.annualReturn | percent }}</span>
-              <span class="figure-caption">на рік</span>
+              <span class="figure-caption">{{ 'builder.trials.perYear' | transloco }}</span>
             } @else {
               <ng-container *ngTemplateOutlet="statusBadge; context: { $implicit: run }" />
             }
@@ -66,7 +66,7 @@
       </li>
     } @empty {
       @if (!store.loading()) {
-        <li class="trial-empty">Запусків ще немає. Поверніться до чернетки й натисніть «Бектест».</li>
+        <li class="trial-empty">{{ 'builder.trials.empty' | transloco }}</li>
       }
     }
   </ul>
@@ -75,13 +75,13 @@
     <p-table [value]="store.trials()" [loading]="store.loading()" [tableStyle]="{ 'min-width': '40rem' }">
       <ng-template #header>
         <tr>
-          <th class="mark-column"><span class="sr-only">Вибір</span></th>
-          <th>Запуск</th>
-          <th class="number">Річна дохідність</th>
-          <th class="number">Після податку</th>
-          <th class="number">Волатильність</th>
+          <th class="mark-column"><span class="sr-only">{{ 'builder.trials.choice' | transloco }}</span></th>
+          <th>{{ 'builder.trials.run' | transloco }}</th>
+          <th class="number">{{ 'builder.comparison.yearlyReturn' | transloco }}</th>
+          <th class="number">{{ 'backtest.afterTax' | transloco }}</th>
+          <th class="number">{{ 'backtest.volatility' | transloco }}</th>
           <th class="number">Sharpe</th>
-          <th class="number">Найбільше падіння</th>
+          <th class="number">{{ 'backtest.largestFall' | transloco }}</th>
         </tr>
       </ng-template>
       <ng-template #body let-run>
@@ -93,7 +93,10 @@
           [attr.aria-selected]="isSelected(run)"
           [attr.aria-disabled]="!store.canSelect(run)"
           [attr.data-trial-number]="run.number"
-          [attr.aria-label]="'Запуск ' + run.number + (isSelected(run) ? ', вибрано' : '')"
+          [attr.aria-label]="
+            (isSelected(run) ? 'builder.trials.runSelected' : 'builder.trials.runNumber')
+              | transloco: { number: run.number }
+          "
           (click)="store.toggle(run.number)"
           (keydown.enter)="store.toggle(run.number)"
           (keydown.space)="$event.preventDefault(); store.toggle(run.number)"
@@ -104,7 +107,7 @@
             }
           </td>
           <td class="run-column">
-            <span class="trial-title">Запуск {{ run.number }}</span>
+            <span class="trial-title">{{ 'builder.trials.runNumber' | transloco: { number: run.number } }}</span>
             <span class="trial-meta trial-label-line" [attr.title]="run.label">{{ run.label || (run.ranAt | dateTime) }}</span>
             <span class="trial-meta trial-period">{{ periodOf(run) }}</span>
           </td>
@@ -126,7 +129,7 @@
       </ng-template>
       <ng-template #emptymessage>
         <tr>
-          <td colspan="7">Запусків ще немає. Поверніться до чернетки й натисніть «Бектест».</td>
+          <td colspan="7">{{ 'builder.trials.empty' | transloco }}</td>
         </tr>
       </ng-template>
     </p-table>

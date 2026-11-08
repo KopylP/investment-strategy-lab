@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ConfirmationService } from 'primeng/api';
@@ -18,6 +19,7 @@ import { Tooltip } from 'primeng/tooltip';
 @Component({
   selector: 'app-builder-draft-list-page',
   imports: [
+    TranslocoPipe,
     Button,
     Message,
     Skeleton,
@@ -61,7 +63,7 @@ export class DraftListPage {
     input.value = '';
     if (!file) return;
 
-    const name = file.name.replace(/\.json$/i, '') || 'Імпортована стратегія';
+    const name = file.name.replace(/\.json$/i, '') || translate('builder.json.imported');
     const draft = await this.store.importRules(name, await file.text());
     if (draft) await this.router.navigate(['/strategy-builder', draft.id]);
   }

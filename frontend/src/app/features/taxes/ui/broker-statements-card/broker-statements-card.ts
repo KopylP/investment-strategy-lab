@@ -34,8 +34,7 @@ export class BrokerStatementsCard {
   protected confirmRemoveBroker(statement: BrokerStatement): void {
     this.confirm.confirm({
       header: translate('taxes.brokerStatements.deleteQuestion'),
-      message:
-        translate('taxes.brokerStatements.deleteHint'),
+      message: translate('taxes.brokerStatements.deleteHint'),
       acceptLabel: translate('common.delete'),
       rejectLabel: translate('common.cancel'),
       acceptButtonProps: { severity: 'danger' },

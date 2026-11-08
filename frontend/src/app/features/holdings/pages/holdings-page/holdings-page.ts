@@ -23,7 +23,8 @@ import { HoldingsSleeveCard } from '../../ui/holdings-sleeve-card/holdings-sleev
 
 @Component({
   selector: 'app-holdings-page',
-  imports: [TranslocoPipe, 
+  imports: [
+    TranslocoPipe,
     HoldingsSleeveCard,
     HoldingsTiles,
     HoldingsExposureCard,

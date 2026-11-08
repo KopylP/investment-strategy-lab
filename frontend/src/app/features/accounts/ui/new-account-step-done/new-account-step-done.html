@@ -8,7 +8,9 @@
       class="rounded-border border border-surface p-4 bg-transparent cursor-pointer text-color hover:border-primary text-left"
       (click)="draft.go(['/transactions/import'])"
     >
-      <div class="font-semibold"><i class="pi pi-upload mr-2"></i>{{ 'accounts.wizard.done.haveInvestments' | transloco }}</div>
+      <div class="font-semibold">
+        <i class="pi pi-upload mr-2"></i>{{ 'accounts.wizard.done.haveInvestments' | transloco }}
+      </div>
       <div class="text-sm text-muted-color mt-1">
         {{ 'accounts.wizard.done.haveInvestmentsHint' | transloco }}
       </div>
@@ -18,7 +20,9 @@
       class="rounded-border border border-surface p-4 bg-transparent cursor-pointer text-color hover:border-primary text-left"
       (click)="draft.go(['/draft.reports'])"
     >
-      <div class="font-semibold"><i class="pi pi-bolt mr-2"></i>{{ 'accounts.wizard.done.fromScratch' | transloco }}</div>
+      <div class="font-semibold">
+        <i class="pi pi-bolt mr-2"></i>{{ 'accounts.wizard.done.fromScratch' | transloco }}
+      </div>
       <div class="text-sm text-muted-color mt-1">
         {{ 'accounts.wizard.done.fromScratchHint' | transloco }}
       </div>
@@ -28,7 +32,9 @@
       class="rounded-border border border-surface p-4 bg-transparent cursor-pointer text-color hover:border-primary text-left"
       (click)="draft.go(['/accounts', draft.createdId() ?? ''])"
     >
-      <div class="font-semibold"><i class="pi pi-wallet mr-2"></i>{{ 'accounts.wizard.done.viewAccount' | transloco }}</div>
+      <div class="font-semibold">
+        <i class="pi pi-wallet mr-2"></i>{{ 'accounts.wizard.done.viewAccount' | transloco }}
+      </div>
       <div class="text-sm text-muted-color mt-1">
         {{ 'accounts.wizard.done.viewAccountHint' | transloco }}
       </div>

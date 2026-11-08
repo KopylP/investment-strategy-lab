@@ -32,14 +32,16 @@
   @for (account of store.withoutStrategy(); track account.id) {
     <p-message severity="warn" styleClass="mb-4">
       <div class="flex flex-wrap items-center justify-between gap-3 w-full">
-        <span
-          >{{
-            store.isAll()
-              ? ('overview.noStrategyOfAccount' | transloco: { account: account.name })
-              : ('overview.noStrategy' | transloco)
-          }}</span
-        >
-        <p-button [label]="'overview.chooseStrategy' | transloco" size="small" [routerLink]="['/accounts', account.id]" />
+        <span>{{
+          store.isAll()
+            ? ('overview.noStrategyOfAccount' | transloco: { account: account.name })
+            : ('overview.noStrategy' | transloco)
+        }}</span>
+        <p-button
+          [label]="'overview.chooseStrategy' | transloco"
+          size="small"
+          [routerLink]="['/accounts', account.id]"
+        />
       </div>
     </p-message>
   }
@@ -56,7 +58,11 @@
           {{
             'overview.reportWaiting'
               | transloco
-                : { period: report.period | period, open: report.actionsOpen, total: report.actionsTotal }
+                : {
+                    period: report.period | period,
+                    open: report.actionsOpen,
+                    total: report.actionsTotal,
+                  }
           }}</span
         >
         <p-button
@@ -74,10 +80,23 @@
     @if (alert.exceeded) {
       <p-message severity="warn" styleClass="mb-4">
         <div class="flex flex-wrap items-center justify-between gap-3 w-full">
-          <span
-            >{{ 'overview.taxAlert' | transloco: { taxYear: store.taxYear, taxDue: (store.tax()!.taxDue | taxMoney: 0), ratio: (alert.ratio | percent), share: (alert.share | percent), limit: (alert.limit | taxMoney: 0) } }}</span
-          >
-          <p-button [label]="'layout.menu.taxes' | transloco" size="small" [text]="true" routerLink="/taxes" />
+          <span>{{
+            'overview.taxAlert'
+              | transloco
+                : {
+                    taxYear: store.taxYear,
+                    taxDue: (store.tax()!.taxDue | taxMoney: 0),
+                    ratio: (alert.ratio | percent),
+                    share: (alert.share | percent),
+                    limit: (alert.limit | taxMoney: 0),
+                  }
+          }}</span>
+          <p-button
+            [label]="'layout.menu.taxes' | transloco"
+            size="small"
+            [text]="true"
+            routerLink="/taxes"
+          />
         </div>
       </p-message>
     }
@@ -86,7 +105,9 @@
   @if (store.isLoading() && !store.dashboard()) {
     <div class="card"><p-skeleton height="20rem" /></div>
   } @else if (store.loadError()) {
-    <div class="card"><p-message severity="error" [text]="'overview.loadFailed' | transloco" /></div>
+    <div class="card">
+      <p-message severity="error" [text]="'overview.loadFailed' | transloco" />
+    </div>
   } @else if (store.dashboard(); as d) {
     @if (!store.hasHistory()) {
       <div class="card">

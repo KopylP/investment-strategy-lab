@@ -28,7 +28,8 @@ import { SkipDialog } from '../../ui/skip-dialog/skip-dialog';
 
 @Component({
   selector: 'app-report-detail-page',
-  imports: [TranslocoPipe, 
+  imports: [
+    TranslocoPipe,
     RouterLink,
     Button,
     Menu,
@@ -171,8 +172,7 @@ export class ReportDetailPage {
   protected confirmClose(): void {
     this.confirm.confirm({
       header: translate('reports.detail.closeQuestion'),
-      message:
-        translate('reports.detail.closeHint'),
+      message: translate('reports.detail.closeHint'),
       icon: 'pi pi-lock',
       acceptLabel: translate('common.close'),
       rejectLabel: translate('common.cancel'),
@@ -184,8 +184,7 @@ export class ReportDetailPage {
   protected confirmRegenerate(): void {
     this.confirm.confirm({
       header: translate('reports.detail.regenerateQuestion'),
-      message:
-        translate('reports.detail.regenerateHint'),
+      message: translate('reports.detail.regenerateHint'),
       icon: 'pi pi-refresh',
       acceptLabel: translate('reports.list.generate'),
       rejectLabel: translate('common.cancel'),

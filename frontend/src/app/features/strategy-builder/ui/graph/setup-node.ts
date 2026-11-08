@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { Component, Input, OnChanges, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { KeyValuePipe } from '@angular/common';
@@ -11,20 +12,25 @@ import { InstrumentPickerVm } from '../../models/instrument-picker-vm';
 
 @Component({
   selector: 'app-setup-rete-node',
-  imports: [FormsModule, KeyValuePipe, RefDirective, FundSelectionDialog],
+  imports: [TranslocoPipe, FormsModule, KeyValuePipe, RefDirective, FundSelectionDialog],
   host: { '[style.width.px]': 'data.width' },
   template: `
     <article
       data-node-id="strategy-setup"
       [style.opacity]="data.branchDimmed ? 0.35 : 1"
       (click)="data.choose()"
-      data-node-category="Налаштування"
+      [attr.data-node-category]="'builder.graph.setup.category' | transloco"
       tabindex="0"
-      aria-label="Фонди й ряди · постійний вузол"
+      [attr.aria-label]="'builder.graph.setup.label' | transloco"
     >
       <header>
-        <i class="pi pi-sliders-h"></i><strong>Фонди й ряди</strong
-        ><i class="pi pi-lock" title="Постійний вузол" aria-label="Постійний вузол"></i>
+        <i class="pi pi-sliders-h"></i
+        ><strong>{{ 'builder.graph.visual.setup' | transloco }}</strong
+        ><i
+          class="pi pi-lock"
+          [title]="'builder.graph.setup.permanent' | transloco"
+          [attr.aria-label]="'builder.graph.setup.permanent' | transloco"
+        ></i>
       </header>
       <div
         class="fields"
@@ -58,9 +64,11 @@ import { InstrumentPickerVm } from '../../models/instrument-picker-vm';
               <button
                 type="button"
                 class="port"
-                [attr.aria-label]="'Вихід ' + field.label"
+                [attr.aria-label]="'builder.graph.node.output' | transloco: { name: field.label }"
                 [title]="
-                  field.key === 'funds' ? 'Вибрані фонди для правил та індикаторів' : field.label
+                  field.key === 'funds'
+                    ? ('builder.graph.setup.selectedFundsHint' | transloco)
+                    : field.label
                 "
                 [attr.data-socket-key]="data.id + ':output:' + field.key"
                 (click)="keyboard($event, field.key)"
@@ -77,9 +85,13 @@ import { InstrumentPickerVm } from '../../models/instrument-picker-vm';
               ></button>
             </div>
             @if (field.key === 'funds') {
-              <div class="fund-loop" aria-label="Вибрані фонди перебираються по одному">
+              <div
+                class="fund-loop"
+                [attr.aria-label]="'builder.graph.setup.eachFundLabel' | transloco"
+              >
                 <div class="loop-heading">
-                  <i class="pi pi-sync"></i><span>Для кожного фонду</span
+                  <i class="pi pi-sync"></i
+                  ><span>{{ 'builder.graph.setup.eachFund' | transloco }}</span
                   ><b>×{{ data.setup.funds.length }}</b>
                 </div>
                 <div class="loop-items">
@@ -93,7 +105,9 @@ import { InstrumentPickerVm } from '../../models/instrument-picker-vm';
                     <span class="more-funds">+{{ selectedFunds.length - 3 }}</span>
                   }
                   @if (!selectedFunds.length) {
-                    <span class="more-funds">Оберіть фонди для перебору</span>
+                    <span class="more-funds">{{
+                      'builder.graph.setup.chooseFunds' | transloco
+                    }}</span>
                   }
                 </div>
               </div>
@@ -107,7 +121,9 @@ import { InstrumentPickerVm } from '../../models/instrument-picker-vm';
               <button
                 class="port"
                 type="button"
-                [attr.aria-label]="'Вихід ' + extraLabel(output.key)"
+                [attr.aria-label]="
+                  'builder.graph.node.output' | transloco: { name: extraLabel(output.key) }
+                "
                 [attr.data-socket-key]="data.id + ':output:' + output.key"
                 (click)="keyboard($event, output.key)"
                 refComponent
@@ -369,7 +385,11 @@ export class SetupNode implements OnChanges {
   get selectedFunds() {
     return this.data.setup.funds.map(
       (id) =>
-        this.data.instruments.find((item) => item.id === id) ?? { id, label: 'Фонд', name: '' },
+        this.data.instruments.find((item) => item.id === id) ?? {
+          id,
+          label: translate('builder.graph.setup.fund'),
+          name: '',
+        },
     );
   }
   pickerOf(key: string): InstrumentPickerVm {
@@ -404,7 +424,8 @@ export class SetupNode implements OnChanges {
   }
   extraLabel(key: string) {
     return (
-      this.data.instruments.find((item) => item.id === key.slice(6))?.label ?? 'Додатковий ряд'
+      this.data.instruments.find((item) => item.id === key.slice(6))?.label ??
+      translate<string>('builder.graph.setup.extraSeries')
     );
   }
   keyboard(event: MouseEvent, key: string) {

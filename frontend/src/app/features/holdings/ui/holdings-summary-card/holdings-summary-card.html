@@ -45,13 +45,21 @@
             · {{ totals().pnlPct | signedPercent }}
           }
         </span>
-        <span class="text-sm text-muted-color">{{ 'holdings.summary.unrealizedHint' | transloco }}</span>
+        <span class="text-sm text-muted-color">{{
+          'holdings.summary.unrealizedHint' | transloco
+        }}</span>
       </div>
     </div>
 
     <div>
-      <div class="text-muted-color text-sm mb-2">{{ 'holdings.summary.composition' | transloco }}</div>
-      <div class="flex gap-0.5 -my-2" role="img" [attr.aria-label]="'holdings.summary.shares' | transloco">
+      <div class="text-muted-color text-sm mb-2">
+        {{ 'holdings.summary.composition' | transloco }}
+      </div>
+      <div
+        class="flex gap-0.5 -my-2"
+        role="img"
+        [attr.aria-label]="'holdings.summary.shares' | transloco"
+      >
         @for (slice of store.composition(); track slice.label; let first = $first, last = $last) {
           <div
             class="py-2 min-w-0"

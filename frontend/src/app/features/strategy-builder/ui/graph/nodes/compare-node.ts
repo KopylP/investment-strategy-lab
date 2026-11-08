@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { NodeDto } from '../../../models/draft-dto';
 import { textParameter } from '../node-view';
@@ -13,7 +14,8 @@ const operators: Record<string, string> = {
 
 @Component({
   selector: 'app-compare-node',
-  template: `<div class="font-semibold">Порівняння</div>
+  imports: [TranslocoPipe],
+  template: `<div class="font-semibold">{{ 'builder.graph.node.compare' | transloco }}</div>
     <div class="mt-2 text-sm">A {{ operator() }} {{ value() }}</div>`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

@@ -26,7 +26,10 @@ export class LanguageSettingsCard {
   protected readonly saving = signal(false);
   protected readonly options: { value: LanguageOption; label: string }[] = [
     { value: followBrowser, label: translate('profile.language.followBrowser') },
-    ...languages.map((code) => ({ value: code, label: translate(`profile.language.names.${code}`) })),
+    ...languages.map((code) => ({
+      value: code,
+      label: translate(`profile.language.names.${code}`),
+    })),
   ];
   protected readonly selected = computed<LanguageOption | undefined>(() => {
     const choice = this.language.choice();

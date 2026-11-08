@@ -20,7 +20,8 @@ import { ReportStatusTag } from '../../ui/report-status-tag/report-status-tag';
 
 @Component({
   selector: 'app-report-list-page',
-  imports: [TranslocoPipe, 
+  imports: [
+    TranslocoPipe,
     FormsModule,
     NgTemplateOutlet,
     RouterLink,

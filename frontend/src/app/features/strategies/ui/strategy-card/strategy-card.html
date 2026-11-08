@@ -43,7 +43,8 @@
   </div>
   <div class="text-sm mt-3 pt-3 border-t border-surface">
     @if (places().length) {
-      <i class="pi pi-wallet text-xs mr-1 text-primary"></i>{{ 'strategies.card.usedIn' | transloco: { places: places().join(', ') } }}
+      <i class="pi pi-wallet text-xs mr-1 text-primary"></i
+      >{{ 'strategies.card.usedIn' | transloco: { places: places().join(', ') } }}
     } @else {
       <span class="text-muted-color"
         ><i class="pi pi-info-circle text-xs mr-1"></i>{{ 'strategies.unused' | transloco }}</span

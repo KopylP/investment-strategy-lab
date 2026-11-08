@@ -23,7 +23,9 @@
 @if (store.isLoading() && !store.strategies().length) {
   <div class="card"><p-skeleton height="10rem" /></div>
 } @else if (store.loadError()) {
-  <div class="card"><p-message severity="error" [text]="'strategies.list.loadFailed' | transloco" /></div>
+  <div class="card">
+    <p-message severity="error" [text]="'strategies.list.loadFailed' | transloco" />
+  </div>
 } @else if (!store.strategies().length) {
   <div class="card">
     <app-empty-state

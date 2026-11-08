@@ -1,7 +1,8 @@
 @if (details().openLots.length) {
   <div class="card">
     <h2 class="text-lg font-semibold mb-4">
-      {{ 'taxes.openLots.title' | transloco }}<span class="hidden sm:inline"> {{ 'taxes.openLots.hint' | transloco }}</span>
+      {{ 'taxes.openLots.title' | transloco
+      }}<span class="hidden sm:inline"> {{ 'taxes.openLots.hint' | transloco }}</span>
     </h2>
     <p-table [value]="details().openLots" size="small" tableStyleClass="sm:min-w-[40rem]">
       <ng-template #header

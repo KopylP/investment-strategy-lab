@@ -2,7 +2,7 @@
   <ng-container *ngTemplateOutlet="fields" />
 } @else {
   <p-dialog
-    header="Рапорти"
+    [header]="'routes.reports' | transloco"
     [modal]="true"
     [visible]="visible()"
     (visibleChange)="visible.set($event)"
@@ -13,20 +13,19 @@
 
     <ng-template #footer>
       <p-button
-        label="Скасувати"
+        [label]="'common.cancel' | transloco"
         [text]="true"
         severity="secondary"
         (onClick)="visible.set(false)"
       />
-      <p-button label="Зберегти" icon="pi pi-check" (onClick)="save()" />
+      <p-button [label]="'common.save' | transloco" icon="pi pi-check" (onClick)="save()" />
     </ng-template>
   </p-dialog>
 }
 <ng-template #fields>
   <div class="flex flex-col gap-5">
     <p class="text-sm text-muted-color">
-      Для бектесту оберіть час 20:00 та частоту від щоденної до квартальної.
-      День місяця й тижня враховуються; у свято перевірка переноситься на наступну доступну сесію.
+      {{ 'builder.reports.backtestHint' | transloco }}
     </p>
     @for (report of draft(); track report.code) {
       <section class="rounded-xl border border-surface p-4">
@@ -43,7 +42,7 @@
         </div>
         @if (declaration(report.code)?.signalKinds?.length) {
           <div class="mt-4">
-            <div class="mb-2 text-sm font-medium">Створити рапорт також після сигналу</div>
+            <div class="mb-2 text-sm font-medium">{{ 'builder.reports.afterSignal' | transloco }}</div>
             <div class="flex flex-wrap gap-x-5 gap-y-2">
               @for (kind of signalKinds; track kind.value) {
                 @if (declaration(report.code)!.signalKinds.includes(kind.value)) {
@@ -62,7 +61,7 @@
           </div>
         }
         <label class="mt-4 flex flex-col gap-2 text-sm font-medium">
-          Мої сигнали
+          {{ 'signals.mine' | transloco }}
           <p-multiselect
             [options]="signals()"
             optionLabel="name"
@@ -71,7 +70,7 @@
             (ngModelChange)="update({ ...report, signalIds: $event })"
             [filter]="true"
             display="chip"
-            placeholder="Оберіть сигнали для рапорту"
+            [placeholder]="'builder.reports.chooseSignals' | transloco"
             appendTo="body"
             fluid
           >
@@ -80,8 +79,8 @@
               @if (!signal.isMarket) {
                 <i
                   class="pi pi-exclamation-triangle ml-2 text-orange-500"
-                  pTooltip="У бектесті цей сигнал рахується від портфеля стратегії, а наживо — від рахунку"
-                  aria-label="У бектесті цей сигнал рахується від портфеля стратегії, а наживо — від рахунку"
+                  [pTooltip]="'builder.reports.backtestSignalHint' | transloco"
+                  [attr.aria-label]="'builder.reports.backtestSignalHint' | transloco"
                 ></i>
               }
             </ng-template>

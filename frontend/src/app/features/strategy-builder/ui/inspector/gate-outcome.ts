@@ -1,27 +1,41 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { GraphDto, NodeDto } from '../../models/draft-dto';
 
 @Component({
   selector: 'app-gate-outcome',
+  imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="gate-outcome" [attr.data-gate]="entry() ? 'entry' : 'exit'">
       @if (connected()) {
         <div class="outcome">
-          <span class="answer yes"><i class="pi pi-check"></i> Так</span
+          <span class="answer yes"
+            ><i class="pi pi-check"></i> {{ 'builder.inspector.gate.yes' | transloco }}</span
           ><i class="pi pi-arrow-right arrow"></i
-          ><span>{{ entry() ? 'До кандидатів на купівлю' : 'Продати цей фонд' }}</span>
+          ><span>{{
+            entry()
+              ? ('builder.inspector.gate.toCandidates' | transloco)
+              : ('builder.inspector.gate.sellFund' | transloco)
+          }}</span>
         </div>
         <div class="outcome">
-          <span class="answer no"><i class="pi pi-minus"></i> Ні</span
+          <span class="answer no"
+            ><i class="pi pi-minus"></i> {{ 'builder.inspector.gate.no' | transloco }}</span
           ><i class="pi pi-arrow-right arrow"></i
-          ><span>{{ entry() ? 'Не купувати' : 'До спільного відбору' }}</span>
+          ><span>{{
+            entry()
+              ? ('builder.inspector.gate.dontBuy' | transloco)
+              : ('builder.inspector.gate.toShared' | transloco)
+          }}</span>
         </div>
       } @else {
         <div class="empty">
           <i class="pi pi-link"></i
           ><span>{{
-            entry() ? 'Без умови: усі фонди — кандидати' : 'Окрему умову продажу не задано'
+            entry()
+              ? ('builder.inspector.gate.noCondition' | transloco)
+              : ('builder.inspector.gate.noSellCondition' | transloco)
           }}</span>
         </div>
       }
@@ -29,8 +43,8 @@ import { GraphDto, NodeDto } from '../../models/draft-dto';
         <i class="pi pi-th-large"></i
         ><span>{{
           entry()
-            ? 'Далі — відбір фондів і розподіл ваг'
-            : 'Спільний відбір теж може виключити фонд'
+            ? ('builder.inspector.gate.next' | transloco)
+            : ('builder.inspector.gate.sharedMayExclude' | transloco)
         }}</span>
       </div>
     </div>

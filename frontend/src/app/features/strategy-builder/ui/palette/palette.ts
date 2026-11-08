@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { JsonValue, NodeKind } from '../../models/draft-dto';
@@ -25,20 +26,20 @@ const conditionKinds: Record<string, NodeKind> = {
 
 @Component({
   selector: 'app-node-palette',
-  imports: [FormsModule],
+  imports: [TranslocoPipe, FormsModule],
   template: `
     <div class="palette-content">
-      <strong>Елементи стратегії</strong>
-      <p class="hint">Перетягніть елемент на полотно або натисніть, щоб додати.</p>
+      <strong>{{ 'builder.palette.title' | transloco }}</strong>
+      <p class="hint">{{ 'builder.palette.hint' | transloco }}</p>
       <input
         class="search"
         type="search"
-        placeholder="Знайти елемент…"
-        aria-label="Пошук елементів"
+        [placeholder]="'builder.palette.search' | transloco"
+        [attr.aria-label]="'builder.palette.searchLabel' | transloco"
         [ngModel]="search()"
         (ngModelChange)="search.set($event)"
       />
-      <h3>Індикатори</h3>
+      <h3>{{ 'builder.palette.indicators' | transloco }}</h3>
       @for (indicator of indicators(); track indicator.code) {
         @if (matches(indicator.label)) {
           <button
@@ -49,12 +50,14 @@ const conditionKinds: Record<string, NodeKind> = {
             class="item indicator"
           >
             <i class="pi pi-chart-line"></i
-            ><span>{{ indicator.label }}<small>Числове значення</small></span
+            ><span
+              >{{ indicator.label
+              }}<small>{{ 'builder.palette.numericValue' | transloco }}</small></span
             ><i class="pi pi-plus plus"></i>
           </button>
         }
       }
-      <h3>Умови та логіка</h3>
+      <h3>{{ 'builder.palette.conditionsAndLogic' | transloco }}</h3>
       @for (condition of conditions(); track condition.code) {
         @if (matches(condition.label)) {
           <button
@@ -76,16 +79,21 @@ const conditionKinds: Record<string, NodeKind> = {
               "
             ></i>
             <span
-              >{{ condition.code === 'signal' ? 'Мій сигнал' : condition.label
+              >{{
+                condition.code === 'signal'
+                  ? ('builder.graph.node.mySignal' | transloco)
+                  : condition.label
               }}<small>{{
-                ['all', 'any', 'not'].includes(condition.code) ? 'Поєднати умови' : 'Так / ні'
+                ['all', 'any', 'not'].includes(condition.code)
+                  ? ('builder.palette.combine' | transloco)
+                  : ('builder.graph.node.yesNoShort' | transloco)
               }}</small></span
             ><i class="pi pi-plus plus"></i>
           </button>
         }
       }
-      @if (matches('Відібрати фонди')) {
-        <h3>Модулі відбору</h3>
+      @if (matches('builder.graph.visual.selectFunds' | transloco)) {
+        <h3>{{ 'builder.palette.selectionModules' | transloco }}</h3>
         <button
           class="item"
           type="button"
@@ -93,19 +101,22 @@ const conditionKinds: Record<string, NodeKind> = {
           (dragstart)="drag($event, selectorRequest)"
           (click)="add.emit(selectorRequest)"
         >
-          <i class="pi pi-filter"></i><span>Відібрати фонди<small>Оцінка → кандидати</small></span
+          <i class="pi pi-filter"></i
+          ><span
+            >{{ 'builder.graph.visual.selectFunds' | transloco
+            }}<small>{{ 'builder.palette.scoreToCandidates' | transloco }}</small></span
           ><i class="pi pi-plus plus"></i>
         </button>
       }
       @if (
         !indicators().some(matchesItem) &&
         !conditions().some(matchesItem) &&
-        !matches('Відібрати фонди')
+        !matches('builder.graph.visual.selectFunds' | transloco)
       ) {
-        <p class="hint">Елементів не знайдено.</p>
+        <p class="hint">{{ 'builder.palette.noneFound' | transloco }}</p>
       }
       <p class="hint">
-        Один вузол можна підключити до кількох правил. Гілки завершуються вузлами результату.
+        {{ 'builder.palette.footer' | transloco }}
       </p>
     </div>
   `,

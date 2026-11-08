@@ -19,7 +19,10 @@
             </div>
             @if (!action.isMoney) {
               <div class="text-xs text-muted-color whitespace-nowrap">
-                {{ 'reports.actions.unitsTimes' | transloco: { plannedQuantity: (action.plannedQuantity | quantity) } }}
+                {{
+                  'reports.actions.unitsTimes'
+                    | transloco: { plannedQuantity: (action.plannedQuantity | quantity) }
+                }}
                 <app-money
                   [amount]="action.plannedPrice"
                   [currency]="action.currency"
@@ -56,7 +59,11 @@
             }
             @if (hasDetails(action)) {
               <p-button
-                [label]="expanded().has(action.id) ? ('reports.actions.hide' | transloco) : ('reports.actions.details' | transloco)"
+                [label]="
+                  expanded().has(action.id)
+                    ? ('reports.actions.hide' | transloco)
+                    : ('reports.actions.details' | transloco)
+                "
                 [text]="true"
                 size="small"
                 severity="secondary"
@@ -78,7 +85,11 @@
             }
             @if (action.canMark) {
               <p-splitbutton
-                [label]="action.status === 'PartiallyExecuted' ? ('reports.actions.rest' | transloco) : ('reports.actionStatus.Executed' | transloco)"
+                [label]="
+                  action.status === 'PartiallyExecuted'
+                    ? ('reports.actions.rest' | transloco)
+                    : ('reports.actionStatus.Executed' | transloco)
+                "
                 icon="pi pi-check"
                 size="small"
                 [model]="secondaryActions().get(action.id)!"
@@ -176,7 +187,11 @@
           <div class="flex justify-end gap-1">
             @if (action.canMark) {
               <p-splitbutton
-                [label]="action.status === 'PartiallyExecuted' ? ('reports.actions.restDone' | transloco) : ('reports.actionStatus.Executed' | transloco)"
+                [label]="
+                  action.status === 'PartiallyExecuted'
+                    ? ('reports.actions.restDone' | transloco)
+                    : ('reports.actionStatus.Executed' | transloco)
+                "
                 icon="pi pi-check"
                 size="small"
                 [model]="secondaryActions().get(action.id)!"
@@ -256,7 +271,10 @@
                 }
               }
               @if (fill.transactionId) {
-                <i class="pi pi-check-circle text-primary ml-1" [pTooltip]="'reports.actions.recorded' | transloco"></i>
+                <i
+                  class="pi pi-check-circle text-primary ml-1"
+                  [pTooltip]="'reports.actions.recorded' | transloco"
+                ></i>
               }
             </span>
           </div>

@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -26,16 +27,16 @@ import { experimentBacktest } from '../../data-access/experiment-result-mapper';
 import { BacktestComparisonDto } from '../../models/backtest-comparison-dto';
 import { activeLocale } from '../../../../core/i18n/language';
 const metrics: { key: TrialMetric; label: string }[] = [
-  { key: 'annualReturn', label: 'Річна дохідність' },
-  { key: 'annualReturnAfterTax', label: 'Після податку' },
-  { key: 'volatility', label: 'Волатильність' },
+  { key: 'annualReturn', label: translate('builder.comparison.yearlyReturn') },
+  { key: 'annualReturnAfterTax', label: translate('backtest.afterTax') },
+  { key: 'volatility', label: translate('backtest.volatility') },
   { key: 'sharpe', label: 'Sharpe' },
-  { key: 'maxDrawdown', label: 'Найбільше падіння' },
+  { key: 'maxDrawdown', label: translate('backtest.largestFall') },
 ];
 
 @Component({
   selector: 'app-trial-comparison',
-  imports: [Message, ChartLegend, LiveChart],
+  imports: [TranslocoPipe, Message, ChartLegend, LiveChart],
   templateUrl: './trial-comparison.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -94,9 +95,12 @@ export class TrialComparison {
     const second = results[1]?.result?.series.find((series) => series.code === STRATEGY_SERIES);
     const lines = first.map((series) => ({
       ...series,
-      label: series.code === STRATEGY_SERIES ? `Запуск A · №${this.first().number}` : series.label,
+      label:
+        series.code === STRATEGY_SERIES
+          ? translate('builder.comparison.runA', { number: this.first().number })
+          : series.label,
     }));
-    if (second) lines.push({ ...second, label: `Запуск B · №${this.second().number}` });
+    if (second) lines.push({ ...second, label: translate('builder.comparison.runB', { number: this.second().number }) });
 
     return lines;
   });

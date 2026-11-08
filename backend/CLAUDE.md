@@ -203,4 +203,4 @@ internal sealed class PlanningAccounts(IAccountSetupQueries accounts) : IPlannin
 - Formatting and analyzers follow `.editorconfig`; EF migrations count as generated code. Primary constructors,
   collection expressions, file-scoped namespaces.
 - Text the user reads never appears in code: warnings, reasons and notes are `Message.Of(code, parameters)`, errors carry a
-  code and parameters, and the words are in `../locales/uk.json` (see Language in `../CLAUDE.md`).
+  code and parameters, and the words are in `../locales/uk.json` and `../locales/en.json` (see Language in `../CLAUDE.md`).

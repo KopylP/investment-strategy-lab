@@ -18,7 +18,8 @@ import { TapTooltip } from '../../../../shared/ui/tap-tooltip';
 
 @Component({
   selector: 'app-section-panel',
-  imports: [TranslocoPipe, 
+  imports: [
+    TranslocoPipe,
     TableModule,
     Tag,
     Message,

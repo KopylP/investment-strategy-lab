@@ -17,7 +17,9 @@
       />
     </div>
     <div class="flex flex-col gap-2">
-      <label for="sub-share" class="font-medium">{{ 'accounts.addSub.targetShare' | transloco }}</label>
+      <label for="sub-share" class="font-medium">{{
+        'accounts.addSub.targetShare' | transloco
+      }}</label>
       <p-inputnumber
         inputId="sub-share"
         [ngModel]="draft().share"
@@ -39,7 +41,9 @@
       />
     </div>
     <div class="flex flex-col gap-2">
-      <label for="sub-cash" class="font-medium">{{ 'strategies.detail.parkingEtf' | transloco }}</label>
+      <label for="sub-cash" class="font-medium">{{
+        'strategies.detail.parkingEtf' | transloco
+      }}</label>
       <p-select
         inputId="sub-cash"
         [options]="cashOptions()"
@@ -56,7 +60,12 @@
     </div>
   </div>
   <ng-template #footer>
-    <p-button [label]="'common.cancel' | transloco" [text]="true" severity="secondary" (onClick)="visible.set(false)" />
+    <p-button
+      [label]="'common.cancel' | transloco"
+      [text]="true"
+      severity="secondary"
+      (onClick)="visible.set(false)"
+    />
     <p-button
       [label]="'common.add' | transloco"
       icon="pi pi-plus"

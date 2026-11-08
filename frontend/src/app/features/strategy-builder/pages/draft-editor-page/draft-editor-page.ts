@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -52,6 +53,7 @@ import { ProblemsPanel } from '../../ui/problems-panel/problems-panel';
 @Component({
   selector: 'app-builder-draft-editor-page',
   imports: [
+    TranslocoPipe,
     RouterLink,
     JsonView,
     StepsView,
@@ -129,8 +131,8 @@ export class DraftEditorPage {
     return vocabulary ? experimentParameters(this.experimentRules(), vocabulary) : [];
   });
   private readonly allModes: { label: string; value: EditorMode }[] = [
-    { label: 'Кроки', value: 'steps' },
-    { label: 'Схема', value: 'graph' },
+    { label: translate('builder.editor.steps'), value: 'steps' },
+    { label: translate('builder.editor.diagram'), value: 'graph' },
     { label: 'JSON', value: 'json' },
   ];
   protected readonly modes = computed(() =>
@@ -144,11 +146,13 @@ export class DraftEditorPage {
   protected readonly problemsLabel = computed(() => {
     const count = this.store.draft()?.problems.length ?? 0;
 
-    return count ? `Зауважень: ${count}` : 'Без зауважень';
+    return count
+      ? translate('builder.editor.remarks', { problems: count })
+      : translate('builder.editor.noRemarks');
   });
   protected readonly saveMenu: MenuItem[] = [
     {
-      label: 'Опублікувати…',
+      label: translate('builder.editor.publishMenu'),
       icon: 'pi pi-check-circle',
       command: () => void this.confirmPublish(),
     },
@@ -162,22 +166,32 @@ export class DraftEditorPage {
   ]);
   protected readonly phoneMenuItems = computed<MenuItem[]>(() => [
     {
-      label: 'Бектест…',
+      label: translate('builder.editor.backtestMenu'),
       icon: 'pi pi-play',
       disabled: this.store.busy(),
       command: () => void this.runTrial(),
     },
-    { label: 'Історія бектестів', icon: 'pi pi-history', command: () => this.openTrials() },
-    { separator: true },
-    { label: 'Рапорти…', icon: 'pi pi-file', command: () => this.reportsVisible.set(true) },
     {
-      label: `Опис і перевірка (${this.store.draft()?.problems.length ?? 0})`,
+      label: translate('builder.editor.trialHistory'),
+      icon: 'pi pi-history',
+      command: () => this.openTrials(),
+    },
+    { separator: true },
+    {
+      label: translate('builder.editor.reportsMenu'),
+      icon: 'pi pi-file',
+      command: () => this.reportsVisible.set(true),
+    },
+    {
+      label: translate('builder.editor.describeWithCount', {
+        count: this.store.draft()?.problems.length ?? 0,
+      }),
       icon: 'pi pi-check-circle',
       command: () => this.store.reviewVisible.set(true),
     },
     { separator: true },
     {
-      label: 'Видалити чернетку…',
+      label: translate('builder.editor.deleteMenu'),
       icon: 'pi pi-trash',
       styleClass: 'danger-item',
       command: () => this.confirmDiscard(),
@@ -220,7 +234,11 @@ export class DraftEditorPage {
     await this.store.flush();
     if (this.store.saveError()) return;
 
-    this.messages.add({ severity: 'success', summary: 'Чернетку збережено', life: 2000 });
+    this.messages.add({
+      severity: 'success',
+      summary: translate('builder.editor.saved'),
+      life: 2000,
+    });
   }
 
   private openTrials(): void {
@@ -234,31 +252,39 @@ export class DraftEditorPage {
 
   private strategyMenu(): MenuItem {
     return {
-      label: 'Стратегія',
+      label: translate('routes.strategy'),
       items: [
-        { label: 'Фонди й ряди…', icon: 'pi pi-sliders-h', command: () => this.openSetup() },
-        { label: 'Рапорти…', icon: 'pi pi-file', command: () => this.reportsVisible.set(true) },
         {
-          label: 'Створити вихід з умов входу…',
+          label: translate('builder.editor.setupMenu'),
+          icon: 'pi pi-sliders-h',
+          command: () => this.openSetup(),
+        },
+        {
+          label: translate('builder.editor.reportsMenu'),
+          icon: 'pi pi-file',
+          command: () => this.reportsVisible.set(true),
+        },
+        {
+          label: translate('builder.editor.copyEntryMenu'),
           icon: 'pi pi-copy',
           command: () => this.copyEntryVisible.set(true),
         },
         { separator: true },
         {
-          label: 'Зберегти',
+          label: translate('common.save'),
           icon: 'pi pi-save',
           title: '⌘S / Ctrl+S',
           command: () => void this.save(),
         },
         {
-          label: 'Опублікувати…',
+          label: translate('builder.editor.publishMenu'),
           icon: 'pi pi-check-circle',
           disabled: this.store.busy(),
           command: () => void this.confirmPublish(),
         },
         { separator: true },
         {
-          label: 'Видалити чернетку…',
+          label: translate('builder.editor.deleteMenu'),
           icon: 'pi pi-trash',
           styleClass: 'danger-item',
           disabled: this.store.busy(),
@@ -272,24 +298,24 @@ export class DraftEditorPage {
     const graph = this.graphEditor();
 
     return {
-      label: 'Правка',
+      label: translate('builder.editor.edit'),
       visible: !!graph,
       items: [
         {
-          label: 'Скасувати',
+          label: translate('builder.editor.undo'),
           icon: 'pi pi-undo',
           disabled: !graph?.canUndo(),
           command: () => graph?.undo(),
         },
         {
-          label: 'Повторити',
+          label: translate('builder.editor.redo'),
           icon: 'pi pi-refresh',
           disabled: !graph?.canRedo(),
           command: () => graph?.redo(),
         },
         { separator: true },
         {
-          label: 'Упорядкувати схему',
+          label: translate('builder.editor.arrangeDiagram'),
           icon: 'pi pi-sitemap',
           command: () => void graph?.arrangeAll(),
         },
@@ -308,14 +334,22 @@ export class DraftEditorPage {
       ? [
           { separator: true },
           {
-            label: 'Показати всю схему',
+            label: translate('builder.graph.editor.fitAll'),
             icon: 'pi pi-arrows-alt',
             command: () => void graph.fit(),
           },
-          { label: 'Збільшити', icon: 'pi pi-search-plus', command: () => void graph.setZoom(1) },
-          { label: 'Зменшити', icon: 'pi pi-search-minus', command: () => void graph.setZoom(-1) },
           {
-            label: 'На весь екран',
+            label: translate('builder.graph.editor.zoomIn'),
+            icon: 'pi pi-search-plus',
+            command: () => void graph.setZoom(1),
+          },
+          {
+            label: translate('builder.graph.editor.zoomOut'),
+            icon: 'pi pi-search-minus',
+            command: () => void graph.setZoom(-1),
+          },
+          {
+            label: translate('builder.graph.editor.fullscreen'),
             icon: 'pi pi-expand',
             command: () => void graph.toggleFullscreen(),
           },
@@ -323,13 +357,13 @@ export class DraftEditorPage {
       : [];
 
     return {
-      label: 'Вигляд',
+      label: translate('builder.editor.view'),
       items: [
         ...modeItems,
         ...graphItems,
         { separator: true },
         {
-          label: 'Опис і перевірка',
+          label: translate('builder.editor.describeShort'),
           icon: 'pi pi-check-circle',
           command: () => this.store.reviewVisible.set(true),
         },
@@ -339,15 +373,19 @@ export class DraftEditorPage {
 
   private backtestMenu(): MenuItem {
     return {
-      label: 'Бектест',
+      label: translate('builder.editor.backtest'),
       items: [
         {
-          label: 'Запустити бектест…',
+          label: translate('builder.editor.runBacktest'),
           icon: 'pi pi-play',
           disabled: this.store.busy(),
           command: () => void this.runTrial(),
         },
-        { label: 'Історія бектестів', icon: 'pi pi-history', command: () => this.openTrials() },
+        {
+          label: translate('builder.editor.trialHistory'),
+          icon: 'pi pi-history',
+          command: () => this.openTrials(),
+        },
       ],
     };
   }
@@ -356,11 +394,11 @@ export class DraftEditorPage {
     const graph = this.graphEditor();
 
     return {
-      label: 'Довідка',
+      label: translate('builder.editor.help'),
       visible: !!graph,
       items: [
         {
-          label: 'Як працювати зі схемою',
+          label: translate('builder.graph.editor.help'),
           icon: 'pi pi-question-circle',
           command: () => graph?.helpVisible.set(true),
         },
@@ -402,13 +440,16 @@ export class DraftEditorPage {
     if (!draft) return;
 
     const message = draft.originStrategyId
-      ? `Опублікувати версію ${(draft.originVersion ?? 0) + 1} стратегії «${draft.name}»?`
-      : `Опублікувати як нову стратегію «${draft.name}»?`;
+      ? translate('builder.editor.publishVersion', {
+          version: (draft.originVersion ?? 0) + 1,
+          name: draft.name,
+        })
+      : translate('builder.editor.publishNew', { name: draft.name });
     this.confirmation.confirm({
-      header: 'Публікація стратегії',
+      header: translate('builder.editor.publishTitle'),
       message,
-      acceptLabel: 'Опублікувати',
-      rejectLabel: 'Скасувати',
+      acceptLabel: translate('builder.editor.publish'),
+      rejectLabel: translate('common.cancel'),
       rejectButtonProps: { severity: 'secondary', text: true },
       accept: () => void this.publish(),
     });

@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { Message } from 'primeng/message';
@@ -9,7 +10,7 @@ import { RobustnessResults } from '../robustness-results/robustness-results';
 
 @Component({
   selector: 'app-experiment-results',
-  imports: [DecimalPipe, Message, DatePipe, MoneyPipe, PercentPipe, StrategyBacktest, ExperimentJournal, RobustnessResults],
+  imports: [TranslocoPipe, DecimalPipe, Message, DatePipe, MoneyPipe, PercentPipe, StrategyBacktest, ExperimentJournal, RobustnessResults],
   templateUrl: './experiment-results.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

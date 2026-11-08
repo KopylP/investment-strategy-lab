@@ -38,7 +38,9 @@
     }
     <div class="grid gap-4 sm:grid-cols-2">
       <div class="flex flex-col gap-2">
-        <label for="cash-amount" class="font-medium">{{ 'transactions.cash.amount' | transloco }}</label>
+        <label for="cash-amount" class="font-medium">{{
+          'transactions.cash.amount' | transloco
+        }}</label>
         <p-inputnumber
           inputId="cash-amount"
           [ngModel]="amount()"
@@ -63,7 +65,9 @@
       </div>
     </div>
     <div class="flex flex-col gap-2">
-      <label for="cash-sub" class="font-medium">{{ 'transactions.trade.subPortfolio' | transloco }}</label>
+      <label for="cash-sub" class="font-medium">{{
+        'transactions.trade.subPortfolio' | transloco
+      }}</label>
       <p-select
         inputId="cash-sub"
         [options]="subPortfolios()"
@@ -79,7 +83,12 @@
     </div>
   </div>
   <ng-template #footer>
-    <p-button [label]="'common.cancel' | transloco" [text]="true" severity="secondary" (onClick)="visible.set(false)" />
+    <p-button
+      [label]="'common.cancel' | transloco"
+      [text]="true"
+      severity="secondary"
+      (onClick)="visible.set(false)"
+    />
     <p-button
       [label]="'transactions.trade.record' | transloco"
       icon="pi pi-check"

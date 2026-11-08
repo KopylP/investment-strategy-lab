@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MultiSelect } from 'primeng/multiselect';
@@ -11,7 +12,7 @@ interface FundGroup {
 
 @Component({
   selector: 'app-builder-fund-picker',
-  imports: [FormsModule, MultiSelect],
+  imports: [TranslocoPipe, FormsModule, MultiSelect],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <p-multiselect
@@ -26,12 +27,12 @@ interface FundGroup {
       (ngModelChange)="valueChange.emit($event ?? [])"
       [filter]="true"
       filterBy="label,name"
-      filterPlaceholder="Пошук фонду"
+      [filterPlaceHolder]="'builder.fundPicker.search' | transloco"
       [showToggleAll]="false"
       [selectionLimit]="60"
       [maxSelectedLabels]="0"
-      selectedItemsLabel="Обрано: {0}"
-      placeholder="Оберіть фонди"
+      [selectedItemsLabel]="'builder.fundPicker.selectedCount' | transloco"
+      [placeholder]="'builder.fundPicker.placeholder' | transloco"
       [size]="compact() ? 'small' : undefined"
       [appendTo]="overlayContainer()"
       panelStyleClass="builder-fund-picker-panel"
@@ -43,13 +44,13 @@ interface FundGroup {
           type="button"
           role="checkbox"
           class="fund-group-toggle"
-          [attr.aria-label]="'Уся група «' + group.label + '»'"
+          [attr.aria-label]="'builder.fundPicker.wholeGroup' | transloco: { group: group.label }"
           [attr.aria-checked]="groupState(group)"
           [disabled]="exceedsLimit(group)"
           [title]="
             exceedsLimit(group)
-              ? 'Можна вибрати до 60 фондів. Звільніть місце або оберіть окремі фонди.'
-              : 'Вибрати або зняти вибір усієї видимої групи'
+              ? ('builder.fundPicker.limitReached' | transloco)
+              : ('builder.fundPicker.toggleGroup' | transloco)
           "
           (pointerdown)="$event.stopPropagation()"
           (click)="toggleGroup($event, group)"
@@ -74,7 +75,9 @@ interface FundGroup {
         >
       </ng-template>
       <ng-template #footer>
-        <div class="fund-picker-footer">Обрано {{ value().length }} із 60</div>
+        <div class="fund-picker-footer">
+          {{ 'builder.fundPicker.chosenCount' | transloco: { value: value().length } }}
+        </div>
       </ng-template>
     </p-multiselect>
   `,
@@ -177,7 +180,7 @@ export class FundPicker {
   protected readonly groups = computed(() => {
     const groups = new Map<string, InstrumentChoiceDto[]>();
     for (const item of this.instruments().filter((item) => !item.isVolatilityIndex)) {
-      const label = item.group ?? 'Інші';
+      const label = item.group ?? translate<string>('builder.fundSelection.others');
       groups.set(label, [...(groups.get(label) ?? []), item]);
     }
     return [...groups]

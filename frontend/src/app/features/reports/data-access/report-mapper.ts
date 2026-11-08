@@ -24,15 +24,15 @@ import {
 } from '../models/report-vm';
 
 const kindLabels: Record<ReportSummaryDto['kind'], string> = {
-  Monthly: translate('kind.Monthly'),
-  Recalculation: translate('kind.Recalculation'),
-  RiskReview: translate('kind.RiskReview'),
+  Monthly: translate('reports.mapper.kind.Monthly'),
+  Recalculation: translate('reports.mapper.kind.Recalculation'),
+  RiskReview: translate('reports.mapper.kind.RiskReview'),
 };
 
 const triggerLabels: Record<ReportSummaryDto['trigger'], string> = {
-  Scheduled: translate('trigger.Scheduled'),
-  OnDemand: translate('trigger.OnDemand'),
-  Signal: translate('trigger.Signal'),
+  Scheduled: translate('reports.mapper.trigger.Scheduled'),
+  OnDemand: translate('reports.mapper.trigger.OnDemand'),
+  Signal: translate('reports.mapper.trigger.Signal'),
 };
 
 export function toRequestVm(request: ReportRequestDto): ReportRequestVm {
@@ -46,7 +46,10 @@ export function toRequestVm(request: ReportRequestDto): ReportRequestVm {
     requestedAt: request.requestedAt,
     progressLabel:
       request.strategies > 0
-        ? translate('reports.list.ofTotal', { open: request.strategiesAnswered, total: request.strategies })
+        ? translate('reports.list.ofTotal', {
+            open: request.strategiesAnswered,
+            total: request.strategies,
+          })
         : null,
     error: request.error,
   };
@@ -89,7 +92,9 @@ function toContributionVm(
 ): ReportVm['contribution'] {
   const plan = report.contributionPlan;
   const splitLabel =
-    plan.split === 'FixedSplit' ? translate('split.FixedSplit') : translate('split.laggard');
+    plan.split === 'FixedSplit'
+      ? translate('reports.mapper.split.FixedSplit')
+      : translate('reports.mapper.split.laggard');
   const parts = plan.parts.map((part) => ({
     name: subName(part.subPortfolioId),
     amount: part.amount,
@@ -104,7 +109,10 @@ export function toReportVm(report: ReportDetailsDto): ReportVm {
     id ? (report.instruments[id]?.symbol ?? id.slice(0, 8)) : '';
   const readable = (text: string) =>
     text.replace(guid, (id) => report.instruments[id.toLowerCase()]?.symbol ?? id);
-  const subName = (id: string | null) => (id ? (report.subPortfolios[id] ?? translate('reports.mapper.subPortfolioFallback')) : '');
+  const subName = (id: string | null) =>
+    id
+      ? (report.subPortfolios[id] ?? translate<string>('reports.mapper.subPortfolioFallback'))
+      : '';
   const isOpenForMarking = summary.status === 'New' || summary.status === 'InProgress';
 
   const actions = report.actions.map((action) =>
@@ -117,7 +125,9 @@ export function toReportVm(report: ReportDetailsDto): ReportVm {
     actions,
     sections: report.sections.map((section) => toSectionVm(section, symbol, readable)),
     warnings: [...new Set(report.warnings)],
-    quotesLookStale: report.warnings.some((warning) => warning.includes(translate('reports.mapper.quoteWarningMarker'))),
+    quotesLookStale: report.warnings.some((warning) =>
+      warning.includes(translate('reports.mapper.quoteWarningMarker')),
+    ),
     contribution: toContributionVm(report, subName),
     review: report.review,
     taxImpact: toTaxImpactVm(report.taxEstimate, actions),
@@ -144,7 +154,9 @@ function toTaxImpactVm(
 
   if (estimate.yearTaxBefore === null || estimate.yearTaxBefore === undefined) {
     return {
-      change: translate('reports.mapper.taxApprox', { amount: formatMoney(estimate.taxChange, currency, 0) }),
+      change: translate('reports.mapper.taxApprox', {
+        amount: formatMoney(estimate.taxChange, currency, 0),
+      }),
       yearChange: null,
       carriedLoss: null,
       rowsNote: null,
@@ -157,17 +169,16 @@ function toTaxImpactVm(
   const salesCount = actions.filter((action) => action.taxLabel !== null).length;
 
   return {
-    change: translate('reports.mapper.taxApprox', { amount: signedTax(estimate.taxChange, currency) }),
+    change: translate('reports.mapper.taxApprox', {
+      amount: signedTax(estimate.taxChange, currency),
+    }),
     yearChange: translate('reports.mapper.yearChange', {
       year: estimate.year,
       before: formatMoney(before, currency, 0),
       after: formatMoney(after, currency, 0),
     }),
     carriedLoss: carriedLossLabel(estimate.carriedLoss, currency),
-    rowsNote:
-      salesCount > 1
-        ? translate('reports.mapper.salesHint')
-        : null,
+    rowsNote: salesCount > 1 ? translate('reports.mapper.salesHint') : null,
     notes,
   };
 }
@@ -198,7 +209,10 @@ function saleTaxLabel(action: ReportActionDto, estimate: TaxEstimateDto | null):
       : translate('reports.mapper.gain', { amount: formatMoney(gain, currency, 0) });
   const carriedLoss = action.estimatedCarriedLoss;
   const details = carriedLoss
-    ? translate('reports.mapper.outcomeWithCarried', { outcome, amount: formatMoney(carriedLoss, currency, 0) })
+    ? translate('reports.mapper.outcomeWithCarried', {
+        outcome,
+        amount: formatMoney(carriedLoss, currency, 0),
+      })
     : outcome;
 
   return translate('reports.mapper.taxWithDetails', {
@@ -295,17 +309,17 @@ const orderLabels: Record<
   SectionOrderDto['kind'],
   { label: string; severity: SectionVm['orders'][number]['severity'] }
 > = {
-  Exit: { label: translate('actionKind.Exit'), severity: 'danger' },
-  Trim: { label: translate('actionKind.Trim'), severity: 'warn' },
-  Unpark: { label: translate('actionKind.Unpark'), severity: 'info' },
-  Buy: { label: translate('actionKind.Buy'), severity: 'success' },
-  Park: { label: translate('actionKind.Park'), severity: 'secondary' },
+  Exit: { label: translate('reports.mapper.actionKind.Exit'), severity: 'danger' },
+  Trim: { label: translate('reports.mapper.actionKind.Trim'), severity: 'warn' },
+  Unpark: { label: translate('reports.mapper.actionKind.Unpark'), severity: 'info' },
+  Buy: { label: translate('reports.mapper.actionKind.Buy'), severity: 'success' },
+  Park: { label: translate('reports.mapper.actionKind.Park'), severity: 'secondary' },
 };
 
 const legacyColumns: SectionColumnDto[] = [
   {
     id: 'momentum',
-    label: translate('column.momentum'),
+    label: translate('reports.mapper.column.momentum'),
     format: 'signedPercent',
     hint: null,
     compact: true,
@@ -314,7 +328,7 @@ const legacyColumns: SectionColumnDto[] = [
   },
   {
     id: 'return1m',
-    label: translate('column.return1m'),
+    label: translate('reports.mapper.column.return1m'),
     format: 'signedPercent',
     hint: null,
     compact: false,
@@ -323,7 +337,7 @@ const legacyColumns: SectionColumnDto[] = [
   },
   {
     id: 'return3m',
-    label: translate('column.return3m'),
+    label: translate('reports.mapper.column.return3m'),
     format: 'signedPercent',
     hint: null,
     compact: false,
@@ -332,7 +346,7 @@ const legacyColumns: SectionColumnDto[] = [
   },
   {
     id: 'return12m',
-    label: translate('column.return12m'),
+    label: translate('reports.mapper.column.return12m'),
     format: 'signedPercent',
     hint: null,
     compact: false,
@@ -341,7 +355,7 @@ const legacyColumns: SectionColumnDto[] = [
   },
   {
     id: 'volatility',
-    label: translate('column.volatility'),
+    label: translate('reports.mapper.column.volatility'),
     format: 'percent',
     hint: null,
     compact: false,
@@ -354,8 +368,8 @@ const legacyColumns: SectionColumnDto[] = [
     format: 'trend',
     hint: null,
     compact: true,
-    trueHint: translate('column.aboveMa'),
-    falseHint: translate('column.belowMa'),
+    trueHint: translate('reports.mapper.column.aboveMa'),
+    falseHint: translate('reports.mapper.column.belowMa'),
   },
 ];
 
@@ -383,8 +397,13 @@ function toScoreTable(
   const columns = decision.columns ?? legacyColumns;
 
   return {
-    title: decision.scoreTitle ?? (described ? translate('reports.mapper.whyInstruments') : translate('reports.mapper.whyEtfs')),
-    instrumentLabel: decision.instrumentLabel ?? (described ? translate('instruments.instrument') : 'ETF'),
+    title:
+      decision.scoreTitle ??
+      (described
+        ? translate('reports.mapper.whyInstruments')
+        : translate('reports.mapper.whyEtfs')),
+    instrumentLabel:
+      decision.instrumentLabel ?? (described ? translate('instruments.instrument') : 'ETF'),
     columns,
     rows: decision.scores
       .map((score) => {
@@ -420,7 +439,10 @@ function toSectionVm(
     name: section.name,
     targetShare: section.targetShare,
     strategyLabel: section.strategyCode
-      ? translate('reports.mapper.strategyVersion', { code: section.strategyCode, version: section.strategyVersion })
+      ? translate('reports.mapper.strategyVersion', {
+          code: section.strategyCode,
+          version: section.strategyVersion,
+        })
       : translate('reports.mapper.strategyNoAnswer'),
     contribution: section.contribution,
     marketIsFavorable: section.decision?.marketIsFavorable ?? null,

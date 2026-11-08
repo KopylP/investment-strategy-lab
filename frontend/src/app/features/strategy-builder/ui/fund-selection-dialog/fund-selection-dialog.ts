@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -29,7 +30,16 @@ import { activeLocale } from '../../../../core/i18n/language';
 
 @Component({
   selector: 'app-fund-selection-dialog',
-  imports: [FormsModule, Button, Dialog, Select, InputText, InputNumber, SelectButton],
+  imports: [
+    TranslocoPipe,
+    FormsModule,
+    Button,
+    Dialog,
+    Select,
+    InputText,
+    InputNumber,
+    SelectButton,
+  ],
   providers: [FundSearchStore],
   templateUrl: './fund-selection-dialog.html',
   styleUrl: './fund-selection-dialog.css',
@@ -52,8 +62,8 @@ export class FundSelectionDialog {
   protected readonly remoteQuery = signal('');
   protected readonly scope = signal<'added' | 'external'>('added');
   protected readonly searchScopes = [
-    { label: 'Додані інструменти', value: 'added' },
-    { label: 'Пошук у джерелі котирувань', value: 'external' },
+    { label: translate('builder.fundSelection.mode.catalog'), value: 'added' },
+    { label: translate('builder.fundSelection.mode.source'), value: 'external' },
   ];
   protected readonly exchange = signal<string | null>(null);
   protected readonly region = signal<string | null>(null);
@@ -69,7 +79,12 @@ export class FundSelectionDialog {
   protected readonly selected = computed(() => [
     ...this.selectedIds().map((id) => {
       const item = this.instruments().find((item) => item.id === id);
-      return { key: id, label: item?.label ?? 'Фонд', name: item?.name ?? id, pending: false };
+      return {
+        key: id,
+        label: item?.label ?? translate<string>('builder.graph.setup.fund'),
+        name: item?.name ?? id,
+        pending: false,
+      };
     }),
     ...this.pending().map((item) => ({
       key: item.symbol,
@@ -83,7 +98,7 @@ export class FundSelectionDialog {
     const groups = new Map<string, InstrumentChoiceDto[]>();
     for (const item of this.instruments()) {
       if (!this.fits(item, query)) continue;
-      const group = item.group ?? 'Інші';
+      const group = item.group ?? translate<string>('builder.fundSelection.others');
       groups.set(group, [...(groups.get(group) ?? []), item]);
     }
     return [...groups]
@@ -168,9 +183,7 @@ export class FundSelectionDialog {
       this.error.set(null);
       return true;
     }
-    this.error.set(
-      `Можна вибрати до ${limit}. Зніміть частину вибору або виберіть окремі інструменти.`,
-    );
+    this.error.set(translate('builder.fundSelection.limit', { limit }));
     return false;
   }
   protected search(): void {

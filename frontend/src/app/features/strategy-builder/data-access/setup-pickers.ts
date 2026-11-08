@@ -1,13 +1,13 @@
+import { translate } from '@jsverse/transloco';
 import { InstrumentPickerVm } from '../models/instrument-picker-vm';
 
 const fundLimit = 60;
 
 export const fundPicker: InstrumentPickerVm = {
-  title: 'Фонди стратегії',
-  intro:
-    'Виберіть фонди, серед яких стратегія шукатиме кандидатів. Зміни застосуються після підтвердження.',
-  chooseLabel: 'Обрати фонди',
-  changeLabel: 'Змінити фонди',
+  title: translate('builder.pickers.funds.title'),
+  intro: translate('builder.pickers.funds.hint'),
+  chooseLabel: translate('builder.setup.chooseFunds'),
+  changeLabel: translate('builder.pickers.funds.change'),
   limit: fundLimit,
   volatilityIndices: false,
   externalSearch: true,
@@ -17,31 +17,30 @@ export const fundPicker: InstrumentPickerVm = {
 export const setupPickers: Record<string, InstrumentPickerVm> = {
   funds: fundPicker,
   benchmarkId: {
-    title: 'Бенчмарк',
-    intro:
-      'Виберіть фонд, з яким стратегія порівнюватиметься і за яким може визначати ринковий режим.',
-    chooseLabel: 'Обрати бенчмарк',
-    changeLabel: 'Змінити бенчмарк',
+    title: translate('strategies.detail.benchmark'),
+    intro: translate('builder.pickers.benchmark.hint'),
+    chooseLabel: translate('builder.pickers.benchmark.choose'),
+    changeLabel: translate('builder.pickers.benchmark.change'),
     limit: 1,
     volatilityIndices: false,
     externalSearch: true,
     required: true,
   },
   volatilityIndexId: {
-    title: 'Індекс волатильності',
-    intro: 'Виберіть індекс, на який можуть спиратися ринкові умови стратегії.',
-    chooseLabel: 'Обрати індекс',
-    changeLabel: 'Змінити індекс',
+    title: translate('strategies.detail.volatilityIndex'),
+    intro: translate('builder.pickers.vix.hint'),
+    chooseLabel: translate('builder.pickers.vix.choose'),
+    changeLabel: translate('builder.pickers.vix.change'),
     limit: 1,
     volatilityIndices: true,
     externalSearch: false,
     required: false,
   },
   extraSeries: {
-    title: 'Додаткові ряди',
-    intro: 'Виберіть інструменти, ціни яких стратегія може використовувати в індикаторах.',
-    chooseLabel: 'Обрати ряди',
-    changeLabel: 'Змінити ряди',
+    title: translate('builder.setup.extraSeries'),
+    intro: translate('builder.pickers.extra.hint'),
+    chooseLabel: translate('builder.pickers.extra.choose'),
+    changeLabel: translate('builder.pickers.extra.change'),
     limit: fundLimit,
     volatilityIndices: false,
     externalSearch: true,

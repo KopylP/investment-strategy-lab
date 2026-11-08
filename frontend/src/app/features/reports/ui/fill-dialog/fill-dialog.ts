@@ -19,7 +19,8 @@ export interface FillDialogData {
 
 @Component({
   selector: 'app-fill-dialog',
-  imports: [TranslocoPipe, 
+  imports: [
+    TranslocoPipe,
     ReactiveFormsModule,
     Button,
     DatePicker,

@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -27,6 +28,7 @@ interface InstrumentOption {
 @Component({
   selector: 'app-builder-setup-dialog',
   imports: [
+    TranslocoPipe,
     NgTemplateOutlet,
     FormsModule,
     Button,

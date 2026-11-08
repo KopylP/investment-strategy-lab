@@ -41,15 +41,16 @@ import { WatchedSubject, watchedSubjectOf } from '../../models/watched-subject';
 import { WatchedSubjectPicker } from '../watched-subject-picker/watched-subject-picker';
 
 const signalFrequencyOptions = [
-  { label: translate('frequency.off'), value: 'off' },
-  { label: translate('frequency.hourly'), value: 'hourly' },
-  { label: translate('frequency.daily'), value: 'daily' },
-  { label: translate('frequency.weekly'), value: 'weekly' },
+  { label: translate('signals.editor.frequency.off'), value: 'off' },
+  { label: translate('signals.editor.frequency.hourly'), value: 'hourly' },
+  { label: translate('signals.editor.frequency.daily'), value: 'daily' },
+  { label: translate('signals.editor.frequency.weekly'), value: 'weekly' },
 ];
 
 @Component({
   selector: 'app-signal-editor',
-  imports: [TranslocoPipe, 
+  imports: [
+    TranslocoPipe,
     FormsModule,
     Button,
     Dialog,

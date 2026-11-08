@@ -26,7 +26,8 @@ const newInstrument = '__new';
 
 @Component({
   selector: 'app-statement-import-page',
-  imports: [TranslocoPipe, 
+  imports: [
+    TranslocoPipe,
     StatementRowsCard,
     StatementHistoryCard,
     StatementUploadCard,
@@ -59,10 +60,10 @@ export class StatementImportPage {
   }
 
   protected readonly modes: { label: string; value: ImportMode }[] = [
-    { label: translate('mode.Append'), value: 'Merge' },
-    { label: translate('mode.Update'), value: 'UpdateImported' },
-    { label: translate('mode.Overwrite'), value: 'Replace' },
-    { label: translate('mode.FromScratch'), value: 'FromScratch' },
+    { label: translate('transactions.import.mode.Append'), value: 'Merge' },
+    { label: translate('transactions.import.mode.Update'), value: 'UpdateImported' },
+    { label: translate('transactions.import.mode.Overwrite'), value: 'Replace' },
+    { label: translate('transactions.import.mode.FromScratch'), value: 'FromScratch' },
   ];
 
   protected readonly modeHelp: Record<
@@ -71,11 +72,11 @@ export class StatementImportPage {
   > = {
     Merge: {
       severity: 'info',
-      text: translate('mode.AppendHint'),
+      text: translate('transactions.import.mode.AppendHint'),
     },
     UpdateImported: {
       severity: 'info',
-      text: translate('mode.UpdateHint'),
+      text: translate('transactions.import.mode.UpdateHint'),
     },
     Replace: {
       severity: 'warn',
@@ -83,7 +84,7 @@ export class StatementImportPage {
     },
     FromScratch: {
       severity: 'error',
-      text: translate('mode.FromScratchHint'),
+      text: translate('transactions.import.mode.FromScratchHint'),
     },
   };
 

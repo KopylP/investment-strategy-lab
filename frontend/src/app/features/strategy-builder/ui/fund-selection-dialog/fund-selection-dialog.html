@@ -12,7 +12,7 @@
 >
   <p class="intro">{{ picker().intro }}</p>
   <div class="selection-layout">
-    <section class="catalog" aria-label="Пошук і каталог фондів">
+    <section class="catalog" [attr.aria-label]="'builder.fundSelection.label' | transloco">
       @if (picker().externalSearch) {
         <p-selectbutton
           [options]="searchScopes"
@@ -22,35 +22,35 @@
           (ngModelChange)="scope.set($event)"
           [allowEmpty]="false"
           [disabled]="busy()"
-          ariaLabel="Де шукати фонди"
+          [ariaLabel]="'builder.fundSelection.where' | transloco"
         />
       }
       @if (scope() === 'added') {
         <p class="scope-description">
-          Пошук серед інструментів, уже доданих до сервісу. Наявність у каталозі не гарантує повної
-          історії котирувань.
+          {{ 'builder.fundSelection.catalogHint' | transloco }}
         </p>
-        <label for="fund-selection-query">Назва або тикер серед доданих</label>
+        <label for="fund-selection-query">{{
+          'builder.fundSelection.catalogSearch' | transloco
+        }}</label>
         <input
           pInputText
           id="fund-selection-query"
           type="search"
-          placeholder="Наприклад, SPY або MSCI World"
+          [placeholder]="'builder.fundSelection.catalogPlaceholder' | transloco"
           [ngModel]="query()"
           (ngModelChange)="query.set($event)"
           [disabled]="busy()"
         />
       } @else {
         <p class="scope-description">
-          Пошук ETF у джерелі котирувань, зокрема ще не доданих до сервісу. Вибрані нові фонди буде
-          додано після «Застосувати».
+          {{ 'builder.fundSelection.sourceHint' | transloco }}
         </p>
-        <label for="fund-remote-query">Слова в назві ETF</label>
+        <label for="fund-remote-query">{{ 'builder.fundSelection.nameWords' | transloco }}</label>
         <input
           pInputText
           id="fund-remote-query"
           type="search"
-          placeholder="Наприклад, MSCI World"
+          [placeholder]="'builder.fundSearch.namePlaceholder' | transloco"
           [ngModel]="remoteQuery()"
           (ngModelChange)="remoteQuery.set($event)"
           [disabled]="busy() || store.searching()"
@@ -58,14 +58,12 @@
         />
         <div class="external-search">
           <p class="hint">
-            Виберіть біржу або регіон. Пошук перевіряє до 250 найбільших ETF і показує до 100
-            збігів. Це обмежена вибірка, а не повний список ETF. Пошук за точним тикером тут ще не
-            підтримується.
+            {{ 'builder.fundSelection.sourceLimits' | transloco }}
           </p>
           @if (store.options(); as options) {
             <div class="search-filters">
               <div>
-                <label for="selection-exchange">Біржа</label
+                <label for="selection-exchange">{{ 'instruments.exchange' | transloco }}</label
                 ><p-select
                   inputId="selection-exchange"
                   [options]="options.exchanges"
@@ -74,14 +72,16 @@
                   [ngModel]="exchange()"
                   (ngModelChange)="exchange.set($event)"
                   [showClear]="true"
-                  placeholder="Оберіть біржу"
+                  [placeholder]="'builder.fundSelection.chooseExchange' | transloco"
                   [disabled]="busy()"
                   [appendTo]="overlayContainer()"
                   fluid
                 />
               </div>
               <div>
-                <label for="selection-region">Регіон</label
+                <label for="selection-region">{{
+                  'builder.fundSelection.region' | transloco
+                }}</label
                 ><p-select
                   inputId="selection-region"
                   [options]="options.regions"
@@ -90,7 +90,7 @@
                   [ngModel]="region()"
                   (ngModelChange)="region.set($event)"
                   [showClear]="true"
-                  placeholder="Оберіть регіон"
+                  [placeholder]="'builder.fundSelection.chooseRegion' | transloco"
                   [disabled]="busy()"
                   [appendTo]="overlayContainer()"
                   fluid
@@ -98,10 +98,12 @@
               </div>
             </div>
             <details class="advanced-filters">
-              <summary>Додаткові фільтри</summary>
+              <summary>{{ 'builder.fundSelection.moreFilters' | transloco }}</summary>
               <div class="search-filters">
                 <div>
-                  <label for="selection-family">Сімейство фондів</label
+                  <label for="selection-family">{{
+                    'builder.fundSelection.family' | transloco
+                  }}</label
                   ><input
                     pInputText
                     id="selection-family"
@@ -111,7 +113,9 @@
                   />
                 </div>
                 <div>
-                  <label for="selection-assets">Мінімальні активи</label
+                  <label for="selection-assets">{{
+                    'builder.fundSelection.minAssets' | transloco
+                  }}</label
                   ><p-inputnumber
                     inputId="selection-assets"
                     [ngModel]="minAssets()"
@@ -123,7 +127,7 @@
                   />
                 </div>
                 <div>
-                  <label for="selection-fee">Максимальна TER, %</label
+                  <label for="selection-fee">{{ 'builder.fundSelection.maxTer' | transloco }}</label
                   ><p-inputnumber
                     inputId="selection-fee"
                     [ngModel]="maxFee()"
@@ -139,7 +143,9 @@
             </details>
             <p-button
               [label]="
-                store.searching() ? 'Шукаємо в джерелі котирувань…' : 'Шукати в джерелі котирувань'
+                store.searching()
+                  ? ('builder.fundSelection.searching' | transloco)
+                  : ('builder.fundSelection.searchSource' | transloco)
               "
               icon="pi pi-search"
               [loading]="store.searching()"
@@ -148,7 +154,7 @@
             />
           } @else {
             <p-button
-              label="Завантажити параметри пошуку"
+              [label]="'builder.fundSelection.loadParameters' | transloco"
               [loading]="store.loadingOptions()"
               (onClick)="store.loadOptions()"
             />
@@ -191,18 +197,17 @@
             </section>
           } @empty {
             <p class="hint">
-              Серед доданих інструментів збігів немає. Перемкніться на «Пошук у джерелі котирувань»,
-              щоб знайти інші ETF.
+              {{ 'builder.fundSelection.noCatalogMatches' | transloco }}
             </p>
           }
         } @else if (store.searching()) {
           <div class="search-status" role="status">
-            <i class="pi pi-spin pi-spinner" aria-hidden="true"></i> Шукаємо ETF у джерелі
-            котирувань. Це може зайняти деякий час…
+            <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+            {{ 'builder.fundSelection.searchingLong' | transloco }}
           </div>
         } @else if (store.funds() !== null) {
           <p class="search-status" role="status">
-            Джерело котирувань · знайдено {{ external().length }} ETF за останнім запитом
+            {{ 'builder.fundSelection.sourceFound' | transloco: { external: external().length } }}
           </p>
 
           @for (fund of external(); track fund.symbol) {
@@ -216,28 +221,33 @@
               /><span
                 ><strong>{{ fund.symbol }}</strong
                 ><span class="fund-name"
-                  >{{ fund.name }} · {{ fund.currency ?? 'Валюта невідома' }}</span
+                  >{{ fund.name }} ·
+                  {{ fund.currency ?? ('builder.fundSelection.currencyUnknown' | transloco) }}</span
                 ></span
               ><small>{{
-                fund.instrumentId ? 'Уже додано до сервісу' : 'Ще не додано'
+                fund.instrumentId
+                  ? ('builder.fundSelection.alreadyAdded' | transloco)
+                  : ('builder.fundSelection.notAdded' | transloco)
               }}</small></label
             >
           } @empty {
             <p class="hint">
-              За цими умовами ETF не знайдено. Спробуйте прибрати слова з назви або змінити біржу чи
-              регіон.
+              {{ 'builder.fundSelection.noSourceMatches' | transloco }}
             </p>
           }
         } @else {
           <p class="hint" role="status">
-            Виберіть біржу або регіон і натисніть «Шукати в джерелі котирувань». Результати
-            з’являться тут.
+            {{ 'builder.fundSelection.sourceStart' | transloco }}
           </p>
         }
       </div>
     </section>
-    <aside class="selected-panel" aria-label="Вибрані фонди">
-      <h3 aria-live="polite">Вибрано {{ count() }} із {{ picker().limit }}</h3>
+    <aside class="selected-panel" [attr.aria-label]="'builder.fundSelection.chosen' | transloco">
+      <h3 aria-live="polite">
+        {{
+          'builder.fundSelection.chosenCount' | transloco: { count: count(), limit: picker().limit }
+        }}
+      </h3>
       <div class="selected-list">
         @for (fund of selected(); track fund.key) {
           <div class="selected-row">
@@ -245,11 +255,11 @@
               ><strong>{{ fund.label }}</strong
               ><span class="fund-name">{{ fund.name }}</span>
               @if (fund.pending) {
-                <small>Буде додано до каталогу</small>
+                <small>{{ 'builder.fundSelection.willBeAdded' | transloco }}</small>
               }</span
             ><button
               type="button"
-              [attr.aria-label]="'Прибрати ' + fund.label"
+              [attr.aria-label]="'builder.fundSelection.remove' | transloco: { name: fund.label }"
               [disabled]="busy()"
               (click)="remove(fund.key, fund.pending)"
             >
@@ -257,7 +267,7 @@
             </button>
           </div>
         } @empty {
-          <p class="hint">Позначте потрібне в каталозі або результатах пошуку.</p>
+          <p class="hint">{{ 'builder.fundSelection.pickHint' | transloco }}</p>
         }
       </div>
     </aside>
@@ -270,14 +280,18 @@
   }
   <ng-template #footer>
     <p-button
-      label="Скасувати"
+      [label]="'common.cancel' | transloco"
       severity="secondary"
       [text]="true"
       [disabled]="busy()"
       (onClick)="visible.set(false)"
     />
     <p-button
-      [label]="single() ? 'Застосувати' : 'Застосувати · ' + count()"
+      [label]="
+        single()
+          ? ('builder.fundSelection.apply' | transloco)
+          : ('builder.fundSelection.applyCount' | transloco: { count: count() })
+      "
       [loading]="busy()"
       [disabled]="store.searching()"
       (onClick)="apply()"

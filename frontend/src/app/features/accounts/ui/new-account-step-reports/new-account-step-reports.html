@@ -1,8 +1,9 @@
 <div class="card">
   <p-message severity="secondary" styleClass="mb-5">
     <div>
-      <b>{{ 'accounts.wizard.reports.report' | transloco }}</b> {{ 'accounts.wizard.reports.hint' | transloco }}<b
-        >{{ 'accounts.settingsAccounts' | transloco }}</b
+      <b>{{ 'accounts.wizard.reports.report' | transloco }}</b>
+      {{ 'accounts.wizard.reports.hint' | transloco
+      }}<b>{{ 'accounts.settingsAccounts' | transloco }}</b
       >).
     </div>
   </p-message>
@@ -21,7 +22,10 @@
             </div>
             <div class="text-sm text-muted-color mt-1">{{ report.description }}</div>
             <div class="text-sm mt-1">
-              {{ 'accounts.wizard.reports.strategyTiming' | transloco: { strategyTiming: draft.scheduleLabel(report.strategyTiming) } }}
+              {{
+                'accounts.wizard.reports.strategyTiming'
+                  | transloco: { strategyTiming: draft.scheduleLabel(report.strategyTiming) }
+              }}
             </div>
           </div>
           <p-selectbutton

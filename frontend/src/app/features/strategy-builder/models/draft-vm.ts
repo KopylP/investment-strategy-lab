@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 import { BlockKind } from './draft-dto';
 import { builtInSignalKindLabels } from '../../signals/models/signal-labels';
 
@@ -16,37 +17,37 @@ export const blocks: BlockVm[] = [
   {
     kind: 'MarketFilter',
     number: 1,
-    title: 'Ринковий фільтр',
-    purpose: 'для ринку загалом',
-    result: 'Ринок сприятливий',
+    title: translate('builder.block.market.title'),
+    purpose: translate('builder.block.market.scope'),
+    result: translate('builder.block.market.outcome'),
   },
   {
     kind: 'Exit',
     number: 2,
-    title: 'Вихід',
-    purpose: 'для кожного фонду в портфелі',
-    result: 'Продати',
+    title: translate('builder.block.exit.title'),
+    purpose: translate('builder.block.exit.scope'),
+    result: translate('builder.block.exit.outcome'),
   },
   {
     kind: 'Entry',
     number: 3,
-    title: 'Вхід',
-    purpose: 'для кожного фонду поза портфелем',
-    result: 'Кандидат на купівлю',
+    title: translate('builder.block.entry.title'),
+    purpose: translate('builder.block.entry.scope'),
+    result: translate('builder.block.entry.outcome'),
   },
   {
     kind: 'Selection',
     number: 4,
-    title: 'Відбір і ваги',
-    purpose: 'серед кандидатів',
-    result: 'Розподілити гроші',
+    title: translate('builder.block.selection.title'),
+    purpose: translate('builder.block.selection.scope'),
+    result: translate('builder.block.selection.outcome'),
   },
   {
     kind: 'Risk',
     number: 5,
-    title: 'Ризик між ребалансами',
-    purpose: 'для кожного фонду в портфелі',
-    result: 'Продати позачергово',
+    title: translate('builder.block.risk.title'),
+    purpose: translate('builder.block.exit.scope'),
+    result: translate('builder.block.risk.outcome'),
   },
 ];
 

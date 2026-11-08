@@ -30,11 +30,13 @@ const showHeldKey = 'overview.valueChart.showHeld';
     >
       @if (hasPlan() && !showHeld()) {
         <label class="flex items-center gap-2">
-          <p-toggleswitch [ngModel]="showPlan()" (ngModelChange)="setShowPlan($event)" /> {{ 'overview.chart.ifToPlan' | transloco }}
+          <p-toggleswitch [ngModel]="showPlan()" (ngModelChange)="setShowPlan($event)" />
+          {{ 'overview.chart.ifToPlan' | transloco }}
         </label>
       }
       <label class="flex items-center gap-2">
-        <p-toggleswitch [ngModel]="showHeld()" (ngModelChange)="setShowHeld($event)" /> {{ 'overview.chart.gainOnAssets' | transloco }}
+        <p-toggleswitch [ngModel]="showHeld()" (ngModelChange)="setShowHeld($event)" />
+        {{ 'overview.chart.gainOnAssets' | transloco }}
       </label>
     </div>
     <app-chart-legend
@@ -105,7 +107,9 @@ export class ValueChart {
           pointHoverRadius: 6,
         },
         {
-          label: held ? translate('overview.chart.paidForAssets') : translate('overview.chart.contributed'),
+          label: held
+            ? translate('overview.chart.paidForAssets')
+            : translate('overview.chart.contributed'),
           data: series.map((point) => scaled(held ? point.costBasis : point.netContributions)),
           borderColor: palette.neutral,
           borderDash: [6, 4],

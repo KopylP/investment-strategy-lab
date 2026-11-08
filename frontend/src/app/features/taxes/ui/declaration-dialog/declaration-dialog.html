@@ -18,7 +18,9 @@
     <p-skeleton height="20rem" />
   } @else if (declaration(); as d) {
     <div class="text-sm text-muted-color mb-3">
-      {{ 'taxes.declaration.subtitle' | transloco: { title: d.title, deadline: (d.deadline | date) } }}
+      {{
+        'taxes.declaration.subtitle' | transloco: { title: d.title, deadline: (d.deadline | date) }
+      }}
     </div>
     <div class="flex flex-wrap gap-2 mb-3">
       <p-button
@@ -60,7 +62,9 @@
       <p-message severity="warn" styleClass="mb-2" [text]="warning" />
     }
 
-    <h3 class="text-base font-semibold mt-4 mb-2">{{ 'taxes.declaration.accounts' | transloco }}</h3>
+    <h3 class="text-base font-semibold mt-4 mb-2">
+      {{ 'taxes.declaration.accounts' | transloco }}
+    </h3>
     <div class="flex flex-col mb-2">
       @for (a of d.accounts; track a.accountId) {
         <div
@@ -75,7 +79,10 @@
             @if (a.takesPit8C) {
               @if (a.pit8CCoveredBy) {
                 <div class="text-xs mt-1 text-muted-color">
-                  {{ 'taxes.declaration.pit8cCoveredBy' | transloco: { pit8CCoveredBy: a.pit8CCoveredBy } }}
+                  {{
+                    'taxes.declaration.pit8cCoveredBy'
+                      | transloco: { pit8CCoveredBy: a.pit8CCoveredBy }
+                  }}
                 </div>
               } @else if (a.pit8C) {
                 <div class="text-xs mt-1">
@@ -108,15 +115,23 @@
           </div>
           <div class="text-right text-sm tabular-nums whitespace-nowrap">
             <div>
-              {{ a.revenue | taxMoney }} <span class="text-muted-color text-xs">{{ 'taxes.declaration.proceeds' | transloco }}</span>
+              {{ a.revenue | taxMoney }}
+              <span class="text-muted-color text-xs">{{
+                'taxes.declaration.proceeds' | transloco
+              }}</span>
             </div>
             <div>
-              {{ a.costs | taxMoney }} <span class="text-muted-color text-xs">{{ 'taxes.declaration.costs' | transloco }}</span>
+              {{ a.costs | taxMoney }}
+              <span class="text-muted-color text-xs">{{
+                'taxes.declaration.costs' | transloco
+              }}</span>
             </div>
             @if (a.dividendsGross) {
               <div>
                 {{ a.dividendsGross | taxMoney }}
-                <span class="text-muted-color text-xs">{{ 'taxes.declaration.dividends' | transloco }}</span>
+                <span class="text-muted-color text-xs">{{
+                  'taxes.declaration.dividends' | transloco
+                }}</span>
               </div>
             }
           </div>
@@ -186,7 +201,9 @@
     }
 
     @if (d.facts?.length) {
-      <h3 class="text-base font-semibold mt-5 mb-2">{{ 'taxes.declaration.forReference' | transloco }}</h3>
+      <h3 class="text-base font-semibold mt-5 mb-2">
+        {{ 'taxes.declaration.forReference' | transloco }}
+      </h3>
       @for (fact of d.facts; track fact.label) {
         <div class="flex justify-between gap-3 text-sm py-1">
           <span>{{ fact.label }}</span
@@ -196,7 +213,9 @@
     }
 
     @if (d.notes.length) {
-      <h3 class="text-base font-semibold mt-5 mb-2">{{ 'taxes.declaration.worthKnowing' | transloco }}</h3>
+      <h3 class="text-base font-semibold mt-5 mb-2">
+        {{ 'taxes.declaration.worthKnowing' | transloco }}
+      </h3>
       <ul class="m-0 pl-5 text-sm flex flex-col gap-1">
         @for (note of d.notes; track $index) {
           <li [class.font-medium]="note.action">{{ note.text }}</li>
@@ -215,7 +234,9 @@
           <div class="text-sm">
             {{ field.label }}
             @if (field.computed) {
-              <span class="text-xs text-muted-color">{{ 'taxes.declaration.computedByForm' | transloco }}</span>
+              <span class="text-xs text-muted-color">{{
+                'taxes.declaration.computedByForm' | transloco
+              }}</span>
             }
           </div>
           @if (field.hint) {

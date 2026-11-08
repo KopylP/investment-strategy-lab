@@ -24,7 +24,11 @@
       [title]="'reports.list.openAccountFirst' | transloco"
       [text]="'reports.list.openAccountHint' | transloco"
     >
-      <p-button [label]="'holdings.openAccount' | transloco" icon="pi pi-plus" routerLink="/accounts/new" />
+      <p-button
+        [label]="'holdings.openAccount' | transloco"
+        icon="pi pi-plus"
+        routerLink="/accounts/new"
+      />
     </app-empty-state>
   </div>
 } @else {
@@ -32,7 +36,8 @@
     <p-message severity="info" styleClass="mb-4">
       <span
         >{{ 'reports.list.openReport' | transloco }}
-        <a [routerLink]="['/reports', open.id]" class="font-medium underline">{{ open.title }}</a> {{ 'reports.list.waiting' | transloco: { actionsOpen: open.actionsOpen } }}</span
+        <a [routerLink]="['/reports', open.id]" class="font-medium underline">{{ open.title }}</a>
+        {{ 'reports.list.waiting' | transloco: { actionsOpen: open.actionsOpen } }}</span
       >
     </p-message>
   }
@@ -81,7 +86,9 @@
             <th>{{ 'reports.list.report' | transloco }}</th>
             <th class="hidden sm:table-cell">{{ 'reports.list.state' | transloco }}</th>
             <th class="text-right">{{ 'reports.list.actionsCount' | transloco }}</th>
-            <th class="text-right hidden sm:table-cell">{{ 'reports.progress.contribution' | transloco }}</th>
+            <th class="text-right hidden sm:table-cell">
+              {{ 'reports.progress.contribution' | transloco }}
+            </th>
             <th class="hidden sm:table-cell">{{ 'reports.list.generated' | transloco }}</th>
           </tr>
         </ng-template>
@@ -112,13 +119,20 @@
               </td>
               <td class="text-right whitespace-nowrap">
                 @if (request.status === 'Pending' && request.progressLabel) {
-                  <span [title]="'reports.list.answeredHint' | transloco">{{ request.progressLabel }}</span>
+                  <span [title]="'reports.list.answeredHint' | transloco">{{
+                    request.progressLabel
+                  }}</span>
                 } @else {
                   —
                 }
               </td>
               <td class="text-right hidden sm:table-cell">—</td>
-              <td class="hidden sm:table-cell">{{ 'reports.list.requested' | transloco: { requestedAt: (request.requestedAt | dateTime) } }}</td>
+              <td class="hidden sm:table-cell">
+                {{
+                  'reports.list.requested'
+                    | transloco: { requestedAt: (request.requestedAt | dateTime) }
+                }}
+              </td>
             </tr>
           } @else {
             <tr>
@@ -144,7 +158,11 @@
                   (row.report.status === 'New' || row.report.status === 'InProgress')
                 ) {
                   <p-tag
-                    [value]="'reports.list.ofTotal' | transloco: { open: row.report.actionsOpen, total: row.report.actionsTotal }"
+                    [value]="
+                      'reports.list.ofTotal'
+                        | transloco
+                          : { open: row.report.actionsOpen, total: row.report.actionsTotal }
+                    "
                     severity="warn"
                     styleClass="whitespace-nowrap"
                   />
@@ -197,7 +215,9 @@
       {{ 'reports.list.generateHint' | transloco: { description: asking()?.description } }}
     </p>
     <div class="flex flex-col gap-2">
-      <label for="contribution" class="font-medium">{{ 'reports.list.monthContribution' | transloco }}</label>
+      <label for="contribution" class="font-medium">{{
+        'reports.list.monthContribution' | transloco
+      }}</label>
       <p-inputnumber
         inputId="contribution"
         [ngModel]="contribution()"
@@ -208,13 +228,16 @@
         [min]="0"
         fluid
       />
-      <small class="text-muted-color"
-        >{{ 'reports.list.monthContributionHint' | transloco }}</small
-      >
+      <small class="text-muted-color">{{ 'reports.list.monthContributionHint' | transloco }}</small>
     </div>
   </div>
   <ng-template #footer>
-    <p-button [label]="'common.cancel' | transloco" [text]="true" severity="secondary" (onClick)="asking.set(null)" />
+    <p-button
+      [label]="'common.cancel' | transloco"
+      [text]="true"
+      severity="secondary"
+      (onClick)="asking.set(null)"
+    />
     <p-button
       [label]="'reports.list.generate' | transloco"
       icon="pi pi-bolt"

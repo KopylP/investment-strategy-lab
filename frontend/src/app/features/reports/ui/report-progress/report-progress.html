@@ -6,7 +6,9 @@
         >{{ progress().resolved }} / {{ progress().total }}
         @if (progress().partial) {
           <span class="text-muted-color font-normal text-sm">
-            {{ 'reports.progress.partialInline' | transloco: { partial: progress().partial } }}</span
+            {{
+              'reports.progress.partialInline' | transloco: { partial: progress().partial }
+            }}</span
           >
         }
       </span>
@@ -14,7 +16,9 @@
     <p-progressbar [value]="progress().percent" [showValue]="false" styleClass="mt-2 h-2" />
     <div class="grid grid-cols-3 gap-2 mt-3 text-sm">
       <div>
-        <div class="text-muted-color text-xs">{{ 'reports.progress.contribution' | transloco }}</div>
+        <div class="text-muted-color text-xs">
+          {{ 'reports.progress.contribution' | transloco }}
+        </div>
         <div class="font-semibold">
           <app-money
             [amount]="report().contribution.total"
@@ -56,15 +60,21 @@
 } @else {
   <div class="grid gap-4 grid-cols-2 lg:grid-cols-4">
     <div class="card mb-0">
-      <div class="text-muted-color text-sm mb-2">{{ 'reports.progress.actionsDone' | transloco }}</div>
+      <div class="text-muted-color text-sm mb-2">
+        {{ 'reports.progress.actionsDone' | transloco }}
+      </div>
       <div class="text-2xl font-semibold">{{ progress().resolved }} / {{ progress().total }}</div>
       <p-progressbar [value]="progress().percent" [showValue]="false" styleClass="mt-3 h-2" />
       @if (progress().partial) {
-        <div class="text-sm text-muted-color mt-2">{{ 'reports.progress.partial' | transloco: { partial: progress().partial } }}</div>
+        <div class="text-sm text-muted-color mt-2">
+          {{ 'reports.progress.partial' | transloco: { partial: progress().partial } }}
+        </div>
       }
     </div>
     <div class="card mb-0">
-      <div class="text-muted-color text-sm mb-2">{{ 'reports.progress.contribution' | transloco }}</div>
+      <div class="text-muted-color text-sm mb-2">
+        {{ 'reports.progress.contribution' | transloco }}
+      </div>
       <div class="text-2xl font-semibold">
         <app-money [amount]="report().contribution.total" [currency]="report().summary.currency" />
       </div>
@@ -75,7 +85,9 @@
       <div class="text-2xl font-semibold">
         <app-money [amount]="report().totals.buys" [currency]="report().summary.currency" />
       </div>
-      <div class="text-sm text-muted-color mt-2">{{ 'reports.progress.withParking' | transloco }}</div>
+      <div class="text-sm text-muted-color mt-2">
+        {{ 'reports.progress.withParking' | transloco }}
+      </div>
     </div>
     <div class="card mb-0">
       <div class="text-muted-color text-sm mb-2">{{ 'reports.progress.sells' | transloco }}</div>
@@ -87,7 +99,9 @@
           <ng-container *ngTemplateOutlet="taxImpact; context: { $implicit: tax }" />
         </div>
       } @else {
-        <div class="text-sm text-muted-color mt-2">{{ 'reports.progress.sellsHint' | transloco }}</div>
+        <div class="text-sm text-muted-color mt-2">
+          {{ 'reports.progress.sellsHint' | transloco }}
+        </div>
       }
     </div>
   </div>

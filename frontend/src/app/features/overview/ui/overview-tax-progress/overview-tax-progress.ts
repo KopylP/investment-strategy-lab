@@ -11,7 +11,16 @@ import { OverviewStore } from '../../data-access/overview-store';
 
 @Component({
   selector: 'app-overview-tax-progress',
-  imports: [TranslocoPipe, TaxMoneyPipe, Message, Skeleton, SignedValue, TaxProgressChart, MoneyPipe, PercentPipe],
+  imports: [
+    TranslocoPipe,
+    TaxMoneyPipe,
+    Message,
+    Skeleton,
+    SignedValue,
+    TaxProgressChart,
+    MoneyPipe,
+    PercentPipe,
+  ],
   templateUrl: './overview-tax-progress.html',
   host: { class: 'contents' },
   changeDetection: ChangeDetectionStrategy.OnPush,

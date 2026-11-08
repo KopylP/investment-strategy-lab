@@ -57,13 +57,16 @@ export class ImportPositionsDialog {
 
     try {
       const json = JSON.parse(await file.text()) as { positions?: unknown[] };
-      if (!Array.isArray(json.positions)) throw new Error(translate('accounts.importPositions.noPositions'));
+      if (!Array.isArray(json.positions))
+        throw new Error(translate('accounts.importPositions.noPositions'));
 
       this.importJson.set(json);
       this.importError.set(null);
     } catch (error) {
       this.importJson.set(null);
-      this.importError.set(error instanceof Error ? error.message : translate('accounts.importPositions.notJson'));
+      this.importError.set(
+        error instanceof Error ? error.message : translate('accounts.importPositions.notJson'),
+      );
     }
   }
 

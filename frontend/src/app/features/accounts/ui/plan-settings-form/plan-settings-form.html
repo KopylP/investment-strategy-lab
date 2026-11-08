@@ -1,6 +1,8 @@
 <div class="grid gap-5 md:grid-cols-2">
   <div class="flex flex-col gap-2">
-    <label for="contribution" class="font-medium">{{ 'accounts.plan.monthlyContribution' | transloco }}</label>
+    <label for="contribution" class="font-medium">{{
+      'accounts.plan.monthlyContribution' | transloco
+    }}</label>
     <p-inputnumber
       inputId="contribution"
       [ngModel]="settings().monthlyContribution"
@@ -11,9 +13,9 @@
       [min]="0"
       fluid
     />
-    <small class="text-muted-color"
-      >{{ 'accounts.plan.monthlyContributionHint' | transloco }}</small
-    >
+    <small class="text-muted-color">{{
+      'accounts.plan.monthlyContributionHint' | transloco
+    }}</small>
   </div>
   @if (showPolicy()) {
     <div class="flex flex-col gap-2">
@@ -26,9 +28,7 @@
         (ngModelChange)="$event && set('contributionPolicy', $event)"
         [allowEmpty]="false"
       />
-      <small class="text-muted-color"
-        >{{ 'accounts.plan.splitHint' | transloco }}</small
-      >
+      <small class="text-muted-color">{{ 'accounts.plan.splitHint' | transloco }}</small>
     </div>
   }
   <div class="flex flex-col gap-2">
@@ -103,9 +103,7 @@
         [ngModel]="settings().levelByPurchasesOnly"
         (ngModelChange)="set('levelByPurchasesOnly', $event)"
       />
-      <span
-        >{{ 'accounts.plan.buyOnly' | transloco }}</span
-      >
+      <span>{{ 'accounts.plan.buyOnly' | transloco }}</span>
     </label>
     <label class="flex items-center gap-3">
       <p-toggleswitch

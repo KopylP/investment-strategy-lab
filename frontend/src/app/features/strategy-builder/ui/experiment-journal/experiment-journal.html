@@ -1,20 +1,23 @@
 @if (store.experiment()?.result; as report) {
-    <section class="card mt-4" aria-label="Журнал рішень і угод">
-      <h2 class="mt-0 text-lg font-semibold">Журнал рішень і угод</h2>
+    <section class="card mt-4" [attr.aria-label]="'builder.journal.title' | transloco">
+      <h2 class="mt-0 text-lg font-semibold">{{ 'builder.journal.title' | transloco }}</h2>
       <div class="mb-4 grid grid-cols-2 items-end gap-3 sm:flex sm:flex-wrap">
-        <label class="col-span-2 flex flex-col gap-2 text-sm">Тип запису
-          <p-select [options]="journalKinds" optionLabel="label" optionValue="value" [ngModel]="store.kind()" (ngModelChange)="store.filter($event, store.from(), store.to())" ariaLabel="Тип запису журналу" />
+        <label class="col-span-2 flex flex-col gap-2 text-sm">{{ 'builder.journal.kind' | transloco }}
+          <p-select [options]="journalKinds" optionLabel="label" optionValue="value" [ngModel]="store.kind()" (ngModelChange)="store.filter($event, store.from(), store.to())" [ariaLabel]="'builder.journal.kindLabel' | transloco" />
         </label>
-        <label class="flex min-w-0 flex-col gap-2 text-sm">Від
-          <input pInputText class="w-full" type="date" [ngModel]="store.from()" (ngModelChange)="store.filter(store.kind(), $event, store.to())" aria-label="Початок журналу" />
+        <label class="flex min-w-0 flex-col gap-2 text-sm">{{ 'builder.journal.from' | transloco }}
+          <input pInputText class="w-full" type="date" [ngModel]="store.from()" (ngModelChange)="store.filter(store.kind(), $event, store.to())" [attr.aria-label]="'builder.journal.fromLabel' | transloco" />
         </label>
-        <label class="flex min-w-0 flex-col gap-2 text-sm">До
-          <input pInputText class="w-full" type="date" [ngModel]="store.to()" (ngModelChange)="store.filter(store.kind(), store.from(), $event)" aria-label="Кінець журналу" />
+        <label class="flex min-w-0 flex-col gap-2 text-sm">{{ 'builder.journal.to' | transloco }}
+          <input pInputText class="w-full" type="date" [ngModel]="store.to()" (ngModelChange)="store.filter(store.kind(), store.from(), $event)" [attr.aria-label]="'builder.journal.toLabel' | transloco" />
         </label>
       </div>
-      @if (store.journalError()) { <p-message severity="error" text="Не вдалося завантажити журнал." /> }
+      @if (store.journalError()) { <p-message severity="error" [text]="'builder.journal.loadFailed' | transloco" /> }
       @if (store.journal(); as journal) {
-        <p class="text-sm text-muted-color" aria-live="polite">Знайдено записів: {{ journal.total }} @if (store.journalLoading()) { · Оновлюється… }</p>
+        <p class="text-sm text-muted-color" aria-live="polite">{{ 'builder.journal.foundCount' | transloco: { count: journal.total } }}
+          @if (store.journalLoading()) {
+            {{ 'builder.journal.updating' | transloco }}
+          }</p>
         <div class="flex flex-col divide-y divide-surface">
           @for (entry of journal.entries; track $index) {
             <details class="py-3">
@@ -31,29 +34,29 @@
               <div class="mt-3 flex flex-col gap-4 rounded-lg bg-emphasis p-3 text-sm">
                 @if (entry.fill; as fill) {
                   <dl class="grid gap-3 sm:grid-cols-3">
-                    <div><dt>Рішення від</dt><dd class="m-0">{{ fill.decisionDate | date }}</dd></div>
-                    <div><dt>Ціна закриття</dt><dd class="m-0">{{ fill.referencePrice | money: currency() }}</dd></div>
-                    <div><dt>Ціна виконання</dt><dd class="m-0">{{ fill.price | money: currency() }}</dd></div>
-                    <div><dt>Комісія</dt><dd class="m-0">{{ fill.commission | money: currency() }}</dd></div>
-                    <div><dt>Витрати spread</dt><dd class="m-0">{{ fill.spreadCost | money: currency() }}</dd></div>
-                    <div><dt>Витрати slippage</dt><dd class="m-0">{{ fill.slippageCost | money: currency() }}</dd></div>
+                    <div><dt>{{ 'builder.journal.decisionFrom' | transloco }}</dt><dd class="m-0">{{ fill.decisionDate | date }}</dd></div>
+                    <div><dt>{{ 'chart.closingPrice' | transloco }}</dt><dd class="m-0">{{ fill.referencePrice | money: currency() }}</dd></div>
+                    <div><dt>{{ 'builder.journal.executionPrice' | transloco }}</dt><dd class="m-0">{{ fill.price | money: currency() }}</dd></div>
+                    <div><dt>{{ 'transactions.trade.fee' | transloco }}</dt><dd class="m-0">{{ fill.commission | money: currency() }}</dd></div>
+                    <div><dt>{{ 'builder.journal.spreadCost' | transloco }}</dt><dd class="m-0">{{ fill.spreadCost | money: currency() }}</dd></div>
+                    <div><dt>{{ 'builder.journal.slippageCost' | transloco }}</dt><dd class="m-0">{{ fill.slippageCost | money: currency() }}</dd></div>
                   </dl>
                 }
                 @if (entry.allocation; as allocation) {
-                  <p class="m-0">Вільні гроші: {{ allocation.cash | money: currency() }}</p>
+                  <p class="m-0">{{ 'builder.journal.freeCash' | transloco: { cash: (allocation.cash | money: currency()) } }}</p>
                   <div class="overflow-x-auto"><table class="w-full min-w-96 text-left">
-                    <thead><tr><th class="p-2">Інструмент</th><th class="p-2">Фактична вага</th><th class="p-2">Цільова вага</th></tr></thead>
+                    <thead><tr><th class="p-2">{{ 'instruments.instrument' | transloco }}</th><th class="p-2">{{ 'builder.journal.actualWeight' | transloco }}</th><th class="p-2">{{ 'builder.journal.targetWeight' | transloco }}</th></tr></thead>
                     <tbody>@for (position of allocation.positions; track position.instrumentId) {
                       <tr><td class="p-2">{{ instrumentName(position.instrumentId) }}</td><td class="p-2">{{ position.weight | percent }}</td><td class="p-2">{{ targetWeight(position.instrumentId, allocation.targets) | percent }}</td></tr>
                     }</tbody>
                   </table></div>
                   @if (allocation.targets.length) {
-                    <p class="m-0 text-xs text-muted-color">Цілі: @for (target of allocation.targets; track target.instrumentId) { {{ instrumentName(target.instrumentId) }} {{ target.weight | percent }}; }</p>
+                    <p class="m-0 text-xs text-muted-color">{{ 'builder.journal.targets' | transloco }} @for (target of allocation.targets; track target.instrumentId) { {{ instrumentName(target.instrumentId) }} {{ target.weight | percent }}; }</p>
                   }
                 }
                 @if (entry.explanation?.candidates?.length) {
                   <div class="overflow-x-auto"><table class="w-full min-w-[42rem] text-left">
-                    <thead><tr><th class="p-2">Інструмент</th><th class="p-2">Причина</th><th class="p-2">Показники</th></tr></thead>
+                    <thead><tr><th class="p-2">{{ 'instruments.instrument' | transloco }}</th><th class="p-2">{{ 'reports.skip.reason' | transloco }}</th><th class="p-2">{{ 'builder.journal.metrics' | transloco }}</th></tr></thead>
                     <tbody>@for (candidate of entry.explanation!.candidates; track candidate.instrumentId) {
                       <tr class="border-t border-surface"><td class="p-2">{{ candidate.name || instrumentName(candidate.instrumentId) }}</td><td class="p-2">{{ candidate.reason }}</td><td class="p-2">
                         @for (value of candidate.values | keyvalue; track value.key) {
@@ -65,14 +68,14 @@
                 }
               </div>
             </details>
-          } @empty { <p class="text-muted-color">За цими фільтрами записів немає.</p> }
+          } @empty { <p class="text-muted-color">{{ 'builder.journal.empty' | transloco }}</p> }
         </div>
         <div class="mt-4 flex items-center justify-between gap-3">
-          <p-button label="Попередні" icon="pi pi-chevron-left" severity="secondary" [outlined]="true" [disabled]="journal.offset === 0 || store.journalLoading()" (onClick)="store.offset.set(journal.offset - 50)" />
-          <span class="text-xs text-muted-color">{{ journal.entries.length ? journal.offset + 1 : 0 }}–{{ journal.offset + journal.entries.length }} із {{ journal.total }}</span>
-          <p-button label="Наступні" icon="pi pi-chevron-right" iconPos="right" severity="secondary" [outlined]="true" [disabled]="journal.offset + journal.entries.length >= journal.total || store.journalLoading()" (onClick)="store.offset.set(journal.offset + 50)" />
+          <p-button [label]="'builder.journal.previous' | transloco" icon="pi pi-chevron-left" severity="secondary" [outlined]="true" [disabled]="journal.offset === 0 || store.journalLoading()" (onClick)="store.offset.set(journal.offset - 50)" />
+          <span class="text-xs text-muted-color">{{ 'builder.journal.range' | transloco: { offset: journal.entries.length ? journal.offset + 1 : 0, entries: journal.offset + journal.entries.length, total: journal.total } }}</span>
+          <p-button [label]="'builder.journal.nextPage' | transloco" icon="pi pi-chevron-right" iconPos="right" severity="secondary" [outlined]="true" [disabled]="journal.offset + journal.entries.length >= journal.total || store.journalLoading()" (onClick)="store.offset.set(journal.offset + 50)" />
         </div>
       }
-      <details class="mt-5 text-xs text-muted-color"><summary class="cursor-pointer">Версія експерименту</summary><p>Рушій: {{ report.engineVersion }} · модель: {{ report.replayModel }}</p><p class="break-all">Відбиток параметрів: {{ report.parametersHash }}</p></details>
+      <details class="mt-5 text-xs text-muted-color"><summary class="cursor-pointer">{{ 'builder.journal.version' | transloco }}</summary><p>{{ 'builder.journal.engine' | transloco: { engineVersion: report.engineVersion, replayModel: report.replayModel } }}</p><p class="break-all">{{ 'builder.journal.fingerprint' | transloco: { parametersHash: report.parametersHash } }}</p></details>
     </section>
 }

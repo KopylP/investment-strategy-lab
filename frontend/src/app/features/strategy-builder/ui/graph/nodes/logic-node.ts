@@ -1,7 +1,12 @@
+import { translate } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { NodeDto } from '../../../models/draft-dto';
 
-const labels: Record<string, string> = { All: 'Усі умови', Any: 'Будь-яка умова', Not: 'НЕ' };
+const labels: Record<string, string> = {
+  All: translate('builder.graph.node.all'),
+  Any: translate('builder.graph.node.any'),
+  Not: translate('builder.graph.node.not'),
+};
 
 @Component({
   selector: 'app-logic-node',

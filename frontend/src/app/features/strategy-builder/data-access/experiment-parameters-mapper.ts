@@ -1,15 +1,16 @@
+import { translate } from '@jsverse/transloco';
 import { JsonValue } from '../models/draft-dto';
 import { ExperimentParameterVm } from '../models/experiment-parameter-vm';
 import { VocabularyDto, VocabularyFieldDto } from '../models/vocabulary-dto';
 
 const sections: Record<string, string> = {
-  selection: 'Відбір фондів',
-  weights: 'Розподіл ваг',
-  risk: 'Ризик',
-  marketFilter: 'Ринковий режим',
+  selection: translate('builder.parameters.group.selection'),
+  weights: translate('builder.parameters.group.weights'),
+  risk: translate('builder.parameters.group.risk'),
+  marketFilter: translate('builder.parameters.group.market'),
 };
 const seriesNames: Record<string, string> = {
-  fund: 'Фонд', benchmark: 'Бенчмарк', volatilityIndex: 'Індекс волатильності', extra: 'Додатковий ряд',
+  fund: translate('builder.graph.setup.fund'), benchmark: translate('strategies.detail.benchmark'), volatilityIndex: translate('strategies.detail.volatilityIndex'), extra: translate('builder.graph.setup.extraSeries'),
 };
 
 export function experimentParameters(rules: Record<string, JsonValue>, vocabulary: VocabularyDto): ExperimentParameterVm[] {

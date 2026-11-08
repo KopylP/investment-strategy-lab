@@ -33,11 +33,11 @@ export class CashDialog {
   readonly save = output<NewCashMovement>();
 
   protected readonly kinds: { label: string; value: NewCashMovement['kind'] }[] = [
-    { label: translate('kind.Contribution'), value: 'Contribution' },
-    { label: translate('kind.Withdrawal'), value: 'Withdrawal' },
-    { label: translate('kind.Dividend'), value: 'Dividend' },
-    { label: translate('kind.BrokerFee'), value: 'Fee' },
-    { label: translate('kind.TaxPayment'), value: 'TaxPayment' },
+    { label: translate('transactions.cash.kind.Contribution'), value: 'Contribution' },
+    { label: translate('transactions.cash.kind.Withdrawal'), value: 'Withdrawal' },
+    { label: translate('transactions.cash.kind.Dividend'), value: 'Dividend' },
+    { label: translate('transactions.cash.kind.BrokerFee'), value: 'Fee' },
+    { label: translate('transactions.cash.kind.TaxPayment'), value: 'TaxPayment' },
   ];
   protected readonly kind = signal<NewCashMovement['kind']>('Contribution');
   protected readonly amount = signal<number | null>(null);

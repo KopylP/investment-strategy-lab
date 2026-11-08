@@ -37,7 +37,8 @@ import { RenameSubPortfolioDialog } from '../../ui/rename-sub-portfolio-dialog/r
 
 @Component({
   selector: 'app-account-detail-page',
-  imports: [TranslocoPipe, 
+  imports: [
+    TranslocoPipe,
     ImportPositionsDialog,
     AddSubPortfolioDialog,
     RenameSubPortfolioDialog,
@@ -125,8 +126,7 @@ export class AccountDetailPage {
   protected confirmRetire(sub: SubPortfolioSetup): void {
     this.confirm.confirm({
       header: translate('accounts.detail.retireQuestion', { name: sub.name }),
-      message:
-        translate('accounts.detail.retireHint'),
+      message: translate('accounts.detail.retireHint'),
       icon: 'pi pi-sign-out',
       acceptLabel: translate('accounts.detail.retire'),
       rejectLabel: translate('common.cancel'),

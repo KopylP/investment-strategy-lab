@@ -3,7 +3,11 @@
   [subtitle]="'accounts.list.subtitle' | transloco"
 >
   @if (accounts.accounts().length) {
-    <p-button [label]="'routes.newAccount' | transloco" icon="pi pi-plus" routerLink="/accounts/new" />
+    <p-button
+      [label]="'routes.newAccount' | transloco"
+      icon="pi pi-plus"
+      routerLink="/accounts/new"
+    />
   }
 </app-page-header>
 
@@ -16,7 +20,11 @@
       [title]="'accounts.list.empty' | transloco"
       [text]="'accounts.list.emptyHint' | transloco"
     >
-      <p-button [label]="'holdings.openAccount' | transloco" icon="pi pi-plus" routerLink="/accounts/new" />
+      <p-button
+        [label]="'holdings.openAccount' | transloco"
+        icon="pi pi-plus"
+        routerLink="/accounts/new"
+      />
     </app-empty-state>
   </div>
 } @else {

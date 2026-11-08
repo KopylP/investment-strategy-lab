@@ -1,11 +1,20 @@
+import { translate } from '@jsverse/transloco';
 import { DraftSetupDto, GraphDto, NodeDto, JsonValue } from '../models/draft-dto';
 export const setupNodeId = 'strategy-setup';
 export const setupFields = [
-  { key: 'funds', label: 'Фонди', type: 'Series' as const },
-  { key: 'benchmarkId', label: 'Бенчмарк', type: 'Series' as const },
-  { key: 'cashId', label: 'Фонд для кешу', type: 'Series' as const },
-  { key: 'volatilityIndexId', label: 'Індекс волатильності', type: 'Series' as const },
-  { key: 'extraSeries', label: 'Додаткові ряди', type: 'SeriesList' as const },
+  { key: 'funds', label: translate('builder.graph.node.funds'), type: 'Series' as const },
+  { key: 'benchmarkId', label: translate('strategies.detail.benchmark'), type: 'Series' as const },
+  { key: 'cashId', label: translate('builder.graph.node.series.cash'), type: 'Series' as const },
+  {
+    key: 'volatilityIndexId',
+    label: translate('strategies.detail.volatilityIndex'),
+    type: 'Series' as const,
+  },
+  {
+    key: 'extraSeries',
+    label: translate('builder.setup.extraSeries'),
+    type: 'SeriesList' as const,
+  },
 ];
 export function setupOutput(node: NodeDto): string | null {
   const of = node.parameters['of'];

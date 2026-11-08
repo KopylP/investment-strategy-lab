@@ -2,9 +2,7 @@
   backLink="/transactions"
   [backLabel]="'routes.transactions' | transloco"
   [title]="'routes.revolutImport' | transloco"
-  [subtitle]="
-    'transactions.import.subtitle' | transloco: { account: store.account()?.name ?? '' }
-  "
+  [subtitle]="'transactions.import.subtitle' | transloco: { account: store.account()?.name ?? '' }"
 />
 
 @if (!store.current()) {
@@ -21,16 +19,34 @@
     <div class="card">
       <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
         <h2 class="text-lg font-semibold m-0">{{ 'transactions.import.step1' | transloco }}</h2>
-        <span class="text-sm text-muted-color"
-          >{{ 'transactions.import.fileLine' | transloco: { fileName: current.fileName, rows: current.rows.length, accountCurrency: current.accountCurrency } }}</span
-        >
+        <span class="text-sm text-muted-color">{{
+          'transactions.import.fileLine'
+            | transloco
+              : {
+                  fileName: current.fileName,
+                  rows: current.rows.length,
+                  accountCurrency: current.accountCurrency,
+                }
+        }}</span>
       </div>
       <p-table [value]="current.mappings" tableStyleClass="sm:min-w-[52rem]" size="small">
         <ng-template #header
           ><tr>
-            <th>{{ 'transactions.rows.ticker' | transloco }}<span class="hidden sm:inline"> {{ 'transactions.import.inStatement' | transloco }}</span></th>
-            <th>{{ 'transactions.import.instrument' | transloco }}<span class="sm:hidden"> {{ 'transactions.import.andSubPortfolio' | transloco }}</span></th>
-            <th class="hidden sm:table-cell">{{ 'transactions.trade.subPortfolio' | transloco }}</th>
+            <th>
+              {{ 'transactions.rows.ticker' | transloco
+              }}<span class="hidden sm:inline">
+                {{ 'transactions.import.inStatement' | transloco }}</span
+              >
+            </th>
+            <th>
+              {{ 'transactions.import.instrument' | transloco
+              }}<span class="sm:hidden">
+                {{ 'transactions.import.andSubPortfolio' | transloco }}</span
+              >
+            </th>
+            <th class="hidden sm:table-cell">
+              {{ 'transactions.trade.subPortfolio' | transloco }}
+            </th>
           </tr></ng-template
         >
         <ng-template #body let-mapping>
@@ -38,7 +54,10 @@
             <td>
               <div class="font-medium">{{ mapping.ticker }}</div>
               <div class="text-xs text-muted-color">
-                {{ 'transactions.import.mappingLine' | transloco: { currency: mapping.currency, rows: mapping.rows } }}
+                {{
+                  'transactions.import.mappingLine'
+                    | transloco: { currency: mapping.currency, rows: mapping.rows }
+                }}
               </div>
             </td>
             <td>
@@ -56,7 +75,9 @@
                 />
                 @if (mapping.instrumentId === null && mapping.registerAs !== null) {
                   <div class="flex flex-wrap items-center gap-2">
-                    <span class="text-xs text-muted-color whitespace-nowrap">{{ 'transactions.import.symbol' | transloco }}</span>
+                    <span class="text-xs text-muted-color whitespace-nowrap">{{
+                      'transactions.import.symbol' | transloco
+                    }}</span>
                     <input
                       pInputText
                       [ngModel]="mapping.registerAs"
@@ -66,11 +87,15 @@
                     @if (mapping.instrumentName) {
                       <span class="text-xs text-muted-color"
                         ><i class="pi pi-check-circle text-green-500 mr-1"></i
-                        >{{ 'transactions.import.newInstrumentLine' | transloco: { instrumentName: mapping.instrumentName } }}</span
+                        >{{
+                          'transactions.import.newInstrumentLine'
+                            | transloco: { instrumentName: mapping.instrumentName }
+                        }}</span
                       >
                     } @else {
                       <span class="text-xs text-muted-color"
-                        ><i class="pi pi-exclamation-circle text-orange-500 mr-1"></i>{{ 'transactions.import.symbolNotFound' | transloco }}</span
+                        ><i class="pi pi-exclamation-circle text-orange-500 mr-1"></i
+                        >{{ 'transactions.import.symbolNotFound' | transloco }}</span
                       >
                     }
                   </div>
@@ -105,7 +130,9 @@
       </p-table>
       @if (store.unmappedCount() > 1) {
         <div class="flex flex-wrap items-center gap-3 mt-4">
-          <span class="font-medium">{{ 'transactions.import.allUnmapped' | transloco: { unmappedCount: store.unmappedCount() } }}</span>
+          <span class="font-medium">{{
+            'transactions.import.allUnmapped' | transloco: { unmappedCount: store.unmappedCount() }
+          }}</span>
           <p-select
             [options]="current.subPortfolios"
             optionLabel="name"

@@ -118,23 +118,23 @@
       }
     }
   },
-  "register": {
-    "title": "New account",
-    "hint": "A password of 10 characters or more; a phrase of several words works best",
-    "passwordTooShort": "At least 10 characters",
-    "confirm": "Again",
-    "passwordsDiffer": "The passwords do not match",
-    "haveAccount": "Already have an account?"
-  },
   "auth": {
     "password": "Password",
     "signUp": "Sign up",
-    "signIn": "Sign in"
-  },
-  "login": {
-    "homeAssistantHint": "Sign in once — after that Home Assistant signs you in",
-    "hint": "Sign in to see this month's report",
-    "noAccount": "No account yet?"
+    "signIn": "Sign in",
+    "register": {
+      "title": "New account",
+      "hint": "A password of 10 characters or more; a phrase of several words works best",
+      "passwordTooShort": "At least 10 characters",
+      "confirm": "Again",
+      "passwordsDiffer": "The passwords do not match",
+      "haveAccount": "Already have an account?"
+    },
+    "login": {
+      "homeAssistantHint": "Sign in once — after that Home Assistant signs you in",
+      "hint": "Sign in to see this month's report",
+      "noAccount": "No account yet?"
+    }
   },
   "instruments": {
     "title": "Instruments & quotes",
@@ -368,7 +368,15 @@
       "title": "Value of {scope} · {date}",
       "allAccounts": "all accounts",
       "portfolio": "the portfolio",
-      "gainOnAssetsHint": "How much the assets you hold are worth now above what was paid for them with fees. Free cash and what was already sold are not included — this is the same result as on the “Holdings” page."
+      "gainOnAssetsHint": "How much the assets you hold are worth now above what was paid for them with fees. Free cash and what was already sold are not included — this is the same result as on the “Holdings” page.",
+      "period": {
+        "1M": "1M",
+        "3M": "3M",
+        "6M": "6M",
+        "1Y": "1Y",
+        "ytd": "Year to date",
+        "all": "All"
+      }
     },
     "tax": {
       "title": "Tax",
@@ -451,14 +459,6 @@
     "reportWaiting": "Report for {period}: {open} of {total} actions wait to be marked.",
     "taxFailed": "Could not compute the tax: {error}"
   },
-  "period": {
-    "1M": "1M",
-    "3M": "3M",
-    "6M": "6M",
-    "1Y": "1Y",
-    "ytd": "Year to date",
-    "all": "All"
-  },
   "signals": {
     "subject": {
       "instrument": "Instrument",
@@ -504,7 +504,10 @@
       "afterCreate": "Notifications turn on by themselves. Reports can be connected once the signal is created.",
       "checkNow": "Check now",
       "frequency": {
-        "off": "After new data"
+        "off": "After new data",
+        "hourly": "Hourly",
+        "daily": "Daily",
+        "weekly": "Weekly"
       }
     },
     "accountFallback": "account",
@@ -524,7 +527,31 @@
     "notificationsOff": "Notifications off",
     "labels": {
       "above": "above",
-      "below": "below"
+      "below": "below",
+      "metric": {
+        "DrawdownFromPeak": "Drawdown from peak",
+        "DayFall": "Fall in a day",
+        "LossFromCost": "Loss from the purchase price",
+        "Level": "Value level"
+      },
+      "builtIn": {
+        "volatilityIndex": "Volatility index",
+        "accountDrawdown": "Account drawdown",
+        "positionDrawdown": "Position drawdown"
+      },
+      "target": {
+        "Instrument": "Instrument or group",
+        "EachPosition": "Each position of the account",
+        "SubPortfolio": "Sub-portfolio",
+        "Account": "Account"
+      },
+      "cleared": {
+        "Recovered": "recovered",
+        "PositionClosed": "position closed",
+        "Reconfigured": "rule changed",
+        "Disabled": "signal turned off",
+        "Deleted": "signal deleted"
+      }
     },
     "subtitle": "They watch the market and your portfolio and tell you when a condition fires",
     "activeNow": "Firing now",
@@ -538,38 +565,6 @@
     "eachPosition": "Each position · {account}",
     "firing": "Firing: {count}",
     "reportCount": "reports: {count}"
-  },
-  "frequency": {
-    "off": "After new data",
-    "hourly": "Hourly",
-    "daily": "Daily",
-    "weekly": "Weekly",
-    "monthly": "Monthly",
-    "quarterly": "Quarterly"
-  },
-  "metric": {
-    "DrawdownFromPeak": "Drawdown from peak",
-    "DayFall": "Fall in a day",
-    "LossFromCost": "Loss from the purchase price",
-    "Level": "Value level"
-  },
-  "builtIn": {
-    "volatilityIndex": "Volatility index",
-    "accountDrawdown": "Account drawdown",
-    "positionDrawdown": "Position drawdown"
-  },
-  "target": {
-    "Instrument": "Instrument or group",
-    "EachPosition": "Each position of the account",
-    "SubPortfolio": "Sub-portfolio",
-    "Account": "Account"
-  },
-  "cleared": {
-    "Recovered": "recovered",
-    "PositionClosed": "position closed",
-    "Reconfigured": "rule changed",
-    "Disabled": "signal turned off",
-    "Deleted": "signal deleted"
   },
   "taxes": {
     "openLots": {
@@ -729,7 +724,9 @@
       "kind": {
         "Withdrawal": "Withdrawal",
         "Dividend": "Dividend",
-        "Contribution": "Contribution"
+        "Contribution": "Contribution",
+        "BrokerFee": "Broker fee",
+        "TaxPayment": "Tax payment"
       }
     },
     "rows": {
@@ -766,7 +763,16 @@
       "unmappedRows": "Rows without mapping: {count}.",
       "reasonRows": "{reason} (rows: {count})",
       "confirmMessage": "{count} transactions will be recorded. The import can be undone in one step.",
-      "confirmMessageWithReversals": "{count} transactions will be recorded, {reversed} reversed. The import can be undone in one step."
+      "confirmMessageWithReversals": "{count} transactions will be recorded, {reversed} reversed. The import can be undone in one step.",
+      "decisionLabel": {
+        "New": "new",
+        "AlreadyImported": "already there",
+        "Differs": "differs",
+        "MatchesExisting": "matches the journal",
+        "OutOfScope": "before the date",
+        "Unsupported": "not imported",
+        "NeedsMapping": "needs mapping"
+      }
     },
     "import": {
       "done": "Import finished",
@@ -794,7 +800,14 @@
       "recordedCount": "Recorded {recorded}",
       "recordedAndFailed": "Recorded {recorded}, failed {failed} — see the table",
       "mode": {
-        "OverwriteHint": "All previous imports (statements and positions.json) will be reversed, and the statement imported again. Manual transactions and marks from reports stay."
+        "OverwriteHint": "All previous imports (statements and positions.json) will be reversed, and the statement imported again. Manual transactions and marks from reports stay.",
+        "Append": "Append",
+        "Update": "Update imported",
+        "Overwrite": "Overwrite",
+        "FromScratch": "From scratch",
+        "AppendHint": "Only new rows are added. Uploading the same or a fresher statement again duplicates nothing.",
+        "UpdateHint": "Like “Append”, and rows imported earlier with other figures are overwritten from the statement (reversal + a new record).",
+        "FromScratchHint": "The whole account journal is reversed, then the statement is imported. Use it if you start the bookkeeping over."
       },
       "subtitle": "The account statement (CSV) becomes records in the journal of account “{account}”: trades, top-ups, withdrawals, dividends"
     },
@@ -816,7 +829,12 @@
       "import": "Import",
       "cash": "Cash",
       "filter": {
-        "cash": "Cash movements"
+        "cash": "Cash movements",
+        "trades": "Trades",
+        "contributions": "Contributions",
+        "withdrawals": "Withdrawals",
+        "transfers": "Transfers",
+        "reversals": "Reversals"
       },
       "trade": "Trade",
       "loadFailed": "Could not load the journal",
@@ -833,52 +851,12 @@
     },
     "source": {
       "report": "from a report",
-      "manual": "manual"
+      "manual": "manual",
+      "reconciliation": "reconciliation",
+      "import": "import"
     },
     "feeDetail": " · fee {fee}",
     "atBroker": " · at the broker {amount}"
-  },
-  "kind": {
-    "Contribution": "Contribution",
-    "Withdrawal": "Withdrawal",
-    "Dividend": "Dividend",
-    "BrokerFee": "Broker fee",
-    "TaxPayment": "Tax payment",
-    "Monthly": "contribution, buys and sells",
-    "Recalculation": "recalculation",
-    "RiskReview": "sale only on an exit signal"
-  },
-  "decision": {
-    "New": "new",
-    "AlreadyImported": "already there",
-    "Differs": "differs",
-    "MatchesExisting": "matches the journal",
-    "OutOfScope": "before the date",
-    "Unsupported": "not imported",
-    "NeedsMapping": "needs mapping"
-  },
-  "source": {
-    "report": "from a report",
-    "manual": "manual",
-    "reconciliation": "reconciliation",
-    "import": "import"
-  },
-  "mode": {
-    "Append": "Append",
-    "Update": "Update imported",
-    "Overwrite": "Overwrite",
-    "FromScratch": "From scratch",
-    "AppendHint": "Only new rows are added. Uploading the same or a fresher statement again duplicates nothing.",
-    "UpdateHint": "Like “Append”, and rows imported earlier with other figures are overwritten from the statement (reversal + a new record).",
-    "FromScratchHint": "The whole account journal is reversed, then the statement is imported. Use it if you start the bookkeeping over."
-  },
-  "filter": {
-    "trades": "Trades",
-    "cash": "Cash movements",
-    "contributions": "Contributions",
-    "withdrawals": "Withdrawals",
-    "transfers": "Transfers",
-    "reversals": "Reversals"
   },
   "accounts": {
     "importPositions": {
@@ -908,7 +886,11 @@
       "driftBandHint": "A larger drift — the report suggests an internal transfer between sub-portfolios",
       "fractional": "Fractional shares (the broker allows buying part of an ETF)",
       "buyOnly": "Level only by buying: no selling of the excess and no transfers between sub-portfolios. Funds that dropped out of the strategy are still sold",
-      "autoReports": "Reports automatically on schedule"
+      "autoReports": "Reports automatically on schedule",
+      "policy": {
+        "laggard": "To the one lagging",
+        "proportional": "By shares"
+      }
     },
     "wizard": {
       "review": {
@@ -988,7 +970,15 @@
       "subtitle": "A few steps — and every month the service will tell you what to buy at the broker",
       "defaultSleeveName": "Sub-portfolio {number}",
       "timeNotSaved": "The time of report “{report}” was not saved",
-      "timeNotSavedHint": "{error} The report will come at the strategy’s time; it can be changed on the account page."
+      "timeNotSavedHint": "{error} The report will come at the strategy’s time; it can be changed on the account page.",
+      "step": {
+        "account": "Account",
+        "sleeves": "How to split the money",
+        "contributions": "Contributions",
+        "reports": "Reports",
+        "review": "Review",
+        "done": "Done"
+      }
     },
     "settingsAccounts": "Settings → Accounts",
     "rename": {
@@ -1004,7 +994,6 @@
       "notChanged": "Schedule not changed",
       "hint": "The strategy sets which reports exist; when they come is up to you for this account, otherwise the strategy’s time applies. Time zone — {timeZone}.",
       "ownTime": "Your time · strategy: {strategy}",
-      "strategies": "· {strategies}",
       "resetDone": "{report}: strategy time"
     },
     "detail": {
@@ -1055,18 +1044,6 @@
       "current": "current"
     }
   },
-  "policy": {
-    "laggard": "To the one lagging",
-    "proportional": "By shares"
-  },
-  "step": {
-    "account": "Account",
-    "sleeves": "How to split the money",
-    "contributions": "Contributions",
-    "reports": "Reports",
-    "review": "Review",
-    "done": "Done"
-  },
   "reports": {
     "status": {
       "New": "New",
@@ -1098,6 +1075,10 @@
         "weekly": "weekly, {weekday} at {time}",
         "monthly": "monthly, on day {day} at {time}",
         "quarterly": "quarterly, on day {day} of the first month at {time}"
+      },
+      "frequency": {
+        "monthly": "Monthly",
+        "quarterly": "Quarterly"
       }
     },
     "timing": {
@@ -1134,7 +1115,13 @@
     "skip": {
       "hint": "The action stays in the report as skipped with a reason; the journal does not change.",
       "reason": "Reason",
-      "skip": "Skip"
+      "skip": "Skip",
+      "reasons": {
+        "tooSmall": "The amount is too small",
+        "noCash": "No free money",
+        "wait": "Decided to wait",
+        "broker": "The broker did not let it through"
+      }
     },
     "actions": {
       "partlyDone": "Partly done",
@@ -1210,7 +1197,6 @@
       "whyInstruments": "Why these instruments",
       "whyEtfs": "Why these ETFs",
       "strategyNoAnswer": "the strategy did not answer",
-      "requestTitle": "{title} · {period}",
       "taxApprox": "≈ tax {amount}",
       "yearChange": "for {year}: {before} → {after}",
       "carriedLoss": "a loss of {amount} carries over to the next years",
@@ -1229,7 +1215,37 @@
         "Transfer": "Transfer {ticker}: {from} → {to}"
       },
       "strategyVersion": "{code} · version {version}",
-      "cashIn": "Cash · {symbol}"
+      "cashIn": "Cash · {symbol}",
+      "kind": {
+        "Monthly": "contribution, buys and sells",
+        "Recalculation": "recalculation",
+        "RiskReview": "sale only on an exit signal"
+      },
+      "trigger": {
+        "Scheduled": "on schedule",
+        "OnDemand": "on demand",
+        "Signal": "on a signal"
+      },
+      "split": {
+        "FixedSplit": "by target shares",
+        "laggard": "to the one lagging most"
+      },
+      "actionKind": {
+        "Exit": "Exit",
+        "Trim": "Trim",
+        "Unpark": "Unpark",
+        "Buy": "Buy",
+        "Park": "Park"
+      },
+      "column": {
+        "momentum": "Momentum",
+        "return1m": "1 mo",
+        "return3m": "3 mo",
+        "return12m": "12 mo",
+        "volatility": "Volatility",
+        "aboveMa": "Price above MA200",
+        "belowMa": "Price below MA200"
+      }
     },
     "list": {
       "preparingHint": "The strategies are working out the plan; the report opens as soon as it is ready.",
@@ -1302,37 +1318,6 @@
       "subtitle": "{account} · quotes as of {marketAsOf} · generated {generatedAt} {trigger}"
     }
   },
-  "reasons": {
-    "tooSmall": "The amount is too small",
-    "noCash": "No free money",
-    "wait": "Decided to wait",
-    "broker": "The broker did not let it through"
-  },
-  "trigger": {
-    "Scheduled": "on schedule",
-    "OnDemand": "on demand",
-    "Signal": "on a signal"
-  },
-  "split": {
-    "FixedSplit": "by target shares",
-    "laggard": "to the one lagging most"
-  },
-  "actionKind": {
-    "Exit": "Exit",
-    "Trim": "Trim",
-    "Unpark": "Unpark",
-    "Buy": "Buy",
-    "Park": "Park"
-  },
-  "column": {
-    "momentum": "Momentum",
-    "return1m": "1 mo",
-    "return3m": "3 mo",
-    "return12m": "12 mo",
-    "volatility": "Volatility",
-    "aboveMa": "Price above MA200",
-    "belowMa": "Price below MA200"
-  },
   "weekday": {
     "1": "Monday",
     "2": "Tuesday",
@@ -1341,5 +1326,686 @@
     "5": "Friday",
     "6": "Saturday",
     "0": "Sunday"
+  },
+  "builder": {
+    "graph": {
+      "socket": {
+        "series": "Series",
+        "inCash": "In cash",
+        "control": "Control",
+        "cashSeries": "Cash series",
+        "remainder": "Remainder"
+      },
+      "visual": {
+        "setup": "Funds and series",
+        "selectFunds": "Select funds",
+        "targetPortfolio": "Target portfolio",
+        "indicator": "Indicator",
+        "condition": "Condition",
+        "logic": "Logic",
+        "signal": "Signal",
+        "result": "Result",
+        "priceSeries": "Price series",
+        "seriesSet": "Set of series",
+        "number": "Number",
+        "yesNo": "Condition: yes / no",
+        "selectedFunds": "Selected funds",
+        "candidates": "Candidates",
+        "riskControl": "Risk control",
+        "budget": "Budget"
+      },
+      "node": {
+        "mySignal": "My signal",
+        "signalInactive": "inactive",
+        "signalActive": "active",
+        "between": "Between bounds",
+        "crossed": "Level crossing",
+        "all": "All conditions",
+        "any": "Any condition",
+        "not": "NOT",
+        "compare": "Comparison",
+        "notChosen": "not chosen",
+        "duplicate": "Duplicate",
+        "delete": "Delete the node",
+        "eachHeld": "Each held position",
+        "eachFund": "Each fund",
+        "sharedForAll": "Shared by all",
+        "startLink": "Start a link",
+        "fundsPlusCash": "Funds + cash = 100%",
+        "weightsHint": "The selected funds get the computed weights. The unused part of the budget stays in cash.",
+        "riskHint": "Risk settings apply to held positions between rebalances.",
+        "investRemainderIn": "Invest the remainder in",
+        "series": {
+          "cash": "Cash fund",
+          "fund": "this fund",
+          "benchmark": "benchmark",
+          "volatilityIndex": "volatility index"
+        },
+        "cashHint": "Takes the money left after selection, limits and allocation.",
+        "finalAllocation": "Final allocation",
+        "budgetRemainder": "Budget remainder",
+        "sharedSelection": "Shared selection",
+        "sharedAllocation": "Shared allocation",
+        "fundsAndWeights": "Funds and weights",
+        "selected": "Selected",
+        "yesNoShort": "Yes / no",
+        "eachHeldHint": "A separate check of each held position",
+        "portfolioHint": "Combines the fund weights, cash and the risk control settings",
+        "remainderHint": "Takes the unused budget after the fund weights are split",
+        "selectionHint": "Collects the fund scores, compares them with each other and splits the weights",
+        "sharedHint": "One result shared by all selected funds",
+        "shared": "Shared",
+        "strategySummary": "Strategy summary",
+        "portfolioCash": "Portfolio cash",
+        "notConnected": "Not connected yet",
+        "buyCondition": "Buy condition",
+        "sellCondition": "Sell condition",
+        "fundScore": "Fund score",
+        "value": "Value",
+        "compareWith": "Compare with",
+        "conditions": "Conditions",
+        "funds": "Funds",
+        "forWhat": "For what: {series}",
+        "input": "Input {name}",
+        "output": "Output {name}",
+        "perFund": "A separate calculation for each of the {count} chosen funds",
+        "seriesLabel": {
+          "cash": "cash fund"
+        },
+        "role": {
+          "market": "Market",
+          "entry": "Entry",
+          "exit": "Exit",
+          "weights": "Weights",
+          "risk": "Risk"
+        }
+      },
+      "menu": {
+        "insert": "Insert a node",
+        "noneCompatible": "No compatible nodes",
+        "result": {
+          "market": "Market filter result",
+          "exit": "Exit result",
+          "entry": "Entry result",
+          "selection": "Selection result",
+          "risk": "Risk result"
+        }
+      },
+      "moveSegmentHorizontal": "Move the segment left or right",
+      "moveSegmentVertical": "Move the segment up or down",
+      "block": {
+        "arrange": "Arrange",
+        "expand": "Expand the block",
+        "collapse": "Collapse the block",
+        "empty": "No rules set yet"
+      },
+      "editor": {
+        "updateFailed": "Could not update the diagram. Try again.",
+        "chooseSockets": "Choose an output and an input of a node.",
+        "wrongType": "This input expects another data type. Choose a highlighted input.",
+        "cycle": "This link creates a loop. Choose another input.",
+        "oneSelection": "A portfolio flow can have one selection module. Combine extra criteria in its score.",
+        "cashGetsRemainder": "Cash takes the “Remainder” output after the money is split.",
+        "budgetFromMarket": "The market filter sets the budget.",
+        "portfolioGetsCash": "The portfolio takes cash after the remainder is split.",
+        "marketNotFund": "The market filter judges the market as a whole. Choose the benchmark or a specific instrument instead of “this fund”.",
+        "fullscreenFailed": "Could not open full screen. Try again.",
+        "addFailed": "Could not add the node. Choose it from the list.",
+        "arrangeFailed": "Could not arrange the diagram. Try again.",
+        "label": "Strategy diagram editor",
+        "elements": "Elements",
+        "title": "Strategy diagram",
+        "help": "How to work with the diagram",
+        "deleteLink": "Delete the link",
+        "deleteLinkHint": "Delete the link (Delete)",
+        "autoRoute": "Automatic route",
+        "restoreRoute": "Restore the automatic route",
+        "undo": "Undo",
+        "redo": "Redo",
+        "arrange": "Arrange",
+        "fitAll": "Show the whole diagram",
+        "exitFullscreen": "Exit full screen",
+        "fullscreen": "Full screen",
+        "exitFullscreenEsc": "Exit full screen (Esc)",
+        "zoomOut": "Zoom out",
+        "zoomIn": "Zoom in",
+        "roles": "Strategy roles",
+        "nextNode": "Go to the next node of the section",
+        "helpText": "Add an element from the panel on the left. Drag from an output to a compatible input to connect nodes. Drag the background to move around, the wheel zooms. Select a node to trace its branch. Double-click a node to zoom in on it; click the background to show everything. Esc cancels a link, Delete removes the selected element.",
+        "closeHint": "Close the hint",
+        "chooseInput": "Choose a highlighted input of the same role.",
+        "dragHint": "Drag an element from the left · drag the background to move · wheel to zoom",
+        "canvas": "Strategy canvas"
+      },
+      "copyEntry": {
+        "title": "Create an exit from the entry conditions",
+        "hint": "The entry conditions are turned into opposite exit conditions. The margin reduces needless sales right at the bound.",
+        "replaceHint": "The current exit rule will be replaced. The entry conditions stay unchanged.",
+        "margin": "Margin",
+        "replace": "Replace the exit rule"
+      },
+      "setup": {
+        "category": "Settings",
+        "label": "Funds and series · permanent node",
+        "permanent": "Permanent node",
+        "selectedFundsHint": "The chosen funds for rules and indicators",
+        "eachFundLabel": "The chosen funds are gone through one by one",
+        "eachFund": "For each fund",
+        "chooseFunds": "Choose the funds to go through",
+        "fund": "Fund",
+        "extraSeries": "Extra series"
+      },
+      "chooseLink": "Select the link",
+      "deleteLinkHint": "Double-click to delete the link"
+    },
+    "experiment": {
+      "loadFailed": "Could not load the experiment.",
+      "conditions": "Experiment conditions",
+      "running": "Running in the background",
+      "period": "Period",
+      "startingCapital": "Starting capital",
+      "endCapital": "Capital at the end, before tax",
+      "commissionLine": "{commissionRate} + {feePerTrade} per trade",
+      "spreadLine": "{spreadBps} / {slippageBps} bp"
+    },
+    "palette": {
+      "title": "Strategy elements",
+      "hint": "Drag an element onto the canvas or click to add it.",
+      "search": "Find an element…",
+      "searchLabel": "Search elements",
+      "indicators": "Indicators",
+      "numericValue": "Numeric value",
+      "conditionsAndLogic": "Conditions and logic",
+      "combine": "Combine conditions",
+      "selectionModules": "Selection modules",
+      "scoreToCandidates": "Score → candidates",
+      "noneFound": "No elements found.",
+      "footer": "One node can be connected to several rules. Branches end with result nodes."
+    },
+    "fundSelection": {
+      "label": "Fund search and catalog",
+      "where": "Where to look for funds",
+      "catalogHint": "Search among instruments already added to the service. Being in the catalog does not guarantee a full quote history.",
+      "catalogSearch": "Name or ticker among the added ones",
+      "catalogPlaceholder": "For example, SPY or MSCI World",
+      "sourceHint": "Search ETFs in the quote source, including those not yet added to the service. Chosen new funds are added after “Apply”.",
+      "nameWords": "Words in the ETF name",
+      "sourceLimits": "Choose an exchange or a region. The search checks up to 250 of the largest ETFs and shows up to 100 matches. This is a limited sample, not a full list of ETFs. Searching by an exact ticker is not supported here yet.",
+      "chooseExchange": "Choose an exchange",
+      "region": "Region",
+      "chooseRegion": "Choose a region",
+      "moreFilters": "More filters",
+      "family": "Fund family",
+      "minAssets": "Minimum assets",
+      "maxTer": "Highest TER, %",
+      "searching": "Searching the quote source…",
+      "searchSource": "Search the quote source",
+      "loadParameters": "Load the search parameters",
+      "noCatalogMatches": "No matches among the added instruments. Switch to “Search the quote source” to find other ETFs.",
+      "searchingLong": "Searching for ETFs in the quote source. This may take a while…",
+      "currencyUnknown": "Currency unknown",
+      "alreadyAdded": "Already added to the service",
+      "notAdded": "Not added yet",
+      "noSourceMatches": "No ETFs found for these conditions. Try removing words from the name or changing the exchange or region.",
+      "sourceStart": "Choose an exchange or a region and press “Search the quote source”. The results appear here.",
+      "chosen": "Chosen funds",
+      "willBeAdded": "Will be added to the catalog",
+      "pickHint": "Mark what you need in the catalog or the search results.",
+      "apply": "Apply",
+      "others": "Others",
+      "sourceFound": "Quote source · found {external} ETFs by the last query",
+      "chosenCount": "Chosen {count} of {limit}",
+      "remove": "Remove {name}",
+      "applyCount": "Apply · {count}",
+      "limit": "Up to {limit} can be chosen. Deselect some or choose single instruments.",
+      "mode": {
+        "catalog": "Added instruments",
+        "source": "Search the quote source"
+      }
+    },
+    "fundSearch": {
+      "namePlaceholder": "For example, MSCI World",
+      "title": "Find funds",
+      "hint": "Find ETFs and add the chosen ones to the strategy funds. The search checks up to 250 of the largest funds for the chosen conditions and shows up to 100 matches.",
+      "loading": "Loading exchanges and regions…",
+      "chooseExchange": "Choose an exchange",
+      "tradingRegion": "Trading region",
+      "chooseRegion": "Choose a region",
+      "optional": "Optional",
+      "maxTer": "Highest yearly fee (TER), %",
+      "nameWords": "Words in the name (up to five)",
+      "search": "Search",
+      "retry": "Load again",
+      "someNotAdded": "Some funds were not added. The rest were already added to the selection.",
+      "symbol": "Symbol",
+      "name": "Name",
+      "assets": "Assets",
+      "inService": "In the service",
+      "exists": "Already there",
+      "new": "New",
+      "empty": "No funds found for these conditions. Try loosening the limits.",
+      "addChosen": "Add the chosen ones",
+      "found": "Found: {funds} · Chosen: {selected}"
+    },
+    "setup": {
+      "universe": "Funds the strategy picks from",
+      "chooseFunds": "Choose funds",
+      "optional": "Optional",
+      "extraSeries": "Extra series",
+      "fundsCount": "{funds} of 60",
+      "chooseFundsCount": "Choose funds · {count}"
+    },
+    "inspector": {
+      "gate": {
+        "yes": "Yes",
+        "toCandidates": "To buy candidates",
+        "sellFund": "Sell this fund",
+        "no": "No",
+        "dontBuy": "Do not buy",
+        "toShared": "To the shared selection",
+        "noCondition": "No condition: all funds are candidates",
+        "noSellCondition": "No separate sell condition set",
+        "next": "Next — fund selection and weight split",
+        "sharedMayExclude": "The shared selection may exclude a fund too"
+      },
+      "fields": {
+        "heldFunds": "What to do with held funds",
+        "keepInFunds": "Keep in funds",
+        "maxFunds": "Most funds in the portfolio",
+        "whichScores": "Which scores to pick",
+        "splitMoney": "How to split the money",
+        "maxPerFund": "Most per fund",
+        "maxPerGroup": "Most from one group",
+        "maxCorrelation": "Highest correlation",
+        "correlationDays": "Correlation period, trading days",
+        "fundRiskDays": "Fund risk period, trading days",
+        "targetVolatility": "Target yearly volatility",
+        "portfolioRiskDays": "Portfolio risk period, trading days",
+        "lossFromCost": "Loss from the purchase price",
+        "fallFromPeak": "Fall from the high",
+        "heldFundsHint": "“Reduce holdings” sells funds down to the given share, the rest goes to the cash fund. “New contributions only” leaves holdings alone: only the given share of new contributions goes to the funds.",
+        "maxPerFundHint": "A cap on the target weight. The unallocated remainder goes to cash.",
+        "correlationHint": "From 0 to 1: closer to 1 means the fund prices move more alike.",
+        "volatilityHint": "If the computed risk is higher, the strategy reduces the investment.",
+        "lossHint": "Sell a position if it lost the given percent from the purchase price.",
+        "fallHint": "Sell a position at the given fall from its high.",
+        "section": {
+          "unfavorable": "If the condition does not hold",
+          "which": "Which funds to pick",
+          "limits": "Selection limits",
+          "split": "How to split the budget",
+          "risk": "Risk limits",
+          "exitLimits": "Out-of-turn sale limits"
+        }
+      },
+      "fund": "This fund",
+      "enterPercent": "Enter a percent",
+      "noLimit": "No limit",
+      "ruleParameters": "Rule parameters",
+      "selectedNode": "Selected node",
+      "chooseSignal": "Choose a market signal",
+      "wholeBudget": "The condition holds → the whole available budget",
+      "noLimits": "No limits set",
+      "limitsHint": "Enter the percent of fall to sell a position. An empty field — no such limit.",
+      "checkedInRiskReview": "Checked during the “Risk review” report.",
+      "selectionLabel": "Candidate selection and money split",
+      "toAllocation": "To allocation",
+      "unfavorableBudget": "Budget when the market condition does not hold",
+      "links": "Links",
+      "top": "Top {top}",
+      "fundsShare": "Funds {share}%",
+      "cashShare": "Cash {share}%",
+      "activeLimits": "Active limits: {count}",
+      "order": {
+        "desc": "Highest first",
+        "asc": "Lowest first"
+      },
+      "method": {
+        "equal": "Equally",
+        "inverseVolatility": "More to less volatile funds"
+      }
+    },
+    "experimentDialog": {
+      "title": "Strategy experiment",
+      "hint": "To compare strategies use the same period, capital and costs. The settings are saved together with the result.",
+      "label": "Run label",
+      "labelPlaceholder": "For example, the base variant",
+      "periodAndCapital": "Period and capital",
+      "start": "Start",
+      "startLabel": "Experiment start",
+      "end": "End",
+      "endLabel": "Experiment end",
+      "capitalHint": "Capital and the fixed fee are in the backtest currency stated in the result.",
+      "costs": "Execution costs",
+      "commission": "Commission, %",
+      "commissionLabel": "Commission in percent",
+      "tradeFee": "Fee per trade",
+      "spread": "Full spread, bp",
+      "spreadLabel": "Spread in basis points",
+      "slippage": "Slippage, bp",
+      "slippageLabel": "Slippage in basis points",
+      "bpHint": "1 basis point = 0.01%. Each execution takes half the spread and the full slippage.",
+      "robustness": "Robustness check",
+      "holdout": "Independent test period",
+      "holdoutStart": "Start of the independent test",
+      "walkForward": "Walk-forward: consecutive training and test windows",
+      "trainingMonths": "Training window, months",
+      "trainingMonthsLabel": "Training window in months",
+      "testMonths": "Test window, months",
+      "testMonthsLabel": "Test window in months",
+      "neighbours": "Check neighbouring parameter values",
+      "parameter": "Parameter",
+      "parameterLabel": "Parameter for the robustness check",
+      "values": "Values separated by semicolons",
+      "valuesLabel": "Neighbouring parameter values",
+      "robustnessHint": "For independent tests the value is chosen by Sharpe on the training data only. Without a list of neighbouring values the current parameters are checked. Extra runs may take longer.",
+      "run": "Run the experiment",
+      "currentValue": "Current value: {value}. It will be checked too.",
+      "percentHint": "Enter values in percent."
+    },
+    "fundPicker": {
+      "search": "Search for a fund",
+      "placeholder": "Choose funds",
+      "limitReached": "Up to 60 funds can be chosen. Free up a place or choose single funds.",
+      "toggleGroup": "Select or deselect the whole visible group",
+      "chosenCount": "Chosen {value} of 60",
+      "selectedCount": "Chosen: '{0}'",
+      "wholeGroup": "The whole group “{group}”"
+    },
+    "journal": {
+      "title": "Decision and trade journal",
+      "kind": "Entry type",
+      "kindLabel": "Journal entry type",
+      "from": "From",
+      "fromLabel": "Journal start",
+      "to": "To",
+      "toLabel": "Journal end",
+      "loadFailed": "Could not load the journal.",
+      "decisionFrom": "Decision as of",
+      "executionPrice": "Execution price",
+      "spreadCost": "Spread cost",
+      "slippageCost": "Slippage cost",
+      "actualWeight": "Actual weight",
+      "targetWeight": "Target weight",
+      "metrics": "Metrics",
+      "empty": "No entries for these filters.",
+      "previous": "Previous",
+      "nextPage": "Next",
+      "version": "Experiment version",
+      "freeCash": "Free money: {cash}",
+      "range": "{offset}–{entries} of {total}",
+      "engine": "Engine: {engineVersion} · model: {replayModel}",
+      "fingerprint": "Parameter fingerprint: {parametersHash}",
+      "foundCount": "Entries found: {count}",
+      "updating": "· Updating…",
+      "targets": "Targets:",
+      "kinds": {
+        "all": "All entries",
+        "rebalance": "Rebalances",
+        "risk": "Risk review",
+        "buys": "Buys",
+        "sells": "Sells",
+        "expired": "Expired orders"
+      }
+    },
+    "newDraft": {
+      "title": "New strategy",
+      "namePlaceholder": "For example, Momentum with a trend filter",
+      "start": "Start",
+      "create": "Create",
+      "blank": "From an empty diagram"
+    },
+    "robustness": {
+      "hint": "Independent tests pick the parameter only by the training window’s Sharpe. Each test window starts with the given capital. The check of neighbouring values over the whole period is exploratory.",
+      "check": "Check",
+      "trainingWindow": "Training window",
+      "testWindow": "Test window",
+      "parameterValue": "Parameter value",
+      "returnPerYear": "Return / year",
+      "current": "Current",
+      "fractionsHint": "Parameter values for percentage quantities are shown as fractions: 0.1 = 10%.",
+      "kind": {
+        "neighbours": "Neighbouring values",
+        "holdout": "Independent test"
+      }
+    },
+    "words": {
+      "title": "The strategy in words",
+      "notSet": "Not set up"
+    },
+    "comparison": {
+      "title": "Run comparison",
+      "checkFailed": "Could not check the comparison conditions.",
+      "metric": "Metric",
+      "difference": "Difference B - A",
+      "hint": "The chart shows the growth of 100 units from the start of each run. The difference of metrics is available only for the same dates, currency, capital and costs. The return difference is in percentage points.",
+      "chartFailed": "Could not load the chart",
+      "yearlyReturn": "Yearly return",
+      "runA": "Run A · #{number}",
+      "runB": "Run B · #{number}"
+    },
+    "json": {
+      "copy": "Copy",
+      "export": "Export",
+      "preparing": "Preparing JSON…",
+      "label": "Rules JSON",
+      "loadFailed": "Could not get the JSON. Check the draft’s problems.",
+      "copied": "JSON copied",
+      "copyFailed": "Could not copy the JSON. Use the export.",
+      "imported": "Imported strategy"
+    },
+    "problems": {
+      "title": "What to check",
+      "none": "No problems found."
+    },
+    "steps": {
+      "label": "Strategy steps",
+      "description": "Description",
+      "check": "Check",
+      "howRuleWorks": "How the rule works",
+      "desktopOnly": "The rule’s parameters can be changed here. Conditions and how they combine are changed on the diagram on a computer.",
+      "openDiagram": "The rule’s parameters can be changed here. To add conditions or change how they combine, open the diagram.",
+      "editLinks": "Change links on the diagram",
+      "optional": "An optional step. You can go on.",
+      "allAnd": "All conditions (AND)",
+      "anyOr": "Any condition (OR)",
+      "editInDiagram": "Edit in the diagram",
+      "diagramOnly": "This rule is changed on the diagram on a computer.",
+      "stepOf": "Step {step} of {titles}",
+      "hint": {
+        "name": "Give the strategy a clear name and describe the investment idea. Changes are saved automatically.",
+        "setup": "Choose tradable funds, a benchmark to compare with and a fund for free money.",
+        "market": "Define in which market conditions the strategy may invest.",
+        "exit": "Define when to sell a fund already in the portfolio.",
+        "entry": "Define when a fund may become a buy candidate.",
+        "selection": "Choose how to rank candidates and split the portfolio weights.",
+        "risk": "If needed, add out-of-turn exit conditions between rebalances.",
+        "reports": "Choose the reports and how often to get them.",
+        "check": "Check the rules and fix the errors. Then run a backtest or publish the strategy with the buttons at the top."
+      },
+      "title": {
+        "name": "Name and description",
+        "check": "Check and backtest"
+      }
+    },
+    "reports": {
+      "backtestHint": "For a backtest choose 20:00 and a frequency from daily to quarterly. The day of the month and week count; on a holiday the check moves to the next available session.",
+      "afterSignal": "Also make a report after a signal",
+      "chooseSignals": "Choose signals for the report",
+      "backtestSignalHint": "In a backtest this signal is counted from the strategy’s portfolio, and live from the account"
+    },
+    "discard": {
+      "hint": "Published strategies are managed on the “Strategies” tab. Deleting the draft does not affect them.",
+      "question": "Delete the draft?",
+      "message": "The draft “{name}” and its diagram will be deleted completely, with no way to restore them. {notice}"
+    },
+    "setupRow": {
+      "reports": "Reports:"
+    },
+    "published": {
+      "openFailed": "Could not open the builder",
+      "loadFailed": "Could not load the strategy description",
+      "editInBuilder": "Change in the builder"
+    },
+    "save": {
+      "saved": "Saved",
+      "saving": "Saving…",
+      "notSaved": "Not saved"
+    },
+    "trialStatus": {
+      "Pending": "Pending",
+      "Running": "Computing",
+      "Finished": "Done",
+      "Failed": "Error",
+      "Cancelled": "Cancelled"
+    },
+    "mapper": {
+      "none": "none"
+    },
+    "drafts": {
+      "createFailed": "Could not create the draft",
+      "importFailed": "Could not import the rules",
+      "deleted": "Draft deleted",
+      "deleteFailed": "Could not delete the draft"
+    },
+    "draft": {
+      "fundsFailed": "Could not update the fund list",
+      "checkFailed": "Could not check the draft",
+      "trialFailed": "Could not start the backtest",
+      "publishFailed": "Could not publish the strategy",
+      "exitCopied": "Exit rules copied",
+      "exitCopyFailed": "Could not copy the exit rules",
+      "jsonFailed": "Could not generate the JSON",
+      "stale": "The draft was changed in another window. Your changes stayed here. Save a local copy before opening the server version.",
+      "saveFailed": "Could not save the changes. Check the connection and try again.",
+      "notSaved": "Draft not saved",
+      "layoutFailed": "Could not save the diagram layout. Try again.",
+      "layoutNotSaved": "Diagram layout not saved"
+    },
+    "editor": {
+      "notFound": "Draft not found",
+      "toBuilder": "To the builder",
+      "draftName": "Draft name",
+      "moreActions": "More actions",
+      "mode": "Editor mode",
+      "backtest": "Backtest",
+      "saveMore": "Other save actions",
+      "retrySave": "Retry saving",
+      "downloadCopy": "Download a local copy",
+      "describeAndCheck": "Strategy description and check",
+      "noProblems": "No problems found",
+      "closeDescribe": "Close the description and check",
+      "steps": "Steps",
+      "diagram": "Diagram",
+      "noRemarks": "No remarks",
+      "publishMenu": "Publish…",
+      "backtestMenu": "Backtest…",
+      "trialHistory": "Backtest history",
+      "reportsMenu": "Reports…",
+      "deleteMenu": "Delete the draft…",
+      "saved": "Draft saved",
+      "setupMenu": "Funds and series…",
+      "copyEntryMenu": "Create an exit from the entry conditions…",
+      "edit": "Edit",
+      "undo": "Undo",
+      "redo": "Redo",
+      "arrangeDiagram": "Arrange the diagram",
+      "view": "View",
+      "describeShort": "Description and check",
+      "runBacktest": "Run a backtest…",
+      "help": "Help",
+      "publishTitle": "Publish the strategy",
+      "publish": "Publish",
+      "remarks": "Remarks: {problems}",
+      "describeWithCount": "Description and check ({count})",
+      "publishVersion": "Publish version {version} of strategy “{name}”?",
+      "publishNew": "Publish as a new strategy “{name}”?"
+    },
+    "trials": {
+      "autoPeriod": "Automatic period",
+      "loadFailed": "Could not load the backtests",
+      "hint": "Choose a run to see its results. Two finished runs can be compared.",
+      "runs": "Backtest runs",
+      "perYear": "a year",
+      "empty": "No runs yet. Go back to the draft and press “Backtest”.",
+      "choice": "Choice",
+      "run": "Run",
+      "runNumber": "Run {number}",
+      "runSelected": "Run {number}, selected"
+    },
+    "list": {
+      "subtitle": "Create your own strategy rules as a diagram, step by step or from ready JSON",
+      "importJson": "Import JSON",
+      "publishedHint": "Published strategies are managed on the tab",
+      "strategiesTab": "“Strategies”",
+      "publishedHintTail": ". Deleting a draft does not affect them.",
+      "loadFailed": "Could not load the drafts",
+      "empty": "No drafts yet",
+      "emptyHint": "Start from an empty diagram, a ready template or import a rules file.",
+      "delete": "Delete the draft",
+      "fromStrategy": "From which strategy",
+      "new": "New",
+      "lastChange": "Last change",
+      "lastTrial": "Last trial run",
+      "never": "Not yet",
+      "actions": "Actions",
+      "originVersion": "{name} · version {version}"
+    },
+    "block": {
+      "market": {
+        "title": "Market filter",
+        "scope": "for the market as a whole",
+        "outcome": "The market is favourable"
+      },
+      "exit": {
+        "title": "Exit",
+        "scope": "for each fund in the portfolio",
+        "outcome": "Sell"
+      },
+      "entry": {
+        "title": "Entry",
+        "scope": "for each fund outside the portfolio",
+        "outcome": "Buy candidate"
+      },
+      "selection": {
+        "title": "Selection and weights",
+        "scope": "among the candidates",
+        "outcome": "Split the money"
+      },
+      "risk": {
+        "title": "Risk between rebalances",
+        "outcome": "Sell out of turn"
+      }
+    },
+    "pickers": {
+      "funds": {
+        "title": "Strategy funds",
+        "hint": "Choose the funds among which the strategy looks for candidates. Changes apply after confirmation.",
+        "change": "Change funds"
+      },
+      "benchmark": {
+        "hint": "Choose the fund the strategy compares itself with and by which it may judge the market regime.",
+        "choose": "Choose a benchmark",
+        "change": "Change the benchmark"
+      },
+      "vix": {
+        "hint": "Choose the index the strategy’s market conditions may rely on.",
+        "choose": "Choose an index",
+        "change": "Change the index"
+      },
+      "extra": {
+        "hint": "Choose the instruments whose prices the strategy may use in indicators.",
+        "choose": "Choose series",
+        "change": "Change series"
+      }
+    },
+    "parameters": {
+      "group": {
+        "selection": "Fund selection",
+        "weights": "Weight split",
+        "risk": "Risk",
+        "market": "Market regime"
+      }
+    }
   }
 }

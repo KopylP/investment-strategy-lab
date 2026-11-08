@@ -253,7 +253,15 @@ export class HoldingsStore {
     const cash = this.totals().cash;
 
     return cash > 0
-      ? [...slices, { label: translate('common.cash'), name: '', weight: cash / total, color: palette.neutral }]
+      ? [
+          ...slices,
+          {
+            label: translate('common.cash'),
+            name: '',
+            weight: cash / total,
+            color: palette.neutral,
+          },
+        ]
       : slices;
   });
 

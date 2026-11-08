@@ -28,11 +28,11 @@ export interface ReportSchedule {
 }
 
 export const frequencyOptions = [
-  { label: translate('frequency.hourly'), value: 'hourly' },
-  { label: translate('frequency.daily'), value: 'daily' },
-  { label: translate('frequency.weekly'), value: 'weekly' },
-  { label: translate('frequency.monthly'), value: 'monthly' },
-  { label: translate('frequency.quarterly'), value: 'quarterly' },
+  { label: translate('signals.editor.frequency.hourly'), value: 'hourly' },
+  { label: translate('signals.editor.frequency.daily'), value: 'daily' },
+  { label: translate('signals.editor.frequency.weekly'), value: 'weekly' },
+  { label: translate('reports.schedule.frequency.monthly'), value: 'monthly' },
+  { label: translate('reports.schedule.frequency.quarterly'), value: 'quarterly' },
   { label: translate('reports.schedule.off'), value: 'off' },
 ];
 
@@ -55,7 +55,9 @@ export function scheduleLabel(timing: ReportTiming): string {
   const time = timing.time;
   switch (timing.frequency.toLowerCase()) {
     case 'hourly':
-      return translate('reports.schedule.label.hourly', { minute: String(timing.minute).padStart(2, '0') });
+      return translate('reports.schedule.label.hourly', {
+        minute: String(timing.minute).padStart(2, '0'),
+      });
     case 'daily':
       return translate('reports.schedule.label.daily', { time });
     case 'weekly':

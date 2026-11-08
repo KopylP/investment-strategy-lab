@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -16,10 +17,10 @@ import { TemplateDto } from '../../models/vocabulary-dto';
 
 @Component({
   selector: 'app-new-builder-draft-dialog',
-  imports: [FormsModule, Button, Dialog, InputText, Select],
+  imports: [TranslocoPipe, FormsModule, Button, Dialog, InputText, Select],
   template: `
     <p-dialog
-      header="Нова стратегія"
+      [header]="'builder.newDraft.title' | transloco"
       [modal]="true"
       [visible]="visible()"
       (visibleChange)="visible.set($event)"
@@ -29,18 +30,22 @@ import { TemplateDto } from '../../models/vocabulary-dto';
     >
       <div class="flex flex-col gap-4">
         <div class="flex flex-col gap-2">
-          <label for="builder-draft-name" class="font-medium">Назва</label>
+          <label for="builder-draft-name" class="font-medium">{{
+            'signals.editor.name' | transloco
+          }}</label>
           <input
             pInputText
             id="builder-draft-name"
             [ngModel]="name()"
             (ngModelChange)="name.set($event)"
-            placeholder="Наприклад, Моментум із фільтром тренду"
+            [placeholder]="'builder.newDraft.namePlaceholder' | transloco"
             autofocus
           />
         </div>
         <div class="flex flex-col gap-2">
-          <label for="builder-template" class="font-medium">Почати</label>
+          <label for="builder-template" class="font-medium">{{
+            'builder.newDraft.start' | transloco
+          }}</label>
           <p-select
             inputId="builder-template"
             [options]="options()"
@@ -57,13 +62,13 @@ import { TemplateDto } from '../../models/vocabulary-dto';
       </div>
       <ng-template #footer>
         <p-button
-          label="Скасувати"
+          [label]="'common.cancel' | transloco"
           [text]="true"
           severity="secondary"
           (onClick)="visible.set(false)"
         />
         <p-button
-          label="Створити"
+          [label]="'builder.newDraft.create' | transloco"
           icon="pi pi-plus"
           [loading]="busy()"
           [disabled]="!name().trim()"
@@ -84,7 +89,7 @@ export class NewDraftDialog {
   protected readonly name = signal('');
   protected readonly template = signal<string | null>(null);
   protected readonly options = computed(() => [
-    { label: 'З порожньої схеми', value: null },
+    { label: translate('builder.newDraft.blank'), value: null },
     ...this.templates().map((template) => ({ label: template.name, value: template.code })),
   ]);
   protected readonly selectedDescription = computed(

@@ -1,7 +1,9 @@
 @if (store.isLoading() && !store.account()) {
   <div class="card"><p-skeleton height="12rem" /></div>
 } @else if (store.loadError()) {
-  <div class="card"><p-message severity="error" [text]="'accounts.detail.notFound' | transloco" /></div>
+  <div class="card">
+    <p-message severity="error" [text]="'accounts.detail.notFound' | transloco" />
+  </div>
 } @else if (store.account(); as account) {
   <app-page-header
     backLink="/accounts"
@@ -10,17 +12,29 @@
     [subtitle]="
       'accounts.detail.subtitle'
         | transloco
-          : { broker: account.broker, currency: account.baseCurrency, policy: account.taxPolicyCode }
+          : {
+              broker: account.broker,
+              currency: account.baseCurrency,
+              policy: account.taxPolicyCode,
+            }
     "
   >
     <p-button
-      [label]="viewport.phone() ? ('transactions.ledger.import' | transloco) : ('accounts.importPositions.title' | transloco)"
+      [label]="
+        viewport.phone()
+          ? ('transactions.ledger.import' | transloco)
+          : ('accounts.importPositions.title' | transloco)
+      "
       icon="pi pi-upload"
       severity="secondary"
       [outlined]="true"
       (onClick)="importVisible.set(true)"
     />
-    <p-button [label]="'routes.reports' | transloco" icon="pi pi-list-check" routerLink="/reports" />
+    <p-button
+      [label]="'routes.reports' | transloco"
+      icon="pi pi-list-check"
+      routerLink="/reports"
+    />
   </app-page-header>
 
   <div class="card">
@@ -65,7 +79,10 @@
       <ng-template #header>
         <tr>
           <th>{{ 'accounts.wizard.sleeves.subPortfolio' | transloco }}</th>
-          <th class="sm:w-40">{{ 'accounts.detail.share' | transloco }}<span class="hidden sm:inline"> {{ 'accounts.detail.target' | transloco }}</span></th>
+          <th class="sm:w-40">
+            {{ 'accounts.detail.share' | transloco
+            }}<span class="hidden sm:inline"> {{ 'accounts.detail.target' | transloco }}</span>
+          </th>
           <th>{{ 'routes.strategy' | transloco }}</th>
           <th class="hidden sm:table-cell">{{ 'strategies.detail.parking' | transloco }}</th>
           <th class="hidden sm:table-cell">{{ 'accounts.detail.limits' | transloco }}</th>
@@ -87,13 +104,23 @@
             <div class="sm:hidden text-xs text-muted-color">
               {{ 'accounts.detail.cashLabel' | transloco }}
               {{
-                sub.cashInstrumentId ? instruments.symbol(sub.cashInstrumentId) : ('accounts.asInStrategyLower' | transloco)
+                sub.cashInstrumentId
+                  ? instruments.symbol(sub.cashInstrumentId)
+                  : ('accounts.asInStrategyLower' | transloco)
               }}
               @if (sub.maxPositionWeight) {
-                · {{ 'accounts.detail.maxPosition' | transloco: { limit: sub.maxPositionWeight | percent: 0 } }}
+                ·
+                {{
+                  'accounts.detail.maxPosition'
+                    | transloco: { limit: sub.maxPositionWeight | percent: 0 }
+                }}
               }
               @if (sub.maxMonthlyTurnover) {
-                · {{ 'accounts.detail.maxTurnover' | transloco: { limit: sub.maxMonthlyTurnover | percent: 0 } }}
+                ·
+                {{
+                  'accounts.detail.maxTurnover'
+                    | transloco: { limit: sub.maxMonthlyTurnover | percent: 0 }
+                }}
               }
             </div>
           </td>
@@ -120,11 +147,17 @@
               (click)="pickFor.set(sub)"
             >
               <div class="font-medium flex items-center gap-2">
-                {{ sub.strategyId ? store.strategyName(sub.strategyId) : ('strategies.picker.none' | transloco) }}
+                {{
+                  sub.strategyId
+                    ? store.strategyName(sub.strategyId)
+                    : ('strategies.picker.none' | transloco)
+                }}
                 <i class="pi pi-pencil text-xs text-muted-color"></i>
                 @if (sub.pinnedStrategyVersion) {
                   <p-tag
-                    [value]="'accounts.detail.pinned' | transloco: { version: sub.pinnedStrategyVersion }"
+                    [value]="
+                      'accounts.detail.pinned' | transloco: { version: sub.pinnedStrategyVersion }
+                    "
                     severity="secondary"
                   />
                 }
@@ -135,14 +168,25 @@
             </button>
           </td>
           <td class="hidden sm:table-cell">
-            {{ sub.cashInstrumentId ? instruments.symbol(sub.cashInstrumentId) : ('accounts.asInStrategyLower' | transloco) }}
+            {{
+              sub.cashInstrumentId
+                ? instruments.symbol(sub.cashInstrumentId)
+                : ('accounts.asInStrategyLower' | transloco)
+            }}
           </td>
           <td class="text-sm text-muted-color hidden sm:table-cell">
             @if (sub.maxPositionWeight) {
-              {{ 'accounts.detail.maxPosition' | transloco: { limit: sub.maxPositionWeight | percent: 0 } }}
+              {{
+                'accounts.detail.maxPosition'
+                  | transloco: { limit: sub.maxPositionWeight | percent: 0 }
+              }}
             }
             @if (sub.maxMonthlyTurnover) {
-              · {{ 'accounts.detail.maxTurnover' | transloco: { limit: sub.maxMonthlyTurnover | percent: 0 } }}
+              ·
+              {{
+                'accounts.detail.maxTurnover'
+                  | transloco: { limit: sub.maxMonthlyTurnover | percent: 0 }
+              }}
             }
             @if (!sub.maxPositionWeight && !sub.maxMonthlyTurnover) {
               —
@@ -167,19 +211,26 @@
           <tr>
             <td>{{ 'accounts.detail.total' | transloco }}</td>
             <td>{{ sharesTotal() }} %</td>
-            <td colspan="4" class="text-sm text-muted-color">{{ 'accounts.detail.mustBe100' | transloco }}</td>
+            <td colspan="4" class="text-sm text-muted-color">
+              {{ 'accounts.detail.mustBe100' | transloco }}
+            </td>
           </tr>
         </ng-template>
       }
     </p-table>
     @if (store.retired().length) {
-      <div class="text-sm text-muted-color mt-3">{{ 'accounts.detail.retired' | transloco: { retiredNames: store.retiredNames() } }}</div>
+      <div class="text-sm text-muted-color mt-3">
+        {{ 'accounts.detail.retired' | transloco: { retiredNames: store.retiredNames() } }}
+      </div>
     }
     @if (!store.strategies().length) {
       <p-message severity="info" styleClass="mt-4">
         <span
           >{{ 'accounts.detail.noStrategies' | transloco }}
-          <a routerLink="/strategies" class="font-medium underline">{{ 'accounts.detail.createDefaults' | transloco }}</a> {{ 'accounts.detail.createDefaultsTail' | transloco }}</span
+          <a routerLink="/strategies" class="font-medium underline">{{
+            'accounts.detail.createDefaults' | transloco
+          }}</a>
+          {{ 'accounts.detail.createDefaultsTail' | transloco }}</span
         >
       </p-message>
     }

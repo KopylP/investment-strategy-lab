@@ -2,7 +2,7 @@
   <ng-container *ngTemplateOutlet="fields" />
 } @else {
   <p-dialog
-    header="Фонди й ряди"
+    [header]="'builder.graph.visual.setup' | transloco"
     [modal]="true"
     [visible]="visible()"
     (visibleChange)="visible.set($event)"
@@ -13,12 +13,12 @@
 
     <ng-template #footer>
       <p-button
-        label="Скасувати"
+        [label]="'common.cancel' | transloco"
         [text]="true"
         severity="secondary"
         (onClick)="visible.set(false)"
       />
-      <p-button label="Зберегти" icon="pi pi-check" (onClick)="save()" />
+      <p-button [label]="'common.save' | transloco" icon="pi pi-check" (onClick)="save()" />
     </ng-template>
   </p-dialog>
 }
@@ -26,12 +26,14 @@
   <div class="flex min-w-0 flex-col gap-4">
     <div class="flex flex-col gap-2">
       <div class="flex items-center justify-between gap-3">
-        <span class="font-medium">Фонди, з яких стратегія вибирає</span>
-        <small class="text-muted-color">{{ draft().funds.length }} із 60</small>
+        <span class="font-medium">{{ 'builder.setup.universe' | transloco }}</span>
+        <small class="text-muted-color">{{
+          'builder.setup.fundsCount' | transloco: { funds: draft().funds.length }
+        }}</small>
       </div>
       <p-button
-        [label]="'Обрати фонди · ' + draft().funds.length"
-        ariaLabel="Обрати фонди"
+        [label]="'builder.setup.chooseFundsCount' | transloco: { count: draft().funds.length }"
+        [ariaLabel]="'builder.setup.chooseFunds' | transloco"
         icon="pi pi-folder-open"
         severity="secondary"
         [outlined]="true"
@@ -41,7 +43,9 @@
 
     <div class="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <div class="flex min-w-0 flex-col gap-2">
-        <label for="builder-benchmark" class="font-medium">Бенчмарк</label>
+        <label for="builder-benchmark" class="font-medium">{{
+          'strategies.detail.benchmark' | transloco
+        }}</label>
         <p-select
           inputId="builder-benchmark"
           [options]="regularOptions()"
@@ -56,7 +60,9 @@
         />
       </div>
       <div class="flex min-w-0 flex-col gap-2">
-        <label for="builder-cash" class="font-medium">Фонд для кешу</label>
+        <label for="builder-cash" class="font-medium">{{
+          'builder.graph.node.series.cash' | transloco
+        }}</label>
         <p-select
           inputId="builder-cash"
           [options]="regularOptions()"
@@ -71,7 +77,9 @@
         />
       </div>
       <div class="flex min-w-0 flex-col gap-2">
-        <label for="builder-volatility" class="font-medium">Індекс волатильності</label>
+        <label for="builder-volatility" class="font-medium">{{
+          'strategies.detail.volatilityIndex' | transloco
+        }}</label>
         <p-select
           inputId="builder-volatility"
           [options]="volatilityOptions()"
@@ -81,13 +89,15 @@
           (ngModelChange)="patch({ volatilityIndexId: $event })"
           [filter]="true"
           [showClear]="true"
-          placeholder="Необовʼязково"
+          [placeholder]="'builder.setup.optional' | transloco"
           appendTo="body"
           fluid
         />
       </div>
       <div class="flex min-w-0 flex-col gap-2">
-        <label for="builder-extra" class="font-medium">Додаткові ряди</label>
+        <label for="builder-extra" class="font-medium">{{
+          'builder.setup.extraSeries' | transloco
+        }}</label>
         <p-multiselect
           inputId="builder-extra"
           [options]="regularOptions()"
@@ -96,7 +106,7 @@
           [ngModel]="draft().extraSeries"
           (ngModelChange)="patch({ extraSeries: $event })"
           [filter]="true"
-          placeholder="Необовʼязково"
+          [placeholder]="'builder.setup.optional' | transloco"
           appendTo="body"
           fluid
         />

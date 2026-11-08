@@ -72,7 +72,9 @@ export class FileDrop {
     this.messages.add({
       severity: 'warn',
       summary: translate('common.wrongFile'),
-      detail: translate('common.fileNeeded', { extensions: extensions.join(translate('common.or')) }),
+      detail: translate('common.fileNeeded', {
+        extensions: extensions.join(translate('common.or')),
+      }),
     });
   }
 

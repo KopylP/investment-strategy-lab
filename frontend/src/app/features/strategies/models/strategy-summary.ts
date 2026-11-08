@@ -21,7 +21,9 @@ function regionOf(currencies: Set<string | undefined>): string {
 
   const [currency] = currencies;
 
-  return currency === 'EUR' || currency === 'USD' ? translate(`strategies.blurb.region.${currency}`) : '';
+  return currency === 'EUR' || currency === 'USD'
+    ? translate(`strategies.blurb.region.${currency}`)
+    : '';
 }
 
 export function describeStrategy(
@@ -52,9 +54,7 @@ export function describeStrategy(
         : translate('strategies.blurb.riskWarns'),
     );
   if (typeof maxCorrelation === 'number' && maxCorrelation < 1)
-    points.push(
-      translate('strategies.blurb.correlation', { limit: maxCorrelation }),
-    );
+    points.push(translate('strategies.blurb.correlation', { limit: maxCorrelation }));
   if (typeof targetVolatility === 'number' && targetVolatility < 1)
     points.push(
       version.cashInstrumentId
@@ -62,7 +62,9 @@ export function describeStrategy(
             target: Math.round(targetVolatility * 100),
             cash: symbol(version.cashInstrumentId),
           })
-        : translate('strategies.blurb.volatilityNoCash', { target: Math.round(targetVolatility * 100) }),
+        : translate('strategies.blurb.volatilityNoCash', {
+            target: Math.round(targetVolatility * 100),
+          }),
     );
   if (typeof weak === 'number')
     points.push(

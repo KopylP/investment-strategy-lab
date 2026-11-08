@@ -1,6 +1,6 @@
 <app-page-header
-  title="Конструктор"
-  subtitle="Створюйте власні правила стратегії як схему, покроково або з готового JSON"
+  [title]="'routes.builder' | transloco"
+  [subtitle]="'builder.list.subtitle' | transloco"
 >
   <input
     #importInput
@@ -10,33 +10,45 @@
     (change)="importFile($event)"
   />
   <p-button
-    label="Імпортувати JSON"
+    [label]="'builder.list.importJson' | transloco"
     icon="pi pi-upload"
     severity="secondary"
     [outlined]="true"
     [loading]="store.busy() === 'import'"
     (onClick)="importInput.click()"
   />
-  <p-button label="Нова стратегія" icon="pi pi-plus" (onClick)="newDraftVisible.set(true)" />
+  <p-button
+    [label]="'builder.newDraft.title' | transloco"
+    icon="pi pi-plus"
+    (onClick)="newDraftVisible.set(true)"
+  />
 </app-page-header>
 <p class="mb-4 text-sm text-muted-color">
-  Опублікованими стратегіями можна керувати у вкладці
-  <a routerLink="/strategies" class="text-primary underline">«Стратегії»</a>. Видалення чернетки не
-  впливає на них.
+  {{ 'builder.list.publishedHint' | transloco }}
+  <a routerLink="/strategies" class="text-primary underline">{{
+    'builder.list.strategiesTab' | transloco
+  }}</a
+  >{{ 'builder.list.publishedHintTail' | transloco }}
 </p>
 
 @if (store.isLoading() && !store.drafts().length) {
   <div class="card"><p-skeleton height="12rem" /></div>
 } @else if (store.loadError()) {
-  <div class="card"><p-message severity="error" text="Не вдалося завантажити чернетки" /></div>
+  <div class="card">
+    <p-message severity="error" [text]="'builder.list.loadFailed' | transloco" />
+  </div>
 } @else if (!store.drafts().length) {
   <div class="card">
     <app-empty-state
       icon="pi pi-sitemap"
-      title="Ще немає чернеток"
-      text="Почніть із порожньої схеми, готового шаблону або імпортуйте файл правил."
+      [title]="'builder.list.empty' | transloco"
+      [text]="'builder.list.emptyHint' | transloco"
     >
-      <p-button label="Нова стратегія" icon="pi pi-plus" (onClick)="newDraftVisible.set(true)" />
+      <p-button
+        [label]="'builder.newDraft.title' | transloco"
+        icon="pi pi-plus"
+        (onClick)="newDraftVisible.set(true)"
+      />
     </app-empty-state>
   </div>
 } @else if (viewport.phone()) {
@@ -53,25 +65,30 @@
             icon="pi pi-trash"
             severity="danger"
             [text]="true"
-            ariaLabel="Видалити чернетку"
+            [ariaLabel]="'builder.list.delete' | transloco"
             [disabled]="!!store.busy()"
             (onClick)="discard(draft)"
           />
         </div>
         <dl class="m-0 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
-          <dt class="text-muted-color">З якої стратегії</dt>
+          <dt class="text-muted-color">{{ 'builder.list.fromStrategy' | transloco }}</dt>
           <dd class="m-0">
             {{
               draft.originStrategyName
-                ? draft.originStrategyName + ' · версія ' + draft.originVersion
-                : 'Нова'
+                ? ('builder.list.originVersion'
+                  | transloco: { name: draft.originStrategyName, version: draft.originVersion })
+                : ('builder.list.new' | transloco)
             }}
           </dd>
-          <dt class="text-muted-color">Остання зміна</dt>
+          <dt class="text-muted-color">{{ 'builder.list.lastChange' | transloco }}</dt>
           <dd class="m-0">{{ draft.updatedAt | dateTime }}</dd>
-          <dt class="text-muted-color">Останній пробний запуск</dt>
+          <dt class="text-muted-color">{{ 'builder.list.lastTrial' | transloco }}</dt>
           <dd class="m-0">
-            {{ draft.lastTrialAt ? (draft.lastTrialAt | dateTime) : 'Ще не було' }}
+            {{
+              draft.lastTrialAt
+                ? (draft.lastTrialAt | dateTime)
+                : ('builder.list.never' | transloco)
+            }}
           </dd>
         </dl>
       </article>
@@ -82,11 +99,13 @@
     <p-table [value]="store.drafts()" [rowHover]="true">
       <ng-template #header>
         <tr>
-          <th>Назва</th>
-          <th>З якої стратегії</th>
-          <th>Остання зміна</th>
-          <th>Останній пробний запуск</th>
-          <th class="w-28"><span class="sr-only">Дії</span></th>
+          <th>{{ 'signals.editor.name' | transloco }}</th>
+          <th>{{ 'builder.list.fromStrategy' | transloco }}</th>
+          <th>{{ 'builder.list.lastChange' | transloco }}</th>
+          <th>{{ 'builder.list.lastTrial' | transloco }}</th>
+          <th class="w-28">
+            <span class="sr-only">{{ 'builder.list.actions' | transloco }}</span>
+          </th>
         </tr>
       </ng-template>
       <ng-template #body let-draft>
@@ -110,13 +129,18 @@
           <td>
             {{
               draft.originStrategyName
-                ? draft.originStrategyName + ' · версія ' + draft.originVersion
-                : 'Нова'
+                ? ('builder.list.originVersion'
+                  | transloco: { name: draft.originStrategyName, version: draft.originVersion })
+                : ('builder.list.new' | transloco)
             }}
           </td>
           <td>{{ draft.updatedAt | dateTime }}</td>
           <td>
-            {{ draft.lastTrialAt ? (draft.lastTrialAt | dateTime) : 'Ще не було' }}
+            {{
+              draft.lastTrialAt
+                ? (draft.lastTrialAt | dateTime)
+                : ('builder.list.never' | transloco)
+            }}
           </td>
           <td (click)="$event.stopPropagation()">
             <div class="flex items-center justify-end gap-1">
@@ -124,22 +148,22 @@
                 <p-button
                   icon="pi pi-history"
                   [text]="true"
-                  ariaLabel="Історія бектестів"
-                  pTooltip="Історія бектестів"
+                  [ariaLabel]="'builder.editor.trialHistory' | transloco"
+                  [pTooltip]="'builder.editor.trialHistory' | transloco"
                   (onClick)="router.navigate(['/strategy-builder', draft.id, 'trials'])"
                 />
               }
               <p-button
                 icon="pi pi-chevron-right"
                 [text]="true"
-                ariaLabel="Відкрити"
+                [ariaLabel]="'overview.details.open' | transloco"
                 (onClick)="router.navigate(['/strategy-builder', draft.id])"
               />
               <p-button
                 icon="pi pi-trash"
                 severity="danger"
                 [text]="true"
-                ariaLabel="Видалити чернетку"
+                [ariaLabel]="'builder.list.delete' | transloco"
                 [disabled]="!!store.busy()"
                 (onClick)="discard(draft)"
               />

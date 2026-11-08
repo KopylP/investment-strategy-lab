@@ -204,14 +204,13 @@ export class PriceChart {
 
               return (byIndex.get(context.dataIndex) ?? [])
                 .filter((trade) => trade.side === side)
-                .map(
-                  (trade) =>
-                    translate('chart.tradeTooltip', {
-                      side: translate(side === 'Buy' ? 'chart.buy' : 'chart.sell'),
-                      quantity: formatQuantity(trade.quantity),
-                      price: formatMoney(trade.price, trade.currency),
-                      date: formatDate(trade.date),
-                    }),
+                .map((trade) =>
+                  translate('chart.tradeTooltip', {
+                    side: translate(side === 'Buy' ? 'chart.buy' : 'chart.sell'),
+                    quantity: formatQuantity(trade.quantity),
+                    price: formatMoney(trade.price, trade.currency),
+                    date: formatDate(trade.date),
+                  }),
                 );
             },
           },

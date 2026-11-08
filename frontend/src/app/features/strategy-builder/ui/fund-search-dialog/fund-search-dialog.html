@@ -1,6 +1,6 @@
 <p-dialog
   [appendTo]="overlayContainer()"
-  header="Знайти фонди"
+  [header]="'builder.fundSearch.title' | transloco"
   [modal]="true"
   [visible]="visible()"
   (visibleChange)="visible.set($event)"
@@ -11,16 +11,15 @@
 >
   <div class="flex flex-col gap-4">
     <p class="text-muted-color m-0">
-      Знайдіть ETF і додайте вибрані до фондів стратегії. Пошук перевіряє до 250 найбільших фондів
-      за вибраними умовами та показує до 100 збігів.
+      {{ 'builder.fundSearch.hint' | transloco }}
     </p>
     @if (store.loadingOptions()) {
-      <p class="text-muted-color" role="status">Завантажуємо біржі й регіони…</p>
+      <p class="text-muted-color" role="status">{{ 'builder.fundSearch.loading' | transloco }}</p>
     }
     @if (store.options(); as options) {
       <form class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" (ngSubmit)="search()">
         <div class="flex flex-col gap-2">
-          <label for="fund-search-exchange">Біржа</label>
+          <label for="fund-search-exchange">{{ 'instruments.exchange' | transloco }}</label>
           <p-select
             inputId="fund-search-exchange"
             name="exchange"
@@ -30,13 +29,15 @@
             [ngModel]="exchangeId()"
             (ngModelChange)="exchangeId.set($event)"
             [showClear]="true"
-            placeholder="Виберіть біржу"
+            [placeholder]="'builder.fundSearch.chooseExchange' | transloco"
             [appendTo]="overlayContainer()"
             fluid
           />
         </div>
         <div class="flex flex-col gap-2">
-          <label for="fund-search-region">Регіон торгів</label>
+          <label for="fund-search-region">{{
+            'builder.fundSearch.tradingRegion' | transloco
+          }}</label>
           <p-select
             inputId="fund-search-region"
             name="region"
@@ -46,24 +47,26 @@
             [ngModel]="regionId()"
             (ngModelChange)="regionId.set($event)"
             [showClear]="true"
-            placeholder="Виберіть регіон"
+            [placeholder]="'builder.fundSearch.chooseRegion' | transloco"
             [appendTo]="overlayContainer()"
             fluid
           />
         </div>
         <div class="flex flex-col gap-2">
-          <label for="fund-search-family">Сімейство фондів</label>
+          <label for="fund-search-family">{{ 'builder.fundSelection.family' | transloco }}</label>
           <input
             pInputText
             id="fund-search-family"
             name="family"
-            placeholder="Необов’язково"
+            [placeholder]="'builder.fundSearch.optional' | transloco"
             [ngModel]="family()"
             (ngModelChange)="family.set($event)"
           />
         </div>
         <div class="flex flex-col gap-2">
-          <label for="fund-search-assets">Мінімальні активи</label>
+          <label for="fund-search-assets">{{
+            'builder.fundSelection.minAssets' | transloco
+          }}</label>
           <p-inputnumber
             inputId="fund-search-assets"
             name="assets"
@@ -72,12 +75,12 @@
             (ngModelChange)="minAssets.set($event)"
             [min]="0"
             [maxFractionDigits]="0"
-            placeholder="Без обмеження"
+            [placeholder]="'builder.inspector.noLimit' | transloco"
             fluid
           />
         </div>
         <div class="flex flex-col gap-2">
-          <label for="fund-search-fee">Максимальна річна комісія (TER), %</label>
+          <label for="fund-search-fee">{{ 'builder.fundSearch.maxTer' | transloco }}</label>
           <p-inputnumber
             inputId="fund-search-fee"
             name="fee"
@@ -87,17 +90,17 @@
             [min]="0"
             [max]="10"
             [maxFractionDigits]="3"
-            placeholder="Без обмеження"
+            [placeholder]="'builder.inspector.noLimit' | transloco"
             fluid
           />
         </div>
         <div class="flex flex-col gap-2">
-          <label for="fund-search-words">Слова в назві (до п’яти)</label>
+          <label for="fund-search-words">{{ 'builder.fundSearch.nameWords' | transloco }}</label>
           <input
             pInputText
             id="fund-search-words"
             name="words"
-            placeholder="Наприклад, MSCI World"
+            [placeholder]="'builder.fundSearch.namePlaceholder' | transloco"
             [ngModel]="words()"
             (ngModelChange)="words.set($event)"
           />
@@ -105,8 +108,8 @@
         <div class="sm:col-span-2 lg:col-span-3">
           <p-button
             type="submit"
-            label="Шукати"
-            ariaLabel="Шукати"
+            [label]="'builder.fundSearch.search' | transloco"
+            [ariaLabel]="'builder.fundSearch.search' | transloco"
             icon="pi pi-search"
             [loading]="store.searching()"
             [disabled]="store.adding()"
@@ -115,7 +118,7 @@
       </form>
     } @else if (!store.loadingOptions()) {
       <p-button
-        label="Повторити завантаження"
+        [label]="'builder.fundSearch.retry' | transloco"
         severity="secondary"
         (onClick)="store.loadOptions()"
       />
@@ -125,7 +128,7 @@
     }
     @if (store.failed().length > 0) {
       <div class="flex flex-col gap-2" role="status">
-        <p-message severity="warn">Деякі фонди не додано. Решту вже додано до вибору.</p-message>
+        <p-message severity="warn">{{ 'builder.fundSearch.someNotAdded' | transloco }}</p-message>
         @for (failure of store.failed(); track failure.symbol) {
           <p class="m-0">{{ failure.symbol }}: {{ failure.reason }}</p>
         }
@@ -133,7 +136,10 @@
     }
     @if (store.funds(); as funds) {
       <p class="text-muted-color m-0" role="status">
-        Знайдено: {{ funds.length }} · Вибрано: {{ store.selected().length }}
+        {{
+          'builder.fundSearch.found'
+            | transloco: { funds: funds.length, selected: store.selected().length }
+        }}
       </p>
       <p-table
         [value]="funds"
@@ -147,11 +153,11 @@
         <ng-template #header>
           <tr>
             <th style="width: 3rem"><p-tableHeaderCheckbox /></th>
-            <th>Символ</th>
-            <th>Назва</th>
-            <th>Активи</th>
+            <th>{{ 'builder.fundSearch.symbol' | transloco }}</th>
+            <th>{{ 'builder.fundSearch.name' | transloco }}</th>
+            <th>{{ 'builder.fundSearch.assets' | transloco }}</th>
             <th>TER</th>
-            <th>У сервісі</th>
+            <th>{{ 'builder.fundSearch.inService' | transloco }}</th>
           </tr>
         </ng-template>
         <ng-template #body let-fund>
@@ -165,12 +171,18 @@
             <td class="whitespace-nowrap">
               {{ fund.expenseRatio === null ? '—' : (fund.expenseRatio | percent: '1.0-3') }}
             </td>
-            <td>{{ fund.instrumentId ? 'Уже є' : 'Новий' }}</td>
+            <td>
+              {{
+                fund.instrumentId
+                  ? ('builder.fundSearch.exists' | transloco)
+                  : ('builder.fundSearch.new' | transloco)
+              }}
+            </td>
           </tr>
         </ng-template>
         <ng-template #emptymessage>
           <tr>
-            <td colspan="6">Фондів за цими умовами не знайдено. Спробуйте послабити обмеження.</td>
+            <td colspan="6">{{ 'builder.fundSearch.empty' | transloco }}</td>
           </tr>
         </ng-template>
       </p-table>
@@ -178,15 +190,15 @@
   </div>
   <ng-template #footer>
     <p-button
-      label="Закрити"
+      [label]="'common.close' | transloco"
       severity="secondary"
       [text]="true"
       [disabled]="store.adding()"
       (onClick)="visible.set(false)"
     />
     <p-button
-      label="Додати вибрані"
-      ariaLabel="Додати вибрані"
+      [label]="'builder.fundSearch.addChosen' | transloco"
+      [ariaLabel]="'builder.fundSearch.addChosen' | transloco"
       icon="pi pi-plus"
       [loading]="store.adding()"
       [disabled]="store.selected().length === 0 || store.searching()"

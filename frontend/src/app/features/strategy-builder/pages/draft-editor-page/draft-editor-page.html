@@ -1,15 +1,21 @@
 @if (store.loading() && !store.draft()) {
   <div class="card"><p-skeleton height="16rem" /></div>
 } @else if (store.loadError()) {
-  <app-page-header title="Чернетка" backLink="/strategy-builder" backLabel="Конструктор" />
-  <div class="card"><p-message severity="error" text="Чернетку не знайдено" /></div>
+  <app-page-header
+    [title]="'routes.draft' | transloco"
+    backLink="/strategy-builder"
+    [backLabel]="'routes.builder' | transloco"
+  />
+  <div class="card">
+    <p-message severity="error" [text]="'builder.editor.notFound' | transloco" />
+  </div>
 } @else if (store.draft(); as draft) {
   <header class="editor-header">
     <a
       routerLink="/strategy-builder"
       class="back-link"
-      aria-label="До конструктора"
-      title="До конструктора"
+      [attr.aria-label]="'builder.editor.toBuilder' | transloco"
+      [title]="'builder.editor.toBuilder' | transloco"
       ><i class="pi pi-chevron-left" aria-hidden="true"></i
     ></a>
     <div class="title-block">
@@ -22,7 +28,7 @@
           (change)="store.rename($any($event.target).value)"
           [attr.aria-invalid]="!!store.nameError()"
           aria-describedby="draft-name-error"
-          aria-label="Назва чернетки"
+          [attr.aria-label]="'builder.editor.draftName' | transloco"
         />
         <span class="save-status" [attr.data-state]="saveStatus()" role="status">
           <i [class]="saveStatuses[saveStatus()].icon" aria-hidden="true"></i>
@@ -37,7 +43,7 @@
       @if (viewport.phone()) {
         <p-button
           icon="pi pi-ellipsis-h"
-          ariaLabel="Більше дій"
+          [ariaLabel]="'builder.editor.moreActions' | transloco"
           severity="secondary"
           [text]="true"
           [rounded]="true"
@@ -67,11 +73,11 @@
           [ngModel]="store.mode()"
           (ngModelChange)="changeMode($event)"
           [allowEmpty]="false"
-          ariaLabel="Режим редактора"
+          [ariaLabel]="'builder.editor.mode' | transloco"
         />
         <p-button
-          label="Бектест"
-          ariaLabel="Бектест"
+          [label]="'builder.editor.backtest' | transloco"
+          [ariaLabel]="'builder.editor.backtest' | transloco"
           icon="pi pi-play"
           severity="secondary"
           size="small"
@@ -81,13 +87,13 @@
         />
       }
       <p-splitbutton
-        label="Зберегти"
-        [buttonProps]="{ ariaLabel: 'Зберегти' }"
+        [label]="'common.save' | transloco"
+        [buttonProps]="{ ariaLabel: ('common.save' | transloco) }"
         [model]="saveMenu"
         size="small"
         appendTo="body"
         [disabled]="store.busy()"
-        [menuButtonProps]="{ ariaLabel: 'Інші дії зі збереженням' }"
+        [menuButtonProps]="{ ariaLabel: ('builder.editor.saveMore' | transloco) }"
         (onClick)="save()"
       />
     </div>
@@ -101,17 +107,17 @@
       [ngModel]="store.mode()"
       (ngModelChange)="changeMode($event)"
       [allowEmpty]="false"
-      ariaLabel="Режим редактора"
+      [ariaLabel]="'builder.editor.mode' | transloco"
     />
   }
   @if (store.saveError(); as error) {
     <div role="alert" class="mb-4 rounded-xl border border-red-300 p-4">
       <p>{{ error }}</p>
       @if (!store.saveConflict()) {
-        <p-button label="Повторити збереження" (onClick)="store.flush()" />
+        <p-button [label]="'builder.editor.retrySave' | transloco" (onClick)="store.flush()" />
       }
       <p-button
-        label="Завантажити локальну копію"
+        [label]="'builder.editor.downloadCopy' | transloco"
         severity="secondary"
         (onClick)="store.downloadLocalCopy()"
       />
@@ -165,18 +171,21 @@
     @if (store.reviewVisible()) {
       <section id="strategy-review" class="review-panel" aria-labelledby="strategy-review-title">
         <header class="review-header">
-          <h2 id="strategy-review-title">Опис стратегії та перевірка</h2>
+          <h2 id="strategy-review-title">{{ 'builder.editor.describeAndCheck' | transloco }}</h2>
           @if (!draft.problems.length) {
             <span class="review-status"
-              ><i class="pi pi-check-circle" aria-hidden="true"></i> Проблем не виявлено</span
+              ><i class="pi pi-check-circle" aria-hidden="true"></i>
+              {{ 'builder.editor.noProblems' | transloco }}</span
             >
           } @else {
-            <span class="review-status">Зауважень: {{ draft.problems.length }}</span>
+            <span class="review-status">{{
+              'builder.editor.remarks' | transloco: { problems: draft.problems.length }
+            }}</span>
           }
           <p-button
             icon="pi pi-times"
-            ariaLabel="Закрити опис і перевірку"
-            pTooltip="Закрити"
+            [ariaLabel]="'builder.editor.closeDescribe' | transloco"
+            [pTooltip]="'common.close' | transloco"
             [text]="true"
             severity="secondary"
             size="small"
