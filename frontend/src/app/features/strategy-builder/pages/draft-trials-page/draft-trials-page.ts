@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   effect,
   inject,
   input,
@@ -13,7 +14,7 @@ import { TableModule } from 'primeng/table';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { DateTimePipe, PercentPipe } from '../../../../shared/pipes/format-pipes';
 import { formatDate } from '../../../../shared/pipes/format';
-import { Viewport } from '../../../../shared/ui/viewport';
+import { hostWidth } from '../../../../shared/ui/host-width';
 import { TrialRunDto } from '../../models/trial-run-dto';
 import { TrialStatusVm, trialStatuses } from '../../models/trial-status-vm';
 import { StrategyBacktest } from '../../../backtesting/ui/strategy-backtest/strategy-backtest';
@@ -21,6 +22,8 @@ import { TrialsStore } from '../../data-access/trials-store';
 import { TrialComparison } from '../../ui/trial-comparison/trial-comparison';
 import { ExperimentStore } from '../../data-access/experiment-store';
 import { ExperimentResults } from '../../ui/experiment-results/experiment-results';
+
+const tableLayoutMinimumWidth = 672;
 
 @Component({
   selector: 'app-draft-trials-page',
@@ -46,7 +49,8 @@ export class DraftTrialsPage {
   protected readonly store = inject(TrialsStore);
   private readonly experiments = inject(ExperimentStore);
   private readonly route = inject(ActivatedRoute);
-  protected readonly viewport = inject(Viewport);
+  private readonly width = hostWidth();
+  protected readonly listLayout = computed(() => this.width() < tableLayoutMinimumWidth);
 
   constructor() {
     effect(() => {
