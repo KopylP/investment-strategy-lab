@@ -137,8 +137,8 @@
         "kind": "buy",
         "ticker": "IS3N.DE",
         "name": "iShares Core MSCI EM IMI",
-        "amount": 56.70257488415035,
-        "shares": 1.1585903984796637,
+        "amount": 56.702574884150536,
+        "shares": 1.1585903984796675,
         "price": 48.941001892089844,
         "reason": "докупити до цілі 25% портфеля (ранг 3, моментум +26.2%)"
       },
@@ -147,8 +147,8 @@
         "kind": "buy",
         "ticker": "QDVF.DE",
         "name": "iShares S&P 500 Energy",
-        "amount": 1478.0968213305096,
-        "shares": 143.56030392752115,
+        "amount": 1478.096821330509,
+        "shares": 143.56030392752112,
         "price": 10.295999526977539,
         "reason": "нова позиція, ціль 25% портфеля (ранг 4, моментум +24.5%)"
       }
@@ -180,18 +180,18 @@
         "ticker": "IS3N.DE",
         "role": "pick",
         "valueBefore": 1506.6250204892117,
-        "valueAfter": 1563.327595373362,
+        "valueAfter": 1563.3275953733623,
         "weightBefore": 0.2494449222694988,
-        "weightAfter": 0.24945746074889866,
+        "weightAfter": 0.24945746074889869,
         "targetWeight": 0.25
       },
       {
         "ticker": "QDVF.DE",
         "role": "pick",
         "valueBefore": 0.0,
-        "valueAfter": 1478.0968213305096,
+        "valueAfter": 1478.096821330509,
         "weightBefore": 0.0,
-        "weightAfter": 0.2358573346247798,
+        "weightAfter": 0.23585733462477973,
         "targetWeight": 0.25
       },
       {

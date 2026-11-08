@@ -115,22 +115,6 @@
     }
   </div>
 
-  @if (report.contribution.transfer; as transfer) {
-    <p-message
-      severity="info"
-      styleClass="mt-4"
-      [text]="
-        'Під-портфелі відійшли від цільових часток: варто перенести ' +
-        (transfer.amount | money: report.summary.currency) +
-        ' з «' +
-        transfer.from +
-        '» до «' +
-        transfer.to +
-        '».'
-      "
-    />
-  }
-
   @if (report.sections.length) {
     <div class="card mt-3 sm:mt-4">
       <h2 class="text-xl font-semibold mb-4">Обґрунтування по під-портфелях</h2>

@@ -71,10 +71,20 @@
       {
         "action": "buy",
         "kind": "buy",
+        "ticker": "AAA",
+        "name": "AAA",
+        "amount": 66.66666666666666,
+        "shares": 6.666666666666666,
+        "price": 10.0,
+        "reason": "докупити до цілі 25% портфеля (ранг 1, моментум +29.0%)"
+      },
+      {
+        "action": "buy",
+        "kind": "buy",
         "ticker": "BBB",
         "name": "BBB",
-        "amount": 75.0,
-        "shares": 3.75,
+        "amount": 133.33333333333331,
+        "shares": 6.666666666666666,
         "price": 20.0,
         "reason": "нова позиція, ціль 25% портфеля (ранг 2, моментум +28.0%)"
       },
@@ -83,8 +93,8 @@
         "kind": "park",
         "ticker": "CASHX",
         "name": "CASHX",
-        "amount": 325.0,
-        "shares": 3.25,
+        "amount": 200.00000000000003,
+        "shares": 2.0000000000000004,
         "price": 100.0,
         "reason": "парковка: гроші, які цього місяця не інвестуються"
       }
@@ -92,39 +102,40 @@
     "totalBefore": 400.0,
     "totalAfter": 800.0,
     "parkedBefore": 300.0,
-    "parkedAfter": 625.0,
+    "parkedAfter": 500.0,
     "allocation": [
       {
         "ticker": "AAA",
         "role": "pick",
         "valueBefore": 100.0,
-        "valueAfter": 100.0,
+        "valueAfter": 166.66666666666666,
         "weightBefore": 0.25,
-        "weightAfter": 0.125,
+        "weightAfter": 0.20833333333333331,
         "targetWeight": 0.25
       },
       {
         "ticker": "BBB",
         "role": "pick",
         "valueBefore": 0.0,
-        "valueAfter": 75.0,
+        "valueAfter": 133.33333333333331,
         "weightBefore": 0.0,
-        "weightAfter": 0.09375,
+        "weightAfter": 0.16666666666666663,
         "targetWeight": 0.25
       },
       {
         "ticker": "CASHX",
         "role": "cash",
         "valueBefore": 300.0,
-        "valueAfter": 625.0,
+        "valueAfter": 500.0,
         "weightBefore": 0.75,
-        "weightAfter": 0.78125,
+        "weightAfter": 0.625,
         "targetWeight": null
       }
     ],
     "notes": [
-      "Ринок слабкий: інвестуємо 50% внеску (€200.00), решту (€200.00) паркуємо в CASHX. Через стан ринку поточні позиції не продаємо.",
-      "Знайдено 2 з 4 кандидатів: 2 порожні слоти (50% портфеля) лишаються в CASHX до наступного місяця."
+      "Ринок слабкий: інвестуємо 50% внеску (€200.00), решту (€200.00) паркуємо в CASHX.",
+      "Ринок слабкий: запарковані кошти (€300.00) лишаються в CASHX, доки ринок не відновиться.",
+      "Цілі стратегії займають 50% портфеля: решта лишається в CASHX."
     ]
   }
 }

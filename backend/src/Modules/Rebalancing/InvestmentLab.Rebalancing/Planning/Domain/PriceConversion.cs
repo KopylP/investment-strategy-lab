@@ -39,5 +39,7 @@ public static class PriceConversion
         public decimal Close => Quote.Close * Factor;
         public DateOnly Date => Quote.Date;
         public bool IsStale => Quote.IsStale;
+
+        public decimal FromQuoteCurrency(decimal amount) => amount * Factor;
     }
 }

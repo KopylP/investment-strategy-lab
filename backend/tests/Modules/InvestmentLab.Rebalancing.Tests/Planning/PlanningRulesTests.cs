@@ -60,6 +60,8 @@ public sealed class PlanningRulesTests
     {
         public decimal Close => 10m;
         public DateOnly Date => Today;
+
+        public decimal FromQuoteCurrency(decimal amount) => amount;
     }
 
     [Fact]
@@ -184,6 +186,17 @@ public sealed class PlanningRulesTests
         converted.Prices[quotes[0].InstrumentId].Close.ShouldBe(5m);
         converted.Prices[quotes[1].InstrumentId].Close.ShouldBe(10m);
         converted.Warnings.ShouldHaveSingleItem().ShouldContain("report.warning.fx_converted");
+    }
+
+    [Fact]
+    public void An_average_cost_in_the_fund_currency_is_converted_at_the_rate_of_its_price()
+    {
+        var quote = new Quote("USD");
+        var rates = new Dictionary<string, decimal?> { ["USD"] = 4m };
+
+        var converted = PriceConversion.Of([quote], rates, "PLN");
+
+        converted.Prices[quote.InstrumentId].FromQuoteCurrency(12m).ShouldBe(48m);
     }
 
     [Fact]

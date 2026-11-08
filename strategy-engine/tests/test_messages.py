@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import re
 
-from finance_decisions.messages import _all_messages, msg, render, render_deep, t
+from finance_decisions.messages import _all_messages, _plural, msg, render, render_deep, t
 
 SOURCE = Path(__file__).resolve().parents[1] / "src" / "finance_decisions"
 CYRILLIC = re.compile(r"[Ѐ-ӿ]")
@@ -46,8 +46,9 @@ def test_a_list_of_failures_is_joined_by_the_template() -> None:
 
 
 def test_counted_words_follow_the_language() -> None:
-    assert "1 порожній слот" in t("etf_momentum.plan.empty_slots", found=3, slots=4, empty=1, share="25%", parking="кеш")
-    assert "2 порожні слоти" in t("etf_momentum.plan.empty_slots", found=2, slots=4, empty=2, share="50%", parking="кеш")
+    forms = "слот|слоти|слотів"
+
+    assert [_plural(count, forms) for count in (1, 2, 5, 11, 21, 22)] == ["слот", "слоти", "слотів", "слотів", "слот", "слоти"]
 
 
 def test_rendering_a_payload_reaches_every_nested_message() -> None:

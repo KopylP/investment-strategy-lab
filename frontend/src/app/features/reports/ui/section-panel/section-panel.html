@@ -18,10 +18,12 @@
         [severity]="s.marketIsFavorable ? 'success' : 'warn'"
         [icon]="s.marketIsFavorable ? 'pi pi-sun' : 'pi pi-cloud'"
       />
-      <p-tag
-        [value]="'Інвестуємо ' + (s.investFraction | percent: 0) + ' внеску'"
-        severity="info"
-      />
+      @if (s.investFraction !== null && s.investFraction < 1) {
+        <p-tag
+          [value]="'Інвестуємо ' + (s.investFraction | percent: 0) + ' внеску'"
+          severity="info"
+        />
+      }
     }
     @if (s.contribution) {
       <p-tag
