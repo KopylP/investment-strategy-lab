@@ -1,6 +1,6 @@
 <app-page-header
-  title="Рапорти"
-  subtitle="Рапорти, які задають стратегії рахунку: робочий документ, у якому ви відмічаєте виконане"
+  [title]="'routes.reports' | transloco"
+  [subtitle]="'reports.list.subtitle' | transloco"
 >
   @if (store.hasAccount()) {
     @for (report of store.definitions(); track report.code) {
@@ -21,19 +21,18 @@
   <div class="card">
     <app-empty-state
       icon="pi pi-wallet"
-      title="Спершу відкрийте рахунок"
-      text="Рапорт рахується для рахунку з під-портфелями, яким призначено стратегії."
+      [title]="'reports.list.openAccountFirst' | transloco"
+      [text]="'reports.list.openAccountHint' | transloco"
     >
-      <p-button label="Відкрити рахунок" icon="pi pi-plus" routerLink="/accounts/new" />
+      <p-button [label]="'holdings.openAccount' | transloco" icon="pi pi-plus" routerLink="/accounts/new" />
     </app-empty-state>
   </div>
 } @else {
   @if (store.openReport(); as open) {
     <p-message severity="info" styleClass="mb-4">
       <span
-        >Відкритий рапорт:
-        <a [routerLink]="['/reports', open.id]" class="font-medium underline">{{ open.title }}</a> —
-        {{ open.actionsOpen }} дій чекають на відмітку.</span
+        >{{ 'reports.list.openReport' | transloco }}
+        <a [routerLink]="['/reports', open.id]" class="font-medium underline">{{ open.title }}</a> {{ 'reports.list.waiting' | transloco: { actionsOpen: open.actionsOpen } }}</span
       >
     </p-message>
   }
@@ -51,19 +50,19 @@
       @if (store.definitions()[0]; as first) {
         <app-empty-state
           icon="pi pi-list-check"
-          title="Рапортів ще немає"
-          text="Згенеруйте перший рапорт: стратегії оцінять ринок, а план покаже, що купити, продати чи запаркувати."
+          [title]="'reports.list.empty' | transloco"
+          [text]="'reports.list.emptyHint' | transloco"
         >
           <p-button [label]="first.name" [icon]="icon(first.mode)" (onClick)="start(first)" />
         </app-empty-state>
       } @else if (store.definitionsLoaded()) {
         <app-empty-state
           icon="pi pi-list-check"
-          title="Рапортів ще немає"
-          text="Рапорти задають стратегії: призначте стратегію під-портфелю рахунку, і тут з’являться її рапорти."
+          [title]="'reports.list.empty' | transloco"
+          [text]="'reports.list.noStrategyHint' | transloco"
         >
           <p-button
-            label="До рахунку"
+            [label]="'reports.list.toAccount' | transloco"
             icon="pi pi-wallet"
             [routerLink]="['/accounts', store.account()?.id]"
           />
@@ -79,11 +78,11 @@
       >
         <ng-template #header>
           <tr>
-            <th>Рапорт</th>
-            <th class="hidden sm:table-cell">Статус</th>
-            <th class="text-right">Дій</th>
-            <th class="text-right hidden sm:table-cell">Внесок</th>
-            <th class="hidden sm:table-cell">Згенеровано</th>
+            <th>{{ 'reports.list.report' | transloco }}</th>
+            <th class="hidden sm:table-cell">{{ 'reports.list.state' | transloco }}</th>
+            <th class="text-right">{{ 'reports.list.actionsCount' | transloco }}</th>
+            <th class="text-right hidden sm:table-cell">{{ 'reports.progress.contribution' | transloco }}</th>
+            <th class="hidden sm:table-cell">{{ 'reports.list.generated' | transloco }}</th>
           </tr>
         </ng-template>
         <ng-template #body let-row>
@@ -113,13 +112,13 @@
               </td>
               <td class="text-right whitespace-nowrap">
                 @if (request.status === 'Pending' && request.progressLabel) {
-                  <span title="Скільки стратегій уже відповіли">{{ request.progressLabel }}</span>
+                  <span [title]="'reports.list.answeredHint' | transloco">{{ request.progressLabel }}</span>
                 } @else {
                   —
                 }
               </td>
               <td class="text-right hidden sm:table-cell">—</td>
-              <td class="hidden sm:table-cell">запитано {{ request.requestedAt | dateTime }}</td>
+              <td class="hidden sm:table-cell">{{ 'reports.list.requested' | transloco: { requestedAt: (request.requestedAt | dateTime) } }}</td>
             </tr>
           } @else {
             <tr>
@@ -145,7 +144,7 @@
                   (row.report.status === 'New' || row.report.status === 'InProgress')
                 ) {
                   <p-tag
-                    [value]="row.report.actionsOpen + ' з ' + row.report.actionsTotal"
+                    [value]="'reports.list.ofTotal' | transloco: { open: row.report.actionsOpen, total: row.report.actionsTotal }"
                     severity="warn"
                     styleClass="whitespace-nowrap"
                   />
@@ -167,14 +166,14 @@
       <ng-template #requestTag let-request>
         @if (request.status === 'Pending') {
           <p-tag
-            value="Готується"
+            [value]="'reports.list.preparing' | transloco"
             icon="pi pi-spin pi-spinner"
             severity="secondary"
             styleClass="whitespace-nowrap"
           />
         } @else {
           <p-tag
-            value="Не вдалося"
+            [value]="'reports.list.failed' | transloco"
             icon="pi pi-exclamation-triangle"
             severity="danger"
             styleClass="whitespace-nowrap"
@@ -195,12 +194,10 @@
 >
   <div class="flex flex-col gap-4">
     <p class="m-0 text-muted-color">
-      {{ asking()?.description }} План рахується на останніх котируваннях у базі; стратегіям може
-      знадобитися час, рапорт з’явиться, щойно буде готовий. Відкритий такий самий рапорт цього
-      місяця буде замінено; уже зроблені відмітки лишаються в журналі.
+      {{ 'reports.list.generateHint' | transloco: { description: asking()?.description } }}
     </p>
     <div class="flex flex-col gap-2">
-      <label for="contribution" class="font-medium">Внесок цього місяця</label>
+      <label for="contribution" class="font-medium">{{ 'reports.list.monthContribution' | transloco }}</label>
       <p-inputnumber
         inputId="contribution"
         [ngModel]="contribution()"
@@ -212,15 +209,14 @@
         fluid
       />
       <small class="text-muted-color"
-        >За замовчуванням — із налаштувань рахунку; внесок, уже відмічений цього місяця, не
-        плануватиметься вдруге.</small
+        >{{ 'reports.list.monthContributionHint' | transloco }}</small
       >
     </div>
   </div>
   <ng-template #footer>
-    <p-button label="Скасувати" [text]="true" severity="secondary" (onClick)="asking.set(null)" />
+    <p-button [label]="'common.cancel' | transloco" [text]="true" severity="secondary" (onClick)="asking.set(null)" />
     <p-button
-      label="Згенерувати"
+      [label]="'reports.list.generate' | transloco"
       icon="pi pi-bolt"
       [loading]="!!asking() && store.generating() === asking()!.code"
       (onClick)="generate()"

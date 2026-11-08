@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
@@ -10,19 +11,19 @@ import {
 
 @Component({
   selector: 'app-next-reports',
-  imports: [RouterLink],
+  imports: [TranslocoPipe, RouterLink],
   template: `
     <div class="text-sm text-surface-600 dark:text-muted-color">
       <div class="flex items-baseline justify-between gap-3">
-        <span>Наступні рапорти</span>
+        <span>{{ 'reports.next.title' | transloco }}</span>
         <a
           [routerLink]="['/accounts', accountId()]"
           class="text-primary no-underline whitespace-nowrap"
-          >Змінити час →</a
+          >{{ 'reports.next.changeTime' | transloco }}</a
         >
       </div>
       @if (!schedule().generateOnSchedule) {
-        <div class="mt-1">Лише вручну: автоматична генерація вимкнена в плані.</div>
+        <div class="mt-1">{{ 'reports.next.manualOnlyHint' | transloco }}</div>
       } @else {
         <ul class="list-none m-0 mt-1 p-0 flex flex-wrap gap-x-6 gap-y-1">
           @for (report of reports(); track report.code) {
@@ -34,7 +35,7 @@ import {
               <span
                 >{{ report.name }}:
                 <span class="font-medium text-color">{{
-                  report.next ? next(report.next) : 'лише вручну'
+                  report.next ? next(report.next) : ('reports.schedule.manualLower' | transloco)
                 }}</span></span
               >
             </li>

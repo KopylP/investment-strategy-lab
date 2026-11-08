@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 import { computed, DestroyRef, effect, inject, Injectable, resource, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { toProblemMessage } from '../../../core/api/api-client';
@@ -52,7 +53,7 @@ export class ReportDetailStore {
     return this.runCommand(
       action,
       () => this.api.markExecuted(this.requireId(), action.id, fill),
-      'Відмічено як виконане',
+      translate('reports.detail.markedDone'),
     );
   }
 
@@ -60,7 +61,7 @@ export class ReportDetailStore {
     return this.runCommand(
       action,
       () => this.api.recordPartialFill(this.requireId(), action.id, fill),
-      'Часткове виконання збережено',
+      translate('reports.detail.partSaved'),
     );
   }
 
@@ -68,7 +69,7 @@ export class ReportDetailStore {
     return this.runCommand(
       action,
       () => this.api.skip(this.requireId(), action.id, reason),
-      'Дію пропущено',
+      translate('reports.detail.skipped'),
     );
   }
 
@@ -76,15 +77,15 @@ export class ReportDetailStore {
     return this.runCommand(
       action,
       () => this.api.undo(this.requireId(), action.id),
-      'Відмітку скасовано, операцію в журналі сторновано',
+      translate('reports.detail.undone'),
     );
   }
 
   marked(count: number): void {
     this.messages.add({
       severity: 'success',
-      summary: 'Операції підтягнуто',
-      detail: `Відмічено дій: ${count}`,
+      summary: translate('reports.detail.loaded'),
+      detail: translate('reports.detail.markedCount', { count }),
     });
     this.afterChange();
   }
@@ -96,14 +97,14 @@ export class ReportDetailStore {
       await this.api.close(this.requireId());
       this.messages.add({
         severity: 'success',
-        summary: 'Рапорт закрито',
-        detail: 'Невідмічені дії позначено як пропущені',
+        summary: translate('reports.detail.closed'),
+        detail: translate('reports.detail.closedHint'),
       });
       this.afterChange();
     } catch (error) {
       this.messages.add({
         severity: 'error',
-        summary: 'Не вдалося закрити',
+        summary: translate('reports.detail.closeFailed'),
         detail: toProblemMessage(error),
       });
     } finally {
@@ -123,8 +124,8 @@ export class ReportDetailStore {
 
       this.messages.add({
         severity: 'info',
-        summary: 'Новий рапорт готується',
-        detail: 'Коли він буде готовий, цей рапорт буде замінено',
+        summary: translate('reports.detail.regenerating'),
+        detail: translate('reports.detail.regeneratingHint'),
       });
 
       return requestId;
@@ -140,7 +141,7 @@ export class ReportDetailStore {
   private reportNotGenerated(error: unknown): void {
     this.messages.add({
       severity: 'error',
-      summary: 'Не вдалося згенерувати',
+      summary: translate('reports.detail.generateFailed'),
       detail: toProblemMessage(error),
       life: 8000,
     });
@@ -153,13 +154,13 @@ export class ReportDetailStore {
       await this.api.ingestQuotes();
       this.messages.add({
         severity: 'success',
-        summary: 'Котирування оновлено',
-        detail: 'Згенеруйте рапорт заново, щоб план врахував нові ціни',
+        summary: translate('reports.detail.quotesUpdated'),
+        detail: translate('reports.detail.quotesUpdatedHint'),
       });
     } catch (error) {
       this.messages.add({
         severity: 'error',
-        summary: 'Не вдалося оновити котирування',
+        summary: translate('reports.detail.quotesFailed'),
         detail: toProblemMessage(error),
       });
     } finally {
@@ -181,7 +182,7 @@ export class ReportDetailStore {
     } catch (error) {
       this.messages.add({
         severity: 'error',
-        summary: 'Не вдалося зберегти',
+        summary: translate('accounts.detail.saveFailed'),
         detail: toProblemMessage(error),
         life: 8000,
       });

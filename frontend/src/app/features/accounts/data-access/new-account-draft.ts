@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 import { computed, effect, inject, Injectable, resource, signal, untracked } from '@angular/core';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -52,7 +53,7 @@ export class NewAccountDraft {
   private readonly catalogResource = resource({ loader: () => this.strategiesApi.catalog() });
 
   readonly step = signal(1);
-  readonly name = signal('Брокерський рахунок');
+  readonly name = signal(translate('accounts.wizard.defaultAccountName'));
   readonly broker = signal('Revolut');
   readonly currency = signal<'EUR' | 'PLN' | 'USD'>('EUR');
   private readonly chosenTaxPolicy = signal<string | null>(null);
@@ -75,7 +76,7 @@ export class NewAccountDraft {
   readonly showAdvanced = signal(false);
   readonly saving = signal(false);
 
-  readonly brokers = ['Revolut', 'XTB', 'Interactive Brokers', 'Trading 212', 'Інший'].map(
+  readonly brokers = ['Revolut', 'XTB', 'Interactive Brokers', 'Trading 212', translate('accounts.wizard.otherBroker')].map(
     (value) => ({ label: value, value }),
   );
   readonly currencies = ['EUR', 'PLN', 'USD'].map((value) => ({ label: value, value }));
@@ -155,8 +156,8 @@ export class NewAccountDraft {
   readonly scheduleLabel = scheduleLabel;
   readonly reportIcon = reportIcon;
   readonly timingChoices = [
-    { label: 'Як у стратегії', value: false },
-    { label: 'Свій час', value: true },
+    { label: translate('accounts.asInStrategyLabel'), value: false },
+    { label: translate('accounts.wizard.ownTime'), value: true },
   ];
 
   readonly summary = computed(() => {
@@ -194,14 +195,14 @@ export class NewAccountDraft {
       strategies.find((strategy) => strategy.name.startsWith('US')) ??
       strategies[1] ??
       strategies[0];
-    if (preset === 'simple') this.sleeves.set([this.sleeve('Основний', 100, eu?.id ?? null)]);
+    if (preset === 'simple') this.sleeves.set([this.sleeve(translate('accounts.wizard.mainSleeve'), 100, eu?.id ?? null)]);
     else if (preset === 'balanced')
       this.sleeves.set([
-        this.sleeve('Європа', 70, eu?.id ?? null),
-        this.sleeve('США', 30, us?.id ?? null),
+        this.sleeve(translate('accounts.wizard.europe'), 70, eu?.id ?? null),
+        this.sleeve(translate('accounts.wizard.usa'), 30, us?.id ?? null),
       ]);
     else if (!this.sleeves().length)
-      this.sleeves.set([this.sleeve('Основний', 100, eu?.id ?? null)]);
+      this.sleeves.set([this.sleeve(translate('accounts.wizard.mainSleeve'), 100, eu?.id ?? null)]);
   }
 
   update(key: number, change: Partial<SleeveDraft>): void {
@@ -216,7 +217,7 @@ export class NewAccountDraft {
     this.sleeves.update((sleeves) => [
       ...sleeves,
       this.sleeve(
-        `Під-портфель ${sleeves.length + 1}`,
+        translate('accounts.wizard.defaultSleeveName', { number: sleeves.length + 1 }),
         Math.max(0, 100 - this.total()),
         this.strategies()[0]?.id ?? null,
       ),
@@ -282,7 +283,7 @@ export class NewAccountDraft {
   private reportNotOpened(error: unknown): void {
     this.messages.add({
       severity: 'error',
-      summary: 'Рахунок не створено',
+      summary: translate('accounts.wizard.notCreated'),
       detail: toProblemMessage(error),
       life: 8000,
     });
@@ -334,9 +335,9 @@ export class NewAccountDraft {
       } catch (error) {
         this.messages.add({
           severity: 'warn',
-          summary: `Час рапорту «${report.name}» не збережено`,
+          summary: translate('accounts.wizard.timeNotSaved', { report: report.name }),
           life: 10000,
-          detail: `${toProblemMessage(error)} Рапорт приходитиме за часом стратегії; змінити можна на сторінці рахунку.`,
+          detail: translate('accounts.wizard.timeNotSavedHint', { error: toProblemMessage(error) }),
         });
       }
     }

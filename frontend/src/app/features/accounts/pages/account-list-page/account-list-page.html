@@ -1,9 +1,9 @@
 <app-page-header
-  title="Рахунки"
-  subtitle="Брокерський рахунок поділено на віртуальні під-портфелі, кожним керує своя стратегія"
+  [title]="'routes.accounts' | transloco"
+  [subtitle]="'accounts.list.subtitle' | transloco"
 >
   @if (accounts.accounts().length) {
-    <p-button label="Новий рахунок" icon="pi pi-plus" routerLink="/accounts/new" />
+    <p-button [label]="'routes.newAccount' | transloco" icon="pi pi-plus" routerLink="/accounts/new" />
   }
 </app-page-header>
 
@@ -13,10 +13,10 @@
   <div class="card">
     <app-empty-state
       icon="pi pi-wallet"
-      title="Рахунків ще немає"
-      text="Відкрийте рахунок, задайте під-портфелі з цільовими частками та стратегіями — і перший рапорт готовий за хвилину."
+      [title]="'accounts.list.empty' | transloco"
+      [text]="'accounts.list.emptyHint' | transloco"
     >
-      <p-button label="Відкрити рахунок" icon="pi pi-plus" routerLink="/accounts/new" />
+      <p-button [label]="'holdings.openAccount' | transloco" icon="pi pi-plus" routerLink="/accounts/new" />
     </app-empty-state>
   </div>
 } @else {
@@ -35,7 +35,7 @@
           </div>
           <div class="flex gap-2">
             @if (account.id === accounts.currentId()) {
-              <p-tag value="поточний" severity="info" />
+              <p-tag [value]="'accounts.list.current' | transloco" severity="info" />
             }
             <p-tag [value]="account.taxPolicyCode" severity="secondary" />
           </div>

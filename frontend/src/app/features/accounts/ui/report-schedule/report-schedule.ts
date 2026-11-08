@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, inject, input, resource, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -19,14 +20,14 @@ import { ReportTimingEditor } from '../../../reports/ui/report-timing-editor/rep
 
 @Component({
   selector: 'app-report-schedule',
-  imports: [RouterLink, Button, Message, Tag, DatePipe, ReportTimingEditor],
+  imports: [TranslocoPipe, RouterLink, Button, Message, Tag, DatePipe, ReportTimingEditor],
   template: `
     @if (schedule.value(); as schedule) {
       @if (!schedule.generateOnSchedule) {
         <p-message
           severity="warn"
           styleClass="mb-3"
-          text="Автоматична генерація вимкнена в плані — рапорти лише вручну."
+          [text]="'accounts.schedule.autoOff' | transloco"
         />
       }
       @if (schedule.reports.length) {
@@ -47,8 +48,8 @@ import { ReportTimingEditor } from '../../../reports/ui/report-timing-editor/rep
                   <div class="text-xs text-muted-color mt-1">
                     {{
                       report.own
-                        ? 'Ваш час · стратегія: ' + label(report.strategySchedule)
-                        : 'Час стратегії'
+                        ? ('accounts.schedule.ownTime' | transloco: { strategy: label(report.strategySchedule) })
+                        : ('accounts.schedule.strategyTime' | transloco)
                     }}
                     · {{ report.strategies.join(' · ') }}
                   </div>
@@ -56,7 +57,7 @@ import { ReportTimingEditor } from '../../../reports/ui/report-timing-editor/rep
                 <div class="text-sm flex flex-wrap items-center gap-2 sm:flex-col sm:items-end">
                   @if (report.next) {
                     <div class="flex gap-1 sm:block sm:text-right">
-                      <div class="text-muted-color">наступний</div>
+                      <div class="text-muted-color">{{ 'accounts.schedule.next' | transloco }}</div>
                       <div class="font-semibold">
                         {{ report.next.slice(0, 10) | date }}, {{ report.next.slice(11) }}
                       </div>
@@ -64,7 +65,7 @@ import { ReportTimingEditor } from '../../../reports/ui/report-timing-editor/rep
                   }
                   @if (editing() !== report.code) {
                     <p-button
-                      label="Змінити час"
+                      [label]="'accounts.schedule.changeTime' | transloco"
                       icon="pi pi-clock"
                       size="small"
                       [text]="true"
@@ -79,7 +80,7 @@ import { ReportTimingEditor } from '../../../reports/ui/report-timing-editor/rep
                   <div class="flex flex-wrap justify-end gap-2">
                     @if (report.own) {
                       <p-button
-                        label="Як у стратегії"
+                        [label]="'accounts.asInStrategyLabel' | transloco"
                         severity="secondary"
                         [text]="true"
                         [disabled]="saving()"
@@ -87,14 +88,14 @@ import { ReportTimingEditor } from '../../../reports/ui/report-timing-editor/rep
                       />
                     }
                     <p-button
-                      label="Скасувати"
+                      [label]="'common.cancel' | transloco"
                       severity="secondary"
                       [text]="true"
                       [disabled]="saving()"
                       (onClick)="editing.set(null)"
                     />
                     <p-button
-                      label="Зберегти"
+                      [label]="'common.save' | transloco"
                       icon="pi pi-check"
                       [loading]="saving()"
                       [disabled]="!complete(draft())"
@@ -108,13 +109,12 @@ import { ReportTimingEditor } from '../../../reports/ui/report-timing-editor/rep
         </ul>
       } @else {
         <div class="text-muted-color">
-          Призначте стратегію під-портфелю — рапорти задає стратегія.
+          {{ 'accounts.schedule.assignStrategy' | transloco }}
         </div>
       }
       <div class="text-xs text-muted-color mt-3">
-        Які рапорти бувають, задає стратегія; коли — вирішуєте ви для цього рахунку, інакше діє час
-        стратегії. Час — {{ schedule.timeZone }}.
-        <a routerLink="/strategies" class="text-primary">Стратегії →</a>
+        {{ 'accounts.schedule.hint' | transloco: { timeZone: schedule.timeZone } }}
+        <a routerLink="/strategies" class="text-primary">{{ 'accounts.schedule.strategiesLink' | transloco }}</a>
       </div>
     }
   `,
@@ -161,7 +161,7 @@ export class ReportScheduleCard {
   protected reset(report: ScheduledReport): Promise<void> {
     return this.apply(
       () => this.api.delete<ReportSchedule>(`${this.url(this.accountId())}/${report.code}`),
-      `${report.name}: час стратегії`,
+      translate('accounts.schedule.resetDone', { report: report.name }),
     );
   }
 
@@ -175,7 +175,7 @@ export class ReportScheduleCard {
     } catch (error) {
       this.messages.add({
         severity: 'error',
-        summary: 'Розклад не змінено',
+        summary: translate('accounts.schedule.notChanged'),
         detail: toProblemMessage(error),
       });
     } finally {

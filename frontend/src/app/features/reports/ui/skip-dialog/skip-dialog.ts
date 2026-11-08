@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Button } from 'primeng/button';
@@ -8,7 +9,7 @@ import { ReportActionVm } from '../../models/report-vm';
 
 @Component({
   selector: 'app-skip-dialog',
-  imports: [FormsModule, Button, SelectButton, Textarea],
+  imports: [TranslocoPipe, FormsModule, Button, SelectButton, Textarea],
   templateUrl: './skip-dialog.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -18,10 +19,10 @@ export class SkipDialog {
     .action;
 
   protected readonly presets = [
-    'Сума замала',
-    'Немає вільних коштів',
-    'Вирішив почекати',
-    'Брокер не дав виконати',
+    translate('reasons.tooSmall'),
+    translate('reasons.noCash'),
+    translate('reasons.wait'),
+    translate('reasons.broker'),
   ].map((label) => ({ label, value: label }));
   protected readonly reason = signal('');
 

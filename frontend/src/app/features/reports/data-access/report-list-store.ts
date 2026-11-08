@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 import {
   afterNextRender,
   computed,
@@ -140,8 +141,8 @@ export class ReportListStore {
       this.awaited = requestId;
       this.messages.add({
         severity: 'info',
-        summary: `«${report.name}» готується`,
-        detail: 'Стратегії рахують план; рапорт відкриється, щойно буде готовий.',
+        summary: translate('reports.list.preparingNamed', { name: report.name }),
+        detail: translate('reports.list.preparingHint'),
       });
       this.requestsResource.reload();
     } catch (error) {
@@ -154,7 +155,7 @@ export class ReportListStore {
   private reportNotGenerated(report: ScheduledReport, error: unknown): void {
     this.messages.add({
       severity: 'error',
-      summary: `Не вдалося згенерувати «${report.name}»`,
+      summary: translate('reports.list.generateFailedNamed', { name: report.name }),
       detail: toProblemMessage(error),
       life: 8000,
     });
@@ -192,7 +193,7 @@ export class ReportListStore {
     if (request.status === 'Failed') {
       this.messages.add({
         severity: 'error',
-        summary: `Не вдалося підготувати «${request.title}»`,
+        summary: translate('reports.list.prepareFailedNamed', { name: request.title }),
         detail: request.error ?? undefined,
         life: 8000,
       });
@@ -200,7 +201,7 @@ export class ReportListStore {
       return;
     }
 
-    this.messages.add({ severity: 'success', summary: `${request.title}: рапорт готовий` });
+    this.messages.add({ severity: 'success', summary: translate('reports.list.readyNamed', { name: request.title }) });
 
     if (awaited && request.reportId) void this.router.navigate(['/reports', request.reportId]);
   }

@@ -1,16 +1,14 @@
 <div class="card">
   <p-message severity="secondary" styleClass="mb-5">
     <div>
-      <b>Внесок</b> — скільки ви плануєте докладати регулярно. У кожному рапорті сервіс скаже,
-      скільки внести і що на ці гроші купити. Суму можна змінити при кожному рапорті.
+      <b>{{ 'accounts.wizard.contributions.contribution' | transloco }}</b> {{ 'accounts.wizard.contributions.hint' | transloco }}
     </div>
     <div class="mt-2">
-      <i class="pi pi-pencil mr-1"></i>Внесок за замовчуванням і додаткові налаштування — у блоці
-      «План» на сторінці рахунку (<b>Налаштування → Рахунки</b>).
+      <i class="pi pi-pencil mr-1"></i>{{ 'accounts.wizard.contributions.where' | transloco }}<b>{{ 'accounts.settingsAccounts' | transloco }}</b>).
     </div>
   </p-message>
   <div class="flex flex-col gap-2 max-w-sm">
-    <label for="contribution" class="font-medium">Щомісячний внесок</label>
+    <label for="contribution" class="font-medium">{{ 'accounts.plan.monthlyContribution' | transloco }}</label>
     <p-inputnumber
       inputId="contribution"
       [ngModel]="draft.plan().monthlyContribution"
@@ -32,7 +30,7 @@
       [class.pi-chevron-down]="!draft.showAdvanced()"
       [class.pi-chevron-up]="draft.showAdvanced()"
     ></i
-    >Додаткові налаштування (можна не чіпати)
+    >{{ 'accounts.wizard.contributions.extra' | transloco }}
   </button>
   @if (draft.showAdvanced()) {
     <div class="mt-4">
@@ -46,12 +44,12 @@
   }
   <div class="flex justify-between mt-6">
     <p-button
-      label="Назад"
+      [label]="'common.back' | transloco"
       icon="pi pi-arrow-left"
       severity="secondary"
       [text]="true"
       (onClick)="draft.step.set(2)"
     />
-    <p-button label="Далі" icon="pi pi-arrow-right" iconPos="right" (onClick)="draft.step.set(4)" />
+    <p-button [label]="'common.next' | transloco" icon="pi pi-arrow-right" iconPos="right" (onClick)="draft.step.set(4)" />
   </div>
 </div>

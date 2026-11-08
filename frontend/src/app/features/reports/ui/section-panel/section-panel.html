@@ -3,31 +3,29 @@
   @if (s.error) {
     <p-message
       severity="error"
-      [text]="
-        'Стратегія не відповіла: ' + s.error + '. Позиції під-портфеля цього разу не змінюються.'
-      "
+      [text]="'reports.section.strategyFailed' | transloco: { error: s.error }"
     />
   }
 
   <div class="flex flex-wrap items-center gap-2">
     <p-tag [value]="s.strategyLabel" severity="secondary" icon="pi pi-sliders-h" />
-    <p-tag [value]="'Цільова частка ' + (s.targetShare | percent: 0)" severity="secondary" />
+    <p-tag [value]="'reports.section.targetShare' | transloco: { share: s.targetShare | percent: 0 }" severity="secondary" />
     @if (s.marketIsFavorable !== null) {
       <p-tag
-        [value]="s.marketIsFavorable ? 'Ринок у нормі' : 'Ринок слабкий'"
+        [value]="s.marketIsFavorable ? ('reports.section.marketOk' | transloco) : ('reports.section.marketWeak' | transloco)"
         [severity]="s.marketIsFavorable ? 'success' : 'warn'"
         [icon]="s.marketIsFavorable ? 'pi pi-sun' : 'pi pi-cloud'"
       />
       @if (s.investFraction !== null && s.investFraction < 1) {
         <p-tag
-          [value]="'Інвестуємо ' + (s.investFraction | percent: 0) + ' внеску'"
+          [value]="'reports.section.investing' | transloco: { share: s.investFraction | percent: 0 }"
           severity="info"
         />
       }
     }
     @if (s.contribution) {
       <p-tag
-        [value]="'Внесок ' + (s.contribution | money: currency())"
+        [value]="'reports.section.contribution' | transloco: { amount: s.contribution | money: currency() }"
         severity="info"
         icon="pi pi-plus"
       />
@@ -53,15 +51,15 @@
 
   @if (s.orders.length) {
     <div>
-      <h3 class="text-lg font-semibold mt-4 mb-3">Ордери під-портфеля (до неттінгу)</h3>
+      <h3 class="text-lg font-semibold mt-4 mb-3">{{ 'reports.section.orders' | transloco }}</h3>
       <p-table [value]="s.orders" tableStyleClass="sm:min-w-[40rem]" size="small">
         <ng-template #header>
           <tr>
-            <th class="hidden sm:table-cell">Дія</th>
+            <th class="hidden sm:table-cell">{{ 'reports.actions.action' | transloco }}</th>
             <th>ETF</th>
-            <th class="text-right hidden sm:table-cell">Штук</th>
-            <th class="text-right">Сума</th>
-            <th class="hidden sm:table-cell">Чому</th>
+            <th class="text-right hidden sm:table-cell">{{ 'holdings.sleeve.units' | transloco }}</th>
+            <th class="text-right">{{ 'transactions.cash.amount' | transloco }}</th>
+            <th class="hidden sm:table-cell">{{ 'reports.section.why' | transloco }}</th>
           </tr>
         </ng-template>
         <ng-template #body let-order>
@@ -86,16 +84,16 @@
 
   @if (s.allocation.length) {
     <div>
-      <h3 class="text-lg font-semibold mt-4 mb-3">До → після</h3>
+      <h3 class="text-lg font-semibold mt-4 mb-3">{{ 'reports.section.beforeAfter' | transloco }}</h3>
       <p-table [value]="s.allocation" tableStyleClass="sm:min-w-[40rem]" size="small">
         <ng-template #header>
           <tr>
-            <th>Позиція</th>
-            <th class="text-right hidden sm:table-cell">Було</th>
-            <th class="text-right">Вага</th>
-            <th class="text-right hidden sm:table-cell">Стане</th>
-            <th class="text-right">Вага</th>
-            <th class="text-right">Ціль</th>
+            <th>{{ 'reports.section.position' | transloco }}</th>
+            <th class="text-right hidden sm:table-cell">{{ 'reports.section.was' | transloco }}</th>
+            <th class="text-right">{{ 'holdings.sleeve.weight' | transloco }}</th>
+            <th class="text-right hidden sm:table-cell">{{ 'reports.section.willBe' | transloco }}</th>
+            <th class="text-right">{{ 'holdings.sleeve.weight' | transloco }}</th>
+            <th class="text-right">{{ 'overview.allocation.target' | transloco }}</th>
           </tr>
         </ng-template>
         <ng-template #body let-row>
@@ -103,7 +101,7 @@
             <td class="font-medium">
               {{ row.label }}
               @if (row.role === 'Exit') {
-                <p-tag value="вихід" severity="danger" styleClass="ml-2" />
+                <p-tag [value]="'reports.section.exit' | transloco" severity="danger" styleClass="ml-2" />
               }
             </td>
             <td class="text-right hidden sm:table-cell">
@@ -121,7 +119,7 @@
         </ng-template>
         <ng-template #footer>
           <tr class="hidden sm:table-row">
-            <td>Разом</td>
+            <td>{{ 'accounts.detail.total' | transloco }}</td>
             <td class="text-right hidden sm:table-cell">{{ s.totalBefore | money: currency() }}</td>
             <td></td>
             <td class="text-right hidden sm:table-cell">{{ s.totalAfter | money: currency() }}</td>
@@ -144,14 +142,14 @@
       >
         <ng-template #header>
           <tr>
-            <th class="hidden sm:table-cell">Ранг</th>
+            <th class="hidden sm:table-cell">{{ 'reports.section.rank' | transloco }}</th>
             <th>{{ table.instrumentLabel }}</th>
             @for (column of table.columns; track column.id) {
               <th [class]="cellClass(column)" [pTooltip]="column.hint ?? ''">
                 {{ column.label }}
               </th>
             }
-            <th>Рішення</th>
+            <th>{{ 'transactions.rows.decision' | transloco }}</th>
           </tr>
         </ng-template>
         <ng-template #body let-score>
@@ -207,7 +205,7 @@
             }
             <td>
               @if (score.isTarget) {
-                <p-tag [value]="'ціль ' + (score.targetWeight | percent: 0)" severity="success" />
+                <p-tag [value]="'reports.section.targetWeight' | transloco: { weight: score.targetWeight | percent: 0 }" severity="success" />
               }
               <div class="hidden sm:block text-xs text-muted-color mt-1">{{ score.reason }}</div>
             </td>
@@ -220,10 +218,10 @@
   @if (s.risk; as risk) {
     <div class="flex flex-col gap-3">
       <div class="flex items-center gap-2">
-        <h3 class="text-lg font-semibold m-0">Ризик</h3>
+        <h3 class="text-lg font-semibold m-0">{{ 'reports.section.risk' | transloco }}</h3>
         <p-tag
           [value]="
-            risk.status === 'ok' ? 'Усе гаразд' : risk.status === 'watch' ? 'Стежити' : 'Діяти'
+            risk.status === 'ok' ? ('reports.section.allGood' | transloco) : risk.status === 'watch' ? ('reports.section.watch' | transloco) : ('reports.section.act' | transloco)
           "
           [severity]="
             risk.status === 'ok' ? 'success' : risk.status === 'watch' ? 'warn' : 'danger'
@@ -237,11 +235,11 @@
         <ng-template #header>
           <tr>
             <th>ETF</th>
-            <th class="text-right hidden sm:table-cell">Вартість</th>
+            <th class="text-right hidden sm:table-cell">{{ 'holdings.sleeve.value' | transloco }}</th>
             <th class="text-right">P&amp;L</th>
-            <th class="text-right whitespace-nowrap">Від піку</th>
-            <th class="text-right hidden sm:table-cell">Вихід</th>
-            <th class="hidden sm:table-cell">Сигнали</th>
+            <th class="text-right whitespace-nowrap">{{ 'reports.section.fromPeak' | transloco }}</th>
+            <th class="text-right hidden sm:table-cell">{{ 'reports.section.exitLevel' | transloco }}</th>
+            <th class="hidden sm:table-cell">{{ 'reports.section.signals' | transloco }}</th>
           </tr>
         </ng-template>
         <ng-template #body let-position>
@@ -273,7 +271,7 @@
             </td>
             <td class="hidden sm:table-cell">
               @if (position.sell) {
-                <p-tag value="продати" severity="danger" />
+                <p-tag [value]="'reports.section.sell' | transloco" severity="danger" />
               }
               @for (alert of position.alerts; track $index) {
                 <div class="text-xs text-muted-color">{{ alert }}</div>
@@ -284,7 +282,7 @@
             <tr class="sm:hidden">
               <td colspan="3" class="pt-0!">
                 @if (position.sell) {
-                  <p-tag value="продати" severity="danger" styleClass="mb-1" />
+                  <p-tag [value]="'reports.section.sell' | transloco" severity="danger" styleClass="mb-1" />
                 }
                 @for (alert of position.alerts; track $index) {
                   <div class="text-xs text-muted-color">{{ alert }}</div>

@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -15,7 +16,7 @@ import { AccountDetailStore } from '../../data-access/account-detail-store';
 
 @Component({
   selector: 'app-rename-sub-portfolio-dialog',
-  imports: [FormsModule, Button, Dialog, InputText],
+  imports: [TranslocoPipe, FormsModule, Button, Dialog, InputText],
   templateUrl: './rename-sub-portfolio-dialog.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

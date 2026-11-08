@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -19,7 +20,7 @@ import { ReportStatusTag } from '../../ui/report-status-tag/report-status-tag';
 
 @Component({
   selector: 'app-report-list-page',
-  imports: [
+  imports: [TranslocoPipe, 
     FormsModule,
     NgTemplateOutlet,
     RouterLink,

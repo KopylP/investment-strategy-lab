@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { ProgressBar } from 'primeng/progressbar';
@@ -7,7 +8,7 @@ import { Money } from '../../../../shared/ui/money/money';
 import { Viewport } from '../../../../shared/ui/viewport';
 @Component({
   selector: 'app-report-progress',
-  imports: [Money, NgTemplateOutlet, ProgressBar],
+  imports: [TranslocoPipe, Money, NgTemplateOutlet, ProgressBar],
   templateUrl: './report-progress.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

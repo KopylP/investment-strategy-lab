@@ -1,6 +1,6 @@
 <div class="flex flex-col gap-4 pt-1">
   <p class="m-0 text-muted-color">
-    Дія лишиться в рапорті як пропущена з причиною; журнал не зміниться.
+    {{ 'reports.skip.hint' | transloco }}
   </p>
   <p-selectbutton
     [options]="presets"
@@ -16,13 +16,13 @@
     rows="3"
     [ngModel]="reason()"
     (ngModelChange)="reason.set($event)"
-    placeholder="Причина"
+    [placeholder]="'reports.skip.reason' | transloco"
     fluid
   ></textarea>
   <div class="flex justify-end gap-2">
-    <p-button label="Скасувати" [text]="true" severity="secondary" (onClick)="cancel()" />
+    <p-button [label]="'common.cancel' | transloco" [text]="true" severity="secondary" (onClick)="cancel()" />
     <p-button
-      label="Пропустити"
+      [label]="'reports.skip.skip' | transloco"
       icon="pi pi-forward"
       severity="contrast"
       [disabled]="!reason().trim()"

@@ -3,20 +3,21 @@
     <p-skeleton height="2rem" width="20rem" styleClass="mb-4" /><p-skeleton height="12rem" />
   </div>
 } @else if (store.loadError()) {
-  <div class="card"><p-message severity="error" text="Не вдалося завантажити рапорт" /></div>
+  <div class="card"><p-message severity="error" [text]="'reports.detail.loadFailed' | transloco" /></div>
 } @else if (store.report(); as report) {
   <app-page-header
     backLink="/reports"
-    backLabel="Рапорти"
+    [backLabel]="'routes.reports' | transloco"
     [title]="report.summary.title"
     [subtitle]="
-      report.summary.accountName +
-      ' · котирування на ' +
-      (report.summary.marketAsOf | date) +
-      ' · згенеровано ' +
-      (report.summary.generatedAt | dateTime) +
-      ' ' +
-      report.summary.triggerLabel
+      'reports.detail.subtitle'
+        | transloco
+          : {
+              account: report.summary.accountName,
+              marketAsOf: report.summary.marketAsOf | date,
+              generatedAt: report.summary.generatedAt | dateTime,
+              trigger: report.summary.triggerLabel,
+            }
     "
   >
     <app-report-status-tag [status]="report.summary.status" />
@@ -27,7 +28,7 @@
           [text]="true"
           [rounded]="true"
           severity="secondary"
-          ariaLabel="Дії з рапортом"
+          [ariaLabel]="'reports.detail.menu' | transloco"
           (onClick)="pageMenu.toggle($event)"
         />
         <p-menu #pageMenu [model]="pageActions()" [popup]="true" appendTo="body" />
@@ -35,7 +36,7 @@
     } @else {
       @if (report.summary.status !== 'Superseded') {
         <p-button
-          label="Згенерувати заново"
+          [label]="'reports.detail.regenerate' | transloco"
           icon="pi pi-refresh"
           severity="secondary"
           [outlined]="true"
@@ -45,12 +46,12 @@
       }
       @if (store.canMark()) {
         <p-button
-          label="Довантажити операції"
+          [label]="'reports.detail.loadOperations' | transloco"
           icon="pi pi-download"
           (onClick)="openLoadOperations()"
         />
         <p-button
-          label="Закрити рапорт"
+          [label]="'reports.detail.close' | transloco"
           icon="pi pi-lock"
           severity="secondary"
           [loading]="store.busy() === 'close'"
@@ -62,9 +63,9 @@
 
   @if (report.summary.supersededBy) {
     <p-message severity="info" styleClass="mb-4">
-      <span>Цей рапорт замінено новішим. </span>
+      <span>{{ 'reports.detail.superseded' | transloco }} </span>
       <a [routerLink]="['/reports', report.summary.supersededBy]" class="font-medium underline"
-        >Відкрити актуальний</a
+        >{{ 'reports.detail.openCurrent' | transloco }}</a
       >
     </p-message>
   }
@@ -77,7 +78,7 @@
       @if (report.quotesLookStale && store.canMark()) {
         <div>
           <p-button
-            label="Оновити котирування"
+            [label]="'reports.detail.updateQuotes' | transloco"
             icon="pi pi-cloud-download"
             size="small"
             [outlined]="true"
@@ -93,9 +94,9 @@
 
   <div class="card mt-3 sm:mt-4">
     <div class="flex flex-wrap items-center justify-between gap-2 mb-2 sm:mb-4">
-      <h2 class="text-xl font-semibold m-0">Що зробити в брокера</h2>
+      <h2 class="text-xl font-semibold m-0">{{ 'reports.detail.whatToDo' | transloco }}</h2>
       <span class="hidden sm:inline text-sm text-muted-color"
-        >Порядок: внесок → продажі → перекази → купівлі → парковка</span
+        >{{ 'reports.detail.order' | transloco }}</span
       >
     </div>
     @if (store.actions().length) {
@@ -110,21 +111,21 @@
     } @else {
       <p-message
         severity="success"
-        text="Цього разу нічого робити не треба: портфель відповідає стратегіям."
+        [text]="'reports.detail.nothingToDo' | transloco"
       />
     }
   </div>
 
   @if (report.sections.length) {
     <div class="card mt-3 sm:mt-4">
-      <h2 class="text-xl font-semibold mb-4">Обґрунтування по під-портфелях</h2>
+      <h2 class="text-xl font-semibold mb-4">{{ 'reports.detail.rationale' | transloco }}</h2>
       <p-tabs [value]="report.sections[0].id" [scrollable]="true">
         <p-tablist>
           @for (section of report.sections; track section.id) {
             <p-tab [value]="section.id">
               {{ section.name }}
               @if (section.error) {
-                <p-tag value="помилка" severity="danger" styleClass="ml-2" />
+                <p-tag [value]="'reports.detail.errorTag' | transloco" severity="danger" styleClass="ml-2" />
               }
             </p-tab>
           }

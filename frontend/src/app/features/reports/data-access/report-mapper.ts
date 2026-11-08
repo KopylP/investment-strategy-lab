@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 import { formatMoney, formatPeriod, formatQuantity } from '../../../shared/pipes/format';
 import {
   ActionKind,
@@ -23,15 +24,15 @@ import {
 } from '../models/report-vm';
 
 const kindLabels: Record<ReportSummaryDto['kind'], string> = {
-  Monthly: 'внесок, купівлі й продажі',
-  Recalculation: 'перерахунок',
-  RiskReview: 'продаж лише за сигналом виходу',
+  Monthly: translate('kind.Monthly'),
+  Recalculation: translate('kind.Recalculation'),
+  RiskReview: translate('kind.RiskReview'),
 };
 
 const triggerLabels: Record<ReportSummaryDto['trigger'], string> = {
-  Scheduled: 'за розкладом',
-  OnDemand: 'на вимогу',
-  Signal: 'за сигналом',
+  Scheduled: translate('trigger.Scheduled'),
+  OnDemand: translate('trigger.OnDemand'),
+  Signal: translate('trigger.Signal'),
 };
 
 export function toRequestVm(request: ReportRequestDto): ReportRequestVm {
@@ -44,7 +45,9 @@ export function toRequestVm(request: ReportRequestDto): ReportRequestVm {
     status: request.status === 'Failed' ? 'Failed' : 'Pending',
     requestedAt: request.requestedAt,
     progressLabel:
-      request.strategies > 0 ? `${request.strategiesAnswered} з ${request.strategies}` : null,
+      request.strategies > 0
+        ? translate('reports.list.ofTotal', { open: request.strategiesAnswered, total: request.strategies })
+        : null,
     error: request.error,
   };
 }
@@ -86,7 +89,7 @@ function toContributionVm(
 ): ReportVm['contribution'] {
   const plan = report.contributionPlan;
   const splitLabel =
-    plan.split === 'FixedSplit' ? 'за цільовими частками' : 'тому, хто найбільше відстає';
+    plan.split === 'FixedSplit' ? translate('split.FixedSplit') : translate('split.laggard');
   const parts = plan.parts.map((part) => ({
     name: subName(part.subPortfolioId),
     amount: part.amount,
@@ -101,7 +104,7 @@ export function toReportVm(report: ReportDetailsDto): ReportVm {
     id ? (report.instruments[id]?.symbol ?? id.slice(0, 8)) : '';
   const readable = (text: string) =>
     text.replace(guid, (id) => report.instruments[id.toLowerCase()]?.symbol ?? id);
-  const subName = (id: string | null) => (id ? (report.subPortfolios[id] ?? 'під-портфель') : '');
+  const subName = (id: string | null) => (id ? (report.subPortfolios[id] ?? translate('reports.mapper.subPortfolioFallback')) : '');
   const isOpenForMarking = summary.status === 'New' || summary.status === 'InProgress';
 
   const actions = report.actions.map((action) =>
@@ -114,7 +117,7 @@ export function toReportVm(report: ReportDetailsDto): ReportVm {
     actions,
     sections: report.sections.map((section) => toSectionVm(section, symbol, readable)),
     warnings: [...new Set(report.warnings)],
-    quotesLookStale: report.warnings.some((warning) => warning.includes('котирув')),
+    quotesLookStale: report.warnings.some((warning) => warning.includes(translate('reports.mapper.quoteWarningMarker'))),
     contribution: toContributionVm(report, subName),
     review: report.review,
     taxImpact: toTaxImpactVm(report.taxEstimate, actions),
@@ -123,7 +126,7 @@ export function toReportVm(report: ReportDetailsDto): ReportVm {
 }
 
 function signedTax(change: number, currency: string): string {
-  if (change === 0) return 'без змін';
+  if (change === 0) return translate('reports.mapper.noChange');
 
   const sign = change > 0 ? '+' : '−';
 
@@ -141,7 +144,7 @@ function toTaxImpactVm(
 
   if (estimate.yearTaxBefore === null || estimate.yearTaxBefore === undefined) {
     return {
-      change: `≈ податок ${formatMoney(estimate.taxChange, currency, 0)}`,
+      change: translate('reports.mapper.taxApprox', { amount: formatMoney(estimate.taxChange, currency, 0) }),
       yearChange: null,
       carriedLoss: null,
       rowsNote: null,
@@ -154,12 +157,16 @@ function toTaxImpactVm(
   const salesCount = actions.filter((action) => action.taxLabel !== null).length;
 
   return {
-    change: `≈ податок ${signedTax(estimate.taxChange, currency)}`,
-    yearChange: `за ${estimate.year}: ${formatMoney(before, currency, 0)} → ${formatMoney(after, currency, 0)}`,
+    change: translate('reports.mapper.taxApprox', { amount: signedTax(estimate.taxChange, currency) }),
+    yearChange: translate('reports.mapper.yearChange', {
+      year: estimate.year,
+      before: formatMoney(before, currency, 0),
+      after: formatMoney(after, currency, 0),
+    }),
     carriedLoss: carriedLossLabel(estimate.carriedLoss, currency),
     rowsNote:
       salesCount > 1
-        ? 'У рядках — вплив, якщо продати лише цю позицію; разом вони можуть давати іншу суму.'
+        ? translate('reports.mapper.salesHint')
         : null,
     notes,
   };
@@ -167,7 +174,7 @@ function toTaxImpactVm(
 
 function carriedLossLabel(carriedLoss: number | null, currency: string): string | null {
   return carriedLoss
-    ? `збиток ${formatMoney(carriedLoss, currency, 0)} перейде на наступні роки`
+    ? translate('reports.mapper.carriedLoss', { amount: formatMoney(carriedLoss, currency, 0) })
     : null;
 }
 
@@ -179,19 +186,25 @@ function saleTaxLabel(action: ReportActionDto, estimate: TaxEstimateDto | null):
   const gain = action.estimatedGain ?? 0;
 
   if (estimate.yearTaxBefore === null || estimate.yearTaxBefore === undefined) {
-    return `≈ податок ${formatMoney(action.estimatedTaxChange, currency, 0)} (зиск ${formatMoney(gain, currency, 0)})`;
+    return translate('reports.mapper.taxWithGain', {
+      tax: formatMoney(action.estimatedTaxChange, currency, 0),
+      gain: formatMoney(gain, currency, 0),
+    });
   }
 
   const outcome =
     gain < 0
-      ? `збиток ${formatMoney(-gain, currency, 0)}`
-      : `зиск ${formatMoney(gain, currency, 0)}`;
+      ? translate('reports.mapper.loss', { amount: formatMoney(-gain, currency, 0) })
+      : translate('reports.mapper.gain', { amount: formatMoney(gain, currency, 0) });
   const carriedLoss = action.estimatedCarriedLoss;
   const details = carriedLoss
-    ? `${outcome}, з них ${formatMoney(carriedLoss, currency, 0)} перейде на наступні роки`
+    ? translate('reports.mapper.outcomeWithCarried', { outcome, amount: formatMoney(carriedLoss, currency, 0) })
     : outcome;
 
-  return `≈ податок ${signedTax(action.estimatedTaxChange, currency)} (${details})`;
+  return translate('reports.mapper.taxWithDetails', {
+    tax: signedTax(action.estimatedTaxChange, currency),
+    details,
+  });
 }
 
 function plannedTotals(actions: ReportActionVm[]) {
@@ -212,10 +225,12 @@ function toActionVm(
 ): ReportActionVm {
   const ticker = symbol(action.instrumentId);
   const isMoney = action.kind === 'Contribute';
-  const unit = isMoney ? '' : ' шт.';
   const fillSummary =
     action.status === 'PartiallyExecuted'
-      ? `${formatQuantity(action.filledQuantity)} з ${formatQuantity(action.plannedQuantity)}${unit}`
+      ? translate(isMoney ? 'reports.mapper.fillMoney' : 'reports.mapper.fillUnits', {
+          filled: formatQuantity(action.filledQuantity),
+          planned: formatQuantity(action.plannedQuantity),
+        })
       : undefined;
   const canMark = isOpen && (action.status === 'Pending' || action.status === 'PartiallyExecuted');
 
@@ -265,17 +280,14 @@ function toActionVm(
 function titleOf(kind: ActionKind, ticker: string, from: string, to: string): string {
   switch (kind) {
     case 'Contribute':
-      return 'Внести гроші на рахунок';
+      return translate('reports.mapper.contribute');
     case 'Buy':
-      return `Купити ${ticker}`;
     case 'Sell':
-      return `Продати ${ticker}`;
     case 'Park':
-      return `Запаркувати в ${ticker}`;
     case 'Unpark':
-      return `Продати ${ticker} (розпаркувати)`;
+      return translate(`reports.mapper.title.${kind}`, { ticker });
     case 'Transfer':
-      return `Переказати ${ticker}: ${from} → ${to}`;
+      return translate('reports.mapper.title.Transfer', { ticker, from, to });
   }
 }
 
@@ -283,17 +295,17 @@ const orderLabels: Record<
   SectionOrderDto['kind'],
   { label: string; severity: SectionVm['orders'][number]['severity'] }
 > = {
-  Exit: { label: 'Вихід', severity: 'danger' },
-  Trim: { label: 'Зменшити', severity: 'warn' },
-  Unpark: { label: 'Розпаркувати', severity: 'info' },
-  Buy: { label: 'Купити', severity: 'success' },
-  Park: { label: 'Запаркувати', severity: 'secondary' },
+  Exit: { label: translate('actionKind.Exit'), severity: 'danger' },
+  Trim: { label: translate('actionKind.Trim'), severity: 'warn' },
+  Unpark: { label: translate('actionKind.Unpark'), severity: 'info' },
+  Buy: { label: translate('actionKind.Buy'), severity: 'success' },
+  Park: { label: translate('actionKind.Park'), severity: 'secondary' },
 };
 
 const legacyColumns: SectionColumnDto[] = [
   {
     id: 'momentum',
-    label: 'Моментум',
+    label: translate('column.momentum'),
     format: 'signedPercent',
     hint: null,
     compact: true,
@@ -302,7 +314,7 @@ const legacyColumns: SectionColumnDto[] = [
   },
   {
     id: 'return1m',
-    label: '1 міс',
+    label: translate('column.return1m'),
     format: 'signedPercent',
     hint: null,
     compact: false,
@@ -311,7 +323,7 @@ const legacyColumns: SectionColumnDto[] = [
   },
   {
     id: 'return3m',
-    label: '3 міс',
+    label: translate('column.return3m'),
     format: 'signedPercent',
     hint: null,
     compact: false,
@@ -320,7 +332,7 @@ const legacyColumns: SectionColumnDto[] = [
   },
   {
     id: 'return12m',
-    label: '12 міс',
+    label: translate('column.return12m'),
     format: 'signedPercent',
     hint: null,
     compact: false,
@@ -329,7 +341,7 @@ const legacyColumns: SectionColumnDto[] = [
   },
   {
     id: 'volatility',
-    label: 'Волатильність',
+    label: translate('column.volatility'),
     format: 'percent',
     hint: null,
     compact: false,
@@ -342,8 +354,8 @@ const legacyColumns: SectionColumnDto[] = [
     format: 'trend',
     hint: null,
     compact: true,
-    trueHint: 'Ціна вище MA200',
-    falseHint: 'Ціна нижче MA200',
+    trueHint: translate('column.aboveMa'),
+    falseHint: translate('column.belowMa'),
   },
 ];
 
@@ -371,8 +383,8 @@ function toScoreTable(
   const columns = decision.columns ?? legacyColumns;
 
   return {
-    title: decision.scoreTitle ?? (described ? 'Чому саме ці інструменти' : 'Чому саме ці ETF'),
-    instrumentLabel: decision.instrumentLabel ?? (described ? 'Інструмент' : 'ETF'),
+    title: decision.scoreTitle ?? (described ? translate('reports.mapper.whyInstruments') : translate('reports.mapper.whyEtfs')),
+    instrumentLabel: decision.instrumentLabel ?? (described ? translate('instruments.instrument') : 'ETF'),
     columns,
     rows: decision.scores
       .map((score) => {
@@ -408,8 +420,8 @@ function toSectionVm(
     name: section.name,
     targetShare: section.targetShare,
     strategyLabel: section.strategyCode
-      ? `${section.strategyCode} · версія ${section.strategyVersion}`
-      : 'стратегія не відповіла',
+      ? translate('reports.mapper.strategyVersion', { code: section.strategyCode, version: section.strategyVersion })
+      : translate('reports.mapper.strategyNoAnswer'),
     contribution: section.contribution,
     marketIsFavorable: section.decision?.marketIsFavorable ?? null,
     investFraction: section.decision?.investFraction ?? null,
@@ -430,8 +442,8 @@ function toSectionVm(
       label:
         row.role === 'Cash'
           ? row.instrumentId
-            ? `Кеш · ${symbol(row.instrumentId)}`
-            : 'Кеш'
+            ? translate('reports.mapper.cashIn', { symbol: symbol(row.instrumentId) })
+            : translate('common.cash')
           : symbol(row.instrumentId),
       role: row.role,
       valueBefore: row.valueBefore,

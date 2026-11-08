@@ -1,3 +1,4 @@
+import { TranslocoPipe, translate } from '@jsverse/transloco';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -36,7 +37,7 @@ import { RenameSubPortfolioDialog } from '../../ui/rename-sub-portfolio-dialog/r
 
 @Component({
   selector: 'app-account-detail-page',
-  imports: [
+  imports: [TranslocoPipe, 
     ImportPositionsDialog,
     AddSubPortfolioDialog,
     RenameSubPortfolioDialog,
@@ -108,7 +109,7 @@ export class AccountDetailPage {
     const strategy = strategyId
       ? this.store.strategies().find((each) => each.id === strategyId)
       : undefined;
-    if (!strategy) return 'Рапорти цей під-портфель не чіпають — оберіть стратегію';
+    if (!strategy) return translate('accounts.detail.noStrategyHint');
 
     return describeStrategy(
       strategy,
@@ -123,12 +124,12 @@ export class AccountDetailPage {
 
   protected confirmRetire(sub: SubPortfolioSetup): void {
     this.confirm.confirm({
-      header: `Вивести «${sub.name}»?`,
+      header: translate('accounts.detail.retireQuestion', { name: sub.name }),
       message:
-        'Частку буде пропорційно розподілено між іншими під-портфелями. Позиції лишаються видимими, їх можна перенести внутрішнім переказом.',
+        translate('accounts.detail.retireHint'),
       icon: 'pi pi-sign-out',
-      acceptLabel: 'Вивести',
-      rejectLabel: 'Скасувати',
+      acceptLabel: translate('accounts.detail.retire'),
+      rejectLabel: translate('common.cancel'),
       acceptButtonProps: { severity: 'danger' },
       rejectButtonProps: { severity: 'secondary', text: true },
       accept: () => void this.store.retire(sub.id),

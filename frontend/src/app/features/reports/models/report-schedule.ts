@@ -1,3 +1,4 @@
+import { translate } from '@jsverse/transloco';
 export type ReportMode = 'rebalance' | 'riskReview';
 
 export interface ReportTiming {
@@ -27,22 +28,22 @@ export interface ReportSchedule {
 }
 
 export const frequencyOptions = [
-  { label: 'Щогодини', value: 'hourly' },
-  { label: 'Щодня', value: 'daily' },
-  { label: 'Щотижня', value: 'weekly' },
-  { label: 'Щомісяця', value: 'monthly' },
-  { label: 'Щокварталу', value: 'quarterly' },
-  { label: 'Лише вручну', value: 'off' },
+  { label: translate('frequency.hourly'), value: 'hourly' },
+  { label: translate('frequency.daily'), value: 'daily' },
+  { label: translate('frequency.weekly'), value: 'weekly' },
+  { label: translate('frequency.monthly'), value: 'monthly' },
+  { label: translate('frequency.quarterly'), value: 'quarterly' },
+  { label: translate('reports.schedule.off'), value: 'off' },
 ];
 
 const weekdayLabels: Record<string, string> = {
-  monday: 'понеділок',
-  tuesday: 'вівторок',
-  wednesday: 'середа',
-  thursday: 'четвер',
-  friday: 'пʼятниця',
-  saturday: 'субота',
-  sunday: 'неділя',
+  monday: translate('weekday.1'),
+  tuesday: translate('weekday.2'),
+  wednesday: translate('weekday.3'),
+  thursday: translate('weekday.4'),
+  friday: translate('weekday.5'),
+  saturday: translate('weekday.6'),
+  sunday: translate('weekday.0'),
 };
 
 export const weekdayOptions = Object.entries(weekdayLabels).map(([value, label]) => ({
@@ -51,20 +52,23 @@ export const weekdayOptions = Object.entries(weekdayLabels).map(([value, label])
 }));
 
 export function scheduleLabel(timing: ReportTiming): string {
-  const at = `о ${timing.time}`;
+  const time = timing.time;
   switch (timing.frequency.toLowerCase()) {
     case 'hourly':
-      return `щогодини о :${String(timing.minute).padStart(2, '0')}`;
+      return translate('reports.schedule.label.hourly', { minute: String(timing.minute).padStart(2, '0') });
     case 'daily':
-      return `щодня ${at}`;
+      return translate('reports.schedule.label.daily', { time });
     case 'weekly':
-      return `щотижня, ${weekdayLabels[timing.weekday.toLowerCase()] ?? timing.weekday} ${at}`;
+      return translate('reports.schedule.label.weekly', {
+        weekday: weekdayLabels[timing.weekday.toLowerCase()] ?? timing.weekday,
+        time,
+      });
     case 'monthly':
-      return `щомісяця, ${timing.day}-го ${at}`;
+      return translate('reports.schedule.label.monthly', { day: timing.day, time });
     case 'quarterly':
-      return `щокварталу, ${timing.day}-го першого місяця ${at}`;
+      return translate('reports.schedule.label.quarterly', { day: timing.day, time });
     default:
-      return 'лише вручну';
+      return translate('reports.schedule.manualLower');
   }
 }
 
