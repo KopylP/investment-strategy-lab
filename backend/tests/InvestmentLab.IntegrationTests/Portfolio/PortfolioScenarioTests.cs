@@ -78,6 +78,11 @@ public sealed class PortfolioScenarioTests(PortfolioApiFactory factory) : IClass
             new { instrumentId = position.InstrumentId, side = "Sell", quantity = position.Quantity, price = 20m, fee = 0m, executedOn = "2026-10-21" }, ct);
         oversell.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
 
+        var buyWithoutSubPortfolio = await client.PostAsJsonAsync($"/api/portfolio/accounts/{account.Id}/trades",
+            new { instrumentId = position.InstrumentId, side = "Buy", quantity = 1m, price = 20m, fee = 0m, executedOn = "2026-10-21" }, ct);
+        buyWithoutSubPortfolio.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await buyWithoutSubPortfolio.Content.ReadAsStringAsync(ct)).ShouldContain("transaction.sub_portfolio_required");
+
         await PostAsync<RecordedTransaction>(client, $"/api/portfolio/accounts/{account.Id}/transactions/{sale.TransactionId}/reverse",
             JsonContent.Create(new { reason = "Sold in the wrong account" }), ct);
         var restored = await HoldingsAsync(client, account.Id, ct);

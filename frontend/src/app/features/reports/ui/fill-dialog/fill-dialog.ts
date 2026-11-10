@@ -10,6 +10,7 @@ import { Message } from 'primeng/message';
 import { Textarea } from 'primeng/textarea';
 import { toIsoDate } from '../../../../shared/models/api';
 import { MoneyPipe, QuantityPipe } from '../../../../shared/pipes/format-pipes';
+import { TradeCost } from '../../../../shared/ui/trade-cost/trade-cost';
 import { EnteredFill, ReportActionVm } from '../../models/report-vm';
 
 export interface FillDialogData {
@@ -29,6 +30,7 @@ export interface FillDialogData {
     Message,
     MoneyPipe,
     QuantityPipe,
+    TradeCost,
   ],
   templateUrl: './fill-dialog.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -44,21 +46,15 @@ export class FillDialog {
       this.partial ? 0 : this.defaultQuantity(),
       [Validators.required, Validators.min(0.00000001)],
     ],
-    price: [
-      this.action.isMoney ? 1 : this.action.plannedPrice,
-      [Validators.required, Validators.min(0.00000001)],
-    ],
+    price: [this.initialPrice(), [Validators.required, Validators.min(0.00000001)]],
     fee: [0, [Validators.required, Validators.min(0)]],
     executedOn: [new Date(), Validators.required],
     note: [''],
   });
 
-  private readonly values = toSignal(this.form.valueChanges, {
+  protected readonly values = toSignal(this.form.valueChanges, {
     initialValue: this.form.getRawValue(),
   });
-  protected readonly total = computed(
-    () => (this.values().quantity ?? 0) * (this.values().price ?? 0),
-  );
   protected readonly tooMuch = computed(
     () => this.partial && (this.values().quantity ?? 0) >= this.action.remainingQuantity,
   );
@@ -77,7 +73,7 @@ export class FillDialog {
     const value = this.form.getRawValue();
     const fill: EnteredFill = {
       quantity: value.quantity,
-      price: this.action.isMoney ? 1 : value.price,
+      price: this.action.isMoney ? 1 : value.price!,
       fee: value.fee,
       executedOn: toIsoDate(value.executedOn),
       note: value.note.trim() || null,
@@ -88,6 +84,12 @@ export class FillDialog {
 
   protected cancel(): void {
     this.ref.close();
+  }
+
+  private initialPrice(): number | null {
+    if (this.action.isMoney) return 1;
+
+    return this.action.kind === 'Transfer' ? this.action.plannedPrice : null;
   }
 
   private defaultQuantity(): number {

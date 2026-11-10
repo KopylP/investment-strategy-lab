@@ -19,13 +19,19 @@ public sealed class RecordPartialFillHandler(FillMarker marker)
         RebalancingReport report,
         ReportAction action,
         RecordPartialFillCommand command,
-        DateTimeOffset now) =>
-        report.RecordPartialFill(
+        DateTimeOffset now)
+    {
+        var price = action.FillPriceOf(command.Price);
+        if (price.IsFailure)
+            return price.Error;
+
+        return report.RecordPartialFill(
             action.Id,
             command.Quantity,
-            command.Price ?? action.PlannedPrice,
+            price.Value,
             command.Fee,
             command.ExecutedOn ?? FillMarker.DayOf(now),
             command.Note,
             now);
+    }
 }

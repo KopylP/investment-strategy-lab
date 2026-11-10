@@ -93,6 +93,9 @@ public sealed class RebalancingScenarioTests : IClassFixture<StrategiesApiFactor
         (await client.PostAsJsonAsync($"/api/rebalancing/reports/{report.Summary.Id}/actions/{contribute.Id}/fills", new { }, ct)).EnsureSuccessStatusCode();
         await EventuallyAsync(async () => (await HoldingsAsync(client, account.Id, ct)).SubPortfolios.Sum(sub => sub.Cash) == 1000m, ct);
 
+        var withoutPrice = await client.PostAsJsonAsync($"/api/rebalancing/reports/{report.Summary.Id}/actions/{buy.Id}/fills", new { }, ct);
+        withoutPrice.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+
         var half = decimal.Round(buy.PlannedQuantity / 2m, 4);
         (await client.PostAsJsonAsync($"/api/rebalancing/reports/{report.Summary.Id}/actions/{buy.Id}/partial-fills",
             new { quantity = half, price = buy.PlannedPrice * 0.99m, fee = 1m }, ct)).EnsureSuccessStatusCode();

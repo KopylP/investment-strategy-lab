@@ -16,7 +16,7 @@ import { InputNumber } from 'primeng/inputnumber';
 import { Select } from 'primeng/select';
 import { SelectButton } from 'primeng/selectbutton';
 import { toIsoDate } from '../../../../shared/models/api';
-import { MoneyPipe } from '../../../../shared/pipes/format-pipes';
+import { TradeCost } from '../../../../shared/ui/trade-cost/trade-cost';
 import { NewTrade } from '../../data-access/transactions-store';
 
 export interface Option {
@@ -35,7 +35,7 @@ export interface Option {
     InputNumber,
     Select,
     SelectButton,
-    MoneyPipe,
+    TradeCost,
   ],
   templateUrl: './trade-dialog.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -59,13 +59,20 @@ export class TradeDialog {
   protected readonly fee = signal<number>(0);
   protected readonly executedOn = signal<Date>(new Date());
   protected readonly subPortfolioId = signal<string | null>(null);
-  protected readonly total = computed(() => (this.quantity() ?? 0) * (this.price() ?? 0));
+  protected readonly isSale = computed(() => this.side() === 'Sell');
+  protected readonly subPortfolioRequired = computed(
+    () => !this.isSale() && this.subPortfolios().length > 1,
+  );
+  protected readonly subPortfolioPlaceholder = computed(() =>
+    this.isSale() ? 'transactions.trade.autoSplitSell' : 'transactions.trade.chooseSubPortfolio',
+  );
   protected readonly valid = computed(
     () =>
       !!this.instrumentId() &&
       (this.quantity() ?? 0) > 0 &&
       (this.price() ?? 0) > 0 &&
-      this.fee() >= 0,
+      this.fee() >= 0 &&
+      this.hasSubPortfolioWhenRequired(),
   );
 
   protected submit(): void {
@@ -80,5 +87,9 @@ export class TradeDialog {
       executedOn: toIsoDate(this.executedOn()),
       subPortfolioId: this.subPortfolioId(),
     });
+  }
+
+  private hasSubPortfolioWhenRequired(): boolean {
+    return !this.subPortfolioRequired() || !!this.subPortfolioId();
   }
 }

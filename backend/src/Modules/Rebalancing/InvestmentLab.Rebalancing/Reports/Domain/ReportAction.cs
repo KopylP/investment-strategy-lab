@@ -56,6 +56,19 @@ public sealed class ReportAction : Entity<ReportActionId>
 
     public bool IsMarked => Status != ActionStatus.Pending;
 
+    public bool IsBrokerTrade => Kind is not (ActionKind.Contribute or ActionKind.Transfer);
+
+    public Result<decimal> FillPriceOf(decimal? enteredPrice)
+    {
+        if (enteredPrice is { } entered)
+            return entered;
+
+        if (IsBrokerTrade)
+            return ReportErrors.FillPriceRequired(Id.Value);
+
+        return PlannedPrice;
+    }
+
     internal Result<Fill> RecordFill(decimal quantity, decimal price, decimal fee, DateOnly executedOn, string? note, bool final)
     {
         if (IsResolved)

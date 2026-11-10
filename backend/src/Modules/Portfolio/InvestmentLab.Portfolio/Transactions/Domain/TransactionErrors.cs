@@ -37,6 +37,11 @@ public static class TransactionErrors
         Error.Validation("transaction.not_enough_units",
             $"On {on:yyyy-MM-dd} sub-portfolio {subPortfolioId} holds {held} of instrument {instrumentId}, cannot give away {requested}.");
 
+    public static Error SubPortfolioRequired(int activeSubPortfolios) =>
+        Error.Validation(
+            "transaction.sub_portfolio_required",
+            $"The account has {activeSubPortfolios} active sub-portfolios: a buy must name the one it belongs to.");
+
     public static Error NothingToAllocateTo(Guid instrumentId) =>
         Error.Validation("transaction.nothing_to_sell", $"No sub-portfolio holds instrument {instrumentId}.");
 
