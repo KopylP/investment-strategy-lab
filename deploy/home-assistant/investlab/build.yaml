@@ -1,4 +1,3 @@
 # Ubuntu 24.04 with the ASP.NET Core 10 runtime: Python 3.12 and PostgreSQL 16 come from apt.
 build_from:
   aarch64: mcr.microsoft.com/dotnet/aspnet:10.0-noble-arm64v8
-  amd64: mcr.microsoft.com/dotnet/aspnet:10.0-noble-amd64

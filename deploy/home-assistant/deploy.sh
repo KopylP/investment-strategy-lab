@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# One-command deploy to Home Assistant: build the artifacts (build.sh), copy the add-on folder over SSH (the Terminal &
-# SSH add-on) and let the Supervisor install it, or update/rebuild and restart it. The version comes from main: every
-# merge there bumps it (.github/workflows/addon-version.yml), so pull first.
+# Deploys the working copy as the *local* add-on (local_investlab), built on the device: for trying out changes that are
+# not on main. The installed add-on comes from the repository with the image GitHub Actions built (README.md). Build
+# the artifacts (build.sh), copy the add-on folder over SSH (the Terminal & SSH add-on) without its `image:` line, so the
+# Supervisor builds it, and install it, or update/rebuild and restart it.
 #
 #   deploy/home-assistant/deploy.sh                    # build, copy, install or update to the version in config.yaml
 #   deploy/home-assistant/deploy.sh --skip-build       # reuse the artifacts already in investlab/rootfs/app
@@ -97,6 +98,7 @@ fi
 
 echo "==> Copying the add-on to $HA_HOST:$REMOTE_DIR/investlab"
 rsync -az --delete --exclude .gitignore -e "ssh $SSH_OPTS" "$ADDON_DIR" "$HA_USER@$HA_HOST:$REMOTE_DIR/"
+remote "sed -i '/^image:/d' '$REMOTE_DIR/investlab/config.yaml'"
 
 echo "==> Reloading the add-on store"
 remote "ha store reload --no-progress >/dev/null 2>&1 || ha $HA_CMD reload --no-progress"
