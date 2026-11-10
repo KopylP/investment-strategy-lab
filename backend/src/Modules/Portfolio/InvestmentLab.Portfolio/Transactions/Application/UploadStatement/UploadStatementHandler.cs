@@ -1,6 +1,7 @@
 using InvestmentLab.MarketData.Contracts.FxRates;
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.Portfolio.Accounts.Domain;
+using InvestmentLab.Portfolio.Holdings.Domain;
 using InvestmentLab.Portfolio.Transactions.Application.Shared;
 using InvestmentLab.Portfolio.Transactions.Domain;
 using InvestmentLab.Strategies.Contracts;
@@ -31,7 +32,11 @@ public sealed class UploadStatementHandler(
 
         await LoadRatesForForeignRowsAsync(account, statement, cancellationToken);
 
-        var mappings = await SuggestMappingsAsync(account, statement.Rows, cancellationToken);
+        var evidence = await EvidenceOfAsync(account, cancellationToken);
+        if (evidence.IsFailure)
+            return evidence.Error;
+
+        var mappings = await SuggestMappingsAsync(statement.Rows, evidence.Value, cancellationToken);
         statement.Configure(ImportMode.Merge, null, StatementSuggestions.CashSubPortfolio(account, statement.Rows, mappings), mappings);
         imports.Add(statement);
 
@@ -46,17 +51,28 @@ public sealed class UploadStatementHandler(
             await fxBackfill.EnsureSinceAsync(statement.Rows.Min(row => row.OccurredOn), cancellationToken);
     }
 
-    private async Task<List<TickerMapping>> SuggestMappingsAsync(
-        InvestmentAccount account, IReadOnlyList<StatementRow> rows, CancellationToken cancellationToken)
+    private async Task<Result<SubPortfolioEvidence>> EvidenceOfAsync(InvestmentAccount account, CancellationToken cancellationToken)
     {
-        var instruments = await catalog.GetInstruments(cancellationToken);
+        var entries = await journal.GetEntriesAsync(account.Id, cancellationToken);
+        var projected = HoldingsProjector.Project(account, entries);
+        if (projected.IsFailure)
+            return projected.Error;
+
         var strategiesKnown = await strategies.GetStrategies(cancellationToken);
         var universes = strategiesKnown.ToDictionary(strategy => strategy.Id, strategy => strategy.Universe);
+
+        return new SubPortfolioEvidence(account, projected.Value.Holdings, universes);
+    }
+
+    private async Task<List<TickerMapping>> SuggestMappingsAsync(
+        IReadOnlyList<StatementRow> rows, SubPortfolioEvidence evidence, CancellationToken cancellationToken)
+    {
+        var instruments = await catalog.GetInstruments(cancellationToken);
 
         var tickers = await TickersOfAsync(rows, cancellationToken);
         var listed = await ListedElsewhereAsync(tickers, cancellationToken);
 
-        return [.. tickers.Select(ticker => MappingOf(ticker, listed.GetValueOrDefault(ticker.Ticker), instruments, account, universes))];
+        return [.. tickers.Select(ticker => MappingOf(ticker, listed.GetValueOrDefault(ticker.Ticker), instruments, evidence))];
     }
 
     private async Task<List<StatementTicker>> TickersOfAsync(IReadOnlyList<StatementRow> rows, CancellationToken cancellationToken)
@@ -82,11 +98,10 @@ public sealed class UploadStatementHandler(
         StatementTicker ticker,
         ListedSymbolDto? listing,
         IReadOnlyList<InstrumentDto> instruments,
-        InvestmentAccount account,
-        Dictionary<Guid, IReadOnlyList<Guid>> universes)
+        SubPortfolioEvidence evidence)
     {
         var match = ticker.Match ?? InstrumentOfListing(listing, instruments);
-        var sub = StatementSuggestions.SubPortfolioFor(match?.Id, account, universes);
+        var sub = StatementSuggestions.SubPortfolioFor(match?.Id, evidence);
 
         if (match is not null)
             return new TickerMapping(ticker.Ticker, ticker.Currency, match.Id, null, sub);
