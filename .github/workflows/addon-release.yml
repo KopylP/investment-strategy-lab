@@ -1,0 +1,108 @@
+# Every push to main that changes what goes into the Home Assistant add-on releases it: the add-on is built here into
+# one image, ghcr.io/kopylp/investlab:<version> (aarch64, for the Raspberry Pi), and only once that image is in the
+# registry does config.yaml get the version, so Home Assistant never offers a version it cannot pull (ADR-0028).
+#
+# The version: if the image of the version in config.yaml is already published, the patch number goes up; if not
+# (a push that set the version itself, or the first release), that version is released as it is. The run builds
+# the newest main, one run at a time, so two quick pushes give two versions, never one tag with two contents.
+# The version commit is pushed with GITHUB_TOKEN, which does not start workflows: no loop.
+name: Add-on release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - backend/**
+      - frontend/**
+      - strategy-engine/**
+      - deploy/home-assistant/investlab/**
+      - deploy/home-assistant/integration/**
+      - deploy/home-assistant/build.sh
+      - .github/workflows/addon-release.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  group: addon-release
+  cancel-in-progress: false
+
+env:
+  CONFIG: deploy/home-assistant/investlab/config.yaml
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      # Signed in before the version check, so a private image counts as published too.
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Choose the version
+        id: version
+        run: |
+          set -euo pipefail
+          IMAGE="$(sed -n 's/^image: *"\{0,1\}\([^"]*\)"\{0,1\} *$/\1/p' "$CONFIG")"
+          CURRENT="$(sed -n 's/^version: *"\{0,1\}\([^"]*\)"\{0,1\} *$/\1/p' "$CONFIG")"
+          if docker manifest inspect "$IMAGE:$CURRENT" >/dev/null 2>&1; then
+            VERSION="$(echo "$CURRENT" | awk -F. -v OFS=. '{ $NF = $NF + 1; print }')"
+            echo "bump=true" >> "$GITHUB_OUTPUT"
+          else
+            VERSION="$CURRENT"
+            echo "bump=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Releasing $IMAGE:$VERSION"
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: backend/global.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build the artifacts
+        run: deploy/home-assistant/build.sh
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: deploy/home-assistant/investlab
+          platforms: linux/arm64
+          build-args: |
+            BUILD_FROM=mcr.microsoft.com/dotnet/aspnet:10.0-noble-arm64v8
+          labels: |
+            io.hass.type=addon
+            io.hass.arch=aarch64
+            io.hass.version=${{ steps.version.outputs.version }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          tags: ${{ steps.version.outputs.image }}:${{ steps.version.outputs.version }}
+          push: true
+
+      - name: Publish the version
+        if: steps.version.outputs.bump == 'true'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          sed -i "s/^version: .*/version: \"$VERSION\"/" "$CONFIG"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
+          git commit -qm "Home Assistant add-on $VERSION" -- "$CONFIG"
+          # A push may have landed meanwhile (it waits for this run): put the one-line version commit on top of it.
+          git pull -q --rebase origin main
+          git push origin HEAD:main

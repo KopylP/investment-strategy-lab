@@ -29,6 +29,25 @@ export PGPASSWORD="$DB_PASSWORD"
 "$PGBIN/psql" -h 127.0.0.1 -U postgres -tc "SELECT 1 FROM pg_database WHERE datname='investmentlab'" | grep -q 1 \
   || "$PGBIN/psql" -h 127.0.0.1 -U postgres -c "CREATE DATABASE investmentlab"
 
+# --- Moving the data to another add-on (DOCS.md): asked once by a marker file in /share/investlab ---------------
+# "export" writes the database and the sign-in keys there; "import" replaces this add-on's with them. The marker is
+# removed when it is done; a failed import stops the add-on and is tried again on the next start.
+TRANSFER=/share/investlab
+if [ -f "$TRANSFER/export" ]; then
+  echo "[investlab] exporting the data to $TRANSFER"
+  "$PGBIN/pg_dump" -h 127.0.0.1 -U postgres -Fc -f "$TRANSFER/investmentlab.dump" investmentlab
+  rm -rf "$TRANSFER/keys" && cp -R /data/keys "$TRANSFER/keys"
+  rm -f "$TRANSFER/export"
+fi
+if [ -f "$TRANSFER/import" ] && [ -s "$TRANSFER/investmentlab.dump" ]; then
+  echo "[investlab] importing the data from $TRANSFER"
+  "$PGBIN/psql" -h 127.0.0.1 -U postgres -c "DROP DATABASE investmentlab WITH (FORCE)" -c "CREATE DATABASE investmentlab"
+  "$PGBIN/pg_restore" -h 127.0.0.1 -U postgres --no-owner -d investmentlab "$TRANSFER/investmentlab.dump"
+  if [ -d "$TRANSFER/keys" ]; then rm -rf /data/keys && cp -R "$TRANSFER/keys" /data/keys; fi
+  rm -f "$TRANSFER/import"
+  echo "[investlab] imported"
+fi
+
 # --- Strategy engine (FastAPI), only reachable from inside the add-on ------------------------------------------
 /opt/engine/bin/uvicorn finance_decisions.api.main:app --host 127.0.0.1 --port 8000 --workers 1 &
 ENGINE_PID=$!

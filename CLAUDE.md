@@ -43,9 +43,10 @@ cd frontend && npx ng build
 - Commit messages and code follow the code rules below; the why of a decision goes in an ADR, not in a comment.
   ADRs (`docs/architecture/adr/`) are written in English.
 - Commit messages: one descriptive paragraph of what changed for the user and why (see `git log`), no type prefixes.
-- Do not bump `deploy/home-assistant/investlab/config.yaml` `version` by hand: a workflow bumps it on every push to
-  `main` that touches `backend/`, `frontend/`, `strategy-engine/` or the add-on. Backend pushes are also auto-formatted
-  by `dotnet format` and committed back — pull before pushing again.
+- Do not bump `deploy/home-assistant/investlab/config.yaml` `version` by hand: every push to `main` that touches `backend/`,
+  `frontend/`, `strategy-engine/` or the add-on is released by a workflow, which builds the add-on image, pushes it to
+  GHCR and then commits the next version (ADR-0028). Backend pushes are also auto-formatted by `dotnet format` and
+  committed back — pull before pushing again.
 
 ## Code rules (Clean Code)
 

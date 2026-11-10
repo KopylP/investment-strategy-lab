@@ -3,9 +3,11 @@ version: "1.0.155"
 slug: investlab
 description: Інвестиційні стратегії, щомісячні рапорти й облік портфеля (Revolut, податок Белка).
 url: https://github.com/KopylP/investment-strategy-lab
+# Home Assistant pulls the image GitHub Actions built for this version (.github/workflows/addon-release.yml) instead of
+# building it on the device. Only the Raspberry Pi (aarch64) is built; deploy.sh drops this line for an on-device build.
+image: ghcr.io/kopylp/investlab
 arch:
   - aarch64
-  - amd64
 init: false
 startup: application
 boot: auto
@@ -20,6 +22,9 @@ homeassistant_api: true
 # /api/investlab/mcp on Home Assistant's own origin and forwards to 8098; clients sign in with Home Assistant's OAuth.
 map:
   - type: homeassistant_config
+    read_only: false
+  # /share/investlab: moving the database between add-ons (export / import markers, see run.sh and DOCS.md).
+  - type: share
     read_only: false
 options:
   timezone: Europe/Warsaw
