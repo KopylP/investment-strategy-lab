@@ -18,6 +18,9 @@ add-on and a reachable Home Assistant; nothing happened after a merge until some
 - **The image is published before the version.** The version in `config.yaml` is what Home Assistant offers, so the workflow
   pushes the image first and commits the new version after it. It decides the version by the registry: the image of the
   current version exists → the next patch; it does not → that version as it is (set by hand, or the first release).
+- **Only the two newest images are kept.** After a successful release the workflow deletes every older version of the
+  package; the previous one stays so an installation that has not updated yet can still reinstall it. Each version is one
+  plain manifest (no provenance or SBOM index), so deleting a version never takes part of a kept image with it.
 - **The repository is the add-on store.** `repository.yaml` is in the root; Home Assistant follows the repository and offers
   each new version, or installs it itself with auto-update. No SSH, VPN or secret on GitHub reaches Home Assistant.
 - **`deploy.sh` stays for changes not on `main`**: it installs the working copy as the local add-on, built on the device, by

@@ -8,7 +8,8 @@
 Образ збирає GitHub Actions (`.github/workflows/addon-release.yml`) після кожного мерджу в `main`, що змінює
 `backend`, `frontend`, `strategy-engine` чи add-on, і публікує його як `ghcr.io/kopylp/investlab:<версія>` (лише
 aarch64 — Raspberry Pi). Home Assistant його тільки завантажує, нічого не збираючи на пристрої. Нову версію в
-`investlab/config.yaml` workflow комітить уже після того, як образ опубліковано.
+`investlab/config.yaml` workflow комітить уже після того, як образ опубліковано. Після успішного релізу в реєстрі
+лишаються тільки два найновіші образи (поточний і попередній), старіші видаляються.
 
 1. Один раз: GitHub → профіль → **Packages → investlab → Package settings → Change visibility → Public**
    (після першого запуску workflow), щоб Home Assistant міг завантажити образ без пароля.
