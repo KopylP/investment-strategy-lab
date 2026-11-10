@@ -16,6 +16,19 @@ public sealed class RebalancingReportTests
         new(ActionKind.Buy, Etf, quantity, 50m, [new ActionAllocation(Eu, quantity * 0.6m, null), new ActionAllocation(Us, quantity * 0.4m, null)], "buy");
 
     [Fact]
+    public void A_broker_trade_is_marked_only_at_the_price_it_was_executed_at_while_a_contribution_keeps_its_unit_price()
+    {
+        var contribution = new ActionDraft(ActionKind.Contribute, null, 100m, 1m, [new ActionAllocation(Eu, 100m, null)], "contribute");
+        var report = Report(Buy(), contribution);
+        var buy = report.Actions.Single(action => action.Kind == ActionKind.Buy);
+        var contribute = report.Actions.Single(action => action.Kind == ActionKind.Contribute);
+
+        buy.FillPriceOf(null).Error.Code.ShouldBe("report.fill_price_required");
+        buy.FillPriceOf(51m).Value.ShouldBe(51m);
+        contribute.FillPriceOf(null).Value.ShouldBe(1m);
+    }
+
+    [Fact]
     public void Partial_fills_add_up_and_the_last_one_completes_the_action_and_the_report()
     {
         var report = Report(Buy());

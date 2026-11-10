@@ -27,6 +27,9 @@ public static class ReportErrors
 
     public static Error FillQuantityNotPositive() => Error.Validation("report.fill_quantity_not_positive", "Quantity must be above zero.");
 
+    public static Error FillPriceRequired(Guid actionId) =>
+        Error.Validation("report.fill_price_required", $"Action {actionId} is a trade at the broker: its executed price must be given.");
+
     public static Error FillPriceNotPositive() => Error.Validation("report.fill_price_not_positive", "Price must be above zero.");
 
     public static Error FillFeeNegative() => Error.Validation("report.fill_fee_negative", "Fee cannot be negative.");

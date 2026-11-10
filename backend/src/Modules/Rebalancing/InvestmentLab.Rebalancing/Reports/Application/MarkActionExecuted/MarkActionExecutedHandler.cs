@@ -19,15 +19,21 @@ public sealed class MarkActionExecutedHandler(FillMarker marker)
         RebalancingReport report,
         ReportAction action,
         MarkActionExecutedCommand command,
-        DateTimeOffset now) =>
-        report.MarkExecuted(
+        DateTimeOffset now)
+    {
+        var price = action.FillPriceOf(command.Price);
+        if (price.IsFailure)
+            return price.Error;
+
+        return report.MarkExecuted(
             action.Id,
             command.Quantity ?? RemainingOrPlanned(action),
-            command.Price ?? action.PlannedPrice,
+            price.Value,
             command.Fee,
             command.ExecutedOn ?? FillMarker.DayOf(now),
             command.Note,
             now);
+    }
 
     private static decimal RemainingOrPlanned(ReportAction action) =>
         action.RemainingQuantity > 0m ? action.RemainingQuantity : action.PlannedQuantity;

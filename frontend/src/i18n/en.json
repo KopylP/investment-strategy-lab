@@ -693,7 +693,9 @@
       "fee": "Fee",
       "subPortfolio": "Sub-portfolio",
       "autoSplit": "Split automatically",
-      "autoSplitHint": "Without a choice: a buy is split by target shares, a sell by the units held.",
+      "chooseSubPortfolio": "Choose a sub-portfolio",
+      "autoSplitSell": "Split by the units held",
+      "subPortfolioHint": "A buy is recorded in the chosen sub-portfolio. A sell without a choice is split between sub-portfolios by the units held.",
       "record": "Record"
     },
     "upload": {
@@ -1151,7 +1153,7 @@
       "contributionAmount": "Contribution amount",
       "quantity": "Quantity, sh.",
       "price": "Price per share",
-      "tradeAmount": "Trade amount",
+      "pricePlaceholder": "Actual price from the broker",
       "date": "Execution date",
       "note": "Note",
       "notePlaceholder": "For example: part of the order did not go through",
@@ -2007,5 +2009,11 @@
         "market": "Market regime"
       }
     }
+  },
+  "tradeCost": {
+    "amount": "Trade amount",
+    "fee": "Fee",
+    "toPay": "Taken from cash",
+    "toReceive": "Added to cash"
   }
 }

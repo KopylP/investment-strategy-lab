@@ -97,13 +97,21 @@
         [ngModel]="subPortfolioId()"
         (ngModelChange)="subPortfolioId.set($event)"
         [showClear]="true"
-        [placeholder]="'transactions.trade.autoSplit' | transloco"
+        [placeholder]="subPortfolioPlaceholder() | transloco"
         appendTo="body"
         fluid
       />
-      <small class="text-muted-color">{{ 'transactions.trade.autoSplitHint' | transloco }}</small>
+      <small class="text-muted-color">{{
+        'transactions.trade.subPortfolioHint' | transloco
+      }}</small>
     </div>
-    <div class="text-right text-lg font-semibold">{{ total() | money: currency() }}</div>
+    <app-trade-cost
+      [quantity]="quantity() ?? 0"
+      [price]="price() ?? 0"
+      [fee]="fee()"
+      [currency]="currency()"
+      [isSale]="isSale()"
+    />
   </div>
   <ng-template #footer>
     <p-button

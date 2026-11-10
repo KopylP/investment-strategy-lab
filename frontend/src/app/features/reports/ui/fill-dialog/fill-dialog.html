@@ -52,6 +52,7 @@
           [currency]="action.currency"
           locale="uk-UA"
           [maxFractionDigits]="6"
+          [placeholder]="'reports.fill.pricePlaceholder' | transloco"
           fluid
         />
       </div>
@@ -66,11 +67,16 @@
           fluid
         />
       </div>
-      <div class="flex flex-col gap-2">
-        <span class="font-medium">{{ 'reports.fill.tradeAmount' | transloco }}</span>
-        <span class="text-lg font-semibold pt-1">{{ total() | money: action.currency }}</span>
-      </div>
     </div>
+    @if (action.kind !== 'Transfer') {
+      <app-trade-cost
+        [quantity]="values().quantity ?? 0"
+        [price]="values().price ?? 0"
+        [fee]="values().fee ?? 0"
+        [currency]="action.currency"
+        [isSale]="action.isSell"
+      />
+    }
   }
 
   <div class="flex flex-col gap-2">

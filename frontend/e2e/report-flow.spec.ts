@@ -61,6 +61,8 @@ test('a new user goes from registration to a partly executed monthly report', as
   const dialog = page.getByRole('dialog');
   await dialog.locator('#quantity').fill('0,1');
   await dialog.locator('#quantity').blur();
+  await dialog.locator('#price').fill('50');
+  await dialog.locator('#price').blur();
   await shot('08-partial-fill-dialog');
   await dialog.getByRole('button', { name: 'Зберегти частину' }).click();
   await expectToast(page, 'Часткове виконання збережено');

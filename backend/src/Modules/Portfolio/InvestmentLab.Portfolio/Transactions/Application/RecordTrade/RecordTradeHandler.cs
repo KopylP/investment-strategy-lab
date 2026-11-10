@@ -1,3 +1,4 @@
+using InvestmentLab.Portfolio.Accounts.Domain;
 using InvestmentLab.Portfolio.Contracts.Transactions;
 using InvestmentLab.Portfolio.Transactions.Application.Shared;
 using InvestmentLab.Portfolio.Transactions.Domain;
@@ -53,10 +54,20 @@ public sealed class RecordTradeHandler(TransactionRecorder recorder)
         if (command.Allocations is { Count: > 0 } given)
             return Allocation.TryAll(given.Select(allocation => (allocation.SubPortfolioId, allocation.Quantity)));
 
-        var weights = side == TradeSide.Buy
-            ? context.Account.TargetWeights()
-            : context.Holdings.WeightsOf(command.InstrumentId);
+        if (side == TradeSide.Buy)
+            return IntoTheOnlySubPortfolio(context.Account, quantity);
 
-        return Result<IReadOnlyList<Allocation>>.Success(TradeAllocator.Split(quantity, weights));
+        var holdingWeights = context.Holdings.WeightsOf(command.InstrumentId);
+
+        return Result<IReadOnlyList<Allocation>>.Success(TradeAllocator.Split(quantity, holdingWeights));
+    }
+
+    private static Result<IReadOnlyList<Allocation>> IntoTheOnlySubPortfolio(InvestmentAccount account, Quantity quantity)
+    {
+        var active = account.ActiveSubPortfolios.ToList();
+        if (active.Count != 1)
+            return TransactionErrors.SubPortfolioRequired(active.Count);
+
+        return Result<IReadOnlyList<Allocation>>.Success([new Allocation(active[0].Id, quantity)]);
     }
 }

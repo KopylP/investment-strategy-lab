@@ -23,7 +23,7 @@ internal static class TransactionTools
     }
 
     [McpServerTool(Name = "record_trade", Destructive = true)]
-    [Description("Records a buy or sell the user made at the broker.")]
+    [Description("Records a buy or sell the user made at the broker. A buy names its sub-portfolio in allocations unless the account has only one; a sell without allocations comes out of the sub-portfolios holding the instrument.")]
     public static async Task<RecordedTransaction> RecordTrade(
         Guid accountId,
         RecordTradeCommand trade,
