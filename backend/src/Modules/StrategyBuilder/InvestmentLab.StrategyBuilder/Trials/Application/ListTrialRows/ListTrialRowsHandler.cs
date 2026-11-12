@@ -87,7 +87,7 @@ public sealed class ListTrialRowsHandler(IDraftRepository drafts, TrialRunSummar
         Version: run.Version,
         ExperimentId: run.ExperimentId);
 
-    private static string? PeriodOf(TrialExperiment? experiment) =>
+    private static string? PeriodOf(TrialExperimentDto? experiment) =>
         experiment is null ? null : $"{experiment.Period.Start:yyyy-MM-dd}..{experiment.Period.End:yyyy-MM-dd}";
 
     private static int? QueuePositionOf(TrialRunDto run, IReadOnlyDictionary<Guid, int> positions) =>

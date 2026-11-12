@@ -49,10 +49,18 @@ public static class DraftMapping
             collapsed.Add(kind);
         }
 
-        var routes = layout.EdgeRoutes ?? new Dictionary<string, IReadOnlyList<NodePosition>>();
+        var positions = layout.Positions.ToDictionary(pair => pair.Key, pair => ToPosition(pair.Value));
+        var routes = ToRoutes(layout.EdgeRoutes);
         if (routes.Values.Any(points => points.Count > 128 || points.Any(point => !double.IsFinite(point.X) || !double.IsFinite(point.Y))))
             return DraftErrors.GraphInvalid("edge routes must contain finite coordinates and at most 128 points");
-        return new DraftLayout(layout.Positions, collapsed) { EdgeRoutes = routes };
+        return new DraftLayout(positions, collapsed) { EdgeRoutes = routes };
+    }
+
+    private static Dictionary<string, IReadOnlyList<NodePosition>> ToRoutes(IReadOnlyDictionary<string, IReadOnlyList<NodePositionDto>>? routes)
+    {
+        var given = routes ?? new Dictionary<string, IReadOnlyList<NodePositionDto>>();
+
+        return given.ToDictionary(pair => pair.Key, pair => (IReadOnlyList<NodePosition>)[.. pair.Value.Select(ToPosition)]);
     }
 
     private static Result<DraftSetup> ToSetup(DraftSetupDto setup) =>
@@ -90,7 +98,11 @@ public static class DraftMapping
         return PortfolioFlow.Upgrade(graph with { Nodes = [.. graph.Nodes, .. missing] });
     }
 
-    private static DraftReport ToReport(DraftReportDto report) => new(report.Code, report.Schedule, report.SignalKinds ?? [], report.SignalIds ?? []);
+    private static DraftReport ToReport(DraftReportDto report) => new(report.Code, ToTiming(report.Schedule), report.SignalKinds ?? [], report.SignalIds ?? []);
+
+    private static ReportTiming ToTiming(ReportTimingDto timing) => new(timing.Frequency, timing.Day, timing.Weekday, timing.Time, timing.Minute);
+
+    private static NodePosition ToPosition(NodePositionDto position) => new(position.X, position.Y);
 
     private static DraftSetupDto ToDto(DraftSetup setup) => new(setup.Funds, setup.BenchmarkId, setup.CashId, setup.VolatilityIndexId, setup.ExtraSeries);
 
@@ -102,9 +114,20 @@ public static class DraftMapping
             [.. graph.Links.Select(link => new LinkDto(link.From.Value, link.To.Value, link.Input, link.Output))]);
     }
 
-    private static LayoutDto ToDto(DraftLayout layout) => new(layout.Positions, [.. layout.Collapsed.Select(block => block.ToString())], layout.EdgeRoutes);
+    private static LayoutDto ToDto(DraftLayout layout)
+    {
+        var positions = layout.Positions.ToDictionary(pair => pair.Key, pair => ToDto(pair.Value));
+        var collapsed = layout.Collapsed.Select(block => block.ToString()).ToList();
+        var routes = layout.EdgeRoutes.ToDictionary(pair => pair.Key, pair => (IReadOnlyList<NodePositionDto>)[.. pair.Value.Select(ToDto)]);
 
-    private static DraftReportDto ToDto(DraftReport report) => new(report.Code, report.Schedule, report.SignalKinds, report.SignalIds);
+        return new LayoutDto(positions, collapsed, routes);
+    }
+
+    private static NodePositionDto ToDto(NodePosition position) => new(position.X, position.Y);
+
+    private static DraftReportDto ToDto(DraftReport report) => new(report.Code, ToDto(report.Schedule), report.SignalKinds, report.SignalIds);
+
+    private static ReportTimingDto ToDto(ReportTiming timing) => new(timing.Frequency, timing.Day, timing.Weekday, timing.Time, timing.Minute);
 
     private static BlockWordsDto ToDto(BlockWords words) => new(words.Block.ToString(), words.Sentence);
 }

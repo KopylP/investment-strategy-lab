@@ -19,5 +19,5 @@ public static class TrialMapping
         Sharpe: summary.Sharpe,
         MaxDrawdown: summary.MaxDrawdown,
         ExperimentId: run.ExperimentId,
-        Experiment: run.Experiment);
+        Experiment: run.Experiment is { } experiment ? TrialExperimentDto.From(experiment) : null);
 }

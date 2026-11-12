@@ -4,7 +4,7 @@ using InvestmentLab.StrategyBuilder.Trials.Domain;
 
 namespace InvestmentLab.StrategyBuilder.Trials.Application.RunTrial;
 
-public sealed record RunTrialCommand(Guid DraftId, string? Label, TrialExperiment? Experiment = null, bool Rerun = false);
+public sealed record RunTrialCommand(Guid DraftId, string? Label, TrialExperimentDto? Experiment = null, bool Rerun = false);
 
 public sealed class RunTrialHandler(
     IDraftRepository drafts,
@@ -30,16 +30,20 @@ public sealed class RunTrialHandler(
         if (!checkedDraft.Value.IsClean)
             return ProblemsOf(checkedDraft.Value.Problems);
 
+        var experiment = ExperimentOf(command.Experiment);
+        if (experiment.IsFailure)
+            return experiment.Error;
+
         var rules = checkedDraft.Value.Rules!;
-        var experimentCheck = await CheckExperiment(command.Experiment, rules, cancellationToken);
+        var experimentCheck = await CheckExperiment(experiment.Value, rules, cancellationToken);
         if (experimentCheck.IsFailure)
             return experimentCheck.Error;
 
-        var fingerprint = DraftFingerprint.Of(rules, draft.Setup, draft.Reports, command.Experiment);
+        var fingerprint = DraftFingerprint.Of(rules, draft.Setup, draft.Reports, experiment.Value);
         if (!command.Rerun && await ReusableTrialAsync(draft, fingerprint, cancellationToken) is { } reused)
             return reused;
 
-        var executed = await Execute(draft, rules, command.Experiment, cancellationToken);
+        var executed = await Execute(draft, rules, experiment.Value, cancellationToken);
         if (executed.IsFailure)
             return executed.Error;
 
@@ -59,12 +63,22 @@ public sealed class RunTrialHandler(
         return described.Status == nameof(TrialStatus.Failed) ? null : described;
     }
 
+    private static Result<TrialExperiment?> ExperimentOf(TrialExperimentDto? asked)
+    {
+        if (asked is null)
+            return Result<TrialExperiment?>.Success(null);
+
+        var experiment = asked.ToDomain();
+        if (experiment.IsFailure)
+            return experiment.Error;
+
+        return experiment.Value;
+    }
+
     private async Task<Result> CheckExperiment(TrialExperiment? experiment, GeneratedRules rules, CancellationToken cancellationToken)
     {
         if (experiment is null)
             return Result.Success();
-        if (experiment.ShapeProblem() is { } shapeProblem)
-            return Result.Failure(shapeProblem);
 
         return await experiments.CheckAsync(experiment, rules.Json, cancellationToken);
     }
