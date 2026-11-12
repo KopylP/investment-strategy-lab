@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.Portfolio.Transactions.Application.Shared;
 
 namespace InvestmentLab.Portfolio.Transactions.Application.GetStatementImport;

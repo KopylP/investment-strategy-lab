@@ -1,7 +1,6 @@
 using InvestmentLab.Strategies.Catalog.Domain;
 using System.Text.Json;
 using InvestmentLab.Strategies.Definitions.Domain;
-using Json.Schema;
 
 namespace InvestmentLab.Strategies.Definitions.Application.Shared;
 

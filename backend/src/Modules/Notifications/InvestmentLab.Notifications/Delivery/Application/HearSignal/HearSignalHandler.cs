@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.Notifications.Delivery.Domain;
 
 namespace InvestmentLab.Notifications.Delivery.Application.HearSignal;

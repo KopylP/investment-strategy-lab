@@ -1,5 +1,3 @@
-using InvestmentLab.Rebalancing.Reports.Application.GetReport;
-
 namespace InvestmentLab.Rebalancing.Reports.Application.Shared;
 
 public sealed record ReportSummaryDto(

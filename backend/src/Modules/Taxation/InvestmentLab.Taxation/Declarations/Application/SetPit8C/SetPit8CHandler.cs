@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Taxation.Declarations.Application.Shared;
 using InvestmentLab.Taxation.Declarations.Domain;

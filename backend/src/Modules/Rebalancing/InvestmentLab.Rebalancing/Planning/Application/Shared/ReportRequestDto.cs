@@ -1,5 +1,3 @@
-using InvestmentLab.Rebalancing.Planning.Application.RequestReport;
-
 namespace InvestmentLab.Rebalancing.Planning.Application.Shared;
 
 public sealed record ReportRequestDto(

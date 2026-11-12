@@ -1,5 +1,3 @@
-using InvestmentLab.Identity.Profiles.Domain;
-
 namespace InvestmentLab.Identity.Users.Domain;
 
 public static class UserErrors

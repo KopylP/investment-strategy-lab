@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.Rebalancing.Reports.Application.Shared;
 using InvestmentLab.Rebalancing.Reports.Domain;
 

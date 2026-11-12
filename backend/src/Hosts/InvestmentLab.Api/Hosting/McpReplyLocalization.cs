@@ -2,7 +2,6 @@ using InvestmentLab.BuildingBlocks.Localization;
 using InvestmentLab.BuildingBlocks.Mcp;
 using InvestmentLab.Strategies.Contracts;
 using ModelContextProtocol.Protocol;
-using ModelContextProtocol.Server;
 
 namespace InvestmentLab.Api.Hosting;
 

@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.Backtesting.Experiments.Domain;
 
 namespace InvestmentLab.Backtesting.Experiments.Application.FailExperiment;

@@ -1,5 +1,3 @@
-using Microsoft.Extensions.DependencyInjection.Extensions;
-
 namespace InvestmentLab.BuildingBlocks.Messaging;
 
 public interface IIntegrationEventHandler<in TEvent>

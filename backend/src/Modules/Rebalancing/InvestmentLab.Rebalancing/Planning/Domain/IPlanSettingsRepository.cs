@@ -1,5 +1,3 @@
-using InvestmentLab.Rebalancing.Planning.Domain;
-
 namespace InvestmentLab.Rebalancing.Planning.Domain;
 
 public interface IPlanSettingsRepository

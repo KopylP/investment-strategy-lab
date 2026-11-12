@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Taxation.Assessments.Domain;

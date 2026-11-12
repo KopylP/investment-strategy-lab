@@ -1,9 +1,7 @@
 using InvestmentLab.MarketData.Contracts.FxRates;
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.MarketData.Contracts.Quotes;
-using InvestmentLab.Performance.Shadow.Domain;
 using InvestmentLab.Performance.Valuation.Domain;
-using InvestmentLab.Portfolio.Contracts.Transactions;
 
 namespace InvestmentLab.Performance.Valuation.Application.Shared;
 

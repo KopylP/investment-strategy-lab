@@ -1,6 +1,5 @@
 using InvestmentLab.BuildingBlocks.Scheduling;
 using InvestmentLab.Rebalancing.Planning.Application.Shared;
-using InvestmentLab.Rebalancing.Planning.Application.RequestReport;
 using InvestmentLab.Rebalancing.Planning.Domain;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.Portfolio.Contracts.Transactions;
 using InvestmentLab.Portfolio.Transactions.Application.RecordCashMovement;
 using InvestmentLab.Portfolio.Transactions.Application.Shared;

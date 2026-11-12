@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Rebalancing.Planning.Domain;
 using InvestmentLab.Signals.Contracts;

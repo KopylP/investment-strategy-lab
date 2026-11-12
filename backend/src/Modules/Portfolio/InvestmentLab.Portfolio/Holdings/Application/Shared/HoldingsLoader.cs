@@ -1,6 +1,5 @@
 using InvestmentLab.Portfolio.Accounts.Domain;
 using InvestmentLab.Portfolio.Holdings.Domain;
-using InvestmentLab.Portfolio.Transactions.Domain;
 
 namespace InvestmentLab.Portfolio.Holdings.Application.Shared;
 

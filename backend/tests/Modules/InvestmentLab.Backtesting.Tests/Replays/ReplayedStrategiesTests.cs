@@ -1,4 +1,3 @@
-using InvestmentLab.Backtesting.Replays.Domain;
 using InvestmentLab.Backtesting.Replays.Infrastructure;
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.Strategies.Contracts;

@@ -1,4 +1,3 @@
-using InvestmentLab.MarketData.Instruments.Application;
 using InvestmentLab.MarketData.Instruments.Application.RegisterInstrument;
 using InvestmentLab.MarketData.Instruments.Domain;
 using InvestmentLab.MarketData.Instruments.Infrastructure.Seed;

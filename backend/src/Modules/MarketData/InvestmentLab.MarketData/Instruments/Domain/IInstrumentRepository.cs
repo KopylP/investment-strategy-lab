@@ -1,5 +1,3 @@
-using InvestmentLab.MarketData.Instruments.Domain;
-
 namespace InvestmentLab.MarketData.Instruments.Domain;
 
 public interface IInstrumentRepository

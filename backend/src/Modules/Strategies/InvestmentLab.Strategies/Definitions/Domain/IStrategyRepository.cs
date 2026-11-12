@@ -1,5 +1,3 @@
-using InvestmentLab.Strategies.Definitions.Domain;
-
 namespace InvestmentLab.Strategies.Definitions.Domain;
 
 public interface IStrategyRepository

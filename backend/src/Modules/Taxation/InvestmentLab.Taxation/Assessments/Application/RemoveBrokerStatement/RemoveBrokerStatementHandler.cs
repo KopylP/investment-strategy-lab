@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.Taxation.Assessments.Application.Shared;
 using InvestmentLab.Taxation.BrokerStatements.Domain;
 

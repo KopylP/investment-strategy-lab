@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Signals.Monitoring.Application.Shared;

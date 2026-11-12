@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.Portfolio.Contracts.Holdings;
 using InvestmentLab.Portfolio.Holdings.Application.Shared;
 using InvestmentLab.Portfolio.Holdings.Domain;

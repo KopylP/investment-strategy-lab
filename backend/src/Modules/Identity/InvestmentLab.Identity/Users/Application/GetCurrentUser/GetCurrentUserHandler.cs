@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Identity.Users.Application.Shared;
 using InvestmentLab.Identity.Users.Domain;

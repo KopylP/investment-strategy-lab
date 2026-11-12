@@ -1,5 +1,3 @@
-using InvestmentLab.Performance.Valuation.Domain;
-
 namespace InvestmentLab.Performance.Valuation.Application.Shared;
 
 public sealed record SeriesPointDto(

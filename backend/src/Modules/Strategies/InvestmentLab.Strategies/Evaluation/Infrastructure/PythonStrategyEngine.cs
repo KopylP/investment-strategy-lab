@@ -3,7 +3,6 @@ using InvestmentLab.Strategies.Contracts;
 using InvestmentLab.Strategies.Evaluation.Application.Shared;
 using InvestmentLab.Strategies.Shared.Infrastructure.Engine;
 using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
 
 namespace InvestmentLab.Strategies.Evaluation.Infrastructure;
 

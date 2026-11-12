@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.Notifications.Delivery.Application.Shared;
 using InvestmentLab.Notifications.Delivery.Domain;
 

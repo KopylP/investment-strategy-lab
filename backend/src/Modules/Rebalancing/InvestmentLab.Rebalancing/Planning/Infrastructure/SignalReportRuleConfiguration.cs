@@ -1,5 +1,4 @@
 using InvestmentLab.Rebalancing.Planning.Domain;
-using InvestmentLab.Rebalancing.Shared.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

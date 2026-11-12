@@ -1,5 +1,4 @@
 using InvestmentLab.Taxation.Assessments.Domain;
-using InvestmentLab.Taxation.BrokerStatements.Domain;
 using InvestmentLab.Taxation.Ledger.Domain;
 
 namespace InvestmentLab.Taxation.Tests;

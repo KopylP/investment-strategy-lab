@@ -2,9 +2,7 @@ using System.Reflection;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Portfolio.Accounts.Domain;
-using InvestmentLab.Portfolio.Accounts.Infrastructure;
 using InvestmentLab.Portfolio.Transactions.Domain;
-using InvestmentLab.Portfolio.Transactions.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 namespace InvestmentLab.Portfolio.Shared.Infrastructure;

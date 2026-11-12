@@ -1,20 +1,13 @@
 using System.Reflection;
-using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.BuildingBlocks.Modules;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Identity.Contracts;
 using InvestmentLab.Identity.Profiles.Api;
-using InvestmentLab.Identity.Profiles.Application.GetProfile;
-using InvestmentLab.Identity.Profiles.Application.UpdateProfile;
 using InvestmentLab.Identity.Profiles.Domain;
 using InvestmentLab.Identity.Profiles.Infrastructure;
 using InvestmentLab.Identity.Shared.Infrastructure;
 using InvestmentLab.Identity.Users.Api;
-using InvestmentLab.Identity.Users.Application.GetCurrentUser;
-using InvestmentLab.Identity.Users.Application.Integration;
-using InvestmentLab.Identity.Users.Application.Login;
-using InvestmentLab.Identity.Users.Application.Register;
 using InvestmentLab.Identity.Users.Application.Shared;
 using InvestmentLab.Identity.Users.Domain;
 using InvestmentLab.Identity.Users.Infrastructure;
@@ -26,7 +19,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Caching.Hybrid;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 

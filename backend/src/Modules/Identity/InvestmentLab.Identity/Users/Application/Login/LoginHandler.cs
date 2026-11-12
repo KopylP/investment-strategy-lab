@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.Identity.Users.Application.Shared;
 
 namespace InvestmentLab.Identity.Users.Application.Login;

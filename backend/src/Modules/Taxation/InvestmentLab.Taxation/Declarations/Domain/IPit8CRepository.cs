@@ -1,5 +1,3 @@
-using InvestmentLab.Taxation.Declarations.Domain;
-
 namespace InvestmentLab.Taxation.Declarations.Domain;
 
 public interface IPit8CRepository

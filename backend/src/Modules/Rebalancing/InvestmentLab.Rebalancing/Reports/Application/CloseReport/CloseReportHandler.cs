@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.Rebalancing.Reports.Domain;
 
 namespace InvestmentLab.Rebalancing.Reports.Application.CloseReport;

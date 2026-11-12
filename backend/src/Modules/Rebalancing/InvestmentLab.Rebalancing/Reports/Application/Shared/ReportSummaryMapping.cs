@@ -1,4 +1,3 @@
-using InvestmentLab.Rebalancing.Reports.Application.GetReport;
 using InvestmentLab.Rebalancing.Reports.Domain;
 
 namespace InvestmentLab.Rebalancing.Reports.Application.Shared;

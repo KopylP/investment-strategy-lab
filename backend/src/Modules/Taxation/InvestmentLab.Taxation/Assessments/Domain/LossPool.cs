@@ -1,5 +1,3 @@
-using InvestmentLab.Taxation.BrokerStatements.Domain;
-
 namespace InvestmentLab.Taxation.Assessments.Domain;
 
 public sealed class LossPool(LossYear loss)

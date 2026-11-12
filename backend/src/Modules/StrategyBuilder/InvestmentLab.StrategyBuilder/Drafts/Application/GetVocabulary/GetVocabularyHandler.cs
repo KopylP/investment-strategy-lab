@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using System.Text.Json;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 

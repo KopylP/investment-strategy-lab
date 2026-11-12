@@ -1,6 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-
 namespace InvestmentLab.BuildingBlocks.Messaging;
 
 internal interface IIntegrationEventDelivery

@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.Rebalancing.Planning.Domain;
 
 namespace InvestmentLab.Rebalancing.Planning.Application.RemoveSignalReportRule;

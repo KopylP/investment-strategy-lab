@@ -1,5 +1,4 @@
 using InvestmentLab.Notifications.Delivery.Domain;
-using InvestmentLab.Notifications.Shared.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

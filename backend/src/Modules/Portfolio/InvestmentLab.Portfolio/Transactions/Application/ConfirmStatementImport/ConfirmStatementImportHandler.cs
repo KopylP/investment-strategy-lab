@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using System.Globalization;
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.Portfolio.Accounts.Domain;

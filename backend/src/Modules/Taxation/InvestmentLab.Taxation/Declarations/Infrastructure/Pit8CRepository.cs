@@ -1,4 +1,3 @@
-using InvestmentLab.Taxation.Declarations.Application;
 using InvestmentLab.Taxation.Declarations.Domain;
 using InvestmentLab.Taxation.Shared.Infrastructure;
 using Microsoft.EntityFrameworkCore;

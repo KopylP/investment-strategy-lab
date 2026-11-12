@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.Taxation.Declarations.Application.Shared;
 
 namespace InvestmentLab.Taxation.Declarations.Application.GetDeclaration;

@@ -1,4 +1,3 @@
-using System.Text.Json;
 using InvestmentLab.Strategies.Definitions.Domain;
 
 namespace InvestmentLab.Strategies.Definitions.Application.Shared;

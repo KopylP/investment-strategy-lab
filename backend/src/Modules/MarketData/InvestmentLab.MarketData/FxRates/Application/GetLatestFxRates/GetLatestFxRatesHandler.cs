@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.MarketData.FxRates.Application.Shared;
 using InvestmentLab.MarketData.FxRates.Domain;
 

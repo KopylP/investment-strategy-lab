@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.Strategies.Contracts;
 using InvestmentLab.Strategies.Evaluation.Application.DecideStrategy;
 using InvestmentLab.Strategies.Evaluation.Application.Shared;

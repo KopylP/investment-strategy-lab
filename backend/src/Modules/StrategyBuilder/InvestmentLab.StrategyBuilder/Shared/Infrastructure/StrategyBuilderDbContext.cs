@@ -2,7 +2,6 @@ using System.Reflection;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
-using InvestmentLab.StrategyBuilder.Drafts.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 namespace InvestmentLab.StrategyBuilder.Shared.Infrastructure;

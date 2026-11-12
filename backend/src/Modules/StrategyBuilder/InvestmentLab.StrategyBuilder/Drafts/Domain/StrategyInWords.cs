@@ -1,5 +1,3 @@
-using System.Text.Json;
-
 namespace InvestmentLab.StrategyBuilder.Drafts.Domain;
 
 public static class StrategyInWords

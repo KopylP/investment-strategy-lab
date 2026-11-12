@@ -1,4 +1,3 @@
-using System.Text.Json.Serialization;
 using InvestmentLab.BuildingBlocks.Http;
 using InvestmentLab.Portfolio.Transactions.Application.ImportPositions;
 using Microsoft.AspNetCore.Builder;

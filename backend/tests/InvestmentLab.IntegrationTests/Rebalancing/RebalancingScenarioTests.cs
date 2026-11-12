@@ -7,7 +7,6 @@ using InvestmentLab.Portfolio.Contracts.Holdings;
 using InvestmentLab.Rebalancing.Contracts;
 using InvestmentLab.Rebalancing.Planning.Api;
 using InvestmentLab.Rebalancing.Planning.Application.EnsureDeclaredSignalRules;
-using InvestmentLab.Rebalancing.Planning.Application.RequestReport;
 using InvestmentLab.Rebalancing.Planning.Application.Shared;
 using InvestmentLab.Rebalancing.Reports.Application.GetReport;
 using InvestmentLab.Signals.Monitoring.Application.EnsureBuiltInSignals;

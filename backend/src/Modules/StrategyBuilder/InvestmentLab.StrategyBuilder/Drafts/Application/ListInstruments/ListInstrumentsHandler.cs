@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 
 namespace InvestmentLab.StrategyBuilder.Drafts.Application.ListInstruments;

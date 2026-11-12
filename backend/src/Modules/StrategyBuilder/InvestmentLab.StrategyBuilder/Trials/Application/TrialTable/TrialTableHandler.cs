@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.Backtesting.Contracts;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 using InvestmentLab.StrategyBuilder.Trials.Domain;

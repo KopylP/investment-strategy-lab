@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.Taxation.Assessments.Domain;
 
 namespace InvestmentLab.Taxation.Assessments.Application.ListTaxPolicies;

@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.Backtesting.Replays.Application.Shared;
 using InvestmentLab.Backtesting.Replays.Domain;
 

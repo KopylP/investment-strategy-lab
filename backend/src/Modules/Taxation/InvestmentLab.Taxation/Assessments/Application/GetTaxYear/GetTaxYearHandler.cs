@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.Taxation.Assessments.Application.Shared;

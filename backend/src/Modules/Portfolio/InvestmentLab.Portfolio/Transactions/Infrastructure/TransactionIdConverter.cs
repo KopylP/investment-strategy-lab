@@ -1,4 +1,3 @@
-using InvestmentLab.Portfolio.Transactions.Application.Shared;
 using InvestmentLab.Portfolio.Transactions.Domain;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 

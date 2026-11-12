@@ -1,7 +1,6 @@
 using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.Rebalancing.Contracts;
 using InvestmentLab.Rebalancing.Planning.Application.AdvanceReportRequests;
-using InvestmentLab.Rebalancing.Planning.Application.RequestReport;
 using InvestmentLab.Rebalancing.Planning.Domain;
 
 namespace InvestmentLab.Rebalancing.Planning.Application.Integration;

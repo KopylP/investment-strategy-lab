@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.Backtesting.Replays.Domain;
 
 namespace InvestmentLab.Backtesting.Replays.Application.GetMoneyOutcomes;

@@ -1,8 +1,6 @@
 using System.Reflection;
 using InvestmentLab.Backtesting.Replays.Domain;
-using InvestmentLab.Backtesting.Replays.Infrastructure;
 using InvestmentLab.Backtesting.Experiments.Domain;
-using InvestmentLab.Backtesting.Experiments.Infrastructure;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.BuildingBlocks.Security;
 using Microsoft.EntityFrameworkCore;

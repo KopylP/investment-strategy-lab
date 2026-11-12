@@ -1,5 +1,3 @@
-using InvestmentLab.Rebalancing.Planning.Application.Shared;
-
 namespace InvestmentLab.Rebalancing.Planning.Domain;
 
 public sealed class PlanSettings : AggregateRoot<Guid>, IUserOwned

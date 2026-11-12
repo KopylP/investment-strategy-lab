@@ -1,5 +1,3 @@
-using InvestmentLab.Portfolio.Accounts.Domain;
-
 namespace InvestmentLab.Portfolio.Accounts.Domain;
 
 public interface IAccountRepository

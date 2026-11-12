@@ -1,5 +1,3 @@
-using InvestmentLab.Identity.Users.Domain;
-
 namespace InvestmentLab.Identity.Profiles.Domain;
 
 public static class ProfileErrors

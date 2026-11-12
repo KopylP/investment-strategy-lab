@@ -1,6 +1,5 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.Strategies.Definitions.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

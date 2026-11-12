@@ -1,5 +1,3 @@
-using InvestmentLab.Portfolio.Transactions.Domain;
-
 namespace InvestmentLab.Portfolio.Transactions.Application.Shared;
 
 public sealed record ImportCountsDto(

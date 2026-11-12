@@ -2,7 +2,6 @@ using System.Reflection;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Notifications.Delivery.Domain;
-using InvestmentLab.Notifications.Delivery.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 namespace InvestmentLab.Notifications.Shared.Infrastructure;

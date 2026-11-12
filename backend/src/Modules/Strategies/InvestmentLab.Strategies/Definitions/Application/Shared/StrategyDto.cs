@@ -1,5 +1,4 @@
 using InvestmentLab.Strategies.Contracts;
-using Json.Schema;
 
 namespace InvestmentLab.Strategies.Definitions.Application.Shared;
 

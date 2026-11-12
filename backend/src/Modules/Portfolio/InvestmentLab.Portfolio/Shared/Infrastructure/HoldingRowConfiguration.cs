@@ -1,4 +1,3 @@
-using InvestmentLab.Portfolio.Accounts.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

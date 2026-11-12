@@ -1,24 +1,15 @@
 using System.Reflection;
 using System.Net.Http.Headers;
-using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.BuildingBlocks.Modules;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.Notifications.Delivery.Api;
-using InvestmentLab.Notifications.Delivery.Application.ChangeNotificationSettings;
-using InvestmentLab.Notifications.Delivery.Application.GetMutedSignals;
-using InvestmentLab.Notifications.Delivery.Application.GetNotificationSettings;
-using InvestmentLab.Notifications.Delivery.Application.HearSignal;
 using InvestmentLab.Notifications.Delivery.Application.Integration;
-using InvestmentLab.Notifications.Delivery.Application.SendTestNotification;
 using InvestmentLab.Notifications.Delivery.Application.Shared;
 using InvestmentLab.Notifications.Delivery.Domain;
 using InvestmentLab.Notifications.Delivery.Infrastructure;
 using InvestmentLab.Notifications.Shared.Infrastructure;
-using InvestmentLab.Rebalancing.Contracts;
-using InvestmentLab.Signals.Contracts;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 

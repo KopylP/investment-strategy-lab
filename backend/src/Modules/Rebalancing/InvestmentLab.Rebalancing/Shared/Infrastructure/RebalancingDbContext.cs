@@ -2,9 +2,7 @@ using System.Reflection;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Rebalancing.Planning.Domain;
-using InvestmentLab.Rebalancing.Planning.Infrastructure;
 using InvestmentLab.Rebalancing.Reports.Domain;
-using InvestmentLab.Rebalancing.Reports.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 namespace InvestmentLab.Rebalancing.Shared.Infrastructure;

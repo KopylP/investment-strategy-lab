@@ -1,4 +1,3 @@
-using InvestmentLab.Portfolio.Contracts.Transactions;
 using InvestmentLab.Rebalancing.Reports.Domain;
 
 namespace InvestmentLab.Rebalancing.Reports.Application.Shared;

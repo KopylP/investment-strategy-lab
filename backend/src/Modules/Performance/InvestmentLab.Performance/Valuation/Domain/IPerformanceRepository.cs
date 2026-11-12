@@ -1,5 +1,4 @@
 using InvestmentLab.Performance.Shadow.Domain;
-using InvestmentLab.Performance.Valuation.Domain;
 
 namespace InvestmentLab.Performance.Valuation.Domain;
 

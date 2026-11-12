@@ -1,5 +1,4 @@
 using InvestmentLab.Strategies.Definitions.Application.Shared;
-using InvestmentLab.Strategies.Catalog.Domain;
 using InvestmentLab.Strategies.Contracts;
 using InvestmentLab.Strategies.Definitions.Domain;
 using InvestmentLab.Strategies.Shared.Infrastructure.Engine;

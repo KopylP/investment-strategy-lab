@@ -1,6 +1,5 @@
 using InvestmentLab.Rebalancing.Contracts;
 using InvestmentLab.Rebalancing.Reports.Domain;
-using Microsoft.EntityFrameworkCore;
 
 namespace InvestmentLab.Rebalancing.Reports.Infrastructure;
 

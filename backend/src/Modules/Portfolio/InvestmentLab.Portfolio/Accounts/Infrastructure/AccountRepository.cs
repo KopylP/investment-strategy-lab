@@ -1,4 +1,3 @@
-using InvestmentLab.Portfolio.Accounts.Application;
 using InvestmentLab.Portfolio.Accounts.Domain;
 using InvestmentLab.Portfolio.Shared.Infrastructure;
 using Microsoft.EntityFrameworkCore;

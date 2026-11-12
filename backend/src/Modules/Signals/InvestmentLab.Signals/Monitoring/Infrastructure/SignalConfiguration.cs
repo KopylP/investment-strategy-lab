@@ -1,5 +1,4 @@
 using InvestmentLab.Signals.Monitoring.Domain;
-using InvestmentLab.Signals.Shared.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

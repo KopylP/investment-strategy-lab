@@ -1,4 +1,3 @@
-using InvestmentLab.Portfolio.Accounts.Domain;
 using InvestmentLab.Portfolio.Contracts.Holdings;
 using InvestmentLab.Portfolio.Holdings.Application.GetHoldings;
 

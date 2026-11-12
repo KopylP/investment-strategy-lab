@@ -2,7 +2,6 @@ using System.Reflection;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Signals.Monitoring.Domain;
-using InvestmentLab.Signals.Monitoring.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 namespace InvestmentLab.Signals.Shared.Infrastructure;

@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.MarketData.Instruments.Application.Shared;
 using InvestmentLab.MarketData.Instruments.Domain;
 

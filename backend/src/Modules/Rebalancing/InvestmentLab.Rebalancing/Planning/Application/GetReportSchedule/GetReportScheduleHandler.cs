@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using System.Globalization;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Rebalancing.Planning.Application.Shared;

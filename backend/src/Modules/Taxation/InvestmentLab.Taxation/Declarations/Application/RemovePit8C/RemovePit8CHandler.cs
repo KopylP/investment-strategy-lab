@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.Taxation.Declarations.Domain;
 
 namespace InvestmentLab.Taxation.Declarations.Application.RemovePit8C;

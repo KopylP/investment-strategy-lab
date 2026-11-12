@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.Rebalancing.Planning.Application.Shared;
 
 namespace InvestmentLab.Rebalancing.Planning.Application.UseStrategySchedule;

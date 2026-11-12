@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.Performance.Valuation.Application.Shared;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 

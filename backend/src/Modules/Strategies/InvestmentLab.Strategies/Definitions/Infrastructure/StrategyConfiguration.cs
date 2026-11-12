@@ -1,6 +1,4 @@
-using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.Strategies.Definitions.Domain;
-using InvestmentLab.Strategies.Shared.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

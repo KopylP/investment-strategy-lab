@@ -3,7 +3,6 @@ using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.BuildingBlocks.Scheduling;
 using InvestmentLab.BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;

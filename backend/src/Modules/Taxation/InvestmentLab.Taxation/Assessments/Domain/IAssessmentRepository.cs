@@ -1,5 +1,3 @@
-using InvestmentLab.Taxation.Assessments.Domain;
-
 namespace InvestmentLab.Taxation.Assessments.Domain;
 
 public interface IAssessmentRepository

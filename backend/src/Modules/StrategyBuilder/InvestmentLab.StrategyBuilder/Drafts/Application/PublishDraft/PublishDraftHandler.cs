@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.StrategyBuilder.Drafts.Application.Shared;
 using InvestmentLab.StrategyBuilder.Drafts.Application.CleanUpTrials;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;

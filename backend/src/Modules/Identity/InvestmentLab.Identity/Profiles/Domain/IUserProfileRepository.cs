@@ -1,5 +1,3 @@
-using InvestmentLab.Identity.Profiles.Domain;
-
 namespace InvestmentLab.Identity.Profiles.Domain;
 
 public interface IUserProfileRepository

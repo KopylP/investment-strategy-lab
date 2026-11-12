@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using System.Text.Json;
 using InvestmentLab.Strategies.Catalog.Application.Shared;
 using InvestmentLab.Strategies.Catalog.Domain;

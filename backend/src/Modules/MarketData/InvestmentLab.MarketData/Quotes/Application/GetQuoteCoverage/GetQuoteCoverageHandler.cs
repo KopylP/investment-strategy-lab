@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.MarketData.Contracts.Quotes;
 using InvestmentLab.MarketData.Instruments.Domain;
 using InvestmentLab.MarketData.Quotes.Domain;

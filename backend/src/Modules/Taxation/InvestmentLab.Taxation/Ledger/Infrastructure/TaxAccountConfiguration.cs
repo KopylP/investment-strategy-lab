@@ -1,5 +1,4 @@
 using InvestmentLab.Taxation.Ledger.Domain;
-using InvestmentLab.Taxation.Shared.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

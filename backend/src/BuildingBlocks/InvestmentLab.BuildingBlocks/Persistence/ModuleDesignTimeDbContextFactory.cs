@@ -1,4 +1,3 @@
-using InvestmentLab.BuildingBlocks.Messaging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 

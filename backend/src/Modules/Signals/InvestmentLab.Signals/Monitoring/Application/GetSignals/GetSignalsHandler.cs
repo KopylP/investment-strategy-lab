@@ -1,4 +1,3 @@
-using InvestmentLab.SharedKernel;
 using InvestmentLab.Signals.Monitoring.Domain;
 
 namespace InvestmentLab.Signals.Monitoring.Application.GetSignals;

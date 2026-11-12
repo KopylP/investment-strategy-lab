@@ -1,5 +1,3 @@
-using InvestmentLab.Performance.Valuation.Domain;
-
 namespace InvestmentLab.Performance.Shadow.Domain;
 
 public sealed class PlannedReport : IUserOwned

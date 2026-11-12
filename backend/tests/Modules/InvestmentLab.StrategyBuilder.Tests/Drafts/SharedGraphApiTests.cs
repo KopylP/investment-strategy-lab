@@ -1,4 +1,3 @@
-using System.Text.Json;
 using InvestmentLab.StrategyBuilder.Drafts.Application.Shared;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 using static InvestmentLab.StrategyBuilder.Tests.Drafts.SampleDrafts;

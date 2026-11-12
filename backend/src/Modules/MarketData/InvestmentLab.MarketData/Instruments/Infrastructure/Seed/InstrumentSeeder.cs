@@ -1,7 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using InvestmentLab.BuildingBlocks.Persistence;
-using InvestmentLab.MarketData.Instruments.Application;
 using InvestmentLab.MarketData.Instruments.Application.RegisterInstrument;
 using InvestmentLab.MarketData.Instruments.Domain;
 using Microsoft.Extensions.Logging;

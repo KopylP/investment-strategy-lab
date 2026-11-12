@@ -1,6 +1,5 @@
 using InvestmentLab.Performance.Shadow.Domain;
 using InvestmentLab.Performance.Shared.Infrastructure;
-using InvestmentLab.Performance.Valuation.Application;
 using InvestmentLab.Performance.Valuation.Domain;
 using Microsoft.EntityFrameworkCore;
 
