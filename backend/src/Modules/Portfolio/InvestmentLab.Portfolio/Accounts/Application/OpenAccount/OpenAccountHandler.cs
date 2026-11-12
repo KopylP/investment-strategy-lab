@@ -9,7 +9,7 @@ public sealed record OpenAccountCommand(
     string Name,
     string Broker,
     string BaseCurrency,
-    IReadOnlyList<NewSubPortfolio> SubPortfolios,
+    IReadOnlyList<NewSubPortfolioDto> SubPortfolios,
     ContributionPolicyChoice? ContributionPolicy = null,
     string? TaxPolicyCode = null);
 
@@ -33,7 +33,7 @@ public sealed class OpenAccountHandler(IAccountRepository accounts, ITaxPolicyDi
 
         foreach (var asked in command.SubPortfolios ?? [])
         {
-            var draft = SubPortfolioDraft.TryOf(asked);
+            var draft = SubPortfolioDraft.TryOf(asked.ToDomain());
             if (draft.IsFailure)
                 return draft.Error;
 

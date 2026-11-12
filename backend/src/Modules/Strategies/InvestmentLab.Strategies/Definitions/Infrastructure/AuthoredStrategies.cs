@@ -5,7 +5,6 @@ using InvestmentLab.Strategies.Definitions.Application.CheckParameters;
 using InvestmentLab.Strategies.Definitions.Application.DeleteTrialStrategy;
 using InvestmentLab.Strategies.Definitions.Application.PublishStrategy;
 using InvestmentLab.Strategies.Definitions.Application.WriteTrialVersion;
-using InvestmentLab.Strategies.Definitions.Domain;
 
 namespace InvestmentLab.Strategies.Definitions.Infrastructure;
 
@@ -34,16 +33,8 @@ internal sealed class AuthoredStrategies(
     public async Task<AuthoringResult<PublishedVersionDto>> PublishAsync(PublishRequest request, CancellationToken cancellationToken) =>
         ToAuthoring(await publish.Handle(request, cancellationToken));
 
-    public async Task<AuthoringResult<ParametersCheckDto>> CheckParametersAsync(string typeCode, string parameters, CancellationToken cancellationToken)
-    {
-        var check = await checkParameters.Handle(typeCode, parameters, cancellationToken);
-        if (check.IsFailure)
-            return Failure<ParametersCheckDto>(check.Error);
-
-        var problems = check.Value.Problems.Select(ToDto).ToList();
-
-        return new AuthoringResult<ParametersCheckDto>(new ParametersCheckDto(problems, check.Value.SignalIds, check.Value.HistoryBars));
-    }
+    public async Task<AuthoringResult<ParametersCheckDto>> CheckParametersAsync(string typeCode, string parameters, CancellationToken cancellationToken) =>
+        ToAuthoring(await checkParameters.Handle(typeCode, parameters, cancellationToken));
 
     private static AuthoringResult<T> ToAuthoring<T>(Result<T> result) =>
         result.IsSuccess ? new AuthoringResult<T>(result.Value) : Failure<T>(result.Error);
@@ -58,6 +49,4 @@ internal sealed class AuthoredStrategies(
 
         return problems ?? [];
     }
-
-    private static ParameterProblemDto ToDto(ParameterProblem problem) => new(problem.Path, problem.Code, problem.Message);
 }

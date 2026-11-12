@@ -95,7 +95,7 @@ public sealed class DescribeInstrumentsTests
         repository.Items.AddRange([broadcom, Stock("Xtrackers MSCI Japan ESG", "XDJE.DE")]);
         var lookup = new FakeLookup();
 
-        await new DescribeInstrumentsHandler(repository, lookup, new FixedClock(Now)).Handle([broadcom.Id], TestContext.Current.CancellationToken);
+        await new DescribeInstrumentsHandler(repository, lookup, new FixedClock(Now)).Handle([broadcom.Id.Value], TestContext.Current.CancellationToken);
 
         lookup.Asked.ShouldBe(["AVGO"]);
         broadcom.Description.ShouldBe("Broadcom Inc. designs semiconductors.");

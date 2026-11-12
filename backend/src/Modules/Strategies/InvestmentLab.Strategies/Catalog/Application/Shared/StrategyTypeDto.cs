@@ -1,5 +1,4 @@
 using System.Text.Json;
-using InvestmentLab.Strategies.Catalog.Domain;
 
 namespace InvestmentLab.Strategies.Catalog.Application.Shared;
 
@@ -13,4 +12,4 @@ public sealed record StrategyTypeDto(
     IReadOnlyList<string> RequiredSeriesRoles,
     JsonElement ParametersSchema,
     JsonElement? DefaultParameters,
-    IReadOnlyList<ReportDefinition> Reports);
+    IReadOnlyList<ReportDefinitionDto> Reports);

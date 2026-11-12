@@ -4,7 +4,7 @@ using InvestmentLab.Portfolio.Contracts.Accounts;
 
 namespace InvestmentLab.Portfolio.Accounts.Application.AddSubPortfolio;
 
-public sealed record AddSubPortfolioCommand(NewSubPortfolio SubPortfolio, IReadOnlyDictionary<Guid, decimal> TargetSharesOfOthers);
+public sealed record AddSubPortfolioCommand(NewSubPortfolioDto SubPortfolio, IReadOnlyDictionary<Guid, decimal> TargetSharesOfOthers);
 
 public sealed class AddSubPortfolioHandler(IAccountRepository accounts, TimeProvider clock)
 {
@@ -13,7 +13,7 @@ public sealed class AddSubPortfolioHandler(IAccountRepository accounts, TimeProv
         if (accountId == Guid.Empty || await accounts.FindAsync(AccountId.Of(accountId), cancellationToken) is not { } account)
             return AccountErrors.NotFound(accountId);
 
-        var draft = SubPortfolioDraft.TryOf(command.SubPortfolio);
+        var draft = SubPortfolioDraft.TryOf(command.SubPortfolio.ToDomain());
         if (draft.IsFailure)
             return draft.Error;
 

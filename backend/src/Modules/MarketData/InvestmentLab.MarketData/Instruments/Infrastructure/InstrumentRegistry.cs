@@ -53,26 +53,28 @@ internal sealed class InstrumentRegistry(
         if (await instruments.FindOwnerAsync(symbol.Value, cancellationToken) is { } owner)
             return new RegisteredInstrumentDto(owner.Value, null);
 
-        var command = RegisterCommandOf(instrument, symbol.Value);
+        var kind = KindOf(instrument);
 
-        var result = command.Kind == InstrumentKind.Etf
+        var result = kind == InstrumentKind.Etf
             ? await registerFund.Handle(new RegisterListedFundCommand(instrument.Symbol, instrument.Name, instrument.TradingCurrency), cancellationToken)
-            : await register.Handle(command, cancellationToken);
+            : await register.Handle(RegisterCommandOf(instrument, kind, symbol.Value), cancellationToken);
         if (result.IsFailure)
             return new RegisteredInstrumentDto(null, result.Error.AsMessage());
 
-        await describe.Handle([InstrumentId.Of(result.Value)], cancellationToken);
+        await describe.Handle([result.Value], cancellationToken);
 
         return new RegisteredInstrumentDto(result.Value, null);
     }
 
-    private RegisterInstrumentCommand RegisterCommandOf(NewInstrumentDto instrument, ProviderSymbol symbol)
+    private static InstrumentKind KindOf(NewInstrumentDto instrument) =>
+        Enum.TryParse<InstrumentKind>(instrument.Kind, ignoreCase: true, out var parsed) ? parsed : InstrumentKind.Stock;
+
+    private RegisterInstrumentCommand RegisterCommandOf(NewInstrumentDto instrument, InstrumentKind kind, ProviderSymbol symbol)
     {
-        var kind = Enum.TryParse<InstrumentKind>(instrument.Kind, ignoreCase: true, out var parsed) ? parsed : InstrumentKind.Stock;
         var name = string.IsNullOrWhiteSpace(instrument.Name) ? instrument.Symbol : instrument.Name.Trim();
 
         return new RegisterInstrumentCommand(
-            kind,
+            kind.ToString(),
             null,
             name,
             convention.ExchangeOf(instrument.Symbol),
