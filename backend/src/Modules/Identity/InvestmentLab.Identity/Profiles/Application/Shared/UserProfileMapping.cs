@@ -6,6 +6,6 @@ internal static class UserProfileMapping
 {
     extension(UserProfile profile)
     {
-        public UserProfileDto ToDto() => new(profile.DisplayCurrency.Code, profile.Language?.Code, profile.TimeZone);
+        public UserProfileDto ToDto() => new(profile.DisplayCurrency.Code, profile.Language?.Code, profile.TimeZone, profile.ChartStyle.ToString());
     }
 }

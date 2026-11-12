@@ -108,6 +108,14 @@
     },
     "notSaved": "Not saved",
     "title": "Profile",
+    "chartStyle": {
+      "title": "Charts",
+      "hint": "How the value charts are drawn: a plain line or Japanese candlesticks (green when the value ended the step higher, red when lower).",
+      "names": {
+        "Line": "Line",
+        "Candles": "Candlesticks"
+      }
+    },
     "language": {
       "title": "Language",
       "hint": "The language of the app and notifications. When following the browser, Home Assistant notifications come in the language of Home Assistant itself.",
@@ -407,7 +415,19 @@
       "riskReview": "risk review",
       "drawdown": "Drawdown",
       "gainOnAssetsTooltip": "Gain on assets: {gain}",
-      "report": "Report: {report}"
+      "report": "Report: {report}",
+      "reportMarkers": "Reports",
+      "granularity": {
+        "label": "Chart step",
+        "day": "Day",
+        "week": "Week"
+      },
+      "candle": {
+        "open": "Open",
+        "high": "High",
+        "low": "Low",
+        "close": "Close"
+      }
     },
     "metrics": {
       "twr": "TWR return",

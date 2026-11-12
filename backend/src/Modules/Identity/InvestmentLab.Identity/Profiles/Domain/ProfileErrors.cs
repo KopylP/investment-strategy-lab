@@ -11,4 +11,7 @@ public static class ProfileErrors
 
     public static Error UnknownTimeZone(string timeZone) =>
         Error.Validation("profile.time_zone_unknown", $"'{timeZone}' is not a known IANA time zone.");
+
+    public static Error UnknownChartStyle(string chartStyle) =>
+        Error.Validation("profile.chart_style_unknown", $"'{chartStyle}' is not a chart style; use Line or Candles.");
 }
