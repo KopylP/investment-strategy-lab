@@ -847,9 +847,9 @@
       "subPortfolios": "Sub-portfolios",
       "money": "Money",
       "source": "Source",
-      "reversedTag": "reversed",
       "undoneByReport": "Undone by a mark in the report",
-      "reversedNote": "· reversed"
+      "cancels": "Cancels: {kind} of {date}",
+      "cancelledOn": "reversed on {date}"
     },
     "source": {
       "report": "from a report",

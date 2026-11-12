@@ -95,13 +95,6 @@
           </td>
           <td class="hidden sm:table-cell">
             <p-tag [value]="transaction.kindLabel" [severity]="transaction.severity" />
-            @if (transaction.isReversed) {
-              <p-tag
-                [value]="'transactions.ledger.reversedTag' | transloco"
-                severity="secondary"
-                styleClass="ml-1"
-              />
-            }
           </td>
           <td>
             <div
@@ -110,18 +103,50 @@
               {{ transaction.occurredOn | date }}
               <p-tag [value]="transaction.kindLabel" [severity]="transaction.severity" />
             </div>
-            {{ transaction.description }}
+            @if (transaction.cancels; as original) {
+              <div>
+                {{
+                  'transactions.ledger.cancels'
+                    | transloco
+                      : {
+                          kind: original.kindLabel,
+                          date: original.occurredOn | date,
+                        }
+                }}
+              </div>
+              <div class="text-sm text-muted-color">{{ original.description }}</div>
+              @if (transaction.reversalReason) {
+                <div class="text-xs text-muted-color mt-0.5">
+                  <i class="pi pi-info-circle text-xs mr-1"></i>{{ transaction.reversalReason }}
+                </div>
+              }
+            } @else {
+              {{ transaction.description }}
+            }
+            @if (transaction.cancelledBy; as cancellation) {
+              <div class="text-xs text-muted-color mt-0.5">
+                <i class="pi pi-replay text-xs mr-1"></i
+                >{{
+                  'transactions.ledger.cancelledOn'
+                    | transloco: { date: cancellation.occurredOn | date }
+                }}
+                @if (cancellation.reason) {
+                  · {{ cancellation.reason }}
+                }
+              </div>
+            }
             <div class="sm:hidden text-xs text-muted-color">
               {{ transaction.allocation }}
-              @if (transaction.isReversed) {
-                {{ 'transactions.ledger.reversedNote' | transloco }}
-              }
             </div>
           </td>
           <td class="text-sm text-muted-color hidden sm:table-cell">
             {{ transaction.allocation }}
           </td>
-          <td class="text-right whitespace-nowrap" [appSignedValue]="transaction.amount">
+          <td
+            class="text-right whitespace-nowrap"
+            [class.line-through]="transaction.isReversed"
+            [appSignedValue]="transaction.amount"
+          >
             @if (transaction.amount !== null) {
               <app-money
                 [amount]="transaction.amount"
