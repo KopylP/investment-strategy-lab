@@ -10,25 +10,26 @@ public static class JournalMovements
     public static IReadOnlyList<Movement> Of(AccountJournal journal)
     {
         var reversed = journal.ReversedIds.ToHashSet();
+        var currency = Currency.Of(journal.Currency);
         var movements = new List<Movement>();
 
         foreach (var entry in journal.Entries.Where(entry => !reversed.Contains(entry.TransactionId)))
-            AddMovementsOf(entry, movements);
+            AddMovementsOf(entry, currency, movements);
 
         return movements;
     }
 
-    private static void AddMovementsOf(IJournalEntry entry, List<Movement> movements)
+    private static void AddMovementsOf(IJournalEntry entry, Currency currency, List<Movement> movements)
     {
         if (entry.Trade is { } trade)
-            AddTrade(entry.OccurredOn, trade, movements);
+            AddTrade(entry.OccurredOn, trade, currency, movements);
         else if (entry.Cash is { } cash)
             AddCashMovement(entry.OccurredOn, cash, movements);
         else if (entry.Transfer is { } transfer)
             AddTransfer(entry.OccurredOn, transfer, movements);
     }
 
-    private static void AddTrade(DateOnly day, IJournalTrade trade, List<Movement> movements)
+    private static void AddTrade(DateOnly day, IJournalTrade trade, Currency accountCurrency, List<Movement> movements)
     {
         var sign = trade.Side == Buy ? 1m : -1m;
         var total = trade.Allocations.Sum(allocation => allocation.Quantity);
@@ -36,7 +37,7 @@ public static class JournalMovements
         foreach (var allocation in trade.Allocations)
         {
             var share = total > 0m ? allocation.Quantity / total : 0m;
-            var (cashDelta, currency) = TradeCash(trade, allocation, sign, share);
+            var (cashDelta, currency) = TradeCash(trade, allocation, accountCurrency, sign, share);
             var unitCost = allocation.Quantity > 0m ? trade.Price + trade.Fee * share / allocation.Quantity : (decimal?)null;
 
             movements.Add(new Movement(
@@ -56,13 +57,16 @@ public static class JournalMovements
     private static (decimal CashDelta, string? Currency) TradeCash(
         IJournalTrade trade,
         IJournalQuantity allocation,
+        Currency accountCurrency,
         decimal sign,
         decimal share)
     {
         if (trade is { SettledAmount: { } settled, SettledCurrency: { } code })
             return (-sign * settled * share, code);
 
-        return (-sign * allocation.Quantity * trade.Price - trade.Fee * share, null);
+        var amount = Price.Of(trade.Price, accountCurrency).TotalFor(Quantity.Of(allocation.Quantity));
+
+        return (-sign * amount.Amount - trade.Fee * share, null);
     }
 
     private static void AddCashMovement(DateOnly day, IJournalCash cash, List<Movement> movements)
