@@ -5,42 +5,11 @@ import { AccountContext } from '../../../core/context/account-context';
 import { DisplayCurrency } from '../../../core/context/display-currency';
 import { ChartTheme } from '../../../shared/charts/chart-theme';
 import { InstrumentCatalog } from '../../../core/context/instrument-catalog';
-import { AccountHoldings, LatestPrice, Lot, toIsoDate } from '../../../shared/models/api';
+import { toIsoDate } from '../../../shared/models/api';
 import { exposureBreakdownsOf } from '../models/exposure-vm';
-
-export interface PositionVm {
-  instrumentId: string;
-  symbol: string;
-  name: string;
-  description: string | null;
-  quantity: number;
-  averageCost: number;
-  costBasis: number;
-  price: number | null;
-  quotedPrice: number | null;
-  quoteCurrency: string;
-  priceDate: string | null;
-  isStale: boolean;
-  value: number;
-  pnl: number;
-  pnlPct: number | null;
-  weight: number;
-  lots: Lot[];
-}
-
-export interface SleeveVm {
-  id: string;
-  name: string;
-  accountName: string | null;
-  targetShare: number;
-  actualShare: number;
-  cash: number;
-  cashParts: { currency: string; amount: number }[];
-  value: number;
-  costBasis: number;
-  pnl: number;
-  positions: PositionVm[];
-}
+import { SleeveVm } from '../models/holdings-vm';
+import { ValuedHoldingsDto } from '../models/valued-holdings-dto';
+import { HoldingsMapper, SleeveSetup } from './holdings-mapper';
 
 @Injectable()
 export class HoldingsStore {
@@ -49,6 +18,7 @@ export class HoldingsStore {
   private readonly instruments = inject(InstrumentCatalog);
   private readonly fx = inject(DisplayCurrency);
   private readonly theme = inject(ChartTheme);
+  private readonly mapper = inject(HoldingsMapper);
 
   readonly asOf = signal<Date | null>(null);
 
@@ -60,32 +30,14 @@ export class HoldingsStore {
         ? { accountIds, asOf: this.asOf() ? toIsoDate(this.asOf()!) : undefined }
         : undefined;
     },
-    loader: async ({ params }) => {
-      const all = await Promise.all(
+    loader: ({ params }) =>
+      Promise.all(
         params.accountIds.map((id) =>
-          this.api.get<AccountHoldings>(`/api/portfolio/accounts/${id}/holdings`, {
+          this.api.get<ValuedHoldingsDto>(`/api/portfolio/accounts/${id}/holdings/valued`, {
             asOf: params.asOf,
           }),
         ),
-      );
-      const ids = [
-        ...new Set(
-          all.flatMap((holdings) =>
-            holdings.subPortfolios.flatMap((sub) =>
-              sub.positions.map((position) => position.instrumentId),
-            ),
-          ),
-        ),
-      ];
-      const prices = ids.length
-        ? await this.api.get<LatestPrice[]>('/api/market-data/quotes/latest', {
-            instrumentIds: ids,
-            asOf: params.asOf,
-          })
-        : [];
-
-      return { all, prices: new Map(prices.map((price) => [price.instrumentId, price])) };
-    },
+      ),
   });
 
   readonly account = this.accounts.current;
@@ -95,117 +47,31 @@ export class HoldingsStore {
   readonly currency = computed(() =>
     this.isAll()
       ? (this.fx.code() ?? this.account()?.baseCurrency ?? 'EUR')
-      : (this.holdingsResource.value()?.all[0]?.currency ?? this.account()?.baseCurrency ?? 'EUR'),
+      : (this.holdingsResource.value()?.[0]?.currency ?? this.account()?.baseCurrency ?? 'EUR'),
   );
 
-  readonly sleeves = computed<SleeveVm[]>(() => {
-    const data = this.holdingsResource.value();
-    const currency = this.currency();
-    if (!data) return [];
+  private readonly holdingsInView = computed(() =>
+    (this.holdingsResource.value() ?? []).map((holdings) => ({
+      holdings,
+      rate: this.rateToViewCurrency(holdings.currency),
+    })),
+  );
 
-    return data.all.flatMap((holdings) => {
-      const account = this.accounts
-        .accounts()
-        .find((candidate) => candidate.id === holdings.accountId);
-      const factor =
-        holdings.currency === currency ? 1 : (this.fx.rate(holdings.currency, currency) ?? 1);
-
-      return this.sleevesOf(
-        holdings,
-        currency,
-        data.prices,
-        account?.subPortfolios ?? [],
-        factor,
-        this.isAll() ? (account?.name ?? '') : null,
-      );
-    });
-  });
-
-  private sleevesOf(
-    holdings: AccountHoldings,
-    currency: string,
-    prices: Map<string, LatestPrice>,
-    setup: { id: string; targetShare: number }[],
-    factor: number,
-    accountName: string | null,
-  ): SleeveVm[] {
-    const data = { holdings, prices };
-    const targets = new Map(setup.map((sub) => [sub.id, sub.targetShare]));
-    const sleeves = data.holdings.subPortfolios.map((sub) => {
-      const positions = sub.positions.map((position) => {
-        const quote = data.prices.get(position.instrumentId);
-        const rate = quote ? this.fx.rate(quote.currency, currency) : null;
-        const price = quote && rate !== null ? quote.close * rate : null;
-        const value = price !== null ? position.quantity * price : position.costBasis * factor;
-
-        return {
-          instrumentId: position.instrumentId,
-          symbol: this.instruments.symbol(position.instrumentId),
-          name: this.instruments.name(position.instrumentId),
-          description: this.instruments.byId().get(position.instrumentId)?.description ?? null,
-          quantity: position.quantity,
-          averageCost: position.averageCost * factor,
-          costBasis: position.costBasis * factor,
-          price,
-          quotedPrice: quote?.close ?? null,
-          quoteCurrency: quote?.currency ?? data.holdings.currency,
-          priceDate: quote?.date ?? null,
-          isStale: quote?.isStale ?? true,
-          value,
-          pnl: value - position.costBasis * factor,
-          pnlPct: position.costBasis ? value / (position.costBasis * factor) - 1 : null,
-          weight: 0,
-          lots:
-            factor === 1
-              ? position.lots
-              : position.lots.map((lot) => ({ ...lot, unitCost: lot.unitCost * factor })),
-        };
-      });
-      const foreign = sub.foreignCash ?? [];
-      const cash =
-        sub.cash * factor +
-        foreign.reduce(
-          (sum, part) => sum + part.amount * (this.fx.rate(part.currency, currency) ?? 0),
-          0,
-        );
-      const value = positions.reduce((sum, position) => sum + position.value, 0) + cash;
-
-      positions.forEach((position) => (position.weight = value ? position.value / value : 0));
-      const costBasis = positions.reduce((sum, position) => sum + position.costBasis, 0);
-
-      return {
-        id: sub.subPortfolioId,
-        name: sub.name,
-        accountName,
-        targetShare: targets.get(sub.subPortfolioId) ?? 0,
-        actualShare: 0,
-        cash,
-        cashParts: [{ currency: data.holdings.currency, amount: sub.cash }, ...foreign],
-        value,
-        costBasis,
-        pnl: positions.reduce((sum, position) => sum + position.pnl, 0),
-        positions: positions.sort((left, right) => right.value - left.value),
-      };
-    });
-    const total = sleeves.reduce((sum, sleeve) => sum + sleeve.value, 0);
-
-    sleeves.forEach((sleeve) => (sleeve.actualShare = total ? sleeve.value / total : 0));
-
-    return sleeves;
-  }
+  readonly sleeves = computed<SleeveVm[]>(() =>
+    this.holdingsInView().flatMap(({ holdings, rate }) =>
+      this.mapper.sleevesOf(holdings, this.setupOf(holdings, rate)),
+    ),
+  );
 
   readonly totals = computed(() => {
-    const sleeves = this.sleeves();
-    const value = sleeves.reduce((sum, sleeve) => sum + sleeve.value, 0);
-    const cash = sleeves.reduce((sum, sleeve) => sum + sleeve.cash, 0);
-    const parts = new Map<string, number>();
-
-    for (const part of sleeves.flatMap((sleeve) => sleeve.cashParts))
-      parts.set(part.currency, (parts.get(part.currency) ?? 0) + part.amount);
-
-    const cashParts = [...parts].map(([currency, amount]) => ({ currency, amount }));
-    const costBasis = sleeves.reduce((sum, sleeve) => sum + sleeve.costBasis, 0);
-    const pnl = sleeves.reduce((sum, sleeve) => sum + sleeve.pnl, 0);
+    const accounts = this.holdingsInView().map(({ holdings, rate }) =>
+      this.mapper.totalsOf(holdings, rate),
+    );
+    const value = accounts.reduce((sum, account) => sum + account.value, 0);
+    const cash = accounts.reduce((sum, account) => sum + account.cash, 0);
+    const costBasis = accounts.reduce((sum, account) => sum + account.costBasis, 0);
+    const pnl = accounts.reduce((sum, account) => sum + account.pnl, 0);
+    const cashParts = this.cashPartsInView();
 
     return {
       value,
@@ -291,6 +157,30 @@ export class HoldingsStore {
   readonly staleQuotes = computed(() =>
     this.sleeves().some((sleeve) => sleeve.positions.some((position) => position.isStale)),
   );
+
+  private rateToViewCurrency(currency: string): number {
+    return currency === this.currency() ? 1 : (this.fx.rate(currency, this.currency()) ?? 1);
+  }
+
+  private setupOf(holdings: ValuedHoldingsDto, rate: number): SleeveSetup {
+    const account = this.accounts
+      .accounts()
+      .find((candidate) => candidate.id === holdings.accountId);
+    const targetShares = new Map(
+      (account?.subPortfolios ?? []).map((sub) => [sub.id, sub.targetShare] as const),
+    );
+
+    return { accountName: this.isAll() ? (account?.name ?? '') : null, targetShares, rate };
+  }
+
+  private cashPartsInView(): { currency: string; amount: number }[] {
+    const parts = new Map<string, number>();
+
+    for (const part of this.sleeves().flatMap((sleeve) => sleeve.cashParts))
+      parts.set(part.currency, (parts.get(part.currency) ?? 0) + part.amount);
+
+    return [...parts].map(([currency, amount]) => ({ currency, amount }));
+  }
 
   private accountIdsInView(): string[] {
     if (this.accounts.isAll()) return this.accounts.accounts().map((account) => account.id);
