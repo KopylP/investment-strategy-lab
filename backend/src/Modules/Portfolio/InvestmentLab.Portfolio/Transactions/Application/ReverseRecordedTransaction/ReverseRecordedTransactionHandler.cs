@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Portfolio.Transactions.Application.ReverseTransaction;
 using InvestmentLab.Portfolio.Transactions.Application.Shared;
 using InvestmentLab.Portfolio.Transactions.Domain;
 
 namespace InvestmentLab.Portfolio.Transactions.Application.ReverseRecordedTransaction;
 
-public sealed class ReverseRecordedTransactionHandler(TransactionRecorder recorder)
+public sealed class ReverseRecordedTransactionHandler(TransactionRecorder recorder) : IHandler
 {
     public Task<Result<RecordedTransaction>> Handle(
         Guid accountId, string sourceReference, string reason, CancellationToken cancellationToken) =>

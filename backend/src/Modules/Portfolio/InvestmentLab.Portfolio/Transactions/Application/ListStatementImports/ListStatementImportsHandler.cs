@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Portfolio.Accounts.Domain;
 using InvestmentLab.Portfolio.Transactions.Application.Shared;
 using InvestmentLab.Portfolio.Transactions.Domain;
 
 namespace InvestmentLab.Portfolio.Transactions.Application.ListStatementImports;
 
-public sealed class ListStatementImportsHandler(IStatementImportRepository imports)
+public sealed class ListStatementImportsHandler(IStatementImportRepository imports) : IHandler
 {
     public async Task<IReadOnlyList<StatementImportSummaryDto>> Handle(Guid accountId, CancellationToken cancellationToken)
     {

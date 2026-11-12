@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.StrategyBuilder.Drafts.Application.Shared;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 
 namespace InvestmentLab.StrategyBuilder.Drafts.Application.DiscardDraft;
 
-public sealed class DiscardDraftHandler(IDraftRepository drafts, ITrialCleanupRepository cleanups, TimeProvider clock)
+public sealed class DiscardDraftHandler(IDraftRepository drafts, ITrialCleanupRepository cleanups, TimeProvider clock) : IHandler
 {
     public async Task<Result> Handle(Guid draftId, CancellationToken cancellationToken)
     {

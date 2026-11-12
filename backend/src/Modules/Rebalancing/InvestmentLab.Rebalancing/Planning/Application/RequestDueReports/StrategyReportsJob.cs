@@ -18,6 +18,8 @@ public sealed class StrategyReportsJob(
     TimeProvider clock,
     ILogger<StrategyReportsJob> logger) : IScheduledJob
 {
+    public static IJobSchedule Schedule => ReportSchedules.Check;
+
     public async Task RunAsync(CancellationToken cancellationToken)
     {
         var now = ReportSchedules.Local(clock.GetUtcNow()).DateTime;

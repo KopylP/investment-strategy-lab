@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Strategies.Contracts;
 using InvestmentLab.Strategies.Definitions.Domain;
 
 namespace InvestmentLab.Strategies.Definitions.Application.GetAuthoredVersion;
 
-public sealed class GetAuthoredVersionHandler(IStrategyRepository strategies)
+public sealed class GetAuthoredVersionHandler(IStrategyRepository strategies) : IHandler
 {
     public async Task<AuthoredVersionDto?> Handle(Guid strategyId, int version, CancellationToken cancellationToken)
     {

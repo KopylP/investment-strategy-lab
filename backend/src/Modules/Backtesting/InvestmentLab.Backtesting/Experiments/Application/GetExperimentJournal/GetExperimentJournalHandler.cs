@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Backtesting.Experiments.Domain;
 using InvestmentLab.Backtesting.Replays.Domain;
 using InvestmentLab.Backtesting.Experiments.Application.Shared;
@@ -8,7 +9,7 @@ public sealed record GetExperimentJournalQuery(Guid ExperimentId, string? Kind, 
 
 public sealed record ExperimentJournalDto(int Total, int Offset, IReadOnlyList<ResearchJournalEntryDto> Entries);
 
-public sealed class GetExperimentJournalHandler(IExperimentRepository experiments)
+public sealed class GetExperimentJournalHandler(IExperimentRepository experiments) : IHandler
 {
     public async Task<Result<ExperimentJournalDto>> Handle(GetExperimentJournalQuery query, CancellationToken cancellationToken)
     {

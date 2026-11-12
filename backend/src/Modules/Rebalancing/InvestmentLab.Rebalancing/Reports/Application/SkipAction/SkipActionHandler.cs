@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Rebalancing.Reports.Domain;
 
 namespace InvestmentLab.Rebalancing.Reports.Application.SkipAction;
 
 public sealed record SkipActionCommand(string Reason);
 
-public sealed class SkipActionHandler(IReportRepository reports, TimeProvider clock)
+public sealed class SkipActionHandler(IReportRepository reports, TimeProvider clock) : IHandler
 {
     public async Task<Result> Handle(Guid reportId, Guid actionId, SkipActionCommand command, CancellationToken cancellationToken)
     {

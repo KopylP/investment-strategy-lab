@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.StrategyBuilder.Drafts.Application.Shared;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 
 namespace InvestmentLab.StrategyBuilder.Drafts.Application.OpenPublishedStrategy;
 
-public sealed class OpenPublishedStrategyHandler(IDraftRepository drafts, IPublishedLayoutRepository layouts, IStrategyAuthoring authoring, IRuleVocabulary vocabularies, DraftDescriber describer, TimeProvider clock)
+public sealed class OpenPublishedStrategyHandler(IDraftRepository drafts, IPublishedLayoutRepository layouts, IStrategyAuthoring authoring, IRuleVocabulary vocabularies, DraftDescriber describer, TimeProvider clock) : IHandler
 {
     public async Task<Result<DraftDto>> Handle(UserId owner, Guid strategyId, int version, CancellationToken cancellationToken)
     {

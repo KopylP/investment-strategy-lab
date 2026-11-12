@@ -1,8 +1,9 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Rebalancing.Planning.Domain;
 
 namespace InvestmentLab.Rebalancing.Planning.Application.RemoveSignalReportRule;
 
-public sealed class RemoveSignalReportRuleHandler(ISignalReportRuleRepository rules, TimeProvider clock)
+public sealed class RemoveSignalReportRuleHandler(ISignalReportRuleRepository rules, TimeProvider clock) : IHandler
 {
     public async Task<Result> Handle(Guid ruleId, CancellationToken cancellationToken)
     {

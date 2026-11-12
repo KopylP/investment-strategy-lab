@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 using InvestmentLab.StrategyBuilder.Trials.Application.Shared;
 
 namespace InvestmentLab.StrategyBuilder.Trials.Application.ListTrials;
 
-public sealed class ListTrialsHandler(IDraftRepository drafts, TrialRunSummaries summaries)
+public sealed class ListTrialsHandler(IDraftRepository drafts, TrialRunSummaries summaries) : IHandler
 {
     public async Task<Result<IReadOnlyList<TrialRunDto>>> Handle(Guid draftId, CancellationToken cancellationToken)
     {

@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Portfolio.Accounts.Application.Shared;
 using InvestmentLab.Portfolio.Accounts.Domain;
 using InvestmentLab.Portfolio.Contracts.Accounts;
@@ -13,7 +14,7 @@ public sealed record OpenAccountCommand(
     ContributionPolicyChoice? ContributionPolicy = null,
     string? TaxPolicyCode = null);
 
-public sealed class OpenAccountHandler(IAccountRepository accounts, ITaxPolicyDirectory taxPolicies, TimeProvider clock)
+public sealed class OpenAccountHandler(IAccountRepository accounts, ITaxPolicyDirectory taxPolicies, TimeProvider clock) : IHandler
 {
     public async Task<Result<AccountSetupDto>> Handle(UserId ownerId, OpenAccountCommand command, CancellationToken cancellationToken)
     {

@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Signals.Monitoring.Application.Shared;
 using InvestmentLab.Signals.Monitoring.Domain;
 
@@ -5,7 +6,7 @@ namespace InvestmentLab.Signals.Monitoring.Application.ChangeSignal;
 
 public sealed record ChangeSignalCommand(string Name, SignalConditionDto Condition, SignalScheduleDto Schedule, bool Enabled);
 
-public sealed class ChangeSignalHandler(ISignalRepository signals, TimeProvider clock)
+public sealed class ChangeSignalHandler(ISignalRepository signals, TimeProvider clock) : IHandler
 {
     public async Task<Result> Handle(Guid signalId, ChangeSignalCommand command, CancellationToken cancellationToken)
     {

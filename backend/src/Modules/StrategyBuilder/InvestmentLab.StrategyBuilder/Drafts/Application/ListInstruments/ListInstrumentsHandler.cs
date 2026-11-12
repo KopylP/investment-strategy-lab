@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 
 namespace InvestmentLab.StrategyBuilder.Drafts.Application.ListInstruments;
 
 public sealed record InstrumentChoiceDto(Guid Id, string Label, string Name, string? Group, string? AssetClass, string? Region, bool IsVolatilityIndex);
 
-public sealed class ListInstrumentsHandler(IInstrumentDirectory instruments)
+public sealed class ListInstrumentsHandler(IInstrumentDirectory instruments) : IHandler
 {
     public async Task<IReadOnlyList<InstrumentChoiceDto>> Handle(CancellationToken cancellationToken)
     {

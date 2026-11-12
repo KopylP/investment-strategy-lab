@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Portfolio.Accounts.Domain;
 using InvestmentLab.Portfolio.Contracts.Transactions;
 using InvestmentLab.Portfolio.Transactions.Application.Shared;
@@ -14,7 +15,7 @@ public sealed record RecordTradeCommand(
     DateOnly ExecutedOn,
     IReadOnlyList<QuantityAllocationDto>? Allocations = null);
 
-public sealed class RecordTradeHandler(TransactionRecorder recorder)
+public sealed class RecordTradeHandler(TransactionRecorder recorder) : IHandler
 {
     public async Task<Result<RecordedTransaction>> Handle(
         Guid accountId, RecordTradeCommand command, TransactionSourceDto source, CancellationToken cancellationToken)

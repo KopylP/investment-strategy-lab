@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Backtesting.Experiments.Application.Shared;
 using InvestmentLab.Backtesting.Experiments.Domain;
 
@@ -5,7 +6,7 @@ namespace InvestmentLab.Backtesting.Experiments.Application.CheckExperiment;
 
 public sealed record CheckExperimentCommand(ExperimentConditionsDto Conditions, string TypeCode, string Parameters);
 
-public sealed class CheckExperimentHandler(IResearchStrategies strategies, TimeProvider clock)
+public sealed class CheckExperimentHandler(IResearchStrategies strategies, TimeProvider clock) : IHandler
 {
     public async Task<Result> Handle(CheckExperimentCommand command, CancellationToken cancellationToken)
     {

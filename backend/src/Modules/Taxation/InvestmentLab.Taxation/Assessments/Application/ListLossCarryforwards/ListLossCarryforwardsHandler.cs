@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Taxation.Assessments.Application.Shared;
 using InvestmentLab.Taxation.Assessments.Domain;
 
 namespace InvestmentLab.Taxation.Assessments.Application.ListLossCarryforwards;
 
-public sealed class ListLossCarryforwardsHandler(IAssessmentRepository assessments, ICurrentUser currentUser)
+public sealed class ListLossCarryforwardsHandler(IAssessmentRepository assessments, ICurrentUser currentUser) : IHandler
 {
     public async Task<IReadOnlyList<LossCarryforwardDto>> Handle(CancellationToken cancellationToken)
     {

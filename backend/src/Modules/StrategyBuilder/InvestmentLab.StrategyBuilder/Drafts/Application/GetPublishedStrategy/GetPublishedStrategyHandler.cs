@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.StrategyBuilder.Drafts.Application.Shared;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 
@@ -5,7 +6,7 @@ namespace InvestmentLab.StrategyBuilder.Drafts.Application.GetPublishedStrategy;
 
 public sealed record PublishedStrategyDto(bool Editable, Guid? DraftId, IReadOnlyList<BlockWordsDto> Words);
 
-public sealed class GetPublishedStrategyHandler(IDraftRepository drafts, IPublishedLayoutRepository layouts, IStrategyAuthoring authoring, IRuleVocabulary vocabularies, DraftDescriber describer, TimeProvider clock)
+public sealed class GetPublishedStrategyHandler(IDraftRepository drafts, IPublishedLayoutRepository layouts, IStrategyAuthoring authoring, IRuleVocabulary vocabularies, DraftDescriber describer, TimeProvider clock) : IHandler
 {
     public async Task<Result<PublishedStrategyDto>> Handle(UserId owner, Guid strategyId, int version, CancellationToken cancellationToken)
     {

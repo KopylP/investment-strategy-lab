@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Taxation.Assessments.Application.Shared;
 using InvestmentLab.Taxation.Assessments.Domain;
 
 namespace InvestmentLab.Taxation.Assessments.Application.GetTaxYears;
 
-public sealed class GetTaxYearsHandler(IAssessmentRepository assessments, TaxRecalculator recalculator, ICurrentUser currentUser)
+public sealed class GetTaxYearsHandler(IAssessmentRepository assessments, TaxRecalculator recalculator, ICurrentUser currentUser) : IHandler
 {
     public async Task<TaxOverviewDto> Handle(CancellationToken cancellationToken)
     {

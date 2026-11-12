@@ -7,7 +7,7 @@ namespace InvestmentLab.Backtesting.Replays.Application.RunBacktest;
 
 public sealed class BacktestsJob(IServiceScopeFactory scopes, TimeProvider clock, ILogger<BacktestsJob> logger) : IScheduledJob
 {
-    public static readonly IntervalSchedule Schedule = new(TimeSpan.FromSeconds(15));
+    public static IJobSchedule Schedule { get; } = new IntervalSchedule(TimeSpan.FromSeconds(15));
 
     public async Task RunAsync(CancellationToken cancellationToken)
     {

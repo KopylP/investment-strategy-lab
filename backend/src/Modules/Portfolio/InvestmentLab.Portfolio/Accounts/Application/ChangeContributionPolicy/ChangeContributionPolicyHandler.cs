@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Portfolio.Accounts.Application.Shared;
 using InvestmentLab.Portfolio.Accounts.Domain;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 
 namespace InvestmentLab.Portfolio.Accounts.Application.ChangeContributionPolicy;
 
-public sealed class ChangeContributionPolicyHandler(IAccountRepository accounts)
+public sealed class ChangeContributionPolicyHandler(IAccountRepository accounts) : IHandler
 {
     public async Task<Result<AccountSetupDto>> Handle(Guid accountId, ContributionPolicyChoice choice, CancellationToken cancellationToken)
     {

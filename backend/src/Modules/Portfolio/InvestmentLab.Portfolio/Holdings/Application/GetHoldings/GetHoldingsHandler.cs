@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Portfolio.Contracts.Holdings;
 using InvestmentLab.Portfolio.Holdings.Application.Shared;
 
 namespace InvestmentLab.Portfolio.Holdings.Application.GetHoldings;
 
-public sealed class GetHoldingsHandler(HoldingsLoader loader)
+public sealed class GetHoldingsHandler(HoldingsLoader loader) : IHandler
 {
     public async Task<Result<AccountHoldingsDto>> Handle(Guid accountId, DateOnly? asOf, CancellationToken cancellationToken)
     {

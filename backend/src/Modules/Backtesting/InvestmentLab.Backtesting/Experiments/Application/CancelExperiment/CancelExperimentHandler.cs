@@ -1,8 +1,9 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Backtesting.Experiments.Domain;
 
 namespace InvestmentLab.Backtesting.Experiments.Application.CancelExperiment;
 
-public sealed class CancelExperimentHandler(IExperimentRepository experiments, TimeProvider clock)
+public sealed class CancelExperimentHandler(IExperimentRepository experiments, TimeProvider clock) : IHandler
 {
     public async Task<Result> Handle(Guid experimentId, CancellationToken cancellationToken)
     {

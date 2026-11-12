@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Signals.Monitoring.Application.Shared;
@@ -17,7 +18,7 @@ public sealed record CreateSignalCommand(
 
 public sealed record SignalCreatedDto(Guid Id);
 
-public sealed class CreateSignalHandler(ISignalRepository signals, IAccountSetupQueries accounts, IInstrumentCatalog instruments)
+public sealed class CreateSignalHandler(ISignalRepository signals, IAccountSetupQueries accounts, IInstrumentCatalog instruments) : IHandler
 {
     public async Task<Result<SignalCreatedDto>> Handle(UserId ownerId, CreateSignalCommand command, CancellationToken cancellationToken)
     {

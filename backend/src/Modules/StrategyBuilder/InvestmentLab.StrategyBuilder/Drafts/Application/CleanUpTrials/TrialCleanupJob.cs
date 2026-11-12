@@ -7,7 +7,7 @@ namespace InvestmentLab.StrategyBuilder.Drafts.Application.CleanUpTrials;
 
 public sealed class TrialCleanupJob(ITrialCleanupRepository cleanups, IServiceScopeFactory scopes, TimeProvider clock, ILogger<TrialCleanupJob> logger) : IScheduledJob
 {
-    public static readonly IntervalSchedule Schedule = new(TimeSpan.FromMinutes(5));
+    public static IJobSchedule Schedule { get; } = new IntervalSchedule(TimeSpan.FromMinutes(5));
 
     public async Task RunAsync(CancellationToken cancellationToken)
     {

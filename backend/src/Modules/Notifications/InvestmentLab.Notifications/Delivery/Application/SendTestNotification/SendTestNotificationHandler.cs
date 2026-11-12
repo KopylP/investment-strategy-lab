@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Notifications.Delivery.Application.Shared;
 using InvestmentLab.Notifications.Delivery.Domain;
 
 namespace InvestmentLab.Notifications.Delivery.Application.SendTestNotification;
 
-public sealed class SendTestNotificationHandler(Notifier notifier)
+public sealed class SendTestNotificationHandler(Notifier notifier) : IHandler
 {
     private const string Topic = "test";
     private static readonly string Title = Message.Of("notification.test.title");

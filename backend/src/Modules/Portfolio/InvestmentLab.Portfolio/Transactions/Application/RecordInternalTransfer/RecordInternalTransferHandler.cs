@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Portfolio.Accounts.Domain;
 using InvestmentLab.Portfolio.Transactions.Application.Shared;
 using InvestmentLab.Portfolio.Transactions.Domain;
@@ -12,7 +13,7 @@ public sealed record RecordInternalTransferCommand(
     decimal? Quantity = null,
     decimal? Amount = null);
 
-public sealed class RecordInternalTransferHandler(TransactionRecorder recorder)
+public sealed class RecordInternalTransferHandler(TransactionRecorder recorder) : IHandler
 {
     public async Task<Result<RecordedTransaction>> Handle(
         Guid accountId, RecordInternalTransferCommand command, TransactionSourceDto source, CancellationToken cancellationToken)

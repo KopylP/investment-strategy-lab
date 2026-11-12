@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 
 namespace InvestmentLab.StrategyBuilder.Drafts.Application.ListOwnSignals;
 
 public sealed record OwnSignalDto(Guid Id, string Name, bool IsMarket, string Target);
 
-public sealed class ListOwnSignalsHandler(IOwnSignals signals)
+public sealed class ListOwnSignalsHandler(IOwnSignals signals) : IHandler
 {
     public async Task<IReadOnlyList<OwnSignalDto>> Handle(CancellationToken cancellationToken)
     {

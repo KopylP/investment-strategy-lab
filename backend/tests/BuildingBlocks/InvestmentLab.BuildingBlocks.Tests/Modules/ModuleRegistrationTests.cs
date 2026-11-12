@@ -1,3 +1,4 @@
+using System.Reflection;
 using InvestmentLab.BuildingBlocks.Modules;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
@@ -13,6 +14,8 @@ public sealed class ModuleRegistrationTests
     private sealed class SampleModule : IModule
     {
         public string Name => "Sample";
+
+        public Assembly Assembly => typeof(IModule).Assembly;
 
         public void AddServices(IHostApplicationBuilder builder) => builder.Services.AddSingleton<Marker>();
 

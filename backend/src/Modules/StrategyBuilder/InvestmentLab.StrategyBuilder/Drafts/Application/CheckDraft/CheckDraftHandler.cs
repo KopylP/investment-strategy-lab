@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.StrategyBuilder.Drafts.Application.Shared;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 
@@ -5,7 +6,7 @@ namespace InvestmentLab.StrategyBuilder.Drafts.Application.CheckDraft;
 
 public sealed record DraftCheckDto(bool IsClean, IReadOnlyList<DraftProblemDto> Problems, IReadOnlyList<Guid> SignalIds);
 
-public sealed class CheckDraftHandler(IDraftRepository drafts, DraftChecker checker)
+public sealed class CheckDraftHandler(IDraftRepository drafts, DraftChecker checker) : IHandler
 {
     public async Task<Result<DraftCheckDto>> Handle(Guid draftId, CancellationToken cancellationToken)
     {

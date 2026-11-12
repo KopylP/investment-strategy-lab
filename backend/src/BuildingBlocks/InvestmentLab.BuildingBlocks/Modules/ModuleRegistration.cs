@@ -15,7 +15,10 @@ public static class ModuleRegistration
     public static IHostApplicationBuilder AddModules(this IHostApplicationBuilder builder, params IModule[] modules)
     {
         foreach (var module in modules)
+        {
+            builder.Services.AddServicesOf(module.Assembly);
             module.AddServices(builder);
+        }
 
         builder.Services.AddSingleton<IReadOnlyList<IModule>>(modules);
         builder.Services.TryAddSingleton(TimeProvider.System);

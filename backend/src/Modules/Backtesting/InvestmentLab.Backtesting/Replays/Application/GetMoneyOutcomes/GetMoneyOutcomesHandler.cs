@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Backtesting.Replays.Domain;
 
 namespace InvestmentLab.Backtesting.Replays.Application.GetMoneyOutcomes;
 
 public sealed record GetMoneyOutcomesQuery(Guid StrategyId, int Version, decimal Start, decimal MonthlyContribution, int Years);
 
-public sealed class GetMoneyOutcomesHandler(IBacktestRepository backtests)
+public sealed class GetMoneyOutcomesHandler(IBacktestRepository backtests) : IHandler
 {
     public async Task<Result<MoneyOutcomesDto>> Handle(GetMoneyOutcomesQuery query, CancellationToken cancellationToken)
     {

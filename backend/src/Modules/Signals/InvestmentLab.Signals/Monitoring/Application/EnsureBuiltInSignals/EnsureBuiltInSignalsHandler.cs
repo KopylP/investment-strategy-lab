@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Signals.Monitoring.Domain;
 
 namespace InvestmentLab.Signals.Monitoring.Application.EnsureBuiltInSignals;
 
-public sealed class EnsureBuiltInSignalsHandler(ISignalRepository signals, IAccountSetupQueries accounts, IInstrumentCatalog instruments)
+public sealed class EnsureBuiltInSignalsHandler(ISignalRepository signals, IAccountSetupQueries accounts, IInstrumentCatalog instruments) : IHandler
 {
     private const int MaxAccountNameLength = 50;
 

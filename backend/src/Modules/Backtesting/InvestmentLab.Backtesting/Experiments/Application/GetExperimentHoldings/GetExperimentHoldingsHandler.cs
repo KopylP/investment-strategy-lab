@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Backtesting.Experiments.Domain;
 
 namespace InvestmentLab.Backtesting.Experiments.Application.GetExperimentHoldings;
@@ -6,7 +7,7 @@ public sealed record GetExperimentHoldingsQuery(Guid ExperimentId, DateOnly? Fro
 
 public sealed record ExperimentHoldingsDto(IReadOnlyList<HoldingsRowDto> Rows, HoldingsDiagnosticsDto? Diagnostics);
 
-public sealed class GetExperimentHoldingsHandler(IExperimentRepository experiments)
+public sealed class GetExperimentHoldingsHandler(IExperimentRepository experiments) : IHandler
 {
     public async Task<Result<ExperimentHoldingsDto>> Handle(GetExperimentHoldingsQuery query, CancellationToken cancellationToken)
     {

@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Backtesting.Contracts;
 using InvestmentLab.Backtesting.Experiments.Domain;
 using InvestmentLab.Backtesting.Replays.Domain;
 
 namespace InvestmentLab.Backtesting.Experiments.Application.GetExperimentStatus;
 
-public sealed class GetExperimentStatusHandler(IExperimentRepository experiments)
+public sealed class GetExperimentStatusHandler(IExperimentRepository experiments) : IHandler
 {
     public async Task<ExperimentStatusDto?> Handle(Guid id, CancellationToken cancellationToken)
     {

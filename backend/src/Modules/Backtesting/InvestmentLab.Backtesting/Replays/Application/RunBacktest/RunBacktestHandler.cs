@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Backtesting.Replays.Domain;
 using Microsoft.Extensions.Logging;
 
 namespace InvestmentLab.Backtesting.Replays.Application.RunBacktest;
 
-public sealed class RunBacktestHandler(IBacktestRepository backtests, IReplayedStrategies strategies, StrategyReplay replay, TimeProvider clock, ILogger<RunBacktestHandler> logger)
+public sealed class RunBacktestHandler(IBacktestRepository backtests, IReplayedStrategies strategies, StrategyReplay replay, TimeProvider clock, ILogger<RunBacktestHandler> logger) : IHandler
 {
     public async Task Handle(Guid backtestId, CancellationToken cancellationToken)
     {

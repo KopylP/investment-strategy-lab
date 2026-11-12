@@ -1,8 +1,9 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Signals.Monitoring.Domain;
 
 namespace InvestmentLab.Signals.Monitoring.Application.CheckSignal;
 
-public sealed class CheckSignalHandler(ISignalRepository signals, SignalChecker checker)
+public sealed class CheckSignalHandler(ISignalRepository signals, SignalChecker checker) : IHandler
 {
     public async Task<Result> Handle(Guid signalId, CancellationToken cancellationToken)
     {

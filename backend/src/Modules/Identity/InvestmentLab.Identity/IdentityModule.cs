@@ -1,3 +1,4 @@
+using System.Reflection;
 using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.BuildingBlocks.Modules;
 using InvestmentLab.BuildingBlocks.Persistence;
@@ -42,6 +43,8 @@ public sealed class IdentityModule : IModule
 
     public string Name => "Identity";
 
+    public Assembly Assembly => typeof(IdentityAssemblyMarker).Assembly;
+
     public void AddServices(IHostApplicationBuilder builder)
     {
         builder.AddModuleDbContext<IdentityDbContext>(Schema);
@@ -72,8 +75,6 @@ public sealed class IdentityModule : IModule
             cookie.Events.OnRedirectToLogin = context => Respond(context.Response, StatusCodes.Status401Unauthorized);
             cookie.Events.OnRedirectToAccessDenied = context => Respond(context.Response, StatusCodes.Status403Forbidden);
         });
-
-
     }
 
     private static string SchemeOf(HttpContext context)
@@ -136,31 +137,21 @@ public sealed class IdentityModule : IModule
                     .AddSignInManager();
         services.AddScoped<UserStore>();
         services.AddScoped<IUserStore<User>>(provider => provider.GetRequiredService<UserStore>());
-
-
     }
 
     private static void AddAuthorization(IServiceCollection services)
     {
         services.AddAuthorizationBuilder()
                     .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
-
-
     }
 
     private static void AddHandlers(IServiceCollection services)
     {
         services.AddScoped<IUserAccounts, UserAccounts>();
-        services.AddDomainEventMapper<UserRegistered, UserRegisteredV1, UserRegisteredMapper>();
         services.AddScoped<IHomeAssistantUsers, HomeAssistantUsers>();
-        services.AddScoped<RegisterHandler>();
-        services.AddScoped<LoginHandler>();
-        services.AddScoped<GetCurrentUserHandler>();
 
         services.AddScoped<IUserProfileRepository, UserProfileRepository>();
         services.AddScoped<IUserLanguages, UserLanguages>();
-        services.AddScoped<GetProfileHandler>();
-        services.AddScoped<UpdateProfileHandler>();
     }
 
     private static Task Respond(HttpResponse response, int statusCode)

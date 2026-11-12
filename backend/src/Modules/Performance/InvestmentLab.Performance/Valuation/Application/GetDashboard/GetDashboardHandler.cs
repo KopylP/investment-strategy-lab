@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Performance.Valuation.Application.Shared;
 using InvestmentLab.Performance.Valuation.Domain;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 
 namespace InvestmentLab.Performance.Valuation.Application.GetDashboard;
 
-public sealed class GetDashboardHandler(AccountHistoryLoader histories, IAccountSetupQueries accounts)
+public sealed class GetDashboardHandler(AccountHistoryLoader histories, IAccountSetupQueries accounts) : IHandler
 {
     public async Task<Result<DashboardDto>> Handle(Guid accountId, string? period, CancellationToken cancellationToken)
     {

@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Performance.Valuation.Application.Shared;
 using InvestmentLab.Performance.Valuation.Domain;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 
 namespace InvestmentLab.Performance.Valuation.Application.GetAllAccountsDashboard;
 
-public sealed class GetAllAccountsDashboardHandler(AccountHistoryLoader histories, IAccountSetupQueries accounts, PriceBook prices)
+public sealed class GetAllAccountsDashboardHandler(AccountHistoryLoader histories, IAccountSetupQueries accounts, PriceBook prices) : IHandler
 {
     private const string DefaultCurrency = "EUR";
     private const int CurrencyCodeLength = 3;

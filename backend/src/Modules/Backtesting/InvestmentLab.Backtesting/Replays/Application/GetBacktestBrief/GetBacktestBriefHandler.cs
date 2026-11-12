@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Backtesting.Replays.Application.Shared;
 using InvestmentLab.Backtesting.Replays.Domain;
 
@@ -12,7 +13,7 @@ public sealed record BacktestBriefDto(
     string? FailureReason,
     ReplayResultBriefDto? Result);
 
-public sealed class GetBacktestBriefHandler(IBacktestRepository backtests)
+public sealed class GetBacktestBriefHandler(IBacktestRepository backtests) : IHandler
 {
     public async Task<Result<BacktestBriefDto>> Handle(GetBacktestBriefQuery query, CancellationToken cancellationToken)
     {

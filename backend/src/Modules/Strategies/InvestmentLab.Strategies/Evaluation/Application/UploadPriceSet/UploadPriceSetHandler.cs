@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Strategies.Contracts;
 using InvestmentLab.Strategies.Evaluation.Application.Shared;
 
 namespace InvestmentLab.Strategies.Evaluation.Application.UploadPriceSet;
 
-public sealed class UploadPriceSetHandler(EvaluationPreparer preparer, IStrategyEngine engine)
+public sealed class UploadPriceSetHandler(EvaluationPreparer preparer, IStrategyEngine engine) : IHandler
 {
     public async Task<Result<PriceSetTicket>> Handle(UploadPriceSetRequest request, CancellationToken cancellationToken)
     {

@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Taxation.Assessments.Application.ListBrokerStatements;
 using InvestmentLab.Taxation.Assessments.Application.Shared;
 using InvestmentLab.Taxation.BrokerStatements.Domain;
@@ -10,7 +11,7 @@ public sealed class UploadBrokerStatementHandler(
     TaxAccountSync sync,
     TaxRecalculator recalculator,
     ListBrokerStatementsHandler list,
-    TimeProvider clock)
+    TimeProvider clock) : IHandler
 {
     public async Task<Result<BrokerStatementsDto>> Handle(Guid accountId, UploadBrokerStatementCommand command, CancellationToken cancellationToken)
     {

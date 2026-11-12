@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.MarketData.Instruments.Domain;
 using InvestmentLab.MarketData.Quotes.Application.Shared;
 using InvestmentLab.MarketData.Quotes.Domain;
 
 namespace InvestmentLab.MarketData.Quotes.Application.IngestDailyQuotes;
 
-public sealed class IngestDailyQuotesHandler(IQuoteStore store, IQuoteProvider provider, TimeProvider clock)
+public sealed class IngestDailyQuotesHandler(IQuoteStore store, IQuoteProvider provider, TimeProvider clock) : IHandler
 {
     public const int InitialHistoryYears = 3;
     private const int SymbolsPerRequest = 20;

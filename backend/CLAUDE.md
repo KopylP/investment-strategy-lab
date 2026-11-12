@@ -68,6 +68,12 @@ Modules/<Module>/
     └── Shared/Infrastructure/            the module's DbContext and Migrations/
 ```
 
+- **Registration is by assembly.** `ModuleRegistration` scans each module's assembly (`IModule.Assembly`, from its `AssemblyMarker`) and registers
+  what declares itself: a handler implements `IHandler` (Scoped, as itself), an integration event handler implements `IIntegrationEventHandler<T>`
+  (with its delivery), a domain event mapper implements `IDomainEventMapper<,>` (public parameterless constructor), a job implements `IScheduledJob`
+  and states its own `Schedule` and, if it should also run at startup, `RunAtStartup`. A module file lists only what the scan cannot know: contracts
+  and their adapters, typed HTTP clients, options, authentication and registrations that forward to one instance. A handler that serves another
+  module's contract is registered by hand under that contract. `ModuleStructureTests` fails for a `*Handler` in `Application/` that declares nothing.
 - **One mapping per entity.** Each entity or owned child has its own `<Entity>Configuration : IEntityTypeConfiguration<T>` with a parameterless constructor in
   the `Infrastructure/` of its feature. `ModuleDbContext` applies all of them from the module's assembly marker and adds the owner query filter to every
   entity that implements `IUserOwned`; a context never lists configurations by hand.

@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Rebalancing.Planning.Application.RequestReport;
 using InvestmentLab.Rebalancing.Planning.Application.Shared;
 using InvestmentLab.Rebalancing.Planning.Domain;
 
 namespace InvestmentLab.Rebalancing.Planning.Application.ListReportRequests;
 
-public sealed class ListReportRequestsHandler(IReportRequestRepository requests, TimeProvider clock)
+public sealed class ListReportRequestsHandler(IReportRequestRepository requests, TimeProvider clock) : IHandler
 {
     private static readonly TimeSpan RecentlyFinished = TimeSpan.FromDays(1);
 

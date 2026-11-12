@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.Rebalancing.Reports.Application.Shared;
 using InvestmentLab.Rebalancing.Reports.Domain;
 
 namespace InvestmentLab.Rebalancing.Reports.Application.GetReport;
 
-public sealed class GetReportHandler(IReportRepository reports, IInstrumentCatalog instruments)
+public sealed class GetReportHandler(IReportRepository reports, IInstrumentCatalog instruments) : IHandler
 {
 
     public async Task<Result<ReportDetailsDto>> Handle(Guid reportId, CancellationToken cancellationToken)

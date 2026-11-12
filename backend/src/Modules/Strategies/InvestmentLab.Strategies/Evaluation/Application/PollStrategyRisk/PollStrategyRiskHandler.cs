@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Strategies.Contracts;
 using InvestmentLab.Strategies.Evaluation.Application.Shared;
 
 namespace InvestmentLab.Strategies.Evaluation.Application.PollStrategyRisk;
 
-public sealed class PollStrategyRiskHandler(IStrategyEngine engine)
+public sealed class PollStrategyRiskHandler(IStrategyEngine engine) : IHandler
 {
     public async Task<EngineJobPoll<RiskAssessmentDto>> Handle(StrategyJobTicket ticket, CancellationToken cancellationToken)
     {

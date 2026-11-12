@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Backtesting.Experiments.Application.Shared;
 using InvestmentLab.Backtesting.Experiments.Domain;
 
@@ -14,7 +15,7 @@ public sealed record ExperimentDto(
     ExperimentConditionsDto Conditions,
     ResearchReportDto? Result);
 
-public sealed class GetExperimentHandler(IExperimentRepository experiments)
+public sealed class GetExperimentHandler(IExperimentRepository experiments) : IHandler
 {
     public async Task<Result<ExperimentDto>> Handle(Guid id, CancellationToken cancellationToken)
     {

@@ -1,8 +1,9 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Signals.Monitoring.Domain;
 
 namespace InvestmentLab.Signals.Monitoring.Application.DeleteSignal;
 
-public sealed class DeleteSignalHandler(ISignalRepository signals, TimeProvider clock)
+public sealed class DeleteSignalHandler(ISignalRepository signals, TimeProvider clock) : IHandler
 {
     public async Task<Result> Handle(Guid signalId, CancellationToken cancellationToken)
     {

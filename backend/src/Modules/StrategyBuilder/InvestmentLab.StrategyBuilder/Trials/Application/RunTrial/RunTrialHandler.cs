@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 using InvestmentLab.StrategyBuilder.Trials.Application.Shared;
 using InvestmentLab.StrategyBuilder.Trials.Domain;
@@ -14,7 +15,7 @@ public sealed class RunTrialHandler(
     ITrialBacktests backtests,
     TrialRunSummaries summaries,
     ITrialRunGate gate,
-    TimeProvider clock)
+    TimeProvider clock) : IHandler
 {
     public async Task<Result<TrialRunDto>> Handle(RunTrialCommand command, CancellationToken cancellationToken)
     {

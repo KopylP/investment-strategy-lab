@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 using InvestmentLab.StrategyBuilder.Trials.Application.Shared;
 using InvestmentLab.StrategyBuilder.Trials.Domain;
@@ -21,7 +22,7 @@ public sealed record TrialRowDto(
     int Version,
     Guid? ExperimentId);
 
-public sealed class ListTrialRowsHandler(IDraftRepository drafts, TrialRunSummaries summaries, ITrialExperiments experiments)
+public sealed class ListTrialRowsHandler(IDraftRepository drafts, TrialRunSummaries summaries, ITrialExperiments experiments) : IHandler
 {
     public async Task<Result<IReadOnlyList<TrialRowDto>>> Handle(TrialRowsQuery query, CancellationToken cancellationToken)
     {

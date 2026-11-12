@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Strategies.Contracts;
 using InvestmentLab.Strategies.Evaluation.Application.Shared;
 
 namespace InvestmentLab.Strategies.Evaluation.Application.SubmitStrategyJob;
 
-public sealed class SubmitStrategyJobHandler(EvaluationPreparer preparer, IStrategyEngine engine)
+public sealed class SubmitStrategyJobHandler(EvaluationPreparer preparer, IStrategyEngine engine) : IHandler
 {
     public async Task<Result<StrategyJobTicket>> Handle(StrategyTask task, EvaluateStrategyRequest request, CancellationToken cancellationToken)
     {

@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 using Microsoft.Extensions.Logging;
 
 namespace InvestmentLab.StrategyBuilder.Drafts.Application.CleanUpTrials;
 
-public sealed class CleanUpTrialHandler(ITrialCleanupRepository cleanups, IStrategyAuthoring authoring, TimeProvider clock, ILogger<CleanUpTrialHandler> logger)
+public sealed class CleanUpTrialHandler(ITrialCleanupRepository cleanups, IStrategyAuthoring authoring, TimeProvider clock, ILogger<CleanUpTrialHandler> logger) : IHandler
 {
     public async Task Handle(Guid cleanupId, CancellationToken cancellationToken)
     {

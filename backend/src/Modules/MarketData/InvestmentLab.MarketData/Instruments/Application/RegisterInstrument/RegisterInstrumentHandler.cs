@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.MarketData.Instruments.Domain;
 
 namespace InvestmentLab.MarketData.Instruments.Application.RegisterInstrument;
@@ -15,7 +16,7 @@ public sealed record RegisterInstrumentCommand(
     string? Region = null,
     string? AssetCurrency = null);
 
-public sealed class RegisterInstrumentHandler(IInstrumentRepository instruments)
+public sealed class RegisterInstrumentHandler(IInstrumentRepository instruments) : IHandler
 {
     public async Task<Result<Guid>> Handle(RegisterInstrumentCommand command, CancellationToken cancellationToken)
     {

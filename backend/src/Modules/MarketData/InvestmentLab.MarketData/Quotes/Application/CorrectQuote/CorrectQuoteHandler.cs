@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.MarketData.Instruments.Domain;
 using InvestmentLab.MarketData.Quotes.Application.Shared;
 using InvestmentLab.MarketData.Quotes.Domain;
@@ -6,7 +7,7 @@ namespace InvestmentLab.MarketData.Quotes.Application.CorrectQuote;
 
 public sealed record CorrectQuoteCommand(Guid InstrumentId, DateOnly TradingDate, decimal Close, decimal? AdjustedClose, string Reason);
 
-public sealed class CorrectQuoteHandler(IQuoteStore store, TimeProvider clock)
+public sealed class CorrectQuoteHandler(IQuoteStore store, TimeProvider clock) : IHandler
 {
     public async Task<Result> Handle(CorrectQuoteCommand command, string correctedBy, CancellationToken cancellationToken)
     {

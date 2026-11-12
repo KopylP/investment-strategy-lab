@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Taxation.Declarations.Application.Shared;
 using InvestmentLab.Taxation.Declarations.Domain;
 
 namespace InvestmentLab.Taxation.Declarations.Application.SetPit8C;
 
-public sealed class SetPit8CHandler(IAccountSetupQueries accounts, IPit8CRepository pit8C)
+public sealed class SetPit8CHandler(IAccountSetupQueries accounts, IPit8CRepository pit8C) : IHandler
 {
     public async Task<Result> Handle(int year, Guid accountId, Pit8CCommand command, CancellationToken cancellationToken)
     {

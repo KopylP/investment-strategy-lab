@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using System.Text.Json;
 using InvestmentLab.Strategies.Contracts;
 using InvestmentLab.Strategies.Definitions.Application.Shared;
@@ -5,7 +6,7 @@ using InvestmentLab.Strategies.Definitions.Domain;
 
 namespace InvestmentLab.Strategies.Definitions.Application.CheckParameters;
 
-public sealed class CheckParametersHandler(StrategySetupFactory setups)
+public sealed class CheckParametersHandler(StrategySetupFactory setups) : IHandler
 {
     public async Task<Result<ParametersCheckDto>> Handle(string typeCode, string parameters, CancellationToken cancellationToken)
     {

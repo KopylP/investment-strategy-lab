@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Portfolio.Accounts.Application.Shared;
 using InvestmentLab.Portfolio.Accounts.Domain;
 using InvestmentLab.Portfolio.Contracts.Accounts;
@@ -6,7 +7,7 @@ namespace InvestmentLab.Portfolio.Accounts.Application.AddSubPortfolio;
 
 public sealed record AddSubPortfolioCommand(NewSubPortfolioDto SubPortfolio, IReadOnlyDictionary<Guid, decimal> TargetSharesOfOthers);
 
-public sealed class AddSubPortfolioHandler(IAccountRepository accounts, TimeProvider clock)
+public sealed class AddSubPortfolioHandler(IAccountRepository accounts, TimeProvider clock) : IHandler
 {
     public async Task<Result<AccountSetupDto>> Handle(Guid accountId, AddSubPortfolioCommand command, CancellationToken cancellationToken)
     {

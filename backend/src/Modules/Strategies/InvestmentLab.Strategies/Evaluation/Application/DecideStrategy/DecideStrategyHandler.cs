@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Strategies.Contracts;
 using InvestmentLab.Strategies.Evaluation.Application.Shared;
 
 namespace InvestmentLab.Strategies.Evaluation.Application.DecideStrategy;
 
-public sealed class DecideStrategyHandler(EvaluationPreparer preparer, IStrategyEngine engine)
+public sealed class DecideStrategyHandler(EvaluationPreparer preparer, IStrategyEngine engine) : IHandler
 {
     public async Task<Result<StrategyDecisionDto>> Handle(EvaluateStrategyRequest request, CancellationToken cancellationToken)
     {

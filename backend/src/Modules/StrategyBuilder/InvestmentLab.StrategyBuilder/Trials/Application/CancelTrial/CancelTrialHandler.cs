@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 using InvestmentLab.StrategyBuilder.Trials.Domain;
 
 namespace InvestmentLab.StrategyBuilder.Trials.Application.CancelTrial;
 
-public sealed class CancelTrialHandler(IDraftRepository drafts, ITrialExperiments experiments)
+public sealed class CancelTrialHandler(IDraftRepository drafts, ITrialExperiments experiments) : IHandler
 {
     public async Task<Result> Handle(Guid draftId, int number, CancellationToken cancellationToken)
     {

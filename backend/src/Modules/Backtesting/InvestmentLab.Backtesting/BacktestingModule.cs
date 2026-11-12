@@ -1,3 +1,4 @@
+using System.Reflection;
 using InvestmentLab.Backtesting.Contracts;
 using InvestmentLab.Backtesting.Experiments.Api;
 using InvestmentLab.Backtesting.Experiments.Application.CheckExperiment;
@@ -45,6 +46,8 @@ public sealed class BacktestingModule : IModule
 
     public string Name => "Backtesting";
 
+    public Assembly Assembly => typeof(BacktestingAssemblyMarker).Assembly;
+
     public void AddServices(IHostApplicationBuilder builder)
     {
         builder.AddModuleDbContext<BacktestingDbContext>(Schema);
@@ -68,28 +71,6 @@ public sealed class BacktestingModule : IModule
         services.AddScoped<IResearchStrategies, ResearchStrategies>();
         services.AddScoped<IExperimentRepository, ExperimentRepository>();
         services.AddScoped<IBacktestExperiments, BacktestExperiments>();
-        services.AddScoped<CheckExperimentHandler>();
-        services.AddScoped<RequestExperimentHandler>();
-        services.AddScoped<RunExperimentHandler>();
-        services.AddScoped<FailExperimentHandler>();
-        services.AddScoped<CancelExperimentHandler>();
-        services.AddScoped<GetQueuePositionsHandler>();
-        services.AddScoped<GetExperimentHandler>();
-        services.AddScoped<GetExperimentBriefHandler>();
-        services.AddScoped<GetExperimentOutcomeHandler>();
-        services.AddScoped<GetExperimentStatusHandler>();
-        services.AddScoped<GetExperimentJournalHandler>();
-        services.AddScoped<GetExperimentHoldingsHandler>();
-        services.AddScheduledJob<ExperimentsJob>(ExperimentsJob.Schedule);
-        services.AddScoped<RunBacktestHandler>();
-        services.AddScoped<CompareBacktestsHandler>();
-        services.AddScoped<EnsureBacktestHandler>();
-        services.AddScoped<GetBacktestHandler>();
-        services.AddScoped<GetBacktestBriefHandler>();
-        services.AddScoped<GetMoneyOutcomesHandler>();
-        services.AddScheduledJob<BacktestsJob>(BacktestsJob.Schedule);
-        services.AddIntegrationEventHandler<StrategyReconfiguredV1, RequestBacktestOnReconfigured>();
-        services.AddIntegrationEventHandler<StrategyDeletedV1, DeleteBacktestsOfDeletedStrategy>();
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>

@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.StrategyBuilder.Drafts.Application.Shared;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 
@@ -5,7 +6,7 @@ namespace InvestmentLab.StrategyBuilder.Drafts.Application.CopyEntryToExit;
 
 public sealed record CopyEntryToExitCommand(int Revision, double Margin);
 
-public sealed class CopyEntryToExitHandler(IDraftRepository drafts, IRuleVocabulary vocabularies, DraftDescriber describer, TimeProvider clock)
+public sealed class CopyEntryToExitHandler(IDraftRepository drafts, IRuleVocabulary vocabularies, DraftDescriber describer, TimeProvider clock) : IHandler
 {
     public async Task<Result<DraftDto>> Handle(Guid draftId, int revision, double margin, CancellationToken cancellationToken)
     {

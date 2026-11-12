@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Portfolio.Transactions.Application.ReverseRecordedTransaction;
 using InvestmentLab.Portfolio.Transactions.Application.Shared;
 using InvestmentLab.Portfolio.Transactions.Domain;
@@ -9,7 +10,7 @@ public sealed class UndoStatementImportHandler(
     StatementPreview preview,
     IStatementImportRepository imports,
     ReverseRecordedTransactionHandler recordedReversals,
-    TimeProvider clock)
+    TimeProvider clock) : IHandler
 {
     private const string AlreadyReversedCode = "transaction.already_reversed";
 

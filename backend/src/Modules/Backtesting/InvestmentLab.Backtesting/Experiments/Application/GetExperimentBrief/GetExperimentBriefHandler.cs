@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Backtesting.Experiments.Application.Shared;
 using InvestmentLab.Backtesting.Experiments.Domain;
 using InvestmentLab.Backtesting.Replays.Domain;
@@ -26,7 +27,7 @@ public sealed record ResearchStudyBrief(
     double? TrainingSharpe,
     string? FailureReason);
 
-public sealed class GetExperimentBriefHandler(IExperimentRepository experiments)
+public sealed class GetExperimentBriefHandler(IExperimentRepository experiments) : IHandler
 {
     public async Task<Result<ExperimentBriefDto>> Handle(GetExperimentBriefQuery query, CancellationToken cancellationToken)
     {

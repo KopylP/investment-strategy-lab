@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Portfolio.Contracts.Holdings;
 using InvestmentLab.Portfolio.Holdings.Application.Shared;
 using InvestmentLab.Portfolio.Holdings.Domain;
@@ -42,7 +43,7 @@ public sealed record ValuedPositionDto(
     decimal Weight,
     IReadOnlyList<LotDto> Lots);
 
-public sealed class GetValuedHoldingsHandler(HoldingsLoader loader, IHoldingsMarket market, TimeProvider clock)
+public sealed class GetValuedHoldingsHandler(HoldingsLoader loader, IHoldingsMarket market, TimeProvider clock) : IHandler
 {
     public async Task<Result<ValuedHoldingsDto>> Handle(Guid accountId, DateOnly? asOf, CancellationToken cancellationToken)
     {

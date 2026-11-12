@@ -1,3 +1,4 @@
+using System.Reflection;
 using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.BuildingBlocks.Modules;
 using InvestmentLab.BuildingBlocks.Persistence;
@@ -49,10 +50,11 @@ public sealed class MarketDataModule : IModule
 
     public string Name => "MarketData";
 
+    public Assembly Assembly => typeof(MarketDataAssemblyMarker).Assembly;
+
     public void AddServices(IHostApplicationBuilder builder)
     {
         builder.AddModuleDbContext<MarketDataDbContext>(Schema);
-        AddDomainEventMappers(builder.Services);
 
         var services = builder.Services;
         AddInstruments(services);
@@ -60,30 +62,14 @@ public sealed class MarketDataModule : IModule
         AddFxRates(services);
     }
 
-    private static void AddDomainEventMappers(IServiceCollection services)
-    {
-        services.AddDomainEventMapper<QuoteCorrected, QuoteCorrectedV1, QuoteCorrectedMapper>();
-        services.AddDomainEventMapper<DailyQuotesIngested, DailyQuotesIngestedV1, DailyQuotesIngestedMapper>();
-        services.AddDomainEventMapper<FxRatesIngested, FxRatesIngestedV1, FxRatesIngestedMapper>();
-    }
-
     private static void AddInstruments(IServiceCollection services)
     {
         services.AddScoped<IInstrumentRepository, InstrumentRepository>();
-        services.AddScoped<RegisterInstrumentHandler>();
-        services.AddScoped<RegisterListedFundHandler>();
-        services.AddScoped<AssignProviderSymbolHandler>();
-        services.AddScoped<GetInstrumentsHandler>();
-        services.AddScoped<GetQuoteCoverageHandler>();
-        services.AddScoped<DescribeInstrumentsHandler>();
-        services.AddScheduledJob<InstrumentDescriptionsJob>(InstrumentDescriptionsJob.Schedule, runAtStartup: true);
         services.AddScoped<IInstrumentCatalog, InstrumentCatalog>();
         services.AddScoped<IInstrumentRegistry, InstrumentRegistry>();
         services.AddScoped<IFundScreen, FundScreen>();
         services.AddSingleton<ISymbolConvention, YFinanceSymbolConvention>();
         services.AddScoped<IModuleDataSeeder, InstrumentSeeder>();
-
-
     }
 
     private static void AddQuotes(IHostApplicationBuilder builder)
@@ -93,9 +79,6 @@ public sealed class MarketDataModule : IModule
         services.AddScoped<IQuoteHistory, QuoteHistory>();
         services.AddSingleton<QuoteArchiveCache>();
         services.AddScoped<IQuoteArchive, QuoteArchive>();
-        services.AddScoped<IngestDailyQuotesHandler>();
-        services.AddScoped<CorrectQuoteHandler>();
-        services.AddScheduledJob<NightlyQuotesJob>(NightlyQuotesJob.Schedule, runAtStartup: true);
         AddYFinance(builder);
     }
 
@@ -104,9 +87,6 @@ public sealed class MarketDataModule : IModule
         services.AddScoped<FxRateStore>();
         services.AddScoped<IFxRateStore>(provider => provider.GetRequiredService<FxRateStore>());
         services.AddScoped<IFxRates>(provider => provider.GetRequiredService<FxRateStore>());
-        services.AddScoped<IngestFxRatesHandler>();
-        services.AddScoped<GetLatestFxRatesHandler>();
-        services.AddScheduledJob<DailyFxRatesJob>(DailyFxRatesJob.Schedule, runAtStartup: true);
         services.AddScoped<IFxRateBackfill, BackfillFxRatesHandler>();
         services.AddSingleton<FxRateChecks>();
         services.AddHttpClient<NbpFxRateProvider>(http => http.BaseAddress = new Uri(NbpFxRateProvider.BaseAddress));

@@ -1,8 +1,9 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Notifications.Delivery.Domain;
 
 namespace InvestmentLab.Notifications.Delivery.Application.GetMutedSignals;
 
-public sealed class GetMutedSignalsHandler(INotificationPreferencesRepository preferences)
+public sealed class GetMutedSignalsHandler(INotificationPreferencesRepository preferences) : IHandler
 {
     public async Task<Result<IReadOnlyList<Guid>>> Handle(UserId userId, CancellationToken cancellationToken)
     {

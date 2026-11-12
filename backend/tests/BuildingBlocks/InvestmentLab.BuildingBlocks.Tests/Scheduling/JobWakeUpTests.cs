@@ -43,6 +43,8 @@ public sealed class JobWakeUpTests
 
     private sealed class CountedJob(RunCounter counter) : IScheduledJob
     {
+        public static IJobSchedule Schedule { get; } = new IntervalSchedule(TimeSpan.FromHours(1));
+
         public Task RunAsync(CancellationToken cancellationToken)
         {
             counter.FirstRun.TrySetResult(true);

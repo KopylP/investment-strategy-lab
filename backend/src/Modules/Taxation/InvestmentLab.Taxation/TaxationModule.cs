@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Globalization;
 using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.BuildingBlocks.Modules;
@@ -49,10 +50,11 @@ public sealed class TaxationModule : IModule
 
     public string Name => "Taxation";
 
+    public Assembly Assembly => typeof(TaxationAssemblyMarker).Assembly;
+
     public void AddServices(IHostApplicationBuilder builder)
     {
         builder.AddModuleDbContext<TaxationDbContext>(Schema);
-        builder.Services.AddDomainEventMapper<TaxAssessmentRecomputed, TaxAssessmentUpdatedV2, TaxAssessmentRecomputedMapper>();
 
         var services = builder.Services;
         AddAssessments(builder);
@@ -80,28 +82,13 @@ public sealed class TaxationModule : IModule
         services.AddScoped<ITaxJournals, TaxJournals>();
         services.AddScoped<IInstrumentKeys, InstrumentKeys>();
         services.AddScoped<TaxRecalculator>();
-        services.AddScoped<RefreshTaxAssessmentsHandler>();
-        services.AddScoped<GetTaxYearsHandler>();
-        services.AddScoped<GetTaxRegimeHandler>();
-        services.AddSingleton<ListTaxPoliciesHandler>();
-        services.AddScoped<GetTaxYearHandler>();
-        services.AddScoped<GetTaxProgressHandler>();
-        services.AddScoped<ListLossCarryforwardsHandler>();
-        services.AddScoped<RecordLossCarryforwardHandler>();
-        services.AddScoped<RemoveLossCarryforwardHandler>();
         services.AddSingleton(new TaxAlertOptions(AlertShareOf(builder)));
-
     }
 
     private static void AddDeclarations(IServiceCollection services)
     {
         services.AddScoped<DeclarationAccounts>();
         services.AddScoped<DeclarationFiller>();
-        services.AddScoped<ListDeclarationFormsHandler>();
-        services.AddScoped<GetDeclarationHandler>();
-        services.AddScoped<GetDeclarationPdfHandler>();
-        services.AddScoped<SetPit8CHandler>();
-        services.AddScoped<RemovePit8CHandler>();
 
         services.AddSingleton<ITaxDeclarationForm, Pit38Form>();
         services.AddScoped<ITaxpayerHistory, TaxpayerHistory>();
@@ -111,18 +98,12 @@ public sealed class TaxationModule : IModule
         services.AddScoped<ITaxEstimator, TaxEstimator>();
         services.AddScoped<ITaxSimulation, TaxSimulation>();
         services.AddSingleton<ITaxPolicyDirectory, TaxPolicyDirectory>();
-
     }
 
     private static void AddBrokerStatements(IServiceCollection services)
     {
         services.AddScoped<IBrokerStatementRepository, BrokerStatementRepository>();
         services.AddSingleton<IBrokerStatementParser, RevolutPnlPdfParser>();
-        services.AddScoped<ListBrokerStatementsHandler>();
-        services.AddScoped<UploadBrokerStatementHandler>();
-        services.AddScoped<RemoveBrokerStatementHandler>();
-        services.AddIntegrationEventHandler<TransactionRecordedV1, RecomputeOnTransactionRecorded>();
-        services.AddIntegrationEventHandler<TransactionReversedV1, RecomputeOnTransactionReversed>();
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>

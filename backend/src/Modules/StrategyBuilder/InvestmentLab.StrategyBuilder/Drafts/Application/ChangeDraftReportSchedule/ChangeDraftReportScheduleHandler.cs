@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.StrategyBuilder.Drafts.Application.Shared;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 
@@ -12,7 +13,7 @@ public sealed record ChangeDraftReportScheduleCommand(
     string? Time = null,
     int? Minute = null);
 
-public sealed class ChangeDraftReportScheduleHandler(IDraftRepository drafts, DraftDescriber describer, TimeProvider clock)
+public sealed class ChangeDraftReportScheduleHandler(IDraftRepository drafts, DraftDescriber describer, TimeProvider clock) : IHandler
 {
     public async Task<Result<DraftDto>> Handle(Guid draftId, ChangeDraftReportScheduleCommand command, CancellationToken cancellationToken)
     {

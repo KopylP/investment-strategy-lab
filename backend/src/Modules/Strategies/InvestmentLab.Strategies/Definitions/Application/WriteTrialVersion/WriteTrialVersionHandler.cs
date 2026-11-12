@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Strategies.Contracts;
 using InvestmentLab.Strategies.Definitions.Application.Shared;
 using InvestmentLab.Strategies.Definitions.Domain;
 
 namespace InvestmentLab.Strategies.Definitions.Application.WriteTrialVersion;
 
-public sealed class WriteTrialVersionHandler(IStrategyRepository strategies, StrategySetupFactory setups, TimeProvider clock)
+public sealed class WriteTrialVersionHandler(IStrategyRepository strategies, StrategySetupFactory setups, TimeProvider clock) : IHandler
 {
     public async Task<Result<TrialVersionDto>> Handle(TrialVersionRequest request, CancellationToken cancellationToken)
     {

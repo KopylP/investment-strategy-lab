@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Taxation.Assessments.Domain;
 
 namespace InvestmentLab.Taxation.Assessments.Application.ListTaxPolicies;
 
 public sealed record TaxPolicyDto(string Code, string Name, string Hint, bool IsTaxed, bool IsDefault);
 
-public sealed class ListTaxPoliciesHandler
+public sealed class ListTaxPoliciesHandler : IHandler
 {
     public static IReadOnlyList<TaxPolicyDto> Handle() => [.. TaxPolicies.All.Select(ToDto)];
 

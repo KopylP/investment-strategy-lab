@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.StrategyBuilder.Drafts.Application.Shared;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 
@@ -5,7 +6,7 @@ namespace InvestmentLab.StrategyBuilder.Drafts.Application.ReplaceDraftRules;
 
 public sealed record ReplaceDraftRulesCommand(int Revision, string Json);
 
-public sealed class ReplaceDraftRulesHandler(IDraftRepository drafts, IRuleVocabulary vocabularies, DraftDescriber describer, TimeProvider clock)
+public sealed class ReplaceDraftRulesHandler(IDraftRepository drafts, IRuleVocabulary vocabularies, DraftDescriber describer, TimeProvider clock) : IHandler
 {
     public async Task<Result<DraftDto>> Handle(Guid draftId, ReplaceDraftRulesCommand command, CancellationToken cancellationToken)
     {

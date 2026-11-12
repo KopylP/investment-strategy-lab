@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Backtesting.Experiments.Domain;
 using InvestmentLab.Backtesting.Replays.Domain;
 
@@ -7,7 +8,7 @@ public sealed record CompareBacktestsQuery(BacktestRunDto First, BacktestRunDto 
 
 public sealed record BacktestComparisonDto(bool Comparable, string? Reason, BacktestDifferenceDto? Difference);
 
-public sealed class CompareBacktestsHandler(IBacktestRepository backtests, IExperimentRepository experiments)
+public sealed class CompareBacktestsHandler(IBacktestRepository backtests, IExperimentRepository experiments) : IHandler
 {
     public async Task<Result<BacktestComparisonDto>> Handle(CompareBacktestsQuery query, CancellationToken cancellationToken)
     {

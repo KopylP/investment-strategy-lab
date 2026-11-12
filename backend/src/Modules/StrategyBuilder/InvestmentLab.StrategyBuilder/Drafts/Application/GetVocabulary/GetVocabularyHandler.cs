@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using System.Text.Json;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 
@@ -33,7 +34,7 @@ public sealed record VocabularyDto(
     IReadOnlyList<ReportKindDto> Reports,
     IReadOnlyList<TemplateDto> Templates);
 
-public sealed class GetVocabularyHandler(IRuleVocabulary vocabularies)
+public sealed class GetVocabularyHandler(IRuleVocabulary vocabularies) : IHandler
 {
     public async Task<Result<VocabularyDto>> Handle(CancellationToken cancellationToken)
     {

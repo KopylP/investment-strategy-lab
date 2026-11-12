@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Backtesting.Replays.Application.Shared;
 using InvestmentLab.Backtesting.Replays.Domain;
 
 namespace InvestmentLab.Backtesting.Replays.Application.GetBacktest;
 
-public sealed class GetBacktestHandler(IBacktestRepository backtests)
+public sealed class GetBacktestHandler(IBacktestRepository backtests) : IHandler
 {
     public async Task<Result<BacktestDto>> Handle(Guid strategyId, int version, CancellationToken cancellationToken)
     {

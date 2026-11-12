@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Rebalancing.Reports.Application.Shared;
 using InvestmentLab.Rebalancing.Reports.Domain;
 
@@ -10,7 +11,7 @@ public sealed record MarkActionExecutedCommand(
     DateOnly? ExecutedOn = null,
     string? Note = null);
 
-public sealed class MarkActionExecutedHandler(FillMarker marker)
+public sealed class MarkActionExecutedHandler(FillMarker marker) : IHandler
 {
     public Task<Result> Handle(Guid reportId, Guid actionId, MarkActionExecutedCommand command, CancellationToken cancellationToken) =>
         marker.MarkAsync(reportId, actionId, (report, action, now) => MarkExecuted(report, action, command, now), cancellationToken);

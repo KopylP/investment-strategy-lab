@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using System.Globalization;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Rebalancing.Planning.Application.Shared;
@@ -5,7 +6,7 @@ using InvestmentLab.Rebalancing.Planning.Domain;
 
 namespace InvestmentLab.Rebalancing.Planning.Application.GetReportSchedule;
 
-public sealed class GetReportScheduleHandler(IAccountSetupQueries accounts, IAccountReports accountReports, IPlanSettingsRepository settings, TimeProvider clock)
+public sealed class GetReportScheduleHandler(IAccountSetupQueries accounts, IAccountReports accountReports, IPlanSettingsRepository settings, TimeProvider clock) : IHandler
 {
     private const string LocalMinuteFormat = "yyyy-MM-ddTHH:mm";
 

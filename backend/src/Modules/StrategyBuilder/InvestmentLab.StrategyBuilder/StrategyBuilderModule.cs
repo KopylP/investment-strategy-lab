@@ -1,3 +1,4 @@
+using System.Reflection;
 using InvestmentLab.StrategyBuilder.Funds.Api;
 using InvestmentLab.StrategyBuilder.Funds.Application.AddFunds;
 using InvestmentLab.StrategyBuilder.Funds.Application.GetFundSearchOptions;
@@ -56,34 +57,21 @@ public sealed class StrategyBuilderModule : IModule
 
     public string Name => "StrategyBuilder";
 
+    public Assembly Assembly => typeof(StrategyBuilderAssemblyMarker).Assembly;
+
     public void AddServices(IHostApplicationBuilder builder)
     {
         builder.AddModuleDbContext<StrategyBuilderDbContext>(Schema);
 
         var services = builder.Services;
         services.AddScoped<IFundSearch, FundSearch>();
-        services.AddScoped<GetFundSearchOptionsHandler>();
-        services.AddScoped<SearchFundsHandler>();
-        services.AddScoped<AddFundsHandler>();
         services.AddSingleton<ITrialRunGate, TrialRunGate>();
         services.AddScoped<ITrialBacktests, TrialBacktests>();
         services.AddScoped<ITrialExperiments, TrialExperiments>();
         services.AddScoped<TrialRunSummaries>();
-        services.AddScoped<RunTrialHandler>();
-        services.AddScoped<ListTrialsHandler>();
-        services.AddScoped<ListTrialRowsHandler>();
-        services.AddScoped<CancelTrialHandler>();
-        services.AddScoped<TrialTableHandler>();
         services.AddScoped<IPublishedLayoutRepository, PublishedLayoutRepository>();
         services.AddScoped<ITrialCleanupRepository, TrialCleanupRepository>();
-        services.AddScoped<CleanUpTrialHandler>();
-        services.AddScoped<PublishDraftHandler>();
-        services.AddScoped<OpenPublishedStrategyHandler>();
-        services.AddScoped<GetPublishedStrategyHandler>();
-        services.AddScheduledJob<TrialCleanupJob>(TrialCleanupJob.Schedule);
-        services.AddIntegrationEventHandler<SignalDeletedV1, MarkDraftsOfDeletedSignal>();
         services.AddScoped<IOwnSignals, OwnSignals>();
-        services.AddScoped<ListOwnSignalsHandler>();
         services.AddScoped<IDraftRepository, DraftRepository>();
         services.AddScoped<IRuleVocabulary, RuleVocabularyFromSchema>();
         services.AddScoped<IInstrumentDirectory, InstrumentDirectory>();
@@ -91,20 +79,6 @@ public sealed class StrategyBuilderModule : IModule
         services.AddScoped<DraftDescriber>();
         services.AddScoped<DraftChecker>();
         services.AddScoped<IDraftChecks>(provider => provider.GetRequiredService<DraftChecker>());
-        services.AddScoped<GetVocabularyHandler>();
-        services.AddScoped<ListInstrumentsHandler>();
-        services.AddScoped<CreateDraftHandler>();
-        services.AddScoped<CopyEntryToExitHandler>();
-        services.AddScoped<GetDraftHandler>();
-        services.AddScoped<ListDraftsHandler>();
-        services.AddScoped<ChangeDraftHandler>();
-        services.AddScoped<MoveNodesHandler>();
-        services.AddScoped<CheckDraftHandler>();
-        services.AddScoped<GetDraftRulesHandler>();
-        services.AddScoped<ImportRulesHandler>();
-        services.AddScoped<ReplaceDraftRulesHandler>();
-        services.AddScoped<ChangeDraftReportScheduleHandler>();
-        services.AddScoped<DiscardDraftHandler>();
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>

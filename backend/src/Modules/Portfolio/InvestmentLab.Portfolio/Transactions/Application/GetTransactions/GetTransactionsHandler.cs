@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Portfolio.Accounts.Domain;
 using InvestmentLab.Portfolio.Contracts.Transactions;
 using InvestmentLab.Portfolio.Transactions.Application.Shared;
@@ -19,7 +20,7 @@ public sealed record TransactionDto(
     Guid? ReversalOf,
     string? ReversalReason);
 
-public sealed class GetTransactionsHandler(ITransactionJournal journal)
+public sealed class GetTransactionsHandler(ITransactionJournal journal) : IHandler
 {
     public async Task<Result<IReadOnlyList<TransactionDto>>> Handle(Guid accountId, CancellationToken cancellationToken)
     {

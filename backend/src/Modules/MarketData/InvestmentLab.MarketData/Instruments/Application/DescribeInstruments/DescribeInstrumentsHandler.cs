@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.MarketData.Instruments.Application.Shared;
 using InvestmentLab.MarketData.Instruments.Domain;
 
 namespace InvestmentLab.MarketData.Instruments.Application.DescribeInstruments;
 
-public sealed class DescribeInstrumentsHandler(IInstrumentRepository instruments, ISymbolLookup lookup, TimeProvider clock)
+public sealed class DescribeInstrumentsHandler(IInstrumentRepository instruments, ISymbolLookup lookup, TimeProvider clock) : IHandler
 {
     private const int SymbolsPerRequest = 10;
 
