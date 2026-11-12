@@ -14,7 +14,6 @@ export interface UserProfile {
   displayCurrency: string;
   language: string | null;
   timeZone: string;
-  chartStyle: string;
 }
 
 @Injectable({ providedIn: 'root' })

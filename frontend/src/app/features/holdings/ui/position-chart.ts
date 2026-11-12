@@ -9,7 +9,6 @@ import {
 import { Skeleton } from 'primeng/skeleton';
 import { ApiClient } from '../../../core/api/api-client';
 import { PriceChart } from '../../../shared/charts/price-chart';
-import { PricePoint } from '../../../shared/charts/price-point';
 import { AccountTrades } from '../../../shared/data/account-trades';
 import { toIsoDate } from '../../../shared/models/api';
 
@@ -57,7 +56,7 @@ export class PositionChart {
   protected readonly history = resource({
     params: () => ({ id: this.instrumentId(), from: this.from() }),
     loader: ({ params }) =>
-      this.api.get<{ points: PricePoint[] }>(
+      this.api.get<{ points: { date: string; close: number }[] }>(
         `/api/market-data/quotes/${params.id}`,
         { from: params.from, to: toIsoDate(new Date()) },
       ),

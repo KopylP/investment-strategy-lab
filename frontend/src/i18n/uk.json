@@ -33,18 +33,7 @@
     "closingPrice": "Ціна закриття",
     "buy": "Купівля",
     "sell": "Продаж",
-    "tradeTooltip": "{side} {quantity} шт. × {price} ({date})",
-    "granularity": {
-      "label": "Крок графіка",
-      "day": "День",
-      "week": "Тиждень"
-    },
-    "candle": {
-      "open": "Відкриття",
-      "high": "Максимум",
-      "low": "Мінімум",
-      "close": "Закриття"
-    }
+    "tradeTooltip": "{side} {quantity} шт. × {price} ({date})"
   },
   "layout": {
     "footer": "Investment Lab · розрахунки — оцінка, рішення ухвалюєте ви",
@@ -119,14 +108,6 @@
     },
     "notSaved": "Не збережено",
     "title": "Профіль",
-    "chartStyle": {
-      "title": "Графіки",
-      "hint": "Як малювати графіки цін: звичайною лінією чи японськими свічками (зелена — ціна за крок зросла, червона — впала).",
-      "names": {
-        "Line": "Лінія",
-        "Candles": "Японські свічки"
-      }
-    },
     "language": {
       "title": "Мова",
       "hint": "Мова застосунку й сповіщень. За мовою браузера сповіщення Home Assistant приходять мовою самого Home Assistant.",

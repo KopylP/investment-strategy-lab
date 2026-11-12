@@ -3,15 +3,12 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, signal } f
 import { FormsModule } from '@angular/forms';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { DisplayCurrency } from '../../../../core/context/display-currency';
-import { ChartGranularity } from '../../../../shared/charts/chart-granularity';
 import { ChartLegend } from '../../../../shared/charts/chart-legend/chart-legend';
 import { ChartTheme, withAlpha } from '../../../../shared/charts/chart-theme';
 import { dateAxis } from '../../../../shared/charts/date-axis';
-import { GranularityToggle } from '../../../../shared/charts/granularity-toggle';
 import { HiddenLines } from '../../../../shared/charts/hidden-lines';
 import { lineChartBase } from '../../../../shared/charts/line-chart-base';
 import { LiveChart } from '../../../../shared/charts/live-chart';
-import { bucketDatesByDate, bucketsOf } from '../../../../shared/charts/series-buckets';
 import { valueAxis } from '../../../../shared/charts/value-axis';
 import {
   formatAxisNumber,
@@ -24,15 +21,13 @@ import { DashboardDto } from '../../data-access/dashboard-api';
 
 const showPlanKey = 'overview.valueChart.showPlan';
 const showHeldKey = 'overview.valueChart.showHeld';
-const phoneMaxTicks = 4;
 
 @Component({
   selector: 'app-value-chart',
-  imports: [TranslocoPipe, FormsModule, ChartLegend, GranularityToggle, LiveChart, ToggleSwitch],
+  imports: [TranslocoPipe, FormsModule, ChartLegend, LiveChart, ToggleSwitch],
   template: ` <div
       class="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 mb-2 text-sm text-muted-color"
     >
-      <app-granularity-toggle />
       @if (hasPlan() && !showHeld()) {
         <label class="flex items-center gap-2">
           <p-toggleswitch [ngModel]="showPlan()" (ngModelChange)="setShowPlan($event)" />
@@ -59,7 +54,6 @@ const phoneMaxTicks = 4;
 export class ValueChart {
   private readonly theme = inject(ChartTheme);
   private readonly display = inject(DisplayCurrency);
-  private readonly granularity = inject(ChartGranularity);
   protected readonly viewport = inject(Viewport);
 
   private readonly scale = computed(() => {
@@ -88,57 +82,35 @@ export class ValueChart {
     remember(showHeldKey, show);
   }
 
-  private readonly buckets = computed(() =>
-    bucketsOf(this.dashboard().series, this.granularity.step()),
-  );
-
-  private readonly reportsByBucketDate = computed(() => {
-    const bucketDates = bucketDatesByDate(this.buckets());
-    const byBucketDate = new Map<string, DashboardDto['reports'][number]>();
-
-    for (const report of this.dashboard().reports) {
-      const bucketDate = bucketDates.get(report.date);
-
-      if (bucketDate) byBucketDate.set(bucketDate, report);
-    }
-
-    return byBucketDate;
-  });
-
   private readonly allLines = computed(() => {
-    const buckets = this.buckets();
-    const points = buckets.map((bucket) => bucket.last);
+    const { series, reports } = this.dashboard();
     const { rate } = this.scale();
     const scaled = (value: number | null) => (value === null ? null : value * rate);
     const palette = this.theme.palette();
-    const reportDates = this.reportsByBucketDate();
+    const reportDays = new Map(reports.map((report) => [report.date, report]));
     const plan = palette.series[1];
     const held = this.showHeld();
-    const valueLabel = held
-      ? translate('overview.chart.assetsValue')
-      : translate('overview.chart.value');
+
     return {
-      labels: buckets.map((bucket) => formatDate(bucket.date)),
+      labels: series.map((point) => formatDate(point.date)),
       datasets: [
         {
-          type: 'line' as const,
-          label: valueLabel,
-          data: points.map((point) => scaled(held ? point.positionsValue : point.value)),
+          label: held ? translate('overview.chart.assetsValue') : translate('overview.chart.value'),
+          data: series.map((point) => scaled(held ? point.positionsValue : point.value)),
           borderColor: palette.primary,
           backgroundColor: palette.primarySoft,
           fill: false,
           tension: 0.2,
           borderWidth: 2,
-          pointRadius: points.map((point) => (reportDates.has(point.date) ? 5 : 0)),
+          pointRadius: series.map((point) => (reportDays.has(point.date) ? 5 : 0)),
           pointBackgroundColor: palette.tax,
           pointHoverRadius: 6,
         },
         {
-          type: 'line' as const,
           label: held
             ? translate('overview.chart.paidForAssets')
             : translate('overview.chart.contributed'),
-          data: points.map((point) => scaled(held ? point.costBasis : point.netContributions)),
+          data: series.map((point) => scaled(held ? point.costBasis : point.netContributions)),
           borderColor: palette.neutral,
           borderDash: [6, 4],
           stepped: true,
@@ -149,9 +121,8 @@ export class ValueChart {
         ...(this.hasPlan() && this.showPlan() && !held
           ? [
               {
-                type: 'line' as const,
                 label: translate('overview.chart.valueToPlan'),
-                data: points.map((point) => scaled(point.planValue)),
+                data: series.map((point) => scaled(point.planValue)),
                 borderColor: plan,
                 pointRadius: 0,
                 borderWidth: 2,
@@ -159,9 +130,8 @@ export class ValueChart {
                 fill: false,
               },
               {
-                type: 'line' as const,
                 label: translate('overview.chart.contributedToPlan'),
-                data: points.map((point) => scaled(point.planNetContributions)),
+                data: series.map((point) => scaled(point.planNetContributions)),
                 borderColor: withAlpha(plan, 0.7),
                 borderDash: [2, 3],
                 stepped: true,
@@ -187,11 +157,10 @@ export class ValueChart {
 
   protected readonly options = computed(() => {
     const palette = this.theme.palette();
+    const { series, reports } = this.dashboard();
     const { currency } = this.scale();
     const held = this.showHeld();
-    const reportDays = new Map(
-      [...this.reportsByBucketDate()].map(([date, report]) => [formatDate(date), report]),
-    );
+    const reportDays = new Map(reports.map((report) => [formatDate(report.date), report]));
     const phone = this.viewport.phone();
 
     return {
@@ -200,9 +169,9 @@ export class ValueChart {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            label: (item: TooltipItem) =>
-              `${item.dataset.label}: ${formatMoney(item.parsed.y, currency, 0)}`,
-            afterBody: (items: TooltipItem[]) => {
+            label: (context: { dataset: { label: string }; parsed: { y: number } }) =>
+              `${context.dataset.label}: ${formatMoney(context.parsed.y, currency, 0)}`,
+            afterBody: (items: { label: string; parsed: { y: number } }[]) => {
               const report = reportDays.get(items[0]?.label);
               const gain = held && items.length >= 2 ? items[0].parsed.y - items[1].parsed.y : null;
 
@@ -232,25 +201,17 @@ export class ValueChart {
       scales: {
         x: dateAxis(palette, {
           phone,
-          maxTicks: phone ? phoneMaxTicks : this.buckets().length > 60 ? 8 : 12,
+          maxTicks: phone ? 4 : series.length > 60 ? 8 : 12,
           shortLabels: phone,
         }),
-        y: {
-          ...valueAxis(palette, {
-            phone,
-            maxTicks: phone ? 5 : undefined,
-            tick: (value) => (phone ? formatAxisNumber(value) : formatMoney(value, currency, 0)),
-          }),
-        },
+        y: valueAxis(palette, {
+          phone,
+          maxTicks: phone ? 5 : undefined,
+          tick: (value) => (phone ? formatAxisNumber(value) : formatMoney(value, currency, 0)),
+        }),
       },
     };
   });
-}
-
-interface TooltipItem {
-  label: string;
-  parsed: { y: number };
-  dataset: { label: string };
 }
 
 function readChoice(key: string, fallback: boolean): boolean {

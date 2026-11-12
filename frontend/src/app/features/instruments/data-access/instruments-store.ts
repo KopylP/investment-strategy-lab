@@ -8,9 +8,6 @@ import { AccountHoldings, LatestPrice, toIsoDate } from '../../../shared/models/
 
 export interface QuotePoint {
   date: string;
-  open: number | null;
-  high: number | null;
-  low: number | null;
   close: number;
   adjustedClose: number;
   flags: string[];

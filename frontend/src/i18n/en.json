@@ -33,18 +33,7 @@
     "closingPrice": "Closing price",
     "buy": "Buy",
     "sell": "Sell",
-    "tradeTooltip": "{side} {quantity} sh. × {price} ({date})",
-    "granularity": {
-      "label": "Chart step",
-      "day": "Day",
-      "week": "Week"
-    },
-    "candle": {
-      "open": "Open",
-      "high": "High",
-      "low": "Low",
-      "close": "Close"
-    }
+    "tradeTooltip": "{side} {quantity} sh. × {price} ({date})"
   },
   "layout": {
     "footer": "Investment Lab · the numbers are estimates, the decisions are yours",
@@ -119,14 +108,6 @@
     },
     "notSaved": "Not saved",
     "title": "Profile",
-    "chartStyle": {
-      "title": "Charts",
-      "hint": "How price charts are drawn: a plain line or Japanese candlesticks (green when the price ended the step higher, red when lower).",
-      "names": {
-        "Line": "Line",
-        "Candles": "Candlesticks"
-      }
-    },
     "language": {
       "title": "Language",
       "hint": "The language of the app and notifications. When following the browser, Home Assistant notifications come in the language of Home Assistant itself.",
