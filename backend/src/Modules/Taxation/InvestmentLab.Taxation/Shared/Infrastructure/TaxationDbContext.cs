@@ -33,7 +33,7 @@ public sealed class TaxationDbContext(DbContextOptions<TaxationDbContext> option
         ConfigurePit8CStatements(modelBuilder);
     }
 
-    private void ConfigureAccounts(ModelBuilder modelBuilder)
+    private static void ConfigureAccounts(ModelBuilder modelBuilder)
     {
         var account = modelBuilder.Entity<TaxAccount>();
 
@@ -45,7 +45,7 @@ public sealed class TaxationDbContext(DbContextOptions<TaxationDbContext> option
         HasOwnerFilter(account, a => a.OwnerId);
     }
 
-    private void ConfigureLedgerEntries(ModelBuilder modelBuilder)
+    private static void ConfigureLedgerEntries(ModelBuilder modelBuilder)
     {
         var entry = modelBuilder.Entity<TaxLedgerEntry>();
 
@@ -60,7 +60,7 @@ public sealed class TaxationDbContext(DbContextOptions<TaxationDbContext> option
         HasOwnerFilter(entry, e => e.OwnerId);
     }
 
-    private void ConfigureAssessments(ModelBuilder modelBuilder)
+    private static void ConfigureAssessments(ModelBuilder modelBuilder)
     {
         var assessment = modelBuilder.Entity<TaxAssessment>();
 
@@ -78,7 +78,7 @@ public sealed class TaxationDbContext(DbContextOptions<TaxationDbContext> option
         HasOwnerFilter(assessment, a => a.OwnerId);
     }
 
-    private void ConfigureLossCarryforwards(ModelBuilder modelBuilder)
+    private static void ConfigureLossCarryforwards(ModelBuilder modelBuilder)
     {
         var loss = modelBuilder.Entity<LossCarryforward>();
 
@@ -89,7 +89,7 @@ public sealed class TaxationDbContext(DbContextOptions<TaxationDbContext> option
         HasOwnerFilter(loss, l => l.OwnerId);
     }
 
-    private void ConfigureBrokerStatements(ModelBuilder modelBuilder)
+    private static void ConfigureBrokerStatements(ModelBuilder modelBuilder)
     {
         var statement = modelBuilder.Entity<BrokerStatement>();
 
@@ -106,7 +106,7 @@ public sealed class TaxationDbContext(DbContextOptions<TaxationDbContext> option
         HasOwnerFilter(statement, s => s.OwnerId);
     }
 
-    private void ConfigurePit8CStatements(ModelBuilder modelBuilder)
+    private static void ConfigurePit8CStatements(ModelBuilder modelBuilder)
     {
         var statement = modelBuilder.Entity<Pit8CStatement>();
 
