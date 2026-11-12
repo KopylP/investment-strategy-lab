@@ -158,9 +158,14 @@
         top: 4rem;
     }
 
-    .card {
-        padding: 1rem;
-        margin-bottom: 0.75rem;
+    :root {
+        --card-spacing: 0.75rem;
+    }
+
+    @layer components {
+        .card {
+            padding: 1rem;
+        }
     }
 
     @layer base {

@@ -21,7 +21,12 @@ import {
 } from '../../../../shared/pipes/format-pipes';
 import { Viewport } from '../../../../shared/ui/viewport';
 import { BacktestStore } from '../../data-access/backtest-store';
-import { ReplayPointDto, ReplaySeriesDto, ReplayResultDto, STRATEGY_SERIES } from '../../models/backtest-dto';
+import {
+  ReplayPointDto,
+  ReplaySeriesDto,
+  ReplayResultDto,
+  STRATEGY_SERIES,
+} from '../../models/backtest-dto';
 
 const FEW_PERIODS = 24;
 const PHONE_DATE_TICKS = 4;
@@ -32,7 +37,9 @@ const COMPARISON_LINE_WIDTH = 1.5;
 
 @Component({
   selector: 'app-strategy-backtest',
-  imports: [TranslocoPipe, 
+  host: { class: 'contents' },
+  imports: [
+    TranslocoPipe,
     FormsModule,
     InputNumber,
     Message,
@@ -59,11 +66,14 @@ export class StrategyBacktest {
   private readonly theme = inject(ChartTheme);
 
   protected readonly fewPeriods = FEW_PERIODS;
-  protected readonly periodOptions = [
-    5, 10, 15, 20,
-  ].map((years) => ({ label: translate('backtest.years', { count: years }), value: years }));
+  protected readonly periodOptions = [5, 10, 15, 20].map((years) => ({
+    label: translate('backtest.years', { count: years }),
+    value: years,
+  }));
 
-  protected readonly result = computed(() => this.replay() ?? this.store.backtest()?.result ?? null);
+  protected readonly result = computed(
+    () => this.replay() ?? this.store.backtest()?.result ?? null,
+  );
   protected readonly currency = computed(() => this.result()?.currency ?? '');
   protected readonly series = computed(() => this.result()?.series ?? []);
   protected readonly strategySummary = computed(

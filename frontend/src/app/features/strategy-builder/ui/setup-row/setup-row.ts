@@ -6,6 +6,7 @@ import { SetupSummaryVm } from '../../models/draft-vm';
 
 @Component({
   selector: 'app-builder-setup-row',
+  host: { class: 'contents' },
   imports: [TranslocoPipe, Button, Tooltip],
   template: `
     <div class="card mb-4 flex min-w-0 flex-wrap items-center gap-x-6 gap-y-3 py-3">

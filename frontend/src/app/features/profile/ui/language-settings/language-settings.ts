@@ -15,6 +15,7 @@ type LanguageOption = Language | typeof followBrowser;
 
 @Component({
   selector: 'app-language-settings',
+  host: { class: 'contents' },
   imports: [FormsModule, TranslocoPipe, Select, Skeleton],
   templateUrl: './language-settings.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
