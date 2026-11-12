@@ -82,6 +82,10 @@ public sealed class FxRateBackfillTests
         {
         }
 
+        public void Record(IDomainEvent domainEvent)
+        {
+        }
+
         public Task SaveChangesAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     }
 }

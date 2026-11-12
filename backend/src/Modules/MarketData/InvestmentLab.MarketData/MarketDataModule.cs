@@ -8,8 +8,10 @@ using InvestmentLab.MarketData.Contracts.Quotes;
 using InvestmentLab.MarketData.FxRates.Api;
 using InvestmentLab.MarketData.FxRates.Application.BackfillFxRates;
 using InvestmentLab.MarketData.FxRates.Application.GetLatestFxRates;
+using InvestmentLab.MarketData.FxRates.Application.Integration;
 using InvestmentLab.MarketData.FxRates.Application.IngestFxRates;
 using InvestmentLab.MarketData.FxRates.Application.Shared;
+using InvestmentLab.MarketData.FxRates.Domain;
 using InvestmentLab.MarketData.FxRates.Infrastructure;
 using InvestmentLab.MarketData.FxRates.Infrastructure.Nbp;
 using InvestmentLab.MarketData.Instruments.Api;
@@ -62,6 +64,7 @@ public sealed class MarketDataModule : IModule
     {
         services.AddDomainEventMapper<QuoteCorrected, QuoteCorrectedV1, QuoteCorrectedMapper>();
         services.AddDomainEventMapper<DailyQuotesIngested, DailyQuotesIngestedV1, DailyQuotesIngestedMapper>();
+        services.AddDomainEventMapper<FxRatesIngested, FxRatesIngestedV1, FxRatesIngestedMapper>();
     }
 
     private static void AddInstruments(IServiceCollection services)

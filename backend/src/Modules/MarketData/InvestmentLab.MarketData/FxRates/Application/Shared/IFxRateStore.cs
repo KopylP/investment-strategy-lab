@@ -14,5 +14,7 @@ public interface IFxRateStore
 
     void Add(FxRate rate);
 
+    void Record(IDomainEvent domainEvent);
+
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }
