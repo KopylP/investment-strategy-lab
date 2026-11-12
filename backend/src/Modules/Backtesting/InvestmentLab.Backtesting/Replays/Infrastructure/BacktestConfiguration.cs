@@ -6,11 +6,11 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InvestmentLab.Backtesting.Replays.Infrastructure;
 
-internal static class BacktestConfiguration
+internal sealed class BacktestConfiguration : IEntityTypeConfiguration<Backtest>
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
-    public static void Configure(EntityTypeBuilder<Backtest> backtest)
+    public void Configure(EntityTypeBuilder<Backtest> backtest)
     {
         backtest.ToTable("backtests");
         backtest.HasKey(entry => entry.Id);

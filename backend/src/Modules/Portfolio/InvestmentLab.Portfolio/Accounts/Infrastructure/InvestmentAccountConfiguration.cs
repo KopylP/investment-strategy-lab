@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InvestmentLab.Portfolio.Accounts.Infrastructure;
 
-internal sealed class InvestmentAccountConfiguration(PortfolioDbContext context) : IEntityTypeConfiguration<InvestmentAccount>
+internal sealed class InvestmentAccountConfiguration : IEntityTypeConfiguration<InvestmentAccount>
 {
     public void Configure(EntityTypeBuilder<InvestmentAccount> account)
     {
@@ -22,7 +22,6 @@ internal sealed class InvestmentAccountConfiguration(PortfolioDbContext context)
             policy.Property(p => p.DriftBand).HasColumnName("drift_band");
         });
         account.Ignore(a => a.ActiveSubPortfolios);
-        context.HasOwnerFilter(account, a => a.OwnerId);
 
         account.HasMany(a => a.SubPortfolios).WithOne().HasForeignKey("AccountId").OnDelete(DeleteBehavior.Cascade);
         account.Navigation(a => a.SubPortfolios).UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();

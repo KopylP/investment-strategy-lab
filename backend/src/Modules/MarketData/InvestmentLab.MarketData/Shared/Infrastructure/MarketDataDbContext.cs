@@ -1,3 +1,4 @@
+using System.Reflection;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.MarketData.FxRates.Domain;
 using InvestmentLab.MarketData.Instruments.Domain;
@@ -17,6 +18,5 @@ public sealed class MarketDataDbContext(DbContextOptions<MarketDataDbContext> op
 
     protected override string Schema => SchemaName;
 
-    protected override void OnModuleModelCreating(ModelBuilder modelBuilder) =>
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(MarketDataDbContext).Assembly);
+    protected override Assembly MappingsAssembly => typeof(MarketDataAssemblyMarker).Assembly;
 }

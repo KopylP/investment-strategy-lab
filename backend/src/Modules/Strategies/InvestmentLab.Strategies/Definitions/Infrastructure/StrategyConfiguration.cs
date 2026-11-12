@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InvestmentLab.Strategies.Definitions.Infrastructure;
 
-internal sealed class StrategyConfiguration(StrategiesDbContext context) : IEntityTypeConfiguration<Strategy>
+internal sealed class StrategyConfiguration : IEntityTypeConfiguration<Strategy>
 {
     public void Configure(EntityTypeBuilder<Strategy> strategy)
     {
@@ -20,7 +20,6 @@ internal sealed class StrategyConfiguration(StrategiesDbContext context) : IEnti
         strategy.HasIndex(s => new { s.OwnerId, s.Name }).IsUnique();
         strategy.Ignore(s => s.Latest);
         strategy.Ignore(s => s.DomainEvents);
-        context.HasOwnerFilter(strategy, s => s.OwnerId);
 
         strategy.HasMany(s => s.Versions).WithOne().HasForeignKey("StrategyId").OnDelete(DeleteBehavior.Cascade);
         strategy.Navigation(s => s.Versions).UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();

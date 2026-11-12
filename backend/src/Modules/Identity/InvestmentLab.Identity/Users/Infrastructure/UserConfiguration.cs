@@ -1,44 +1,24 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InvestmentLab.Identity.Users.Infrastructure;
 
-internal static class UserConfiguration
+internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 {
-    public static void Configure(ModelBuilder modelBuilder)
+    public void Configure(EntityTypeBuilder<User> builder)
     {
-        modelBuilder.Entity<User>(user =>
-        {
-            user.ToTable("users");
-            user.HasKey(u => u.Id);
-            user.HasIndex(u => u.NormalizedUserName).IsUnique();
-            user.HasIndex(u => u.NormalizedEmail).IsUnique();
-            user.Property(u => u.ConcurrencyStamp).IsConcurrencyToken();
-            user.Property(u => u.UserName).HasMaxLength(256);
-            user.Property(u => u.NormalizedUserName).HasMaxLength(256);
-            user.Property(u => u.Email).HasMaxLength(256);
-            user.Property(u => u.NormalizedEmail).HasMaxLength(256);
-            user.HasMany<IdentityUserClaim<Guid>>().WithOne().HasForeignKey(claim => claim.UserId).IsRequired();
-            user.HasMany<IdentityUserLogin<Guid>>().WithOne().HasForeignKey(login => login.UserId).IsRequired();
-            user.HasMany<IdentityUserToken<Guid>>().WithOne().HasForeignKey(token => token.UserId).IsRequired();
-        });
-
-        modelBuilder.Entity<IdentityUserClaim<Guid>>(claim =>
-        {
-            claim.ToTable("user_claims");
-            claim.HasKey(c => c.Id);
-        });
-
-        modelBuilder.Entity<IdentityUserLogin<Guid>>(login =>
-        {
-            login.ToTable("user_logins");
-            login.HasKey(l => new { l.LoginProvider, l.ProviderKey });
-        });
-
-        modelBuilder.Entity<IdentityUserToken<Guid>>(token =>
-        {
-            token.ToTable("user_tokens");
-            token.HasKey(t => new { t.UserId, t.LoginProvider, t.Name });
-        });
+        builder.ToTable("users");
+        builder.HasKey(u => u.Id);
+        builder.HasIndex(u => u.NormalizedUserName).IsUnique();
+        builder.HasIndex(u => u.NormalizedEmail).IsUnique();
+        builder.Property(u => u.ConcurrencyStamp).IsConcurrencyToken();
+        builder.Property(u => u.UserName).HasMaxLength(256);
+        builder.Property(u => u.NormalizedUserName).HasMaxLength(256);
+        builder.Property(u => u.Email).HasMaxLength(256);
+        builder.Property(u => u.NormalizedEmail).HasMaxLength(256);
+        builder.HasMany<IdentityUserClaim<Guid>>().WithOne().HasForeignKey(claim => claim.UserId).IsRequired();
+        builder.HasMany<IdentityUserLogin<Guid>>().WithOne().HasForeignKey(login => login.UserId).IsRequired();
+        builder.HasMany<IdentityUserToken<Guid>>().WithOne().HasForeignKey(token => token.UserId).IsRequired();
     }
 }

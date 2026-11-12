@@ -1,7 +1,9 @@
+using System.Reflection;
 using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.SharedKernel;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InvestmentLab.BuildingBlocks.Tests.Messaging;
 
@@ -29,12 +31,17 @@ public sealed class DomainEventsToOutboxTests
     {
         protected override string Schema => "things";
 
-        protected override void OnModuleModelCreating(ModelBuilder modelBuilder)
-        {
-            var thing = modelBuilder.Entity<Thing>();
+        protected override Assembly MappingsAssembly => typeof(DomainEventsToOutboxTests).Assembly;
 
-            thing.HasKey(each => each.Id);
-            thing.Ignore(each => each.DomainEvents);
+        protected override bool IsMappedHere(Type configuration) => configuration.DeclaringType == typeof(DomainEventsToOutboxTests);
+    }
+
+    private sealed class ThingConfiguration : IEntityTypeConfiguration<Thing>
+    {
+        public void Configure(EntityTypeBuilder<Thing> builder)
+        {
+            builder.HasKey(each => each.Id);
+            builder.Ignore(each => each.DomainEvents);
         }
     }
 

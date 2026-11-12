@@ -1,3 +1,4 @@
+using System.Reflection;
 using InvestmentLab.Backtesting.Replays.Domain;
 using InvestmentLab.Backtesting.Replays.Infrastructure;
 using InvestmentLab.Backtesting.Experiments.Domain;
@@ -19,17 +20,5 @@ public sealed class BacktestingDbContext(DbContextOptions<BacktestingDbContext> 
 
     protected override ICurrentUser CurrentUser => currentUser;
 
-    protected override void OnModuleModelCreating(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<Backtest>(backtest =>
-        {
-            BacktestConfiguration.Configure(backtest);
-            HasOwnerFilter(backtest, entry => entry.OwnerId);
-        });
-        modelBuilder.Entity<ResearchExperiment>(experiment =>
-        {
-            ExperimentConfiguration.Configure(experiment);
-            HasOwnerFilter(experiment, entry => entry.OwnerId);
-        });
-    }
+    protected override Assembly MappingsAssembly => typeof(BacktestingAssemblyMarker).Assembly;
 }

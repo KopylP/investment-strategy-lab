@@ -1,3 +1,4 @@
+using System.Reflection;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Signals.Monitoring.Domain;
@@ -17,9 +18,5 @@ public sealed class SignalsDbContext(DbContextOptions<SignalsDbContext> options,
 
     protected override ICurrentUser CurrentUser => currentUser;
 
-    protected override void OnModuleModelCreating(ModelBuilder modelBuilder)
-    {
-        modelBuilder.ApplyConfiguration(new SignalConfiguration(this));
-        modelBuilder.ApplyConfiguration(new SignalOccurrenceConfiguration(this));
-    }
+    protected override Assembly MappingsAssembly => typeof(SignalsAssemblyMarker).Assembly;
 }

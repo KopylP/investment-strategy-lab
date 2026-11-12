@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InvestmentLab.Notifications.Delivery.Infrastructure;
 
-internal sealed class NotificationPreferencesConfiguration(NotificationsDbContext context) : IEntityTypeConfiguration<NotificationPreferences>
+internal sealed class NotificationPreferencesConfiguration : IEntityTypeConfiguration<NotificationPreferences>
 {
     public void Configure(EntityTypeBuilder<NotificationPreferences> preferences)
     {
@@ -14,6 +14,5 @@ internal sealed class NotificationPreferencesConfiguration(NotificationsDbContex
         preferences.Property(p => p.Id).HasColumnName("user_id").ValueGeneratedNever();
         preferences.Property(p => p.MutedSignalIds).HasDefaultValueSql("'{}'::uuid[]");
         preferences.Ignore(p => p.DomainEvents);
-        context.HasOwnerFilter(preferences, p => p.OwnerId);
     }
 }

@@ -1,3 +1,4 @@
+using System.Reflection;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
@@ -19,18 +20,5 @@ public sealed class StrategyBuilderDbContext(DbContextOptions<StrategyBuilderDbC
 
     protected override ICurrentUser CurrentUser => currentUser;
 
-    protected override void OnModuleModelCreating(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<StrategyDraft>(draft =>
-        {
-            StrategyDraftConfiguration.Configure(draft);
-            HasOwnerFilter(draft, entry => entry.OwnerId);
-        });
-        modelBuilder.Entity<PublishedLayout>(layout =>
-        {
-            PublishedLayoutConfiguration.Configure(layout);
-            HasOwnerFilter(layout, entry => entry.OwnerId);
-        });
-        modelBuilder.Entity<TrialCleanup>(TrialCleanupConfiguration.Configure);
-    }
+    protected override Assembly MappingsAssembly => typeof(StrategyBuilderAssemblyMarker).Assembly;
 }

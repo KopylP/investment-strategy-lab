@@ -1,3 +1,4 @@
+using System.Reflection;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.Identity.Profiles.Domain;
 using InvestmentLab.Identity.Users.Infrastructure;
@@ -14,9 +15,5 @@ public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> option
 
     protected override string Schema => SchemaName;
 
-    protected override void OnModuleModelCreating(ModelBuilder modelBuilder)
-    {
-        UserConfiguration.Configure(modelBuilder);
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(IdentityDbContext).Assembly);
-    }
+    protected override Assembly MappingsAssembly => typeof(IdentityAssemblyMarker).Assembly;
 }

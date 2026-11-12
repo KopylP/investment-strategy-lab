@@ -25,6 +25,8 @@ public abstract class ModuleDbContext(DbContextOptions options) : DbContext(opti
 
     protected abstract Assembly MappingsAssembly { get; }
 
+    protected virtual bool IsMappedHere(Type configuration) => true;
+
     private LambdaExpression OwnerVisibility(Type entityType)
     {
         var entity = Expression.Parameter(entityType, "entity");
@@ -73,7 +75,7 @@ public abstract class ModuleDbContext(DbContextOptions options) : DbContext(opti
             outbox.HasIndex(message => message.OccurredAt).HasFilter("processed_at IS NULL");
         });
 
-        modelBuilder.ApplyConfigurationsFromAssembly(MappingsAssembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(MappingsAssembly, IsMappedHere);
         FilterByOwner(modelBuilder);
     }
 

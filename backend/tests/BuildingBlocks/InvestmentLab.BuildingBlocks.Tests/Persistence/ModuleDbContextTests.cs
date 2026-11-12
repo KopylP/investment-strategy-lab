@@ -1,6 +1,8 @@
+using System.Reflection;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.SharedKernel;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InvestmentLab.BuildingBlocks.Tests.Persistence;
 
@@ -20,8 +22,25 @@ public sealed class ModuleDbContextTests
     {
         protected override string Schema => "sample";
 
-        protected override void OnModuleModelCreating(ModelBuilder modelBuilder) =>
-            modelBuilder.Entity<Sample>();
+        protected override Assembly MappingsAssembly => typeof(ModuleDbContextTests).Assembly;
+
+        protected override bool IsMappedHere(Type configuration) => configuration.DeclaringType == typeof(ModuleDbContextTests);
+    }
+
+    private sealed class OwnedSample : IUserOwned
+    {
+        public Guid Id { get; set; }
+        public UserId OwnerId { get; set; }
+    }
+
+    private sealed class OwnedSampleConfiguration : IEntityTypeConfiguration<OwnedSample>
+    {
+        public void Configure(EntityTypeBuilder<OwnedSample> builder) => builder.HasKey(sample => sample.Id);
+    }
+
+    private sealed class SampleConfiguration : IEntityTypeConfiguration<Sample>
+    {
+        public void Configure(EntityTypeBuilder<Sample> builder) => builder.HasKey(sample => sample.Id);
     }
 
     private static SampleDbContext CreateContext() =>
@@ -29,6 +48,15 @@ public sealed class ModuleDbContextTests
             .UseNpgsql("Host=unused")
             .UseSnakeCaseNamingConvention()
             .Options);
+
+    [Fact]
+    public void Entities_owned_by_a_user_are_filtered_by_owner_and_others_are_not()
+    {
+        using var context = CreateContext();
+
+        context.Model.FindEntityType(typeof(OwnedSample))!.GetDeclaredQueryFilters().Count.ShouldBe(1);
+        context.Model.FindEntityType(typeof(Sample))!.GetDeclaredQueryFilters().ShouldBeEmpty();
+    }
 
     [Fact]
     public void Tables_live_in_the_module_schema()

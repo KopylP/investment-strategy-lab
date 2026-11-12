@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InvestmentLab.Rebalancing.Planning.Infrastructure;
 
-internal sealed class SignalReportRuleConfiguration(RebalancingDbContext context) : IEntityTypeConfiguration<SignalReportRule>
+internal sealed class SignalReportRuleConfiguration : IEntityTypeConfiguration<SignalReportRule>
 {
     public void Configure(EntityTypeBuilder<SignalReportRule> rule)
     {
@@ -19,7 +19,5 @@ internal sealed class SignalReportRuleConfiguration(RebalancingDbContext context
         rule.Ignore(r => r.DomainEvents);
 
         rule.HasIndex(r => new { r.SignalId, r.AccountId, r.ReportCode }).IsUnique();
-
-        context.HasOwnerFilter(rule, r => r.OwnerId);
     }
 }

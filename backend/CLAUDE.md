@@ -49,13 +49,14 @@ this rule?" If yes, it belongs in `Domain`, whatever the shape of the code that 
 
 ### Inside a module
 
-Every file has one place. Nothing lies loose in `Application/` or in the module's root except `<Module>Module.cs`.
+Every file has one place. Nothing lies loose in `Application/` or in the module's root except `<Module>Module.cs` and `<Module>AssemblyMarker.cs`.
 
 ```
 Modules/<Module>/
 ├── InvestmentLab.<Module>.Contracts/     integration events (…V1) and query interfaces: primitives only
 └── InvestmentLab.<Module>/
     ├── <Module>Module.cs                 registration
+    ├── <Module>AssemblyMarker.cs         names the module's assembly (EF mappings are applied from it)
     ├── <Feature>/                        Accounts, Planning, Monitoring…
     │   ├── Api/                          endpoints of the feature
     │   ├── Application/
@@ -66,6 +67,10 @@ Modules/<Module>/
     │   └── Infrastructure/               EF configurations, repositories, outside services
     └── Shared/Infrastructure/            the module's DbContext and Migrations/
 ```
+
+- **One mapping per entity.** Each entity or owned child has its own `<Entity>Configuration : IEntityTypeConfiguration<T>` with a parameterless constructor in
+  the `Infrastructure/` of its feature. `ModuleDbContext` applies all of them from the module's assembly marker and adds the owner query filter to every
+  entity that implements `IUserOwned`; a context never lists configurations by hand.
 
 - `Application/` holds only folders, never a file directly: `<ActionName>/`, `Integration/` and `Shared/`.
 - Repository interfaces (`IAccountRepository`) go in `Domain/`. Request records and mappings that several actions use

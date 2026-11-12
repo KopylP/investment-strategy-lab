@@ -1,3 +1,4 @@
+using System.Reflection;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Rebalancing.Planning.Domain;
@@ -21,12 +22,5 @@ public sealed class RebalancingDbContext(DbContextOptions<RebalancingDbContext> 
 
     protected override ICurrentUser CurrentUser => currentUser;
 
-    protected override void OnModuleModelCreating(ModelBuilder modelBuilder)
-    {
-        modelBuilder.ApplyConfiguration(new RebalancingReportConfiguration(this));
-        modelBuilder.ApplyConfiguration(new ReportActionConfiguration());
-        modelBuilder.ApplyConfiguration(new PlanSettingsConfiguration(this));
-        modelBuilder.ApplyConfiguration(new ReportRequestConfiguration(this));
-        modelBuilder.ApplyConfiguration(new SignalReportRuleConfiguration(this));
-    }
+    protected override Assembly MappingsAssembly => typeof(RebalancingAssemblyMarker).Assembly;
 }
