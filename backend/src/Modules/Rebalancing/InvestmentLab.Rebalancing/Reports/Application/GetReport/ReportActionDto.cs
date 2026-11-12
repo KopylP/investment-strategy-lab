@@ -1,5 +1,3 @@
-using InvestmentLab.Rebalancing.Reports.Domain;
-
 namespace InvestmentLab.Rebalancing.Reports.Application.GetReport;
 
 public sealed record ReportActionDto(
@@ -10,14 +8,14 @@ public sealed record ReportActionDto(
     decimal PlannedQuantity,
     decimal PlannedPrice,
     decimal PlannedAmount,
-    IReadOnlyList<ActionAllocation> Allocations,
+    IReadOnlyList<ActionAllocationDto> Allocations,
     Guid? FromSubPortfolioId,
     Guid? ToSubPortfolioId,
     string Reason,
     string Status,
     decimal FilledQuantity,
     decimal RemainingQuantity,
-    IReadOnlyList<Fill> Fills,
+    IReadOnlyList<FillDto> Fills,
     string? SkipReason,
     string? Rejection,
     decimal? EstimatedGain,

@@ -96,6 +96,7 @@
   "transaction.reason_required": "Enter the reason for the reversal.",
   "transaction.settlement_in_account_currency": "The settlement must be in a currency other than the account's.",
   "report_request.not_found": "Report request not found.",
+  "report.trigger_unknown": "This reason to make a report is not known.",
   "report.unknown_code": "The strategies of this account do not make such a report.",
   "report.definition_not_found": "The strategies of this account do not make such a report.",
   "plan_settings.contribution_negative": "The monthly contribution cannot be negative.",

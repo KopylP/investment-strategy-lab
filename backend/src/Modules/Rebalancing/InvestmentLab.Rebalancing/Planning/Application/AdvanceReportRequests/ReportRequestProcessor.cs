@@ -9,9 +9,9 @@ namespace InvestmentLab.Rebalancing.Planning.Application.AdvanceReportRequests;
 public sealed class ReportRequestProcessor(
     IReportRequestRepository requests,
     IStrategyRuns strategies,
-    GenerateMonthlyReportHandler rebalance,
+    MonthlyReportGenerator rebalance,
     MonthlyPlanPreparation rebalancePreparation,
-    GenerateRiskReviewHandler riskReview,
+    RiskReviewGenerator riskReview,
     RiskReviewStrategyRequests riskReviewRequests,
     TimeProvider clock)
 {
@@ -115,8 +115,8 @@ public sealed class ReportRequestProcessor(
     private async Task<Result<ReportId>> GenerateAsync(ReportRequest request, CancellationToken cancellationToken)
     {
         var made = request.Kind == ReportKind.RiskReview
-            ? await riskReview.Handle(RiskReviewOf(request), AnswersOf(request, strategies.RiskIn), request, cancellationToken)
-            : await rebalance.Handle(RebalanceOf(request), AnswersOf(request, strategies.DecisionIn), request, cancellationToken);
+            ? await riskReview.GenerateAsync(RiskReviewOf(request), AnswersOf(request, strategies.RiskIn), request, cancellationToken)
+            : await rebalance.GenerateAsync(RebalanceOf(request), AnswersOf(request, strategies.DecisionIn), request, cancellationToken);
 
         return made;
     }

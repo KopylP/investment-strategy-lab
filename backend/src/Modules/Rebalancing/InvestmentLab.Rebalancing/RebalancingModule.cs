@@ -126,9 +126,9 @@ public sealed class RebalancingModule : IModule
     private static void AddReportGeneration(IServiceCollection services)
     {
         services.AddScoped<MonthlyPlanPreparation>();
-        services.AddScoped<GenerateMonthlyReportHandler>();
+        services.AddScoped<MonthlyReportGenerator>();
         services.AddScoped<RiskReviewStrategyRequests>();
-        services.AddScoped<GenerateRiskReviewHandler>();
+        services.AddScoped<RiskReviewGenerator>();
         services.AddScoped<IReportRequestRepository, ReportRequestRepository>();
         services.AddScoped<RequestReportHandler>();
         services.AddScoped<RequestReportOnDemandHandler>();

@@ -90,7 +90,7 @@ public sealed class StrategyReportsJob(
     {
         var command = new RequestReportCommand(accountId, report.Code, AsOf: today, SubPortfolioIds: due);
 
-        var asked = await request.Handle(command, ReportTrigger.Scheduled, cancellationToken);
+        var asked = await request.Handle(command, nameof(ReportTrigger.Scheduled), cancellationToken);
         if (asked.IsFailure)
             logger.LogWarning("Report {Code} for account {AccountId} was not asked for: {Error}", report.Code, accountId, asked.Error.Message);
     }
