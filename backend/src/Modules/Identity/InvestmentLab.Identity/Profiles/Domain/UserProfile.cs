@@ -10,16 +10,15 @@ public sealed class UserProfile : AggregateRoot<UserId>
     public Currency DisplayCurrency { get; private set; }
     public Language? Language { get; private set; }
     public string TimeZone { get; private set; }
-    public ChartStyle ChartStyle { get; private set; }
 
-    private UserProfile(UserId id, Currency displayCurrency, Language? language, string timeZone, ChartStyle chartStyle) : base(id) =>
-        (DisplayCurrency, Language, TimeZone, ChartStyle) = (displayCurrency, language, timeZone, chartStyle);
+    private UserProfile(UserId id, Currency displayCurrency, Language? language, string timeZone) : base(id) =>
+        (DisplayCurrency, Language, TimeZone) = (displayCurrency, language, timeZone);
 
-    public static UserProfile CreateDefault(UserId userId) => new(userId, DefaultDisplayCurrency, language: null, DefaultTimeZone, ChartStyle.Line);
+    public static UserProfile CreateDefault(UserId userId) => new(userId, DefaultDisplayCurrency, language: null, DefaultTimeZone);
 
     public void Registered(string email, DateTimeOffset now) => Raise(new UserRegistered(Id, email, now));
 
-    public Result Update(Currency displayCurrency, Language? language, string timeZone, ChartStyle chartStyle)
+    public Result Update(Currency displayCurrency, Language? language, string timeZone)
     {
         if (!DisplayCurrencies.Contains(displayCurrency))
             return ProfileErrors.UnsupportedCurrency(displayCurrency);
@@ -27,7 +26,7 @@ public sealed class UserProfile : AggregateRoot<UserId>
         if (!TimeZoneInfo.TryFindSystemTimeZoneById(timeZone, out _))
             return ProfileErrors.UnknownTimeZone(timeZone);
 
-        (DisplayCurrency, Language, TimeZone, ChartStyle) = (displayCurrency, language, timeZone, chartStyle);
+        (DisplayCurrency, Language, TimeZone) = (displayCurrency, language, timeZone);
 
         return Result.Success();
     }
