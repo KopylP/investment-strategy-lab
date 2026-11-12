@@ -5,8 +5,8 @@ using InvestmentLab.Backtesting.Experiments.Application.GetQueuePositions;
 using InvestmentLab.Backtesting.Experiments.Application.GetExperimentOutcome;
 using InvestmentLab.Backtesting.Experiments.Application.GetExperimentStatus;
 using InvestmentLab.Backtesting.Experiments.Application.RequestExperiment;
-using InvestmentLab.Backtesting.Experiments.Domain;
-using InvestmentLab.Backtesting.Replays.Domain;
+using InvestmentLab.Backtesting.Experiments.Application.Shared;
+using InvestmentLab.Backtesting.Replays.Application.Shared;
 
 namespace InvestmentLab.Backtesting.Experiments.Infrastructure;
 
@@ -62,43 +62,43 @@ internal sealed class BacktestExperiments(
     public Task<IReadOnlyDictionary<Guid, int>> QueuePositionsAsync(IReadOnlyList<Guid> experimentIds, CancellationToken cancellationToken) =>
         getQueuePositions.Handle(experimentIds, cancellationToken);
 
-    private static ExperimentConditions ConditionsOf(ExperimentSettingsDto settings)
+    private static ExperimentConditionsDto ConditionsOf(ExperimentSettingsDto settings)
     {
-        var period = new ExperimentPeriod(settings.Start, settings.End);
+        var period = new ExperimentPeriodDto(settings.Start, settings.End);
         var costs = CostsOf(settings);
         var robustness = RobustnessOf(settings);
 
-        return new ExperimentConditions(period, settings.InitialCapital, costs, robustness);
+        return new ExperimentConditionsDto(period, settings.InitialCapital, costs, robustness);
     }
 
-    private static TradingCosts CostsOf(ExperimentSettingsDto settings) => new(
+    private static TradingCostsDto CostsOf(ExperimentSettingsDto settings) => new(
         CommissionRate: settings.CommissionRate,
         FeePerTrade: settings.FeePerTrade,
         SpreadBps: settings.SpreadBps,
         SlippageBps: settings.SlippageBps);
 
-    private static RobustnessPlan RobustnessOf(ExperimentSettingsDto settings)
+    private static RobustnessPlanDto RobustnessOf(ExperimentSettingsDto settings)
     {
         var windows = WindowsOf(settings);
         var neighborhood = NeighborhoodOf(settings);
 
-        return new RobustnessPlan(settings.OutOfSampleStart, windows, neighborhood);
+        return new RobustnessPlanDto(settings.OutOfSampleStart, windows, neighborhood);
     }
 
-    private static WalkForwardWindows? WindowsOf(ExperimentSettingsDto settings)
+    private static WalkForwardWindowsDto? WindowsOf(ExperimentSettingsDto settings)
     {
         if (settings is not { TrainingMonths: { } training, TestMonths: { } test })
             return null;
 
-        return new WalkForwardWindows(training, test);
+        return new WalkForwardWindowsDto(training, test);
     }
 
-    private static ParameterNeighborhood? NeighborhoodOf(ExperimentSettingsDto settings)
+    private static ParameterNeighborhoodDto? NeighborhoodOf(ExperimentSettingsDto settings)
     {
         if (settings.ParameterPath is null && settings.ParameterValues is not { Count: > 0 })
             return null;
 
-        return new ParameterNeighborhood(settings.ParameterPath ?? "", settings.ParameterValues ?? []);
+        return new ParameterNeighborhoodDto(settings.ParameterPath ?? "", settings.ParameterValues ?? []);
     }
 
     private static ExperimentTicketDto TicketOf(Result<Guid> result) =>

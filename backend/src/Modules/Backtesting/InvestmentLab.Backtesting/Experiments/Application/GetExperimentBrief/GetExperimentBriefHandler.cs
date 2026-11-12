@@ -1,4 +1,6 @@
+using InvestmentLab.Backtesting.Experiments.Application.Shared;
 using InvestmentLab.Backtesting.Experiments.Domain;
+using InvestmentLab.Backtesting.Replays.Application.Shared;
 using InvestmentLab.Backtesting.Replays.Domain;
 
 namespace InvestmentLab.Backtesting.Experiments.Application.GetExperimentBrief;
@@ -11,13 +13,13 @@ public sealed record ExperimentBriefDto(
     int StrategyVersion,
     string Status,
     string? FailureReason,
-    ExperimentConditions Conditions,
-    ReplayResultBrief? Result,
+    ExperimentConditionsDto Conditions,
+    ReplayResultBriefDto? Result,
     IReadOnlyList<ResearchStudyBrief>? Studies);
 
 public sealed record ResearchStudyBrief(
     string Kind,
-    ResearchFold Window,
+    ResearchFoldDto Window,
     decimal? ParameterValue,
     double? Sharpe,
     double? AnnualReturn,
@@ -34,7 +36,7 @@ public sealed class GetExperimentBriefHandler(IExperimentRepository experiments)
             return ExperimentErrors.NotFound(query.ExperimentId);
 
         var report = experiment.Result;
-        var result = ReplayResultBrief.Of(report?.Baseline, query.IncludePoints);
+        var brief = ReplayResultBrief.Of(report?.Baseline, query.IncludePoints);
         var studies = report?.Studies.Select(BriefOf).ToList();
 
         return new ExperimentBriefDto(
@@ -43,14 +45,14 @@ public sealed class GetExperimentBriefHandler(IExperimentRepository experiments)
             StrategyVersion: experiment.StrategyVersion,
             Status: experiment.Status.ToString(),
             FailureReason: experiment.FailureReason,
-            Conditions: experiment.Conditions,
-            Result: result,
+            Conditions: ExperimentConditionsDto.From(experiment.Conditions),
+            Result: brief is null ? null : ReplayResultBriefDto.From(brief),
             Studies: studies);
     }
 
     private static ResearchStudyBrief BriefOf(ResearchStudy study) => new(
         Kind: study.Kind,
-        Window: study.Window,
+        Window: ResearchFoldDto.From(study.Window),
         ParameterValue: study.ParameterValue,
         Sharpe: study.Summary?.Sharpe,
         AnnualReturn: study.Summary?.AnnualReturn,

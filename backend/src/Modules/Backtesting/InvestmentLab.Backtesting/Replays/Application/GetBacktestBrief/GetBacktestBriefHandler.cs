@@ -1,3 +1,4 @@
+using InvestmentLab.Backtesting.Replays.Application.Shared;
 using InvestmentLab.Backtesting.Replays.Domain;
 
 namespace InvestmentLab.Backtesting.Replays.Application.GetBacktestBrief;
@@ -9,7 +10,7 @@ public sealed record BacktestBriefDto(
     int StrategyVersion,
     string Status,
     string? FailureReason,
-    ReplayResultBrief? Result);
+    ReplayResultBriefDto? Result);
 
 public sealed class GetBacktestBriefHandler(IBacktestRepository backtests)
 {
@@ -18,13 +19,13 @@ public sealed class GetBacktestBriefHandler(IBacktestRepository backtests)
         if (await backtests.FindAsync(query.StrategyId, query.Version, cancellationToken) is not { } backtest)
             return BacktestErrors.StrategyNotFound(query.StrategyId);
 
-        var result = ReplayResultBrief.Of(backtest.Result, query.IncludePoints);
+        var brief = ReplayResultBrief.Of(backtest.Result, query.IncludePoints);
 
         return new BacktestBriefDto(
             StrategyId: backtest.StrategyId,
             StrategyVersion: backtest.StrategyVersion,
             Status: backtest.Status.ToString(),
             FailureReason: backtest.FailureReason,
-            Result: result);
+            Result: brief is null ? null : ReplayResultBriefDto.From(brief));
     }
 }

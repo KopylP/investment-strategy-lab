@@ -1,11 +1,12 @@
 using InvestmentLab.Backtesting.Experiments.Application.RunDueExperiments;
+using InvestmentLab.Backtesting.Experiments.Application.Shared;
 using InvestmentLab.Backtesting.Experiments.Domain;
 using InvestmentLab.BuildingBlocks.Scheduling;
 using InvestmentLab.Backtesting.Replays.Domain;
 
 namespace InvestmentLab.Backtesting.Experiments.Application.RequestExperiment;
 
-public sealed record RequestExperimentCommand(Guid StrategyId, int Version, ExperimentConditions Conditions);
+public sealed record RequestExperimentCommand(Guid StrategyId, int Version, ExperimentConditionsDto Conditions);
 
 public sealed class RequestExperimentHandler(
     IExperimentRepository experiments,
@@ -17,7 +18,8 @@ public sealed class RequestExperimentHandler(
     {
         var now = clock.GetUtcNow();
         var today = DateOnly.FromDateTime(now.UtcDateTime);
-        if (command.Conditions.Problem(today) is { } problem)
+        var conditions = command.Conditions.ToDomain();
+        if (conditions.Problem(today) is { } problem)
             return problem;
 
         var source = await strategies.FindAsync(command.StrategyId, command.Version, cancellationToken);
@@ -27,7 +29,7 @@ public sealed class RequestExperimentHandler(
         if (!source.Setup.CanBeReplayed)
             return ExperimentErrors.NotSupported();
 
-        var candidates = ParameterVariants.Of(source.Parameters, command.Conditions.Robustness.Neighborhood);
+        var candidates = ParameterVariants.Of(source.Parameters, conditions.Robustness.Neighborhood);
         if (candidates.IsFailure)
             return candidates.Error;
 
@@ -39,7 +41,7 @@ public sealed class RequestExperimentHandler(
             owner: source.Setup.OwnerId,
             strategyId: command.StrategyId,
             version: command.Version,
-            conditions: command.Conditions,
+            conditions: conditions,
             now: now);
         if (requested.IsFailure)
             return requested.Error;

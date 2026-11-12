@@ -4,7 +4,7 @@ namespace InvestmentLab.Backtesting.Experiments.Application.GetExperimentHolding
 
 public sealed record GetExperimentHoldingsQuery(Guid ExperimentId, DateOnly? From, DateOnly? To);
 
-public sealed record ExperimentHoldingsDto(IReadOnlyList<HoldingsRow> Rows, HoldingsDiagnostics? Diagnostics);
+public sealed record ExperimentHoldingsDto(IReadOnlyList<HoldingsRowDto> Rows, HoldingsDiagnosticsDto? Diagnostics);
 
 public sealed class GetExperimentHoldingsHandler(IExperimentRepository experiments)
 {
@@ -21,6 +21,9 @@ public sealed class GetExperimentHoldingsHandler(IExperimentRepository experimen
         var holdings = ExperimentHoldings.Of(report.Baseline, labels, report.CashInstrumentId);
         var window = holdings.Between(query.From, query.To);
 
-        return new ExperimentHoldingsDto(window.Rows, window.Diagnostics);
+        var rows = window.Rows.Select(HoldingsRowDto.From).ToList();
+        var diagnostics = HoldingsDiagnosticsDto.From(window.Diagnostics);
+
+        return new ExperimentHoldingsDto(rows, diagnostics);
     }
 }

@@ -1,3 +1,4 @@
+using InvestmentLab.Backtesting.Replays.Application.Shared;
 using InvestmentLab.Backtesting.Replays.Domain;
 
 namespace InvestmentLab.Backtesting.Replays.Application.GetBacktest;
@@ -16,6 +17,6 @@ public sealed class GetBacktestHandler(IBacktestRepository backtests)
             RequestedAt: backtest.RequestedAt,
             FinishedAt: backtest.FinishedAt,
             FailureReason: backtest.FailureReason,
-            Result: backtest.Result);
+            Result: backtest.Result is { } result ? ReplayResultDto.From(result) : null);
     }
 }

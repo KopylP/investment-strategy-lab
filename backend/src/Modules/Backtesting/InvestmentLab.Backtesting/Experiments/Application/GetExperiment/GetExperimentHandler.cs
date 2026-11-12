@@ -1,3 +1,4 @@
+using InvestmentLab.Backtesting.Experiments.Application.Shared;
 using InvestmentLab.Backtesting.Experiments.Domain;
 
 namespace InvestmentLab.Backtesting.Experiments.Application.GetExperiment;
@@ -10,8 +11,8 @@ public sealed record ExperimentDto(
     DateTimeOffset RequestedAt,
     DateTimeOffset? FinishedAt,
     string? FailureReason,
-    ExperimentConditions Conditions,
-    ResearchReport? Result);
+    ExperimentConditionsDto Conditions,
+    ResearchReportDto? Result);
 
 public sealed class GetExperimentHandler(IExperimentRepository experiments)
 {
@@ -31,8 +32,8 @@ public sealed class GetExperimentHandler(IExperimentRepository experiments)
             RequestedAt: experiment.RequestedAt,
             FinishedAt: experiment.FinishedAt,
             FailureReason: experiment.FailureReason,
-            Conditions: experiment.Conditions,
-            Result: report);
+            Conditions: ExperimentConditionsDto.From(experiment.Conditions),
+            Result: report is null ? null : ResearchReportDto.From(report));
     }
 
     private static ResearchReport? WithoutJournal(ResearchReport? report)
