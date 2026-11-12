@@ -1,3 +1,4 @@
+using System.Reflection;
 using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.BuildingBlocks.Modules;
 using InvestmentLab.BuildingBlocks.Persistence;
@@ -55,10 +56,11 @@ public sealed class RebalancingModule : IModule
 
     public string Name => "Rebalancing";
 
+    public Assembly Assembly => typeof(RebalancingAssemblyMarker).Assembly;
+
     public void AddServices(IHostApplicationBuilder builder)
     {
         builder.AddModuleDbContext<RebalancingDbContext>(Schema);
-        AddDomainEventMappers(builder.Services);
 
         var services = builder.Services;
         AddReports(services);
@@ -68,37 +70,12 @@ public sealed class RebalancingModule : IModule
         AddJobs(services);
     }
 
-    private static void AddDomainEventMappers(IServiceCollection services)
-    {
-        services.AddDomainEventMapper<ReportGenerated, ReportGeneratedV1, ReportGeneratedMapper>();
-        services.AddDomainEventMapper<ReportSuperseded, ReportSupersededV1, ReportSupersededMapper>();
-        services.AddDomainEventMapper<ReportClosed, ReportClosedV1, ReportClosedMapper>();
-        services.AddDomainEventMapper<ContributionMarked, RecordContributionV1, ContributionMarkedMapper>();
-        services.AddDomainEventMapper<TransferMarked, RecordInternalTransferV1, TransferMarkedMapper>();
-        services.AddDomainEventMapper<TradeMarked, RecordTradeV1, TradeMarkedMapper>();
-        services.AddDomainEventMapper<MarkUndone, ReverseTransactionV1, MarkUndoneMapper>();
-        services.AddDomainEventMapper<ReportRequestFailed, ReportRequestFailedV1, ReportRequestFailedMapper>();
-    }
-
     private static void AddReports(IServiceCollection services)
     {
         services.AddScoped<IReportRepository, ReportRepository>();
         services.AddScoped<IReportQueries, ReportQueries>();
-        services.AddScoped<GetReportHandler>();
-        services.AddScoped<ListReportsHandler>();
         services.AddScoped<FillMarker>();
-        services.AddScoped<MarkActionExecutedHandler>();
-        services.AddScoped<RecordPartialFillHandler>();
-        services.AddScoped<SkipActionHandler>();
-        services.AddScoped<UndoMarkHandler>();
-        services.AddScoped<CloseReportHandler>();
         services.AddScoped<JournalOperationsLoader>();
-        services.AddScoped<PreviewJournalMatchesHandler>();
-        services.AddScoped<ApplyJournalMatchesHandler>();
-        services.AddIntegrationEventHandler<TransactionRecordedV1, LinkRecordedTransaction>();
-        services.AddIntegrationEventHandler<TransactionRejectedV1, RollBackRejectedTransaction>();
-
-
     }
 
     private static void AddPlanSettings(IServiceCollection services)
@@ -112,15 +89,8 @@ public sealed class RebalancingModule : IModule
         services.AddScoped<IStrategyRuns, StrategyRuns>();
         services.AddScoped<SaleTaxes>();
         services.AddScoped<GeneratedReportSaver>();
-        services.AddScoped<EnsureDeclaredSignalRulesHandler>();
-        services.AddScoped<GetPlanSettingsHandler>();
-        services.AddScoped<ChangePlanSettingsHandler>();
-        services.AddScoped<GetReportScheduleHandler>();
         services.AddScoped<OwnReportScheduleChange>();
-        services.AddScoped<ChangeReportScheduleHandler>();
-        services.AddScoped<UseStrategyScheduleHandler>();
         services.AddScoped<IReportScheduleQueries, ReportScheduleQueries>();
-
     }
 
     private static void AddReportGeneration(IServiceCollection services)
@@ -130,30 +100,16 @@ public sealed class RebalancingModule : IModule
         services.AddScoped<RiskReviewStrategyRequests>();
         services.AddScoped<RiskReviewGenerator>();
         services.AddScoped<IReportRequestRepository, ReportRequestRepository>();
-        services.AddScoped<RequestReportHandler>();
-        services.AddScoped<RequestReportOnDemandHandler>();
-        services.AddScoped<GetReportRequestHandler>();
-        services.AddScoped<ListReportRequestsHandler>();
         services.AddScoped<ReportRequestProcessor>();
-
     }
 
     private static void AddSignalRules(IServiceCollection services)
     {
         services.AddScoped<ISignalReportRuleRepository, SignalReportRuleRepository>();
-        services.AddScoped<GetSignalReportRulesHandler>();
-        services.AddScoped<AddSignalReportRuleHandler>();
-        services.AddScoped<RemoveSignalReportRuleHandler>();
-        services.AddIntegrationEventHandler<SignalTriggeredV1, RequestReportsOnSignal>();
-        services.AddIntegrationEventHandler<SignalDeletedV1, RemoveRulesOfDeletedSignal>();
-
     }
 
     private static void AddJobs(IServiceCollection services)
     {
-        services.AddScheduledJob<StrategyReportsJob>(ReportSchedules.Check);
-        services.AddScheduledJob<DeclaredSignalRulesJob>(ReportSchedules.Check);
-        services.AddScheduledJob<ReportRequestsJob>(ReportSchedules.Requests);
         services.AddScoped<IRebalancingRules, RebalancingRules>();
 
         services.AddScoped<IPlanReviewer, NullPlanReviewer>();

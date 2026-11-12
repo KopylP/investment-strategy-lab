@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.StrategyBuilder.Drafts.Application.Shared;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 
@@ -5,7 +6,7 @@ namespace InvestmentLab.StrategyBuilder.Drafts.Application.CreateDraft;
 
 public sealed record CreateDraftCommand(string Name, string? Template);
 
-public sealed class CreateDraftHandler(IDraftRepository drafts, IRuleVocabulary vocabularies, DraftDescriber describer, TimeProvider clock)
+public sealed class CreateDraftHandler(IDraftRepository drafts, IRuleVocabulary vocabularies, DraftDescriber describer, TimeProvider clock) : IHandler
 {
     public async Task<Result<DraftDto>> Handle(UserId owner, CreateDraftCommand command, CancellationToken cancellationToken)
     {

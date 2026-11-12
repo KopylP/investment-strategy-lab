@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.StrategyBuilder.Drafts.Application.Shared;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 
@@ -5,7 +6,7 @@ namespace InvestmentLab.StrategyBuilder.Drafts.Application.ListDrafts;
 
 public sealed record DraftSummaryDto(Guid Id, string Name, string? OriginStrategyName, int? OriginVersion, DateTimeOffset UpdatedAt, DateTimeOffset? LastTrialAt);
 
-public sealed class ListDraftsHandler(IDraftRepository drafts)
+public sealed class ListDraftsHandler(IDraftRepository drafts) : IHandler
 {
     public async Task<IReadOnlyList<DraftSummaryDto>> Handle(CancellationToken cancellationToken)
     {

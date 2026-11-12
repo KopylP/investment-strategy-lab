@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Notifications.Delivery.Application.Shared;
 using InvestmentLab.Notifications.Delivery.Domain;
 
@@ -7,7 +8,7 @@ public sealed record DestinationDto(string Id, string Channel, string Label, boo
 
 public sealed record NotificationSettingsDto(IReadOnlyList<string> Channels, bool Automatic, IReadOnlyList<DestinationDto> Destinations);
 
-public sealed class GetNotificationSettingsHandler(Notifier notifier)
+public sealed class GetNotificationSettingsHandler(Notifier notifier) : IHandler
 {
     public async Task<Result<NotificationSettingsDto>> Handle(UserId userId, CancellationToken cancellationToken)
     {

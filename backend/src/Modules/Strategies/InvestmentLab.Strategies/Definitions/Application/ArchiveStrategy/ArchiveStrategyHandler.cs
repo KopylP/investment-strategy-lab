@@ -1,8 +1,9 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Strategies.Definitions.Domain;
 
 namespace InvestmentLab.Strategies.Definitions.Application.ArchiveStrategy;
 
-public sealed class ArchiveStrategyHandler(IStrategyRepository strategies)
+public sealed class ArchiveStrategyHandler(IStrategyRepository strategies) : IHandler
 {
     public async Task<Result> Handle(Guid strategyId, CancellationToken cancellationToken)
     {

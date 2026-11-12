@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Rebalancing.Planning.Application.Shared;
 using InvestmentLab.Rebalancing.Planning.Domain;
 
 namespace InvestmentLab.Rebalancing.Planning.Application.GetPlanSettings;
 
-public sealed class GetPlanSettingsHandler(IAccountSetupQueries accounts, IPlanSettingsRepository settings)
+public sealed class GetPlanSettingsHandler(IAccountSetupQueries accounts, IPlanSettingsRepository settings) : IHandler
 {
     public async Task<Result<PlanSettingsDto>> Handle(Guid accountId, CancellationToken cancellationToken)
     {

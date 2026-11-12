@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.MarketData.FxRates.Application.Shared;
 using InvestmentLab.MarketData.FxRates.Domain;
 
 namespace InvestmentLab.MarketData.FxRates.Application.IngestFxRates;
 
-public sealed class IngestFxRatesHandler(IFxRateStore store, IFxRateProvider provider, TimeProvider clock)
+public sealed class IngestFxRatesHandler(IFxRateStore store, IFxRateProvider provider, TimeProvider clock) : IHandler
 {
     public const int InitialHistoryYears = 2;
     public static readonly Currency[] Currencies = [Currency.EUR, Currency.USD];

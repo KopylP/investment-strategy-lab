@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Rebalancing.Reports.Application.Shared;
 using InvestmentLab.Rebalancing.Reports.Domain;
 
@@ -10,7 +11,7 @@ public sealed record RecordPartialFillCommand(
     DateOnly? ExecutedOn = null,
     string? Note = null);
 
-public sealed class RecordPartialFillHandler(FillMarker marker)
+public sealed class RecordPartialFillHandler(FillMarker marker) : IHandler
 {
     public Task<Result> Handle(Guid reportId, Guid actionId, RecordPartialFillCommand command, CancellationToken cancellationToken) =>
         marker.MarkAsync(reportId, actionId, (report, action, now) => RecordFill(report, action, command, now), cancellationToken);

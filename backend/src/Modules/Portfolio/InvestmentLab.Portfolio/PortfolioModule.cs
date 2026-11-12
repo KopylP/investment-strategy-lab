@@ -1,3 +1,4 @@
+using System.Reflection;
 using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.BuildingBlocks.Modules;
 using InvestmentLab.BuildingBlocks.Persistence;
@@ -56,10 +57,11 @@ public sealed class PortfolioModule : IModule
 
     public string Name => "Portfolio";
 
+    public Assembly Assembly => typeof(PortfolioAssemblyMarker).Assembly;
+
     public void AddServices(IHostApplicationBuilder builder)
     {
         builder.AddModuleDbContext<PortfolioDbContext>(Schema);
-        AddDomainEventMappers(builder.Services);
 
         var services = builder.Services;
         AddAccounts(services);
@@ -69,45 +71,17 @@ public sealed class PortfolioModule : IModule
         AddHoldings(services);
     }
 
-    private static void AddDomainEventMappers(IServiceCollection services)
-    {
-        services.AddDomainEventMapper<SubPortfolioAdded, SubPortfolioAddedV1, SubPortfolioAddedMapper>();
-        services.AddDomainEventMapper<TargetSharesChanged, TargetSharesChangedV1, TargetSharesChangedMapper>();
-        services.AddDomainEventMapper<TransactionRecorded, TransactionRecordedV1, TransactionRecordedMapper>();
-        services.AddDomainEventMapper<TransactionReversed, TransactionReversedV1, TransactionReversedMapper>();
-        services.AddDomainEventMapper<TransactionRejected, TransactionRejectedV1, TransactionRejectedMapper>();
-    }
-
     private static void AddAccounts(IServiceCollection services)
     {
         services.AddScoped<IAccountRepository, AccountRepository>();
-        services.AddScoped<OpenAccountHandler>();
-        services.AddScoped<AddSubPortfolioHandler>();
-        services.AddScoped<ChangeTargetSharesHandler>();
-        services.AddScoped<AssignStrategyHandler>();
-        services.AddScoped<ChangeContributionPolicyHandler>();
-        services.AddScoped<RetireSubPortfolioHandler>();
-        services.AddScoped<RenameSubPortfolioHandler>();
-        services.AddScoped<GetAccountHandler>();
-        services.AddScoped<ListAccountsHandler>();
         services.AddScoped<IAccountSetupQueries, AccountSetupQueries>();
-
-
     }
 
     private static void AddTransactions(IServiceCollection services)
     {
         services.AddScoped<ITransactionJournal, TransactionJournal>();
         services.AddScoped<TransactionRecorder>();
-        services.AddScoped<RecordTradeHandler>();
-        services.AddScoped<RecordCashMovementHandler>();
-        services.AddScoped<RecordContributionHandler>();
-        services.AddScoped<RecordInternalTransferHandler>();
-        services.AddScoped<ReverseTransactionHandler>();
-        services.AddScoped<ReverseRecordedTransactionHandler>();
-        services.AddScoped<GetTransactionsHandler>();
         services.AddScoped<IJournalQueries, JournalQueries>();
-
     }
 
     private static void AddImports(IServiceCollection services)
@@ -117,25 +91,11 @@ public sealed class PortfolioModule : IModule
         services.AddScoped<StatementPricing>();
         services.AddScoped<StatementPreview>();
         services.AddScoped<StatementImportLoader>();
-        services.AddScoped<ListStatementImportsHandler>();
-        services.AddScoped<UploadStatementHandler>();
-        services.AddScoped<GetStatementImportHandler>();
-        services.AddScoped<ConfigureStatementImportHandler>();
-        services.AddScoped<ConfirmStatementImportHandler>();
-        services.AddScoped<UndoStatementImportHandler>();
-        services.AddScoped<ImportPositionsHandler>();
-
     }
 
     private static void AddReactionsToReports(IServiceCollection services)
     {
         services.AddScoped<CommandRejection>();
-        services.AddIntegrationEventHandler<RecordTradeV1, RecordTradeFromReport>();
-        services.AddIntegrationEventHandler<RecordContributionV1, RecordContributionFromReport>();
-        services.AddIntegrationEventHandler<RecordInternalTransferV1, RecordTransferFromReport>();
-        services.AddIntegrationEventHandler<ReverseTransactionV1, ReverseTransactionFromReport>();
-
-
     }
 
     private static void AddHoldings(IServiceCollection services)
@@ -143,8 +103,6 @@ public sealed class PortfolioModule : IModule
         services.AddScoped<IHoldingsReader, HoldingsReader>();
         services.AddScoped<IHoldingsMarket, HoldingsMarketData>();
         services.AddScoped<HoldingsLoader>();
-        services.AddScoped<GetHoldingsHandler>();
-        services.AddScoped<GetValuedHoldingsHandler>();
         services.AddScoped<IHoldingsQueries, HoldingsQueries>();
     }
 

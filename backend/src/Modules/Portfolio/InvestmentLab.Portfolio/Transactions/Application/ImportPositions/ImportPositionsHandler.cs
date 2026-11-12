@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.Portfolio.Accounts.Domain;
 using InvestmentLab.Portfolio.Transactions.Application.Shared;
@@ -7,7 +8,7 @@ namespace InvestmentLab.Portfolio.Transactions.Application.ImportPositions;
 
 public sealed record ImportPositionsCommand(Guid SubPortfolioId, decimal Cash, IReadOnlyList<LegacyPosition> Positions, DateOnly? AsOf = null);
 
-public sealed class ImportPositionsHandler(TransactionRecorder recorder, IInstrumentCatalog catalog, TimeProvider clock)
+public sealed class ImportPositionsHandler(TransactionRecorder recorder, IInstrumentCatalog catalog, TimeProvider clock) : IHandler
 {
     private const string DuplicateSourceCode = "transaction.duplicate_source";
 

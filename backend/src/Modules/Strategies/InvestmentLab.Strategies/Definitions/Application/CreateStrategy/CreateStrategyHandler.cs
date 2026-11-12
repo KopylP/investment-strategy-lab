@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Strategies.Definitions.Application.Shared;
 using InvestmentLab.Strategies.Definitions.Domain;
 
@@ -5,7 +6,7 @@ namespace InvestmentLab.Strategies.Definitions.Application.CreateStrategy;
 
 public sealed record CreateStrategyCommand(string Name, string TypeCode, StrategySetupDraft Setup);
 
-public sealed class CreateStrategyHandler(IStrategyRepository strategies, IStrategyTypes types, StrategySetupFactory setups, TimeProvider clock)
+public sealed class CreateStrategyHandler(IStrategyRepository strategies, IStrategyTypes types, StrategySetupFactory setups, TimeProvider clock) : IHandler
 {
     public async Task<Result<StrategyDto>> Handle(UserId ownerId, CreateStrategyCommand command, CancellationToken cancellationToken)
     {

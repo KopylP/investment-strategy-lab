@@ -1,8 +1,9 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Taxation.Declarations.Domain;
 
 namespace InvestmentLab.Taxation.Declarations.Application.RemovePit8C;
 
-public sealed class RemovePit8CHandler(IPit8CRepository pit8C)
+public sealed class RemovePit8CHandler(IPit8CRepository pit8C) : IHandler
 {
     public async Task<Result> Handle(int year, Guid accountId, CancellationToken cancellationToken)
     {

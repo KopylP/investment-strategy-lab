@@ -1,3 +1,4 @@
+using System.Reflection;
 using InvestmentLab.Strategies.Definitions.Application.GetAuthoredVersion;
 using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.BuildingBlocks.Modules;
@@ -51,11 +52,11 @@ public sealed class StrategiesModule : IModule
 
     public string Name => "Strategies";
 
+    public Assembly Assembly => typeof(StrategiesAssemblyMarker).Assembly;
+
     public void AddServices(IHostApplicationBuilder builder)
     {
         builder.AddModuleDbContext<StrategiesDbContext>(Schema);
-        builder.Services.AddDomainEventMapper<StrategyReconfigured, StrategyReconfiguredV1, StrategyReconfiguredMapper>();
-        builder.Services.AddDomainEventMapper<StrategyDeleted, StrategyDeletedV1, StrategyDeletedMapper>();
 
         var services = builder.Services;
         services.AddMemoryCache();
@@ -71,43 +72,23 @@ public sealed class StrategiesModule : IModule
         var engineUrl = builder.Configuration["Strategies:StrategyEngineUrl"] ?? StrategyEngineClient.DefaultBaseAddress;
         services.AddHttpClient<StrategyEngineClient>(http => http.BaseAddress = new Uri(engineUrl));
         services.AddScoped<CatalogSynchronizer>();
-
-
     }
 
     private static void AddCatalog(IServiceCollection services)
     {
         services.AddScoped<IStrategyCatalog, StrategyCatalog>();
-        services.AddScoped<GetStrategyCatalogHandler>();
-
-
     }
 
     private static void AddDefinitions(IServiceCollection services)
     {
-        services.AddIntegrationEventHandler<SignalDeletedV1, MarkStrategiesOfDeletedSignal>();
         services.AddScoped<IStrategyRepository, StrategyRepository>();
         services.AddScoped<IStrategyDirectory, StrategyDirectory>();
         services.AddScoped<IStrategyTypes, StrategyTypes>();
         services.AddSingleton<IDefaultStrategies, DefaultStrategies>();
         services.AddScoped<StrategySetupFactory>();
         services.AddScoped<IParameterChecks, EngineParameterChecks>();
-        services.AddScoped<CreateStrategyHandler>();
-        services.AddScoped<ReconfigureStrategyHandler>();
-        services.AddScoped<ArchiveStrategyHandler>();
-        services.AddScoped<DeleteTrialStrategyHandler>();
-        services.AddScoped<WriteTrialVersionHandler>();
-        services.AddScoped<PublishStrategyHandler>();
-        services.AddScoped<CheckParametersHandler>();
         services.AddScoped<IAuthoredStrategies, AuthoredStrategies>();
         services.AddScoped<IStrategyTypeQueries, StrategyTypeQueries>();
-        services.AddScoped<GetAuthoredVersionHandler>();
-        services.AddScoped<GetStrategyHandler>();
-        services.AddScoped<ListStrategiesHandler>();
-        services.AddScoped<CreateDefaultStrategiesHandler>();
-        services.AddIntegrationEventHandler<UserRegisteredV1, DefaultStrategiesForNewUser>();
-
-
     }
 
     private static void AddEvaluation(IServiceCollection services)
@@ -115,15 +96,7 @@ public sealed class StrategiesModule : IModule
         services.AddScoped<IStrategyEngine, PythonStrategyEngine>();
         services.AddScoped<IStrategyReader, StrategyReader>();
         services.AddScoped<EvaluationPreparer>();
-        services.AddScoped<DecideStrategyHandler>();
-        services.AddScoped<AssessStrategyRiskHandler>();
-        services.AddScoped<UploadPriceSetHandler>();
-        services.AddScoped<SubmitStrategyJobHandler>();
-        services.AddScoped<PollStrategyDecisionHandler>();
-        services.AddScoped<PollStrategyRiskHandler>();
         services.AddScoped<SubPortfolioEvaluationRequests>();
-        services.AddScoped<DecideSubPortfolioHandler>();
-        services.AddScoped<AssessSubPortfolioRiskHandler>();
         services.AddScoped<IStrategyEvaluation, StrategyEvaluation>();
     }
 

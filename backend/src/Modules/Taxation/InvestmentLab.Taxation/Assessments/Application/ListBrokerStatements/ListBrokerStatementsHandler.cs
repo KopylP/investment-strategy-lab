@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Taxation.Assessments.Application.Shared;
 using InvestmentLab.Taxation.BrokerStatements.Domain;
 
 namespace InvestmentLab.Taxation.Assessments.Application.ListBrokerStatements;
 
-public sealed class ListBrokerStatementsHandler(IBrokerStatementRepository statements, TaxAccountSync sync, TaxEventReader taxEvents)
+public sealed class ListBrokerStatementsHandler(IBrokerStatementRepository statements, TaxAccountSync sync, TaxEventReader taxEvents) : IHandler
 {
     public async Task<Result<BrokerStatementsDto>> Handle(Guid accountId, CancellationToken cancellationToken)
     {

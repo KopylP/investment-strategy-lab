@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using System.Text.Json;
 using InvestmentLab.Strategies.Catalog.Application.Shared;
 using InvestmentLab.Strategies.Catalog.Domain;
 
 namespace InvestmentLab.Strategies.Catalog.Application.GetStrategyCatalog;
 
-public sealed class GetStrategyCatalogHandler(IStrategyCatalog catalog)
+public sealed class GetStrategyCatalogHandler(IStrategyCatalog catalog) : IHandler
 {
     public async Task<IReadOnlyList<StrategyTypeDto>> Handle(CancellationToken cancellationToken)
     {

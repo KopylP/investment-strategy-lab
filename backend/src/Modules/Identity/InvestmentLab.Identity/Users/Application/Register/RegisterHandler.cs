@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Identity.Profiles.Domain;
 using InvestmentLab.Identity.Users.Application.Shared;
 
@@ -5,7 +6,7 @@ namespace InvestmentLab.Identity.Users.Application.Register;
 
 public sealed record RegisterCommand(string Email, string Password);
 
-public sealed class RegisterHandler(IUserAccounts accounts, TimeProvider clock)
+public sealed class RegisterHandler(IUserAccounts accounts, TimeProvider clock) : IHandler
 {
     public async Task<Result<CurrentUserDto>> Handle(RegisterCommand command, CancellationToken cancellationToken)
     {

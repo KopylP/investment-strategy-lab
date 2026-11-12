@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Identity.Profiles.Application.Shared;
 using InvestmentLab.Identity.Profiles.Domain;
 using InvestmentLab.Identity.Users.Domain;
@@ -17,7 +18,7 @@ public sealed record UpdateProfileCommand(string DisplayCurrency, string? Langua
     }
 }
 
-public sealed class UpdateProfileHandler(IUserProfileRepository profiles)
+public sealed class UpdateProfileHandler(IUserProfileRepository profiles) : IHandler
 {
     public async Task<Result<UserProfileDto>> Handle(UserId userId, UpdateProfileCommand command, CancellationToken cancellationToken)
     {

@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.StrategyBuilder.Drafts.Application.Shared;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 
@@ -5,7 +6,7 @@ namespace InvestmentLab.StrategyBuilder.Drafts.Application.GetDraftRules;
 
 public sealed record DraftRulesDto(string Json);
 
-public sealed class GetDraftRulesHandler(IDraftRepository drafts, IRuleVocabulary vocabularies, IOwnSignals signals)
+public sealed class GetDraftRulesHandler(IDraftRepository drafts, IRuleVocabulary vocabularies, IOwnSignals signals) : IHandler
 {
     public async Task<Result<DraftRulesDto>> Handle(Guid draftId, CancellationToken cancellationToken)
     {

@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Backtesting.Experiments.Domain;
 using InvestmentLab.Backtesting.Replays.Domain;
 
@@ -7,7 +8,7 @@ public sealed class RunExperimentHandler(
     IExperimentRepository experiments,
     IResearchStrategies strategies,
     IResearchReplay replay,
-    TimeProvider clock)
+    TimeProvider clock) : IHandler
 {
     public async Task Handle(Guid experimentId, CancellationToken cancellationToken)
     {

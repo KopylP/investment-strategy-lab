@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Taxation.Declarations.Application.Shared;
 using InvestmentLab.Taxation.Declarations.Domain;
 
 namespace InvestmentLab.Taxation.Declarations.Application.ListDeclarationForms;
 
-public sealed class ListDeclarationFormsHandler(IEnumerable<ITaxDeclarationForm> forms, DeclarationAccounts accounts)
+public sealed class ListDeclarationFormsHandler(IEnumerable<ITaxDeclarationForm> forms, DeclarationAccounts accounts) : IHandler
 {
     public async Task<IReadOnlyList<DeclarationFormDto>> Handle(int year, CancellationToken cancellationToken)
     {

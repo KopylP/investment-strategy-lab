@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Rebalancing.Planning.Application.RequestReport;
 using InvestmentLab.Rebalancing.Planning.Application.Shared;
 using InvestmentLab.Rebalancing.Planning.Domain;
 
 namespace InvestmentLab.Rebalancing.Planning.Application.GetReportRequest;
 
-public sealed class GetReportRequestHandler(IReportRequestRepository requests)
+public sealed class GetReportRequestHandler(IReportRequestRepository requests) : IHandler
 {
     public async Task<Result<ReportRequestDto>> Handle(Guid requestId, CancellationToken cancellationToken)
     {

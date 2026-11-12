@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Portfolio.Accounts.Application.Shared;
 using InvestmentLab.Portfolio.Accounts.Domain;
 using InvestmentLab.Portfolio.Contracts.Accounts;
@@ -7,7 +8,7 @@ namespace InvestmentLab.Portfolio.Accounts.Application.AssignStrategy;
 
 public sealed record AssignStrategyCommand(Guid? StrategyId, int? PinnedVersion);
 
-public sealed class AssignStrategyHandler(IAccountRepository accounts)
+public sealed class AssignStrategyHandler(IAccountRepository accounts) : IHandler
 {
     public async Task<Result<AccountSetupDto>> Handle(
         Guid accountId,

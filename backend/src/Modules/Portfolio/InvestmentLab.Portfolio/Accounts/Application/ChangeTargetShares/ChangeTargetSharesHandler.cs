@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Portfolio.Accounts.Application.Shared;
 using InvestmentLab.Portfolio.Accounts.Domain;
 using InvestmentLab.Portfolio.Contracts.Accounts;
@@ -7,7 +8,7 @@ namespace InvestmentLab.Portfolio.Accounts.Application.ChangeTargetShares;
 
 public sealed record ChangeTargetSharesCommand(IReadOnlyDictionary<Guid, decimal> TargetShares);
 
-public sealed class ChangeTargetSharesHandler(IAccountRepository accounts, TimeProvider clock)
+public sealed class ChangeTargetSharesHandler(IAccountRepository accounts, TimeProvider clock) : IHandler
 {
     public async Task<Result<AccountSetupDto>> Handle(Guid accountId, ChangeTargetSharesCommand command, CancellationToken cancellationToken)
     {

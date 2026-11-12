@@ -1,8 +1,9 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Rebalancing.Reports.Domain;
 
 namespace InvestmentLab.Rebalancing.Reports.Application.UndoMark;
 
-public sealed class UndoMarkHandler(IReportRepository reports, TimeProvider clock)
+public sealed class UndoMarkHandler(IReportRepository reports, TimeProvider clock) : IHandler
 {
     public async Task<Result> Handle(Guid reportId, Guid actionId, CancellationToken cancellationToken)
     {

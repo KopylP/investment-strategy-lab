@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Notifications.Delivery.Domain;
 
 namespace InvestmentLab.Notifications.Delivery.Application.HearSignal;
 
 public sealed record HearSignalCommand(bool Notify);
 
-public sealed class HearSignalHandler(INotificationPreferencesRepository preferences, TimeProvider clock)
+public sealed class HearSignalHandler(INotificationPreferencesRepository preferences, TimeProvider clock) : IHandler
 {
     public async Task<Result> Handle(UserId userId, Guid signalId, HearSignalCommand command, CancellationToken cancellationToken)
     {

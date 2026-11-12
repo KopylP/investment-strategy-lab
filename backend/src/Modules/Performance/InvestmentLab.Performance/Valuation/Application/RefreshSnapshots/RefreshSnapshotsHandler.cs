@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Performance.Valuation.Application.Shared;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 
@@ -5,7 +6,7 @@ namespace InvestmentLab.Performance.Valuation.Application.RefreshSnapshots;
 
 public sealed record RefreshSnapshotsCommand(Guid? AccountId);
 
-public sealed class RefreshSnapshotsHandler(SnapshotBuilder builder, IAccountSetupQueries accounts)
+public sealed class RefreshSnapshotsHandler(SnapshotBuilder builder, IAccountSetupQueries accounts) : IHandler
 {
     public async Task Handle(RefreshSnapshotsCommand command, CancellationToken cancellationToken)
     {

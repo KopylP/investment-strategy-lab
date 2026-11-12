@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Net.Http.Headers;
 using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.BuildingBlocks.Modules;
@@ -29,6 +30,8 @@ public sealed class NotificationsModule : IModule
 
     public string Name => "Notifications";
 
+    public Assembly Assembly => typeof(NotificationsAssemblyMarker).Assembly;
+
     public void AddServices(IHostApplicationBuilder builder)
     {
         builder.AddModuleDbContext<NotificationsDbContext>(Schema);
@@ -37,18 +40,6 @@ public sealed class NotificationsModule : IModule
         services.AddScoped<INotificationPreferencesRepository, NotificationPreferencesRepository>();
         services.AddScoped<Notifier>();
         services.AddScoped<NextReportLookup>();
-        services.AddScoped<GetNotificationSettingsHandler>();
-        services.AddScoped<ChangeNotificationSettingsHandler>();
-        services.AddScoped<SendTestNotificationHandler>();
-        services.AddIntegrationEventHandler<ReportGeneratedV1, AnnounceGeneratedReport>();
-        services.AddIntegrationEventHandler<ReportClosedV1, DismissClosedReport>();
-        services.AddIntegrationEventHandler<ReportSupersededV1, DismissSupersededReport>();
-        services.AddIntegrationEventHandler<ReportRequestFailedV1, AnnounceFailedReport>();
-        services.AddScoped<GetMutedSignalsHandler>();
-        services.AddScoped<HearSignalHandler>();
-        services.AddIntegrationEventHandler<SignalTriggeredV1, AnnounceFiredSignal>();
-        services.AddIntegrationEventHandler<SignalClearedV1, DismissClearedSignal>();
-        services.AddIntegrationEventHandler<SignalDeletedV1, ForgetDeletedSignal>();
 
         AddHomeAssistant(builder);
     }

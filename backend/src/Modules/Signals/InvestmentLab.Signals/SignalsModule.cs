@@ -1,3 +1,4 @@
+using System.Reflection;
 using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.BuildingBlocks.Modules;
 using InvestmentLab.BuildingBlocks.Persistence;
@@ -29,6 +30,8 @@ public sealed class SignalsModule : IModule
 
     public string Name => "Signals";
 
+    public Assembly Assembly => typeof(SignalsAssemblyMarker).Assembly;
+
     public void AddServices(IHostApplicationBuilder builder)
     {
         builder.AddModuleDbContext<SignalsDbContext>(Schema);
@@ -45,13 +48,6 @@ public sealed class SignalsModule : IModule
         services.AddScoped<IInstrumentGroups, InstrumentGroups>();
         services.AddScoped<IOpenPositions, OpenPositions>();
 
-        services.AddScoped<GetSignalsHandler>();
-        services.AddScoped<CreateSignalHandler>();
-        services.AddScoped<ChangeSignalHandler>();
-        services.AddScoped<DeleteSignalHandler>();
-        services.AddScoped<CheckSignalHandler>();
-        services.AddScoped<EnsureBuiltInSignalsHandler>();
-
         services.AddScoped<SignalChecker>();
         services.AddScoped<SignalReader>();
         services.AddScoped<QuoteReader>();
@@ -59,12 +55,6 @@ public sealed class SignalsModule : IModule
         services.AddScoped<InstrumentGroupSubjectReader>();
         services.AddScoped<PositionSubjectReader>();
         services.AddScoped<PortfolioSubjectReader>();
-
-        services.AddDomainEventMapper<SignalFired, SignalTriggeredV1, SignalFiredMapper>();
-        services.AddDomainEventMapper<SignalCleared, SignalClearedV1, SignalClearedMapper>();
-        services.AddDomainEventMapper<SignalDeleted, SignalDeletedV1, SignalDeletedMapper>();
-
-        services.AddScheduledJob<SignalsJob>(SignalsJob.Schedule);
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>

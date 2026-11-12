@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Portfolio.Contracts.Transactions;
 using InvestmentLab.Portfolio.Transactions.Application.Shared;
 using InvestmentLab.Portfolio.Transactions.Domain;
@@ -11,7 +12,7 @@ public sealed record RecordCashMovementCommand(
     IReadOnlyList<AmountAllocationDto>? Allocations = null,
     Guid? InstrumentId = null);
 
-public sealed class RecordCashMovementHandler(TransactionRecorder recorder)
+public sealed class RecordCashMovementHandler(TransactionRecorder recorder) : IHandler
 {
     public async Task<Result<RecordedTransaction>> Handle(
         Guid accountId, RecordCashMovementCommand command, TransactionSourceDto source, CancellationToken cancellationToken)

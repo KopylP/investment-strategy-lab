@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Taxation.Assessments.Application.Shared;
 using InvestmentLab.Taxation.BrokerStatements.Domain;
 
 namespace InvestmentLab.Taxation.Assessments.Application.RemoveBrokerStatement;
 
-public sealed class RemoveBrokerStatementHandler(IBrokerStatementRepository statements, TaxRecalculator recalculator)
+public sealed class RemoveBrokerStatementHandler(IBrokerStatementRepository statements, TaxRecalculator recalculator) : IHandler
 {
     public async Task<Result> Handle(Guid accountId, Guid statementId, CancellationToken cancellationToken)
     {

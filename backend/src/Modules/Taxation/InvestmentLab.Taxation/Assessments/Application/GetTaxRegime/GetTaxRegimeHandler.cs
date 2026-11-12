@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Taxation.Assessments.Domain;
@@ -15,7 +16,7 @@ public sealed record TaxRegimeDto(
     string? ProgressNote,
     string? LossesNote);
 
-public sealed class GetTaxRegimeHandler(IAccountSetupQueries accounts, ICurrentUser currentUser)
+public sealed class GetTaxRegimeHandler(IAccountSetupQueries accounts, ICurrentUser currentUser) : IHandler
 {
     public async Task<TaxRegimeDto> Handle(CancellationToken cancellationToken)
     {

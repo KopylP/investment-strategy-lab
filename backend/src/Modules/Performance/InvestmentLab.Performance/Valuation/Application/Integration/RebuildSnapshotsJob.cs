@@ -6,7 +6,7 @@ namespace InvestmentLab.Performance.Valuation.Application.Integration;
 
 public sealed class RebuildSnapshotsJob(IPerformanceRepository store, SnapshotBuilder builder) : IScheduledJob
 {
-    public static readonly DailySchedule Schedule = DailySchedule.Weekdays(new TimeOnly(23, 15), "Europe/Warsaw");
+    public static IJobSchedule Schedule { get; } = DailySchedule.Weekdays(new TimeOnly(23, 15), "Europe/Warsaw");
 
     public async Task RunAsync(CancellationToken cancellationToken)
     {

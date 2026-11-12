@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using System.Globalization;
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.Portfolio.Accounts.Domain;
@@ -16,7 +17,7 @@ public sealed class ConfirmStatementImportHandler(
     TransactionRecorder recorder,
     ReverseTransactionHandler reversals,
     IInstrumentRegistry registry,
-    TimeProvider clock)
+    TimeProvider clock) : IHandler
 {
     private const string NewInstrumentKind = "Stock";
     private const string CashTicker = "CASH";

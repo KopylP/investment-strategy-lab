@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Rebalancing.Planning.Application.Shared;
 using InvestmentLab.Rebalancing.Planning.Domain;
@@ -6,7 +7,7 @@ namespace InvestmentLab.Rebalancing.Planning.Application.AddSignalReportRule;
 
 public sealed record AddSignalReportRuleCommand(Guid SignalId, Guid AccountId, string ReportCode);
 
-public sealed class AddSignalReportRuleHandler(ISignalReportRuleRepository rules, IAccountSetupQueries accounts, IAccountReports accountReports, TimeProvider clock)
+public sealed class AddSignalReportRuleHandler(ISignalReportRuleRepository rules, IAccountSetupQueries accounts, IAccountReports accountReports, TimeProvider clock) : IHandler
 {
     public async Task<Result<SignalReportRuleDto>> Handle(UserId ownerId, AddSignalReportRuleCommand command, CancellationToken cancellationToken)
     {

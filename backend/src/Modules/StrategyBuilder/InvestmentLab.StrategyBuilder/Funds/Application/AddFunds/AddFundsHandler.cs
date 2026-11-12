@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.StrategyBuilder.Funds.Domain;
 
 namespace InvestmentLab.StrategyBuilder.Funds.Application.AddFunds;
@@ -10,7 +11,7 @@ public sealed record FundNotAddedDto(string Symbol, string Reason);
 
 public sealed record AddedFundsDto(IReadOnlyList<Guid> InstrumentIds, IReadOnlyList<FundNotAddedDto> Failed);
 
-public sealed class AddFundsHandler(IFundSearch search)
+public sealed class AddFundsHandler(IFundSearch search) : IHandler
 {
     public async Task<Result<AddedFundsDto>> Handle(AddFundsCommand command, CancellationToken cancellationToken)
     {

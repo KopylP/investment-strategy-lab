@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Rebalancing.Planning.Domain;
 using InvestmentLab.Rebalancing.Reports.Domain;
@@ -10,7 +11,7 @@ public sealed record RequestReportCommand(
 
 public sealed record ReportCauseDto(Guid SignalTriggerId, string Text);
 
-public sealed class RequestReportHandler(IAccountSetupQueries accounts, IAccountReports accountReports, IReportRequestRepository requests, TimeProvider clock)
+public sealed class RequestReportHandler(IAccountSetupQueries accounts, IAccountReports accountReports, IReportRequestRepository requests, TimeProvider clock) : IHandler
 {
     public async Task<Result<Guid>> Handle(RequestReportCommand command, string trigger, CancellationToken cancellationToken)
     {

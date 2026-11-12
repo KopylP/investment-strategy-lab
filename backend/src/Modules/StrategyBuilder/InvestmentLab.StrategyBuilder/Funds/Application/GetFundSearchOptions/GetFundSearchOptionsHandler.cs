@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.StrategyBuilder.Funds.Domain;
 
 namespace InvestmentLab.StrategyBuilder.Funds.Application.GetFundSearchOptions;
@@ -6,7 +7,7 @@ public sealed record FundSearchChoiceDto(string Id, string Label);
 
 public sealed record FundSearchOptionsDto(IReadOnlyList<FundSearchChoiceDto> Exchanges, IReadOnlyList<FundSearchChoiceDto> Regions);
 
-public sealed class GetFundSearchOptionsHandler(IFundSearch search)
+public sealed class GetFundSearchOptionsHandler(IFundSearch search) : IHandler
 {
     public FundSearchOptionsDto Handle()
     {

@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Strategies.Definitions.Application.Shared;
 using InvestmentLab.Strategies.Definitions.Domain;
 
 namespace InvestmentLab.Strategies.Definitions.Application.ListStrategies;
 
-public sealed class ListStrategiesHandler(IStrategyRepository strategies, IStrategyTypes types)
+public sealed class ListStrategiesHandler(IStrategyRepository strategies, IStrategyTypes types) : IHandler
 {
     public async Task<IReadOnlyList<StrategyDto>> Handle(CancellationToken cancellationToken)
     {

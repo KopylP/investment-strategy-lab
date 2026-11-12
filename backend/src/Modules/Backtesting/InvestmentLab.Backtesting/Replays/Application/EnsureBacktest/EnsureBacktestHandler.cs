@@ -1,8 +1,9 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Backtesting.Replays.Domain;
 
 namespace InvestmentLab.Backtesting.Replays.Application.EnsureBacktest;
 
-public sealed class EnsureBacktestHandler(IBacktestRepository backtests, IReplayedStrategies strategies, TimeProvider clock)
+public sealed class EnsureBacktestHandler(IBacktestRepository backtests, IReplayedStrategies strategies, TimeProvider clock) : IHandler
 {
     public async Task<Result<int>> Handle(Guid strategyId, int? version, CancellationToken cancellationToken)
     {

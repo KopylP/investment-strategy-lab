@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Taxation.Assessments.Application.Shared;
 using InvestmentLab.Taxation.Assessments.Domain;
 
 namespace InvestmentLab.Taxation.Assessments.Application.GetTaxProgress;
 
-public sealed class GetTaxProgressHandler(TaxAlertOptions alert, TaxRecalculator recalculator, ICurrentUser currentUser)
+public sealed class GetTaxProgressHandler(TaxAlertOptions alert, TaxRecalculator recalculator, ICurrentUser currentUser) : IHandler
 {
     public async Task<TaxProgressDto> Handle(int year, CancellationToken cancellationToken)
     {

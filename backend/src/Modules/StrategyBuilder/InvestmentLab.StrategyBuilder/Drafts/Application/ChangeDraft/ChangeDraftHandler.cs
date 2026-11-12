@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.StrategyBuilder.Drafts.Application.Shared;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 
 namespace InvestmentLab.StrategyBuilder.Drafts.Application.ChangeDraft;
 
-public sealed class ChangeDraftHandler(IDraftRepository drafts, DraftDescriber describer, TimeProvider clock)
+public sealed class ChangeDraftHandler(IDraftRepository drafts, DraftDescriber describer, TimeProvider clock) : IHandler
 {
     public async Task<Result<DraftDto>> Handle(Guid draftId, DraftChangeDto body, CancellationToken cancellationToken)
     {

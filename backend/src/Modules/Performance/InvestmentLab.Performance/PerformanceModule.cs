@@ -1,3 +1,4 @@
+using System.Reflection;
 using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.BuildingBlocks.Modules;
 using InvestmentLab.BuildingBlocks.Persistence;
@@ -29,6 +30,8 @@ public sealed class PerformanceModule : IModule
 
     public string Name => "Performance";
 
+    public Assembly Assembly => typeof(PerformanceAssemblyMarker).Assembly;
+
     public void AddServices(IHostApplicationBuilder builder)
     {
         builder.AddModuleDbContext<PerformanceDbContext>(Schema);
@@ -37,21 +40,10 @@ public sealed class PerformanceModule : IModule
         services.AddScoped<IPerformanceRepository, PerformanceRepository>();
         services.AddScoped<PriceBook>();
         services.AddScoped<SnapshotBuilder>();
-        services.AddScoped<RefreshSnapshotsHandler>();
         services.AddScoped<AccountHistoryLoader>();
         services.AddScoped<IAccountJournals, AccountJournals>();
-        services.AddScoped<GetDashboardHandler>();
-        services.AddScoped<GetAllAccountsDashboardHandler>();
         services.AddScoped<IValuationHistory, ValuationHistory>();
-        services.AddScheduledJob<RebuildSnapshotsJob>(RebuildSnapshotsJob.Schedule);
         services.AddScoped<SnapshotInvalidation>();
-        services.AddIntegrationEventHandler<TransactionRecordedV1, InvalidateOnTransactionRecorded>();
-        services.AddIntegrationEventHandler<TransactionReversedV1, InvalidateOnTransactionReversed>();
-        services.AddIntegrationEventHandler<DailyQuotesIngestedV1, InvalidateOnQuotesIngested>();
-        services.AddIntegrationEventHandler<FxRatesIngestedV1, InvalidateOnFxRatesIngested>();
-        services.AddIntegrationEventHandler<QuoteCorrectedV1, InvalidateOnQuoteCorrected>();
-        services.AddIntegrationEventHandler<ReportGeneratedV1, KeepPlanOfGeneratedReport>();
-        services.AddIntegrationEventHandler<ReportSupersededV1, SupersedePlanOfReport>();
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>

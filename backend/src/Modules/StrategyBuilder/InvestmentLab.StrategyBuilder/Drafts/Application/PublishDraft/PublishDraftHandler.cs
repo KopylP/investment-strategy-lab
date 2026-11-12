@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.StrategyBuilder.Drafts.Application.Shared;
 using InvestmentLab.StrategyBuilder.Drafts.Application.CleanUpTrials;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
@@ -17,7 +18,7 @@ public sealed class PublishDraftHandler(
     IStrategyAuthoring authoring,
     CleanUpTrialHandler cleanTrial,
     TimeProvider clock,
-    ILogger<PublishDraftHandler> logger)
+    ILogger<PublishDraftHandler> logger) : IHandler
 {
     public async Task<Result<PublishedVersionDto>> Handle(Guid draftId, int revision, CancellationToken cancellationToken)
     {

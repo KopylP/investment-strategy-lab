@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Rebalancing.Planning.Application.Shared;
 
 namespace InvestmentLab.Rebalancing.Planning.Application.ChangeReportSchedule;
 
 public sealed record ChangeReportScheduleCommand(string Frequency, int? Day = null, string? Weekday = null, string? Time = null, int? Minute = null);
 
-public sealed class ChangeReportScheduleHandler(OwnReportScheduleChange ownSchedule)
+public sealed class ChangeReportScheduleHandler(OwnReportScheduleChange ownSchedule) : IHandler
 {
     public async Task<Result<ReportScheduleDto>> Handle(
         Guid accountId,

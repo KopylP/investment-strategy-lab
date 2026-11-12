@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Strategies.Contracts;
 using InvestmentLab.Strategies.Evaluation.Application.Shared;
 
 namespace InvestmentLab.Strategies.Evaluation.Application.AssessStrategyRisk;
 
-public sealed class AssessStrategyRiskHandler(EvaluationPreparer preparer, IStrategyEngine engine)
+public sealed class AssessStrategyRiskHandler(EvaluationPreparer preparer, IStrategyEngine engine) : IHandler
 {
     public async Task<Result<RiskAssessmentDto>> Handle(EvaluateStrategyRequest request, CancellationToken cancellationToken)
     {

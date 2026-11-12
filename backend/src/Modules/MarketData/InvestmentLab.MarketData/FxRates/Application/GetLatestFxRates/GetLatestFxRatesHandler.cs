@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.MarketData.FxRates.Application.Shared;
 using InvestmentLab.MarketData.FxRates.Domain;
 
@@ -5,7 +6,7 @@ namespace InvestmentLab.MarketData.FxRates.Application.GetLatestFxRates;
 
 public sealed record LatestFxRatesDto(DateOnly? EffectiveDate, IReadOnlyDictionary<string, decimal> ToPivot);
 
-public sealed class GetLatestFxRatesHandler(IFxRateStore store)
+public sealed class GetLatestFxRatesHandler(IFxRateStore store) : IHandler
 {
     public async Task<LatestFxRatesDto> Handle(CancellationToken cancellationToken)
     {

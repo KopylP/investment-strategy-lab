@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.MarketData.Instruments.Domain;
 
 namespace InvestmentLab.MarketData.Instruments.Application.RegisterListedFund;
 
 public sealed record RegisterListedFundCommand(string Symbol, string Name, string TradingCurrency);
 
-public sealed class RegisterListedFundHandler(IInstrumentRepository instruments, ISymbolConvention convention)
+public sealed class RegisterListedFundHandler(IInstrumentRepository instruments, ISymbolConvention convention) : IHandler
 {
     public async Task<Result<Guid>> Handle(RegisterListedFundCommand command, CancellationToken cancellationToken)
     {

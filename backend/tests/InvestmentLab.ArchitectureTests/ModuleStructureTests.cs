@@ -1,3 +1,5 @@
+using InvestmentLab.BuildingBlocks.Messaging;
+using InvestmentLab.SharedKernel;
 using ModelContextProtocol.Server;
 using Assembly = System.Reflection.Assembly;
 
@@ -30,6 +32,20 @@ public sealed class ModuleStructureTests
     }
 
     [Fact]
+    public void Handlers_declare_themselves_so_that_they_are_registered()
+    {
+        var unregistered = CodeLocation.Modules
+            .SelectMany(module => Assembly.Load($"InvestmentLab.{module}").GetTypes())
+            .Where(IsHandlerByName)
+            .Where(type => !type.IsAssignableTo(typeof(IHandler)))
+            .Where(type => !IsIntegrationEventHandler(type))
+            .Where(type => !ServesAContract(type))
+            .Select(type => type.FullName);
+
+        unregistered.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void Repository_interfaces_live_in_domain()
     {
         var misplaced = CodeLocation.Modules
@@ -59,6 +75,18 @@ public sealed class ModuleStructureTests
 
         return name.EndsWith("AssemblyMarker.cs", StringComparison.Ordinal) || name.EndsWith("Module.cs", StringComparison.Ordinal);
     }
+
+    private static bool IsHandlerByName(Type type) =>
+        type is { IsClass: true, IsAbstract: false }
+        && type.Name.EndsWith("Handler", StringComparison.Ordinal)
+        && CodeLocation.Parse(type.Namespace ?? "").Layer == "Application"
+        && !type.Name.Contains('<');
+
+    private static bool ServesAContract(Type type) =>
+        type.GetInterfaces().Any(candidate => (candidate.Namespace ?? "").Contains(".Contracts", StringComparison.Ordinal));
+
+    private static bool IsIntegrationEventHandler(Type type) =>
+        type.GetInterfaces().Any(candidate => candidate.IsGenericType && candidate.GetGenericTypeDefinition() == typeof(IIntegrationEventHandler<>));
 
     private static bool IsRepositoryInterface(Type type) =>
         type.IsInterface && type.Name.StartsWith('I') && type.Name.EndsWith("Repository", StringComparison.Ordinal);

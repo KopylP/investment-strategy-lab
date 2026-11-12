@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.StrategyBuilder.Drafts.Application.Shared;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 
 namespace InvestmentLab.StrategyBuilder.Drafts.Application.MoveNodes;
 
-public sealed class MoveNodesHandler(IDraftRepository drafts, TimeProvider clock)
+public sealed class MoveNodesHandler(IDraftRepository drafts, TimeProvider clock) : IHandler
 {
     public async Task<Result> Handle(Guid draftId, LayoutDto body, CancellationToken cancellationToken)
     {

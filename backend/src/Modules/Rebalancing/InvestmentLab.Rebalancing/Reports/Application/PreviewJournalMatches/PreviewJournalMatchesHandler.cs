@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Rebalancing.Reports.Application.Shared;
 using InvestmentLab.Rebalancing.Reports.Domain;
 
 namespace InvestmentLab.Rebalancing.Reports.Application.PreviewJournalMatches;
 
-public sealed class PreviewJournalMatchesHandler(JournalOperationsLoader loader)
+public sealed class PreviewJournalMatchesHandler(JournalOperationsLoader loader) : IHandler
 {
     public async Task<Result<LoadOperationsPreviewDto>> Handle(Guid reportId, CancellationToken cancellationToken)
     {

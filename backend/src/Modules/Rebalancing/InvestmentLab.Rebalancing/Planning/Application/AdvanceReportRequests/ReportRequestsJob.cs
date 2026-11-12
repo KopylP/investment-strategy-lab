@@ -1,4 +1,5 @@
 using InvestmentLab.BuildingBlocks.Scheduling;
+using InvestmentLab.Rebalancing.Planning.Application.Shared;
 using InvestmentLab.Rebalancing.Planning.Application.RequestReport;
 using InvestmentLab.Rebalancing.Planning.Domain;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,6 +10,8 @@ namespace InvestmentLab.Rebalancing.Planning.Application.AdvanceReportRequests;
 public sealed class ReportRequestsJob(
     IReportRequestRepository requests, IServiceScopeFactory scopes, TimeProvider clock, ILogger<ReportRequestsJob> logger) : IScheduledJob
 {
+    public static IJobSchedule Schedule => ReportSchedules.Requests;
+
     public async Task RunAsync(CancellationToken cancellationToken)
     {
         foreach (var pending in await requests.PendingAsync(cancellationToken))

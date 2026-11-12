@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Rebalancing.Reports.Application.Shared;
 using InvestmentLab.Rebalancing.Reports.Domain;
 
 namespace InvestmentLab.Rebalancing.Reports.Application.ApplyJournalMatches;
 
-public sealed class ApplyJournalMatchesHandler(JournalOperationsLoader loader, IReportRepository reports, TimeProvider clock)
+public sealed class ApplyJournalMatchesHandler(JournalOperationsLoader loader, IReportRepository reports, TimeProvider clock) : IHandler
 {
     public async Task<Result<int>> Handle(Guid reportId, CancellationToken cancellationToken)
     {

@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Identity.Users.Application.Shared;
 using InvestmentLab.Identity.Users.Domain;
 
 namespace InvestmentLab.Identity.Users.Application.GetCurrentUser;
 
-public sealed class GetCurrentUserHandler(ICurrentUser user, IUserAccounts accounts)
+public sealed class GetCurrentUserHandler(ICurrentUser user, IUserAccounts accounts) : IHandler
 {
     public async Task<Result<CurrentUserDto>> Handle(bool viaHomeAssistant, CancellationToken cancellationToken)
     {

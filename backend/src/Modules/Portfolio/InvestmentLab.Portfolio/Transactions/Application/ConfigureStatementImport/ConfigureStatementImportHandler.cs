@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.Portfolio.Transactions.Application.Shared;
 using InvestmentLab.Portfolio.Transactions.Domain;
 
 namespace InvestmentLab.Portfolio.Transactions.Application.ConfigureStatementImport;
 
-public sealed class ConfigureStatementImportHandler(StatementImportLoader loader, StatementPreview preview, IInstrumentRegistry registry)
+public sealed class ConfigureStatementImportHandler(StatementImportLoader loader, StatementPreview preview, IInstrumentRegistry registry) : IHandler
 {
     public async Task<Result<StatementImportDto>> Handle(
         Guid accountId, Guid importId, ConfigureImportCommand command, CancellationToken cancellationToken)

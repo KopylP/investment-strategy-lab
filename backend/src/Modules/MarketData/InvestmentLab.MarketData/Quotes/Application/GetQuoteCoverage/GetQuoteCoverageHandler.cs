@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.MarketData.Contracts.Quotes;
 using InvestmentLab.MarketData.Instruments.Domain;
 using InvestmentLab.MarketData.Quotes.Domain;
@@ -6,7 +7,7 @@ namespace InvestmentLab.MarketData.Quotes.Application.GetQuoteCoverage;
 
 public sealed record QuoteCoverageDto(Guid InstrumentId, string Label, DateOnly? First, DateOnly? Last, int Count, int LongestGapDays);
 
-public sealed class GetQuoteCoverageHandler(IQuoteHistory history, IInstrumentRepository instruments, TimeProvider clock)
+public sealed class GetQuoteCoverageHandler(IQuoteHistory history, IInstrumentRepository instruments, TimeProvider clock) : IHandler
 {
     public async Task<IReadOnlyList<QuoteCoverageDto>> Handle(IReadOnlyCollection<Guid> instrumentIds, CancellationToken cancellationToken)
     {

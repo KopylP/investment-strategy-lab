@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Strategies.Definitions.Application.Shared;
 using InvestmentLab.Strategies.Definitions.Domain;
 
 namespace InvestmentLab.Strategies.Definitions.Application.GetStrategy;
 
-public sealed class GetStrategyHandler(IStrategyRepository strategies, IStrategyTypes types)
+public sealed class GetStrategyHandler(IStrategyRepository strategies, IStrategyTypes types) : IHandler
 {
     public async Task<Result<StrategyDto>> Handle(Guid strategyId, int? version, CancellationToken cancellationToken)
     {

@@ -1,8 +1,9 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Strategies.Definitions.Domain;
 
 namespace InvestmentLab.Strategies.Definitions.Application.DeleteTrialStrategy;
 
-public sealed class DeleteTrialStrategyHandler(IStrategyRepository strategies, TimeProvider clock)
+public sealed class DeleteTrialStrategyHandler(IStrategyRepository strategies, TimeProvider clock) : IHandler
 {
     public async Task<Result> Handle(Guid strategyId, CancellationToken cancellationToken)
     {

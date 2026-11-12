@@ -1,9 +1,10 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Strategies.Definitions.Application.Shared;
 using InvestmentLab.Strategies.Definitions.Domain;
 
 namespace InvestmentLab.Strategies.Definitions.Application.ReconfigureStrategy;
 
-public sealed class ReconfigureStrategyHandler(IStrategyRepository strategies, IStrategyTypes types, StrategySetupFactory setups, TimeProvider clock)
+public sealed class ReconfigureStrategyHandler(IStrategyRepository strategies, IStrategyTypes types, StrategySetupFactory setups, TimeProvider clock) : IHandler
 {
     public async Task<Result<StrategyDto>> Handle(Guid strategyId, StrategySetupDraft command, CancellationToken cancellationToken)
     {

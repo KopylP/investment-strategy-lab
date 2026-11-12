@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.MarketData.Contracts.FxRates;
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.Portfolio.Accounts.Domain;
@@ -17,7 +18,7 @@ public sealed class UploadStatementHandler(
     IInstrumentRegistry registry,
     IStrategyDirectory strategies,
     IFxRateBackfill fxBackfill,
-    TimeProvider clock)
+    TimeProvider clock) : IHandler
 {
     public async Task<Result<StatementImportDto>> Handle(Guid accountId, string fileName, string content, CancellationToken cancellationToken)
     {

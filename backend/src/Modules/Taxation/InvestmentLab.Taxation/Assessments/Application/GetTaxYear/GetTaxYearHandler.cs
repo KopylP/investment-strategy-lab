@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.Taxation.Assessments.Application.Shared;
@@ -10,7 +11,7 @@ public sealed class GetTaxYearHandler(
     IInstrumentCatalog instruments,
     TaxRecalculator recalculator,
     ICurrentUser currentUser,
-    TimeProvider clock)
+    TimeProvider clock) : IHandler
 {
     private const int ShortIdLength = 8;
 

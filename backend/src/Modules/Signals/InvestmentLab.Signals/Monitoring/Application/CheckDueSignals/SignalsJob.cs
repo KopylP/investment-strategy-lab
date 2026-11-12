@@ -16,7 +16,7 @@ public sealed class SignalsJob(
 {
     public const string TimeZone = "Europe/Warsaw";
 
-    public static readonly IntervalSchedule Schedule = new(TimeSpan.FromMinutes(1));
+    public static IJobSchedule Schedule { get; } = new IntervalSchedule(TimeSpan.FromMinutes(1));
 
     public async Task RunAsync(CancellationToken cancellationToken)
     {

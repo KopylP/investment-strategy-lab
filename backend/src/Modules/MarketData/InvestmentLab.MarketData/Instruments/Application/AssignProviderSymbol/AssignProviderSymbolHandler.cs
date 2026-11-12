@@ -1,10 +1,11 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.MarketData.Instruments.Domain;
 
 namespace InvestmentLab.MarketData.Instruments.Application.AssignProviderSymbol;
 
 public sealed record AssignProviderSymbolCommand(Guid InstrumentId, string ProviderSymbol);
 
-public sealed class AssignProviderSymbolHandler(IInstrumentRepository instruments)
+public sealed class AssignProviderSymbolHandler(IInstrumentRepository instruments) : IHandler
 {
     public async Task<Result> Handle(AssignProviderSymbolCommand command, CancellationToken cancellationToken)
     {

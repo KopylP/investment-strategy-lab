@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Backtesting.Contracts;
 using InvestmentLab.Backtesting.Experiments.Domain;
 using InvestmentLab.Backtesting.Replays.Domain;
@@ -5,7 +6,7 @@ using InvestmentLab.Backtesting.Replays.Domain.Comparisons;
 
 namespace InvestmentLab.Backtesting.Experiments.Application.GetExperimentOutcome;
 
-public sealed class GetExperimentOutcomeHandler(IExperimentRepository experiments)
+public sealed class GetExperimentOutcomeHandler(IExperimentRepository experiments) : IHandler
 {
     public async Task<ExperimentOutcomeDto?> Handle(Guid id, CancellationToken cancellationToken)
     {

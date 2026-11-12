@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.StrategyBuilder.Funds.Domain;
 
 namespace InvestmentLab.StrategyBuilder.Funds.Application.SearchFunds;
@@ -13,7 +14,7 @@ public sealed record SearchFundsCommand(
 public sealed record FoundFundDto(
     string Symbol, string Name, string? Currency, string? FundFamily, decimal? TotalAssets, decimal? ExpenseRatio, Guid? InstrumentId);
 
-public sealed class SearchFundsHandler(IFundSearch search)
+public sealed class SearchFundsHandler(IFundSearch search) : IHandler
 {
     public async Task<Result<IReadOnlyList<FoundFundDto>>> Handle(SearchFundsCommand command, CancellationToken cancellationToken)
     {

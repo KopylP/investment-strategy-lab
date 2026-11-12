@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Notifications.Delivery.Application.GetNotificationSettings;
 using InvestmentLab.Notifications.Delivery.Domain;
 
@@ -6,7 +7,7 @@ namespace InvestmentLab.Notifications.Delivery.Application.ChangeNotificationSet
 public sealed record ChangeNotificationSettingsCommand(IReadOnlyList<string>? Destinations);
 
 public sealed class ChangeNotificationSettingsHandler(
-    INotificationPreferencesRepository preferences, GetNotificationSettingsHandler settings, TimeProvider clock)
+    INotificationPreferencesRepository preferences, GetNotificationSettingsHandler settings, TimeProvider clock) : IHandler
 {
     public async Task<Result<NotificationSettingsDto>> Handle(
         UserId userId,

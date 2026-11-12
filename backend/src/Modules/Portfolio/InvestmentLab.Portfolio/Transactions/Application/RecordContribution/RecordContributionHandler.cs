@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Portfolio.Contracts.Transactions;
 using InvestmentLab.Portfolio.Transactions.Application.RecordCashMovement;
 using InvestmentLab.Portfolio.Transactions.Application.Shared;
@@ -7,7 +8,7 @@ namespace InvestmentLab.Portfolio.Transactions.Application.RecordContribution;
 
 public sealed record RecordContributionCommand(decimal Amount, DateOnly OccurredOn, IReadOnlyList<AmountAllocationDto>? Allocations = null);
 
-public sealed class RecordContributionHandler(RecordCashMovementHandler cashMovements)
+public sealed class RecordContributionHandler(RecordCashMovementHandler cashMovements) : IHandler
 {
     public Task<Result<RecordedTransaction>> Handle(
         Guid accountId, RecordContributionCommand command, TransactionSourceDto source, CancellationToken cancellationToken)

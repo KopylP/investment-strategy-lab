@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Backtesting.Contracts;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 using InvestmentLab.StrategyBuilder.Trials.Domain;
@@ -27,7 +28,7 @@ public sealed record HorizonsDto(double? OneYear, double? ThreeYearsAnnual, doub
 
 public sealed record YearReturnDto(int Year, double Return, bool Partial);
 
-public sealed class TrialTableHandler(IDraftRepository drafts, IBacktestExperiments outcomes, ITrialExperiments experiments)
+public sealed class TrialTableHandler(IDraftRepository drafts, IBacktestExperiments outcomes, ITrialExperiments experiments) : IHandler
 {
     public async Task<Result<IReadOnlyList<TrialTableRowDto>>> Handle(TrialTableQuery query, CancellationToken cancellationToken)
     {

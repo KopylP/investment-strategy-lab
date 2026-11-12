@@ -1,8 +1,9 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Backtesting.Experiments.Domain;
 
 namespace InvestmentLab.Backtesting.Experiments.Application.GetQueuePositions;
 
-public sealed class GetQueuePositionsHandler(IExperimentRepository experiments)
+public sealed class GetQueuePositionsHandler(IExperimentRepository experiments) : IHandler
 {
     public async Task<IReadOnlyDictionary<Guid, int>> Handle(IReadOnlyList<Guid> experimentIds, CancellationToken cancellationToken)
     {

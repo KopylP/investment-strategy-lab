@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Rebalancing.Planning.Application.Shared;
 using InvestmentLab.Rebalancing.Planning.Domain;
@@ -7,7 +8,7 @@ namespace InvestmentLab.Rebalancing.Planning.Application.ChangePlanSettings;
 public sealed record ChangePlanSettingsCommand(
     decimal MonthlyContribution, decimal MinTrade, decimal TrimBand, bool AllowFractionalShares, bool GenerateOnSchedule = true, bool LevelByPurchasesOnly = false);
 
-public sealed class ChangePlanSettingsHandler(IAccountSetupQueries accounts, IPlanSettingsRepository settings, TimeProvider clock)
+public sealed class ChangePlanSettingsHandler(IAccountSetupQueries accounts, IPlanSettingsRepository settings, TimeProvider clock) : IHandler
 {
     public async Task<Result<PlanSettingsDto>> Handle(Guid accountId, ChangePlanSettingsCommand command, CancellationToken cancellationToken)
     {

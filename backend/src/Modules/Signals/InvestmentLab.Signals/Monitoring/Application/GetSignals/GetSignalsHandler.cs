@@ -1,3 +1,4 @@
+using InvestmentLab.SharedKernel;
 using InvestmentLab.Signals.Monitoring.Domain;
 
 namespace InvestmentLab.Signals.Monitoring.Application.GetSignals;
@@ -7,7 +8,7 @@ public sealed record SignalsOverviewDto(
     IReadOnlyList<SignalOccurrenceDto> Active,
     IReadOnlyList<SignalOccurrenceDto> Recent);
 
-public sealed class GetSignalsHandler(ISignalRepository signals)
+public sealed class GetSignalsHandler(ISignalRepository signals) : IHandler
 {
     private const int RecentCount = 30;
 
