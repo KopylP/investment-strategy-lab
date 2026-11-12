@@ -23,7 +23,7 @@ internal sealed class InvestmentAccountConfiguration : IEntityTypeConfiguration<
         });
         account.Ignore(a => a.ActiveSubPortfolios);
 
-        account.HasMany(a => a.SubPortfolios).WithOne().HasForeignKey("AccountId").OnDelete(DeleteBehavior.Cascade);
-        account.Navigation(a => a.SubPortfolios).UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
+        account.OwnsMany(a => a.SubPortfolios, SubPortfolioMapping.Configure);
+        account.Navigation(a => a.SubPortfolios).UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

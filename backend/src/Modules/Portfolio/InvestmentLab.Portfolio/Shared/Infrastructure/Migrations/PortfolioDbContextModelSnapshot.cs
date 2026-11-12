@@ -19,7 +19,7 @@ namespace InvestmentLab.Portfolio.Shared.Infrastructure.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("portfolio")
-                .HasAnnotation("ProductVersion", "10.0.13")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -128,63 +128,6 @@ namespace InvestmentLab.Portfolio.Shared.Infrastructure.Migrations
                         .HasDatabaseName("ix_accounts_owner_id");
 
                     b.ToTable("accounts", "portfolio");
-                });
-
-            modelBuilder.Entity("InvestmentLab.Portfolio.Accounts.Domain.SubPortfolio", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid?>("AccountId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("account_id");
-
-                    b.Property<Guid?>("CashInstrumentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("cash_instrument_id");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("name");
-
-                    b.Property<int>("Position")
-                        .HasColumnType("integer")
-                        .HasColumnName("position");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("status");
-
-                    b.Property<decimal>("TargetShare")
-                        .HasColumnType("numeric")
-                        .HasColumnName("target_share");
-
-                    b.ComplexProperty(typeof(Dictionary<string, object>), "Guardrails", "InvestmentLab.Portfolio.Accounts.Domain.SubPortfolio.Guardrails#Guardrails", b1 =>
-                        {
-                            b1.IsRequired();
-
-                            b1.Property<decimal?>("MaxMonthlyTurnover")
-                                .HasColumnType("numeric")
-                                .HasColumnName("max_monthly_turnover");
-
-                            b1.Property<decimal?>("MaxPositionWeight")
-                                .HasColumnType("numeric")
-                                .HasColumnName("max_position_weight");
-                        });
-
-                    b.HasKey("Id")
-                        .HasName("pk_sub_portfolios");
-
-                    b.HasIndex("AccountId", "Position")
-                        .IsUnique()
-                        .HasDatabaseName("ix_sub_portfolios_account_id_position");
-
-                    b.ToTable("sub_portfolios", "portfolio");
                 });
 
             modelBuilder.Entity("InvestmentLab.Portfolio.Shared.Infrastructure.HoldingRow", b =>
@@ -395,38 +338,90 @@ namespace InvestmentLab.Portfolio.Shared.Infrastructure.Migrations
                     b.ToTable("transactions", "portfolio");
                 });
 
-            modelBuilder.Entity("InvestmentLab.Portfolio.Accounts.Domain.SubPortfolio", b =>
+            modelBuilder.Entity("InvestmentLab.Portfolio.Accounts.Domain.InvestmentAccount", b =>
                 {
-                    b.HasOne("InvestmentLab.Portfolio.Accounts.Domain.InvestmentAccount", null)
-                        .WithMany("SubPortfolios")
-                        .HasForeignKey("AccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .HasConstraintName("fk_sub_portfolios_accounts_account_id");
-
-                    b.OwnsOne("InvestmentLab.Portfolio.Accounts.Domain.StrategyRef", "Strategy", b1 =>
+                    b.OwnsMany("InvestmentLab.Portfolio.Accounts.Domain.SubPortfolio", "SubPortfolios", b1 =>
                         {
-                            b1.Property<Guid>("SubPortfolioId")
-                                .HasColumnType("uuid")
-                                .HasColumnName("id");
+                            b1.Property<Guid>("InvestmentAccountId");
 
-                            b1.Property<int?>("PinnedVersion")
-                                .HasColumnType("integer")
-                                .HasColumnName("strategy_pinned_version");
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
 
-                            b1.Property<Guid>("StrategyId")
-                                .HasColumnType("uuid")
-                                .HasColumnName("strategy_id");
+                            b1.Property<Guid?>("CashInstrumentId");
 
-                            b1.HasKey("SubPortfolioId");
+                            b1.Property<Guid>("Id");
 
-                            b1.ToTable("sub_portfolios", "portfolio");
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasMaxLength(100);
+
+                            b1.Property<int>("Position");
+
+                            b1.Property<string>("Status")
+                                .IsRequired()
+                                .HasMaxLength(20);
+
+                            b1.Property<decimal>("TargetShare");
+
+                            b1.HasKey("InvestmentAccountId", "__synthesizedOrdinal");
+
+                            b1.ToTable("accounts", "portfolio");
+
+                            b1
+                                .ToJson("sub_portfolios")
+                                .HasColumnType("jsonb");
 
                             b1.WithOwner()
-                                .HasForeignKey("SubPortfolioId")
-                                .HasConstraintName("fk_sub_portfolios_sub_portfolios_id");
+                                .HasForeignKey("InvestmentAccountId")
+                                .HasConstraintName("fk_accounts_accounts_investment_account_id");
+
+                            b1.OwnsOne("InvestmentLab.Portfolio.Accounts.Domain.Guardrails", "Guardrails", b2 =>
+                                {
+                                    b2.Property<Guid>("SubPortfolioInvestmentAccountId");
+
+                                    b2.Property<int>("SubPortfolio__synthesizedOrdinal");
+
+                                    b2.Property<decimal?>("MaxMonthlyTurnover");
+
+                                    b2.Property<decimal?>("MaxPositionWeight");
+
+                                    b2.HasKey("SubPortfolioInvestmentAccountId", "SubPortfolio__synthesizedOrdinal")
+                                        .HasName("pk_accounts");
+
+                                    b2.ToTable("accounts", "portfolio");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("SubPortfolioInvestmentAccountId", "SubPortfolio__synthesizedOrdinal")
+                                        .HasConstraintName("fk_accounts_accounts_sub_portfolio_investment_account_id_sub_portfo");
+                                });
+
+                            b1.OwnsOne("InvestmentLab.Portfolio.Accounts.Domain.StrategyRef", "Strategy", b2 =>
+                                {
+                                    b2.Property<Guid>("SubPortfolioInvestmentAccountId");
+
+                                    b2.Property<int>("SubPortfolio__synthesizedOrdinal");
+
+                                    b2.Property<int?>("PinnedVersion");
+
+                                    b2.Property<Guid>("StrategyId");
+
+                                    b2.HasKey("SubPortfolioInvestmentAccountId", "SubPortfolio__synthesizedOrdinal")
+                                        .HasName("pk_accounts");
+
+                                    b2.ToTable("accounts", "portfolio");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("SubPortfolioInvestmentAccountId", "SubPortfolio__synthesizedOrdinal")
+                                        .HasConstraintName("fk_accounts_accounts_sub_portfolio_investment_account_id_sub_portfo");
+                                });
+
+                            b1.Navigation("Guardrails")
+                                .IsRequired();
+
+                            b1.Navigation("Strategy");
                         });
 
-                    b.Navigation("Strategy");
+                    b.Navigation("SubPortfolios");
                 });
 
             modelBuilder.Entity("InvestmentLab.Portfolio.Transactions.Domain.Transaction", b =>
@@ -464,11 +459,6 @@ namespace InvestmentLab.Portfolio.Shared.Infrastructure.Migrations
 
                     b.Navigation("Source")
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("InvestmentLab.Portfolio.Accounts.Domain.InvestmentAccount", b =>
-                {
-                    b.Navigation("SubPortfolios");
                 });
 #pragma warning restore 612, 618
         }
