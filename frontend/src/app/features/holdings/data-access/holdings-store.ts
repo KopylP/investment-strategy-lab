@@ -11,6 +11,8 @@ import { SleeveVm } from '../models/holdings-vm';
 import { ValuedHoldingsDto } from '../models/valued-holdings-dto';
 import { HoldingsMapper, SleeveSetup } from './holdings-mapper';
 
+const MIN_VISIBLE_COMPOSITION_WEIGHT = 0.0005;
+
 @Injectable()
 export class HoldingsStore {
   private readonly api = inject(ApiClient);
@@ -117,18 +119,20 @@ export class HoldingsStore {
         color: colors[index % colors.length],
       }));
     const cash = this.totals().cash;
+    const withCash =
+      cash > 0
+        ? [
+            ...slices,
+            {
+              label: translate('common.cash'),
+              name: '',
+              weight: cash / total,
+              color: palette.neutral,
+            },
+          ]
+        : slices;
 
-    return cash > 0
-      ? [
-          ...slices,
-          {
-            label: translate('common.cash'),
-            name: '',
-            weight: cash / total,
-            color: palette.neutral,
-          },
-        ]
-      : slices;
+    return withCash.filter((slice) => slice.weight >= MIN_VISIBLE_COMPOSITION_WEIGHT);
   });
 
   readonly exposure = computed(() => {

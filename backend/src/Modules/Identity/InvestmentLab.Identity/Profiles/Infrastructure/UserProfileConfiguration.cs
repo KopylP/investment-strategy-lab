@@ -11,5 +11,6 @@ internal sealed class UserProfileConfiguration : IEntityTypeConfiguration<UserPr
         profile.ToTable("user_profiles");
         profile.HasKey(p => p.Id);
         profile.Property(p => p.TimeZone).HasMaxLength(64);
+        profile.Property(p => p.ChartStyle).HasConversion<string>().HasMaxLength(16);
     }
 }

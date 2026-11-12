@@ -73,6 +73,12 @@ namespace InvestmentLab.Identity.Shared.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("ChartStyle")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("chart_style");
+
                     b.Property<string>("DisplayCurrency")
                         .IsRequired()
                         .HasMaxLength(3)
