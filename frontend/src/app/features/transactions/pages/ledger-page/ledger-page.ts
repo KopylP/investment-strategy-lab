@@ -105,7 +105,7 @@ export class LedgerPage {
       return (
         kindOk &&
         (!text ||
-          `${transaction.kindLabel} ${transaction.description} ${transaction.allocation}`
+          `${transaction.kindLabel} ${transaction.description} ${transaction.allocation} ${transaction.cancels?.description ?? ''}`
             .toLowerCase()
             .includes(text))
       );

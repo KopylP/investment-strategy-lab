@@ -65,6 +65,19 @@ export interface TransactionVm {
   isReversed: boolean;
   canReverse: boolean;
   reversalReason: string | null;
+  cancels: CancelledOperation | null;
+  cancelledBy: Cancellation | null;
+}
+
+export interface CancelledOperation {
+  occurredOn: string;
+  kindLabel: string;
+  description: string;
+}
+
+export interface Cancellation {
+  occurredOn: string;
+  reason: string | null;
 }
 
 export interface NewTrade {
@@ -97,7 +110,7 @@ const kinds: Record<
   TaxPayment: { label: translate('transactions.kind.Tax'), severity: 'warn' },
   Dividend: { label: translate('transactions.cash.kind.Dividend'), severity: 'success' },
   InternalTransfer: { label: translate('transactions.kind.Transfer'), severity: 'secondary' },
-  Reversal: { label: translate('transactions.kind.Reversal'), severity: 'contrast' },
+  Reversal: { label: translate('transactions.kind.Reversal'), severity: 'secondary' },
 };
 
 const sources: Record<TransactionDto['source'], string> = {
@@ -129,13 +142,12 @@ export class TransactionsStore {
     const names = new Map(account?.subPortfolios.map((sub) => [sub.id, sub.name]) ?? []);
     const currency = account?.baseCurrency ?? 'EUR';
 
-    return [...(this.journalResource.value() ?? [])]
-      .sort(
-        (left, right) =>
-          right.occurredOn.localeCompare(left.occurredOn) ||
-          right.recordedAt.localeCompare(left.recordedAt),
-      )
-      .map((transaction) => this.toVm(transaction, currency, (id) => names.get(id) ?? '—'));
+    const journal = newestFirst(this.journalResource.value() ?? []);
+    const entries = journal.map((transaction) =>
+      this.toVm(transaction, currency, (id) => names.get(id) ?? '—'),
+    );
+
+    return linkReversals(journal, entries);
   });
 
   async recordTrade(trade: NewTrade): Promise<boolean> {
@@ -317,8 +329,52 @@ export class TransactionsStore {
         transaction.kind !== 'Reversal' &&
         transaction.source !== 'ReportAction',
       reversalReason: transaction.reversalReason,
+      cancels: null,
+      cancelledBy: null,
     };
   }
+}
+
+function newestFirst(journal: TransactionDto[]): TransactionDto[] {
+  return [...journal].sort(
+    (left, right) =>
+      right.occurredOn.localeCompare(left.occurredOn) ||
+      right.recordedAt.localeCompare(left.recordedAt),
+  );
+}
+
+function linkReversals(journal: TransactionDto[], entries: TransactionVm[]): TransactionVm[] {
+  const entriesById = new Map(entries.map((entry) => [entry.id, entry]));
+  const reversals = journal.filter((transaction) => transaction.reversalOf);
+  const originalIdByReversal = new Map(
+    reversals.map((reversal) => [reversal.id, reversal.reversalOf!]),
+  );
+  const reversalIdByOriginal = new Map(
+    reversals.map((reversal) => [reversal.reversalOf!, reversal.id]),
+  );
+
+  return entries.map((entry) => {
+    const original = entriesById.get(originalIdByReversal.get(entry.id) ?? '');
+    const reversal = entriesById.get(reversalIdByOriginal.get(entry.id) ?? '');
+
+    return {
+      ...entry,
+      cancels: original ? cancelledOperation(original) : null,
+      cancelledBy: reversal ? cancellation(reversal) : null,
+    };
+  });
+}
+
+function cancelledOperation(original: TransactionVm): CancelledOperation {
+  return {
+    occurredOn: original.occurredOn,
+    kindLabel: original.kindLabel,
+    description: original.description,
+  };
+}
+
+function cancellation(reversal: TransactionVm): Cancellation {
+  return { occurredOn: reversal.occurredOn, reason: reversal.reversalReason };
 }
 
 interface TransactionDetails {

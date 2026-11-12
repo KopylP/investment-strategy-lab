@@ -847,9 +847,9 @@
       "subPortfolios": "Під-портфелі",
       "money": "Гроші",
       "source": "Джерело",
-      "reversedTag": "сторновано",
       "undoneByReport": "Скасовується відміткою в рапорті",
-      "reversedNote": "· сторновано"
+      "cancels": "Скасовує: {kind} від {date}",
+      "cancelledOn": "сторновано {date}"
     },
     "source": {
       "report": "з рапорту",
