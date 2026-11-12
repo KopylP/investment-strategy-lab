@@ -1,4 +1,4 @@
-namespace InvestmentLab.Portfolio.Transactions.Domain;
+namespace InvestmentLab.SharedKernel;
 
 public static class EnumText
 {

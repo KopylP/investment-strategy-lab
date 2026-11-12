@@ -13,9 +13,15 @@ public sealed record RecordCashMovementCommand(
 
 public sealed class RecordCashMovementHandler(TransactionRecorder recorder)
 {
-    public Task<Result<RecordedTransaction>> Handle(
-        Guid accountId, RecordCashMovementCommand command, TransactionSource source, CancellationToken cancellationToken) =>
-        recorder.RecordAsync(accountId, context => Create(context, command, source), cancellationToken);
+    public async Task<Result<RecordedTransaction>> Handle(
+        Guid accountId, RecordCashMovementCommand command, TransactionSourceDto source, CancellationToken cancellationToken)
+    {
+        var origin = source.ToDomain();
+        if (origin.IsFailure)
+            return origin.Error;
+
+        return await recorder.RecordAsync(accountId, context => Create(context, command, origin.Value), cancellationToken);
+    }
 
     private static Result<Transaction> Create(RecordingContext context, RecordCashMovementCommand command, TransactionSource source)
     {

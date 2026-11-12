@@ -7,11 +7,11 @@ public sealed class DescribeInstrumentsHandler(IInstrumentRepository instruments
 {
     private const int SymbolsPerRequest = 10;
 
-    public async Task<int> Handle(IReadOnlyCollection<InstrumentId>? only, CancellationToken cancellationToken)
+    public async Task<int> Handle(IReadOnlyCollection<Guid>? only, CancellationToken cancellationToken)
     {
         var now = clock.GetUtcNow();
         var due = (await instruments.ListForUpdateAsync(cancellationToken))
-            .Where(instrument => only is null ? instrument.NeedsDescription(now) : only.Contains(instrument.Id))
+            .Where(instrument => only is null ? instrument.NeedsDescription(now) : only.Contains(instrument.Id.Value))
             .Select(instrument => (Instrument: instrument, Symbol: instrument.Ticker))
             .Where(item => item.Symbol is not null)
             .ToList();

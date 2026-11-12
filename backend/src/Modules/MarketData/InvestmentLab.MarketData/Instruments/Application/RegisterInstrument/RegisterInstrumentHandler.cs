@@ -3,7 +3,7 @@ using InvestmentLab.MarketData.Instruments.Domain;
 namespace InvestmentLab.MarketData.Instruments.Application.RegisterInstrument;
 
 public sealed record RegisterInstrumentCommand(
-    InstrumentKind Kind,
+    string Kind,
     string? Isin,
     string Name,
     string Exchange,
@@ -11,14 +11,18 @@ public sealed record RegisterInstrumentCommand(
     string? Group,
     bool? IsAccumulating,
     IReadOnlyList<string> ProviderSymbols,
-    AssetClass? AssetClass = null,
-    InvestmentRegion? Region = null,
+    string? AssetClass = null,
+    string? Region = null,
     string? AssetCurrency = null);
 
 public sealed class RegisterInstrumentHandler(IInstrumentRepository instruments)
 {
     public async Task<Result<Guid>> Handle(RegisterInstrumentCommand command, CancellationToken cancellationToken)
     {
+        var kind = EnumText.TryParse<InstrumentKind>(command.Kind, "instrument.kind_unknown");
+        if (kind.IsFailure)
+            return kind.Error;
+
         var isin = await FreeIsinAsync(command.Isin, cancellationToken);
         if (isin.IsFailure)
             return isin.Error;
@@ -36,7 +40,7 @@ public sealed class RegisterInstrumentHandler(IInstrumentRepository instruments)
             return exposure.Error;
 
         var registered =
-            Instrument.Register(command.Kind, isin.Value, command.Name, command.Exchange, currency.Value, group.Value, command.IsAccumulating);
+            Instrument.Register(kind.Value, isin.Value, command.Name, command.Exchange, currency.Value, group.Value, command.IsAccumulating);
         if (registered.IsFailure)
             return registered.Error;
 

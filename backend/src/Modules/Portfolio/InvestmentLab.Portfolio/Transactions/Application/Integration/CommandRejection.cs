@@ -5,8 +5,6 @@ namespace InvestmentLab.Portfolio.Transactions.Application.Integration;
 
 internal sealed class CommandRejection(ITransactionJournal journal, TimeProvider clock)
 {
-    public static readonly TransactionSource FromReport = new(TransactionSourceKind.ReportAction, null);
-
     public async Task RejectOnFailureAsync(string sourceReference, Result result, CancellationToken cancellationToken)
     {
         if (result.IsSuccess || IsAlreadyDone(result.Error))

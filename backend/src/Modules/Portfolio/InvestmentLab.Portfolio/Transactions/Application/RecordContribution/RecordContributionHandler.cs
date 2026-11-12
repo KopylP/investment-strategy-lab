@@ -10,7 +10,7 @@ public sealed record RecordContributionCommand(decimal Amount, DateOnly Occurred
 public sealed class RecordContributionHandler(RecordCashMovementHandler cashMovements)
 {
     public Task<Result<RecordedTransaction>> Handle(
-        Guid accountId, RecordContributionCommand command, TransactionSource source, CancellationToken cancellationToken)
+        Guid accountId, RecordContributionCommand command, TransactionSourceDto source, CancellationToken cancellationToken)
     {
         var movement = new RecordCashMovementCommand(nameof(CashMovementKind.Contribution), command.Amount, command.OccurredOn, command.Allocations);
 

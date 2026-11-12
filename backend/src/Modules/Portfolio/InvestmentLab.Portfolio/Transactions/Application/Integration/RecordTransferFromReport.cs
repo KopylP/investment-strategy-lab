@@ -1,3 +1,4 @@
+using InvestmentLab.Portfolio.Transactions.Application.Shared;
 using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.Portfolio.Contracts.Transactions;
 using InvestmentLab.Portfolio.Transactions.Application.RecordInternalTransfer;
@@ -12,7 +13,7 @@ internal sealed class RecordTransferFromReport(
     {
         var transfer = new RecordInternalTransferCommand(
             command.FromSubPortfolioId, command.ToSubPortfolioId, command.OccurredOn, command.InstrumentId, command.Quantity, command.Amount);
-        var source = CommandRejection.FromReport with { Reference = command.SourceReference };
+        var source = TransactionSourceDto.FromReport(command.SourceReference);
 
         var recorded = await transfers.Handle(command.AccountId, transfer, source, cancellationToken);
 

@@ -1,6 +1,7 @@
 using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.Portfolio.Contracts.Transactions;
 using InvestmentLab.Portfolio.Transactions.Application.RecordTrade;
+using InvestmentLab.Portfolio.Transactions.Application.Shared;
 
 namespace InvestmentLab.Portfolio.Transactions.Application.Integration;
 
@@ -10,7 +11,7 @@ internal sealed class RecordTradeFromReport(RecordTradeHandler trades, CommandRe
     {
         var trade = new RecordTradeCommand(
             command.InstrumentId, command.Side, command.Quantity, command.Price, command.Fee, command.ExecutedOn, command.Allocations);
-        var source = CommandRejection.FromReport with { Reference = command.SourceReference };
+        var source = TransactionSourceDto.FromReport(command.SourceReference);
 
         var recorded = await trades.Handle(command.AccountId, trade, source, cancellationToken);
 

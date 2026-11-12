@@ -16,12 +16,15 @@ public sealed record RecordTradeCommand(
 
 public sealed class RecordTradeHandler(TransactionRecorder recorder)
 {
-    public Task<Result<RecordedTransaction>> Handle(
-        Guid accountId,
-        RecordTradeCommand command,
-        TransactionSource source,
-        CancellationToken cancellationToken) =>
-        recorder.RecordAsync(accountId, context => Create(context, command, source), cancellationToken);
+    public async Task<Result<RecordedTransaction>> Handle(
+        Guid accountId, RecordTradeCommand command, TransactionSourceDto source, CancellationToken cancellationToken)
+    {
+        var origin = source.ToDomain();
+        if (origin.IsFailure)
+            return origin.Error;
+
+        return await recorder.RecordAsync(accountId, context => Create(context, command, origin.Value), cancellationToken);
+    }
 
     private static Result<Transaction> Create(RecordingContext context, RecordTradeCommand command, TransactionSource source)
     {

@@ -21,14 +21,14 @@ public sealed class InstrumentSeedTests
         await new InstrumentSeeder(repository, register, NullLogger<InstrumentSeeder>.Instance).SeedAsync(cancellationToken);
 
         var instrument = await repository.FindAsync(InstrumentId.Of(registered.Value), cancellationToken);
-        instrument!.AssetClass.ShouldBe(seed.AssetClass);
-        instrument.Region.ShouldBe(seed.Region);
+        instrument!.AssetClass.ToString().ShouldBe(seed.AssetClass);
+        instrument.Region.ToString().ShouldBe(seed.Region);
     }
 
     [Fact]
     public void Every_tradable_seed_instrument_says_what_it_is_exposed_to()
     {
-        var tradable = InstrumentSeeder.Load().Where(command => command.Kind != InstrumentKind.Index);
+        var tradable = InstrumentSeeder.Load().Where(command => command.Kind != nameof(InstrumentKind.Index));
 
         var unclassified = tradable.Where(command => command.AssetClass is null || command.Region is null);
 
