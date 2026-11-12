@@ -49,6 +49,16 @@ public sealed class JournalMovementsTests
         (movement.QuantityDelta, movement.CashDelta).ShouldBe((-4m, 38m));
     }
 
+    [Theory]
+    [InlineData("Buy", -279.56)]
+    [InlineData("Sell", 279.56)]
+    public void A_trade_moves_cash_in_whole_cents_as_the_broker_charges_it(string side, decimal cash)
+    {
+        var movement = MovementsOf(new Entry(new Trade(side, 95.24m, 0m, [new Shares(Sub, 2.935354m)]))).ShouldHaveSingleItem();
+
+        movement.CashDelta.ShouldBe(cash);
+    }
+
     [Fact]
     public void A_trade_settled_in_another_currency_moves_the_settled_amount_in_shares_of_quantity()
     {
