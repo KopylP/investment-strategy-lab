@@ -5,19 +5,25 @@
     clear: both;
 }
 
-.card {
-    background: var(--surface-card);
-    padding: 2rem;
-    margin-bottom: 2rem;
-    border-radius: var(--content-border-radius);
+:root {
+    --card-spacing: 2rem;
+}
 
-    &:last-child {
-        margin-bottom: 0;
+@layer components {
+    .card {
+        background: var(--surface-card);
+        padding: 2rem;
+        margin-bottom: var(--card-spacing);
+        border-radius: var(--content-border-radius);
+
+        &:last-child {
+            margin-bottom: 0;
+        }
     }
 
-    /* A card that lays out its own padding (e.g. a list running edge to edge); the utility alone loses to .card. */
-    &.p-0 {
-        padding: 0;
+    /* A component shown as display: contents makes its card its own last child, though the page goes on after it. */
+    .contents:not(:last-child) > .card:last-child {
+        margin-bottom: var(--card-spacing);
     }
 }
 

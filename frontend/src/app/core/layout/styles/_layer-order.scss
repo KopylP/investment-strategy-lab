@@ -1,0 +1,3 @@
+/* Tailwind's layer order, declared before any layered rule: the card sits in components, so a utility on a card
+   (mb-0, py-4) wins over it, and Tailwind's base reset does not. PrimeNG appends its own layer after these. */
+@layer theme, base, components, utilities;

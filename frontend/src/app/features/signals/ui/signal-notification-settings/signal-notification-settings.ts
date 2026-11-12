@@ -7,6 +7,7 @@ import { SignalsStore } from '../../data-access/signals-store';
 
 @Component({
   selector: 'app-signal-notification-settings',
+  host: { class: 'contents' },
   imports: [TranslocoPipe, FormsModule, Checkbox, Skeleton],
   providers: [SignalsStore],
   template: `

@@ -10,11 +10,24 @@ import { RobustnessResults } from '../robustness-results/robustness-results';
 
 @Component({
   selector: 'app-experiment-results',
-  imports: [TranslocoPipe, DecimalPipe, Message, DatePipe, MoneyPipe, PercentPipe, StrategyBacktest, ExperimentJournal, RobustnessResults],
+  host: { class: 'contents' },
+  imports: [
+    TranslocoPipe,
+    DecimalPipe,
+    Message,
+    DatePipe,
+    MoneyPipe,
+    PercentPipe,
+    StrategyBacktest,
+    ExperimentJournal,
+    RobustnessResults,
+  ],
   templateUrl: './experiment-results.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ExperimentResults {
   protected readonly store = inject(ExperimentStore);
-  protected readonly currency = computed(() => this.store.experiment()?.result?.baseline.currency ?? '');
+  protected readonly currency = computed(
+    () => this.store.experiment()?.result?.baseline.currency ?? '',
+  );
 }

@@ -34,6 +34,7 @@ export interface NotificationSettings {
 
 @Component({
   selector: 'app-notification-settings',
+  host: { class: 'contents' },
   imports: [TranslocoPipe, FormsModule, NgTemplateOutlet, Button, Checkbox, Message, Skeleton, Tag],
   templateUrl: './notification-settings.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -6,6 +6,7 @@ import { RegionMap } from '../region-map/region-map';
 
 @Component({
   selector: 'app-holdings-exposure-card',
+  host: { class: 'contents' },
   imports: [TranslocoPipe, PercentPipe, RegionMap],
   templateUrl: './holdings-exposure-card.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -14,6 +15,10 @@ export class HoldingsExposureCard {
   readonly breakdowns = input.required<ExposureBreakdown[]>();
   readonly currency = input.required<string>();
 
-  protected readonly bars = computed(() => this.breakdowns().filter((breakdown) => breakdown.view === 'bars'));
-  protected readonly maps = computed(() => this.breakdowns().filter((breakdown) => breakdown.view === 'map'));
+  protected readonly bars = computed(() =>
+    this.breakdowns().filter((breakdown) => breakdown.view === 'bars'),
+  );
+  protected readonly maps = computed(() =>
+    this.breakdowns().filter((breakdown) => breakdown.view === 'map'),
+  );
 }

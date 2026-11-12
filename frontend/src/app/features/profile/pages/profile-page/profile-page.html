@@ -1,9 +1,7 @@
 <app-page-header [title]="'profile.title' | transloco" [subtitle]="auth.user()?.email ?? ''" />
 
-<div class="flex flex-col gap-4">
-  <app-language-settings />
+<app-language-settings />
 
-  <app-notification-settings />
+<app-notification-settings />
 
-  <app-signal-notification-settings />
-</div>
+<app-signal-notification-settings />
