@@ -2,7 +2,8 @@ namespace InvestmentLab.Performance.Valuation.Domain;
 
 public static class ValuationCalculator
 {
-    public static IReadOnlyList<Snapshot> Build(IReadOnlyList<Movement> movements, IReadOnlyList<DateOnly> days, PriceOn priceOn, FxOn? fxOn = null)
+    public static Result<IReadOnlyList<Snapshot>> Build(
+        IReadOnlyList<Movement> movements, IReadOnlyList<DateOnly> days, PriceOn priceOn, FxOn? fxOn = null)
     {
         var ordered = movements.OrderBy(movement => movement.Date).ThenBy(movement => movement.Sequence).ToList();
         var subs = ordered.Select(movement => movement.SubPortfolioId).Distinct().ToList();
@@ -25,7 +26,11 @@ public static class ValuationCalculator
 
             foreach (var sub in subs)
             {
-                var (value, cash, cost) = book.ValuationOf(sub, day);
+                var valuation = book.ValuationOf(sub, day);
+                if (valuation.IsFailure)
+                    return valuation.Error;
+
+                var (value, cash, cost) = valuation.Value;
 
                 account.Add(value, cash, cost);
                 snapshots.Add(chains[sub].Next(day, sub, value, cash, flows.OfSub[sub], cost));
@@ -36,6 +41,8 @@ public static class ValuationCalculator
 
         return snapshots;
     }
+
+    private sealed record SubValuation(decimal Value, decimal Cash, decimal Cost);
 
     private sealed class DayFlows(List<Guid> subs)
     {
@@ -85,19 +92,37 @@ public static class ValuationCalculator
             flows.AddExternal(movement.SubPortfolioId, movement.ExternalFlow);
         }
 
-        public (decimal Value, decimal Cash, decimal Cost) ValuationOf(Guid sub, DateOnly day)
+        public Result<SubValuation> ValuationOf(Guid sub, DateOnly day)
         {
-            var foreignInAccountCurrency = _foreign
-                .Where(entry => entry.Key.Sub == sub && entry.Value != 0m)
-                .Sum(entry => entry.Value * Rate(entry.Key.Currency, day));
-            var cash = _cash[sub] + foreignInAccountCurrency;
+            var foreignInAccountCurrency = ForeignCashOf(sub, day);
+            if (foreignInAccountCurrency.IsFailure)
+                return foreignInAccountCurrency.Error;
 
+            var cash = _cash[sub] + foreignInAccountCurrency.Value;
             var positions = _quantities
                 .Where(entry => entry.Key.Sub == sub && entry.Value != 0m)
                 .Sum(entry => entry.Value * Price(entry.Key.Instrument, day));
 
-            return (cash + positions, cash, _costs.Of(sub));
+            return new SubValuation(cash + positions, cash, _costs.Of(sub));
         }
+
+        private Result<decimal> ForeignCashOf(Guid sub, DateOnly day)
+        {
+            var total = 0m;
+
+            foreach (var (currency, balance) in HeldForeignCash(sub))
+            {
+                if (Rate(currency, day) is not { } rate)
+                    return ValuationErrors.NoExchangeRate(currency, day);
+
+                total += balance * rate;
+            }
+
+            return total;
+        }
+
+        private IEnumerable<(string Currency, decimal Balance)> HeldForeignCash(Guid sub) =>
+            _foreign.Where(entry => entry.Key.Sub == sub && entry.Value != 0m).Select(entry => (entry.Key.Currency, entry.Value));
 
         private void ApplyToPosition(Movement movement, Guid instrument, DateOnly day, DayFlows flows)
         {
@@ -122,12 +147,12 @@ public static class ValuationCalculator
                 _cash[movement.SubPortfolioId] += movement.CashDelta;
         }
 
-        private decimal Rate(string currency, DateOnly day)
+        private decimal? Rate(string currency, DateOnly day)
         {
             if (fxOn?.Invoke(currency, day) is { } rate)
                 _lastRate[currency] = rate;
 
-            return _lastRate.GetValueOrDefault(currency);
+            return _lastRate.TryGetValue(currency, out var known) ? known : null;
         }
 
         private decimal Price(Guid instrument, DateOnly day) => priceOn(instrument, day) ?? _lastTradePrice.GetValueOrDefault(instrument);

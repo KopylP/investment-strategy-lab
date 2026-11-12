@@ -18,7 +18,9 @@ public sealed class ApplyJournalMatchesHandler(JournalOperationsLoader loader, I
         if (linked.IsFailure)
             return linked.Error;
 
-        await reports.SaveChangesAsync(cancellationToken);
+        var saved = await reports.TrySaveChangesAsync(cancellationToken);
+        if (!saved)
+            return ReportErrors.ChangedMeanwhile(reportId);
 
         return matches.Count;
     }

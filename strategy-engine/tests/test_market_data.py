@@ -88,3 +88,112 @@ def test_symbol_info_carries_yahoos_description_when_there_is_one(monkeypatch) -
     }
     assert market_data.symbol_info("XDJE.DE")["description"] is None
     assert market_data.symbol_info("NOPE") is None
+
+
+def _quoted_in(currencies: dict[str, str], asked: list[str] | None = None):
+    def quote_currency(symbol: str) -> str:
+        if asked is not None:
+            asked.append(symbol)
+        if symbol not in currencies:
+            raise market_data.QuoteCurrencyUnknown(symbol)
+        return currencies[symbol]
+
+    return quote_currency
+
+
+def test_london_quotes_in_pence_come_back_in_pounds(monkeypatch) -> None:
+    asked: list[str] = []
+    monkeypatch.setattr(market_data.yf, "download", lambda symbols, **kwargs: _multi_index_download(symbols))
+    monkeypatch.setattr(market_data, "quote_currency", _quoted_in({"VUSA.L": "GBp"}, asked))
+
+    result = market_data.download_quotes(["AAA", "VUSA.L"], date(2026, 10, 1))
+
+    assert list(result["VUSA.L"]["adjusted_close"]) == [0.02, 0.03]
+    assert list(result["VUSA.L"]["close"]) == [0.04, 0.05]
+    assert list(result["VUSA.L"]["high"]) == [0.06, 0.07]
+    assert list(result["VUSA.L"]["low"]) == [0.08, 0.09]
+    assert list(result["VUSA.L"]["open"]) == [0.10, 0.11]
+    assert list(result["AAA"]["close"]) == [3.0, 4.0]
+    assert asked == ["VUSA.L"]
+
+
+def test_a_london_symbol_quoted_in_dollars_keeps_its_prices(monkeypatch) -> None:
+    monkeypatch.setattr(market_data.yf, "download", lambda symbols, **kwargs: _multi_index_download(symbols))
+    monkeypatch.setattr(market_data, "quote_currency", _quoted_in({"CSPX.L": "USD"}))
+
+    result = market_data.download_quotes(["CSPX.L"], date(2026, 10, 1))
+
+    assert list(result["CSPX.L"]["close"]) == [2.0, 3.0]
+
+
+def test_cents_and_agorot_come_back_in_rand_and_shekels(monkeypatch) -> None:
+    monkeypatch.setattr(market_data.yf, "download", lambda symbols, **kwargs: _multi_index_download(symbols))
+    monkeypatch.setattr(market_data, "quote_currency", _quoted_in({"NPN.JO": "ZAc", "TEVA.TA": "ILA"}))
+
+    result = market_data.download_quotes(["NPN.JO", "TEVA.TA"], date(2026, 10, 1))
+
+    assert list(result["NPN.JO"]["close"]) == [0.03, 0.04]
+    assert list(result["TEVA.TA"]["close"]) == [0.04, 0.05]
+
+
+def test_quotes_of_a_london_symbol_whose_quote_currency_is_unknown_are_left_out_rather_than_guessed(monkeypatch) -> None:
+    monkeypatch.setattr(market_data.yf, "download", lambda symbols, **kwargs: _multi_index_download(symbols))
+    monkeypatch.setattr(market_data, "quote_currency", _quoted_in({}))
+
+    result = market_data.download_quotes(["AAA", "VUSA.L"], date(2026, 10, 1))
+
+    assert list(result) == ["AAA"]
+
+
+def test_close_prices_for_the_command_line_are_in_pounds_too(monkeypatch) -> None:
+    monkeypatch.setattr(market_data.yf, "download", lambda tickers, **kwargs: _multi_index_download(tickers))
+    monkeypatch.setattr(market_data, "quote_currency", _quoted_in({"VUSA.L": "GBp"}))
+
+    prices = market_data.download_close_prices(["AAA", "VUSA.L"], period="1y")
+
+    assert list(prices["VUSA.L"]) == [0.04, 0.05]
+    assert list(prices["AAA"]) == [3.0, 4.0]
+
+
+def test_the_quote_currency_comes_from_yahoos_chart_metadata_and_is_asked_once(monkeypatch) -> None:
+    created: list[str] = []
+
+    class FakeTicker:
+        def __init__(self, symbol: str) -> None:
+            created.append(symbol)
+            self.fast_info = {"currency": "GBp"}
+
+    monkeypatch.setattr(market_data.yf, "Ticker", FakeTicker)
+    market_data.quote_currency.cache_clear()
+
+    assert market_data.quote_currency("ISF.L") == "GBp"
+    assert market_data.quote_currency("ISF.L") == "GBp"
+    assert created == ["ISF.L"]
+    market_data.quote_currency.cache_clear()
+
+
+def test_an_unanswered_quote_currency_is_unknown_and_asked_again_next_time(monkeypatch) -> None:
+    class SilentTicker:
+        def __init__(self, symbol: str) -> None:
+            self.fast_info = {"currency": None}
+
+    monkeypatch.setattr(market_data.yf, "Ticker", SilentTicker)
+    market_data.quote_currency.cache_clear()
+
+    for _ in range(2):
+        try:
+            market_data.quote_currency("ISF.L")
+            raise AssertionError("an unknown quote currency must not pass")
+        except market_data.QuoteCurrencyUnknown:
+            pass
+    assert market_data.quote_currency.cache_info().currsize == 0
+
+
+def test_a_symbol_quoted_in_pence_is_described_in_pounds(monkeypatch) -> None:
+    class FakeTicker:
+        def __init__(self, symbol: str) -> None:
+            self.info = {"quoteType": "EQUITY", "currency": "GBp", "longName": "Shell plc"}
+
+    monkeypatch.setattr(market_data.yf, "Ticker", FakeTicker)
+
+    assert market_data.symbol_info("SHEL.L")["currency"] == "GBP"

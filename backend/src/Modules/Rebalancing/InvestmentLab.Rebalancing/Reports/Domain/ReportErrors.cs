@@ -20,6 +20,9 @@ public static class ReportErrors
     public static Error OnlyPendingCanBeSkipped(Guid actionId, ActionStatus status) =>
         Error.Conflict("report.action_not_pending", $"Action {actionId} is {status}: only a pending action can be skipped.");
 
+    public static Error ChangedMeanwhile(Guid reportId) =>
+        Error.Conflict("report.changed_meanwhile", $"Report {reportId} was changed by another update at the same time; nothing was saved.");
+
     public static Error NothingToUndo(Guid actionId) => Error.Conflict("report.nothing_to_undo", $"Action {actionId} has no mark to undo.");
 
     public static Error PartialFillNotSupported(ActionKind kind) =>

@@ -4,8 +4,6 @@ namespace InvestmentLab.Performance.Valuation.Application.Shared;
 
 public sealed record DashboardSummary(DashboardDto Dashboard, DateOnly Start, Snapshot? Before)
 {
-    private const decimal DaysInYear = 365.25m;
-
     public static DashboardDto Empty(Guid? accountId, string currency, string period, IReadOnlyList<ReportMarkerDto> reports) => new(
         AccountId: accountId,
         Currency: currency,
@@ -47,7 +45,7 @@ public sealed record DashboardSummary(DashboardDto Dashboard, DateOnly Start, Sn
             NetContributions: last.NetContributions,
             Gain: last.Value - last.NetContributions,
             Twr: twr,
-            TwrAnnualized: Annualized(twr, last.Date, before?.Date ?? history[0].Date),
+            TwrAnnualized: Annualized(twr, before?.Date ?? history[0].Date, last.Date),
             Xirr: XirrOf(window, before, last),
             MaxDrawdown: drawdown.Max,
             CurrentDrawdown: drawdown.Current,
@@ -62,14 +60,8 @@ public sealed record DashboardSummary(DashboardDto Dashboard, DateOnly Start, Sn
         return new DashboardSummary(dashboard, start, before);
     }
 
-    private static decimal? Annualized(decimal? twr, DateOnly end, DateOnly start)
-    {
-        var years = (end.DayNumber - start.DayNumber) / DaysInYear;
-        if (twr is null || years < 1m)
-            return null;
-
-        return (decimal)Math.Pow((double)(1m + twr.Value), (double)(1m / years)) - 1m;
-    }
+    private static decimal? Annualized(decimal? twr, DateOnly start, DateOnly end) =>
+        twr is null ? null : AnnualizedReturn.Of(twr.Value, start, end);
 
     private static decimal? XirrOf(List<Snapshot> window, Snapshot? before, Snapshot last)
     {

@@ -15,4 +15,6 @@ public interface IReportRepository
     void Add(RebalancingReport report);
 
     Task SaveChangesAsync(CancellationToken cancellationToken);
+
+    Task<bool> TrySaveChangesAsync(CancellationToken cancellationToken);
 }

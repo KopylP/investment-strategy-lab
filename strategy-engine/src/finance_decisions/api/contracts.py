@@ -392,6 +392,8 @@ class PricesRequest(ApiModel):
 
 
 class QuoteSeries(ApiModel):
+    """Daily prices in the major unit of the symbol's currency (pounds, not pence)."""
+
     symbol: str
     dates: list[date]
     open: list[float | None]
@@ -418,6 +420,8 @@ class SymbolLookupRequest(ApiModel):
 
 
 class SymbolInfo(ApiModel):
+    """``currency`` is the ISO 4217 code of the major unit the symbol's prices are given in (``GBP``, never ``GBp``)."""
+
     symbol: str
     name: str
     currency: str
@@ -480,6 +484,8 @@ class FundScreenRequest(ApiModel):
 
 
 class ScreenedFund(ApiModel):
+    """``currency`` is an ISO 4217 code of a major unit (``GBP``, never ``GBp``)."""
+
     symbol: str
     name: str
     currency: str | None = None

@@ -41,13 +41,13 @@ internal sealed class OutboxDispatcher(
         while (await WaitForNextTickAsync(timer, stoppingToken));
     }
 
-    private async Task<int> DispatchBatchAsync(ModuleDbContextType context, CancellationToken stoppingToken)
+    internal async Task<int> DispatchBatchAsync(ModuleDbContextType context, CancellationToken stoppingToken)
     {
         await using var scope = scopes.CreateAsyncScope();
         var dbContext = (DbContext)scope.ServiceProvider.GetRequiredService(context.ContextType);
 
         var pending = await dbContext.Set<OutboxMessage>()
-            .Where(message => message.ProcessedAt == null && message.Attempts < OutboxMessage.MaxAttempts)
+            .Where(OutboxMessage.DueAt(clock.GetUtcNow()))
             .OrderBy(message => message.OccurredAt)
             .Take(BatchSize)
             .ToListAsync(stoppingToken);
@@ -78,9 +78,33 @@ internal sealed class OutboxDispatcher(
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            logger.LogWarning(exception, "Delivery of {EventType} {MessageId} failed", message.Type, message.Id);
-            message.RecordFailure(exception.Message);
+            message.RecordFailure(exception.Message, clock.GetUtcNow());
+            ReportFailure(message, exception);
         }
+    }
+
+    private void ReportFailure(OutboxMessage message, Exception exception)
+    {
+        if (message.IsAbandoned)
+        {
+            logger.LogError(
+                exception,
+                "Delivery of {EventType} {MessageId} failed {Attempts} times and is given up",
+                message.Type,
+                message.Id,
+                message.Attempts);
+
+            return;
+        }
+
+        logger.LogWarning(
+            exception,
+            "Delivery of {EventType} {MessageId} failed, attempt {Attempts} of {MaxAttempts}, next at {NextAttemptAt:O}",
+            message.Type,
+            message.Id,
+            message.Attempts,
+            OutboxMessage.MaxAttempts,
+            message.NextAttemptAt);
     }
 
     private static async Task<bool> WaitForNextTickAsync(PeriodicTimer timer, CancellationToken stoppingToken)

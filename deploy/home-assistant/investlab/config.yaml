@@ -11,6 +11,8 @@ arch:
 init: false
 startup: application
 boot: auto
+# A backup copies /data, which holds the live PostgreSQL cluster: the Supervisor stops the add-on first (ADR-0030).
+backup: cold
 # Only the sidebar panel: the Supervisor proxies it to 8098 behind Home Assistant's login and HTTPS. No published port.
 ingress: true
 ingress_port: 8098

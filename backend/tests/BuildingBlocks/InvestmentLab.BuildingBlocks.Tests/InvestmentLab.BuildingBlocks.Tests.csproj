@@ -4,6 +4,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="../../../src/BuildingBlocks/InvestmentLab.BuildingBlocks/InvestmentLab.BuildingBlocks.csproj" />
   </ItemGroup>
 </Project>

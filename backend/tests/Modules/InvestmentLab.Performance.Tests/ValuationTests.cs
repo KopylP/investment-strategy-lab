@@ -15,7 +15,7 @@ public sealed class ValuationTests
             new Movement(D1, 1, Sleeve, null, 0m, 1000m, 1000m),
             new Movement(D1, 2, Sleeve, Etf, 10m, -1000m, 0m, TradePrice: 100m),
             new Movement(D3, 3, Sleeve, null, 0m, 1100m, 1100m),
-        ], [D1, D2, D3], (_, day) => prices[day]);
+        ], [D1, D2, D3], (_, day) => prices[day]).Value;
 
         var account = snapshots.Where(snapshot => snapshot.SubPortfolioId is null).ToList();
         account.Select(snapshot => snapshot.Value).ShouldBe([1000m, 1100m, 2310m]);
@@ -32,7 +32,7 @@ public sealed class ValuationTests
             new Movement(D1, 2, Sleeve, Etf, 10m, -1010m, 0m, TradePrice: 100m, UnitCost: 101m),
             new Movement(D2, 3, Sleeve, Etf, 10m, -1200m, 0m, TradePrice: 120m),
             new Movement(D3, 4, Sleeve, Etf, -15m, 2100m, 0m, TradePrice: 140m),
-        ], [D1, D2, D3], (_, _) => 140m);
+        ], [D1, D2, D3], (_, _) => 140m).Value;
 
         var account = snapshots.Where(snapshot => snapshot.SubPortfolioId is null).ToList();
         account.Select(snapshot => snapshot.CostBasis).ShouldBe([1010m, 2210m, 600m]);
@@ -47,7 +47,7 @@ public sealed class ValuationTests
             new Movement(D1, 2, Sleeve, Etf, 10m, -2000m, 0m, TradePrice: 200m),
             new Movement(D2, 3, Sleeve, Etf, -15m, 0m, 0m, TransferQuantity: -15m),
             new Movement(D2, 4, Other, Etf, 15m, 0m, 0m, TransferQuantity: 15m),
-        ], [D1, D2], (_, _) => 200m);
+        ], [D1, D2], (_, _) => 200m).Value;
 
         var last = snapshots.Where(snapshot => snapshot.Date == D2).ToList();
         last.Single(snapshot => snapshot.SubPortfolioId == Sleeve).CostBasis.ShouldBe(1000m);
@@ -61,13 +61,59 @@ public sealed class ValuationTests
         var rates = new Dictionary<DateOnly, decimal> { [D1] = 0.90m, [D2] = 0.90m, [D3] = 0.85m };
         var snapshots = ValuationCalculator.Build([
             new Movement(D1, 1, Sleeve, null, 0m, 100m, 90m, CashCurrency: "USD"),
-        ], [D1, D2, D3], (_, _) => null, (currency, day) => currency == "USD" ? rates[day] : null);
+        ], [D1, D2, D3], (_, _) => null, (currency, day) => currency == "USD" ? rates[day] : null).Value;
 
         var account = snapshots.Where(snapshot => snapshot.SubPortfolioId is null).ToList();
         account.Select(snapshot => snapshot.Value).ShouldBe([90m, 90m, 85m]);
         account.Select(snapshot => snapshot.Cash).ShouldBe([90m, 90m, 85m]);
         account[2].NetContributions.ShouldBe(90m);
         account[2].TwrIndex.ShouldBe(0.94444444m);
+    }
+
+    [Fact]
+    public void A_day_without_a_new_rate_keeps_the_last_known_rate()
+    {
+        var snapshots = ValuationCalculator.Build([
+            new Movement(D1, 1, Sleeve, null, 0m, 100m, 90m, CashCurrency: "USD"),
+        ], [D1, D2, D3], (_, _) => null, (_, day) => day == D1 ? 0.90m : null).Value;
+
+        var account = snapshots.Where(snapshot => snapshot.SubPortfolioId is null).ToList();
+        account.Select(snapshot => snapshot.Value).ShouldBe([90m, 90m, 90m]);
+    }
+
+    [Fact]
+    public void Foreign_cash_without_any_known_rate_is_not_valued_at_zero_but_names_the_currency_and_the_day()
+    {
+        var valued = ValuationCalculator.Build([
+            new Movement(D1, 1, Sleeve, null, 0m, 1000m, 1000m),
+            new Movement(D2, 2, Sleeve, null, 0m, 100m, 90m, CashCurrency: "CHF"),
+        ], [D1, D2, D3], (_, _) => null, (_, _) => null);
+
+        valued.IsFailure.ShouldBeTrue();
+        valued.Error.Code.ShouldBe("valuation.no_exchange_rate");
+        valued.Error.AsMessage().ShouldContain("\"currency\":\"CHF\"");
+        valued.Error.AsMessage().ShouldContain("\"day\":\"2026-01-06\"");
+    }
+
+    [Fact]
+    public void A_currency_that_was_spent_to_zero_needs_no_rate()
+    {
+        var valued = ValuationCalculator.Build([
+            new Movement(D1, 1, Sleeve, null, 0m, 100m, 90m, CashCurrency: "CHF"),
+            new Movement(D1, 2, Sleeve, null, 0m, -100m, -90m, CashCurrency: "CHF"),
+        ], [D1, D2], (_, _) => null, (_, _) => null);
+
+        valued.IsSuccess.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Foreign_cash_held_before_the_first_known_rate_is_an_error_for_that_day()
+    {
+        var valued = ValuationCalculator.Build([
+            new Movement(D1, 1, Sleeve, null, 0m, 100m, 90m, CashCurrency: "USD"),
+        ], [D1, D2, D3], (_, _) => null, (_, day) => day >= D2 ? 0.90m : null);
+
+        valued.Error.AsMessage().ShouldContain("\"day\":\"2026-01-05\"");
     }
 
     [Fact]
@@ -78,7 +124,7 @@ public sealed class ValuationTests
             new Movement(D1, 2, Sleeve, Etf, 10m, -1000m, 0m, TradePrice: 100m),
             new Movement(D2, 3, Sleeve, Etf, -5m, 0m, 0m, TransferQuantity: -5m),
             new Movement(D2, 4, Other, Etf, 5m, 0m, 0m, TransferQuantity: 5m),
-        ], [D1, D2], (_, _) => 100m);
+        ], [D1, D2], (_, _) => 100m).Value;
 
         var day2 = snapshots.Where(snapshot => snapshot.Date == D2).ToList();
         day2.Single(s => s.SubPortfolioId == Sleeve).Flow.ShouldBe(-500m);

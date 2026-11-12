@@ -13,8 +13,8 @@ public sealed class CloseReportHandler(IReportRepository reports, TimeProvider c
         if (closed.IsFailure)
             return closed;
 
-        await reports.SaveChangesAsync(cancellationToken);
+        var saved = await reports.TrySaveChangesAsync(cancellationToken);
 
-        return Result.Success();
+        return saved ? Result.Success() : ReportErrors.ChangedMeanwhile(reportId);
     }
 }

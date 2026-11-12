@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
+from functools import cache
+import logging
 import math
 import unicodedata
 from typing import TYPE_CHECKING
@@ -14,6 +16,48 @@ import yfinance as yf
 BENCHMARK_SYMBOL = "SPY"
 VOLATILITY_INDEX_SYMBOL = "^VIX"
 MARKET_SYMBOLS = (BENCHMARK_SYMBOL, VOLATILITY_INDEX_SYMBOL)
+
+# Yahoo quotes some exchanges in the minor unit of a currency and names it with a code of its own: pence, cents, agorot.
+# Everything this module returns is in the major unit with the ISO 4217 code.
+MAJOR_CURRENCY_OF_MINOR_UNIT = {"GBp": "GBP", "ZAc": "ZAR", "ILA": "ILS"}
+MINOR_UNITS_PER_MAJOR = 100
+# London (also its international order book), Johannesburg and Tel Aviv: the only exchanges Yahoo quotes in minor units.
+# A symbol of any other exchange is never asked for its quote currency, so nightly quotes need no extra request for it.
+MINOR_UNIT_EXCHANGE_SUFFIXES = (".L", ".IL", ".JO", ".TA")
+
+logger = logging.getLogger(__name__)
+
+
+class QuoteCurrencyUnknown(LookupError):
+    pass
+
+
+def major_currency(currency: str) -> str:
+    return MAJOR_CURRENCY_OF_MINOR_UNIT.get(currency, currency.upper())
+
+
+def quoted_units_per_major(symbol: str) -> int:
+    """How many of the units Yahoo quotes the symbol in make one major unit of its currency: 100 for pence, else 1.
+
+    Raises ``QuoteCurrencyUnknown`` when the symbol may be quoted in a minor unit and Yahoo does not say which.
+    """
+    if not symbol.upper().endswith(MINOR_UNIT_EXCHANGE_SUFFIXES):
+        return 1
+    if quote_currency(symbol) in MAJOR_CURRENCY_OF_MINOR_UNIT:
+        return MINOR_UNITS_PER_MAJOR
+    return 1
+
+
+@cache
+def quote_currency(symbol: str) -> str:
+    """The currency Yahoo quotes the symbol's prices in, as Yahoo writes it (``GBp`` for pence); asked once per process."""
+    try:
+        currency = yf.Ticker(symbol).fast_info["currency"]
+    except Exception as error:
+        raise QuoteCurrencyUnknown(symbol) from error
+    if not currency:
+        raise QuoteCurrencyUnknown(symbol)
+    return str(currency)
 
 
 def ticker_currency(ticker: str) -> str:
@@ -51,14 +95,25 @@ def download_close_prices(tickers: list[str], period: str) -> pd.DataFrame:
     else:
         prices = raw[["Close"]].rename(columns={"Close": tickers[0]})
 
-    return prices.dropna(how="all")
+    return _in_major_units(prices).dropna(how="all")
+
+
+def _in_major_units(prices: pd.DataFrame) -> pd.DataFrame:
+    scaled = {}
+    for symbol in prices.columns:
+        try:
+            scaled[symbol] = prices[symbol] / quoted_units_per_major(str(symbol))
+        except QuoteCurrencyUnknown:
+            logger.warning("Prices of %s are left out: the currency they are quoted in is unknown", symbol)
+    return pd.DataFrame(scaled, index=prices.index)
 
 
 
 def download_quotes(symbols: list[str], start: date, end: date | None = None) -> dict[str, pd.DataFrame]:
-    """Daily ``open``, ``high``, ``low``, ``close`` and ``adjusted_close`` per symbol from ``start`` to ``end`` (inclusive).
+    """Daily ``open``, ``high``, ``low``, ``close`` and ``adjusted_close`` per symbol from ``start`` to ``end`` (inclusive),
+    in the major unit of the symbol's currency (pounds, not pence).
 
-    Symbols without data are left out of the result.
+    Symbols without data, or whose quote currency Yahoo does not tell, are left out of the result.
     """
     if not symbols:
         return {}
@@ -91,9 +146,15 @@ def download_quotes(symbols: list[str], start: date, end: date | None = None) ->
                 "adjusted_close": adjusted,
             }
         ).dropna(how="all")
-        if not frame.empty:
-            frame.index = pd.DatetimeIndex(frame.index).tz_localize(None).normalize()
-            result[symbol] = frame
+        if frame.empty:
+            continue
+        try:
+            frame = frame / quoted_units_per_major(symbol)
+        except QuoteCurrencyUnknown:
+            logger.warning("Quotes of %s are left out: the currency they are quoted in is unknown", symbol)
+            continue
+        frame.index = pd.DatetimeIndex(frame.index).tz_localize(None).normalize()
+        result[symbol] = frame
     return result
 
 
@@ -115,7 +176,7 @@ def symbol_info(symbol: str) -> dict[str, str | None] | None:
         return None
     return {
         "name": info.get("longName") or info.get("shortName") or symbol,
-        "currency": str(info["currency"]),
+        "currency": major_currency(str(info["currency"])),
         "quote_type": str(info["quoteType"]),
         # As Yahoo writes it (English); funds listed in Europe often have none.
         "description": (str(info.get("longBusinessSummary") or "").strip() or None),
@@ -157,7 +218,7 @@ def _screened_fund(quote: dict) -> dict:
     return {
         "symbol": symbol,
         "name": quote.get("longName") or quote.get("shortName") or symbol,
-        "currency": quote.get("currency"),
+        "currency": major_currency(str(quote["currency"])) if quote.get("currency") else None,
         "exchange": quote.get("fullExchangeName") or quote.get("exchange"),
         "fund_family": quote.get("fundFamily") or quote.get("fundfamilyname"),
         "total_assets": _finite_figure(quote.get("netAssets")),

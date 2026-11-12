@@ -122,6 +122,9 @@ export class OverviewStore {
   });
   readonly isLoading = this.dashboardResource.isLoading;
   readonly loadError = this.dashboardResource.error;
+  readonly loadErrorMessage = computed(() =>
+    this.dashboardResource.error() ? toProblemMessage(this.dashboardResource.error()) : null,
+  );
   readonly gainPct = computed(() => {
     const d = this.dashboard();
 

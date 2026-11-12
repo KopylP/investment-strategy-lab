@@ -12,7 +12,9 @@ internal sealed class ValuationHistory(IPerformanceRepository store, SnapshotBui
         DateOnly from,
         CancellationToken cancellationToken)
     {
-        await builder.EnsureFreshAsync(accountId, cancellationToken);
+        var refreshed = await builder.EnsureFreshAsync(accountId, cancellationToken);
+        if (refreshed.IsFailure)
+            return [];
 
         var snapshots = await store.SnapshotsAsync(accountId, SnapshotScenario.Actual, from, cancellationToken);
 

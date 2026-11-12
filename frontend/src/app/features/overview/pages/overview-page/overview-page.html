@@ -106,7 +106,7 @@
     <div class="card"><p-skeleton height="20rem" /></div>
   } @else if (store.loadError()) {
     <div class="card">
-      <p-message severity="error" [text]="'overview.loadFailed' | transloco" />
+      <p-message severity="error" [text]="store.loadErrorMessage() ?? ('overview.loadFailed' | transloco)" />
     </div>
   } @else if (store.dashboard(); as d) {
     @if (!store.hasHistory()) {

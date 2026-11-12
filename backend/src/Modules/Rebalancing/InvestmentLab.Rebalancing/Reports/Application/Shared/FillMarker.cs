@@ -20,9 +20,9 @@ public sealed class FillMarker(IReportRepository reports, TimeProvider clock)
         if (marked.IsFailure)
             return marked.Error;
 
-        await reports.SaveChangesAsync(cancellationToken);
+        var saved = await reports.TrySaveChangesAsync(cancellationToken);
 
-        return Result.Success();
+        return saved ? Result.Success() : ReportErrors.ChangedMeanwhile(reportId);
     }
 
     public static DateOnly DayOf(DateTimeOffset now) => DateOnly.FromDateTime(now.UtcDateTime);

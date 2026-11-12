@@ -95,3 +95,19 @@ def test_results_are_cut_to_the_requested_size(client):
                                       {"nameWords": ["a"] * 6}])
 def test_invalid_limits_are_rejected(client, criteria):
     assert client.post("/v1/funds/screen", json={"region": "us", **criteria}).status_code == 422
+
+
+def test_a_fund_quoted_in_pence_is_listed_in_pounds(monkeypatch):
+    from finance_decisions.api.contracts import FundScreenRequest
+
+    def screen(query, **options):
+        return {"quotes": [
+            {"symbol": "VUSA.L", "longName": "Vanguard S&P 500", "currency": "GBp", "netAssets": 2e9},
+            {"symbol": "CSPX.L", "longName": "iShares Core S&P 500", "currency": "USD", "netAssets": 1e9},
+        ]}
+
+    monkeypatch.setattr(market_data.yf, "screen", screen)
+
+    result = market_data.screen_funds(FundScreenRequest(exchange="LSE"))
+
+    assert [fund["currency"] for fund in result] == ["GBP", "USD"]

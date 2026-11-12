@@ -1674,7 +1674,8 @@
           "close",
           "adjustedClose"
         ],
-        "title": "QuoteSeries"
+        "title": "QuoteSeries",
+        "description": "Daily prices in the major unit of the symbol's currency (pounds, not pence)."
       },
       "Rationale": {
         "properties": {
@@ -2075,7 +2076,8 @@
           "symbol",
           "name"
         ],
-        "title": "ScreenedFund"
+        "title": "ScreenedFund",
+        "description": "``currency`` is an ISO 4217 code of a major unit (``GBP``, never ``GBp``)."
       },
       "SeriesRole": {
         "type": "string",
@@ -2409,7 +2411,8 @@
           "currency",
           "quoteType"
         ],
-        "title": "SymbolInfo"
+        "title": "SymbolInfo",
+        "description": "``currency`` is the ISO 4217 code of the major unit the symbol's prices are given in (``GBP``, never ``GBp``)."
       },
       "SymbolLookupRequest": {
         "properties": {

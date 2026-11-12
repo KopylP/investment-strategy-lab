@@ -7,6 +7,8 @@ namespace InvestmentLab.Rebalancing.Reports.Infrastructure;
 
 internal sealed class RebalancingReportConfiguration : IEntityTypeConfiguration<RebalancingReport>
 {
+    private const string ConcurrencyVersion = "Version";
+
     public void Configure(EntityTypeBuilder<RebalancingReport> report)
     {
         report.ToTable("reports");
@@ -25,6 +27,7 @@ internal sealed class RebalancingReportConfiguration : IEntityTypeConfiguration<
         report.Property(r => r.Review).HasJsonConversion();
         report.Property(r => r.TaxEstimate).HasJsonConversion();
         report.Ignore(r => r.Sales);
+        report.Property<uint>(ConcurrencyVersion).IsRowVersion();
         report.HasIndex(r => new { r.AccountId, r.Period });
         report.Ignore(r => r.DomainEvents);
         report.Ignore(r => r.IsOpen);

@@ -39,6 +39,10 @@ namespace InvestmentLab.Portfolio.Shared.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("error");
 
+                    b.Property<DateTimeOffset?>("NextAttemptAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("next_attempt_at");
+
                     b.Property<DateTimeOffset>("OccurredAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("occurred_at");

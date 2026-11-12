@@ -5,7 +5,7 @@ using InvestmentLab.Performance.Valuation.Domain;
 
 namespace InvestmentLab.Performance.Valuation.Application.Shared;
 
-public sealed class PriceBook(IQuoteHistory quotes, IInstrumentCatalog instruments, IFxRates fxRates)
+public sealed class PriceBook(IQuoteHistory quotes, IInstrumentCatalog instruments, IFxRates fxRates, IFxRateBackfill fxBackfill)
 {
     private const int QuoteLookbackDays = 10;
     private const int RateLookbackDays = 15;
@@ -19,7 +19,7 @@ public sealed class PriceBook(IQuoteHistory quotes, IInstrumentCatalog instrumen
     {
         var closes = await ClosesAsync(instrumentIds, from, to, cancellationToken);
         var catalog = (await instruments.GetInstruments(cancellationToken)).ToDictionary(instrument => instrument.Id);
-        var rates = new RateSeries(fxRates, from, to);
+        var rates = new RateSeries(fxRates, fxBackfill, from, to);
         var factors = new Dictionary<Guid, Func<DateOnly, decimal?>>();
 
         foreach (var id in instrumentIds)
@@ -41,7 +41,7 @@ public sealed class PriceBook(IQuoteHistory quotes, IInstrumentCatalog instrumen
         DateOnly to,
         CancellationToken cancellationToken)
     {
-        var rates = new RateSeries(fxRates, from, to);
+        var rates = new RateSeries(fxRates, fxBackfill, from, to);
         var factors = new Dictionary<string, Func<DateOnly, decimal?>>();
 
         foreach (var code in currencies.Distinct())
@@ -73,9 +73,10 @@ public sealed class PriceBook(IQuoteHistory quotes, IInstrumentCatalog instrumen
         return found;
     }
 
-    private sealed class RateSeries(IFxRates fxRates, DateOnly from, DateOnly to)
+    private sealed class RateSeries(IFxRates fxRates, IFxRateBackfill fxBackfill, DateOnly from, DateOnly to)
     {
         private readonly Dictionary<string, List<(DateOnly Date, decimal Value)>> _series = [];
+        private bool _backfilled;
 
         public async Task<Func<DateOnly, decimal?>> FactorAsync(string source, string target, CancellationToken cancellationToken)
         {
@@ -92,9 +93,19 @@ public sealed class PriceBook(IQuoteHistory quotes, IInstrumentCatalog instrumen
             if (_series.TryGetValue(source, out var cached))
                 return cached;
 
+            await EnsureRatesSinceStartAsync(cancellationToken);
             var history = await fxRates.GetCrossRateHistory(source, target, from.AddDays(-RateLookbackDays), to, cancellationToken);
 
             return _series[source] = [.. history.Select(rate => (rate.Date, rate.Rate))];
+        }
+
+        private async Task EnsureRatesSinceStartAsync(CancellationToken cancellationToken)
+        {
+            if (_backfilled)
+                return;
+
+            await fxBackfill.EnsureSinceAsync(from, cancellationToken);
+            _backfilled = true;
         }
     }
 }
