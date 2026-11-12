@@ -1,6 +1,6 @@
 namespace InvestmentLab.Performance.Valuation.Domain;
 
-public sealed class RecalculationMarker
+public sealed class RecalculationMarker : IUserOwned
 {
     public Guid AccountId { get; private set; }
     public UserId OwnerId { get; private set; }

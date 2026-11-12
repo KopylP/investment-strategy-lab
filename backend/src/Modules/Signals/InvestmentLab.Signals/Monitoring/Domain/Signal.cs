@@ -1,6 +1,6 @@
 namespace InvestmentLab.Signals.Monitoring.Domain;
 
-public sealed class Signal : AggregateRoot<Guid>
+public sealed class Signal : AggregateRoot<Guid>, IUserOwned
 {
     public const int MaxNameLength = 100;
 

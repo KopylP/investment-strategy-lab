@@ -1,6 +1,6 @@
 namespace InvestmentLab.Portfolio.Accounts.Domain;
 
-public sealed class InvestmentAccount : AggregateRoot<AccountId>
+public sealed class InvestmentAccount : AggregateRoot<AccountId>, IUserOwned
 {
     private static readonly Currency[] BaseCurrencies = [Currency.EUR, Currency.USD];
 

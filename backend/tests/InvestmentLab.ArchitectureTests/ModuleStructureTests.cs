@@ -20,11 +20,11 @@ public sealed class ModuleStructureTests
     }
 
     [Fact]
-    public void Module_roots_hold_only_the_module_file()
+    public void Module_roots_hold_only_the_module_file_and_the_assembly_marker()
     {
         var looseFiles = ModuleProjects()
             .SelectMany(project => Directory.GetFiles(project, "*.cs"))
-            .Where(file => !Path.GetFileName(file).EndsWith("Module.cs", StringComparison.Ordinal));
+            .Where(file => !IsModuleOrMarkerFile(file));
 
         looseFiles.ShouldBeEmpty();
     }
@@ -51,6 +51,13 @@ public sealed class ModuleStructureTests
             .Select(type => type.FullName);
 
         misplaced.ShouldBeEmpty();
+    }
+
+    private static bool IsModuleOrMarkerFile(string file)
+    {
+        var name = Path.GetFileName(file);
+
+        return name.EndsWith("AssemblyMarker.cs", StringComparison.Ordinal) || name.EndsWith("Module.cs", StringComparison.Ordinal);
     }
 
     private static bool IsRepositoryInterface(Type type) =>

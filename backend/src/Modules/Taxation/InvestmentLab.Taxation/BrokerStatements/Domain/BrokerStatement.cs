@@ -1,6 +1,6 @@
 namespace InvestmentLab.Taxation.BrokerStatements.Domain;
 
-public sealed class BrokerStatement
+public sealed class BrokerStatement : IUserOwned
 {
     public Guid Id { get; private set; }
     public Guid AccountId { get; private set; }

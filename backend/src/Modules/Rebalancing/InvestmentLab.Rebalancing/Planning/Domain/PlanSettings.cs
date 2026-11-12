@@ -2,7 +2,7 @@ using InvestmentLab.Rebalancing.Planning.Application.Shared;
 
 namespace InvestmentLab.Rebalancing.Planning.Domain;
 
-public sealed class PlanSettings : AggregateRoot<Guid>
+public sealed class PlanSettings : AggregateRoot<Guid>, IUserOwned
 {
     public UserId OwnerId { get; private set; }
     public decimal MonthlyContribution { get; private set; }

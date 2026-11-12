@@ -2,7 +2,7 @@ using InvestmentLab.Rebalancing.Reviews.Domain;
 
 namespace InvestmentLab.Rebalancing.Reports.Domain;
 
-public sealed class RebalancingReport : AggregateRoot<ReportId>
+public sealed class RebalancingReport : AggregateRoot<ReportId>, IUserOwned
 {
     private readonly List<ReportAction> _actions = [];
 

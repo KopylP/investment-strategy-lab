@@ -1,10 +1,10 @@
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text.Json;
 using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.SharedKernel;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InvestmentLab.BuildingBlocks.Persistence;
 
@@ -23,17 +23,27 @@ public abstract class ModuleDbContext(DbContextOptions options) : DbContext(opti
     protected bool HasCurrentUser => CurrentUser?.Id is not null;
     protected UserId CurrentOwner => CurrentUser?.Id ?? Nobody;
 
-    public void HasOwnerFilter<TEntity>(EntityTypeBuilder<TEntity> entity, Expression<Func<TEntity, UserId>> owner)
-        where TEntity : class
+    protected abstract Assembly MappingsAssembly { get; }
+
+    private LambdaExpression OwnerVisibility(Type entityType)
     {
+        var entity = Expression.Parameter(entityType, "entity");
+        var owner = Expression.Property(entity, nameof(IUserOwned.OwnerId));
         var context = Expression.Constant(this, typeof(ModuleDbContext));
         var visible = Expression.OrElse(
             Expression.Not(Expression.Property(context, nameof(HasCurrentUser))),
-            Expression.Equal(owner.Body, Expression.Property(context, nameof(CurrentOwner))));
-        entity.HasQueryFilter(OwnerFilter, Expression.Lambda<Func<TEntity, bool>>(visible, owner.Parameters[0]));
+            Expression.Equal(owner, Expression.Property(context, nameof(CurrentOwner))));
+
+        return Expression.Lambda(visible, entity);
     }
 
-    protected abstract void OnModuleModelCreating(ModelBuilder modelBuilder);
+    private void FilterByOwner(ModelBuilder modelBuilder)
+    {
+        var owned = modelBuilder.Model.GetEntityTypes().Where(entity => entity.ClrType.IsAssignableTo(typeof(IUserOwned)));
+
+        foreach (var entityType in owned)
+            modelBuilder.Entity(entityType.ClrType).HasQueryFilter(OwnerFilter, OwnerVisibility(entityType.ClrType));
+    }
 
     public void Record(IDomainEvent domainEvent) => _eventsWithoutAggregate.Add(domainEvent);
 
@@ -63,7 +73,8 @@ public abstract class ModuleDbContext(DbContextOptions options) : DbContext(opti
             outbox.HasIndex(message => message.OccurredAt).HasFilter("processed_at IS NULL");
         });
 
-        OnModuleModelCreating(modelBuilder);
+        modelBuilder.ApplyConfigurationsFromAssembly(MappingsAssembly);
+        FilterByOwner(modelBuilder);
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

@@ -1,6 +1,6 @@
 namespace InvestmentLab.Rebalancing.Planning.Domain;
 
-public sealed class SignalReportRule : AggregateRoot<Guid>
+public sealed class SignalReportRule : AggregateRoot<Guid>, IUserOwned
 {
     public UserId OwnerId { get; private set; }
     public Guid SignalId { get; private set; }

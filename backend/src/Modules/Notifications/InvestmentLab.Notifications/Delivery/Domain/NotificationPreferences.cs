@@ -1,6 +1,6 @@
 namespace InvestmentLab.Notifications.Delivery.Domain;
 
-public sealed class NotificationPreferences : AggregateRoot<Guid>
+public sealed class NotificationPreferences : AggregateRoot<Guid>, IUserOwned
 {
     public UserId OwnerId { get; private set; }
 

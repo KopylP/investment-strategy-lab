@@ -1,6 +1,6 @@
 namespace InvestmentLab.Taxation.Assessments.Domain;
 
-public sealed class TaxAssessment : AggregateRoot<Guid>
+public sealed class TaxAssessment : AggregateRoot<Guid>, IUserOwned
 {
     public UserId OwnerId { get; private set; }
     public int Year { get; private set; }

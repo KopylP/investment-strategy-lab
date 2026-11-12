@@ -1,6 +1,6 @@
 namespace InvestmentLab.Backtesting.Replays.Domain;
 
-public sealed class Backtest : AggregateRoot<Guid>
+public sealed class Backtest : AggregateRoot<Guid>, IUserOwned
 {
     private static readonly TimeSpan SuccessFreshFor = TimeSpan.FromDays(32);
     private static readonly TimeSpan FailureRetriedAfter = TimeSpan.FromDays(1);

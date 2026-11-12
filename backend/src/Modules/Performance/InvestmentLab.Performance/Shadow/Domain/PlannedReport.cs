@@ -2,7 +2,7 @@ using InvestmentLab.Performance.Valuation.Domain;
 
 namespace InvestmentLab.Performance.Shadow.Domain;
 
-public sealed class PlannedReport
+public sealed class PlannedReport : IUserOwned
 {
     public Guid ReportId { get; private set; }
     public Guid AccountId { get; private set; }

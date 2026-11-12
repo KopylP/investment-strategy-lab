@@ -2,7 +2,7 @@ using InvestmentLab.StrategyBuilder.Trials.Domain;
 
 namespace InvestmentLab.StrategyBuilder.Drafts.Domain;
 
-public sealed class StrategyDraft : AggregateRoot<Guid>
+public sealed class StrategyDraft : AggregateRoot<Guid>, IUserOwned
 {
     public UserId OwnerId { get; private set; }
 

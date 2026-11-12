@@ -2,7 +2,7 @@ using InvestmentLab.Portfolio.Accounts.Domain;
 
 namespace InvestmentLab.Portfolio.Transactions.Domain;
 
-public sealed class StatementImport
+public sealed class StatementImport : IUserOwned
 {
     public Guid Id { get; private set; }
     public AccountId AccountId { get; private set; }

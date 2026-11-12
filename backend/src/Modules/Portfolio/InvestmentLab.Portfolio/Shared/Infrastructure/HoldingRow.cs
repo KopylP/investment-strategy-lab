@@ -6,7 +6,7 @@ using InvestmentLab.Portfolio.Transactions.Domain;
 
 namespace InvestmentLab.Portfolio.Shared.Infrastructure;
 
-public sealed class HoldingRow
+public sealed class HoldingRow : IUserOwned
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 

@@ -1,6 +1,6 @@
 namespace InvestmentLab.Taxation.Ledger.Domain;
 
-public sealed class TaxAccount
+public sealed class TaxAccount : IUserOwned
 {
     public Guid AccountId { get; private set; }
     public UserId OwnerId { get; private set; }

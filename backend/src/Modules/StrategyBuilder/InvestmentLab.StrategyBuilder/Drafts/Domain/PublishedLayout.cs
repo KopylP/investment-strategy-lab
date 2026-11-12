@@ -1,6 +1,6 @@
 namespace InvestmentLab.StrategyBuilder.Drafts.Domain;
 
-public sealed class PublishedLayout : AggregateRoot<Guid>
+public sealed class PublishedLayout : AggregateRoot<Guid>, IUserOwned
 {
     public UserId OwnerId { get; private set; }
     public Guid StrategyId { get; private set; }
