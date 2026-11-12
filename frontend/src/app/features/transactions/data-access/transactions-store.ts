@@ -357,12 +357,21 @@ function linkReversals(journal: TransactionDto[], entries: TransactionVm[]): Tra
     const original = entriesById.get(originalIdByReversal.get(entry.id) ?? '');
     const reversal = entriesById.get(reversalIdByOriginal.get(entry.id) ?? '');
 
+    const reversalFigures = original ? figuresOfReversal(original) : {};
+
     return {
       ...entry,
+      ...reversalFigures,
       cancels: original ? cancelledOperation(original) : null,
       cancelledBy: reversal ? cancellation(reversal) : null,
     };
   });
+}
+
+function figuresOfReversal(original: TransactionVm): Pick<TransactionVm, 'allocation' | 'amount'> {
+  const amount = original.amount === null ? null : -original.amount;
+
+  return { allocation: original.allocation, amount };
 }
 
 function cancelledOperation(original: TransactionVm): CancelledOperation {
