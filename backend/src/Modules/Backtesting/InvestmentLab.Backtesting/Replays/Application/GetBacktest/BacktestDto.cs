@@ -1,4 +1,4 @@
-using InvestmentLab.Backtesting.Replays.Domain;
+using InvestmentLab.Backtesting.Replays.Application.Shared;
 
 namespace InvestmentLab.Backtesting.Replays.Application.GetBacktest;
 
@@ -9,4 +9,4 @@ public sealed record BacktestDto(
     DateTimeOffset RequestedAt,
     DateTimeOffset? FinishedAt,
     string? FailureReason,
-    ReplayResult? Result);
+    ReplayResultDto? Result);

@@ -22,5 +22,5 @@ public sealed class GetMoneyOutcomesHandler(IBacktestRepository backtests)
     }
 
     private static SeriesMoneyOutcomesDto OutcomesOf(ReplaySeries series, MoneyPlan plan) =>
-        new(series.Code, series.Label, MoneyOutcomes.Of(series.Points, plan));
+        new(series.Code, series.Label, MoneyOutcomeRangeDto.From(MoneyOutcomes.Of(series.Points, plan)));
 }

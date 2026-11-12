@@ -3,25 +3,27 @@ using InvestmentLab.Backtesting.Replays.Domain;
 
 namespace InvestmentLab.Backtesting.Replays.Application.CompareBacktests;
 
-public sealed record CompareBacktestsQuery(BacktestRun First, BacktestRun Second);
+public sealed record CompareBacktestsQuery(BacktestRunDto First, BacktestRunDto Second);
 
-public sealed record BacktestComparisonDto(bool Comparable, string? Reason, BacktestDifference? Difference);
+public sealed record BacktestComparisonDto(bool Comparable, string? Reason, BacktestDifferenceDto? Difference);
 
 public sealed class CompareBacktestsHandler(IBacktestRepository backtests, IExperimentRepository experiments)
 {
     public async Task<Result<BacktestComparisonDto>> Handle(CompareBacktestsQuery query, CancellationToken cancellationToken)
     {
-        var first = await Subject(query.First, cancellationToken);
+        var first = await Subject(query.First.ToDomain(), cancellationToken);
         if (first.IsFailure)
             return first.Error;
 
-        var second = await Subject(query.Second, cancellationToken);
+        var second = await Subject(query.Second.ToDomain(), cancellationToken);
         if (second.IsFailure)
             return second.Error;
 
         var comparison = BacktestComparison.Of(first.Value, second.Value);
 
-        return new BacktestComparisonDto(comparison.Comparable, comparison.Reason, comparison.Difference);
+        var difference = comparison.Difference is { } found ? BacktestDifferenceDto.From(found) : null;
+
+        return new BacktestComparisonDto(comparison.Comparable, comparison.Reason, difference);
     }
 
     private async Task<Result<ComparisonSubject>> Subject(BacktestRun run, CancellationToken cancellationToken)
