@@ -1,5 +1,5 @@
 using InvestmentLab.Portfolio.Accounts.Domain;
-using InvestmentLab.Portfolio.Holdings.Application.GetHoldings;
+using InvestmentLab.Portfolio.Holdings.Application.Shared;
 using InvestmentLab.Portfolio.Holdings.Domain;
 using InvestmentLab.Portfolio.Shared.Infrastructure;
 using InvestmentLab.Portfolio.Transactions.Domain;

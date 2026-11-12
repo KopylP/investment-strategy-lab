@@ -19,6 +19,9 @@ using InvestmentLab.Portfolio.Contracts.Holdings;
 using InvestmentLab.Portfolio.Contracts.Transactions;
 using InvestmentLab.Portfolio.Holdings.Api;
 using InvestmentLab.Portfolio.Holdings.Application.GetHoldings;
+using InvestmentLab.Portfolio.Holdings.Application.GetValuedHoldings;
+using InvestmentLab.Portfolio.Holdings.Application.Shared;
+using InvestmentLab.Portfolio.Holdings.Domain;
 using InvestmentLab.Portfolio.Holdings.Infrastructure;
 using InvestmentLab.Portfolio.Shared.Infrastructure;
 using InvestmentLab.Portfolio.Transactions.Api;
@@ -138,7 +141,10 @@ public sealed class PortfolioModule : IModule
     private static void AddHoldings(IServiceCollection services)
     {
         services.AddScoped<IHoldingsReader, HoldingsReader>();
+        services.AddScoped<IHoldingsMarket, HoldingsMarketData>();
+        services.AddScoped<HoldingsLoader>();
         services.AddScoped<GetHoldingsHandler>();
+        services.AddScoped<GetValuedHoldingsHandler>();
         services.AddScoped<IHoldingsQueries, HoldingsQueries>();
     }
 

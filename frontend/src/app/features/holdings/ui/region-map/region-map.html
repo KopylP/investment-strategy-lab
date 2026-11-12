@@ -44,7 +44,11 @@
   @for (bubble of bubbles(); track bubble.row.key) {
     <div
       class="absolute -translate-x-1/2 text-center text-xs leading-tight whitespace-nowrap pointer-events-none"
-      style="text-shadow: 0 0 2px var(--p-content-background), 0 0 4px var(--p-content-background)"
+      style="
+        text-shadow:
+          0 0 2px var(--p-content-background),
+          0 0 4px var(--p-content-background);
+      "
       [style.left.%]="bubble.leftPercent"
       [style.top.%]="bubble.labelTopPercent"
     >
@@ -56,7 +60,10 @@
   @if (hovered(); as bubble) {
     <div
       class="absolute -translate-x-1/2 -translate-y-full -mt-2 z-10 pointer-events-none rounded-border px-3 py-2 text-sm whitespace-nowrap shadow-md"
-      style="background: var(--p-content-background); border: 1px solid var(--p-content-border-color)"
+      style="
+        background: var(--p-content-background);
+        border: 1px solid var(--p-content-border-color);
+      "
       [style.left.%]="bubble.leftPercent"
       [style.top.%]="bubble.topPercent"
     >

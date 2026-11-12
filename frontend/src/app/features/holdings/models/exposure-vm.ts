@@ -82,7 +82,12 @@ function addTo(buckets: Map<string, Bucket>, key: string, label: string, value: 
 function rowsOf(buckets: Map<string, Bucket>, total: number): ExposureRow[] {
   return [...buckets]
     .filter(([, bucket]) => bucket.value > 0)
-    .map(([key, bucket]) => ({ key, label: bucket.label, value: bucket.value, share: bucket.value / total }))
+    .map(([key, bucket]) => ({
+      key,
+      label: bucket.label,
+      value: bucket.value,
+      share: bucket.value / total,
+    }))
     .sort((left, right) => right.value - left.value);
 }
 
@@ -112,8 +117,16 @@ export function exposureBreakdownsOf(
   for (const part of cashByCurrency) addTo(currencies, part.currency, part.currency, part.value);
 
   return [
-    { title: translate('holdings.exposure.byAssetClass'), view: 'bars', rows: rowsOf(classes, total) },
-    { title: translate('holdings.exposure.byCurrency'), view: 'bars', rows: rowsOf(currencies, total) },
+    {
+      title: translate('holdings.exposure.byAssetClass'),
+      view: 'bars',
+      rows: rowsOf(classes, total),
+    },
+    {
+      title: translate('holdings.exposure.byCurrency'),
+      view: 'bars',
+      rows: rowsOf(currencies, total),
+    },
     { title: translate('holdings.exposure.byRegion'), view: 'map', rows: rowsOf(regions, total) },
   ];
 }

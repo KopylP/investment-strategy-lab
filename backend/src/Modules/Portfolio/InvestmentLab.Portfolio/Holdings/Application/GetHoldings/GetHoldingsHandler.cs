@@ -1,23 +1,18 @@
-using InvestmentLab.Portfolio.Accounts.Domain;
 using InvestmentLab.Portfolio.Contracts.Holdings;
-using InvestmentLab.Portfolio.Holdings.Domain;
-using InvestmentLab.Portfolio.Transactions.Application.Shared;
-using InvestmentLab.Portfolio.Transactions.Domain;
+using InvestmentLab.Portfolio.Holdings.Application.Shared;
 
 namespace InvestmentLab.Portfolio.Holdings.Application.GetHoldings;
 
-public sealed class GetHoldingsHandler(IHoldingsReader reader)
+public sealed class GetHoldingsHandler(HoldingsLoader loader)
 {
     public async Task<Result<AccountHoldingsDto>> Handle(Guid accountId, DateOnly? asOf, CancellationToken cancellationToken)
     {
-        if (accountId == Guid.Empty || await reader.FindAccountAsync(AccountId.Of(accountId), cancellationToken) is not { } account)
-            return AccountErrors.NotFound(accountId);
+        var loaded = await loader.LoadAsync(accountId, asOf, cancellationToken);
+        if (loaded.IsFailure)
+            return loaded.Error;
 
-        if (asOf is null)
-            return (await reader.GetCurrentAsync(account, cancellationToken)).ToDto(account);
+        var (account, holdings) = loaded.Value;
 
-        var projected = HoldingsProjector.Project(account, await reader.GetEntriesAsync(account.Id, cancellationToken), asOf);
-
-        return projected.IsSuccess ? projected.Value.Holdings.ToDto(account) : projected.Error;
+        return holdings.ToDto(account);
     }
 }

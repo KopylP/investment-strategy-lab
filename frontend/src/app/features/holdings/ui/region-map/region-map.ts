@@ -2,7 +2,13 @@ import { ChangeDetectionStrategy, Component, computed, input, signal } from '@an
 import { MoneyPipe, PercentPipe } from '../../../../shared/pipes/format-pipes';
 import { ExposureRow } from '../../models/exposure-vm';
 import { REGION_PLACES, RegionPlace } from './region-places';
-import { LAND_DOT_SPACING, WORLD_HEIGHT, WORLD_LAND_DOTS, WORLD_TOP_LATITUDE, WORLD_WIDTH } from './world-land-dots';
+import {
+  LAND_DOT_SPACING,
+  WORLD_HEIGHT,
+  WORLD_LAND_DOTS,
+  WORLD_TOP_LATITUDE,
+  WORLD_WIDTH,
+} from './world-land-dots';
 
 const LARGEST_RADIUS = 24;
 const SMALLEST_RADIUS = 3;
@@ -36,9 +42,13 @@ export class RegionMap {
   protected readonly dotDash = `0 ${LAND_DOT_SPACING}`;
   protected readonly hovered = signal<RegionBubble | null>(null);
 
-  protected readonly bubbles = computed(() => this.placedRows().map((row) => bubbleOf(row, REGION_PLACES[row.key])));
+  protected readonly bubbles = computed(() =>
+    this.placedRows().map((row) => bubbleOf(row, REGION_PLACES[row.key])),
+  );
 
-  protected readonly unplaced = computed(() => this.rows().filter((row) => !(row.key in REGION_PLACES)));
+  protected readonly unplaced = computed(() =>
+    this.rows().filter((row) => !(row.key in REGION_PLACES)),
+  );
 
   protected readonly summary = computed(() =>
     this.rows()
@@ -46,7 +56,9 @@ export class RegionMap {
       .join(', '),
   );
 
-  private readonly placedRows = computed(() => this.rows().filter((row) => row.key in REGION_PLACES));
+  private readonly placedRows = computed(() =>
+    this.rows().filter((row) => row.key in REGION_PLACES),
+  );
 }
 
 function bubbleOf(row: ExposureRow, place: RegionPlace): RegionBubble {

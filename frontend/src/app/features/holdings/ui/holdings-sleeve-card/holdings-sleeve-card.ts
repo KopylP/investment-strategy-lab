@@ -15,7 +15,7 @@ import {
   SignedPercentPipe,
   DatePipe,
 } from '../../../../shared/pipes/format-pipes';
-import { SleeveVm } from '../../data-access/holdings-store';
+import { SleeveVm } from '../../models/holdings-vm';
 import { HoldingsStore } from '../../data-access/holdings-store';
 import { Viewport } from '../../../../shared/ui/viewport';
 
