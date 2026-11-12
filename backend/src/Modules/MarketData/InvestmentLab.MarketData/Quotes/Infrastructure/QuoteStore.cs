@@ -26,22 +26,11 @@ internal sealed class QuoteStore(MarketDataDbContext db) : IQuoteStore
     public Task<bool> InstrumentExistsAsync(InstrumentId id, CancellationToken cancellationToken) =>
         db.Instruments.AnyAsync(instrument => instrument.Id == id, cancellationToken);
 
-    public async Task<IReadOnlyDictionary<InstrumentId, DateOnly>> FetchStartDatesAsync(CancellationToken cancellationToken)
-    {
-        var starts = await db.DailyQuotes
+    public async Task<IReadOnlyDictionary<InstrumentId, DateOnly>> LastTradingDatesAsync(CancellationToken cancellationToken) =>
+        await db.DailyQuotes
             .GroupBy(quote => quote.InstrumentId)
-            .Select(group => new
-            {
-                InstrumentId = group.Key,
-                Last = group.Max(quote => quote.TradingDate),
-                FirstWithoutRange = group
-                    .Where(quote => quote.Open == null && (quote.QualityFlags & QualityFlags.Corrected) == 0)
-                    .Min(quote => (DateOnly?)quote.TradingDate),
-            })
-            .ToListAsync(cancellationToken);
-
-        return starts.ToDictionary(row => row.InstrumentId, row => row.FirstWithoutRange ?? row.Last);
-    }
+            .Select(group => new { InstrumentId = group.Key, Last = group.Max(quote => quote.TradingDate) })
+            .ToDictionaryAsync(row => row.InstrumentId, row => row.Last, cancellationToken);
 
     public async Task<IReadOnlyDictionary<InstrumentId, FirstStoredQuote>> FirstQuotesAsync(
         IReadOnlyCollection<InstrumentId> instrumentIds, CancellationToken cancellationToken)

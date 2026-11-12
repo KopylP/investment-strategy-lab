@@ -1592,48 +1592,6 @@
             "type": "array",
             "title": "Dates"
           },
-          "open": {
-            "items": {
-              "anyOf": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "type": "array",
-            "title": "Open"
-          },
-          "high": {
-            "items": {
-              "anyOf": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "type": "array",
-            "title": "High"
-          },
-          "low": {
-            "items": {
-              "anyOf": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "type": "array",
-            "title": "Low"
-          },
           "close": {
             "items": {
               "anyOf": [
@@ -1668,9 +1626,6 @@
         "required": [
           "symbol",
           "dates",
-          "open",
-          "high",
-          "low",
           "close",
           "adjustedClose"
         ],

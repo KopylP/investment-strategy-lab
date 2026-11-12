@@ -110,7 +110,7 @@ def _in_major_units(prices: pd.DataFrame) -> pd.DataFrame:
 
 
 def download_quotes(symbols: list[str], start: date, end: date | None = None) -> dict[str, pd.DataFrame]:
-    """Daily ``open``, ``high``, ``low``, ``close`` and ``adjusted_close`` per symbol from ``start`` to ``end`` (inclusive),
+    """Daily ``close`` and ``adjusted_close`` per symbol from ``start`` to ``end`` (inclusive),
     in the major unit of the symbol's currency (pounds, not pence).
 
     Symbols without data, or whose quote currency Yahoo does not tell, are left out of the result.
@@ -137,15 +137,7 @@ def download_quotes(symbols: list[str], start: date, end: date | None = None) ->
         adjusted = _column(raw, "Adj Close", symbol, len(symbols))
         if close is None or adjusted is None:
             continue
-        frame = pd.DataFrame(
-            {
-                "open": _column(raw, "Open", symbol, len(symbols)),
-                "high": _column(raw, "High", symbol, len(symbols)),
-                "low": _column(raw, "Low", symbol, len(symbols)),
-                "close": close,
-                "adjusted_close": adjusted,
-            }
-        ).dropna(how="all")
+        frame = pd.DataFrame({"close": close, "adjusted_close": adjusted}).dropna(how="all")
         if frame.empty:
             continue
         try:

@@ -9,7 +9,7 @@ public interface IQuoteStore
 
     Task<bool> InstrumentExistsAsync(InstrumentId id, CancellationToken cancellationToken);
 
-    Task<IReadOnlyDictionary<InstrumentId, DateOnly>> FetchStartDatesAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyDictionary<InstrumentId, DateOnly>> LastTradingDatesAsync(CancellationToken cancellationToken);
 
     Task<IReadOnlyDictionary<InstrumentId, FirstStoredQuote>> FirstQuotesAsync(IReadOnlyCollection<InstrumentId> instrumentIds, CancellationToken cancellationToken);
 

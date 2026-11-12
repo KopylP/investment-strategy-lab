@@ -211,21 +211,6 @@ namespace InvestmentLab.MarketData.Shared.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("fetched_at");
 
-                    b.Property<decimal?>("High")
-                        .HasPrecision(20, 8)
-                        .HasColumnType("numeric(20,8)")
-                        .HasColumnName("high");
-
-                    b.Property<decimal?>("Low")
-                        .HasPrecision(20, 8)
-                        .HasColumnType("numeric(20,8)")
-                        .HasColumnName("low");
-
-                    b.Property<decimal?>("Open")
-                        .HasPrecision(20, 8)
-                        .HasColumnType("numeric(20,8)")
-                        .HasColumnName("open");
-
                     b.Property<int>("QualityFlags")
                         .HasColumnType("integer")
                         .HasColumnName("quality_flags");

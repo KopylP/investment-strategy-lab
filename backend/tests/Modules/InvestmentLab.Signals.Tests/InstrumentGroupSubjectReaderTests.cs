@@ -73,7 +73,7 @@ public sealed class InstrumentGroupSubjectReaderTests
         {
             var firstDate = lastDate.AddDays(1 - prices.Length);
 
-            return [.. prices.Select((price, index) => new QuotePointDto(firstDate.AddDays(index), null, null, null, price, price, []))];
+            return [.. prices.Select((price, index) => new QuotePointDto(firstDate.AddDays(index), price, price, []))];
         }
     }
 }

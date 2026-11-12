@@ -1,4 +1,4 @@
-"""POST /v1/prices: daily open, high, low and close quotes from Yahoo Finance for the backend's MarketData module."""
+"""POST /v1/prices: daily quotes from Yahoo Finance for the backend's MarketData module."""
 
 from __future__ import annotations
 
@@ -28,9 +28,6 @@ def prices(request: PricesRequest, downloader: Annotated[QuoteDownloader, Depend
         QuoteSeries(
             symbol=symbol,
             dates=[timestamp.date() for timestamp in frames[symbol].index],
-            open=_values(frames[symbol]["open"]),
-            high=_values(frames[symbol]["high"]),
-            low=_values(frames[symbol]["low"]),
             close=_values(frames[symbol]["close"]),
             adjusted_close=_values(frames[symbol]["adjusted_close"]),
         )

@@ -26,7 +26,6 @@ public sealed class MarketDataScenarioTests(MarketDataApiFactory factory) : ICla
         var history = await client.GetFromJsonAsync<QuoteSeriesDto>(
             $"/api/market-data/quotes/{sp500.Id}?from={days[0]:yyyy-MM-dd}&to={days[^1]:yyyy-MM-dd}", ct);
         history!.Points.Select(point => point.Close).ShouldBe([.. Enumerable.Range(100, 15).Select(close => (decimal)close)]);
-        history.Points.ShouldAllBe(point => point.Open == point.Close - 1m && point.High == point.Close + 2m && point.Low == point.Close - 2m);
 
         var correction = await client.PostAsJsonAsync($"/api/market-data/quotes/{sp500.Id}/corrections",
             new { tradingDate = days[^1], close = 120m, reason = "Broker statement shows 120" }, ct);
