@@ -35,7 +35,8 @@ public sealed class StatementImportScenarioTests(MarketDataApiFactory factory) :
         var sxr8 = preview.Mappings.Single(mapping => mapping.Ticker == "SXR8");
         sxr8.InstrumentId.ShouldNotBeNull();
         preview.Mappings.Single(mapping => mapping.Ticker == "AAPL").InstrumentName.ShouldBe("Apple");
-        preview.Counts.NeedsMapping.ShouldBe(3);
+        preview.Counts.NeedsMapping.ShouldBe(0);
+        preview.Mappings.ShouldAllBe(mapping => mapping.SubPortfolioId != null);
 
         var configured = await SendAsync(client, HttpMethod.Put, $"{url}/{preview.Id}", new
         {
