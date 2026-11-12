@@ -6,4 +6,5 @@ public sealed record Notification(
     string Tag,
     string Title,
     string Message,
+    string Page,
     IReadOnlyDictionary<string, object?> Data);

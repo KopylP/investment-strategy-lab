@@ -64,8 +64,9 @@ export Kestrel__Endpoints__Ingress__Url="http://*:8098"
 export HomeAssistant__IngressPort=8098
 export HomeAssistant__IngressOnly="${HomeAssistant__IngressOnly:-true}"
 # Notifications go to Home Assistant with the SUPERVISOR_TOKEN the Supervisor passes in (homeassistant_api). The panel
-# lives at /hassio/ingress/<slug>; the container's hostname is the slug with "-" for "_" (local_investlab -> local-investlab).
-export Notifications__HomeAssistant__PanelPath="/hassio/ingress/${HOSTNAME/-/_}"
+# is the sidebar entry at /<slug> (a page of the app follows it: /<slug>/reports/<id>); the container's hostname is the slug
+# with "-" for "_" (8e007b8c_investlab -> 8e007b8c-investlab).
+export Notifications__HomeAssistant__PanelPath="/${HOSTNAME/-/_}"
 
 # --- MCP: off unless the option is on ---------------------------------------------------------------------------
 # The integration in Home Assistant forwards /api/investlab/mcp here; the API trusts only Home Assistant's own answer

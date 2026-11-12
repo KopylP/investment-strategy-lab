@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { DOCUMENT } from '@angular/common';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { ApiClient } from '../api/api-client';
+import { isInHomeAssistantPanel } from '../home-assistant/home-assistant-panel';
 
 export interface CurrentUser {
   id: string;
@@ -23,7 +24,7 @@ export class AuthStore {
   readonly user = this.userState.asReadonly();
   readonly isSignedIn = computed(() => !!this.userState());
 
-  readonly inHomeAssistantPanel = inject(DOCUMENT).baseURI.includes('/api/hassio_ingress/');
+  readonly inHomeAssistantPanel = isInHomeAssistantPanel(inject(DOCUMENT));
 
   async ensureLoaded(): Promise<CurrentUser | null> {
     if (this.userState() !== undefined) return this.userState() ?? null;

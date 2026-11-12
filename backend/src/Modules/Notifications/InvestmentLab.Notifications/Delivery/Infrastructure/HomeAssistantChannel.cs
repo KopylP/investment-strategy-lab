@@ -56,7 +56,8 @@ internal sealed class HomeAssistantChannel(HttpClient http, HomeAssistantChannel
             },
             cancellationToken);
 
-        var link = options.PanelPath is { Length: > 0 } path ? $"\n\n[{localizer.Render("notification.open_panel", null)}]({path})" : "";
+        var pageUrl = PageUrlOf(notification);
+        var link = pageUrl is null ? "" : $"\n\n[{localizer.Render("notification.open_panel", null)}]({pageUrl})";
         await PostAsync("core/api/services/persistent_notification/create",
             new { title, message = message + link, notification_id = notification.Tag }, cancellationToken);
 
@@ -66,7 +67,7 @@ internal sealed class HomeAssistantChannel(HttpClient http, HomeAssistantChannel
             {
                 title,
                 message,
-                data = new { tag = notification.Tag, group = "investlab", url = options.PanelPath, clickAction = options.PanelPath },
+                data = new { tag = notification.Tag, group = "investlab", url = pageUrl, clickAction = pageUrl },
             }, cancellationToken);
         }
     }
@@ -78,6 +79,9 @@ internal sealed class HomeAssistantChannel(HttpClient http, HomeAssistantChannel
         foreach (var phone in await PhonesAsync(cancellationToken))
             await PostAsync($"core/api/services/notify/{phone}", new { message = "clear_notification", data = new { tag } }, cancellationToken);
     }
+
+    private string? PageUrlOf(Notification notification) =>
+        options.PanelPath is { Length: > 0 } panel ? $"{panel.TrimEnd('/')}{notification.Page}" : null;
 
     private async Task<Language> HomeAssistantLanguageAsync(CancellationToken cancellationToken)
     {
