@@ -71,7 +71,7 @@ uv run uvicorn finance_decisions.api.main:app --reload
 | `POST /v1/strategies/{code}/risk` | Weekly exit checks: per-position status, exit prices, `exit`/`warn` signals. |
 | `POST /v1/strategies/{code}/decide/jobs`, `.../risk/jobs` | The same as a background job, for strategies that think for minutes or hours (an AI agent): `202` with a `jobId` at once. |
 | `GET /v1/jobs/{jobId}` | `running`, `succeeded` (with `result` — what `/decide` or `/risk` answers) or `failed` (with `error`). Jobs live in memory: after a restart it is `404` and the backend submits the job again. |
-| `POST /v1/prices` | Daily `close` and `adjustedClose` from Yahoo Finance for the backend's MarketData module. |
+| `POST /v1/prices` | Daily `open`, `high`, `low`, `close` and `adjustedClose` from Yahoo Finance for the backend's MarketData module. |
 | `GET /health` | Liveness for Aspire. |
 
 The contract lives in [`contracts/v1/openapi.json`](contracts/v1/openapi.json). After changing

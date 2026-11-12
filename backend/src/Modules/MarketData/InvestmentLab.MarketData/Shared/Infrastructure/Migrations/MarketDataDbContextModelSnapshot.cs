@@ -18,7 +18,7 @@ namespace InvestmentLab.MarketData.Shared.Infrastructure.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("marketdata")
-                .HasAnnotation("ProductVersion", "10.0.13")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -206,6 +206,21 @@ namespace InvestmentLab.MarketData.Shared.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("FetchedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("fetched_at");
+
+                    b.Property<decimal?>("High")
+                        .HasPrecision(20, 8)
+                        .HasColumnType("numeric(20,8)")
+                        .HasColumnName("high");
+
+                    b.Property<decimal?>("Low")
+                        .HasPrecision(20, 8)
+                        .HasColumnType("numeric(20,8)")
+                        .HasColumnName("low");
+
+                    b.Property<decimal?>("Open")
+                        .HasPrecision(20, 8)
+                        .HasColumnType("numeric(20,8)")
+                        .HasColumnName("open");
 
                     b.Property<int>("QualityFlags")
                         .HasColumnType("integer")

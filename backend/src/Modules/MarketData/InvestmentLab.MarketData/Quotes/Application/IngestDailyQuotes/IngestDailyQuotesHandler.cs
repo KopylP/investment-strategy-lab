@@ -15,11 +15,11 @@ public sealed class IngestDailyQuotesHandler(IQuoteStore store, IQuoteProvider p
         var now = clock.GetUtcNow();
         var today = DateOnly.FromDateTime(now.UtcDateTime);
         var instruments = await store.InstrumentsQuotedBy(provider.Provider, cancellationToken);
-        var lastDates = await store.LastTradingDatesAsync(cancellationToken);
+        var fetchStarts = await store.FetchStartDatesAsync(cancellationToken);
 
         var tally = new IngestTally();
 
-        foreach (var (from, chunk) in BatchesOf(instruments, lastDates, today))
+        foreach (var (from, chunk) in BatchesOf(instruments, fetchStarts, today))
             await FetchBatchAsync(from, chunk, tally, now, cancellationToken);
 
         if (tally.Ingested.Count > 0)
@@ -31,9 +31,9 @@ public sealed class IngestDailyQuotesHandler(IQuoteStore store, IQuoteProvider p
     }
 
     private static IEnumerable<(DateOnly From, QuotedInstrument[] Instruments)> BatchesOf(
-        IReadOnlyList<QuotedInstrument> instruments, IReadOnlyDictionary<InstrumentId, DateOnly> lastDates, DateOnly today) =>
+        IReadOnlyList<QuotedInstrument> instruments, IReadOnlyDictionary<InstrumentId, DateOnly> fetchStarts, DateOnly today) =>
         instruments
-            .GroupBy(instrument => lastDates.TryGetValue(instrument.Id, out var last) ? last : today.AddYears(-InitialHistoryYears))
+            .GroupBy(instrument => fetchStarts.TryGetValue(instrument.Id, out var start) ? start : today.AddYears(-InitialHistoryYears))
             .Where(group => group.Key <= today)
             .SelectMany(group => group.Chunk(SymbolsPerRequest).Select(chunk => (From: group.Key, Instruments: chunk)));
 
@@ -50,33 +50,37 @@ public sealed class IngestDailyQuotesHandler(IQuoteStore store, IQuoteProvider p
             if (!bySymbol.TryGetValue(series.Symbol, out var instrument))
                 continue;
 
-            var (added, updated) = await StoreSeriesAsync(instrument.Id, from, series, now, cancellationToken);
+            var stored = await StoreSeriesAsync(instrument.Id, from, series, now, cancellationToken);
 
-            tally.Count(instrument, from, added, updated);
+            tally.Count(instrument, stored);
         }
     }
 
-    private async Task<(int Added, int Updated)> StoreSeriesAsync(
+    private async Task<StoredSeries> StoreSeriesAsync(
         InstrumentId instrumentId, DateOnly from, FetchedSeries series, DateTimeOffset now, CancellationToken cancellationToken)
     {
         var stored = (await store.QuotesFromAsync(instrumentId, from, cancellationToken)).ToDictionary(quote => quote.TradingDate);
         var fresh = new List<DailyQuote>();
-        var updated = 0;
+        var updated = new List<DateOnly>();
 
         foreach (var point in series.Quotes.Where(point => point.Date >= from).OrderBy(point => point.Date))
         {
             if (point is not { Close: > 0m and var close, AdjustedClose: > 0m and var adjustedClose })
                 continue;
 
+            var range = DayRange.Of(point.Open, point.High, point.Low, close);
+
             if (stored.TryGetValue(point.Date, out var existing))
             {
                 if (existing.Refresh(close, adjustedClose, provider.Provider.Code, now))
-                    updated++;
+                    updated.Add(point.Date);
+
+                existing.UseRange(range);
 
                 continue;
             }
 
-            var quote = DailyQuote.Fetched(instrumentId, point.Date, close, adjustedClose, provider.Provider.Code, now);
+            var quote = DailyQuote.Fetched(instrumentId, point.Date, close, adjustedClose, range, provider.Provider.Code, now);
             fresh.Add(quote);
             store.Add(quote);
         }
@@ -84,8 +88,17 @@ public sealed class IngestDailyQuotesHandler(IQuoteStore store, IQuoteProvider p
         if (fresh.Count > 0)
             QuoteQualityInspector.Inspect(fresh, await store.QuoteBeforeAsync(instrumentId, fresh[0].TradingDate, cancellationToken));
 
-        return (fresh.Count, updated);
+        return new StoredSeries(fresh.Count, updated.Count, FirstChange(fresh, updated));
     }
+
+    private static DateOnly? FirstChange(List<DailyQuote> fresh, List<DateOnly> updated)
+    {
+        var changedDates = fresh.Select(quote => quote.TradingDate).Concat(updated).ToList();
+
+        return changedDates.Count == 0 ? null : changedDates.Min();
+    }
+
+    private sealed record StoredSeries(int Added, int Updated, DateOnly? FirstChange);
 
     private sealed class IngestTally
     {
@@ -95,15 +108,15 @@ public sealed class IngestDailyQuotesHandler(IQuoteStore store, IQuoteProvider p
         public List<Guid> Ingested { get; } = [];
         public DateOnly FirstDate { get; private set; } = DateOnly.MaxValue;
 
-        public void Count(QuotedInstrument instrument, DateOnly from, int added, int updated)
+        public void Count(QuotedInstrument instrument, StoredSeries stored)
         {
-            if (added + updated == 0)
+            if (stored.FirstChange is not { } firstChange)
                 return;
 
-            Added += added;
-            Updated += updated;
+            Added += stored.Added;
+            Updated += stored.Updated;
             Ingested.Add(instrument.Id.Value);
-            FirstDate = FirstDate < from ? FirstDate : from;
+            FirstDate = FirstDate < firstChange ? FirstDate : firstChange;
         }
     }
 }

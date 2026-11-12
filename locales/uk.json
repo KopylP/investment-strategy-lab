@@ -20,6 +20,7 @@
   "profile.not_found": "Профіль не знайдено.",
   "profile.currency_unsupported": "Підсумки можна показувати в EUR, USD або PLN.",
   "profile.time_zone_unknown": "Невідомий часовий пояс.",
+  "profile.chart_style_unknown": "Невідомий стиль графіка.",
   "isin.invalid": "Некоректний ISIN.",
   "currency.invalid": "Некоректний код валюти.",
   "percentage.out_of_range": "Частка має бути від 0 до 1.",

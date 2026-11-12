@@ -74,7 +74,7 @@ internal sealed class QuoteHistory(MarketDataDbContext db, IQuoteArchive archive
 
         var firstStored = stored.Points.Count > 0 ? stored.Points[0].Date : DateOnly.MaxValue;
         var inWindow = archived.Where(price => price.Date >= from && price.Date <= to && price.Date < firstStored);
-        var olderPoints = inWindow.Select(price => new QuotePointDto(price.Date, price.Close, price.AdjustedClose, []));
+        var olderPoints = inWindow.Select(price => new QuotePointDto(price.Date, null, null, null, price.Close, price.AdjustedClose, []));
 
         return stored with { Points = [.. olderPoints, .. stored.Points] };
     }
@@ -83,6 +83,6 @@ internal sealed class QuoteHistory(MarketDataDbContext db, IQuoteArchive archive
         [.. instrumentIds.Where(id => id != Guid.Empty).Distinct().Select(InstrumentId.Of)];
 
     private static QuotePointDto ToPoint(DailyQuote quote) =>
-        new(quote.TradingDate, quote.Close, quote.AdjustedClose,
+        new(quote.TradingDate, quote.Open, quote.High, quote.Low, quote.Close, quote.AdjustedClose,
             [.. StoredFlags.Where(flag => quote.QualityFlags.HasFlag(flag)).Select(flag => flag.ToString())]);
 }

@@ -8,7 +8,14 @@ internal sealed class YFinanceQuoteProvider(HttpClient http) : IQuoteProvider
 {
     private sealed record PricesRequest(IReadOnlyList<string> Symbols, DateOnly Start);
 
-    private sealed record QuoteSeries(string Symbol, List<DateOnly> Dates, List<double?> Close, List<double?> AdjustedClose);
+    private sealed record QuoteSeries(
+        string Symbol,
+        List<DateOnly> Dates,
+        List<double?> Open,
+        List<double?> High,
+        List<double?> Low,
+        List<double?> Close,
+        List<double?> AdjustedClose);
 
     private sealed record PricesResponse(List<QuoteSeries> Series, List<string> Missing);
 
@@ -21,14 +28,22 @@ internal sealed class YFinanceQuoteProvider(HttpClient http) : IQuoteProvider
         var body = await response.Content.ReadFromJsonAsync<PricesResponse>(cancellationToken)
             ?? throw new InvalidOperationException("Empty /v1/prices response.");
 
-        return new FetchedQuotes(
-            [.. body.Series.Select(series => new FetchedSeries(series.Symbol,
-                [
-                    .. series.Dates.Select((date, i) =>
-                        new FetchedQuote(date, ToPrice(series.Close[i]), ToPrice(series.AdjustedClose[i])))
-                ]))
-            ],
-            body.Missing);
+        var series = body.Series.Select(ToFetchedSeries).ToList();
+
+        return new FetchedQuotes(series, body.Missing);
+    }
+
+    private static FetchedSeries ToFetchedSeries(QuoteSeries series)
+    {
+        var quotes = series.Dates.Select((date, i) => new FetchedQuote(
+            Date: date,
+            Open: ToPrice(series.Open[i]),
+            High: ToPrice(series.High[i]),
+            Low: ToPrice(series.Low[i]),
+            Close: ToPrice(series.Close[i]),
+            AdjustedClose: ToPrice(series.AdjustedClose[i])));
+
+        return new FetchedSeries(series.Symbol, [.. quotes]);
     }
 
     private static decimal? ToPrice(double? value) =>

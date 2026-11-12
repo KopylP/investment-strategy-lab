@@ -9,7 +9,7 @@ public sealed class QuoteRulesTests
     private static readonly DateTimeOffset FetchedAt = new(2026, 7, 20, 20, 30, 0, TimeSpan.Zero);
 
     private static DailyQuote Quote(int month, int day, decimal adjustedClose) =>
-        DailyQuote.Fetched(Sp500, new DateOnly(2026, month, day), adjustedClose + 1m, adjustedClose, "yfinance", FetchedAt);
+        DailyQuote.Fetched(Sp500, new DateOnly(2026, month, day), adjustedClose + 1m, adjustedClose, range: null, "yfinance", FetchedAt);
 
     [Fact]
     public void A_normal_day_has_no_flags()
@@ -105,5 +105,85 @@ public sealed class QuoteRulesTests
         quote.Refresh(close: 101m, adjustedClose: 100m, "yfinance", FetchedAt.AddDays(1)).ShouldBeFalse();
 
         quote.FetchedAt.ShouldBe(FetchedAt);
+    }
+
+    [Fact]
+    public void A_range_that_encloses_the_open_and_the_close_is_kept()
+    {
+        var range = DayRange.Of(open: 100m, high: 106m, low: 98m, close: 104m);
+
+        range.ShouldBe(new DayRange(100m, 106m, 98m));
+    }
+
+    [Theory]
+    [InlineData(null, 106, 98)]
+    [InlineData(100, null, 98)]
+    [InlineData(100, 106, null)]
+    [InlineData(0, 106, 98)]
+    public void A_day_with_a_missing_or_empty_price_has_no_range(int? open, int? high, int? low)
+    {
+        DayRange.Of(open, high, low, close: 104m).ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(100, 103, 98)]
+    [InlineData(100, 106, 101)]
+    public void A_range_that_does_not_enclose_the_open_and_the_close_is_dropped(int open, int high, int low)
+    {
+        DayRange.Of(open, high, low, close: 104m).ShouldBeNull();
+    }
+
+    [Fact]
+    public void A_range_is_filled_into_a_quote_fetched_without_one()
+    {
+        var quote = Quote(7, 15, 100m);
+
+        quote.UseRange(new DayRange(100m, 106m, 98m));
+
+        quote.Range.ShouldBe(new DayRange(100m, 106m, 98m));
+    }
+
+    [Fact]
+    public void A_missing_range_does_not_erase_a_known_one()
+    {
+        var quote = Quote(7, 15, 100m);
+        quote.UseRange(new DayRange(100m, 106m, 98m));
+
+        quote.UseRange(null);
+
+        quote.Range.ShouldBe(new DayRange(100m, 106m, 98m));
+    }
+
+    [Fact]
+    public void A_corrected_quote_keeps_its_range_untouched_by_a_later_fetch()
+    {
+        var quote = Quote(7, 15, 100m);
+        quote.ApplyCorrection(close: 101m, adjustedClose: 100m);
+
+        quote.UseRange(new DayRange(100m, 106m, 98m));
+
+        quote.Range.ShouldBeNull();
+    }
+
+    [Fact]
+    public void A_new_close_from_the_provider_drops_the_old_range()
+    {
+        var quote = Quote(7, 15, 100m);
+        quote.UseRange(new DayRange(100m, 106m, 98m));
+
+        quote.Refresh(close: 103m, adjustedClose: 102m, "yfinance", FetchedAt.AddDays(1));
+
+        quote.Range.ShouldBeNull();
+    }
+
+    [Fact]
+    public void A_correction_that_moves_the_close_drops_the_range()
+    {
+        var quote = Quote(7, 15, 100m);
+        quote.UseRange(new DayRange(100m, 106m, 98m));
+
+        quote.ApplyCorrection(close: 110m, adjustedClose: 109m);
+
+        quote.Range.ShouldBeNull();
     }
 }

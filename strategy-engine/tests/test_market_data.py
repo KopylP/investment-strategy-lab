@@ -9,12 +9,12 @@ from finance_decisions import market_data
 
 def _multi_index_download(symbols: list[str]) -> pd.DataFrame:
     index = pd.to_datetime(["2026-10-01", "2026-10-02"]).tz_localize("Europe/Berlin")
-    columns = pd.MultiIndex.from_product([["Adj Close", "Close"], symbols])
+    columns = pd.MultiIndex.from_product([["Adj Close", "Close", "High", "Low", "Open"], symbols])
     data = [[1.0 + i for i in range(len(columns))], [2.0 + i for i in range(len(columns))]]
     return pd.DataFrame(data, index=index, columns=columns)
 
 
-def test_download_quotes_reads_close_and_adjusted_close_per_symbol(monkeypatch) -> None:
+def test_download_quotes_reads_open_high_low_close_and_adjusted_close_per_symbol(monkeypatch) -> None:
     calls = {}
 
     def fake_download(symbols, **kwargs):
@@ -31,6 +31,9 @@ def test_download_quotes_reads_close_and_adjusted_close_per_symbol(monkeypatch) 
     assert list(result) == ["AAA", "BBB"]
     assert list(result["BBB"]["adjusted_close"]) == [2.0, 3.0]
     assert list(result["BBB"]["close"]) == [4.0, 5.0]
+    assert list(result["BBB"]["high"]) == [6.0, 7.0]
+    assert list(result["BBB"]["low"]) == [8.0, 9.0]
+    assert list(result["BBB"]["open"]) == [10.0, 11.0]
     assert result["AAA"].index.tz is None
     assert list(result["AAA"].index) == list(pd.to_datetime(["2026-10-01", "2026-10-02"]))
 
@@ -40,6 +43,9 @@ def test_download_quotes_leaves_out_symbols_without_data(monkeypatch) -> None:
         frame = _multi_index_download(symbols)
         frame[("Close", "NOPE")] = float("nan")
         frame[("Adj Close", "NOPE")] = float("nan")
+        frame[("High", "NOPE")] = float("nan")
+        frame[("Low", "NOPE")] = float("nan")
+        frame[("Open", "NOPE")] = float("nan")
         return frame
 
     monkeypatch.setattr(market_data.yf, "download", fake_download)
@@ -52,7 +58,7 @@ def test_download_quotes_leaves_out_symbols_without_data(monkeypatch) -> None:
 def test_download_quotes_handles_flat_columns_for_one_symbol(monkeypatch) -> None:
     def fake_download(symbols, **kwargs):
         index = pd.to_datetime(["2026-10-01"])
-        return pd.DataFrame({"Adj Close": [9.5], "Close": [10.0]}, index=index)
+        return pd.DataFrame({"Adj Close": [9.5], "Close": [10.0], "High": [10.5], "Low": [9.0], "Open": [9.8]}, index=index)
 
     monkeypatch.setattr(market_data.yf, "download", fake_download)
 
@@ -60,6 +66,9 @@ def test_download_quotes_handles_flat_columns_for_one_symbol(monkeypatch) -> Non
 
     assert list(result["AAA"]["close"]) == [10.0]
     assert list(result["AAA"]["adjusted_close"]) == [9.5]
+    assert list(result["AAA"]["open"]) == [9.8]
+    assert list(result["AAA"]["high"]) == [10.5]
+    assert list(result["AAA"]["low"]) == [9.0]
 
 
 def test_symbol_info_carries_yahoos_description_when_there_is_one(monkeypatch) -> None:

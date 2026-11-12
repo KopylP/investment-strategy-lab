@@ -33,7 +33,18 @@
     "closingPrice": "Closing price",
     "buy": "Buy",
     "sell": "Sell",
-    "tradeTooltip": "{side} {quantity} sh. × {price} ({date})"
+    "tradeTooltip": "{side} {quantity} sh. × {price} ({date})",
+    "granularity": {
+      "label": "Chart step",
+      "day": "Day",
+      "week": "Week"
+    },
+    "candle": {
+      "open": "Open",
+      "high": "High",
+      "low": "Low",
+      "close": "Close"
+    }
   },
   "layout": {
     "footer": "Investment Lab · the numbers are estimates, the decisions are yours",
@@ -110,7 +121,7 @@
     "title": "Profile",
     "chartStyle": {
       "title": "Charts",
-      "hint": "How the value charts are drawn: a plain line or Japanese candlesticks (green when the value ended the step higher, red when lower).",
+      "hint": "How price charts are drawn: a plain line or Japanese candlesticks (green when the price ended the step higher, red when lower).",
       "names": {
         "Line": "Line",
         "Candles": "Candlesticks"
@@ -415,19 +426,7 @@
       "riskReview": "risk review",
       "drawdown": "Drawdown",
       "gainOnAssetsTooltip": "Gain on assets: {gain}",
-      "report": "Report: {report}",
-      "reportMarkers": "Reports",
-      "granularity": {
-        "label": "Chart step",
-        "day": "Day",
-        "week": "Week"
-      },
-      "candle": {
-        "open": "Open",
-        "high": "High",
-        "low": "Low",
-        "close": "Close"
-      }
+      "report": "Report: {report}"
     },
     "metrics": {
       "twr": "TWR return",

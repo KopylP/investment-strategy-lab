@@ -80,7 +80,7 @@ public sealed class EvaluationPreparerTests
         {
             From = from;
             return Task.FromResult<IReadOnlyList<QuoteSeriesDto>>([.. ids.Select(id => new QuoteSeriesDto(id,
-                [new(Day.AddDays(-1), 100m, 100m, []), new(Day, 90m, 90m, [])]))]);
+                [new(Day.AddDays(-1), null, null, null, 100m, 100m, []), new(Day, null, null, null, 90m, 90m, [])]))]);
         }
         public Task<IReadOnlyList<QuoteSeriesDto>> GetQuoteHistory(IReadOnlyCollection<Guid> ids, DateOnly from, DateOnly to, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<IReadOnlyList<LatestPriceDto>> GetLatestPrices(IReadOnlyCollection<Guid> ids, DateOnly day, CancellationToken cancellationToken) => throw new NotSupportedException();

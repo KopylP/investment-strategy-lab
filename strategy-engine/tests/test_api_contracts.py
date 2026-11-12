@@ -292,10 +292,20 @@ def test_risk_matches_risk_monitor_and_emits_exit_signal(client: TestClient) -> 
     assert "нижче свого піку" in render(signals["AAA"]["reason"])
 
 
-def test_prices_returns_close_and_adjusted_close(client: TestClient) -> None:
+def test_prices_returns_open_high_low_close_and_adjusted_close(client: TestClient) -> None:
     def fake_downloader(symbols: list[str], start: date, end: date | None) -> dict[str, pd.DataFrame]:
         index = pd.to_datetime(["2026-10-01", "2026-10-02"])
-        return {"SXR8.DE": pd.DataFrame({"close": [600.0, 605.5], "adjusted_close": [600.0, 605.5]}, index=index)}
+        frame = pd.DataFrame(
+            {
+                "open": [598.0, 601.0],
+                "high": [602.0, 607.0],
+                "low": [597.0, 600.5],
+                "close": [600.0, 605.5],
+                "adjusted_close": [600.0, 605.5],
+            },
+            index=index,
+        )
+        return {"SXR8.DE": frame}
 
     app = create_app()
     app.dependency_overrides[get_quote_downloader] = lambda: fake_downloader
@@ -307,6 +317,9 @@ def test_prices_returns_close_and_adjusted_close(client: TestClient) -> None:
     assert series == {
         "symbol": "SXR8.DE",
         "dates": ["2026-10-01", "2026-10-02"],
+        "open": [598.0, 601.0],
+        "high": [602.0, 607.0],
+        "low": [597.0, 600.5],
         "close": [600.0, 605.5],
         "adjustedClose": [600.0, 605.5],
     }

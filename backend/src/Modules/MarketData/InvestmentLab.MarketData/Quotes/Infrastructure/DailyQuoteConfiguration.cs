@@ -14,5 +14,6 @@ internal sealed class DailyQuoteConfiguration : IEntityTypeConfiguration<DailyQu
         quote.Property(q => q.InstrumentId).HasConversion<MarketDataConverters.InstrumentIdConverter>();
         quote.Property(q => q.Source).HasMaxLength(30);
         quote.Ignore(q => q.IsCorrected);
+        quote.Ignore(q => q.Range);
     }
 }

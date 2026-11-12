@@ -1,18 +1,17 @@
 import { TranslocoPipe, translate } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { SelectButton } from 'primeng/selectbutton';
 import { ToggleSwitch } from 'primeng/toggleswitch';
-import { ChartStyle } from '../../../../core/context/chart-style';
 import { DisplayCurrency } from '../../../../core/context/display-currency';
-import { Candle, candleDatasets, candlesOf } from '../../../../shared/charts/candles';
+import { ChartGranularity } from '../../../../shared/charts/chart-granularity';
 import { ChartLegend } from '../../../../shared/charts/chart-legend/chart-legend';
 import { ChartTheme, withAlpha } from '../../../../shared/charts/chart-theme';
 import { dateAxis } from '../../../../shared/charts/date-axis';
+import { GranularityToggle } from '../../../../shared/charts/granularity-toggle';
 import { HiddenLines } from '../../../../shared/charts/hidden-lines';
 import { lineChartBase } from '../../../../shared/charts/line-chart-base';
 import { LiveChart } from '../../../../shared/charts/live-chart';
-import { bucketDatesByDate, bucketsOf, Granularity } from '../../../../shared/charts/series-buckets';
+import { bucketDatesByDate, bucketsOf } from '../../../../shared/charts/series-buckets';
 import { valueAxis } from '../../../../shared/charts/value-axis';
 import {
   formatAxisNumber,
@@ -25,25 +24,15 @@ import { DashboardDto } from '../../data-access/dashboard-api';
 
 const showPlanKey = 'overview.valueChart.showPlan';
 const showHeldKey = 'overview.valueChart.showHeld';
-const granularityKey = 'overview.valueChart.granularity';
 const phoneMaxTicks = 4;
 
 @Component({
   selector: 'app-value-chart',
-  imports: [TranslocoPipe, FormsModule, ChartLegend, LiveChart, SelectButton, ToggleSwitch],
+  imports: [TranslocoPipe, FormsModule, ChartLegend, GranularityToggle, LiveChart, ToggleSwitch],
   template: ` <div
       class="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 mb-2 text-sm text-muted-color"
     >
-      <p-selectbutton
-        [options]="granularities()"
-        optionLabel="label"
-        optionValue="value"
-        [ngModel]="granularity()"
-        (ngModelChange)="$event && setGranularity($event)"
-        [allowEmpty]="false"
-        [ariaLabel]="'overview.chart.granularity.label' | transloco"
-        size="small"
-      />
+      <app-granularity-toggle />
       @if (hasPlan() && !showHeld()) {
         <label class="flex items-center gap-2">
           <p-toggleswitch [ngModel]="showPlan()" (ngModelChange)="setShowPlan($event)" />
@@ -61,7 +50,6 @@ const phoneMaxTicks = 4;
       (toggled)="hiddenLines.toggle($event)"
     />
     <app-live-chart
-      [type]="candles() ? 'bar' : 'line'"
       [data]="data()"
       [options]="options()"
       [height]="viewport.phone() ? '15rem' : '22rem'"
@@ -71,7 +59,7 @@ const phoneMaxTicks = 4;
 export class ValueChart {
   private readonly theme = inject(ChartTheme);
   private readonly display = inject(DisplayCurrency);
-  private readonly chartStyle = inject(ChartStyle);
+  private readonly granularity = inject(ChartGranularity);
   protected readonly viewport = inject(Viewport);
 
   private readonly scale = computed(() => {
@@ -100,19 +88,9 @@ export class ValueChart {
     remember(showHeldKey, show);
   }
 
-  protected readonly granularities = computed(() => [
-    { label: translate('overview.chart.granularity.day'), value: 'day' },
-    { label: translate('overview.chart.granularity.week'), value: 'week' },
-  ]);
-  protected readonly granularity = signal<Granularity>(readGranularity());
-  protected readonly candles = this.chartStyle.isCandles;
-
-  protected setGranularity(granularity: Granularity): void {
-    this.granularity.set(granularity);
-    rememberText(granularityKey, granularity);
-  }
-
-  private readonly buckets = computed(() => bucketsOf(this.dashboard().series, this.granularity()));
+  private readonly buckets = computed(() =>
+    bucketsOf(this.dashboard().series, this.granularity.step()),
+  );
 
   private readonly reportsByBucketDate = computed(() => {
     const bucketDates = bucketDatesByDate(this.buckets());
@@ -127,18 +105,6 @@ export class ValueChart {
     return byBucketDate;
   });
 
-  private readonly candleSeries = computed(() => {
-    if (!this.candles()) return null;
-
-    const { rate } = this.scale();
-    const held = this.showHeld();
-    const valuesPerBucket = this.buckets().map((bucket) =>
-      bucket.points.map((point) => (held ? point.positionsValue : point.value) * rate),
-    );
-
-    return candlesOf(valuesPerBucket);
-  });
-
   private readonly allLines = computed(() => {
     const buckets = this.buckets();
     const points = buckets.map((bucket) => bucket.last);
@@ -151,48 +117,22 @@ export class ValueChart {
     const valueLabel = held
       ? translate('overview.chart.assetsValue')
       : translate('overview.chart.value');
-    const candles = this.candleSeries();
-
-    const valueDatasets = candles
-      ? candleDatasets(candles, palette, valueLabel)
-      : [
-          {
-            type: 'line' as const,
-            label: valueLabel,
-            data: points.map((point) => scaled(held ? point.positionsValue : point.value)),
-            borderColor: palette.primary,
-            backgroundColor: palette.primarySoft,
-            fill: false,
-            tension: 0.2,
-            borderWidth: 2,
-            pointRadius: points.map((point) => (reportDates.has(point.date) ? 5 : 0)),
-            pointBackgroundColor: palette.tax,
-            pointHoverRadius: 6,
-          },
-        ];
-
-    const reportMarkers = candles
-      ? [
-          {
-            type: 'line' as const,
-            label: translate('overview.chart.reportMarkers'),
-            data: points.map((point, index) =>
-              reportDates.has(point.date) ? candles[index].close : null,
-            ),
-            showLine: false,
-            borderColor: palette.tax,
-            backgroundColor: palette.tax,
-            pointRadius: 5,
-            pointHoverRadius: 6,
-            isReportMarker: true,
-          },
-        ]
-      : [];
-
     return {
       labels: buckets.map((bucket) => formatDate(bucket.date)),
       datasets: [
-        ...valueDatasets,
+        {
+          type: 'line' as const,
+          label: valueLabel,
+          data: points.map((point) => scaled(held ? point.positionsValue : point.value)),
+          borderColor: palette.primary,
+          backgroundColor: palette.primarySoft,
+          fill: false,
+          tension: 0.2,
+          borderWidth: 2,
+          pointRadius: points.map((point) => (reportDates.has(point.date) ? 5 : 0)),
+          pointBackgroundColor: palette.tax,
+          pointHoverRadius: 6,
+        },
         {
           type: 'line' as const,
           label: held
@@ -231,7 +171,6 @@ export class ValueChart {
               },
             ]
           : []),
-        ...reportMarkers,
       ],
     };
   });
@@ -244,11 +183,7 @@ export class ValueChart {
     return { ...lines, datasets: this.hiddenLines.applyTo(lines.datasets) };
   });
 
-  protected readonly legend = computed(() =>
-    this.hiddenLines.legendOf(
-      this.allLines().datasets.filter((dataset) => !('isCandleBody' in dataset)),
-    ),
-  );
+  protected readonly legend = computed(() => this.hiddenLines.legendOf(this.allLines().datasets));
 
   protected readonly options = computed(() => {
     const palette = this.theme.palette();
@@ -257,25 +192,19 @@ export class ValueChart {
     const reportDays = new Map(
       [...this.reportsByBucketDate()].map(([date, report]) => [formatDate(date), report]),
     );
-    const candles = this.candleSeries();
     const phone = this.viewport.phone();
-    const closeOf = (item: TooltipItem) =>
-      candles ? candles[item.dataIndex].close : item.parsed.y;
 
     return {
       ...lineChartBase(),
       plugins: {
         legend: { display: false },
         tooltip: {
-          filter: (item: TooltipItem) => !item.dataset.isCandleBody && !item.dataset.isReportMarker,
           callbacks: {
             label: (item: TooltipItem) =>
-              candles && item.dataset.type === 'bar'
-                ? candleLines(candles[item.dataIndex], currency)
-                : `${item.dataset.label}: ${formatMoney(item.parsed.y, currency, 0)}`,
+              `${item.dataset.label}: ${formatMoney(item.parsed.y, currency, 0)}`,
             afterBody: (items: TooltipItem[]) => {
               const report = reportDays.get(items[0]?.label);
-              const gain = held && items.length >= 2 ? closeOf(items[0]) - items[1].parsed.y : null;
+              const gain = held && items.length >= 2 ? items[0].parsed.y - items[1].parsed.y : null;
 
               return [
                 ...(gain === null
@@ -312,7 +241,6 @@ export class ValueChart {
             maxTicks: phone ? 5 : undefined,
             tick: (value) => (phone ? formatAxisNumber(value) : formatMoney(value, currency, 0)),
           }),
-          beginAtZero: candles ? false : undefined,
         },
       },
     };
@@ -321,34 +249,8 @@ export class ValueChart {
 
 interface TooltipItem {
   label: string;
-  dataIndex: number;
   parsed: { y: number };
-  dataset: { label: string; type?: string; isCandleBody?: boolean; isReportMarker?: boolean };
-}
-
-function candleLines(candle: Candle, currency: string): string[] {
-  const money = (value: number) => formatMoney(value, currency, 0);
-
-  return [
-    `${translate('overview.chart.candle.open')}: ${money(candle.open)}`,
-    `${translate('overview.chart.candle.high')}: ${money(candle.high)}`,
-    `${translate('overview.chart.candle.low')}: ${money(candle.low)}`,
-    `${translate('overview.chart.candle.close')}: ${money(candle.close)}`,
-  ];
-}
-
-function readGranularity(): Granularity {
-  try {
-    return localStorage.getItem(granularityKey) === 'week' ? 'week' : 'day';
-  } catch {
-    return 'day';
-  }
-}
-
-function rememberText(key: string, value: string): void {
-  try {
-    localStorage.setItem(key, value);
-  } catch {}
+  dataset: { label: string };
 }
 
 function readChoice(key: string, fallback: boolean): boolean {

@@ -26,7 +26,7 @@ public sealed class CorrectQuoteHandler(IQuoteStore store, TimeProvider clock) :
             .FirstOrDefault(quote => quote.TradingDate == command.TradingDate);
         if (existing is null)
         {
-            existing = DailyQuote.Fetched(instrumentId, command.TradingDate, command.Close, adjustedClose, "manual", now);
+            existing = DailyQuote.Fetched(instrumentId, command.TradingDate, command.Close, adjustedClose, range: null, "manual", now);
             store.Add(existing);
         }
 

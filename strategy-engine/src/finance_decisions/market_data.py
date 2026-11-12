@@ -56,7 +56,7 @@ def download_close_prices(tickers: list[str], period: str) -> pd.DataFrame:
 
 
 def download_quotes(symbols: list[str], start: date, end: date | None = None) -> dict[str, pd.DataFrame]:
-    """Daily ``close`` and ``adjusted_close`` per symbol from ``start`` to ``end`` (inclusive).
+    """Daily ``open``, ``high``, ``low``, ``close`` and ``adjusted_close`` per symbol from ``start`` to ``end`` (inclusive).
 
     Symbols without data are left out of the result.
     """
@@ -82,7 +82,15 @@ def download_quotes(symbols: list[str], start: date, end: date | None = None) ->
         adjusted = _column(raw, "Adj Close", symbol, len(symbols))
         if close is None or adjusted is None:
             continue
-        frame = pd.DataFrame({"close": close, "adjusted_close": adjusted}).dropna(how="all")
+        frame = pd.DataFrame(
+            {
+                "open": _column(raw, "Open", symbol, len(symbols)),
+                "high": _column(raw, "High", symbol, len(symbols)),
+                "low": _column(raw, "Low", symbol, len(symbols)),
+                "close": close,
+                "adjusted_close": adjusted,
+            }
+        ).dropna(how="all")
         if not frame.empty:
             frame.index = pd.DatetimeIndex(frame.index).tz_localize(None).normalize()
             result[symbol] = frame

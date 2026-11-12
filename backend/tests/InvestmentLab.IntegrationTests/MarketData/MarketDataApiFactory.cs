@@ -102,11 +102,24 @@ public sealed class FakeQuoteProvider : IQuoteProvider
         return days;
     }
 
+    private FetchedQuote QuoteOn(DateOnly day, int n, DateOnly lastDay)
+    {
+        var close = day == lastDay && NewestCloseOverride is { } price ? price : 100m + n;
+
+        return new FetchedQuote(
+            Date: day,
+            Open: close - 1m,
+            High: close + 2m,
+            Low: close - 2m,
+            Close: close,
+            AdjustedClose: 100m + n);
+    }
+
     public Task<FetchedQuotes> FetchAsync(IReadOnlyList<string> symbols, DateOnly from, CancellationToken cancellationToken)
     {
         var days = TradingDays();
         var quotes = days
-            .Select((day, n) => new FetchedQuote(day, day == days[^1] && NewestCloseOverride is { } price ? price : 100m + n, 100m + n))
+            .Select((day, n) => QuoteOn(day, n, days[^1]))
             .Where(quote => quote.Date >= from)
             .ToList();
 

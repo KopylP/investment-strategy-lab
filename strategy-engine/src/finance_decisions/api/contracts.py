@@ -394,6 +394,9 @@ class PricesRequest(ApiModel):
 class QuoteSeries(ApiModel):
     symbol: str
     dates: list[date]
+    open: list[float | None]
+    high: list[float | None]
+    low: list[float | None]
     close: list[float | None]
     adjusted_close: list[float | None]
 

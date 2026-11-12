@@ -78,7 +78,7 @@ public sealed class SyntheticQuoteProvider : IQuoteProvider
         {
             var price = PriceOf(symbol, n);
 
-            return new FetchedQuote(day, price, price);
+            return new FetchedQuote(day, Open: price, High: price, Low: price, Close: price, AdjustedClose: price);
         })])).ToList();
 
         return Task.FromResult(new FetchedQuotes(series, []));

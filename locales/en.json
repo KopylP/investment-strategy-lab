@@ -20,6 +20,7 @@
   "profile.not_found": "Profile not found.",
   "profile.currency_unsupported": "Totals can be shown in EUR, USD or PLN.",
   "profile.time_zone_unknown": "Unknown time zone.",
+  "profile.chart_style_unknown": "Unknown chart style.",
   "isin.invalid": "Invalid ISIN.",
   "currency.invalid": "Invalid currency code.",
   "percentage.out_of_range": "A share must be between 0 and 1.",
