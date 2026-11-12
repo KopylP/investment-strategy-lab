@@ -14,7 +14,7 @@
         }}
       </div>
       <div class="text-4xl sm:text-5xl font-bold tracking-tight mt-1 leading-tight">
-        <app-money [amount]="dashboard().value" [currency]="dashboard().currency" [digits]="0" />
+        <app-money [amount]="dashboard().value" [currency]="dashboard().currency" />
       </div>
       <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3">
         <span
@@ -35,7 +35,7 @@
           }}<app-money
             [amount]="dashboard().gain"
             [currency]="dashboard().currency"
-            [digits]="0"
+           
             [hideOriginal]="true"
           />
           @if (store.gainPct() !== null) {
@@ -47,7 +47,7 @@
           <app-money
             [amount]="dashboard().netContributions"
             [currency]="dashboard().currency"
-            [digits]="0"
+           
             [hideOriginal]="true"
         /></span>
       </div>
@@ -71,7 +71,7 @@
             }}<app-money
               [amount]="held.amount"
               [currency]="dashboard().currency"
-              [digits]="0"
+             
               [hideOriginal]="true"
             />
             · {{ held.pct | signedPercent }}
@@ -81,7 +81,7 @@
             <app-money
               [amount]="held.costBasis"
               [currency]="dashboard().currency"
-              [digits]="0"
+             
               [hideOriginal]="true"
             />
             <i
@@ -113,7 +113,7 @@
       {{ 'overview.value.planVsActual' | transloco }}
       <span [appSignedValue]="gap"
         >{{ gap >= 0 ? '+' : ''
-        }}<app-money [amount]="gap" [currency]="dashboard().currency" [digits]="0" [inline]="true"
+        }}<app-money [amount]="gap" [currency]="dashboard().currency" [inline]="true"
       /></span>
       <span class="hidden sm:inline text-muted-color">
         {{ 'overview.value.planVsActualHint' | transloco }}</span
