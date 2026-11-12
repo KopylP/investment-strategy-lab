@@ -89,7 +89,7 @@ internal sealed class RequestReportsOnSignal(
             AsOf: today,
             Cause: CauseOf(triggered));
 
-        var requested = await requestReport.Handle(command, ReportTrigger.Signal, cancellationToken);
+        var requested = await requestReport.Handle(command, nameof(ReportTrigger.Signal), cancellationToken);
         if (requested.IsSuccess)
         {
             rule.Acted();
@@ -101,10 +101,10 @@ internal sealed class RequestReportsOnSignal(
         rule.CouldNotAct(Message.Of("signal_rule.no_sub_portfolios"));
     }
 
-    private static ReportCause CauseOf(SignalTriggeredV1 triggered)
+    private static ReportCauseDto CauseOf(SignalTriggeredV1 triggered)
     {
         var subjects = triggered.Subjects.Select(subject => subject.Text).ToList();
 
-        return new ReportCause(triggered.TriggerId, Message.Of("report.cause.signal", new { signal = triggered.Name, subjects }));
+        return new ReportCauseDto(triggered.TriggerId, Message.Of("report.cause.signal", new { signal = triggered.Name, subjects }));
     }
 }

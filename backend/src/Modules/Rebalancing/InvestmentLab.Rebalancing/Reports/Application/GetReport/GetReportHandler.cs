@@ -16,12 +16,12 @@ public sealed class GetReportHandler(IReportRepository reports, IInstrumentCatal
 
         return new ReportDetailsDto(
             Summary: report.ToSummaryDto(),
-            ContributionPlan: report.Contribution,
+            ContributionPlan: ContributionPlanDto.From(report.Contribution),
             Actions: [.. report.Actions.Select(ToDto)],
-            Sections: report.Sections,
+            Sections: [.. report.Sections.Select(ReportSectionDto.From)],
             Warnings: report.Warnings,
-            Review: report.Review,
-            TaxEstimate: report.TaxEstimate,
+            Review: report.Review is { } review ? PlanReviewDto.From(review) : null,
+            TaxEstimate: report.TaxEstimate is { } estimate ? TaxEstimateDto.From(estimate) : null,
             Instruments: labels,
             SubPortfolios: report.Sections.ToDictionary(section => section.SubPortfolioId, section => section.Name));
     }
@@ -72,14 +72,14 @@ public sealed class GetReportHandler(IReportRepository reports, IInstrumentCatal
         PlannedQuantity: action.PlannedQuantity,
         PlannedPrice: action.PlannedPrice,
         PlannedAmount: action.PlannedAmount,
-        Allocations: action.Allocations,
+        Allocations: [.. action.Allocations.Select(ActionAllocationDto.From)],
         FromSubPortfolioId: action.FromSubPortfolioId,
         ToSubPortfolioId: action.ToSubPortfolioId,
         Reason: action.Reason,
         Status: action.Status.ToString(),
         FilledQuantity: action.FilledQuantity,
         RemainingQuantity: action.RemainingQuantity,
-        Fills: action.Fills,
+        Fills: [.. action.Fills.Select(FillDto.From)],
         SkipReason: action.SkipReason,
         Rejection: action.Rejection,
         EstimatedGain: action.EstimatedGain,

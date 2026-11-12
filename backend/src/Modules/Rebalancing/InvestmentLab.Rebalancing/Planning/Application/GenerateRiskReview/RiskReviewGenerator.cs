@@ -4,7 +4,7 @@ using InvestmentLab.Rebalancing.Reports.Domain;
 
 namespace InvestmentLab.Rebalancing.Planning.Application.GenerateRiskReview;
 
-public sealed class GenerateRiskReviewHandler(
+public sealed class RiskReviewGenerator(
     IPlanningAccounts accounts,
     IAccountHoldings accountHoldings,
     IInstrumentPrices instrumentPrices,
@@ -13,7 +13,7 @@ public sealed class GenerateRiskReviewHandler(
     GeneratedReportSaver saver,
     TimeProvider clock)
 {
-    public async Task<Result<ReportId>> Handle(
+    public async Task<Result<ReportId>> GenerateAsync(
         GenerateRiskReviewCommand command,
         IReadOnlyDictionary<Guid, StrategyAnswer<StrategyRiskAssessment>> assessments,
         ReportRequest request,

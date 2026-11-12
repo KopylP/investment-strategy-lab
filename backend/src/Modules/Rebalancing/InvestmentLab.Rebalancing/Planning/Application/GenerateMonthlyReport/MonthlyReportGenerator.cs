@@ -4,13 +4,13 @@ using InvestmentLab.Rebalancing.Reports.Domain;
 
 namespace InvestmentLab.Rebalancing.Planning.Application.GenerateMonthlyReport;
 
-public sealed class GenerateMonthlyReportHandler(
+public sealed class MonthlyReportGenerator(
     MonthlyPlanPreparation preparation,
     IInstrumentPrices instrumentPrices,
     IPlanReviewer reviewer,
     GeneratedReportSaver saver)
 {
-    public async Task<Result<ReportId>> Handle(
+    public async Task<Result<ReportId>> GenerateAsync(
         GenerateMonthlyReportCommand command,
         IReadOnlyDictionary<Guid, StrategyAnswer<StrategyDecision>> decisions,
         ReportRequest request,

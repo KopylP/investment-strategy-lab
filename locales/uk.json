@@ -96,6 +96,7 @@
   "transaction.reason_required": "Вкажіть причину сторно.",
   "transaction.settlement_in_account_currency": "Розрахунок має бути в іншій валюті, ніж валюта рахунку.",
   "report_request.not_found": "Запит на рапорт не знайдено.",
+  "report.trigger_unknown": "Така причина створити рапорт невідома.",
   "report.unknown_code": "Стратегії цього рахунку не складають такого рапорту.",
   "report.definition_not_found": "Стратегії цього рахунку не складають такого рапорту.",
   "plan_settings.contribution_negative": "Щомісячний внесок не може бути від'ємним.",
