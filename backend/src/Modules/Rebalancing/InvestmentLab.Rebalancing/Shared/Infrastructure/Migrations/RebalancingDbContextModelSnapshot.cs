@@ -18,7 +18,7 @@ namespace InvestmentLab.Rebalancing.Shared.Infrastructure.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("rebalancing")
-                .HasAnnotation("ProductVersion", "10.0.13")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -393,124 +393,144 @@ namespace InvestmentLab.Rebalancing.Shared.Infrastructure.Migrations
                     b.ToTable("reports", "rebalancing");
                 });
 
-            modelBuilder.Entity("InvestmentLab.Rebalancing.Reports.Domain.ReportAction", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("Allocations")
-                        .IsRequired()
-                        .HasColumnType("jsonb")
-                        .HasColumnName("allocations");
-
-                    b.Property<decimal?>("EstimatedCarriedLoss")
-                        .HasPrecision(20, 8)
-                        .HasColumnType("numeric(20,8)")
-                        .HasColumnName("estimated_carried_loss");
-
-                    b.Property<decimal?>("EstimatedGain")
-                        .HasPrecision(20, 8)
-                        .HasColumnType("numeric(20,8)")
-                        .HasColumnName("estimated_gain");
-
-                    b.Property<decimal?>("EstimatedTaxChange")
-                        .HasPrecision(20, 8)
-                        .HasColumnType("numeric(20,8)")
-                        .HasColumnName("estimated_tax_change");
-
-                    b.Property<string>("Fills")
-                        .IsRequired()
-                        .HasColumnType("jsonb")
-                        .HasColumnName("fills");
-
-                    b.Property<Guid?>("FromSubPortfolioId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("from_sub_portfolio_id");
-
-                    b.Property<Guid?>("InstrumentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("instrument_id");
-
-                    b.Property<string>("Kind")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("kind");
-
-                    b.Property<int>("NextFillNumber")
-                        .HasColumnType("integer")
-                        .HasColumnName("next_fill_number");
-
-                    b.Property<decimal>("PlannedAmount")
-                        .HasPrecision(20, 8)
-                        .HasColumnType("numeric(20,8)")
-                        .HasColumnName("planned_amount");
-
-                    b.Property<decimal>("PlannedPrice")
-                        .HasPrecision(20, 8)
-                        .HasColumnType("numeric(20,8)")
-                        .HasColumnName("planned_price");
-
-                    b.Property<decimal>("PlannedQuantity")
-                        .HasPrecision(20, 8)
-                        .HasColumnType("numeric(20,8)")
-                        .HasColumnName("planned_quantity");
-
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)")
-                        .HasColumnName("reason");
-
-                    b.Property<string>("Rejection")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)")
-                        .HasColumnName("rejection");
-
-                    b.Property<Guid?>("ReportId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("report_id");
-
-                    b.Property<int>("Sequence")
-                        .HasColumnType("integer")
-                        .HasColumnName("sequence");
-
-                    b.Property<string>("SkipReason")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("skip_reason");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)")
-                        .HasColumnName("status");
-
-                    b.Property<Guid?>("ToSubPortfolioId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("to_sub_portfolio_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_report_actions");
-
-                    b.HasIndex("ReportId")
-                        .HasDatabaseName("ix_report_actions_report_id");
-
-                    b.ToTable("report_actions", "rebalancing");
-                });
-
-            modelBuilder.Entity("InvestmentLab.Rebalancing.Reports.Domain.ReportAction", b =>
-                {
-                    b.HasOne("InvestmentLab.Rebalancing.Reports.Domain.RebalancingReport", null)
-                        .WithMany("Actions")
-                        .HasForeignKey("ReportId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .HasConstraintName("fk_report_actions_reports_report_id");
-                });
-
             modelBuilder.Entity("InvestmentLab.Rebalancing.Reports.Domain.RebalancingReport", b =>
                 {
+                    b.OwnsMany("InvestmentLab.Rebalancing.Reports.Domain.ReportAction", "Actions", b1 =>
+                        {
+                            b1.Property<Guid>("RebalancingReportId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<decimal?>("EstimatedCarriedLoss")
+                                .HasPrecision(20, 8);
+
+                            b1.Property<decimal?>("EstimatedGain")
+                                .HasPrecision(20, 8);
+
+                            b1.Property<decimal?>("EstimatedTaxChange")
+                                .HasPrecision(20, 8);
+
+                            b1.Property<Guid?>("FromSubPortfolioId");
+
+                            b1.Property<Guid>("Id");
+
+                            b1.Property<Guid?>("InstrumentId");
+
+                            b1.Property<string>("Kind")
+                                .IsRequired()
+                                .HasMaxLength(20);
+
+                            b1.Property<int>("NextFillNumber");
+
+                            b1.Property<decimal>("PlannedAmount")
+                                .HasPrecision(20, 8);
+
+                            b1.Property<decimal>("PlannedPrice")
+                                .HasPrecision(20, 8);
+
+                            b1.Property<decimal>("PlannedQuantity")
+                                .HasPrecision(20, 8);
+
+                            b1.Property<string>("Reason")
+                                .IsRequired()
+                                .HasMaxLength(2000);
+
+                            b1.Property<string>("Rejection")
+                                .HasMaxLength(1000);
+
+                            b1.Property<int>("Sequence");
+
+                            b1.Property<string>("SkipReason")
+                                .HasMaxLength(500);
+
+                            b1.Property<string>("Status")
+                                .IsRequired()
+                                .HasMaxLength(30);
+
+                            b1.Property<Guid?>("ToSubPortfolioId");
+
+                            b1.HasKey("RebalancingReportId", "__synthesizedOrdinal");
+
+                            b1.ToTable("reports", "rebalancing");
+
+                            b1
+                                .ToJson("actions")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("RebalancingReportId")
+                                .HasConstraintName("fk_reports_reports_rebalancing_report_id");
+
+                            b1.OwnsMany("InvestmentLab.Rebalancing.Reports.Domain.ActionAllocation", "Allocations", b2 =>
+                                {
+                                    b2.Property<Guid>("ReportActionRebalancingReportId");
+
+                                    b2.Property<int>("ReportAction__synthesizedOrdinal");
+
+                                    b2.Property<int>("__synthesizedOrdinal")
+                                        .ValueGeneratedOnAdd();
+
+                                    b2.Property<decimal>("Quantity")
+                                        .HasPrecision(20, 8);
+
+                                    b2.Property<string>("Reason");
+
+                                    b2.Property<Guid>("SubPortfolioId");
+
+                                    b2.HasKey("ReportActionRebalancingReportId", "ReportAction__synthesizedOrdinal", "__synthesizedOrdinal")
+                                        .HasName("pk_reports");
+
+                                    b2.ToTable("reports", "rebalancing");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("ReportActionRebalancingReportId", "ReportAction__synthesizedOrdinal")
+                                        .HasConstraintName("fk_reports_reports_report_action_rebalancing_report_id_report_actio");
+                                });
+
+                            b1.OwnsMany("InvestmentLab.Rebalancing.Reports.Domain.Fill", "Fills", b2 =>
+                                {
+                                    b2.Property<Guid>("ReportActionRebalancingReportId");
+
+                                    b2.Property<int>("ReportAction__synthesizedOrdinal");
+
+                                    b2.Property<int>("__synthesizedOrdinal")
+                                        .ValueGeneratedOnAdd();
+
+                                    b2.Property<DateOnly>("ExecutedOn");
+
+                                    b2.Property<decimal>("Fee")
+                                        .HasPrecision(20, 8);
+
+                                    b2.Property<bool>("Linked");
+
+                                    b2.Property<string>("Note");
+
+                                    b2.Property<int>("Number");
+
+                                    b2.Property<decimal>("Price")
+                                        .HasPrecision(20, 8);
+
+                                    b2.Property<decimal>("Quantity")
+                                        .HasPrecision(20, 8);
+
+                                    b2.Property<Guid?>("TransactionId");
+
+                                    b2.HasKey("ReportActionRebalancingReportId", "ReportAction__synthesizedOrdinal", "__synthesizedOrdinal")
+                                        .HasName("pk_reports");
+
+                                    b2.ToTable("reports", "rebalancing");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("ReportActionRebalancingReportId", "ReportAction__synthesizedOrdinal")
+                                        .HasConstraintName("fk_reports_reports_report_action_rebalancing_report_id_report_actio");
+                                });
+
+                            b1.Navigation("Allocations");
+
+                            b1.Navigation("Fills");
+                        });
+
                     b.Navigation("Actions");
                 });
 #pragma warning restore 612, 618

@@ -30,7 +30,7 @@ internal sealed class RebalancingReportConfiguration : IEntityTypeConfiguration<
         report.Ignore(r => r.IsOpen);
         report.Ignore(r => r.ContributedAmount);
 
-        report.HasMany(r => r.Actions).WithOne().HasForeignKey("ReportId").OnDelete(DeleteBehavior.Cascade);
-        report.Navigation(r => r.Actions).HasField("_actions").UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
+        report.OwnsMany(r => r.Actions, ReportActionMapping.Configure);
+        report.Navigation(r => r.Actions).HasField("_actions").UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }
