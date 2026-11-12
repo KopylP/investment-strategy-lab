@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InvestmentLab.Signals.Monitoring.Infrastructure;
 
-internal sealed class SignalConfiguration(SignalsDbContext context) : IEntityTypeConfiguration<Signal>
+internal sealed class SignalConfiguration : IEntityTypeConfiguration<Signal>
 {
     public void Configure(EntityTypeBuilder<Signal> signal)
     {
@@ -27,7 +27,5 @@ internal sealed class SignalConfiguration(SignalsDbContext context) : IEntityTyp
         signal.Ignore(s => s.DomainEvents);
 
         signal.HasIndex(s => s.BuiltInKey).IsUnique().HasFilter("built_in_key IS NOT NULL");
-
-        context.HasOwnerFilter(signal, s => s.OwnerId);
     }
 }

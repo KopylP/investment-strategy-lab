@@ -1,6 +1,6 @@
 namespace InvestmentLab.Strategies.Definitions.Domain;
 
-public sealed class Strategy : AggregateRoot<StrategyId>
+public sealed class Strategy : AggregateRoot<StrategyId>, IUserOwned
 {
     private readonly List<StrategyVersion> _versions = [];
 

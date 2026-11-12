@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InvestmentLab.Portfolio.Transactions.Infrastructure;
 
-internal sealed class TransactionConfiguration(PortfolioDbContext context) : IEntityTypeConfiguration<Transaction>
+internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
 {
     public void Configure(EntityTypeBuilder<Transaction> transaction)
     {
@@ -28,6 +28,5 @@ internal sealed class TransactionConfiguration(PortfolioDbContext context) : IEn
         transaction.HasIndex(t => t.ReversalOf).IsUnique().HasFilter("reversal_of IS NOT NULL");
         transaction.HasIndex(t => new { t.AccountId, t.OccurredOn });
         transaction.Ignore(t => t.DomainEvents);
-        context.HasOwnerFilter(transaction, t => t.OwnerId);
     }
 }

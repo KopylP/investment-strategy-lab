@@ -2,7 +2,7 @@ using InvestmentLab.Rebalancing.Reports.Domain;
 
 namespace InvestmentLab.Rebalancing.Planning.Domain;
 
-public sealed class ReportRequest : AggregateRoot<ReportRequestId>
+public sealed class ReportRequest : AggregateRoot<ReportRequestId>, IUserOwned
 {
     public static readonly TimeSpan Patience = TimeSpan.FromHours(6);
 

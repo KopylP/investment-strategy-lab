@@ -1,3 +1,4 @@
+using System.Reflection;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Taxation.Assessments.Domain;
@@ -23,98 +24,5 @@ public sealed class TaxationDbContext(DbContextOptions<TaxationDbContext> option
 
     protected override ICurrentUser CurrentUser => currentUser;
 
-    protected override void OnModuleModelCreating(ModelBuilder modelBuilder)
-    {
-        ConfigureAccounts(modelBuilder);
-        ConfigureLedgerEntries(modelBuilder);
-        ConfigureAssessments(modelBuilder);
-        ConfigureLossCarryforwards(modelBuilder);
-        ConfigureBrokerStatements(modelBuilder);
-        ConfigurePit8CStatements(modelBuilder);
-    }
-
-    private void ConfigureAccounts(ModelBuilder modelBuilder)
-    {
-        var account = modelBuilder.Entity<TaxAccount>();
-
-        account.ToTable("accounts");
-        account.HasKey(a => a.AccountId);
-        account.Property(a => a.Currency).HasMaxLength(3);
-        account.Property(a => a.PolicyCode).HasMaxLength(20);
-
-        HasOwnerFilter(account, a => a.OwnerId);
-    }
-
-    private void ConfigureLedgerEntries(ModelBuilder modelBuilder)
-    {
-        var entry = modelBuilder.Entity<TaxLedgerEntry>();
-
-        entry.ToTable("ledger_entries");
-        entry.HasKey(e => e.TransactionId);
-        entry.Property(e => e.Kind).HasConversion<string>().HasMaxLength(20);
-        entry.Property(e => e.Currency).HasMaxLength(3);
-        entry.Property(e => e.Allocations).HasJsonConversion();
-        entry.HasIndex(e => e.AccountId);
-        entry.Ignore(e => e.TaxYear);
-
-        HasOwnerFilter(entry, e => e.OwnerId);
-    }
-
-    private void ConfigureAssessments(ModelBuilder modelBuilder)
-    {
-        var assessment = modelBuilder.Entity<TaxAssessment>();
-
-        assessment.Ignore(a => a.DomainEvents);
-        assessment.ToTable("assessments");
-        assessment.HasKey(a => a.Id);
-        assessment.HasIndex(a => new { a.OwnerId, a.Year }).IsUnique();
-        assessment.Property(a => a.PolicyCode).HasMaxLength(20);
-        assessment.Property(a => a.InputHash).HasMaxLength(64);
-        assessment.Property(a => a.Summary).HasJsonConversion();
-        assessment.Property(a => a.Realizations).HasJsonConversion();
-        assessment.Property(a => a.Dividends).HasJsonConversion();
-        assessment.Property(a => a.CarryforwardUses).HasJsonConversion();
-
-        HasOwnerFilter(assessment, a => a.OwnerId);
-    }
-
-    private void ConfigureLossCarryforwards(ModelBuilder modelBuilder)
-    {
-        var loss = modelBuilder.Entity<LossCarryforward>();
-
-        loss.ToTable("loss_carryforwards");
-        loss.HasKey(l => l.Id);
-        loss.HasIndex(l => l.OwnerId);
-
-        HasOwnerFilter(loss, l => l.OwnerId);
-    }
-
-    private void ConfigureBrokerStatements(ModelBuilder modelBuilder)
-    {
-        var statement = modelBuilder.Entity<BrokerStatement>();
-
-        statement.ToTable("broker_statements");
-        statement.HasKey(s => s.Id);
-        statement.HasIndex(s => s.AccountId);
-        statement.Property(s => s.Broker).HasMaxLength(40);
-        statement.Property(s => s.FileName).HasMaxLength(260);
-        statement.Property(s => s.Lots).HasJsonConversion();
-        statement.Property(s => s.Dividends).HasJsonConversion();
-        statement.Property(s => s.Warnings).HasJsonConversion();
-        statement.Ignore(s => s.Span);
-
-        HasOwnerFilter(statement, s => s.OwnerId);
-    }
-
-    private void ConfigurePit8CStatements(ModelBuilder modelBuilder)
-    {
-        var statement = modelBuilder.Entity<Pit8CStatement>();
-
-        statement.ToTable("pit8c_statements");
-        statement.HasKey(s => s.Id);
-        statement.HasIndex(s => new { s.AccountId, s.Year }).IsUnique();
-        statement.Ignore(s => s.Amounts);
-
-        HasOwnerFilter(statement, s => s.OwnerId);
-    }
+    protected override Assembly MappingsAssembly => typeof(TaxationAssemblyMarker).Assembly;
 }

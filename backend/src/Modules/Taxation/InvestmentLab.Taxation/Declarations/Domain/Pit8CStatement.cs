@@ -1,6 +1,6 @@
 namespace InvestmentLab.Taxation.Declarations.Domain;
 
-public sealed class Pit8CStatement
+public sealed class Pit8CStatement : IUserOwned
 {
     public Guid Id { get; private set; }
     public Guid AccountId { get; private set; }

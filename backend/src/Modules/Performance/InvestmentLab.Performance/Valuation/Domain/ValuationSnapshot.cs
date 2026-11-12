@@ -1,6 +1,6 @@
 namespace InvestmentLab.Performance.Valuation.Domain;
 
-public sealed class ValuationSnapshot
+public sealed class ValuationSnapshot : IUserOwned
 {
     public long Id { get; private set; }
     public Guid AccountId { get; private set; }

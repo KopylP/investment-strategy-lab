@@ -1,6 +1,6 @@
 namespace InvestmentLab.Signals.Monitoring.Domain;
 
-public sealed class SignalOccurrence : AggregateRoot<Guid>
+public sealed class SignalOccurrence : AggregateRoot<Guid>, IUserOwned
 {
     public Guid SignalId { get; private set; }
     public UserId OwnerId { get; private set; }

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InvestmentLab.Rebalancing.Planning.Infrastructure;
 
-internal sealed class PlanSettingsConfiguration(RebalancingDbContext context) : IEntityTypeConfiguration<PlanSettings>
+internal sealed class PlanSettingsConfiguration : IEntityTypeConfiguration<PlanSettings>
 {
     public void Configure(EntityTypeBuilder<PlanSettings> settings)
     {
@@ -17,6 +17,5 @@ internal sealed class PlanSettingsConfiguration(RebalancingDbContext context) : 
         settings.Ignore(s => s.Policy);
         settings.Property(s => s.ReportSchedules).HasJsonConversion(enumsAsText: true);
         settings.Ignore(s => s.DomainEvents);
-        context.HasOwnerFilter(settings, s => s.OwnerId);
     }
 }

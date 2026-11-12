@@ -6,9 +6,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InvestmentLab.StrategyBuilder.Drafts.Infrastructure;
 
-internal static class PublishedLayoutConfiguration
+internal sealed class PublishedLayoutConfiguration : IEntityTypeConfiguration<PublishedLayout>
 {
-    public static void Configure(EntityTypeBuilder<PublishedLayout> layout)
+    public void Configure(EntityTypeBuilder<PublishedLayout> layout)
     {
         layout.ToTable("published_layouts");
         layout.HasKey(entry => entry.Id);

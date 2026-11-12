@@ -1,3 +1,4 @@
+using System.Reflection;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Portfolio.Accounts.Domain;
@@ -21,12 +22,5 @@ public sealed class PortfolioDbContext(DbContextOptions<PortfolioDbContext> opti
 
     protected override ICurrentUser CurrentUser => currentUser;
 
-    protected override void OnModuleModelCreating(ModelBuilder modelBuilder)
-    {
-        modelBuilder.ApplyConfiguration(new InvestmentAccountConfiguration(this));
-        modelBuilder.ApplyConfiguration(new SubPortfolioConfiguration());
-        modelBuilder.ApplyConfiguration(new TransactionConfiguration(this));
-        modelBuilder.ApplyConfiguration(new HoldingRowConfiguration(this));
-        modelBuilder.ApplyConfiguration(new StatementImportConfiguration(this));
-    }
+    protected override Assembly MappingsAssembly => typeof(PortfolioAssemblyMarker).Assembly;
 }

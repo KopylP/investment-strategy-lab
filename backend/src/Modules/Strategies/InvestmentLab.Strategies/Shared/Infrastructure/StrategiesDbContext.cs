@@ -1,3 +1,4 @@
+using System.Reflection;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Strategies.Catalog.Domain;
@@ -19,10 +20,5 @@ public sealed class StrategiesDbContext(DbContextOptions<StrategiesDbContext> op
 
     protected override ICurrentUser CurrentUser => currentUser;
 
-    protected override void OnModuleModelCreating(ModelBuilder modelBuilder)
-    {
-        modelBuilder.ApplyConfiguration(new StrategyTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new StrategyConfiguration(this));
-        modelBuilder.ApplyConfiguration(new StrategyVersionConfiguration());
-    }
+    protected override Assembly MappingsAssembly => typeof(StrategiesAssemblyMarker).Assembly;
 }

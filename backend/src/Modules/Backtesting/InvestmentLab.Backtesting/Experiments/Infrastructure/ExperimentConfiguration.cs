@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InvestmentLab.Backtesting.Experiments.Infrastructure;
 
-internal static class ExperimentConfiguration
+internal sealed class ExperimentConfiguration : IEntityTypeConfiguration<ResearchExperiment>
 {
     private const int StatusLength = 20;
     private const int FailureReasonLength = 2000;
@@ -14,7 +14,7 @@ internal static class ExperimentConfiguration
 
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
-    public static void Configure(EntityTypeBuilder<ResearchExperiment> entity)
+    public void Configure(EntityTypeBuilder<ResearchExperiment> entity)
     {
         entity.ToTable("experiments");
         entity.HasKey(item => item.Id);

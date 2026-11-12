@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InvestmentLab.Rebalancing.Planning.Infrastructure;
 
-internal sealed class ReportRequestConfiguration(RebalancingDbContext context) : IEntityTypeConfiguration<ReportRequest>
+internal sealed class ReportRequestConfiguration : IEntityTypeConfiguration<ReportRequest>
 {
     public void Configure(EntityTypeBuilder<ReportRequest> request)
     {
@@ -30,6 +30,5 @@ internal sealed class ReportRequestConfiguration(RebalancingDbContext context) :
         request.HasIndex(r => new { r.Status, r.RequestedAt });
         request.HasIndex(r => new { r.AccountId, r.Code });
         request.HasIndex(r => new { r.SignalTriggerId, r.AccountId, r.Code }).IsUnique().HasFilter("signal_trigger_id IS NOT NULL");
-        context.HasOwnerFilter(request, r => r.OwnerId);
     }
 }

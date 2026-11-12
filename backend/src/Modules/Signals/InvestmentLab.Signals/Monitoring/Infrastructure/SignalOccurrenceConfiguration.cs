@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InvestmentLab.Signals.Monitoring.Infrastructure;
 
-internal sealed class SignalOccurrenceConfiguration(SignalsDbContext context) : IEntityTypeConfiguration<SignalOccurrence>
+internal sealed class SignalOccurrenceConfiguration : IEntityTypeConfiguration<SignalOccurrence>
 {
     public void Configure(EntityTypeBuilder<SignalOccurrence> occurrence)
     {
@@ -23,7 +23,5 @@ internal sealed class SignalOccurrenceConfiguration(SignalsDbContext context) : 
         occurrence.HasOne<Signal>().WithMany().HasForeignKey(o => o.SignalId).OnDelete(DeleteBehavior.Cascade);
         occurrence.HasIndex(o => new { o.SignalId, o.SubjectKey }).IsUnique().HasFilter("cleared_at IS NULL");
         occurrence.HasIndex(o => o.TriggeredAt);
-
-        context.HasOwnerFilter(occurrence, o => o.OwnerId);
     }
 }

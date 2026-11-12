@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InvestmentLab.Rebalancing.Reports.Infrastructure;
 
-internal sealed class RebalancingReportConfiguration(RebalancingDbContext context) : IEntityTypeConfiguration<RebalancingReport>
+internal sealed class RebalancingReportConfiguration : IEntityTypeConfiguration<RebalancingReport>
 {
     public void Configure(EntityTypeBuilder<RebalancingReport> report)
     {
@@ -29,9 +29,8 @@ internal sealed class RebalancingReportConfiguration(RebalancingDbContext contex
         report.Ignore(r => r.DomainEvents);
         report.Ignore(r => r.IsOpen);
         report.Ignore(r => r.ContributedAmount);
-        context.HasOwnerFilter(report, r => r.OwnerId);
 
-        report.HasMany(r => r.Actions).WithOne().HasForeignKey("ReportId").OnDelete(DeleteBehavior.Cascade);
-        report.Navigation(r => r.Actions).HasField("_actions").UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
+        report.OwnsMany(r => r.Actions, ReportActionMapping.Configure);
+        report.Navigation(r => r.Actions).HasField("_actions").UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

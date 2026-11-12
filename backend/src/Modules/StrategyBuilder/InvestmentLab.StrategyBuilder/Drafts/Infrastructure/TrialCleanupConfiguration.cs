@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InvestmentLab.StrategyBuilder.Drafts.Infrastructure;
 
-internal static class TrialCleanupConfiguration
+internal sealed class TrialCleanupConfiguration : IEntityTypeConfiguration<TrialCleanup>
 {
-    public static void Configure(EntityTypeBuilder<TrialCleanup> cleanup)
+    public void Configure(EntityTypeBuilder<TrialCleanup> cleanup)
     {
         cleanup.ToTable("trial_cleanups");
         cleanup.HasKey(entry => entry.Id);

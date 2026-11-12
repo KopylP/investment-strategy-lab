@@ -1,6 +1,6 @@
 namespace InvestmentLab.Taxation.Assessments.Domain;
 
-public sealed class LossCarryforward
+public sealed class LossCarryforward : IUserOwned
 {
     public Guid Id { get; private set; }
     public UserId OwnerId { get; private set; }

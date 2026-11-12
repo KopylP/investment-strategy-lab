@@ -6,9 +6,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InvestmentLab.StrategyBuilder.Drafts.Infrastructure;
 
-internal static class StrategyDraftConfiguration
+internal sealed class StrategyDraftConfiguration : IEntityTypeConfiguration<StrategyDraft>
 {
-    public static void Configure(EntityTypeBuilder<StrategyDraft> draft)
+    public void Configure(EntityTypeBuilder<StrategyDraft> draft)
     {
         draft.ToTable("drafts");
         draft.HasKey(entry => entry.Id);

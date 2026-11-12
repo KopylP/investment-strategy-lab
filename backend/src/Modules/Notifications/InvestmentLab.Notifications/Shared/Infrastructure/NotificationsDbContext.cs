@@ -1,3 +1,4 @@
+using System.Reflection;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Notifications.Delivery.Domain;
@@ -16,6 +17,5 @@ public sealed class NotificationsDbContext(DbContextOptions<NotificationsDbConte
 
     protected override ICurrentUser CurrentUser => currentUser;
 
-    protected override void OnModuleModelCreating(ModelBuilder modelBuilder) =>
-        modelBuilder.ApplyConfiguration(new NotificationPreferencesConfiguration(this));
+    protected override Assembly MappingsAssembly => typeof(NotificationsAssemblyMarker).Assembly;
 }

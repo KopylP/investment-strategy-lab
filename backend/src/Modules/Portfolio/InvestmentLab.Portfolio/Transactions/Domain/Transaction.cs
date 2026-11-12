@@ -2,7 +2,7 @@ using InvestmentLab.Portfolio.Accounts.Domain;
 
 namespace InvestmentLab.Portfolio.Transactions.Domain;
 
-public sealed class Transaction : AggregateRoot<TransactionId>
+public sealed class Transaction : AggregateRoot<TransactionId>, IUserOwned
 {
     public AccountId AccountId { get; private set; }
     public UserId OwnerId { get; private set; }

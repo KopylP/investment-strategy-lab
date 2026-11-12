@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace InvestmentLab.Portfolio.Transactions.Infrastructure;
 
-internal sealed class StatementImportConfiguration(PortfolioDbContext context) : IEntityTypeConfiguration<StatementImport>
+internal sealed class StatementImportConfiguration : IEntityTypeConfiguration<StatementImport>
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
@@ -31,7 +31,6 @@ internal sealed class StatementImportConfiguration(PortfolioDbContext context) :
         Jsonb(statement.Property(s => s.ReversedTransactionIds));
         statement.Ignore(s => s.IsPreview);
         statement.HasIndex(s => s.AccountId);
-        context.HasOwnerFilter(statement, s => s.OwnerId);
     }
 
     private static void Jsonb<T>(PropertyBuilder<T> property) =>

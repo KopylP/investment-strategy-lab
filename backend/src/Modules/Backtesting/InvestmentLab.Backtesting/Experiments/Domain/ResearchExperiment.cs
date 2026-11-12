@@ -1,6 +1,6 @@
 namespace InvestmentLab.Backtesting.Experiments.Domain;
 
-public sealed class ResearchExperiment : AggregateRoot<Guid>
+public sealed class ResearchExperiment : AggregateRoot<Guid>, IUserOwned
 {
     public UserId OwnerId { get; private set; }
     public Guid StrategyId { get; private set; }
