@@ -1,3 +1,4 @@
+using InvestmentLab.StrategyBuilder.Drafts.Application.Shared;
 using System.Text.Json;
 using InvestmentLab.StrategyBuilder.Drafts.Domain;
 using InvestmentLab.StrategyBuilder.Drafts.Infrastructure;
@@ -17,8 +18,9 @@ public sealed class DraftStorageTests
         var layout = DraftLayout.Empty with { EdgeRoutes = new Dictionary<string, IReadOnlyList<NodePosition>> { [link.RouteKey()] = points } };
         var stored = RoundTrip(layout);
         stored.EdgeRoutes[link.RouteKey()].ShouldBe(points);
-        var dto = new InvestmentLab.StrategyBuilder.Drafts.Application.Shared.LayoutDto(layout.Positions, [], layout.EdgeRoutes);
-        InvestmentLab.StrategyBuilder.Drafts.Application.Shared.DraftMapping.ToLayout(dto).Value.EdgeRoutes[link.RouteKey()].ShouldBe(points);
+        var routes = new Dictionary<string, IReadOnlyList<NodePositionDto>> { [link.RouteKey()] = [new(123.5, 64), new(123.5, 200)] };
+        var dto = new LayoutDto(new Dictionary<string, NodePositionDto>(), [], routes);
+        DraftMapping.ToLayout(dto).Value.EdgeRoutes[link.RouteKey()].ShouldBe(points);
     }
 
     [Fact]

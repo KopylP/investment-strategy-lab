@@ -1,5 +1,3 @@
-using InvestmentLab.StrategyBuilder.Trials.Domain;
-
 namespace InvestmentLab.StrategyBuilder.Trials.Application.Shared;
 
 public sealed record TrialRunDto(
@@ -16,4 +14,4 @@ public sealed record TrialRunDto(
     double? Sharpe,
     double? MaxDrawdown,
     Guid? ExperimentId = null,
-    TrialExperiment? Experiment = null);
+    TrialExperimentDto? Experiment = null);

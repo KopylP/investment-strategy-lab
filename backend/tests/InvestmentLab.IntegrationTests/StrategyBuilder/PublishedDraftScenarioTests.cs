@@ -34,7 +34,7 @@ public sealed class PublishedDraftScenarioTests : IClassFixture<StrategiesApiFac
         var name = $"Published {Guid.CreateVersion7()}";
         var draft = await ConfiguredDraftAsync(client, name, cancellationToken);
         var nodeId = draft.Graph.Nodes[0].Id;
-        var layout = new LayoutDto(new Dictionary<string, NodePosition> { [nodeId] = new(32, 64) }, ["Risk"]);
+        var layout = new LayoutDto(new Dictionary<string, NodePositionDto> { [nodeId] = new(32, 64) }, ["Risk"]);
         var moved = await client.PutAsJsonAsync($"/api/strategy-builder/drafts/{draft.Id}/layout", layout, cancellationToken);
         moved.EnsureSuccessStatusCode();
 
@@ -49,7 +49,7 @@ public sealed class PublishedDraftScenarioTests : IClassFixture<StrategiesApiFac
         var again = await OpenAsync(client, published, cancellationToken);
         again.Id.ShouldBe(reopened.Id);
         reopened.Graph.Nodes.Select(node => node.Id).ShouldBe(draft.Graph.Nodes.Select(node => node.Id));
-        reopened.Layout.Positions[nodeId].ShouldBe(new NodePosition(32, 64));
+        reopened.Layout.Positions[nodeId].ShouldBe(new NodePositionDto(32, 64));
         reopened.Layout.Collapsed.ShouldBe(["Risk"]);
         reopened.OriginStrategyId.ShouldBe(published.StrategyId);
 

@@ -10,10 +10,7 @@ public sealed record ChangeDraftReportScheduleCommand(
     int? Day = null,
     string? Weekday = null,
     string? Time = null,
-    int? Minute = null)
-{
-    public ReportTimingPatch Schedule => new(Frequency, Day, Weekday, Time, Minute);
-}
+    int? Minute = null);
 
 public sealed class ChangeDraftReportScheduleHandler(IDraftRepository drafts, DraftDescriber describer, TimeProvider clock)
 {
@@ -22,7 +19,7 @@ public sealed class ChangeDraftReportScheduleHandler(IDraftRepository drafts, Dr
         if (await drafts.FindAsync(draftId, cancellationToken) is not { } draft)
             return DraftErrors.NotFound(draftId);
 
-        var reports = DraftReports.Rescheduled(draft.Reports, command.ReportCode, command.Schedule);
+        var reports = DraftReports.Rescheduled(draft.Reports, command.ReportCode, PatchOf(command));
         if (reports.IsFailure)
             return reports.Error;
 
@@ -41,4 +38,7 @@ public sealed class ChangeDraftReportScheduleHandler(IDraftRepository drafts, Dr
 
         return await describer.DescribeAsync(draft, cancellationToken);
     }
+
+    private static ReportTimingPatch PatchOf(ChangeDraftReportScheduleCommand command) =>
+        new(command.Frequency, command.Day, command.Weekday, command.Time, command.Minute);
 }
