@@ -83,7 +83,9 @@
           <th class="hidden sm:table-cell">
             {{ 'transactions.ledger.subPortfolios' | transloco }}
           </th>
-          <th class="text-right">{{ 'transactions.ledger.money' | transloco }}</th>
+          <th class="text-right hidden sm:table-cell">
+            {{ 'transactions.ledger.money' | transloco }}
+          </th>
           <th class="hidden sm:table-cell">{{ 'transactions.ledger.source' | transloco }}</th>
           <th class="w-12"></th>
         </tr>
@@ -97,11 +99,22 @@
             <p-tag [value]="transaction.kindLabel" [severity]="transaction.severity" />
           </td>
           <td>
-            <div
-              class="sm:hidden flex flex-wrap items-center gap-x-2 gap-y-1 mb-1 text-sm text-muted-color"
-            >
+            <div class="sm:hidden flex items-center gap-2 mb-1 text-sm text-muted-color">
               {{ transaction.occurredOn | date }}
               <p-tag [value]="transaction.kindLabel" [severity]="transaction.severity" />
+              @if (transaction.amount !== null) {
+                <span
+                  class="ml-auto font-medium whitespace-nowrap"
+                  [class.line-through]="transaction.isReversed"
+                  [appSignedValue]="transaction.amount"
+                >
+                  <app-money
+                    [amount]="transaction.amount"
+                    [currency]="currency()"
+                    [hideOriginal]="true"
+                  />
+                </span>
+              }
             </div>
             @if (transaction.cancels; as original) {
               <div>
@@ -143,16 +156,12 @@
             {{ transaction.allocation }}
           </td>
           <td
-            class="text-right whitespace-nowrap"
+            class="text-right whitespace-nowrap hidden sm:table-cell"
             [class.line-through]="transaction.isReversed"
             [appSignedValue]="transaction.amount"
           >
             @if (transaction.amount !== null) {
-              <app-money
-                [amount]="transaction.amount"
-                [currency]="currency()"
-                [hideOriginal]="viewport.phone()"
-              />
+              <app-money [amount]="transaction.amount" [currency]="currency()" />
             }
           </td>
           <td class="text-sm text-muted-color hidden sm:table-cell">
