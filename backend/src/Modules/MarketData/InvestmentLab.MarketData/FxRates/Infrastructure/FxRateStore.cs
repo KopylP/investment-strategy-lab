@@ -37,6 +37,8 @@ internal sealed class FxRateStore(MarketDataDbContext db) : IFxRateStore, IFxRat
 
     public void Add(FxRate rate) => db.FxRates.Add(rate);
 
+    public void Record(IDomainEvent domainEvent) => db.Record(domainEvent);
+
     public Task SaveChangesAsync(CancellationToken cancellationToken) => db.SaveChangesAsync(cancellationToken);
 
     public async Task<FxRateDto?> GetFxRate(string baseCurrency, string quoteCurrency, DateOnly transactionDate, CancellationToken cancellationToken)

@@ -2,6 +2,7 @@ using InvestmentLab.BuildingBlocks.Messaging;
 using InvestmentLab.BuildingBlocks.Modules;
 using InvestmentLab.BuildingBlocks.Persistence;
 using InvestmentLab.BuildingBlocks.Scheduling;
+using InvestmentLab.MarketData.Contracts.FxRates;
 using InvestmentLab.MarketData.Contracts.Quotes;
 using InvestmentLab.Performance.Contracts;
 using InvestmentLab.Performance.Shared.Infrastructure;
@@ -47,6 +48,7 @@ public sealed class PerformanceModule : IModule
         services.AddIntegrationEventHandler<TransactionRecordedV1, InvalidateOnTransactionRecorded>();
         services.AddIntegrationEventHandler<TransactionReversedV1, InvalidateOnTransactionReversed>();
         services.AddIntegrationEventHandler<DailyQuotesIngestedV1, InvalidateOnQuotesIngested>();
+        services.AddIntegrationEventHandler<FxRatesIngestedV1, InvalidateOnFxRatesIngested>();
         services.AddIntegrationEventHandler<QuoteCorrectedV1, InvalidateOnQuoteCorrected>();
         services.AddIntegrationEventHandler<ReportGeneratedV1, KeepPlanOfGeneratedReport>();
         services.AddIntegrationEventHandler<ReportSupersededV1, SupersedePlanOfReport>();

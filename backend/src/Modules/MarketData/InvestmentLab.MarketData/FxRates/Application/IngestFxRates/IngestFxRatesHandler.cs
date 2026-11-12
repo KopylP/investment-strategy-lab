@@ -10,23 +10,30 @@ public sealed class IngestFxRatesHandler(IFxRateStore store, IFxRateProvider pro
 
     public async Task<FxIngestReport> Handle(CancellationToken cancellationToken)
     {
-        var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
-        var added = new Dictionary<string, int>();
+        var now = clock.GetUtcNow();
+        var today = DateOnly.FromDateTime(now.UtcDateTime);
+        var added = new Dictionary<string, IReadOnlyList<FxRate>>();
 
         foreach (var currency in Currencies)
             added[currency.Code] = await AddNewRatesAsync(currency, today, cancellationToken);
 
+        if (FirstEffectiveDateOf(added.Values) is { } first)
+            store.Record(new FxRatesIngested(first, now));
+
         await store.SaveChangesAsync(cancellationToken);
 
-        return new FxIngestReport(added);
+        return new FxIngestReport(added.ToDictionary(pair => pair.Key, pair => pair.Value.Count));
     }
 
-    private async Task<int> AddNewRatesAsync(Currency currency, DateOnly today, CancellationToken cancellationToken)
+    private static DateOnly? FirstEffectiveDateOf(IEnumerable<IReadOnlyList<FxRate>> added) =>
+        added.SelectMany(rates => rates).Min(rate => (DateOnly?)rate.EffectiveDate);
+
+    private async Task<IReadOnlyList<FxRate>> AddNewRatesAsync(Currency currency, DateOnly today, CancellationToken cancellationToken)
     {
         var last = await store.LastEffectiveDateAsync(provider.Source, currency, PrimaryFxSource.Pivot, cancellationToken);
         var from = last?.AddDays(1) ?? today.AddYears(-InitialHistoryYears);
         if (from > today)
-            return 0;
+            return [];
 
         var fetched = await provider.FetchAsync(currency, from, today, cancellationToken);
         var newRates = fetched.Where(rate => rate.EffectiveDate >= from).ToList();
@@ -34,6 +41,6 @@ public sealed class IngestFxRatesHandler(IFxRateStore store, IFxRateProvider pro
         foreach (var rate in newRates)
             store.Add(rate);
 
-        return newRates.Count;
+        return newRates;
     }
 }
