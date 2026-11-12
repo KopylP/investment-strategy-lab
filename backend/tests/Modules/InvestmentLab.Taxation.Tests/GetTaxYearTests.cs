@@ -131,11 +131,11 @@ public sealed class GetTaxYearTests
         var taxpayers = new TaxpayerReader(accounts, new TaxAccountSync(ledger, accounts, new TaxJournals(new EmptyJournal())), repository);
         var taxEvents = new TaxEventReader(ledger, new NoStatements(), null!, new NoInstrumentKeys());
         var recalculator = new TaxRecalculator(new OneAccount(), taxpayers, taxEvents, repository, clock);
-        var refreshed = await new RefreshTaxAssessmentsHandler(recalculator, new SignedIn()).Handle(TestContext.Current.CancellationToken);
-        var query = new GetTaxYearHandler(repository, new NoInstruments(), clock);
+        await new RefreshTaxAssessmentsHandler(recalculator, new SignedIn()).Handle(TestContext.Current.CancellationToken);
+        var query = new GetTaxYearHandler(repository, new NoInstruments(), recalculator, new SignedIn(), clock);
 
         var saves = repository.Saves;
-        var details = await query.Handle(Now.Year, refreshed, TestContext.Current.CancellationToken);
+        var details = await query.Handle(Now.Year, TestContext.Current.CancellationToken);
 
         details.Value.OpenLots.ShouldNotBeEmpty();
         repository.Saves.ShouldBe(saves);

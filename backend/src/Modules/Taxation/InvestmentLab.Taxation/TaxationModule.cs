@@ -96,6 +96,7 @@ public sealed class TaxationModule : IModule
     private static void AddDeclarations(IServiceCollection services)
     {
         services.AddScoped<DeclarationAccounts>();
+        services.AddScoped<DeclarationFiller>();
         services.AddScoped<ListDeclarationFormsHandler>();
         services.AddScoped<GetDeclarationHandler>();
         services.AddScoped<GetDeclarationPdfHandler>();

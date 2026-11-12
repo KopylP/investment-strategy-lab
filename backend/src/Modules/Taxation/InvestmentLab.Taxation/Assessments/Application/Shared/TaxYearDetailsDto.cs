@@ -1,5 +1,3 @@
-using InvestmentLab.Taxation.Assessments.Domain;
-
 namespace InvestmentLab.Taxation.Assessments.Application.Shared;
 
 public sealed record TaxYearDetailsDto(
@@ -7,11 +5,11 @@ public sealed record TaxYearDetailsDto(
     string PolicyCode,
     string FxRule,
     DateTimeOffset ComputedAt,
-    TaxYearSummary Summary,
-    IReadOnlyList<Realization> Realizations,
-    IReadOnlyList<DividendIncome> Dividends,
-    IReadOnlyList<CarryforwardUse> CarryforwardUses,
-    IReadOnlyList<OpenLotSnapshot> OpenLots,
+    TaxYearSummaryDto Summary,
+    IReadOnlyList<RealizationDto> Realizations,
+    IReadOnlyList<DividendIncomeDto> Dividends,
+    IReadOnlyList<CarryforwardUseDto> CarryforwardUses,
+    IReadOnlyList<OpenLotSnapshotDto> OpenLots,
     IReadOnlyDictionary<Guid, string> Instruments,
     IReadOnlyList<TaxAccountDto> Accounts,
     IReadOnlyList<string> Warnings,

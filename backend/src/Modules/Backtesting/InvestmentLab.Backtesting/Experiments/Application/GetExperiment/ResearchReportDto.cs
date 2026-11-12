@@ -1,10 +1,10 @@
 using InvestmentLab.Backtesting.Experiments.Domain;
-using InvestmentLab.Backtesting.Replays.Application.Shared;
+using InvestmentLab.Backtesting.Experiments.Application.Shared;
 
 namespace InvestmentLab.Backtesting.Experiments.Application.GetExperiment;
 
 public sealed record ResearchReportDto(
-    ReplayResultDto Baseline,
+    ResearchResultDto Baseline,
     IReadOnlyList<ResearchStudyDto> Studies,
     string ParametersHash,
     string EngineVersion,
@@ -14,7 +14,7 @@ public sealed record ResearchReportDto(
     Guid? CashInstrumentId)
 {
     public static ResearchReportDto From(ResearchReport researchReport) => new(
-        Baseline: ReplayResultDto.From(researchReport.Baseline),
+        Baseline: ResearchResultDto.From(researchReport.Baseline),
         Studies: [.. researchReport.Studies.Select(ResearchStudyDto.From)],
         ParametersHash: researchReport.ParametersHash,
         EngineVersion: researchReport.EngineVersion,

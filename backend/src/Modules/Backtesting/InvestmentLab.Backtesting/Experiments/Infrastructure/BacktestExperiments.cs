@@ -6,7 +6,6 @@ using InvestmentLab.Backtesting.Experiments.Application.GetExperimentOutcome;
 using InvestmentLab.Backtesting.Experiments.Application.GetExperimentStatus;
 using InvestmentLab.Backtesting.Experiments.Application.RequestExperiment;
 using InvestmentLab.Backtesting.Experiments.Application.Shared;
-using InvestmentLab.Backtesting.Replays.Application.Shared;
 
 namespace InvestmentLab.Backtesting.Experiments.Infrastructure;
 
@@ -71,7 +70,7 @@ internal sealed class BacktestExperiments(
         return new ExperimentConditionsDto(period, settings.InitialCapital, costs, robustness);
     }
 
-    private static TradingCostsDto CostsOf(ExperimentSettingsDto settings) => new(
+    private static ResearchTradingCostsDto CostsOf(ExperimentSettingsDto settings) => new(
         CommissionRate: settings.CommissionRate,
         FeePerTrade: settings.FeePerTrade,
         SpreadBps: settings.SpreadBps,

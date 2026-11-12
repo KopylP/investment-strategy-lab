@@ -1,15 +1,22 @@
+using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.MarketData.Contracts.Instruments;
 using InvestmentLab.Taxation.Assessments.Application.Shared;
 using InvestmentLab.Taxation.Assessments.Domain;
 
 namespace InvestmentLab.Taxation.Assessments.Application.GetTaxYear;
 
-public sealed class GetTaxYearHandler(IAssessmentRepository assessments, IInstrumentCatalog instruments, TimeProvider clock)
+public sealed class GetTaxYearHandler(
+    IAssessmentRepository assessments,
+    IInstrumentCatalog instruments,
+    TaxRecalculator recalculator,
+    ICurrentUser currentUser,
+    TimeProvider clock)
 {
     private const int ShortIdLength = 8;
 
-    public async Task<Result<TaxYearDetailsDto>> Handle(int year, RecomputeOutcome refreshed, CancellationToken cancellationToken)
+    public async Task<Result<TaxYearDetailsDto>> Handle(int year, CancellationToken cancellationToken)
     {
+        var refreshed = await recalculator.RefreshedAsync(currentUser.RequiredId, cancellationToken);
         var assessed = await assessments.ForOwnerAsync(refreshed.Taxpayer.OwnerId, cancellationToken);
         if (assessed.FirstOrDefault(assessment => assessment.Year == year) is not { } assessment)
             return Error.NotFound("tax.year_not_found", $"No taxable events in {year}.");
@@ -23,11 +30,11 @@ public sealed class GetTaxYearHandler(IAssessmentRepository assessments, IInstru
             assessment.PolicyCode,
             policy.FxRule.Description,
             assessment.ComputedAt,
-            assessment.Summary,
-            assessment.Realizations,
-            assessment.Dividends,
-            assessment.CarryforwardUses,
-            openLots,
+            TaxYearSummaryDto.From(assessment.Summary),
+            [.. assessment.Realizations.Select(RealizationDto.From)],
+            [.. assessment.Dividends.Select(DividendIncomeDto.From)],
+            [.. assessment.CarryforwardUses.Select(CarryforwardUseDto.From)],
+            [.. openLots.Select(OpenLotSnapshotDto.From)],
             labels,
             TaxAccountMapping.AccountsOf(refreshed.Taxpayer),
             refreshed.Warnings,
