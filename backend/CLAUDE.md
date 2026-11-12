@@ -32,7 +32,7 @@ this rule?" If yes, it belongs in `Domain`, whatever the shape of the code that 
 | Layer | Holds | Must not hold | Tested by |
 |---|---|---|---|
 | `Domain` | Every business rule and calculation: aggregates, value objects, domain services and pure calculators (`TaxCalculator`, `SalesTaxImpactCalculator`, `BrokerTickerMatcher`), domain events, errors, repository and policy interfaces | EF Core, ASP.NET, HTTP, the clock, reading or saving data, other modules' contracts | **Unit tests, required**: each rule, its edge cases and each way it can fail, without Docker or mocks of infrastructure |
-| `Application` | The order of steps of one use case: load, call the domain, save, return. Mapping to its own DTOs. A plain read of another module's `.Contracts` query (see Data from other modules) | Business rules, calculations, thresholds, `if`s that decide a business outcome | Only when it has real branching of its own; most is covered through the domain and the integration scenario |
+| `Application` | The order of steps of one use case: load, call the domain, save, return. Mapping to its own DTOs. A plain read of another module's `.Contracts` query (see Data from other modules) | Business rules, calculations, thresholds, `if`s that decide a business outcome; a domain type in a command, a query, a DTO or a handler's signature | Only when it has real branching of its own; most is covered through the domain and the integration scenario |
 | `Infrastructure` | How the outside world is reached: EF configurations, repositories, HTTP adapters, parsers of external formats, adapters over other modules' contracts | Business decisions; an adapter only translates | Adapter tests where the format is tricky; integration tests otherwise |
 | `Api` | Routes, binding, calling one handler, `ToHttpResult()` | Anything else, including validation rules beyond binding | Integration scenario |
 | `Contracts` | What other modules may see: integration events and query interfaces, primitives only | Rules or logic beyond trivial derived values; references to anything of ours | — |
@@ -109,6 +109,14 @@ public sealed class RetireSubPortfolioHandler(IAccountRepository accounts, TimeP
 - **A query** only reads: load, map to a DTO, return. It changes nothing and raises nothing. Name it `Get…` or `List…`.
   Data that is derived and kept on demand (tax assessments, valuation snapshots) is made fresh by its own `Refresh…`
   handler, and the endpoint named `RefreshAndGet…` calls that handler and then the query.
+- **The application's contract speaks DTOs, never the domain.** A command, a query, the parameters and the result of
+  `Handle`, and every record they carry hold only primitives, SharedKernel values and the module's own `…Dto` records from
+  `Application/`. The handler maps the DTO to the domain (`command.Conditions.ToDomain()`, a private `PatchOf(command)`) and
+  the domain result back to a DTO (`ReplayResultDto.From(result)`); an enum travels as its name and is parsed with
+  `EnumText.TryParse`. A class that other handlers call with domain objects is not a handler but a service in the action's
+  folder or `Application/Shared/` (`MonthlyReportGenerator`, `DeclarationFiller`). A feature maps another feature's domain
+  to DTOs of its own (`ResearchResultDto` in Experiments, `ReplayResultDto` in Replays). `ApplicationContractTests` checks
+  handlers and the Api layer.
 - **Failures** are returned as `Result` with an error from `<Feature>Errors` in `Domain/`, not thrown. Parsing input into
   value objects is a private method or lives on the input DTO.
 - **An endpoint** is a named private method that calls one handler and returns `ToHttpResult()`; the route table at the
@@ -190,6 +198,7 @@ internal sealed class PlanningAccounts(IAccountSetupQueries accounts) : IPlannin
 - A module uses another only through its `.Contracts` project: integration events (`…V1` records) and query
   interfaces implemented inside the owning module. Contracts hold primitives only and reference nothing of ours.
 - `Domain` depends only on `SharedKernel`; no EF Core / ASP.NET there.
+- Handlers, endpoints and MCP tools take and return no domain type, not even nested in a DTO (`ApplicationContractTests`).
 - Each module has its own `DbContext` and schema; integration events go out through the outbox in the same save
   (ADR-0007): the aggregate raises a domain event, a mapper registered by the module turns it into an integration event
   (`AddDomainEventMapper`). Repositories do not publish.

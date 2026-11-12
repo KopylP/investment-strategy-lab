@@ -5,6 +5,6 @@ namespace InvestmentLab.Taxation.Assessments.Application.RefreshTaxAssessments;
 
 public sealed class RefreshTaxAssessmentsHandler(TaxRecalculator recalculator, ICurrentUser currentUser)
 {
-    public Task<RecomputeOutcome> Handle(CancellationToken cancellationToken) =>
-        recalculator.RecomputeOwnerAsync(currentUser.RequiredId, cancellationToken);
+    public async Task Handle(CancellationToken cancellationToken) =>
+        await recalculator.RecomputeOwnerAsync(currentUser.RequiredId, cancellationToken);
 }

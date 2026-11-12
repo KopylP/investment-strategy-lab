@@ -1,14 +1,14 @@
 using InvestmentLab.Backtesting.Replays.Domain;
 
-namespace InvestmentLab.Backtesting.Replays.Application.Shared;
+namespace InvestmentLab.Backtesting.Experiments.Application.Shared;
 
-public sealed record TradingCostsDto(
+public sealed record ResearchTradingCostsDto(
     decimal CommissionRate,
     decimal FeePerTrade,
     decimal SpreadBps,
     decimal SlippageBps)
 {
-    public static TradingCostsDto From(TradingCosts tradingCosts) => new(
+    public static ResearchTradingCostsDto From(TradingCosts tradingCosts) => new(
         CommissionRate: tradingCosts.CommissionRate,
         FeePerTrade: tradingCosts.FeePerTrade,
         SpreadBps: tradingCosts.SpreadBps,

@@ -1,13 +1,12 @@
-using InvestmentLab.Taxation.Declarations.Application.GetDeclaration;
 using InvestmentLab.Taxation.Declarations.Application.Shared;
 
 namespace InvestmentLab.Taxation.Declarations.Application.GetDeclarationPdf;
 
-public sealed class GetDeclarationPdfHandler(GetDeclarationHandler declarations, IEnumerable<IDeclarationPrinter> printers)
+public sealed class GetDeclarationPdfHandler(DeclarationFiller filler, IEnumerable<IDeclarationPrinter> printers)
 {
     public async Task<Result<(byte[] Content, string FileName)>> Handle(int year, string code, string kind, CancellationToken cancellationToken)
     {
-        var filled = await declarations.Handle(year, code, cancellationToken);
+        var filled = await filler.FillAsync(year, code, cancellationToken);
         if (filled.IsFailure)
             return filled.Error;
 

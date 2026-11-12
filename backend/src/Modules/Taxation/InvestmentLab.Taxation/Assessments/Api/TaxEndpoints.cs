@@ -42,8 +42,8 @@ internal static class TaxEndpoints
     private static async Task<Ok<TaxOverviewDto>> RefreshAndGetTaxYears(
         RefreshTaxAssessmentsHandler refresh, GetTaxYearsHandler query, CancellationToken cancellationToken)
     {
-        var refreshed = await refresh.Handle(cancellationToken);
-        var overview = await query.Handle(refreshed, cancellationToken);
+        await refresh.Handle(cancellationToken);
+        var overview = await query.Handle(cancellationToken);
 
         return TypedResults.Ok(overview);
     }
@@ -51,8 +51,8 @@ internal static class TaxEndpoints
     private static async Task<IResult> RefreshAndGetTaxYear(
         int year, RefreshTaxAssessmentsHandler refresh, GetTaxYearHandler query, CancellationToken cancellationToken)
     {
-        var refreshed = await refresh.Handle(cancellationToken);
-        var taxYear = await query.Handle(year, refreshed, cancellationToken);
+        await refresh.Handle(cancellationToken);
+        var taxYear = await query.Handle(year, cancellationToken);
 
         return taxYear.ToHttpResult();
     }
@@ -60,8 +60,8 @@ internal static class TaxEndpoints
     private static async Task<Ok<TaxProgressDto>> RefreshAndGetTaxProgress(
         int year, RefreshTaxAssessmentsHandler refresh, GetTaxProgressHandler query, CancellationToken cancellationToken)
     {
-        var refreshed = await refresh.Handle(cancellationToken);
-        var progress = query.Handle(year, refreshed);
+        await refresh.Handle(cancellationToken);
+        var progress = await query.Handle(year, cancellationToken);
 
         return TypedResults.Ok(progress);
     }

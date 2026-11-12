@@ -1,6 +1,5 @@
 using InvestmentLab.Backtesting.Experiments.Application.Shared;
 using InvestmentLab.Backtesting.Experiments.Domain;
-using InvestmentLab.Backtesting.Replays.Application.Shared;
 using InvestmentLab.Backtesting.Replays.Domain;
 
 namespace InvestmentLab.Backtesting.Experiments.Application.GetExperimentBrief;
@@ -14,7 +13,7 @@ public sealed record ExperimentBriefDto(
     string Status,
     string? FailureReason,
     ExperimentConditionsDto Conditions,
-    ReplayResultBriefDto? Result,
+    ResearchResultBriefDto? Result,
     IReadOnlyList<ResearchStudyBrief>? Studies);
 
 public sealed record ResearchStudyBrief(
@@ -46,7 +45,7 @@ public sealed class GetExperimentBriefHandler(IExperimentRepository experiments)
             Status: experiment.Status.ToString(),
             FailureReason: experiment.FailureReason,
             Conditions: ExperimentConditionsDto.From(experiment.Conditions),
-            Result: brief is null ? null : ReplayResultBriefDto.From(brief),
+            Result: brief is null ? null : ResearchResultBriefDto.From(brief),
             Studies: studies);
     }
 

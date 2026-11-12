@@ -12,6 +12,8 @@ public sealed class TaxRecalculator(
 {
     private const int ShownMissingRates = 5;
 
+    private RecomputeOutcome? _refreshed;
+
     public async Task<Result<RecomputeOutcome>> RecomputeAsync(Guid accountId, CancellationToken cancellationToken)
     {
         if (await accounts.GetAccountSetup(accountId, cancellationToken) is not { } account)
@@ -20,8 +22,20 @@ public sealed class TaxRecalculator(
         return await RecomputeOwnerAsync(UserId.Of(account.OwnerId), cancellationToken);
     }
 
-    public Task<RecomputeOutcome> RecomputeOwnerAsync(UserId ownerId, CancellationToken cancellationToken) =>
-        assessments.SerializedAsync(ownerId, () => RecomputeLockedAsync(ownerId, cancellationToken), cancellationToken);
+    public async Task<RecomputeOutcome> RecomputeOwnerAsync(UserId ownerId, CancellationToken cancellationToken)
+    {
+        _refreshed = await assessments.SerializedAsync(ownerId, () => RecomputeLockedAsync(ownerId, cancellationToken), cancellationToken);
+
+        return _refreshed;
+    }
+
+    public async Task<RecomputeOutcome> RefreshedAsync(UserId ownerId, CancellationToken cancellationToken)
+    {
+        if (_refreshed is { } refreshed && refreshed.Taxpayer.OwnerId == ownerId)
+            return refreshed;
+
+        return await RecomputeOwnerAsync(ownerId, cancellationToken);
+    }
 
     private async Task<RecomputeOutcome> RecomputeLockedAsync(UserId ownerId, CancellationToken cancellationToken)
     {
