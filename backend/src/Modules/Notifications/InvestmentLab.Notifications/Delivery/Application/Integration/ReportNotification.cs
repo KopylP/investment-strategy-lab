@@ -14,6 +14,8 @@ internal static class ReportNotification
 
     private const int MaxReasonLength = 300;
 
+    private const string ReportsPage = "/reports";
+
     public static string TagOf(Guid reportId) => $"investlab_report_{reportId:N}";
 
     public static string FailedTagOf(Guid accountId, string code) => $"investlab_report_failed_{accountId:N}_{code}";
@@ -31,7 +33,9 @@ internal static class ReportNotification
         var title = ReadyTitle(report, riskReview);
         var message = WithNext(ReadyBody(report.AccountName, actions), next);
 
-        return new Notification(report.OwnerId, Topic, TagOf(report.ReportId), title, message, new Dictionary<string, object?>
+        var page = $"{ReportsPage}/{report.ReportId}";
+
+        return new Notification(report.OwnerId, Topic, TagOf(report.ReportId), title, message, page, new Dictionary<string, object?>
         {
             ["report_id"] = report.ReportId,
             ["account_id"] = report.AccountId,
@@ -55,6 +59,7 @@ internal static class ReportNotification
             failed.OwnerId, FailedTopic, FailedTagOf(failed.AccountId, failed.Code),
             Message.Of("notification.report.failed_title", new { title = failed.Title, period = PeriodText(failed.Period) }),
             WithNext(body, next),
+            ReportsPage,
             new Dictionary<string, object?>
             {
                 ["request_id"] = failed.RequestId,

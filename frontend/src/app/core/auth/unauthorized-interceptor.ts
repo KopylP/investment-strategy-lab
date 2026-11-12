@@ -3,7 +3,7 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, from, switchMap, throwError } from 'rxjs';
 import { AuthStore } from './auth-store';
-import { IngressSession } from './ingress-session';
+import { IngressSession } from '../home-assistant/ingress-session';
 
 const retriedWithNewSession = new HttpContextToken(() => false);
 

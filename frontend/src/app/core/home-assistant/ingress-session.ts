@@ -1,7 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { inject, Injectable } from '@angular/core';
 import { NavigationError } from '@angular/router';
-import { AuthStore } from './auth-store';
+import { isInHomeAssistantPanel } from './home-assistant-panel';
 
 const reloadKey = 'investmentlab.ingressReloadAt';
 const reloadCooldownMs = 30_000;
@@ -13,7 +13,7 @@ interface Hass {
 @Injectable({ providedIn: 'root' })
 export class IngressSession {
   private readonly document = inject(DOCUMENT);
-  private readonly enabled = inject(AuthStore).inHomeAssistantPanel;
+  private readonly enabled = isInHomeAssistantPanel(this.document);
   private pending: Promise<boolean> | null = null;
 
   constructor() {

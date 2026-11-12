@@ -19,12 +19,13 @@ import { providePrimeNG } from 'primeng/config';
 import { DialogService } from 'primeng/dynamicdialog';
 import { routes } from './app.routes';
 import { basePathInterceptor } from './core/api/base-path-interceptor';
-import { reloadWithNewIngressSession } from './core/auth/ingress-session';
+import { reloadWithNewIngressSession } from './core/home-assistant/ingress-session';
 import { unauthorizedInterceptor } from './core/auth/unauthorized-interceptor';
 import { activeLanguage, activeLocale } from './core/i18n/language';
 import { languageInterceptor } from './core/i18n/language-interceptor';
 import { provideI18n } from './core/i18n/provide-i18n';
 import { translationInterceptor } from './core/i18n/translation-interceptor';
+import { provideHomeAssistantPanel } from './core/home-assistant/provide-home-assistant-panel';
 import { NavigationHistory } from './core/layout/navigation-history';
 import { InvestmentLabPreset } from './core/theme/investment-lab.preset';
 import { primeNgTranslations } from './core/theme/primeng-translations';
@@ -41,6 +42,7 @@ export const appConfig: ApplicationConfig = {
       withNavigationErrorHandler(reloadWithNewIngressSession),
     ),
     provideEnvironmentInitializer(() => inject(NavigationHistory)),
+    provideHomeAssistantPanel(),
     provideHttpClient(
       withFetch(),
       withInterceptors([

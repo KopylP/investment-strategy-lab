@@ -23,10 +23,10 @@ public sealed class HomeAssistantChannelTests
     private readonly FakeHomeAssistant _homeAssistant = new();
 
     private HomeAssistantChannel Channel() =>
-        new(new HttpClient(_homeAssistant) { BaseAddress = new Uri(HomeAssistantChannel.SupervisorAddress) }, new HomeAssistantChannelOptions("/hassio/ingress/local_investlab"), new NoStrategyMessages());
+        new(new HttpClient(_homeAssistant) { BaseAddress = new Uri(HomeAssistantChannel.SupervisorAddress) }, new HomeAssistantChannelOptions("/local_investlab"), new NoStrategyMessages());
 
     private static Notification Report(Guid recipient) =>
-        new(recipient, "report_ready", "investlab_report_1", "Рапорт готовий", "3 дії", new Dictionary<string, object?>());
+        new(recipient, "report_ready", "investlab_report_1", "Рапорт готовий", "3 дії", "/reports/1", new Dictionary<string, object?>());
 
     [Fact]
     public async Task Every_Companion_app_phone_is_offered_and_the_users_own_through_their_person_is_suggested()
@@ -92,14 +92,25 @@ public sealed class HomeAssistantChannelTests
         _homeAssistant.Titles.ShouldBe(["Investment Lab: test notification"]);
     }
 
+    [Fact]
+    public async Task The_notice_and_the_push_open_the_page_of_the_notification_in_the_panel()
+    {
+        await Channel().SendAsync(Report(Guid.NewGuid()), new Recipient(Guid.NewGuid(), "ha-olena", null), CancellationToken.None);
+
+        _homeAssistant.Bodies["core/api/services/persistent_notification/create"].ShouldContain("(/local_investlab/reports/1)");
+        _homeAssistant.Bodies["core/api/services/notify/mobile_app_pixel"].ShouldContain("\"clickAction\":\"/local_investlab/reports/1\"");
+    }
+
     private static Notification Test(Guid recipient) =>
-        new(recipient, "test", "investlab_test", Message.Of("notification.test.title"), Message.Of("notification.test.message"), new Dictionary<string, object?>());
+        new(recipient, "test", "investlab_test", Message.Of("notification.test.title"), Message.Of("notification.test.message"), "/profile", new Dictionary<string, object?>());
 
     private sealed class FakeHomeAssistant : HttpMessageHandler
     {
         public List<string> Posts { get; } = [];
 
         public List<string> Titles { get; } = [];
+
+        public Dictionary<string, string> Bodies { get; } = [];
 
         public string Language { get; set; } = "en";
 
@@ -108,7 +119,10 @@ public sealed class HomeAssistantChannelTests
             var path = request.RequestUri!.AbsolutePath.TrimStart('/');
 
             if (request.Method == HttpMethod.Post)
+            {
                 Posts.Add(path);
+                Bodies[path] = request.Content!.ReadAsStringAsync(cancellationToken).Result;
+            }
 
             if (path == "core/api/services/persistent_notification/create")
                 Titles.Add(System.Text.Json.JsonDocument.Parse(request.Content!.ReadAsStringAsync(cancellationToken).Result).RootElement.GetProperty("title").GetString()!);

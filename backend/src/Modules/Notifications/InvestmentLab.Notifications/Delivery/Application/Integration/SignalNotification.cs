@@ -10,6 +10,8 @@ internal static class SignalNotification
 
     private const int MaxSubjectsShown = 5;
 
+    private const string SignalsPage = "/signals";
+
     public static string TagOf(Guid signalId) => $"investlab_signal_{signalId:N}";
 
     public static Notification For(SignalTriggeredV1 triggered)
@@ -18,7 +20,7 @@ internal static class SignalNotification
         var message = MessageOf(triggered.Subjects);
         var data = DataOf(triggered);
 
-        return new Notification(triggered.OwnerId, Topic, TagOf(triggered.SignalId), title, message, data);
+        return new Notification(triggered.OwnerId, Topic, TagOf(triggered.SignalId), title, message, SignalsPage, data);
     }
 
     private static string MessageOf(IReadOnlyList<TriggeredSubjectDto> subjects)
