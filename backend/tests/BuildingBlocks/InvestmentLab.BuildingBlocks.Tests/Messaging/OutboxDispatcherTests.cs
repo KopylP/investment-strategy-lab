@@ -23,8 +23,10 @@ public sealed class OutboxDispatcherTests : IAsyncDisposable
     public OutboxDispatcherTests()
     {
         var databaseName = Guid.NewGuid().ToString();
+        var slowModuleDatabaseName = Guid.NewGuid().ToString();
         _services = new ServiceCollection()
             .AddDbContext<OutboxDbContext>(options => options.UseInMemoryDatabase(databaseName))
+            .AddDbContext<SlowModuleDbContext>(options => options.UseInMemoryDatabase(slowModuleDatabaseName))
             .BuildServiceProvider();
 
         _dispatcher = new OutboxDispatcher(
@@ -40,6 +42,15 @@ public sealed class OutboxDispatcherTests : IAsyncDisposable
     private sealed class OutboxDbContext(DbContextOptions<OutboxDbContext> options) : ModuleDbContext(options)
     {
         protected override string Schema => "things";
+
+        protected override Assembly MappingsAssembly => typeof(OutboxDispatcherTests).Assembly;
+
+        protected override bool IsMappedHere(Type configuration) => false;
+    }
+
+    private sealed class SlowModuleDbContext(DbContextOptions<SlowModuleDbContext> options) : ModuleDbContext(options)
+    {
+        protected override string Schema => "slow";
 
         protected override Assembly MappingsAssembly => typeof(OutboxDispatcherTests).Assembly;
 
@@ -62,6 +73,23 @@ public sealed class OutboxDispatcherTests : IAsyncDisposable
         }
     }
 
+    private sealed class GatedDelivery(string eventType) : IIntegrationEventDelivery
+    {
+        private readonly TaskCompletionSource _gate = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public TaskCompletionSource Delivered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public string EventType => eventType;
+
+        public void Open() => _gate.TrySetResult();
+
+        public async Task DeliverAsync(IServiceProvider services, string payload, CancellationToken cancellationToken)
+        {
+            await _gate.Task.WaitAsync(cancellationToken);
+            Delivered.TrySetResult();
+        }
+    }
+
     private sealed class RecordingLogger : ILogger<OutboxDispatcher>
     {
         public List<(LogLevel Level, string Text)> Entries { get; } = [];
@@ -75,11 +103,14 @@ public sealed class OutboxDispatcherTests : IAsyncDisposable
             Entries.Add((logLevel, formatter(state, exception)));
     }
 
-    private async Task<OutboxMessage> AddMessageAsync(string payload)
+    private Task<OutboxMessage> AddMessageAsync(string payload) => AddMessageAsync<OutboxDbContext>(EventType, payload);
+
+    private async Task<OutboxMessage> AddMessageAsync<TContext>(string eventType, string payload)
+        where TContext : DbContext
     {
         await using var scope = _services.CreateAsyncScope();
-        var context = scope.ServiceProvider.GetRequiredService<OutboxDbContext>();
-        var message = OutboxMessage.For(EventType, payload, _clock.GetUtcNow());
+        var context = scope.ServiceProvider.GetRequiredService<TContext>();
+        var message = OutboxMessage.For(eventType, payload, _clock.GetUtcNow());
         context.Add(message);
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
         _clock.Advance(TimeSpan.FromMilliseconds(1));
@@ -155,5 +186,28 @@ public sealed class OutboxDispatcherTests : IAsyncDisposable
         await DispatchAsync();
 
         _logger.Entries.ShouldHaveSingleItem().Level.ShouldBe(LogLevel.Warning);
+    }
+
+    [Fact]
+    public async Task A_module_whose_handler_is_slow_does_not_hold_back_the_events_of_another_module()
+    {
+        var slow = new GatedDelivery("SlowThing");
+        var prompt = new GatedDelivery("PromptThing");
+        prompt.Open();
+        await AddMessageAsync<SlowModuleDbContext>(slow.EventType, "slow");
+        await AddMessageAsync<OutboxDbContext>(prompt.EventType, "prompt");
+        using var dispatcher = new OutboxDispatcher(
+            contexts: [new ModuleDbContextType(typeof(SlowModuleDbContext)), new ModuleDbContextType(typeof(OutboxDbContext))],
+            deliveries: [slow, prompt],
+            scopes: _services.GetRequiredService<IServiceScopeFactory>(),
+            clock: _clock,
+            logger: _logger);
+
+        await dispatcher.StartAsync(TestContext.Current.CancellationToken);
+        await prompt.Delivered.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+
+        slow.Delivered.Task.IsCompleted.ShouldBeFalse();
+        slow.Open();
+        await dispatcher.StopAsync(TestContext.Current.CancellationToken);
     }
 }

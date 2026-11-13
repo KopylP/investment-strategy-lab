@@ -19,26 +19,35 @@ internal sealed class OutboxDispatcher(
     private readonly Dictionary<string, IIntegrationEventDelivery> _deliveries =
         deliveries.ToDictionary(delivery => delivery.EventType);
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var loops = contexts.Select(context => DispatchContinuouslyAsync(context, stoppingToken));
+
+        return Task.WhenAll(loops);
+    }
+
+    private async Task DispatchContinuouslyAsync(ModuleDbContextType context, CancellationToken stoppingToken)
+    {
+        await Task.Yield();
         using var timer = new PeriodicTimer(PollInterval, clock);
 
         do
         {
-            foreach (var context in contexts)
-            {
-                try
-                {
-                    while (await DispatchBatchAsync(context, stoppingToken) == BatchSize) { }
-                }
-                catch (Exception exception) when (exception is not OperationCanceledException)
-                {
-                    logger.LogError(exception, "Outbox of {Context} could not be dispatched", context.ContextType.Name);
-                }
-            }
+            await DispatchPendingAsync(context, stoppingToken);
         }
-
         while (await WaitForNextTickAsync(timer, stoppingToken));
+    }
+
+    private async Task DispatchPendingAsync(ModuleDbContextType context, CancellationToken stoppingToken)
+    {
+        try
+        {
+            while (await DispatchBatchAsync(context, stoppingToken) == BatchSize) { }
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            logger.LogError(exception, "Outbox of {Context} could not be dispatched", context.ContextType.Name);
+        }
     }
 
     internal async Task<int> DispatchBatchAsync(ModuleDbContextType context, CancellationToken stoppingToken)
