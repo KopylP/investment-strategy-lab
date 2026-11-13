@@ -3,6 +3,7 @@ import { ApiClient } from '../../../core/api/api-client';
 import {
   ChangeSignalBody,
   CreateSignalBody,
+  SignalCreatedDto,
   SignalReportRuleDto,
   SignalsOverviewDto,
 } from '../models/signal-dto';
@@ -15,7 +16,7 @@ export class SignalsApi {
     return this.api.get<SignalsOverviewDto>('/api/signals');
   }
 
-  create(body: CreateSignalBody): Promise<{ id: string }> {
+  create(body: CreateSignalBody): Promise<SignalCreatedDto> {
     return this.api.post('/api/signals', body);
   }
 

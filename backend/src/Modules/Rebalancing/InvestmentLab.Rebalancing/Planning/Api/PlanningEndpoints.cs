@@ -33,8 +33,10 @@ internal static class PlanningEndpoints
     {
         var rules = group.MapGroup("/signal-report-rules").WithTags("Planning");
 
-        rules.MapGet("", GetSignalReportRules).WithName("GetSignalReportRules");
-        rules.MapPost("", AddSignalReportRule).WithName("AddSignalReportRule");
+        rules.MapGet("", GetSignalReportRules).WithName("GetSignalReportRules")
+            .Produces<IReadOnlyList<SignalReportRuleDto>>();
+        rules.MapPost("", AddSignalReportRule).WithName("AddSignalReportRule")
+            .Produces<SignalReportRuleDto>();
         rules.MapDelete("/{ruleId:guid}", RemoveSignalReportRule).WithName("RemoveSignalReportRule");
 
         var account = group.MapGroup("/accounts/{accountId:guid}").WithTags("Planning");

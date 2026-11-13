@@ -27,6 +27,8 @@ cd frontend && npx ng build
 - Strategy types live in the engine; the backend syncs their catalog (`GET /v1/strategies`) and asks them for
   decisions per sub-portfolio. The contract is `strategy-engine/contracts/v1/openapi.json`: a change on one side
   usually needs the other side (backend `Strategies` module, frontend models) in the same change.
+- The frontend's API types are generated from the backend's OpenAPI document, `backend/contracts/openapi.json`, written
+  by a Debug build of the API; regenerate them with `npm run api:types` in `frontend/` and commit both (CI checks it).
 - Reports a strategy type declares (code, name, mode, default schedule) drive what the backend schedules and generates
   and what the frontend lists — nothing about a specific report is hard-coded elsewhere.
 - The same holds for what a backtest is compared with (ADR-0017): the type declares comparison codes, each is one

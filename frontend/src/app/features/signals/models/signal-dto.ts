@@ -1,3 +1,4 @@
+import { ApiSchema } from '../../../core/api/api-schema';
 import { ReportTiming } from '../../reports/models/report-schedule';
 
 export type SignalTargetKind =
@@ -9,74 +10,35 @@ export type SignalTargetKind =
 export type SignalMetric = 'DrawdownFromPeak' | 'DayFall' | 'LossFromCost' | 'Level';
 export type SignalDirection = 'Above' | 'Below';
 
-export interface SignalConditionDto {
+export type SignalConditionDto = Omit<ApiSchema<'SignalConditionDto'>, 'metric' | 'direction'> & {
   metric: SignalMetric;
   direction: SignalDirection;
-  threshold: number;
-  rearmAt: number | null;
-  windowDays: number | null;
-}
+};
 
-export interface SignalDto {
-  id: string;
-  name: string;
+export type SignalDto = Omit<ApiSchema<'SignalDto'>, 'target' | 'condition' | 'schedule'> & {
   target: SignalTargetKind;
-  accountId: string | null;
-  subPortfolioId: string | null;
-  instrumentId: string | null;
-  groupName: string | null;
   condition: SignalConditionDto;
   schedule: ReportTiming;
-  enabled: boolean;
-  builtIn: boolean;
-  lastCheckedAt: string | null;
-  activeCount: number;
-}
+};
 
-export interface SignalOccurrenceDto {
-  id: string;
-  signalId: string;
-  signalName: string;
+export type SignalOccurrenceDto = Omit<ApiSchema<'SignalOccurrenceDto'>, 'metric'> & {
   metric: SignalMetric;
-  subjectLabel: string;
-  triggerValue: number;
-  latestValue: number;
-  triggerDate: string;
-  latestDate: string;
-  triggeredAt: string;
-  clearedAt: string | null;
-  clearReason: string | null;
-}
+};
 
-export interface SignalsOverviewDto {
+export type SignalsOverviewDto = Omit<ApiSchema<'SignalsOverviewDto'>, 'signals' | 'active' | 'recent'> & {
   signals: SignalDto[];
   active: SignalOccurrenceDto[];
   recent: SignalOccurrenceDto[];
-}
+};
 
-export interface CreateSignalBody {
-  name: string;
+export type CreateSignalBody = Omit<ApiSchema<'CreateSignalCommand'>, 'target' | 'condition'> & {
   target: SignalTargetKind;
-  accountId: string | null;
-  subPortfolioId: string | null;
-  instrumentId: string | null;
-  groupName: string | null;
   condition: SignalConditionDto;
-  schedule: ReportTiming;
-}
+};
 
-export interface ChangeSignalBody {
-  name: string;
+export type ChangeSignalBody = Omit<ApiSchema<'ChangeSignalCommand'>, 'condition'> & {
   condition: SignalConditionDto;
-  schedule: ReportTiming;
-  enabled: boolean;
-}
+};
 
-export interface SignalReportRuleDto {
-  id: string;
-  signalId: string;
-  accountId: string;
-  reportCode: string;
-  problem: string | null;
-  fromStrategy: boolean;
-}
+export type SignalCreatedDto = ApiSchema<'SignalCreatedDto'>;
+export type SignalReportRuleDto = ApiSchema<'SignalReportRuleDto'>;

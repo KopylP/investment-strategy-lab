@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 builder.AddNpgsqlDataSource(ResourceNames.Database);
-builder.Services.AddOpenApi();
+builder.AddOpenApiContract();
 builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>
 {
     if (context.HttpContext.RequestServices.GetRequiredService<IHostEnvironment>().IsDevelopment()
@@ -19,6 +19,7 @@ builder.AddModules(modules);
 builder.AddSelfHosting();
 builder.AddRequestLanguage();
 builder.AddMcpAccess(modules);
+builder.LeaveOutBackgroundWorkWhenGeneratingAtBuild();
 
 var app = builder.Build();
 

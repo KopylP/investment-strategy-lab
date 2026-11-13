@@ -7,6 +7,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "api:types": "openapi-typescript ../backend/contracts/openapi.json --output src/app/core/api/generated/backend-api.ts --properties-required-by-default",
+    "api:check": "npm run api:types -- --check",
     "e2e": "playwright test"
   },
   "private": true,
@@ -47,6 +49,7 @@
     "@playwright/test": "1.56",
     "@tailwindcss/postcss": "^4.3.3",
     "jsdom": "^28.0.0",
+    "openapi-typescript": "7.13.0",
     "postcss": "^8.5.31",
     "prettier": "^3.8.1",
     "tailwindcss": "^4.3.3",

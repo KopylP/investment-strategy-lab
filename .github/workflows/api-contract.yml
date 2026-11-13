@@ -1,0 +1,50 @@
+# The frontend's API types are generated from the backend's OpenAPI document (backend/contracts/openapi.json), and both
+# are committed. A Debug build of the API writes the document; `npm run api:types` writes the types from it. This run
+# fails when either committed file is older than the code: build the API and run `npm run api:types`, then commit both.
+name: API contract
+
+on:
+  push:
+    paths:
+      - backend/**
+      - frontend/**
+      - .github/workflows/api-contract.yml
+  pull_request:
+    paths:
+      - backend/**
+      - frontend/**
+      - .github/workflows/api-contract.yml
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: backend/global.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Write the OpenAPI document
+        working-directory: backend
+        run: dotnet build src/Hosts/InvestmentLab.Api --configuration Debug
+
+      - name: The committed OpenAPI document is up to date
+        run: git diff --exit-code -- backend/contracts/openapi.json
+
+      - name: Install frontend packages
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+
+      - name: The generated frontend types are up to date
+        working-directory: frontend
+        run: npm run api:check

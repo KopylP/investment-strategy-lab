@@ -17,8 +17,8 @@ internal static class SignalEndpoints
     {
         group.WithTags("Signals");
 
-        group.MapGet("", GetSignals).WithName("GetSignals");
-        group.MapPost("", CreateSignal).WithName("CreateSignal");
+        group.MapGet("", GetSignals).WithName("GetSignals").Produces<SignalsOverviewDto>();
+        group.MapPost("", CreateSignal).WithName("CreateSignal").Produces<SignalCreatedDto>();
         group.MapPut("/{signalId:guid}", ChangeSignal).WithName("ChangeSignal");
         group.MapDelete("/{signalId:guid}", DeleteSignal).WithName("DeleteSignal");
         group.MapPost("/{signalId:guid}/check", CheckSignal).WithName("CheckSignal");

@@ -1,5 +1,6 @@
 using InvestmentLab.BuildingBlocks.Http;
 using InvestmentLab.Portfolio.Holdings.Application.GetHoldings;
+using InvestmentLab.Portfolio.Contracts.Holdings;
 using InvestmentLab.Portfolio.Holdings.Application.GetValuedHoldings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -13,10 +14,12 @@ internal static class HoldingsEndpoints
     {
         group.MapGet("/accounts/{accountId:guid}/holdings", GetHoldings)
             .WithTags("Holdings")
-            .WithName("GetHoldings");
+            .WithName("GetHoldings")
+            .Produces<AccountHoldingsDto>();
         group.MapGet("/accounts/{accountId:guid}/holdings/valued", GetValuedHoldings)
             .WithTags("Holdings")
-            .WithName("GetValuedHoldings");
+            .WithName("GetValuedHoldings")
+            .Produces<ValuedHoldingsDto>();
 
         return group;
     }

@@ -13,14 +13,18 @@ internal static class BacktestEndpoints
 {
     public static RouteGroupBuilder MapBacktests(this RouteGroupBuilder group)
     {
-        group.MapPost("/comparisons", Compare).WithName("CompareBacktests");
+        group.MapPost("/comparisons", Compare)
+            .WithName("CompareBacktests")
+            .Produces<BacktestComparisonDto>();
         group.MapGet("/strategies/{strategyId:guid}", EnsureAndGetBacktest)
             .WithTags("Backtesting")
-            .WithName("GetBacktest");
+            .WithName("GetBacktest")
+            .Produces<BacktestDto>();
 
         group.MapGet("/strategies/{strategyId:guid}/money-outcomes", GetMoneyOutcomes)
             .WithTags("Backtesting")
-            .WithName("GetMoneyOutcomes");
+            .WithName("GetMoneyOutcomes")
+            .Produces<MoneyOutcomesDto>();
 
         return group;
     }
