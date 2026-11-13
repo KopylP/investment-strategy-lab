@@ -7,7 +7,7 @@ import { Tooltip } from 'primeng/tooltip';
 import { TapTooltip } from '../../../../shared/ui/tap-tooltip';
 import { SignedValue } from '../../../../shared/ui/signed-value';
 import { MoneyPipe, SignedPercentPipe } from '../../../../shared/pipes/format-pipes';
-import { DashboardDto } from '../../data-access/dashboard-api';
+import { DashboardDto } from '../../models/overview-dto';
 import { OverviewStore } from '../../data-access/overview-store';
 
 @Component({

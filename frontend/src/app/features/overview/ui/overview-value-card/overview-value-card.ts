@@ -9,7 +9,7 @@ import { SignedValue } from '../../../../shared/ui/signed-value';
 import { ValueChart } from '../../ui/value-chart/value-chart';
 import { Money } from '../../../../shared/ui/money/money';
 import { SignedPercentPipe, DatePipe } from '../../../../shared/pipes/format-pipes';
-import { DashboardDto } from '../../data-access/dashboard-api';
+import { DashboardDto } from '../../models/overview-dto';
 import { Viewport } from '../../../../shared/ui/viewport';
 import { OverviewStore } from '../../data-access/overview-store';
 

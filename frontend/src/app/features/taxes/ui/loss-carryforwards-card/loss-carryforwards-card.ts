@@ -8,7 +8,7 @@ import { InputNumber } from 'primeng/inputnumber';
 import { TableModule } from 'primeng/table';
 import { MoneyPipe } from '../../../../shared/pipes/format-pipes';
 import { ConfirmationService } from 'primeng/api';
-import { LossCarryforward } from '../../data-access/taxes-store';
+import { LossCarryforward } from '../../models/tax-dto';
 import { TaxesStore } from '../../data-access/taxes-store';
 
 @Component({

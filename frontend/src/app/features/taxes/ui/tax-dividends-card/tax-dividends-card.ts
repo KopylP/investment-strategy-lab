@@ -3,7 +3,7 @@ import { TaxMoneyPipe } from '../../../../core/context/tax-money-pipe';
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { MoneyPipe, DatePipe } from '../../../../shared/pipes/format-pipes';
-import { TaxYearDetails } from '../../data-access/taxes-store';
+import { TaxYearDetails } from '../../models/tax-dto';
 import { TaxesStore } from '../../data-access/taxes-store';
 
 @Component({

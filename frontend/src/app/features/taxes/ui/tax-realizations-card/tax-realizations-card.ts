@@ -8,7 +8,7 @@ import { Tooltip } from 'primeng/tooltip';
 import { TapTooltip } from '../../../../shared/ui/tap-tooltip';
 import { SignedValue } from '../../../../shared/ui/signed-value';
 import { MoneyPipe, QuantityPipe, DatePipe } from '../../../../shared/pipes/format-pipes';
-import { Realization, TaxYearDetails } from '../../data-access/taxes-store';
+import { Realization, TaxYearDetails } from '../../models/tax-dto';
 import { TaxesStore } from '../../data-access/taxes-store';
 
 @Component({

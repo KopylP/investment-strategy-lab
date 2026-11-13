@@ -7,7 +7,7 @@ import { lineChartBase } from '../../../../shared/charts/line-chart-base';
 import { valueAxis } from '../../../../shared/charts/value-axis';
 import { formatDate, formatSignedPercent } from '../../../../shared/pipes/format';
 import { Viewport } from '../../../../shared/ui/viewport';
-import { DashboardDto } from '../../data-access/dashboard-api';
+import { DashboardDto } from '../../models/overview-dto';
 
 @Component({
   selector: 'app-drawdown-chart',

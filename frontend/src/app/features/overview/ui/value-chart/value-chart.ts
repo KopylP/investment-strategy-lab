@@ -17,7 +17,7 @@ import {
   formatPeriod,
 } from '../../../../shared/pipes/format';
 import { Viewport } from '../../../../shared/ui/viewport';
-import { DashboardDto } from '../../data-access/dashboard-api';
+import { DashboardDto } from '../../models/overview-dto';
 
 const showPlanKey = 'overview.valueChart.showPlan';
 const showHeldKey = 'overview.valueChart.showHeld';

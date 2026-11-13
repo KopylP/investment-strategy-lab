@@ -3,29 +3,7 @@ import { computed, inject, Injectable, linkedSignal, resource, signal } from '@a
 import { ApiClient, toProblemMessage } from '../../../core/api/api-client';
 import { AccountContext } from '../../../core/context/account-context';
 import { DisplayCurrency } from '../../../core/context/display-currency';
-import { DashboardDto } from './dashboard-api';
-
-interface ReportSummary {
-  id: string;
-  accountId: string;
-  period: string;
-  kind: string;
-  status: string;
-  actionsOpen: number;
-  actionsTotal: number;
-  generatedAt: string;
-}
-
-export interface TaxProgress {
-  year: number;
-  taxDue: number;
-  gain: number;
-  dividends: number;
-  taxedAccounts: number;
-  points: { date: string; gain: number; dividends: number; taxDue: number }[];
-  alertShare: number | null;
-  incomplete: string[];
-}
+import { DashboardDto, ReportSummaryDto, StrategyDto, TaxProgress } from '../models/overview-dto';
 
 export type DashboardPeriod = '1M' | '3M' | '6M' | '1Y' | 'YTD' | 'ALL';
 
@@ -39,7 +17,7 @@ export class OverviewStore {
   readonly period = signal<DashboardPeriod>('ALL');
 
   private readonly strategiesResource = resource({
-    loader: () => this.api.get<unknown[]>('/api/strategies'),
+    loader: () => this.api.get<StrategyDto[]>('/api/strategies'),
   });
 
   private readonly dashboardResource = resource({
@@ -73,7 +51,7 @@ export class OverviewStore {
           ? { accountId: this.accounts.currentId() }
           : undefined,
     loader: ({ params }) =>
-      this.api.get<ReportSummary[]>(
+      this.api.get<ReportSummaryDto[]>(
         '/api/rebalancing/reports',
         'accountId' in params ? { accountId: params.accountId } : undefined,
       ),
@@ -86,7 +64,8 @@ export class OverviewStore {
   });
 
   private readonly totalResource = resource({
-    params: () => (this.tax()?.alertShare != null ? (this.regime.currency() ?? undefined) : undefined),
+    params: () =>
+      this.tax()?.alertShare != null ? (this.regime.currency() ?? undefined) : undefined,
     loader: ({ params: currency }) =>
       this.api.get<DashboardDto>('/api/performance/dashboard', { currency, period: '1M' }),
   });

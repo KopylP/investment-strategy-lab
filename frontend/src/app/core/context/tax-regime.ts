@@ -1,18 +1,7 @@
 import { computed, inject, Injectable, resource } from '@angular/core';
 import { ApiClient } from '../api/api-client';
+import { ApiSchema } from '../api/api-schema';
 import { AuthStore } from '../auth/auth-store';
-
-export interface TaxRegimeDto {
-  taxCurrency: string;
-  fxSource: string;
-  rateLabel: string;
-  summary: string | null;
-  estimateNote: string | null;
-  taxedAccountsLabel: string | null;
-  overviewHint: string | null;
-  progressNote: string | null;
-  lossesNote: string | null;
-}
 
 @Injectable({ providedIn: 'root' })
 export class TaxRegime {
@@ -21,7 +10,7 @@ export class TaxRegime {
 
   private readonly regimeResource = resource({
     params: () => (this.auth.isSignedIn() ? true : undefined),
-    loader: () => this.api.get<TaxRegimeDto>('/api/taxation/regime'),
+    loader: () => this.api.get<ApiSchema<'TaxRegimeDto'>>('/api/taxation/regime'),
   });
 
   readonly regime = computed(() => (this.regimeResource.hasValue() ? this.regimeResource.value() : null));

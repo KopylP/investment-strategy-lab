@@ -11,13 +11,13 @@ import { Message } from 'primeng/message';
 import { Skeleton } from 'primeng/skeleton';
 import { Tooltip } from 'primeng/tooltip';
 import { DatePipe, MoneyPipe } from '../../../../shared/pipes/format-pipes';
+import { formValue } from '../../data-access/declarations';
 import {
   DeclarationAccountLine,
   DeclarationField,
-  formValue,
   Pit8CAmounts,
   TaxDeclaration,
-} from '../../data-access/declarations';
+} from '../../models/declaration-dto';
 import { TapTooltip } from '../../../../shared/ui/tap-tooltip';
 
 @Component({

@@ -4,123 +4,16 @@ import { computed, inject, Injectable, resource, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { ApiClient, toProblemMessage } from '../../../core/api/api-client';
 import { AccountContext } from '../../../core/context/account-context';
-import { DeclarationForm, Pit8CAmounts, TaxDeclaration } from './declarations';
-
-export interface TaxYearSummary {
-  year: number;
-  revenue: number;
-  costs: number;
-  gain: number;
-  carryforwardUsed: number;
-  taxBase: number;
-  capitalTax: number;
-  dividendIncome: number;
-  dividendTax: number;
-  taxDue: number;
-  lossToCarry: number;
-  dividendTaxCredit: number;
-}
-
-export interface Realization {
-  saleTransactionId: string;
-  soldOn: string;
-  instrumentId: string;
-  quantity: number;
-  proceedsInTaxCurrency: number;
-  costInTaxCurrency: number;
-  gainInTaxCurrency: number;
-  fxRate: number;
-  fxRateDate: string | null;
-  lots: {
-    buyTransactionId: string;
-    acquiredOn: string;
-    quantity: number;
-    costInTaxCurrency: number;
-    fromBroker: boolean;
-  }[];
-  unmatchedQuantity: number;
-  brokerGainInTaxCurrency: number | null;
-  accountId: string;
-}
-
-export interface TaxAccount {
-  id: string;
-  name: string;
-  broker: string;
-  currency: string;
-  policyCode: string;
-  isTaxed: boolean;
-}
-
-export interface TaxOverview {
-  years: { year: number; policyCode: string; computedAt: string; summary: TaxYearSummary }[];
-  accounts: TaxAccount[];
-}
-
-export interface DividendIncome {
-  transactionId: string;
-  receivedOn: string;
-  instrumentId: string;
-  amount: number;
-  currency: string | null;
-  amountInTaxCurrency: number;
-  fxRate: number;
-  grossInTaxCurrency: number;
-  withheldInTaxCurrency: number;
-  accountId: string;
-}
-
-export interface BrokerStatement {
-  id: string;
-  broker: string;
-  fileName: string;
-  uploadedAt: string;
-  from: string;
-  to: string;
-  sales: number;
-  dividends: number;
-  warnings: string[];
-}
-
-export interface BrokerStatements {
-  statements: BrokerStatement[];
-  sales: number;
-  matchedSales: number;
-  dividends: number;
-  matchedDividends: number;
-}
-
-export interface TaxYearDetails {
-  year: number;
-  policyCode: string;
-  fxRule: string;
-  isTaxed: boolean;
-  rateLabel: string;
-  computedAt: string;
-  summary: TaxYearSummary;
-  realizations: Realization[];
-  dividends: DividendIncome[];
-  carryforwardUses: { lossYear: number; amount: number }[];
-  openLots: {
-    buyTransactionId: string;
-    acquiredOn: string;
-    instrumentId: string;
-    quantity: number;
-    costInTaxCurrency: number;
-    fxRate: number;
-    accountId: string;
-  }[];
-  instruments: Record<string, string>;
-  accounts: TaxAccount[];
-  warnings: string[];
-}
-
-export interface LossCarryforward {
-  id: string;
-  year: number;
-  amount: number;
-  alreadyUsed: number;
-}
+import { DeclarationDto, DeclarationForm, Pit8CAmounts } from '../models/declaration-dto';
+import {
+  BrokerStatement,
+  BrokerStatements,
+  LossCarryforward,
+  RecordLossBody,
+  TaxOverview,
+  TaxYearDetails,
+  UploadBrokerStatementBody,
+} from '../models/tax-dto';
 
 const PDF_LINK_LIFETIME_MS = 10_000;
 
@@ -167,7 +60,7 @@ export class TaxesStore {
         ? { code: this.declarationCode()!, year: this.year()! }
         : undefined,
     loader: ({ params }) =>
-      this.api.get<{ declaration: TaxDeclaration; warnings: string[] }>(
+      this.api.get<DeclarationDto>(
         `/api/taxation/declarations/${params.year}/${encodeURIComponent(params.code)}`,
       ),
   });
@@ -261,7 +154,11 @@ export class TaxesStore {
 
   async addLoss(year: number, amount: number, alreadyUsed: number): Promise<boolean> {
     return this.change(
-      () => this.api.post('/api/taxation/losses', { year, amount, alreadyUsed }),
+      () => {
+        const body: RecordLossBody = { year, amount, alreadyUsed };
+
+        return this.api.post<LossCarryforward>('/api/taxation/losses', body);
+      },
       translate('taxes.lossAdded'),
     );
   }
@@ -280,12 +177,14 @@ export class TaxesStore {
     for (let i = 0; i < bytes.length; i += 0x8000)
       binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
 
+    const body: UploadBrokerStatementBody = { fileName: file.name, contentBase64: btoa(binary) };
+
     return this.change(
       () =>
-        this.api.post(`/api/taxation/accounts/${this.requireAccount()}/broker-statements`, {
-          fileName: file.name,
-          contentBase64: btoa(binary),
-        }),
+        this.api.post<BrokerStatements>(
+          `/api/taxation/accounts/${this.requireAccount()}/broker-statements`,
+          body,
+        ),
       translate('taxes.statementApplied'),
     );
   }

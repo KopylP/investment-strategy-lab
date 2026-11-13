@@ -8,7 +8,7 @@ import { PercentPipe, SignedPercentPipe } from '../../../../shared/pipes/format-
 import { Money } from '../../../../shared/ui/money/money';
 import { SignedValue } from '../../../../shared/ui/signed-value';
 import { Viewport } from '../../../../shared/ui/viewport';
-import { DashboardDto } from '../../data-access/dashboard-api';
+import { DashboardDto } from '../../models/overview-dto';
 
 @Component({
   selector: 'app-allocation-card',

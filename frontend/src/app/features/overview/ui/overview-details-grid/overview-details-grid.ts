@@ -16,7 +16,7 @@ import {
   SignedPercentPipe,
   DateTimePipe,
 } from '../../../../shared/pipes/format-pipes';
-import { DashboardDto } from '../../data-access/dashboard-api';
+import { DashboardDto } from '../../models/overview-dto';
 import { OverviewStore } from '../../data-access/overview-store';
 
 @Component({

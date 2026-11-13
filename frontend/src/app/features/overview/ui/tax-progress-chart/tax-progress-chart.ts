@@ -9,7 +9,7 @@ import { valueAxis } from '../../../../shared/charts/value-axis';
 import { formatAxisNumber, formatDate, formatMoney } from '../../../../shared/pipes/format';
 import { toIsoDate } from '../../../../shared/models/iso-date';
 import { Viewport } from '../../../../shared/ui/viewport';
-import { TaxProgress } from '../../data-access/overview-store';
+import { TaxProgress } from '../../models/overview-dto';
 
 const NO_CURRENCY = 'XXX';
 

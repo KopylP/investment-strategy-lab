@@ -7,7 +7,7 @@ import { Tag } from 'primeng/tag';
 import { FileDrop } from '../../../../shared/ui/file-drop';
 import { DatePipe, DateTimePipe } from '../../../../shared/pipes/format-pipes';
 import { ConfirmationService } from 'primeng/api';
-import { BrokerStatement } from '../../data-access/taxes-store';
+import { BrokerStatement } from '../../models/tax-dto';
 import { TaxesStore } from '../../data-access/taxes-store';
 
 @Component({
