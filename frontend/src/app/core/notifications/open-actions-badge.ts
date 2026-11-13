@@ -1,5 +1,6 @@
 import { computed, inject, Injectable, resource } from '@angular/core';
 import { ApiClient } from '../api/api-client';
+import { ApiSchema } from '../api/api-schema';
 import { AccountContext } from '../context/account-context';
 
 @Injectable({ providedIn: 'root' })
@@ -10,7 +11,7 @@ export class OpenActionsBadge {
   private readonly countResource = resource({
     params: () => this.accounts.currentId(),
     loader: ({ params: accountId }) =>
-      this.api.get<{ count: number }>(`/api/rebalancing/accounts/${accountId}/open-actions`),
+      this.api.get<ApiSchema<'OpenActionsCountResponse'>>(`/api/rebalancing/accounts/${accountId}/open-actions`),
   });
 
   readonly count = computed(() => this.countResource.value()?.count ?? 0);

@@ -1,266 +1,77 @@
+import { ApiSchema } from '../../../core/api/api-schema';
+
 export type ReportStatus = 'New' | 'InProgress' | 'Closed' | 'Superseded';
 export type ReportKind = 'Monthly' | 'Recalculation' | 'RiskReview';
+export type ReportTrigger = 'Scheduled' | 'OnDemand' | 'Signal';
 export type ActionKind = 'Contribute' | 'Sell' | 'Unpark' | 'Transfer' | 'Buy' | 'Park';
 export type ActionStatus = 'Pending' | 'PartiallyExecuted' | 'Executed' | 'Skipped';
+export type AllocationRole = 'Pick' | 'Exit' | 'Cash';
+export type ScoreValue = number | boolean | string | null;
 
-export interface ReportSummaryDto {
-  id: string;
-  accountId: string;
-  accountName: string;
-  period: string;
+export type ReportSummaryDto = Omit<
+  ApiSchema<'ReportSummaryDto'>,
+  'kind' | 'trigger' | 'status'
+> & {
   kind: ReportKind;
-  code: string;
-  title: string;
-  trigger: 'Scheduled' | 'OnDemand' | 'Signal';
+  trigger: ReportTrigger;
   status: ReportStatus;
-  marketAsOf: string;
-  generatedAt: string;
-  closedAt: string | null;
-  currency: string;
-  contribution: number;
-  actionsTotal: number;
-  actionsOpen: number;
-  supersededBy: string | null;
-}
+};
 
-export interface ReportRequestDto {
-  id: string;
-  accountId: string;
-  code: string;
-  title: string;
+export type ReportRequestDto = Omit<ApiSchema<'ReportRequestDto'>, 'kind' | 'trigger'> & {
   kind: ReportKind;
-  trigger: 'Scheduled' | 'OnDemand' | 'Signal';
-  status: 'Pending' | 'Completed' | 'Failed';
-  asOf: string;
-  requestedAt: string;
-  deadline: string;
-  completedAt: string | null;
-  reportId: string | null;
-  error: string | null;
-  strategies: number;
-  strategiesAnswered: number;
-}
+  trigger: ReportTrigger;
+};
 
-export interface FillDto {
-  number: number;
-  quantity: number;
-  price: number;
-  fee: number;
-  executedOn: string;
-  note: string | null;
-  transactionId: string | null;
-  linked?: boolean;
-}
+export type FillDto = ApiSchema<'FillDto'>;
 
-export interface ActionAllocationDto {
-  subPortfolioId: string;
-  quantity: number;
-  reason: string | null;
-}
-
-export interface ReportActionDto {
-  id: string;
-  sequence: number;
+export type ReportActionDto = Omit<ApiSchema<'ReportActionDto'>, 'kind' | 'status'> & {
   kind: ActionKind;
-  instrumentId: string | null;
-  plannedQuantity: number;
-  plannedPrice: number;
-  plannedAmount: number;
-  allocations: ActionAllocationDto[];
-  fromSubPortfolioId: string | null;
-  toSubPortfolioId: string | null;
-  reason: string;
   status: ActionStatus;
-  filledQuantity: number;
-  remainingQuantity: number;
-  fills: FillDto[];
-  skipReason: string | null;
-  rejection: string | null;
-  estimatedGain: number | null;
-  estimatedTaxChange: number | null;
-  estimatedCarriedLoss: number | null;
-}
+};
 
-export interface SectionScoreDto {
-  instrumentId: string;
-  name: string;
-  group: string;
-  price: number | null;
-  momentum: number | null;
-  return1m: number | null;
-  return3m: number | null;
-  return12m: number | null;
-  volatility: number | null;
-  aboveMovingAverage: boolean | null;
-  rank: number | null;
-  status: string;
-  reason: string;
-  values?: Record<string, number | boolean | string | null> | null;
-}
+export type SectionScoreDto = Omit<ApiSchema<'SectionScoreDto'>, 'values'> & {
+  values: Record<string, ScoreValue> | null;
+};
 
-export type ColumnFormat = 'percent' | 'signedPercent' | 'number' | 'money' | 'trend' | 'text';
+export type SectionColumnDto = ApiSchema<'SectionColumnDto'>;
 
-export interface SectionColumnDto {
-  id: string;
-  label: string;
-  format: ColumnFormat;
-  hint: string | null;
-  compact: boolean;
-  trueHint: string | null;
-  falseHint: string | null;
-}
-
-export interface SectionDecisionDto {
-  marketIsFavorable: boolean;
-  investFraction: number;
-  marketReasons: string[];
-  summary: string;
-  targets: { instrumentId: string; weight: number }[];
+export type SectionDecisionDto = Omit<ApiSchema<'SectionDecisionDto'>, 'scores'> & {
   scores: SectionScoreDto[];
-  warnings: string[];
-  scoreTitle?: string | null;
-  instrumentLabel?: string | null;
-  columns?: SectionColumnDto[] | null;
-}
+};
 
-export interface SectionOrderDto {
-  kind: 'Exit' | 'Trim' | 'Unpark' | 'Buy' | 'Park';
-  instrumentId: string;
-  quantity: number;
-  price: number;
-  amount: number;
-  reason: string;
-}
+export type SectionOrderDto = ApiSchema<'SectionOrderDto'>;
 
-export interface SectionAllocationDto {
-  instrumentId: string | null;
-  role: 'Pick' | 'Exit' | 'Cash';
-  valueBefore: number;
-  valueAfter: number;
-  weightBefore: number;
-  weightAfter: number;
-  targetWeight: number | null;
-}
+export type SectionAllocationDto = Omit<ApiSchema<'SectionAllocationDto'>, 'role'> & {
+  role: AllocationRole;
+};
 
-export interface SectionRiskPositionDto {
-  instrumentId: string;
-  status: string;
-  quantity: number;
-  averageCost: number;
-  currentPrice: number;
-  value: number;
-  pnlPct: number;
-  drawdownFromHigh: number;
-  exitPrice: number | null;
-  exitRule: string;
-  exitDistance: number | null;
-  alerts: string[];
-  sell: boolean;
-}
+export type SectionRiskDto = ApiSchema<'SectionRiskDto'>;
 
-export interface SectionRiskDto {
-  status: 'ok' | 'watch' | 'act';
-  marketAlerts: string[];
-  positions: SectionRiskPositionDto[];
-  portfolioAlerts: string[];
-  actions: string[];
-}
-
-export interface ReportSectionDto {
-  subPortfolioId: string;
-  name: string;
-  targetShare: number;
-  strategyId: string | null;
-  strategyVersion: number | null;
-  strategyCode: string | null;
-  engineVersion: string | null;
-  contribution: number;
+export type ReportSectionDto = Omit<ApiSchema<'ReportSectionDto'>, 'decision' | 'allocation'> & {
   decision: SectionDecisionDto | null;
-  orders: SectionOrderDto[];
   allocation: SectionAllocationDto[];
-  totalBefore: number;
-  totalAfter: number;
-  parkedBefore: number;
-  parkedAfter: number;
-  notes: string[];
-  risk: SectionRiskDto | null;
-  error: string | null;
-}
+};
 
-export interface ContributionPlanDto {
-  total: number;
-  split: string;
-  parts: { subPortfolioId: string; amount: number }[];
-  transfer: { fromSubPortfolioId: string; toSubPortfolioId: string; amount: number } | null;
-}
+export type PlanReviewDto = ApiSchema<'PlanReviewDto'>;
+export type TaxEstimateDto = ApiSchema<'TaxEstimateDto'>;
 
-export interface PlanReviewDto {
-  reviewer: string;
-  verdict: string;
-  summary: string;
-  findings: { severity: string; message: string }[];
-}
-
-export interface ReportDetailsDto {
+export type ReportDetailsDto = Omit<
+  ApiSchema<'ReportDetailsDto'>,
+  'summary' | 'actions' | 'sections'
+> & {
   summary: ReportSummaryDto;
-  contributionPlan: ContributionPlanDto;
   actions: ReportActionDto[];
   sections: ReportSectionDto[];
-  warnings: string[];
-  review: PlanReviewDto | null;
-  taxEstimate: TaxEstimateDto | null;
-  instruments: Record<
-    string,
-    { symbol: string; name: string; isin: string | null; currency: string }
-  >;
-  subPortfolios: Record<string, string>;
-}
+};
 
-export interface PlanSettingsDto {
-  accountId: string;
-  monthlyContribution: number;
-  minTrade: number;
-  trimBand: number;
-  allowFractionalShares: boolean;
-  generateOnSchedule: boolean;
-}
-
-export interface TaxEstimateDto {
-  policyCode: string;
-  isTaxed: boolean;
-  gainInTaxCurrency: number;
-  taxChange: number;
-  fxRate: number | null;
-  notes: string[];
-  yearTaxBefore: number | null;
-  carriedLoss: number;
-  year: number | null;
-  taxCurrency: string | null;
-}
-
-export interface MatchedOperationDto {
-  transactionId: string;
-  occurredOn: string;
-  kind: 'Buy' | 'Sell' | 'Contribution';
-  instrumentId: string | null;
-  quantity: number;
-  price: number;
-  fee: number;
-  source: string;
-}
-
-export interface ActionMatchDto {
-  actionId: string;
-  sequence: number;
-  actionKind: string;
-  instrumentId: string | null;
-  plannedQuantity: number;
-  remainingQuantity: number;
-  completes: boolean;
-  operations: MatchedOperationDto[];
-}
-
-export interface LoadOperationsPreviewDto {
-  matches: ActionMatchDto[];
-  unmatched: MatchedOperationDto[];
-}
+export type MatchedOperationDto = ApiSchema<'MatchedOperationDto'>;
+export type LoadOperationsPreviewDto = ApiSchema<'LoadOperationsPreviewDto'>;
+export type PlanSettingsDto = ApiSchema<'PlanSettingsDto'>;
+export type ReportRequestedDto = ApiSchema<'ReportRequestedResponse'>;
+export type GenerateReportBody = ApiSchema<'GenerateReportRequest'>;
+export type MarkActionExecutedBody = ApiSchema<'MarkActionExecutedCommand'>;
+export type RecordPartialFillBody = ApiSchema<'RecordPartialFillCommand'>;
+export type SkipActionBody = ApiSchema<'SkipActionCommand'>;
+export type StatementImportDto = ApiSchema<'StatementImportDto'>;
+export type UploadStatementBody = ApiSchema<'UploadStatementRequest'>;
+export type IngestReport = ApiSchema<'IngestReport'>;

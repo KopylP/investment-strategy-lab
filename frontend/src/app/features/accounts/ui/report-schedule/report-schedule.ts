@@ -7,15 +7,8 @@ import { Message } from 'primeng/message';
 import { Tag } from 'primeng/tag';
 import { ApiClient, toProblemMessage } from '../../../../core/api/api-client';
 import { DatePipe } from '../../../../shared/pipes/format-pipes';
-import {
-  editableTiming,
-  isTimingComplete,
-  reportIcon,
-  ReportSchedule,
-  ReportTiming,
-  ScheduledReport,
-  scheduleLabel,
-} from '../../../reports/models/report-schedule';
+import { editableTiming, isTimingComplete, reportIcon, scheduleLabel } from '../../../reports/models/report-schedule';
+import { ReportSchedule, ReportTiming, ScheduledReport } from '../../../reports/models/report-schedule-dto';
 import { ReportTimingEditor } from '../../../reports/ui/report-timing-editor/report-timing-editor';
 
 @Component({

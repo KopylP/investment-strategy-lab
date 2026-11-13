@@ -14,7 +14,8 @@ import { DatePipe, DateTimePipe, MoneyPipe } from '../../../../shared/pipes/form
 import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { ReportListStore } from '../../data-access/report-list-store';
-import { reportIcon, ScheduledReport } from '../../models/report-schedule';
+import { reportIcon } from '../../models/report-schedule';
+import { ScheduledReport } from '../../models/report-schedule-dto';
 import { NextReports } from '../../ui/next-reports/next-reports';
 import { ReportStatusTag } from '../../ui/report-status-tag/report-status-tag';
 

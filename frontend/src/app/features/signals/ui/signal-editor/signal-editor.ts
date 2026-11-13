@@ -19,7 +19,7 @@ import { InputText } from 'primeng/inputtext';
 import { Message } from 'primeng/message';
 import { Select } from 'primeng/select';
 import { ToggleSwitch } from 'primeng/toggleswitch';
-import { ReportTiming } from '../../../reports/models/report-schedule';
+import { ReportTiming } from '../../../reports/models/report-schedule-dto';
 import { ReportTimingEditor } from '../../../reports/ui/report-timing-editor/report-timing-editor';
 import { SignalsStore } from '../../data-access/signals-store';
 import {

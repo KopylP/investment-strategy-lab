@@ -1,7 +1,10 @@
 import { inject, Injectable } from '@angular/core';
 import { ApiClient } from '../../../core/api/api-client';
 import { AccountSetup } from '../../../shared/models/account-setup-dto';
-import { ReportTiming } from '../../reports/models/report-schedule';
+import {
+  ChangeReportScheduleBody,
+  ReportSchedule,
+} from '../../reports/models/report-schedule-dto';
 import { Strategy } from '../../strategies/models/strategy';
 import {
   AddSubPortfolioBody,
@@ -102,8 +105,15 @@ export class AccountsApi {
     return this.api.get<PlanSettingsDto>(`/api/rebalancing/accounts/${id}/settings`);
   }
 
-  changeReportSchedule(id: string, code: string, timing: ReportTiming): Promise<unknown> {
-    return this.api.put(`/api/rebalancing/accounts/${id}/report-schedule/${code}`, timing);
+  changeReportSchedule(
+    id: string,
+    code: string,
+    timing: ChangeReportScheduleBody,
+  ): Promise<ReportSchedule> {
+    return this.api.put<ReportSchedule>(
+      `/api/rebalancing/accounts/${id}/report-schedule/${code}`,
+      timing,
+    );
   }
 
   changePlanSettings(id: string, settings: ChangePlanSettingsBody): Promise<PlanSettingsDto> {

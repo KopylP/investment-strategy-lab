@@ -7229,7 +7229,8 @@
             "type": [
               "null",
               "object"
-            ]
+            ],
+            "additionalProperties": { }
           }
         }
       },
@@ -7812,7 +7813,8 @@
             "type": "string"
           },
           "parameters": {
-            "type": "object"
+            "type": "object",
+            "additionalProperties": { }
           }
         }
       },
@@ -9079,7 +9081,8 @@
             "type": [
               "null",
               "object"
-            ]
+            ],
+            "additionalProperties": { }
           }
         }
       },
@@ -10145,7 +10148,8 @@
             "type": [
               "null",
               "object"
-            ]
+            ],
+            "additionalProperties": { }
           }
         }
       },
@@ -11352,7 +11356,8 @@
             "type": [
               "null",
               "object"
-            ]
+            ],
+            "additionalProperties": { }
           }
         }
       },

@@ -1,31 +1,5 @@
 import { translate } from '@jsverse/transloco';
-export type ReportMode = 'rebalance' | 'riskReview';
-
-export interface ReportTiming {
-  frequency: string;
-  day: number;
-  weekday: string;
-  time: string;
-  minute: number;
-}
-
-export interface ScheduledReport {
-  code: string;
-  name: string;
-  description: string;
-  mode: ReportMode;
-  schedule: ReportTiming;
-  strategySchedule: ReportTiming;
-  own: boolean;
-  next: string | null;
-  strategies: string[];
-}
-
-export interface ReportSchedule {
-  generateOnSchedule: boolean;
-  timeZone: string;
-  reports: ScheduledReport[];
-}
+import { ReportMode, ReportTiming, ScheduledReport } from './report-schedule-dto';
 
 export const frequencyOptions = [
   { label: translate('signals.editor.frequency.hourly'), value: 'hourly' },

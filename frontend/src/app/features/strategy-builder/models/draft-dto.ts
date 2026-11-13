@@ -1,4 +1,4 @@
-import { ReportTiming } from '../../reports/models/report-schedule';
+import { ReportTiming } from '../../reports/models/report-schedule-dto';
 
 export type BlockKind = 'MarketFilter' | 'Exit' | 'Entry' | 'Selection' | 'Risk';
 

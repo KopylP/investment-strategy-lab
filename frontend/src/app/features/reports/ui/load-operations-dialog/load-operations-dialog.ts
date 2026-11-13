@@ -17,7 +17,12 @@ import { ApiClient, toProblemMessage } from '../../../../core/api/api-client';
 import { InstrumentCatalog } from '../../../../core/context/instrument-catalog';
 import { DatePipe, MoneyPipe, QuantityPipe } from '../../../../shared/pipes/format-pipes';
 import { FileDrop } from '../../../../shared/ui/file-drop';
-import { LoadOperationsPreviewDto, MatchedOperationDto } from '../../models/report-dto';
+import {
+  LoadOperationsPreviewDto,
+  MatchedOperationDto,
+  StatementImportDto,
+  UploadStatementBody,
+} from '../../models/report-dto';
 import { ReportActionVm } from '../../models/report-vm';
 import { ReportsApi } from '../../data-access/reports-api';
 
@@ -26,12 +31,6 @@ export interface LoadOperationsData {
   accountId: string;
   currency: string;
   actions: ReportActionVm[];
-}
-
-interface StatementUpload {
-  id: string;
-  status: string;
-  counts: { toRecord: number; needsMapping: number; alreadyImported: number };
 }
 
 @Component({
@@ -59,7 +58,7 @@ export class LoadOperationsDialog implements OnInit {
   protected readonly data = inject(DynamicDialogConfig).data as LoadOperationsData;
 
   protected readonly preview = signal<LoadOperationsPreviewDto | null>(null);
-  protected readonly upload = signal<StatementUpload | null>(null);
+  protected readonly upload = signal<StatementImportDto | null>(null);
   protected readonly busy = signal<'preview' | 'upload' | 'import' | 'apply' | null>(null);
   protected readonly error = signal<string | null>(null);
 
@@ -99,10 +98,12 @@ export class LoadOperationsDialog implements OnInit {
     if (!file) return;
 
     await this.run('upload', async () => {
+      const body: UploadStatementBody = { fileName: file.name, content: await file.text() };
+
       this.upload.set(
-        await this.api.post<StatementUpload>(
+        await this.api.post<StatementImportDto>(
           `/api/portfolio/accounts/${this.data.accountId}/statement-imports`,
-          { fileName: file.name, content: await file.text() },
+          body,
         ),
       );
     });
@@ -114,7 +115,7 @@ export class LoadOperationsDialog implements OnInit {
 
     await this.run('import', async () => {
       this.upload.set(
-        await this.api.post<StatementUpload>(
+        await this.api.post<StatementImportDto>(
           `/api/portfolio/accounts/${this.data.accountId}/statement-imports/${upload.id}/confirm`,
         ),
       );

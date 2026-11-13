@@ -7,13 +7,8 @@ import { AccountContext } from '../../../core/context/account-context';
 import { InstrumentCatalog } from '../../../core/context/instrument-catalog';
 import { formatMoney } from '../../../shared/pipes/format';
 import { StrategiesApi } from '../../strategies/data-access/strategies-api';
-import {
-  editableTiming,
-  isTimingComplete,
-  reportIcon,
-  ReportTiming,
-  scheduleLabel,
-} from '../../reports/models/report-schedule';
+import { editableTiming, isTimingComplete, reportIcon, scheduleLabel } from '../../reports/models/report-schedule';
+import { ReportTiming } from '../../reports/models/report-schedule-dto';
 import { ReportDefinition, Strategy } from '../../strategies/models/strategy';
 import { describeStrategy } from '../../strategies/models/strategy-summary';
 import { PlanSettingsVm } from '../ui/plan-settings-form/plan-settings-form';

@@ -1,6 +1,7 @@
 import { translate } from '@jsverse/transloco';
 import { formatPercent } from '../../../shared/pipes/format';
-import { ReportTiming, scheduleLabel } from '../../reports/models/report-schedule';
+import { scheduleLabel } from '../../reports/models/report-schedule';
+import { ReportTiming } from '../../reports/models/report-schedule-dto';
 import { SignalConditionDto, SignalMetric, SignalTargetKind } from './signal-dto';
 import { activeLocale } from '../../../core/i18n/language';
 

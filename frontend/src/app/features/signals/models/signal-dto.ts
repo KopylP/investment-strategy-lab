@@ -1,5 +1,5 @@
 import { ApiSchema } from '../../../core/api/api-schema';
-import { ReportTiming } from '../../reports/models/report-schedule';
+import { ReportTiming } from '../../reports/models/report-schedule-dto';
 
 export type SignalTargetKind =
   | 'Instrument'

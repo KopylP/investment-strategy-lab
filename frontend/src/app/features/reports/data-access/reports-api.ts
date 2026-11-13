@@ -2,13 +2,19 @@ import { inject, Injectable } from '@angular/core';
 import { ApiClient } from '../../../core/api/api-client';
 import { EnteredFill } from '../models/report-vm';
 import {
+  GenerateReportBody,
+  IngestReport,
   LoadOperationsPreviewDto,
+  MarkActionExecutedBody,
   PlanSettingsDto,
+  RecordPartialFillBody,
   ReportDetailsDto,
   ReportRequestDto,
+  ReportRequestedDto,
   ReportSummaryDto,
+  SkipActionBody,
 } from '../models/report-dto';
-import { ReportSchedule } from '../models/report-schedule';
+import { ReportSchedule } from '../models/report-schedule-dto';
 
 @Injectable({ providedIn: 'root' })
 export class ReportsApi {
@@ -30,8 +36,10 @@ export class ReportsApi {
     accountId: string,
     code: string,
     contribution: number | null = null,
-  ): Promise<{ requestId: string }> {
-    return this.api.post(`/api/rebalancing/accounts/${accountId}/reports`, { code, contribution });
+  ): Promise<ReportRequestedDto> {
+    const body: GenerateReportBody = { code, contribution };
+
+    return this.api.post<ReportRequestedDto>(`/api/rebalancing/accounts/${accountId}/reports`, body);
   }
 
   requests(accountId: string): Promise<ReportRequestDto[]> {
@@ -43,20 +51,24 @@ export class ReportsApi {
   }
 
   markExecuted(reportId: string, actionId: string, fill: EnteredFill): Promise<void> {
-    return this.api.post(`/api/rebalancing/reports/${reportId}/actions/${actionId}/fills`, fill);
+    const body: MarkActionExecutedBody = fill;
+
+    return this.api.post(`/api/rebalancing/reports/${reportId}/actions/${actionId}/fills`, body);
   }
 
   recordPartialFill(reportId: string, actionId: string, fill: EnteredFill): Promise<void> {
+    const body: RecordPartialFillBody = fill;
+
     return this.api.post(
       `/api/rebalancing/reports/${reportId}/actions/${actionId}/partial-fills`,
-      fill,
+      body,
     );
   }
 
   skip(reportId: string, actionId: string, reason: string): Promise<void> {
-    return this.api.post(`/api/rebalancing/reports/${reportId}/actions/${actionId}/skip`, {
-      reason,
-    });
+    const body: SkipActionBody = { reason };
+
+    return this.api.post(`/api/rebalancing/reports/${reportId}/actions/${actionId}/skip`, body);
   }
 
   undo(reportId: string, actionId: string): Promise<void> {
@@ -77,7 +89,7 @@ export class ReportsApi {
     return this.api.post(`/api/rebalancing/reports/${reportId}/close`);
   }
 
-  ingestQuotes(): Promise<unknown> {
-    return this.api.post('/api/market-data/quotes/ingest');
+  ingestQuotes(): Promise<IngestReport> {
+    return this.api.post<IngestReport>('/api/market-data/quotes/ingest');
   }
 }

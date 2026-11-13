@@ -4,7 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
-import { frequencyOptions, ReportTiming, weekdayOptions } from '../../models/report-schedule';
+import { frequencyOptions, weekdayOptions } from '../../models/report-schedule';
+import { ReportTiming } from '../../models/report-schedule-dto';
 
 @Component({
   selector: 'app-report-timing-editor',

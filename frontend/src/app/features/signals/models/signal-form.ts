@@ -1,8 +1,5 @@
-import {
-  editableTiming,
-  isTimingComplete,
-  ReportTiming,
-} from '../../reports/models/report-schedule';
+import { editableTiming, isTimingComplete } from '../../reports/models/report-schedule';
+import { ReportTiming } from '../../reports/models/report-schedule-dto';
 import {
   CreateSignalBody,
   SignalConditionDto,

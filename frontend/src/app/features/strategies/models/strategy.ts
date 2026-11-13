@@ -1,5 +1,5 @@
 import { JsonObject } from '../../../shared/ui/schema-form/schema-form';
-import { ReportTiming } from '../../reports/models/report-schedule';
+import { ReportTiming } from '../../reports/models/report-schedule-dto';
 
 export interface StrategyVersion {
   number: number;

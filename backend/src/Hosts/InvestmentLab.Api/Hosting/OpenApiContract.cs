@@ -15,6 +15,7 @@ public static class OpenApiContract
             options.CreateSchemaReferenceId = new OneSchemaPerName().NameOf;
             options.AddSchemaTransformer<NumbersWrittenAsNumbers>();
             options.AddSchemaTransformer<ComputedPropertiesKeepTheirNullability>();
+            options.AddSchemaTransformer<DictionariesOfAnyValueStateIt>();
             options.AddDocumentTransformer<AnswersCarryEveryProperty>();
         });
 

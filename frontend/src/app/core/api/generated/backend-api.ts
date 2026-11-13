@@ -2207,14 +2207,14 @@ export interface components {
             extraSeries: string[];
         };
         DraftSetupPatchDto: {
-            funds: null | string[];
+            funds?: null | string[];
             /** Format: uuid */
-            benchmarkId: null | string;
+            benchmarkId?: null | string;
             /** Format: uuid */
-            cashId: null | string;
+            cashId?: null | string;
             /** Format: uuid */
-            volatilityIndexId: null | string;
-            extraSeries: null | string[];
+            volatilityIndexId?: null | string;
+            extraSeries?: null | string[];
         };
         DraftSummaryDto: {
             /** Format: uuid */
@@ -2350,11 +2350,11 @@ export interface components {
             gainInTaxCurrency: number;
         };
         GenerateReportRequest: {
-            code: null | string;
+            code?: null | string;
             /** Format: double */
-            contribution: null | number;
+            contribution?: null | number;
             /** Format: date */
-            asOf: null | string;
+            asOf?: null | string;
         };
         GraphDto: {
             nodes: components["schemas"]["NodeDto"][];
@@ -2483,7 +2483,9 @@ export interface components {
             reason: string;
             /** Format: double */
             weight: null | number;
-            values: null | Record<string, never>;
+            values: null | {
+                [key: string]: unknown;
+            };
         };
         InternalTransferRecordedDto: {
             /** Format: uuid */
@@ -2580,17 +2582,17 @@ export interface components {
         };
         MarkActionExecutedCommand: {
             /** Format: double */
-            quantity: null | number;
+            quantity?: null | number;
             /** Format: double */
-            price: null | number;
+            price?: null | number;
             /**
              * Format: double
              * @default 0
              */
             fee: number;
             /** Format: date */
-            executedOn: null | string;
-            note: null | string;
+            executedOn?: null | string;
+            note?: null | string;
         };
         MarketRegimeDto: {
             isFavorable: boolean;
@@ -2659,7 +2661,9 @@ export interface components {
             id: string;
             kind: string;
             block: string;
-            parameters: Record<string, never>;
+            parameters: {
+                [key: string]: unknown;
+            };
         };
         NodeKindDto: {
             kind: string;
@@ -3018,7 +3022,9 @@ export interface components {
             reason: string;
             /** Format: double */
             weight: null | number;
-            values: null | Record<string, never>;
+            values: null | {
+                [key: string]: unknown;
+            };
         };
         ReplayExplanationDto: {
             summary: string;
@@ -3306,7 +3312,9 @@ export interface components {
             reason: string;
             /** Format: double */
             weight: null | number;
-            values: null | Record<string, never>;
+            values: null | {
+                [key: string]: unknown;
+            };
         };
         ResearchExplanationDto: {
             summary: string;
@@ -3615,7 +3623,9 @@ export interface components {
             rank: null | number;
             status: string;
             reason: string;
-            values: null | Record<string, never>;
+            values: null | {
+                [key: string]: unknown;
+            };
         };
         SectionTargetDto: {
             /** Format: uuid */
@@ -4179,9 +4189,9 @@ export interface components {
         };
         TrialRobustnessDto: {
             /** Format: date */
-            outOfSampleStart: null | string;
-            walkForward: null | components["schemas"]["TrialWindowsDto"];
-            neighborhood: null | components["schemas"]["TrialParameterNeighborhoodDto"];
+            outOfSampleStart?: null | string;
+            walkForward?: null | components["schemas"]["TrialWindowsDto"];
+            neighborhood?: null | components["schemas"]["TrialParameterNeighborhoodDto"];
         };
         TrialRunDto: {
             /** Format: int32 */
