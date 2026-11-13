@@ -8,7 +8,7 @@ import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { InputNumber } from 'primeng/inputnumber';
 import { Message } from 'primeng/message';
 import { Textarea } from 'primeng/textarea';
-import { toIsoDate } from '../../../../shared/models/api';
+import { toIsoDate } from '../../../../shared/models/iso-date';
 import { MoneyPipe, QuantityPipe } from '../../../../shared/pipes/format-pipes';
 import { TradeCost } from '../../../../shared/ui/trade-cost/trade-cost';
 import { EnteredFill, ReportActionVm } from '../../models/report-vm';

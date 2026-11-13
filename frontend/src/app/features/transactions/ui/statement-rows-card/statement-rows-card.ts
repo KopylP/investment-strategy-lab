@@ -17,7 +17,7 @@ import { Tag } from 'primeng/tag';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { MoneyPipe, QuantityPipe, DatePipe } from '../../../../shared/pipes/format-pipes';
 import { ConfirmationService } from 'primeng/api';
-import { RowDecision, StatementImport } from '../../data-access/statement-import-store';
+import { RowDecision, StatementImport } from '../../models/statement-import-dto';
 import { StatementImportStore } from '../../data-access/statement-import-store';
 
 const decisions: Record<

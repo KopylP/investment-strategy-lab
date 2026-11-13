@@ -1,6 +1,6 @@
 import { computed, effect, inject, Injectable, resource, signal } from '@angular/core';
 import { ApiClient } from '../api/api-client';
-import { AccountSetup } from '../../shared/models/api';
+import { AccountSetup } from '../../shared/models/account-setup-dto';
 
 const storageKey = 'investmentlab.account';
 const allKey = 'investmentlab.account.all';

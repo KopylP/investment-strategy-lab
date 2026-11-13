@@ -4,3 +4,4 @@ export type ValuedHoldingsDto = ApiSchema<'ValuedHoldingsDto'>;
 export type ValuedSubPortfolioDto = ApiSchema<'ValuedSubPortfolioDto'>;
 export type ValuedPositionDto = ApiSchema<'ValuedPositionDto'>;
 export type CashBalanceDto = ApiSchema<'CashBalanceDto'>;
+export type LotDto = ApiSchema<'LotDto'>;

@@ -9,14 +9,11 @@ import { Select } from 'primeng/select';
 import { SelectButton } from 'primeng/selectbutton';
 import { TableModule } from 'primeng/table';
 import { InstrumentCatalog } from '../../../../core/context/instrument-catalog';
-import { fromIsoDate, toIsoDate } from '../../../../shared/models/api';
+import { fromIsoDate, toIsoDate } from '../../../../shared/models/iso-date';
 import {} from '../../../../shared/pipes/format-pipes';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
-import {
-  ImportMode,
-  StatementImportStore,
-  TickerMapping,
-} from '../../data-access/statement-import-store';
+import { StatementImportStore } from '../../data-access/statement-import-store';
+import { ImportMode, TickerMapping } from '../../models/statement-import-dto';
 import { Viewport } from '../../../../shared/ui/viewport';
 import { StatementUploadCard } from '../../ui/statement-upload-card/statement-upload-card';
 import { StatementHistoryCard } from '../../ui/statement-history-card/statement-history-card';

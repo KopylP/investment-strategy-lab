@@ -1,4 +1,4 @@
-import { Instrument } from '../../../shared/models/api';
+import { Instrument } from '../../../shared/models/instrument-dto';
 import { SignalForm } from './signal-form';
 import { activeLocale } from '../../../core/i18n/language';
 

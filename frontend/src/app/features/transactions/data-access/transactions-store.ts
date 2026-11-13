@@ -5,52 +5,13 @@ import { ApiClient, toProblemMessage } from '../../../core/api/api-client';
 import { AccountContext } from '../../../core/context/account-context';
 import { InstrumentCatalog } from '../../../core/context/instrument-catalog';
 import { formatMoney, formatQuantity } from '../../../shared/pipes/format';
-
-export interface TransactionDto {
-  id: string;
-  kind:
-    | 'Buy'
-    | 'Sell'
-    | 'Contribution'
-    | 'Withdrawal'
-    | 'Fee'
-    | 'TaxPayment'
-    | 'Dividend'
-    | 'InternalTransfer'
-    | 'Reversal';
-  occurredOn: string;
-  recordedAt: string;
-  source: 'ReportAction' | 'Manual' | 'Reconciliation' | 'Import';
-  sourceReference: string | null;
-  isReversed: boolean;
-  trade: {
-    instrumentId: string;
-    side: string;
-    quantity: number;
-    price: number;
-    fee: number;
-    allocations: { subPortfolioId: string; quantity: number }[];
-    settledAmount?: number | null;
-    settledCurrency?: string | null;
-  } | null;
-  cash: {
-    kind: string;
-    amount: number;
-    instrumentId: string | null;
-    allocations: { subPortfolioId: string; amount: number }[];
-    settledAmount?: number | null;
-    settledCurrency?: string | null;
-  } | null;
-  transfer: {
-    fromSubPortfolioId: string;
-    toSubPortfolioId: string;
-    instrumentId: string | null;
-    quantity: number | null;
-    amount: number | null;
-  } | null;
-  reversalOf: string | null;
-  reversalReason: string | null;
-}
+import {
+  RecordCashMovementBody,
+  RecordedTransaction,
+  RecordTradeBody,
+  ReverseTransactionBody,
+  TransactionDto,
+} from '../models/transaction-dto';
 
 export interface TransactionVm {
   id: string;
@@ -151,48 +112,50 @@ export class TransactionsStore {
   });
 
   async recordTrade(trade: NewTrade): Promise<boolean> {
-    return this.command(
-      `trades`,
-      {
-        instrumentId: trade.instrumentId,
-        side: trade.side,
-        quantity: trade.quantity,
-        price: trade.price,
-        fee: trade.fee,
-        executedOn: trade.executedOn,
-        allocations: trade.subPortfolioId
-          ? [{ subPortfolioId: trade.subPortfolioId, quantity: trade.quantity }]
-          : null,
-      },
-      translate('transactions.tradeRecorded'),
-    );
+    const body: RecordTradeBody = {
+      instrumentId: trade.instrumentId,
+      side: trade.side,
+      quantity: trade.quantity,
+      price: trade.price,
+      fee: trade.fee,
+      executedOn: trade.executedOn,
+      allocations: trade.subPortfolioId
+        ? [{ subPortfolioId: trade.subPortfolioId, quantity: trade.quantity }]
+        : null,
+    };
+
+    return this.command(`trades`, body, translate('transactions.tradeRecorded'));
   }
 
   async recordCash(movement: NewCashMovement): Promise<boolean> {
-    return this.command(
-      'cash-movements',
-      {
-        kind: movement.kind,
-        amount: movement.amount,
-        occurredOn: movement.occurredOn,
-        allocations: movement.subPortfolioId
-          ? [{ subPortfolioId: movement.subPortfolioId, amount: movement.amount }]
-          : null,
-        instrumentId: movement.instrumentId,
-      },
-      translate('transactions.cashRecorded'),
-    );
+    const body: RecordCashMovementBody = {
+      kind: movement.kind,
+      amount: movement.amount,
+      occurredOn: movement.occurredOn,
+      allocations: movement.subPortfolioId
+        ? [{ subPortfolioId: movement.subPortfolioId, amount: movement.amount }]
+        : null,
+      instrumentId: movement.instrumentId,
+    };
+
+    return this.command('cash-movements', body, translate('transactions.cashRecorded'));
   }
 
   reverse(transaction: TransactionVm, reason: string): Promise<boolean> {
+    const body: ReverseTransactionBody = { reason };
+
     return this.command(
       `transactions/${transaction.id}/reverse`,
-      { reason },
+      body,
       translate('transactions.reversed'),
     );
   }
 
-  private async command(path: string, body: unknown, success: string): Promise<boolean> {
+  private async command(
+    path: string,
+    body: RecordTradeBody | RecordCashMovementBody | ReverseTransactionBody,
+    success: string,
+  ): Promise<boolean> {
     const accountId = this.accounts.currentId();
     if (!accountId) return false;
 
@@ -200,9 +163,9 @@ export class TransactionsStore {
 
     try {
       const url = `/api/portfolio/accounts/${accountId}/${path}`;
-      const result = await this.api.post<{ warnings?: string[] }>(url, body);
+      const result = await this.api.post<RecordedTransaction>(url, body);
 
-      this.reportRecorded(success, result?.warnings);
+      this.reportRecorded(success, result.warnings);
       this.journalResource.reload();
 
       return true;
@@ -215,11 +178,11 @@ export class TransactionsStore {
     }
   }
 
-  private reportRecorded(summary: string, warnings?: string[]): void {
+  private reportRecorded(summary: string, warnings: string[]): void {
     this.messages.add({
       severity: 'success',
       summary,
-      detail: warnings?.join(' ') || undefined,
+      detail: warnings.join(' ') || undefined,
     });
   }
 

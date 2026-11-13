@@ -4,83 +4,14 @@ import { computed, effect, inject, Injectable, resource, signal, untracked } fro
 import { MessageService } from 'primeng/api';
 import { ApiClient, toProblemMessage } from '../../../core/api/api-client';
 import { AccountContext } from '../../../core/context/account-context';
-
-export type ImportMode = 'Merge' | 'UpdateImported' | 'Replace' | 'FromScratch';
-export type RowDecision =
-  | 'New'
-  | 'AlreadyImported'
-  | 'Differs'
-  | 'MatchesExisting'
-  | 'OutOfScope'
-  | 'Unsupported'
-  | 'NeedsMapping';
-
-export interface TickerMapping {
-  ticker: string;
-  currency: string;
-  instrumentId: string | null;
-  registerAs: string | null;
-  subPortfolioId: string | null;
-  rows: number;
-  instrumentName: string | null;
-}
-
-export interface StatementRow {
-  number: number;
-  occurredOn: string;
-  kind: string;
-  rawType: string;
-  ticker: string | null;
-  quantity: number | null;
-  price: number | null;
-  amount: number;
-  currency: string;
-  amountInAccountCurrency: number;
-  decision: RowDecision;
-  note: string | null;
-  willRecord: boolean;
-  willReverseExisting: boolean;
-  result: string | null;
-}
-
-export interface StatementImport {
-  id: string;
-  broker: string;
-  fileName: string;
-  uploadedAt: string;
-  status: 'Preview' | 'Confirmed' | 'Undone';
-  mode: ImportMode;
-  fromDate: string | null;
-  cashSubPortfolioId: string | null;
-  accountCurrency: string;
-  mappings: TickerMapping[];
-  rows: StatementRow[];
-  counts: {
-    new: number;
-    alreadyImported: number;
-    differs: number;
-    matchesExisting: number;
-    outOfScope: number;
-    unsupported: number;
-    needsMapping: number;
-    toRecord: number;
-    toReverse: number;
-  };
-  warnings: string[];
-  subPortfolios: { id: string; name: string }[];
-  confirmedAt: string | null;
-  undoneAt: string | null;
-}
-
-export interface ImportSummary {
-  id: string;
-  broker: string;
-  fileName: string;
-  uploadedAt: string;
-  status: string;
-  mode: string;
-  recorded: number;
-}
+import {
+  ConfigureImportBody,
+  ImportMode,
+  ImportSummary,
+  StatementImport,
+  TickerMapping,
+  UploadStatementBody,
+} from '../models/statement-import-dto';
 
 @Injectable()
 export class StatementImportStore {
@@ -132,13 +63,13 @@ export class StatementImportStore {
     if (!accountId) return;
 
     await this.run('upload', async () => {
-      const content = await file.text();
+      const body: UploadStatementBody = { fileName: file.name, content: await file.text() };
 
       this.importAccountId.set(accountId);
       this.current.set(
         await this.api.post<StatementImport>(
           `/api/portfolio/accounts/${accountId}/statement-imports`,
-          { fileName: file.name, content },
+          body,
         ),
       );
     });
@@ -173,25 +104,26 @@ export class StatementImportStore {
         ? { ...mapping, ...change.mapping }
         : mapping,
     );
+    const body: ConfigureImportBody = {
+      mode: change.mode ?? current.mode,
+      fromDate: change.fromDate !== undefined ? change.fromDate : current.fromDate,
+      cashSubPortfolioId:
+        change.cashSubPortfolioId !== undefined
+          ? change.cashSubPortfolioId
+          : current.cashSubPortfolioId,
+      mappings: mappings.map((mapping) => ({
+        ticker: mapping.ticker,
+        instrumentId: mapping.instrumentId,
+        registerAs: mapping.registerAs,
+        subPortfolioId: mapping.subPortfolioId,
+      })),
+    };
 
     await this.run('plan', async () =>
       this.current.set(
         await this.api.put<StatementImport>(
           `/api/portfolio/accounts/${accountId}/statement-imports/${current.id}`,
-          {
-            mode: change.mode ?? current.mode,
-            fromDate: change.fromDate !== undefined ? change.fromDate : current.fromDate,
-            cashSubPortfolioId:
-              change.cashSubPortfolioId !== undefined
-                ? change.cashSubPortfolioId
-                : current.cashSubPortfolioId,
-            mappings: mappings.map((mapping) => ({
-              ticker: mapping.ticker,
-              instrumentId: mapping.instrumentId,
-              registerAs: mapping.registerAs,
-              subPortfolioId: mapping.subPortfolioId,
-            })),
-          },
+          body,
         ),
       ),
     );
@@ -202,21 +134,23 @@ export class StatementImportStore {
     const accountId = this.accounts.currentId();
     if (!current || !accountId) return;
 
+    const body: ConfigureImportBody = {
+      mode: current.mode,
+      fromDate: current.fromDate,
+      cashSubPortfolioId: current.cashSubPortfolioId,
+      mappings: current.mappings.map((mapping) => ({
+        ticker: mapping.ticker,
+        instrumentId: mapping.instrumentId,
+        registerAs: mapping.registerAs,
+        subPortfolioId: mapping.subPortfolioId ?? subPortfolioId,
+      })),
+    };
+
     await this.run('plan', async () =>
       this.current.set(
         await this.api.put<StatementImport>(
           `/api/portfolio/accounts/${accountId}/statement-imports/${current.id}`,
-          {
-            mode: current.mode,
-            fromDate: current.fromDate,
-            cashSubPortfolioId: current.cashSubPortfolioId,
-            mappings: current.mappings.map((mapping) => ({
-              ticker: mapping.ticker,
-              instrumentId: mapping.instrumentId,
-              registerAs: mapping.registerAs,
-              subPortfolioId: mapping.subPortfolioId ?? subPortfolioId,
-            })),
-          },
+          body,
         ),
       ),
     );

@@ -1,14 +1,8 @@
 import { computed, inject, Injectable, resource } from '@angular/core';
 import { ApiClient } from '../../core/api/api-client';
+import { ApiSchema } from '../../core/api/api-schema';
 import { AccountContext } from '../../core/context/account-context';
 import { TradeMarker } from '../charts/price-chart';
-
-interface JournalEntry {
-  kind: string;
-  occurredOn: string;
-  isReversed: boolean;
-  trade: { instrumentId: string; side: string; quantity: number; price: number } | null;
-}
 
 @Injectable({ providedIn: 'root' })
 export class AccountTrades {
@@ -18,7 +12,9 @@ export class AccountTrades {
   private readonly journal = resource({
     params: () => this.accounts.currentId() ?? undefined,
     loader: ({ params: accountId }) =>
-      this.api.get<JournalEntry[]>(`/api/portfolio/accounts/${accountId}/transactions`),
+      this.api.get<ApiSchema<'TransactionDto'>[]>(
+        `/api/portfolio/accounts/${accountId}/transactions`,
+      ),
   });
 
   private readonly byInstrument = computed(() => {

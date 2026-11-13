@@ -15,7 +15,7 @@ import { Dialog } from 'primeng/dialog';
 import { Message } from 'primeng/message';
 import { Select } from 'primeng/select';
 import { FileDrop } from '../../../../shared/ui/file-drop';
-import { toIsoDate } from '../../../../shared/models/api';
+import { toIsoDate } from '../../../../shared/models/iso-date';
 import { AccountDetailStore } from '../../data-access/account-detail-store';
 
 @Component({

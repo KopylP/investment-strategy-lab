@@ -14,7 +14,7 @@ import { DatePicker } from 'primeng/datepicker';
 import { Dialog } from 'primeng/dialog';
 import { InputNumber } from 'primeng/inputnumber';
 import { Select } from 'primeng/select';
-import { toIsoDate } from '../../../../shared/models/api';
+import { toIsoDate } from '../../../../shared/models/iso-date';
 import { NewCashMovement } from '../../data-access/transactions-store';
 import { Option } from '../trade-dialog/trade-dialog';
 

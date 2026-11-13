@@ -6,7 +6,7 @@ import { MeterGroup } from 'primeng/metergroup';
 import { Skeleton } from 'primeng/skeleton';
 import { Tag } from 'primeng/tag';
 import { AccountContext } from '../../../../core/context/account-context';
-import { AccountSetup } from '../../../../shared/models/api';
+import { AccountSetup } from '../../../../shared/models/account-setup-dto';
 import { EmptyState } from '../../../../shared/ui/empty-state/empty-state';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 

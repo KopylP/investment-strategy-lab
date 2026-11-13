@@ -11,7 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { Button } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
 import { InputText } from 'primeng/inputtext';
-import { SubPortfolioSetup } from '../../../../shared/models/api';
+import { SubPortfolioSetup } from '../../../../shared/models/account-setup-dto';
 import { AccountDetailStore } from '../../data-access/account-detail-store';
 
 @Component({

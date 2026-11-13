@@ -5,7 +5,7 @@ import { AccountContext } from '../../../core/context/account-context';
 import { DisplayCurrency } from '../../../core/context/display-currency';
 import { ChartTheme } from '../../../shared/charts/chart-theme';
 import { InstrumentCatalog } from '../../../core/context/instrument-catalog';
-import { toIsoDate } from '../../../shared/models/api';
+import { toIsoDate } from '../../../shared/models/iso-date';
 import { exposureBreakdownsOf } from '../models/exposure-vm';
 import { SleeveVm } from '../models/holdings-vm';
 import { ValuedHoldingsDto } from '../models/valued-holdings-dto';

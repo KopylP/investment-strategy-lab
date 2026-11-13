@@ -42,7 +42,9 @@ specs yet; verify UI changes by building and, when a stack is running, in the br
   fills a field it only accepts as optional (`Omit<…, 'status'> & { status: BacktestStatus }`). When the API changes, build
   the backend (the Debug build writes `../backend/contracts/openapi.json`), run `npm run api:types`, commit both and fix
   the mappers the compiler points to. Message tokens stay plain strings: the translation interceptor turns them into text.
-  Migrated so far: backtesting, holdings, signals; the other features still keep hand-written DTOs, which move to
-  `ApiSchema` when they are next changed.
+  Migrated so far: backtesting, holdings, signals, accounts, transactions, instruments and the shared account and
+  instrument models (`shared/models/*-dto.ts`); the other features still keep hand-written DTOs, which move to
+  `ApiSchema` when they are next changed. A request body is typed with its command too (`ApiSchema<'RecordTradeCommand'>`);
+  a one-off use outside a feature (`core/`, `shared/`) may name `ApiSchema<'…'>` in the call itself.
 - No business logic here: the backend decides and calculates, and the frontend formats what it receives in mappers and
   shows it. No tax rates, policy codes, provider names or symbol formats (see Modularity in `../CLAUDE.md`).

@@ -7,7 +7,7 @@ import { lineChartBase } from '../../../../shared/charts/line-chart-base';
 import { LiveChart } from '../../../../shared/charts/live-chart';
 import { valueAxis } from '../../../../shared/charts/value-axis';
 import { formatAxisNumber, formatDate, formatMoney } from '../../../../shared/pipes/format';
-import { toIsoDate } from '../../../../shared/models/api';
+import { toIsoDate } from '../../../../shared/models/iso-date';
 import { Viewport } from '../../../../shared/ui/viewport';
 import { TaxProgress } from '../../data-access/overview-store';
 

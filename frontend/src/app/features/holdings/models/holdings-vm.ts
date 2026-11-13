@@ -1,4 +1,4 @@
-import { Lot } from '../../../shared/models/api';
+import { LotDto } from './valued-holdings-dto';
 
 export interface PositionVm {
   instrumentId: string;
@@ -17,7 +17,7 @@ export interface PositionVm {
   pnl: number;
   pnlPct: number | null;
   weight: number;
-  lots: Lot[];
+  lots: LotDto[];
 }
 
 export interface SleeveVm {

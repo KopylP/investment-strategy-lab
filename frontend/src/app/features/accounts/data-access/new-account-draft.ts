@@ -17,7 +17,8 @@ import {
 import { ReportDefinition, Strategy } from '../../strategies/models/strategy';
 import { describeStrategy } from '../../strategies/models/strategy-summary';
 import { PlanSettingsVm } from '../ui/plan-settings-form/plan-settings-form';
-import { AccountsApi, NewSubPortfolio } from './accounts-api';
+import { NewSubPortfolioDto } from '../models/account-dto';
+import { AccountsApi } from './accounts-api';
 
 export interface SleeveDraft {
   key: number;
@@ -297,7 +298,7 @@ export class NewAccountDraft {
       broker: this.broker().trim(),
       baseCurrency: this.currency(),
       taxPolicyCode: this.taxPolicy(),
-      subPortfolios: this.sleeves().map((sleeve): NewSubPortfolio => ({
+      subPortfolios: this.sleeves().map((sleeve): NewSubPortfolioDto => ({
         name: sleeve.name.trim(),
         targetSharePercent: sleeve.targetSharePercent,
         strategyId: sleeve.strategyId,

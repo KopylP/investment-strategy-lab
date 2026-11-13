@@ -15,7 +15,7 @@ import { Dialog } from 'primeng/dialog';
 import { InputNumber } from 'primeng/inputnumber';
 import { Select } from 'primeng/select';
 import { SelectButton } from 'primeng/selectbutton';
-import { toIsoDate } from '../../../../shared/models/api';
+import { toIsoDate } from '../../../../shared/models/iso-date';
 import { TradeCost } from '../../../../shared/ui/trade-cost/trade-cost';
 import { NewTrade } from '../../data-access/transactions-store';
 

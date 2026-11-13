@@ -20,7 +20,7 @@ import { Skeleton } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
 import { Tag } from 'primeng/tag';
 import { InstrumentCatalog } from '../../../../core/context/instrument-catalog';
-import { SubPortfolioSetup } from '../../../../shared/models/api';
+import { SubPortfolioSetup } from '../../../../shared/models/account-setup-dto';
 import { PercentPipe } from '../../../../shared/pipes/format-pipes';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
 import { AccountDetailStore } from '../../data-access/account-detail-store';

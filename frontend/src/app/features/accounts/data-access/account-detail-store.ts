@@ -3,9 +3,10 @@ import { computed, inject, Injectable, resource, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { toProblemMessage } from '../../../core/api/api-client';
 import { AccountContext } from '../../../core/context/account-context';
-import { AccountSetup } from '../../../shared/models/api';
+import { AccountSetup } from '../../../shared/models/account-setup-dto';
 import { PlanSettingsVm } from '../ui/plan-settings-form/plan-settings-form';
-import { AccountsApi, normalizeToHundred, NewSubPortfolio } from './accounts-api';
+import { NewSubPortfolioDto } from '../models/account-dto';
+import { AccountsApi, normalizeToHundred } from './accounts-api';
 
 @Injectable()
 export class AccountDetailStore {
@@ -87,7 +88,7 @@ export class AccountDetailStore {
     );
   }
 
-  addSubPortfolio(input: NewSubPortfolio): Promise<boolean> {
+  addSubPortfolio(input: NewSubPortfolioDto): Promise<boolean> {
     const remaining = 100 - input.targetSharePercent;
     const others: Record<string, number> = Object.fromEntries(
       this.active().map((sub) => [sub.id, Math.round(sub.targetShare * remaining * 100) / 100]),

@@ -1,6 +1,6 @@
 import { computed, inject, Injectable, resource } from '@angular/core';
 import { ApiClient } from '../api/api-client';
-import { Instrument } from '../../shared/models/api';
+import { Instrument } from '../../shared/models/instrument-dto';
 
 @Injectable({ providedIn: 'root' })
 export class InstrumentCatalog {

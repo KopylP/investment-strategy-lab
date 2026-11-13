@@ -1,11 +1,7 @@
 import { computed, effect, inject, Injectable, resource, signal } from '@angular/core';
 import { ApiClient } from '../api/api-client';
+import { ApiSchema } from '../api/api-schema';
 import { AuthStore } from '../auth/auth-store';
-
-interface LatestFxRates {
-  effectiveDate: string | null;
-  toPivot: Record<string, number>;
-}
 
 @Injectable({ providedIn: 'root' })
 export class DisplayCurrency {
@@ -21,7 +17,7 @@ export class DisplayCurrency {
 
   private readonly ratesResource = resource({
     params: () => (this.auth.isSignedIn() ? true : undefined),
-    loader: () => this.api.get<LatestFxRates>('/api/market-data/fx-rates/latest'),
+    loader: () => this.api.get<ApiSchema<'LatestFxRatesDto'>>('/api/market-data/fx-rates/latest'),
   });
 
   readonly code = computed(

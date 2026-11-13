@@ -4,19 +4,14 @@ import { MessageService } from 'primeng/api';
 import { ApiClient, toProblemMessage } from '../../../core/api/api-client';
 import { AccountContext } from '../../../core/context/account-context';
 import { InstrumentCatalog } from '../../../core/context/instrument-catalog';
-import { AccountHoldings, LatestPrice, toIsoDate } from '../../../shared/models/api';
-
-export interface QuotePoint {
-  date: string;
-  close: number;
-  adjustedClose: number;
-  flags: string[];
-}
-
-interface QuoteSeries {
-  instrumentId: string;
-  points: QuotePoint[];
-}
+import { toIsoDate } from '../../../shared/models/iso-date';
+import {
+  AccountHoldingsDto,
+  IngestReport,
+  LatestPriceDto,
+  QuotePointDto,
+  QuoteSeriesDto,
+} from '../models/instrument-quotes-dto';
 
 export type InstrumentFilter = 'all' | 'mine' | 'eu' | 'us' | 'stocks' | 'other';
 export type ChartPeriod = '1M' | '3M' | '6M' | '1Y' | '3Y';
@@ -32,7 +27,7 @@ export interface InstrumentRow {
   exchange: string;
   currency: string;
   isAccumulating: boolean | null;
-  price: LatestPrice | null;
+  price: LatestPriceDto | null;
   change1m: number | null;
   spark: number[];
   held: boolean;
@@ -75,7 +70,7 @@ export class InstrumentsStore {
     params: () => this.ids(),
     loader: ({ params: ids }) =>
       ids.length
-        ? this.api.get<LatestPrice[]>('/api/market-data/quotes/latest', { instrumentIds: ids })
+        ? this.api.get<LatestPriceDto[]>('/api/market-data/quotes/latest', { instrumentIds: ids })
         : Promise.resolve([]),
   });
 
@@ -83,7 +78,7 @@ export class InstrumentsStore {
     params: () => this.ids(),
     loader: ({ params: ids }) =>
       ids.length
-        ? this.api.get<QuoteSeries[]>('/api/market-data/quotes/history', {
+        ? this.api.get<QuoteSeriesDto[]>('/api/market-data/quotes/history', {
             instrumentIds: ids,
             from: daysAgo(35),
             to: daysAgo(0),
@@ -94,14 +89,14 @@ export class InstrumentsStore {
   private readonly holdingsResource = resource({
     params: () => this.accounts.currentId() ?? undefined,
     loader: ({ params: accountId }) =>
-      this.api.get<AccountHoldings>(`/api/portfolio/accounts/${accountId}/holdings`),
+      this.api.get<AccountHoldingsDto>(`/api/portfolio/accounts/${accountId}/holdings`),
   });
 
   private readonly detailResource = resource({
     params: () =>
       this.selectedId() ? { id: this.selectedId()!, period: this.period() } : undefined,
     loader: ({ params }) =>
-      this.api.get<QuoteSeries>(`/api/market-data/quotes/${params.id}`, {
+      this.api.get<QuoteSeriesDto>(`/api/market-data/quotes/${params.id}`, {
         from: daysAgo(periodDays[params.period]),
         to: daysAgo(0),
       }),
@@ -202,8 +197,8 @@ export class InstrumentsStore {
     () => this.rows().find((row) => row.id === this.selectedId()) ?? null,
   );
   readonly detailPoints = linkedSignal<
-    { points: QuotePoint[] | undefined; loading: boolean; id: string | null },
-    QuotePoint[]
+    { points: QuotePointDto[] | undefined; loading: boolean; id: string | null },
+    QuotePointDto[]
   >({
     source: () => ({
       points: this.detailResource.hasValue() ? this.detailResource.value().points : undefined,
@@ -273,11 +268,7 @@ export class InstrumentsStore {
 
   async ingestQuotes(): Promise<void> {
     await this.run('quotes', async () => {
-      const report = await this.api.post<{
-        quotesAdded: number;
-        quotesUpdated: number;
-        missingSymbols: string[];
-      }>('/api/market-data/quotes/ingest');
+      const report = await this.api.post<IngestReport>('/api/market-data/quotes/ingest');
 
       this.pricesResource.reload();
       this.monthResource.reload();

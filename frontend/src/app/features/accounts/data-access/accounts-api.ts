@@ -1,45 +1,22 @@
 import { inject, Injectable } from '@angular/core';
 import { ApiClient } from '../../../core/api/api-client';
-import { AccountSetup } from '../../../shared/models/api';
+import { AccountSetup } from '../../../shared/models/account-setup-dto';
 import { ReportTiming } from '../../reports/models/report-schedule';
 import { Strategy } from '../../strategies/models/strategy';
-
-export interface TaxPolicyOption {
-  code: string;
-  name: string;
-  hint: string;
-  isTaxed: boolean;
-  isDefault: boolean;
-}
-
-export interface NewSubPortfolio {
-  name: string;
-  targetSharePercent: number;
-  strategyId: string | null;
-  pinnedStrategyVersion?: number | null;
-  cashInstrumentId: string | null;
-  maxPositionWeightPercent: number | null;
-  maxMonthlyTurnoverPercent?: number | null;
-}
-
-export interface NewAccount {
-  name: string;
-  broker: string;
-  baseCurrency: string;
-  taxPolicyCode?: string;
-  subPortfolios: NewSubPortfolio[];
-  contributionPolicy: { kind: string; driftBandPercent: number | null };
-}
-
-export interface PlanSettings {
-  accountId?: string;
-  monthlyContribution: number;
-  minTrade: number;
-  trimBand: number;
-  allowFractionalShares: boolean;
-  levelByPurchasesOnly: boolean;
-  generateOnSchedule: boolean;
-}
+import {
+  AddSubPortfolioBody,
+  AssignStrategyBody,
+  ChangePlanSettingsBody,
+  ChangeTargetSharesBody,
+  ContributionPolicyChoice,
+  ImportReport,
+  NewSubPortfolioDto,
+  OpenAccountBody,
+  PlanSettingsDto,
+  RenameSubPortfolioBody,
+  RetireSubPortfolioBody,
+  TaxPolicyDto,
+} from '../models/account-dto';
 
 export type StrategyOption = Strategy;
 
@@ -51,18 +28,18 @@ export class AccountsApi {
     return this.api.get<AccountSetup>(`/api/portfolio/accounts/${id}`);
   }
 
-  taxPolicies(): Promise<TaxPolicyOption[]> {
-    return this.api.get<TaxPolicyOption[]>('/api/taxation/policies');
+  taxPolicies(): Promise<TaxPolicyDto[]> {
+    return this.api.get<TaxPolicyDto[]>('/api/taxation/policies');
   }
 
-  open(account: NewAccount): Promise<AccountSetup> {
+  open(account: OpenAccountBody): Promise<AccountSetup> {
     return this.api.post<AccountSetup>('/api/portfolio/accounts', account);
   }
 
   changeTargetShares(id: string, sharesPercent: Record<string, number>): Promise<AccountSetup> {
-    return this.api.put<AccountSetup>(`/api/portfolio/accounts/${id}/target-shares`, {
-      targetShares: sharesPercent,
-    });
+    const body: ChangeTargetSharesBody = { targetShares: sharesPercent };
+
+    return this.api.put<AccountSetup>(`/api/portfolio/accounts/${id}/target-shares`, body);
   }
 
   changeContributionPolicy(
@@ -70,10 +47,9 @@ export class AccountsApi {
     kind: string,
     driftBandPercent: number | null,
   ): Promise<AccountSetup> {
-    return this.api.put<AccountSetup>(`/api/portfolio/accounts/${id}/contribution-policy`, {
-      kind,
-      driftBandPercent,
-    });
+    const body: ContributionPolicyChoice = { kind, driftBandPercent };
+
+    return this.api.put<AccountSetup>(`/api/portfolio/accounts/${id}/contribution-policy`, body);
   }
 
   assignStrategy(
@@ -82,27 +58,30 @@ export class AccountsApi {
     strategyId: string | null,
     pinnedVersion: number | null,
   ): Promise<AccountSetup> {
+    const body: AssignStrategyBody = { strategyId, pinnedVersion };
+
     return this.api.put<AccountSetup>(
       `/api/portfolio/accounts/${id}/sub-portfolios/${subPortfolioId}/strategy`,
-      { strategyId, pinnedVersion },
+      body,
     );
   }
 
   addSubPortfolio(
     id: string,
-    subPortfolio: NewSubPortfolio,
+    subPortfolio: NewSubPortfolioDto,
     targetSharesOfOthers: Record<string, number>,
   ): Promise<AccountSetup> {
-    return this.api.post<AccountSetup>(`/api/portfolio/accounts/${id}/sub-portfolios`, {
-      subPortfolio,
-      targetSharesOfOthers,
-    });
+    const body: AddSubPortfolioBody = { subPortfolio, targetSharesOfOthers };
+
+    return this.api.post<AccountSetup>(`/api/portfolio/accounts/${id}/sub-portfolios`, body);
   }
 
   renameSubPortfolio(id: string, subPortfolioId: string, name: string): Promise<AccountSetup> {
+    const body: RenameSubPortfolioBody = { name };
+
     return this.api.put<AccountSetup>(
       `/api/portfolio/accounts/${id}/sub-portfolios/${subPortfolioId}/name`,
-      { name },
+      body,
     );
   }
 
@@ -111,22 +90,24 @@ export class AccountsApi {
     subPortfolioId: string,
     targetSharesOfRemaining: Record<string, number>,
   ): Promise<AccountSetup> {
+    const body: RetireSubPortfolioBody = { targetSharesOfRemaining };
+
     return this.api.post<AccountSetup>(
       `/api/portfolio/accounts/${id}/sub-portfolios/${subPortfolioId}/retire`,
-      { targetSharesOfRemaining },
+      body,
     );
   }
 
-  planSettings(id: string): Promise<PlanSettings> {
-    return this.api.get<PlanSettings>(`/api/rebalancing/accounts/${id}/settings`);
+  planSettings(id: string): Promise<PlanSettingsDto> {
+    return this.api.get<PlanSettingsDto>(`/api/rebalancing/accounts/${id}/settings`);
   }
 
   changeReportSchedule(id: string, code: string, timing: ReportTiming): Promise<unknown> {
     return this.api.put(`/api/rebalancing/accounts/${id}/report-schedule/${code}`, timing);
   }
 
-  changePlanSettings(id: string, settings: PlanSettings): Promise<PlanSettings> {
-    return this.api.put<PlanSettings>(`/api/rebalancing/accounts/${id}/settings`, settings);
+  changePlanSettings(id: string, settings: ChangePlanSettingsBody): Promise<PlanSettingsDto> {
+    return this.api.put<PlanSettingsDto>(`/api/rebalancing/accounts/${id}/settings`, settings);
   }
 
   strategies(): Promise<StrategyOption[]> {
@@ -142,8 +123,8 @@ export class AccountsApi {
     subPortfolioId: string,
     positionsJson: unknown,
     asOf: string,
-  ): Promise<unknown> {
-    return this.api.post(
+  ): Promise<ImportReport> {
+    return this.api.post<ImportReport>(
       `/api/portfolio/accounts/${id}/sub-portfolios/${subPortfolioId}/import-positions`,
       positionsJson,
       { asOf },

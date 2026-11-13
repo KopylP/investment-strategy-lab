@@ -16,7 +16,7 @@ import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
 import { InputText } from 'primeng/inputtext';
 import { SelectButton } from 'primeng/selectbutton';
-import { Instrument } from '../../../../shared/models/api';
+import { Instrument } from '../../../../shared/models/instrument-dto';
 import { instrumentKindLabel } from '../../../../shared/models/instrument-kind';
 import {
   instrumentGroupsOf,
