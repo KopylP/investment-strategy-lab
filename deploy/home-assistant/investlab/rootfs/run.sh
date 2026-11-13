@@ -68,6 +68,14 @@ export HomeAssistant__IngressOnly="${HomeAssistant__IngressOnly:-true}"
 # with "-" for "_" (8e007b8c_investlab -> 8e007b8c-investlab).
 export Notifications__HomeAssistant__PanelPath="/${HOSTNAME/-/_}"
 
+# The API publishes its own memory to Home Assistant as sensors (ADR-0032). For those who run an OpenTelemetry
+# collector, the option sends the API's metrics, traces and logs there too.
+OTLP_ENDPOINT="$(option otlp_endpoint)"
+if [ -n "$OTLP_ENDPOINT" ]; then
+  export OTEL_EXPORTER_OTLP_ENDPOINT="$OTLP_ENDPOINT"
+  export OTEL_SERVICE_NAME=investlab-api
+fi
+
 # --- MCP: off unless the option is on ---------------------------------------------------------------------------
 # The integration in Home Assistant forwards /api/investlab/mcp here; the API trusts only Home Assistant's own answer
 # about the caller's token (asked at http://homeassistant:8123). The integration learns this add-on's address from

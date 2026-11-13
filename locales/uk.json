@@ -259,6 +259,8 @@
   "notification.test.title": "Investment Lab: тестове сповіщення",
   "notification.test.message": "Сповіщення працюють: сюди прийде звістка, коли буде готовий рапорт.",
   "notification.open_panel": "Відкрити Investment Lab",
+  "sensor.api_memory": "Investment Lab: пам’ять API",
+  "sensor.api_managed_heap": "Investment Lab: керована купа API",
   "notification.period": "{month} {year}",
   "notification.with_next": "{body}{next}",
   "notification.next.at": " Наступний — {date} о {time}.",

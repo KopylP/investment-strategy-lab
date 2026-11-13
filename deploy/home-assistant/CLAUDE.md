@@ -14,6 +14,8 @@ reachable only through the Home Assistant Ingress panel. User docs (Ukrainian): 
   when asked by a marker in `/share/investlab`, reads add-on options from `/data/options.json`, starts the engine and the API.
 - Users are identified by the Supervisor's `X-Remote-User-Id` header via Ingress; notifications go through the
   Home Assistant Core API with the Supervisor token.
+- The API's memory is published every minute as `sensor.investlab_api_memory` and `sensor.investlab_api_managed_heap`
+  (ADR-0032, `Hosting/HomeAssistantMemorySensors.cs`); option `otlp_endpoint` sets `OTEL_EXPORTER_OTLP_ENDPOINT`.
 - MCP (option `mcp_enabled`, ADR-0023): `integration/custom_components/investlab/` is a Home Assistant integration that
   only forwards `/api/investlab/mcp` and its RFC 9728 metadata from Home Assistant's origin to 8098. `run.sh` copies it
   into Home Assistant's config with an `addon.json` naming this add-on's host. The API validates the caller's Home

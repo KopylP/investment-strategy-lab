@@ -17,6 +17,7 @@ builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = 
 var modules = Modules.All();
 builder.AddModules(modules);
 builder.AddSelfHosting();
+builder.AddMemorySensors();
 builder.AddRequestLanguage();
 builder.AddMcpAccess(modules);
 builder.LeaveOutBackgroundWorkWhenGeneratingAtBuild();

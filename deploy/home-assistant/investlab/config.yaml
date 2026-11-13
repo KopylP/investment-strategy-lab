@@ -34,3 +34,5 @@ options:
 schema:
   timezone: str
   mcp_enabled: bool
+  # Optional: an OpenTelemetry collector (OTLP over gRPC) that receives the API's metrics, traces and logs.
+  otlp_endpoint: url?
