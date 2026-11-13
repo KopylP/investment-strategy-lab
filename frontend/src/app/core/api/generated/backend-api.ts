@@ -1903,9 +1903,9 @@ export interface components {
             trimBand: number;
             allowFractionalShares: boolean;
             /** @default true */
-            generateOnSchedule: boolean;
+            generateOnSchedule?: boolean;
             /** @default false */
-            levelByPurchasesOnly: boolean;
+            levelByPurchasesOnly?: boolean;
         };
         ChangeReportScheduleCommand: {
             frequency: string;
@@ -2239,7 +2239,7 @@ export interface components {
              * Format: double
              * @default 0
              */
-            contribution: number;
+            contribution?: number;
             /** Format: int32 */
             version?: null | number;
         };
@@ -2533,7 +2533,7 @@ export interface components {
             to: string;
             input: string;
             /** @default output */
-            output: string;
+            output?: string;
         };
         LoadOperationsPreviewDto: {
             matches: components["schemas"]["ActionMatchDto"][];
@@ -2543,7 +2543,7 @@ export interface components {
             email: string;
             password: string;
             /** @default true */
-            remember: boolean;
+            remember?: boolean;
         };
         LossCarryforwardDto: {
             /** Format: uuid */
@@ -2589,7 +2589,7 @@ export interface components {
              * Format: double
              * @default 0
              */
-            fee: number;
+            fee?: number;
             /** Format: date */
             executedOn?: null | string;
             note?: null | string;
@@ -2953,7 +2953,7 @@ export interface components {
              * Format: double
              * @default 0
              */
-            alreadyUsed: number;
+            alreadyUsed?: number;
         };
         RecordPartialFillCommand: {
             /** Format: double */
@@ -2964,7 +2964,7 @@ export interface components {
              * Format: double
              * @default 0
              */
-            fee: number;
+            fee?: number;
             /** Format: date */
             executedOn?: null | string;
             note?: null | string;
@@ -3498,7 +3498,7 @@ export interface components {
             label: null | string;
             experiment?: null | components["schemas"]["TrialExperimentDto"];
             /** @default false */
-            rerun: boolean;
+            rerun?: boolean;
         };
         ScheduledReportDto: {
             code: string;

@@ -1,6 +1,4 @@
-import { FundNotAddedDto } from './fund-not-added-dto';
+import { ApiSchema } from '../../../core/api/api-schema';
 
-export interface AddedFundsDto {
-  instrumentIds: string[];
-  failed: FundNotAddedDto[];
-}
+export type AddedFundsDto = ApiSchema<'AddedFundsDto'>;
+export type AddFundsBody = ApiSchema<'AddFundsCommand'>;

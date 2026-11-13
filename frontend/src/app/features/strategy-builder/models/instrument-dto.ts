@@ -1,9 +1,3 @@
-export interface InstrumentChoiceDto {
-  id: string;
-  label: string;
-  name: string;
-  group: string | null;
-  assetClass: string | null;
-  region: string | null;
-  isVolatilityIndex: boolean;
-}
+import { ApiSchema } from '../../../core/api/api-schema';
+
+export type InstrumentChoiceDto = ApiSchema<'InstrumentChoiceDto'>;

@@ -24,7 +24,7 @@ import { TrialRunDto } from '../../models/trial-run-dto';
 import { TrialMetric } from '../../models/trial-metric';
 import { ExperimentsApi } from '../../data-access/experiments-api';
 import { experimentBacktest } from '../../data-access/experiment-result-mapper';
-import { BacktestComparisonDto } from '../../models/backtest-comparison-dto';
+import { BacktestComparisonDto, CompareBacktestsBody } from '../../models/backtest-comparison-dto';
 import { activeLocale } from '../../../../core/i18n/language';
 const metrics: { key: TrialMetric; label: string }[] = [
   { key: 'annualReturn', label: translate('builder.comparison.yearlyReturn') },
@@ -57,7 +57,10 @@ export class TrialComparison {
   });
   protected readonly error = this.results.error;
   private readonly comparison = resource({
-    params: () => ({ first: this.reference(this.first()), second: this.reference(this.second()) }),
+    params: (): CompareBacktestsBody => ({
+      first: this.reference(this.first()),
+      second: this.reference(this.second()),
+    }),
     loader: ({ params }) => this.api.post<BacktestComparisonDto>('/api/backtesting/comparisons', params),
   });
   protected readonly comparisonReason = computed(() => this.comparison.hasValue() ? this.comparison.value().reason : null);

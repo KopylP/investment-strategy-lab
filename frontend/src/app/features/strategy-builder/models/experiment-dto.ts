@@ -1,15 +1,8 @@
+import { ApiSchema } from '../../../core/api/api-schema';
 import { BacktestStatus } from '../../backtesting/models/backtest-dto';
-import { ExperimentConditionsDto } from './experiment-conditions-dto';
 import { ResearchReportDto } from './research-report-dto';
 
-export interface ExperimentDto {
-  id: string;
-  strategyId: string;
-  strategyVersion: number;
+export type ExperimentDto = Omit<ApiSchema<'ExperimentDto'>, 'status' | 'result'> & {
   status: BacktestStatus;
-  requestedAt: string;
-  finishedAt: string | null;
-  failureReason: string | null;
-  conditions: ExperimentConditionsDto;
   result: ResearchReportDto | null;
-}
+};

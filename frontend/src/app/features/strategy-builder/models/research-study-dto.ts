@@ -1,13 +1,7 @@
-import { ReplaySummaryDto } from '../../backtesting/models/backtest-dto';
+import { ApiSchema } from '../../../core/api/api-schema';
 
-export interface ResearchStudyDto {
-  kind: 'sensitivity' | 'out-of-sample' | 'walk-forward';
-  window: {
-    training: { start: string; end: string } | null;
-    test: { start: string; end: string };
-  };
-  parameterValue: number | null;
-  summary: ReplaySummaryDto | null;
-  trainingSharpe: number | null;
-  failureReason: string | null;
-}
+export type ResearchStudyKind = 'sensitivity' | 'out-of-sample' | 'walk-forward';
+
+export type ResearchStudyDto = Omit<ApiSchema<'ResearchStudyDto'>, 'kind'> & {
+  kind: ResearchStudyKind;
+};

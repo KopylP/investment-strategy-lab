@@ -1,6 +1,3 @@
-import { FundSearchChoiceDto } from './fund-search-choice-dto';
+import { ApiSchema } from '../../../core/api/api-schema';
 
-export interface FundSearchOptionsDto {
-  exchanges: FundSearchChoiceDto[];
-  regions: FundSearchChoiceDto[];
-}
+export type FundSearchOptionsDto = ApiSchema<'FundSearchOptionsDto'>;

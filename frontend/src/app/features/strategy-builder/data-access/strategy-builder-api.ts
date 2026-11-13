@@ -1,24 +1,27 @@
 import { FundSearchOptionsDto } from '../models/fund-search-options-dto';
 import { FundSearchCriteriaDto } from '../models/fund-search-criteria-dto';
 import { FoundFundDto } from '../models/found-fund-dto';
-import { AddedFundsDto } from '../models/added-funds-dto';
+import { AddedFundsDto, AddFundsBody } from '../models/added-funds-dto';
 import { OwnSignalDto } from '../models/own-signal-dto';
 import { PublishedStrategyDto } from '../models/published-strategy-dto';
-import { PublishedVersionDto } from '../models/published-version-dto';
-import { TrialRunDto } from '../models/trial-run-dto';
+import { PublishDraftBody, PublishedVersionDto } from '../models/published-version-dto';
+import { RunTrialBody, TrialRunDto } from '../models/trial-run-dto';
 import { inject, Injectable } from '@angular/core';
 import { ApiClient } from '../../../core/api/api-client';
 import {
+  CopyEntryToExitBody,
+  CreateDraftBody,
   DraftChangeDto,
   DraftCheckDto,
   DraftDto,
   DraftRulesDto,
   DraftSummaryDto,
+  ImportRulesBody,
   LayoutDto,
 } from '../models/draft-dto';
 import { InstrumentChoiceDto } from '../models/instrument-dto';
 import { VocabularyDto } from '../models/vocabulary-dto';
-import { ExperimentConditionsDto } from '../models/experiment-conditions-dto';
+import { TrialExperimentDto } from '../models/experiment-conditions-dto';
 
 const base = '/api/strategy-builder';
 
@@ -47,7 +50,9 @@ export class StrategyBuilderApi {
   }
 
   addFunds(funds: FoundFundDto[], selectedInstrumentIds: string[]): Promise<AddedFundsDto> {
-    return this.api.post<AddedFundsDto>(`${base}/funds`, { funds, selectedInstrumentIds });
+    const body: AddFundsBody = { funds, selectedInstrumentIds };
+
+    return this.api.post<AddedFundsDto>(`${base}/funds`, body);
   }
 
   drafts(): Promise<DraftSummaryDto[]> {
@@ -55,7 +60,9 @@ export class StrategyBuilderApi {
   }
 
   create(name: string, template: string | null): Promise<DraftDto> {
-    return this.api.post<DraftDto>(`${base}/drafts`, { name, template });
+    const body: CreateDraftBody = { name, template };
+
+    return this.api.post<DraftDto>(`${base}/drafts`, body);
   }
 
   get(id: string): Promise<DraftDto> {
@@ -75,7 +82,9 @@ export class StrategyBuilderApi {
   }
 
   copyEntryToExit(id: string, revision: number, margin: number): Promise<DraftDto> {
-    return this.api.post<DraftDto>(`${base}/drafts/${id}/copy-entry-to-exit`, { revision, margin });
+    const body: CopyEntryToExitBody = { revision, margin };
+
+    return this.api.post<DraftDto>(`${base}/drafts/${id}/copy-entry-to-exit`, body);
   }
 
   rules(id: string): Promise<DraftRulesDto> {
@@ -83,19 +92,29 @@ export class StrategyBuilderApi {
   }
 
   importRules(name: string, json: string): Promise<DraftDto> {
-    return this.api.post<DraftDto>(`${base}/drafts/import`, { name, json });
+    const body: ImportRulesBody = { name, json };
+
+    return this.api.post<DraftDto>(`${base}/drafts/import`, body);
   }
 
   trials(id: string): Promise<TrialRunDto[]> {
     return this.api.get<TrialRunDto[]>(`${base}/drafts/${id}/trials`);
   }
 
-  runTrial(id: string, label: string | null = null, experiment: ExperimentConditionsDto | null = null): Promise<TrialRunDto> {
-    return this.api.post<TrialRunDto>(`${base}/drafts/${id}/trials`, { label, experiment });
+  runTrial(
+    id: string,
+    label: string | null = null,
+    experiment: TrialExperimentDto | null = null,
+  ): Promise<TrialRunDto> {
+    const body: RunTrialBody = { label, experiment };
+
+    return this.api.post<TrialRunDto>(`${base}/drafts/${id}/trials`, body);
   }
 
   publish(id: string, revision: number): Promise<PublishedVersionDto> {
-    return this.api.post<PublishedVersionDto>(`${base}/drafts/${id}/publish`, { revision });
+    const body: PublishDraftBody = { revision };
+
+    return this.api.post<PublishedVersionDto>(`${base}/drafts/${id}/publish`, body);
   }
 
   published(id: string, version: number): Promise<PublishedStrategyDto> {

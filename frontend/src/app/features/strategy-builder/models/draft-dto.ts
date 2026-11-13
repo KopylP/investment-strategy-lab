@@ -1,4 +1,4 @@
-import { ReportTiming } from '../../reports/models/report-schedule-dto';
+import { ApiSchema } from '../../../core/api/api-schema';
 
 export type BlockKind = 'MarketFilter' | 'Exit' | 'Entry' | 'Selection' | 'Risk';
 
@@ -24,104 +24,54 @@ export type NodeKind =
 export type JsonValue =
   string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
-export interface NodeDto {
-  id: string;
+export type NodeDto = Omit<ApiSchema<'NodeDto'>, 'kind' | 'block' | 'parameters'> & {
   kind: NodeKind;
   block: BlockKind | 'Shared';
   parameters: Record<string, JsonValue>;
-}
+};
 
-export interface LinkDto {
-  from: string;
-  to: string;
-  input: string;
-  output?: string;
-}
+export type LinkDto = ApiSchema<'LinkDto'>;
 
-export interface GraphDto {
+export type GraphDto = Omit<ApiSchema<'GraphDto'>, 'nodes'> & {
   nodes: NodeDto[];
-  links: LinkDto[];
-}
+};
 
-export interface NodePosition {
-  x: number;
-  y: number;
-}
+export type NodePosition = ApiSchema<'NodePositionDto'>;
 
-export interface LayoutDto {
-  positions: Record<string, NodePosition>;
+export type LayoutDto = Omit<ApiSchema<'LayoutDto'>, 'collapsed'> & {
   collapsed: BlockKind[];
-  edgeRoutes?: Record<string, NodePosition[]>;
-}
+};
 
-export interface DraftSetupDto {
-  funds: string[];
-  benchmarkId: string | null;
-  cashId: string | null;
-  volatilityIndexId: string | null;
-  extraSeries: string[];
-}
+export type DraftSetupDto = ApiSchema<'DraftSetupDto'>;
+export type DraftReportDto = ApiSchema<'DraftReportDto'>;
 
-export interface DraftReportDto {
-  code: string;
-  schedule: ReportTiming;
-  signalKinds: string[];
-  signalIds: string[];
-}
-
-export interface DraftProblemDto {
-  message: string;
+export type DraftProblemDto = Omit<ApiSchema<'DraftProblemDto'>, 'severity' | 'block'> & {
   severity: 'Error' | 'Warning';
-  nodeId: string | null;
   block: BlockKind | null;
-  reportCode: string | null;
-}
+};
 
-export interface BlockWordsDto {
+export type BlockWordsDto = Omit<ApiSchema<'BlockWordsDto'>, 'block'> & {
   block: BlockKind;
-  sentence: string;
-}
+};
 
-export interface DraftDto {
-  id: string;
-  name: string;
-  description: string | null;
-  revision: number;
-  updatedAt: string;
-  setup: DraftSetupDto;
+export type DraftDto = Omit<ApiSchema<'DraftDto'>, 'graph' | 'layout' | 'problems' | 'words'> & {
   graph: GraphDto;
   layout: LayoutDto;
-  reports: DraftReportDto[];
-  originStrategyId: string | null;
-  originVersion: number | null;
   problems: DraftProblemDto[];
   words: BlockWordsDto[];
-}
+};
 
-export interface DraftChangeDto {
-  revision: number;
-  name?: string | null;
-  description?: string | null;
-  setup?: DraftSetupDto | null;
-  graph?: GraphDto | null;
-  reports?: DraftReportDto[] | null;
-}
+export type DraftChangeDto = Omit<ApiSchema<'DraftChangeDto'>, 'graph'> & {
+  graph: GraphDto | null;
+};
 
-export interface DraftSummaryDto {
-  id: string;
-  name: string;
-  originStrategyName: string | null;
-  originVersion: number | null;
-  updatedAt: string;
-  lastTrialAt: string | null;
-}
+export type DraftSummaryDto = ApiSchema<'DraftSummaryDto'>;
 
-export interface DraftCheckDto {
-  isClean: boolean;
+export type DraftCheckDto = Omit<ApiSchema<'DraftCheckDto'>, 'problems'> & {
   problems: DraftProblemDto[];
-  signalIds: string[];
-}
+};
 
-export interface DraftRulesDto {
-  json: string;
-}
+export type DraftRulesDto = ApiSchema<'DraftRulesDto'>;
+export type CreateDraftBody = ApiSchema<'CreateDraftCommand'>;
+export type ImportRulesBody = ApiSchema<'ImportRulesCommand'>;
+export type CopyEntryToExitBody = ApiSchema<'CopyEntryToExitCommand'>;

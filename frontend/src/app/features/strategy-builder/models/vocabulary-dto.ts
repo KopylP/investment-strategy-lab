@@ -1,69 +1,40 @@
+import { ApiSchema } from '../../../core/api/api-schema';
 import { JsonValue, NodeKind } from './draft-dto';
 
-export type FieldKind =
-  'Integer' | 'Number' | 'Fraction' | 'Series' | 'Choice' | 'Indicator' | 'Signal';
 export type SocketType =
   'Number' | 'Boolean' | 'Funds' | 'Series' | 'SeriesList' | 'Candidates' | 'Budget' | 'RiskPolicy';
 
-export interface VocabularyFieldDto {
-  name: string;
-  kind: FieldKind;
-  label: string;
-  minimum: number | null;
-  maximum: number | null;
-  required: boolean;
+export type VocabularyFieldDto = Omit<ApiSchema<'VocabularyFieldDto'>, 'default'> & {
   default: JsonValue | null;
-  choiceLabels: Record<string, string>;
-}
+};
 
-export interface IndicatorKindDto {
-  code: string;
-  label: string;
-  hint: string;
-  phrase: string;
-  columnFormat: string;
+export type IndicatorKindDto = Omit<ApiSchema<'IndicatorKindDto'>, 'fields'> & {
   fields: VocabularyFieldDto[];
-}
+};
 
-export interface ConditionKindDto {
-  code: string;
-  label: string;
-  hint: string;
-  phrase: string;
+export type ConditionKindDto = Omit<ApiSchema<'ConditionKindDto'>, 'fields'> & {
   fields: VocabularyFieldDto[];
-}
+};
 
-export interface InputSocketDto {
-  name: string;
+export type InputSocketDto = Omit<ApiSchema<'InputSocketDto'>, 'type'> & {
   type: SocketType;
-  required: boolean;
-  many: boolean;
-}
+};
 
-export interface NodeKindDto {
+export type NodeKindDto = Omit<ApiSchema<'NodeKindDto'>, 'kind' | 'inputs' | 'output'> & {
   kind: NodeKind;
   inputs: InputSocketDto[];
   output: SocketType | null;
-}
+};
 
-export interface ReportKindDto {
-  code: string;
-  name: string;
-  description: string;
-  signalKinds: string[];
-}
-
-export interface TemplateDto {
-  code: string;
-  name: string;
-  description: string;
-}
-
-export interface VocabularyDto {
+export type VocabularyDto = Omit<
+  ApiSchema<'VocabularyDto'>,
+  'indicators' | 'conditions' | 'blockFields' | 'nodeKinds'
+> & {
   indicators: IndicatorKindDto[];
   conditions: ConditionKindDto[];
   blockFields: Record<string, VocabularyFieldDto>;
   nodeKinds: NodeKindDto[];
-  reports: ReportKindDto[];
-  templates: TemplateDto[];
-}
+};
+
+export type ReportKindDto = ApiSchema<'ReportKindDto'>;
+export type TemplateDto = ApiSchema<'TemplateDto'>;

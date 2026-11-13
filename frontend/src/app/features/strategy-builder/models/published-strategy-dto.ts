@@ -1,7 +1,6 @@
+import { ApiSchema } from '../../../core/api/api-schema';
 import { BlockWordsDto } from './draft-dto';
 
-export interface PublishedStrategyDto {
-  editable: boolean;
-  draftId: string | null;
+export type PublishedStrategyDto = Omit<ApiSchema<'PublishedStrategyDto'>, 'words'> & {
   words: BlockWordsDto[];
-}
+};

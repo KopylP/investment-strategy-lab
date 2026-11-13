@@ -1,18 +1,9 @@
-import { ExperimentConditionsDto } from './experiment-conditions-dto';
+import { ApiSchema } from '../../../core/api/api-schema';
 
-export interface TrialRunDto {
-  number: number;
-  strategyId: string;
-  version: number;
-  label: string | null;
-  ranAt: string;
-  status: 'Waiting' | 'Running' | 'Succeeded' | 'Failed' | 'Cancelled';
-  failureReason: string | null;
-  annualReturn: number | null;
-  annualReturnAfterTax: number | null;
-  volatility: number | null;
-  sharpe: number | null;
-  maxDrawdown: number | null;
-  experimentId?: string | null;
-  experiment?: ExperimentConditionsDto | null;
-}
+export type TrialStatus = 'Waiting' | 'Running' | 'Succeeded' | 'Failed' | 'Cancelled';
+
+export type TrialRunDto = Omit<ApiSchema<'TrialRunDto'>, 'status'> & {
+  status: TrialStatus;
+};
+
+export type RunTrialBody = ApiSchema<'RunTrialRequest'>;

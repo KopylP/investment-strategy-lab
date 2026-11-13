@@ -1,12 +1,6 @@
-import { ReplayResultDto } from '../../backtesting/models/backtest-dto';
+import { ApiSchema } from '../../../core/api/api-schema';
 import { ResearchStudyDto } from './research-study-dto';
 
-export interface ResearchReportDto {
-  baseline: ReplayResultDto;
+export type ResearchReportDto = Omit<ApiSchema<'ResearchReportDto'>, 'studies'> & {
   studies: ResearchStudyDto[];
-  parametersHash: string;
-  engineVersion: string;
-  selectionMetric: string;
-  replayModel: string;
-  instrumentLabels?: Record<string, string> | null;
-}
+};

@@ -1,11 +1,4 @@
-export interface BacktestComparisonDto {
-  comparable: boolean;
-  reason: string | null;
-  difference: {
-    annualReturn: number;
-    annualReturnAfterTax: number | null;
-    volatility: number;
-    sharpe: number;
-    maxDrawdown: number;
-  } | null;
-}
+import { ApiSchema } from '../../../core/api/api-schema';
+
+export type BacktestComparisonDto = ApiSchema<'BacktestComparisonDto'>;
+export type CompareBacktestsBody = ApiSchema<'CompareBacktestsQuery'>;
