@@ -15,11 +15,19 @@ internal static class CatalogEndpoints
 {
     public static RouteGroupBuilder MapCatalog(this RouteGroupBuilder group)
     {
-        var catalog = group.MapGroup("/catalog").WithTags("Strategy catalog");
+        var catalog = group
+            .MapGroup("/catalog")
+            .WithTags("Strategy catalog");
 
-        catalog.MapGet("", GetStrategyCatalog).WithName("GetStrategyCatalog");
-        catalog.MapGet("/messages", GetStrategyMessages).WithName("GetStrategyMessages");
-        catalog.MapPost("/sync", SyncStrategyCatalog).WithName("SyncStrategyCatalog");
+        catalog
+            .MapGet(string.Empty, GetStrategyCatalog)
+            .WithName("GetStrategyCatalog");
+        catalog
+            .MapGet("/messages", GetStrategyMessages)
+            .WithName("GetStrategyMessages");
+        catalog
+            .MapPost("/sync", SyncStrategyCatalog)
+            .WithName("SyncStrategyCatalog");
 
         return group;
     }

@@ -17,13 +17,25 @@ internal static class QuoteEndpoints
 {
     public static RouteGroupBuilder MapQuotes(this RouteGroupBuilder group)
     {
-        var quotes = group.MapGroup("/quotes").WithTags("Quotes");
+        var quotes = group
+            .MapGroup("/quotes")
+            .WithTags("Quotes");
 
-        quotes.MapPost("/ingest", IngestDailyQuotes).WithName("IngestDailyQuotes");
-        quotes.MapGet("/latest", GetLatestPrices).WithName("GetLatestPrices");
-        quotes.MapGet("/history", GetQuoteHistories).WithName("GetQuoteHistories");
-        quotes.MapGet("/{instrumentId:guid}", GetQuoteHistory).WithName("GetQuoteHistory");
-        quotes.MapPost("/{instrumentId:guid}/corrections", CorrectQuote).WithName("CorrectQuote");
+        quotes
+            .MapPost("/ingest", IngestDailyQuotes)
+            .WithName("IngestDailyQuotes");
+        quotes
+            .MapGet("/latest", GetLatestPrices)
+            .WithName("GetLatestPrices");
+        quotes
+            .MapGet("/history", GetQuoteHistories)
+            .WithName("GetQuoteHistories");
+        quotes
+            .MapGet("/{instrumentId:guid}", GetQuoteHistory)
+            .WithName("GetQuoteHistory");
+        quotes
+            .MapPost("/{instrumentId:guid}/corrections", CorrectQuote)
+            .WithName("CorrectQuote");
 
         return group;
     }

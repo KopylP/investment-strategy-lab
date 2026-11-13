@@ -11,8 +11,14 @@ internal static class ExperimentEndpoints
 {
     public static RouteGroupBuilder MapExperiments(this RouteGroupBuilder group)
     {
-        group.MapGet("/experiments/{id:guid}", Get).WithName("GetResearchExperiment");
-        group.MapGet("/experiments/{id:guid}/journal", Journal).WithName("GetExperimentJournal");
+        group
+            .MapGet("/experiments/{id:guid}", Get)
+            .WithName("GetResearchExperiment")
+            .Produces<ExperimentDto>();
+        group
+            .MapGet("/experiments/{id:guid}/journal", Journal)
+            .WithName("GetExperimentJournal")
+            .Produces<ExperimentJournalDto>();
 
         return group;
     }

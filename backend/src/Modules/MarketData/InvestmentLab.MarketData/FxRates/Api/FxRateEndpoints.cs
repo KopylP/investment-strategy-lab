@@ -12,11 +12,19 @@ internal static class FxRateEndpoints
 {
     public static RouteGroupBuilder MapFxRates(this RouteGroupBuilder group)
     {
-        var fxRates = group.MapGroup("/fx-rates").WithTags("FX rates");
+        var fxRates = group
+            .MapGroup("/fx-rates")
+            .WithTags("FX rates");
 
-        fxRates.MapPost("/ingest", IngestFxRates).WithName("IngestFxRates");
-        fxRates.MapGet("/latest", GetLatestFxRates).WithName("GetLatestFxRates");
-        fxRates.MapGet("/{baseCurrency}/{quoteCurrency}", GetFxRate).WithName("GetFxRate");
+        fxRates
+            .MapPost("/ingest", IngestFxRates)
+            .WithName("IngestFxRates");
+        fxRates
+            .MapGet("/latest", GetLatestFxRates)
+            .WithName("GetLatestFxRates");
+        fxRates
+            .MapGet("/{baseCurrency}/{quoteCurrency}", GetFxRate)
+            .WithName("GetFxRate");
 
         return group;
     }

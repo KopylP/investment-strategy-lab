@@ -12,11 +12,13 @@ internal static class HoldingsEndpoints
 {
     public static RouteGroupBuilder MapHoldings(this RouteGroupBuilder group)
     {
-        group.MapGet("/accounts/{accountId:guid}/holdings", GetHoldings)
+        group
+            .MapGet("/accounts/{accountId:guid}/holdings", GetHoldings)
             .WithTags("Holdings")
             .WithName("GetHoldings")
             .Produces<AccountHoldingsDto>();
-        group.MapGet("/accounts/{accountId:guid}/holdings/valued", GetValuedHoldings)
+        group
+            .MapGet("/accounts/{accountId:guid}/holdings/valued", GetValuedHoldings)
             .WithTags("Holdings")
             .WithName("GetValuedHoldings")
             .Produces<ValuedHoldingsDto>();

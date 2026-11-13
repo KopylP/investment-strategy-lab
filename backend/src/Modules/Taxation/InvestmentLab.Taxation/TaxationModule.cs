@@ -88,5 +88,9 @@ public sealed class TaxationModule : IModule
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>
-        endpoints.MapGroup("/api/taxation").MapAssessments().MapBrokerStatements().MapDeclarations();
+        endpoints
+            .MapGroup("/api/taxation")
+            .MapAssessments()
+            .MapBrokerStatements()
+            .MapDeclarations();
 }

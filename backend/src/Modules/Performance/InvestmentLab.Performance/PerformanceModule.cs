@@ -38,5 +38,7 @@ public sealed class PerformanceModule : IModule
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>
-        endpoints.MapGroup("/api/performance").MapDashboard();
+        endpoints
+            .MapGroup("/api/performance")
+            .MapDashboard();
 }

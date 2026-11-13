@@ -51,5 +51,9 @@ public sealed class StrategyBuilderModule : IModule
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>
-        endpoints.MapGroup("/api/strategy-builder").MapDrafts().MapTrials().MapFunds();
+        endpoints
+            .MapGroup("/api/strategy-builder")
+            .MapDrafts()
+            .MapTrials()
+            .MapFunds();
 }

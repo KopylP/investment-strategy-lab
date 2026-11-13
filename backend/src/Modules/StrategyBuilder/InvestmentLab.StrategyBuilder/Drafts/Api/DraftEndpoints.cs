@@ -28,25 +28,76 @@ internal static class DraftEndpoints
 {
     public static RouteGroupBuilder MapDrafts(this RouteGroupBuilder group)
     {
-        var builder = group.MapGroup("").WithTags("StrategyBuilder");
+        var builder = group
+            .MapGroup(string.Empty)
+            .WithTags("StrategyBuilder");
 
-        builder.MapPost("/drafts/{draftId:guid}/publish", PublishDraft).WithName("PublishDraft");
-        builder.MapPost("/published/{strategyId:guid}/versions/{version:int}/draft", OpenPublishedStrategy).WithName("OpenPublishedStrategy");
-        builder.MapGet("/published/{strategyId:guid}/versions/{version:int}", GetPublishedStrategy).WithName("GetPublishedBuilderStrategy");
-        builder.MapGet("/vocabulary", GetVocabulary).WithName("GetBuilderVocabulary");
-        builder.MapGet("/signals", ListOwnSignals).WithName("ListBuilderSignals");
-        builder.MapGet("/instruments", ListInstruments).WithName("ListBuilderInstruments");
-        builder.MapGet("/drafts", ListDrafts).WithName("ListDrafts");
-        builder.MapPost("/drafts", CreateDraft).WithName("CreateDraft");
-        builder.MapPost("/drafts/import", ImportRules).WithName("ImportRules");
-        builder.MapGet("/drafts/{draftId:guid}", GetDraft).WithName("GetDraft");
-        builder.MapPut("/drafts/{draftId:guid}", ChangeDraft).WithName("ChangeDraft");
-        builder.MapPut("/drafts/{draftId:guid}/layout", MoveNodes).WithName("MoveDraftNodes");
-        builder.MapPost("/drafts/{draftId:guid}/check", CheckDraft).WithName("CheckDraft");
-        builder.MapPost("/drafts/{draftId:guid}/copy-entry-to-exit", CopyEntryToExit).WithName("CopyEntryToExit");
-        builder.MapGet("/drafts/{draftId:guid}/rules", GetDraftRules).WithName("GetDraftRules");
-        builder.MapPut("/drafts/{draftId:guid}/rules", ReplaceDraftRules).WithName("ReplaceDraftRules");
-        builder.MapDelete("/drafts/{draftId:guid}", DiscardDraft).WithName("DiscardDraft");
+        builder
+            .MapPost("/drafts/{draftId:guid}/publish", PublishDraft)
+            .WithName("PublishDraft")
+            .Produces<PublishedVersionDto>();
+        builder
+            .MapPost("/published/{strategyId:guid}/versions/{version:int}/draft", OpenPublishedStrategy)
+            .WithName("OpenPublishedStrategy")
+            .Produces<DraftDto>();
+        builder
+            .MapGet("/published/{strategyId:guid}/versions/{version:int}", GetPublishedStrategy)
+            .WithName("GetPublishedBuilderStrategy")
+            .Produces<PublishedStrategyDto>();
+        builder
+            .MapGet("/vocabulary", GetVocabulary)
+            .WithName("GetBuilderVocabulary")
+            .Produces<VocabularyDto>();
+        builder
+            .MapGet("/signals", ListOwnSignals)
+            .WithName("ListBuilderSignals")
+            .Produces<IReadOnlyList<OwnSignalDto>>();
+        builder
+            .MapGet("/instruments", ListInstruments)
+            .WithName("ListBuilderInstruments")
+            .Produces<IReadOnlyList<InstrumentChoiceDto>>();
+        builder
+            .MapGet("/drafts", ListDrafts)
+            .WithName("ListDrafts")
+            .Produces<IReadOnlyList<DraftSummaryDto>>();
+        builder
+            .MapPost("/drafts", CreateDraft)
+            .WithName("CreateDraft")
+            .Produces<DraftDto>();
+        builder
+            .MapPost("/drafts/import", ImportRules)
+            .WithName("ImportRules")
+            .Produces<DraftDto>();
+        builder
+            .MapGet("/drafts/{draftId:guid}", GetDraft)
+            .WithName("GetDraft")
+            .Produces<DraftDto>();
+        builder
+            .MapPut("/drafts/{draftId:guid}", ChangeDraft)
+            .WithName("ChangeDraft")
+            .Produces<DraftDto>();
+        builder
+            .MapPut("/drafts/{draftId:guid}/layout", MoveNodes)
+            .WithName("MoveDraftNodes");
+        builder
+            .MapPost("/drafts/{draftId:guid}/check", CheckDraft)
+            .WithName("CheckDraft")
+            .Produces<DraftCheckDto>();
+        builder
+            .MapPost("/drafts/{draftId:guid}/copy-entry-to-exit", CopyEntryToExit)
+            .WithName("CopyEntryToExit")
+            .Produces<DraftDto>();
+        builder
+            .MapGet("/drafts/{draftId:guid}/rules", GetDraftRules)
+            .WithName("GetDraftRules")
+            .Produces<DraftRulesDto>();
+        builder
+            .MapPut("/drafts/{draftId:guid}/rules", ReplaceDraftRules)
+            .WithName("ReplaceDraftRules")
+            .Produces<DraftDto>();
+        builder
+            .MapDelete("/drafts/{draftId:guid}", DiscardDraft)
+            .WithName("DiscardDraft");
 
         return group;
     }

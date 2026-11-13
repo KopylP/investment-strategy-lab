@@ -13,11 +13,21 @@ internal static class BrokerStatementEndpoints
 {
     public static RouteGroupBuilder MapBrokerStatements(this RouteGroupBuilder group)
     {
-        var statements = group.MapGroup("/accounts/{accountId:guid}/broker-statements").WithTags("Taxes");
+        var statements = group
+            .MapGroup("/accounts/{accountId:guid}/broker-statements")
+            .WithTags("Taxes");
 
-        statements.MapGet("", ListBrokerStatements).WithName("ListBrokerStatements");
-        statements.MapPost("", UploadBrokerStatement).WithName("UploadBrokerStatement");
-        statements.MapDelete("/{statementId:guid}", RemoveBrokerStatement).WithName("RemoveBrokerStatement");
+        statements
+            .MapGet(string.Empty, ListBrokerStatements)
+            .WithName("ListBrokerStatements")
+            .Produces<BrokerStatementsDto>();
+        statements
+            .MapPost(string.Empty, UploadBrokerStatement)
+            .WithName("UploadBrokerStatement")
+            .Produces<BrokerStatementsDto>();
+        statements
+            .MapDelete("/{statementId:guid}", RemoveBrokerStatement)
+            .WithName("RemoveBrokerStatement");
 
         return group;
     }

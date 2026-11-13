@@ -1,6 +1,7 @@
 using InvestmentLab.BuildingBlocks.Http;
 using InvestmentLab.StrategyBuilder.Trials.Application.ListTrials;
 using InvestmentLab.StrategyBuilder.Trials.Application.RunTrial;
+using InvestmentLab.StrategyBuilder.Trials.Application.Shared;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -11,8 +12,14 @@ internal static class TrialEndpoints
 {
     public static RouteGroupBuilder MapTrials(this RouteGroupBuilder group)
     {
-        group.MapPost("/drafts/{draftId:guid}/trials", RunTrial).WithName("RunDraftTrial");
-        group.MapGet("/drafts/{draftId:guid}/trials", ListTrials).WithName("ListDraftTrials");
+        group
+            .MapPost("/drafts/{draftId:guid}/trials", RunTrial)
+            .WithName("RunDraftTrial")
+            .Produces<TrialRunDto>();
+        group
+            .MapGet("/drafts/{draftId:guid}/trials", ListTrials)
+            .WithName("ListDraftTrials")
+            .Produces<IReadOnlyList<TrialRunDto>>();
 
         return group;
     }

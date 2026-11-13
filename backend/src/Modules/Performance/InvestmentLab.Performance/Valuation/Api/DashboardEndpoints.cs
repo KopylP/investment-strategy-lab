@@ -2,6 +2,7 @@ using InvestmentLab.BuildingBlocks.Http;
 using InvestmentLab.Performance.Valuation.Application.GetAllAccountsDashboard;
 using InvestmentLab.Performance.Valuation.Application.GetDashboard;
 using InvestmentLab.Performance.Valuation.Application.RefreshSnapshots;
+using InvestmentLab.Performance.Valuation.Application.Shared;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -12,13 +13,17 @@ internal static class DashboardEndpoints
 {
     public static RouteGroupBuilder MapDashboard(this RouteGroupBuilder group)
     {
-        group.MapGet("/accounts/{accountId:guid}/dashboard", RefreshAndGetDashboard)
+        group
+            .MapGet("/accounts/{accountId:guid}/dashboard", RefreshAndGetDashboard)
             .WithTags("Performance")
-            .WithName("GetDashboard");
+            .WithName("GetDashboard")
+            .Produces<DashboardDto>();
 
-        group.MapGet("/dashboard", RefreshAndGetAllAccountsDashboard)
+        group
+            .MapGet("/dashboard", RefreshAndGetAllAccountsDashboard)
             .WithTags("Performance")
-            .WithName("GetAllAccountsDashboard");
+            .WithName("GetAllAccountsDashboard")
+            .Produces<DashboardDto>();
 
         return group;
     }

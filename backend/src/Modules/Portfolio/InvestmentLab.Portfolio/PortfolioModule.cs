@@ -80,7 +80,8 @@ public sealed class PortfolioModule : IModule
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>
-        endpoints.MapGroup("/api/portfolio")
+        endpoints
+            .MapGroup("/api/portfolio")
             .MapAccounts()
             .MapTransactions()
             .MapImport()

@@ -18,14 +18,32 @@ internal static class StrategyEndpoints
 {
     public static RouteGroupBuilder MapDefinitions(this RouteGroupBuilder group)
     {
-        var strategies = group.MapGroup("").WithTags("Strategies");
+        var strategies = group
+            .MapGroup(string.Empty)
+            .WithTags("Strategies");
 
-        strategies.MapGet("", ListStrategies).WithName("ListStrategies");
-        strategies.MapPost("", CreateStrategy).WithName("CreateStrategy");
-        strategies.MapPost("/defaults", CreateDefaultStrategies).WithName("CreateDefaultStrategies");
-        strategies.MapGet("/{strategyId:guid}", GetStrategy).WithName("GetStrategy");
-        strategies.MapPut("/{strategyId:guid}", ReconfigureStrategy).WithName("ReconfigureStrategy");
-        strategies.MapPost("/{strategyId:guid}/archive", ArchiveStrategy).WithName("ArchiveStrategy");
+        strategies
+            .MapGet(string.Empty, ListStrategies)
+            .WithName("ListStrategies");
+        strategies
+            .MapPost(string.Empty, CreateStrategy)
+            .WithName("CreateStrategy")
+            .Produces<StrategyDto>();
+        strategies
+            .MapPost("/defaults", CreateDefaultStrategies)
+            .WithName("CreateDefaultStrategies")
+            .Produces<IReadOnlyList<StrategyDto>>();
+        strategies
+            .MapGet("/{strategyId:guid}", GetStrategy)
+            .WithName("GetStrategy")
+            .Produces<StrategyDto>();
+        strategies
+            .MapPut("/{strategyId:guid}", ReconfigureStrategy)
+            .WithName("ReconfigureStrategy")
+            .Produces<StrategyDto>();
+        strategies
+            .MapPost("/{strategyId:guid}/archive", ArchiveStrategy)
+            .WithName("ArchiveStrategy");
 
         return group;
     }

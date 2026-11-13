@@ -49,5 +49,7 @@ public sealed class SignalsModule : IModule
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>
-        endpoints.MapGroup("/api/signals").MapSignals();
+        endpoints
+            .MapGroup("/api/signals")
+            .MapSignals();
 }

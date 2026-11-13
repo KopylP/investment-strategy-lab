@@ -107,7 +107,8 @@ public sealed class MarketDataModule : IModule
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>
-        endpoints.MapGroup("/api/market-data")
+        endpoints
+            .MapGroup("/api/market-data")
             .MapInstruments()
             .MapQuotes()
             .MapFxRates();

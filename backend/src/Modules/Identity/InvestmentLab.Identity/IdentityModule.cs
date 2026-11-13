@@ -154,7 +154,8 @@ public sealed class IdentityModule : IModule
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>
-        endpoints.MapGroup("/api/identity")
+        endpoints
+            .MapGroup("/api/identity")
             .MapUsers()
             .MapProfiles();
 }

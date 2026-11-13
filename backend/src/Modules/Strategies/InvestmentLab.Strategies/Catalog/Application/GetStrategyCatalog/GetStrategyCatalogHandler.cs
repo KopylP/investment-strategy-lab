@@ -40,6 +40,6 @@ public sealed class GetStrategyCatalogHandler(IStrategyCatalog catalog) : IHandl
         Schedule: report.Schedule is { } schedule ? ToDto(schedule) : null,
         SignalKinds: report.SignalKinds);
 
-    private static ReportScheduleDto ToDto(ReportSchedule schedule) =>
+    private static DefaultReportScheduleDto ToDto(ReportSchedule schedule) =>
         new(schedule.Frequency, schedule.Day, schedule.Weekday, schedule.Time, schedule.Minute);
 }

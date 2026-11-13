@@ -36,7 +36,9 @@ public sealed class NotificationsModule : IModule
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>
-        endpoints.MapGroup("/api/notifications").MapNotificationSettings();
+        endpoints
+            .MapGroup("/api/notifications")
+            .MapNotificationSettings();
 
     private static void AddHomeAssistant(IHostApplicationBuilder builder)
     {

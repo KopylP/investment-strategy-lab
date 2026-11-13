@@ -16,11 +16,20 @@ internal static class InstrumentEndpoints
 {
     public static RouteGroupBuilder MapInstruments(this RouteGroupBuilder group)
     {
-        var instruments = group.MapGroup("/instruments").WithTags("Instruments");
+        var instruments = group
+            .MapGroup("/instruments")
+            .WithTags("Instruments");
 
-        instruments.MapGet("/", GetInstruments).WithName("GetInstruments");
-        instruments.MapPost("/", RegisterInstrument).WithName("RegisterInstrument");
-        instruments.MapPost("/{instrumentId:guid}/provider-symbols", AssignProviderSymbol).WithName("AssignProviderSymbol");
+        instruments
+            .MapGet("/", GetInstruments)
+            .WithName("GetInstruments");
+        instruments
+            .MapPost("/", RegisterInstrument)
+            .WithName("RegisterInstrument")
+            .Produces<Guid>();
+        instruments
+            .MapPost("/{instrumentId:guid}/provider-symbols", AssignProviderSymbol)
+            .WithName("AssignProviderSymbol");
 
         return group;
     }

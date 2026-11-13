@@ -22,17 +22,45 @@ internal static class AccountEndpoints
 {
     public static RouteGroupBuilder MapAccounts(this RouteGroupBuilder group)
     {
-        var accounts = group.MapGroup("/accounts").WithTags("Accounts");
+        var accounts = group
+            .MapGroup("/accounts")
+            .WithTags("Accounts");
 
-        accounts.MapPost("", OpenAccount).WithName("OpenAccount");
-        accounts.MapGet("", ListAccounts).WithName("ListAccounts");
-        accounts.MapGet("/{accountId:guid}", GetAccount).WithName("GetAccount");
-        accounts.MapPost("/{accountId:guid}/sub-portfolios", AddSubPortfolio).WithName("AddSubPortfolio");
-        accounts.MapPut("/{accountId:guid}/target-shares", ChangeTargetShares).WithName("ChangeTargetShares");
-        accounts.MapPut("/{accountId:guid}/contribution-policy", ChangeContributionPolicy).WithName("ChangeContributionPolicy");
-        accounts.MapPut("/{accountId:guid}/sub-portfolios/{subPortfolioId:guid}/strategy", AssignStrategy).WithName("AssignStrategy");
-        accounts.MapPut("/{accountId:guid}/sub-portfolios/{subPortfolioId:guid}/name", RenameSubPortfolio).WithName("RenameSubPortfolio");
-        accounts.MapPost("/{accountId:guid}/sub-portfolios/{subPortfolioId:guid}/retire", RetireSubPortfolio).WithName("RetireSubPortfolio");
+        accounts
+            .MapPost(string.Empty, OpenAccount)
+            .WithName("OpenAccount")
+            .Produces<AccountSetupDto>();
+        accounts
+            .MapGet(string.Empty, ListAccounts)
+            .WithName("ListAccounts");
+        accounts
+            .MapGet("/{accountId:guid}", GetAccount)
+            .WithName("GetAccount")
+            .Produces<AccountSetupDto>();
+        accounts
+            .MapPost("/{accountId:guid}/sub-portfolios", AddSubPortfolio)
+            .WithName("AddSubPortfolio")
+            .Produces<AccountSetupDto>();
+        accounts
+            .MapPut("/{accountId:guid}/target-shares", ChangeTargetShares)
+            .WithName("ChangeTargetShares")
+            .Produces<AccountSetupDto>();
+        accounts
+            .MapPut("/{accountId:guid}/contribution-policy", ChangeContributionPolicy)
+            .WithName("ChangeContributionPolicy")
+            .Produces<AccountSetupDto>();
+        accounts
+            .MapPut("/{accountId:guid}/sub-portfolios/{subPortfolioId:guid}/strategy", AssignStrategy)
+            .WithName("AssignStrategy")
+            .Produces<AccountSetupDto>();
+        accounts
+            .MapPut("/{accountId:guid}/sub-portfolios/{subPortfolioId:guid}/name", RenameSubPortfolio)
+            .WithName("RenameSubPortfolio")
+            .Produces<AccountSetupDto>();
+        accounts
+            .MapPost("/{accountId:guid}/sub-portfolios/{subPortfolioId:guid}/retire", RetireSubPortfolio)
+            .WithName("RetireSubPortfolio")
+            .Produces<AccountSetupDto>();
 
         return group;
     }

@@ -10,9 +10,11 @@ internal static class ImportEndpoints
 {
     public static RouteGroupBuilder MapImport(this RouteGroupBuilder group)
     {
-        group.MapPost("/accounts/{accountId:guid}/sub-portfolios/{subPortfolioId:guid}/import-positions", ImportPositions)
+        group
+            .MapPost("/accounts/{accountId:guid}/sub-portfolios/{subPortfolioId:guid}/import-positions", ImportPositions)
             .WithTags("Import")
-            .WithName("ImportPositions");
+            .WithName("ImportPositions")
+            .Produces<ImportReport>();
 
         return group;
     }

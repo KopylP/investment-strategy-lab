@@ -23,7 +23,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentUserDto"
+                }
+              }
+            }
           }
         }
       }
@@ -72,7 +79,14 @@
         "operationId": "GetCurrentUser",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentUserDto"
+                }
+              }
+            }
           }
         }
       }
@@ -85,7 +99,14 @@
         "operationId": "GetProfile",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfileDto"
+                }
+              }
+            }
           }
         }
       },
@@ -106,7 +127,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfileDto"
+                }
+              }
+            }
           }
         }
       }
@@ -150,7 +178,15 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
           }
         }
       }
@@ -587,7 +623,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StrategyDto"
+                }
+              }
+            }
           }
         }
       }
@@ -600,7 +643,17 @@
         "operationId": "CreateDefaultStrategies",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StrategyDto"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -632,7 +685,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StrategyDto"
+                }
+              }
+            }
           }
         }
       },
@@ -664,7 +724,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StrategyDto"
+                }
+              }
+            }
           }
         }
       }
@@ -722,7 +789,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StrategyDecisionDto"
+                }
+              }
+            }
           }
         }
       }
@@ -756,7 +830,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskAssessmentDto"
+                }
+              }
+            }
           }
         }
       }
@@ -779,7 +860,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountSetupDto"
+                }
+              }
+            }
           }
         }
       },
@@ -824,7 +912,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountSetupDto"
+                }
+              }
+            }
           }
         }
       }
@@ -858,7 +953,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountSetupDto"
+                }
+              }
+            }
           }
         }
       }
@@ -892,7 +994,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountSetupDto"
+                }
+              }
+            }
           }
         }
       }
@@ -926,7 +1035,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountSetupDto"
+                }
+              }
+            }
           }
         }
       }
@@ -969,7 +1085,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountSetupDto"
+                }
+              }
+            }
           }
         }
       }
@@ -1012,7 +1135,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountSetupDto"
+                }
+              }
+            }
           }
         }
       }
@@ -1055,7 +1185,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountSetupDto"
+                }
+              }
+            }
           }
         }
       }
@@ -1089,7 +1226,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordedTransaction"
+                }
+              }
+            }
           }
         }
       }
@@ -1123,7 +1267,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordedTransaction"
+                }
+              }
+            }
           }
         }
       }
@@ -1157,7 +1308,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordedTransaction"
+                }
+              }
+            }
           }
         }
       }
@@ -1191,7 +1349,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordedTransaction"
+                }
+              }
+            }
           }
         }
       }
@@ -1234,7 +1399,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordedTransaction"
+                }
+              }
+            }
           }
         }
       }
@@ -1258,7 +1430,17 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TransactionDto"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -1309,7 +1491,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportReport"
+                }
+              }
+            }
           }
         }
       }
@@ -1453,7 +1642,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatementImportDto"
+                }
+              }
+            }
           }
         }
       }
@@ -1486,7 +1682,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatementImportDto"
+                }
+              }
+            }
           }
         }
       },
@@ -1527,7 +1730,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatementImportDto"
+                }
+              }
+            }
           }
         }
       }
@@ -1560,7 +1770,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatementImportDto"
+                }
+              }
+            }
           }
         }
       }
@@ -1593,7 +1810,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatementImportDto"
+                }
+              }
+            }
           }
         }
       }
@@ -1707,8 +1931,15 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "OK"
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportRequestedResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -1732,7 +1963,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanSettingsDto"
+                }
+              }
+            }
           }
         }
       },
@@ -1764,7 +2002,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanSettingsDto"
+                }
+              }
+            }
           }
         }
       }
@@ -1788,7 +2033,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportScheduleDto"
+                }
+              }
+            }
           }
         }
       }
@@ -1830,7 +2082,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportScheduleDto"
+                }
+              }
+            }
           }
         }
       },
@@ -1860,7 +2119,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportScheduleDto"
+                }
+              }
+            }
           }
         }
       }
@@ -1948,7 +2214,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportRequestDto"
+                }
+              }
+            }
           }
         }
       }
@@ -2005,7 +2278,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportDetailsDto"
+                }
+              }
+            }
           }
         }
       }
@@ -2053,7 +2333,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoadOperationsPreviewDto"
+                }
+              }
+            }
           }
         }
       },
@@ -2075,7 +2362,15 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
           }
         }
       }
@@ -2325,7 +2620,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxYearDetailsDto"
+                }
+              }
+            }
           }
         }
       }
@@ -2401,7 +2703,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LossCarryforwardDto"
+                }
+              }
+            }
           }
         }
       }
@@ -2449,7 +2758,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrokerStatementsDto"
+                }
+              }
+            }
           }
         }
       },
@@ -2481,7 +2797,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrokerStatementsDto"
+                }
+              }
+            }
           }
         }
       }
@@ -2582,7 +2905,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeclarationDto"
+                }
+              }
+            }
           }
         }
       }
@@ -2622,7 +2952,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "$ref": "#/components/schemas/Stream"
+                }
+              }
+            }
           }
         }
       }
@@ -2729,7 +3066,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardDto"
+                }
+              }
+            }
           }
         }
       }
@@ -2758,7 +3102,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardDto"
+                }
+              }
+            }
           }
         }
       }
@@ -3046,7 +3397,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentDto"
+                }
+              }
+            }
           }
         }
       }
@@ -3111,7 +3469,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentJournalDto"
+                }
+              }
+            }
           }
         }
       }
@@ -3145,7 +3510,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishedVersionDto"
+                }
+              }
+            }
           }
         }
       }
@@ -3179,7 +3551,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftDto"
+                }
+              }
+            }
           }
         }
       }
@@ -3213,7 +3592,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishedStrategyDto"
+                }
+              }
+            }
           }
         }
       }
@@ -3226,7 +3612,14 @@
         "operationId": "GetBuilderVocabulary",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VocabularyDto"
+                }
+              }
+            }
           }
         }
       }
@@ -3239,7 +3632,17 @@
         "operationId": "ListBuilderSignals",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OwnSignalDto"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -3252,7 +3655,17 @@
         "operationId": "ListBuilderInstruments",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InstrumentChoiceDto"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -3265,7 +3678,17 @@
         "operationId": "ListDrafts",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DraftSummaryDto"
+                  }
+                }
+              }
+            }
           }
         }
       },
@@ -3286,7 +3709,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftDto"
+                }
+              }
+            }
           }
         }
       }
@@ -3309,7 +3739,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftDto"
+                }
+              }
+            }
           }
         }
       }
@@ -3333,7 +3770,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftDto"
+                }
+              }
+            }
           }
         }
       },
@@ -3365,7 +3809,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftDto"
+                }
+              }
+            }
           }
         }
       },
@@ -3445,7 +3896,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftCheckDto"
+                }
+              }
+            }
           }
         }
       }
@@ -3479,7 +3937,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftDto"
+                }
+              }
+            }
           }
         }
       }
@@ -3503,7 +3968,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftRulesDto"
+                }
+              }
+            }
           }
         }
       },
@@ -3535,7 +4007,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftDto"
+                }
+              }
+            }
           }
         }
       }
@@ -3569,7 +4048,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrialRunDto"
+                }
+              }
+            }
           }
         }
       },
@@ -3591,7 +4077,17 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrialRunDto"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -3604,7 +4100,14 @@
         "operationId": "GetBuilderFundSearchOptions",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FundSearchOptionsDto"
+                }
+              }
+            }
           }
         }
       }
@@ -3627,7 +4130,17 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FoundFundDto"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -3650,7 +4163,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddedFundsDto"
+                }
+              }
+            }
           }
         }
       }
@@ -3663,7 +4183,14 @@
         "operationId": "GetNotificationSettings",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationSettingsDto"
+                }
+              }
+            }
           }
         }
       },
@@ -3684,7 +4211,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationSettingsDto"
+                }
+              }
+            }
           }
         }
       }
@@ -3794,6 +4328,53 @@
           }
         }
       },
+      "AccountPerformanceDto": {
+        "required": [
+          "id",
+          "name",
+          "broker",
+          "baseCurrency",
+          "value",
+          "share",
+          "netContributions",
+          "twr"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "broker": {
+            "type": "string"
+          },
+          "baseCurrency": {
+            "type": "string"
+          },
+          "value": {
+            "type": "number",
+            "format": "double"
+          },
+          "share": {
+            "type": "number",
+            "format": "double"
+          },
+          "netContributions": {
+            "type": "number",
+            "format": "double"
+          },
+          "twr": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          }
+        }
+      },
       "AccountSetupDto": {
         "required": [
           "id",
@@ -3839,6 +4420,102 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SubPortfolioSetupDto"
+            }
+          }
+        }
+      },
+      "ActionAllocationDto": {
+        "required": [
+          "subPortfolioId",
+          "quantity",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "subPortfolioId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ActionMatchDto": {
+        "required": [
+          "actionId",
+          "sequence",
+          "actionKind",
+          "instrumentId",
+          "plannedQuantity",
+          "remainingQuantity",
+          "completes",
+          "operations"
+        ],
+        "type": "object",
+        "properties": {
+          "actionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sequence": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "actionKind": {
+            "type": "string"
+          },
+          "instrumentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "plannedQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "remainingQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "completes": {
+            "type": "boolean"
+          },
+          "operations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MatchedOperationDto"
+            }
+          }
+        }
+      },
+      "AddedFundsDto": {
+        "required": [
+          "instrumentIds",
+          "failed"
+        ],
+        "type": "object",
+        "properties": {
+          "instrumentIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "failed": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FundNotAddedDto"
             }
           }
         }
@@ -4102,6 +4779,124 @@
           }
         }
       },
+      "BlockWordsDto": {
+        "required": [
+          "block",
+          "sentence"
+        ],
+        "type": "object",
+        "properties": {
+          "block": {
+            "type": "string"
+          },
+          "sentence": {
+            "type": "string"
+          }
+        }
+      },
+      "BrokerStatementDto": {
+        "required": [
+          "id",
+          "broker",
+          "fileName",
+          "uploadedAt",
+          "from",
+          "to",
+          "sales",
+          "dividends",
+          "warnings"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "broker": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "uploadedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          },
+          "sales": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dividends": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "BrokerStatementsDto": {
+        "required": [
+          "statements",
+          "sales",
+          "matchedSales",
+          "dividends",
+          "matchedDividends"
+        ],
+        "type": "object",
+        "properties": {
+          "statements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BrokerStatementDto"
+            }
+          },
+          "sales": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "matchedSales": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dividends": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "matchedDividends": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "CarryforwardUseDto": {
+        "required": [
+          "lossYear",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "lossYear": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "CashBalanceDto": {
         "required": [
           "currency",
@@ -4115,6 +4910,52 @@
           "amount": {
             "type": "number",
             "format": "double"
+          }
+        }
+      },
+      "CashMovementRecordedDto": {
+        "required": [
+          "kind",
+          "amount",
+          "instrumentId",
+          "allocations",
+          "settledAmount",
+          "settledCurrency"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "instrumentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "allocations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AmountAllocationDto"
+            }
+          },
+          "settledAmount": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "settledCurrency": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -4259,6 +5100,36 @@
           }
         }
       },
+      "ConditionKindDto": {
+        "required": [
+          "code",
+          "label",
+          "hint",
+          "phrase",
+          "fields"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "hint": {
+            "type": "string"
+          },
+          "phrase": {
+            "type": "string"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VocabularyFieldDto"
+            }
+          }
+        }
+      },
       "ConfigureImportCommand": {
         "required": [
           "mode",
@@ -4290,6 +5161,57 @@
             "items": {
               "$ref": "#/components/schemas/TickerMappingChoice"
             }
+          }
+        }
+      },
+      "ContributionPartDto": {
+        "required": [
+          "subPortfolioId",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "subPortfolioId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "ContributionPlanDto": {
+        "required": [
+          "total",
+          "split",
+          "parts",
+          "transfer"
+        ],
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number",
+            "format": "double"
+          },
+          "split": {
+            "type": "string"
+          },
+          "parts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContributionPartDto"
+            }
+          },
+          "transfer": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TransferHintDto"
+              }
+            ]
           }
         }
       },
@@ -4448,6 +5370,317 @@
           }
         }
       },
+      "CurrentUserDto": {
+        "required": [
+          "id",
+          "email",
+          "viaHomeAssistant"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "viaHomeAssistant": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "DashboardDto": {
+        "required": [
+          "accountId",
+          "currency",
+          "asOf",
+          "period",
+          "value",
+          "netContributions",
+          "gain",
+          "twr",
+          "twrAnnualized",
+          "xirr",
+          "maxDrawdown",
+          "currentDrawdown",
+          "planValue",
+          "series",
+          "subPortfolios",
+          "accounts",
+          "reports",
+          "positionsValue",
+          "costBasis"
+        ],
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "asOf": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "period": {
+            "type": "string"
+          },
+          "value": {
+            "type": "number",
+            "format": "double"
+          },
+          "netContributions": {
+            "type": "number",
+            "format": "double"
+          },
+          "gain": {
+            "type": "number",
+            "format": "double"
+          },
+          "twr": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "twrAnnualized": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "xirr": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "maxDrawdown": {
+            "type": "number",
+            "format": "double"
+          },
+          "currentDrawdown": {
+            "type": "number",
+            "format": "double"
+          },
+          "planValue": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "series": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SeriesPointDto"
+            }
+          },
+          "subPortfolios": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubPortfolioPerformanceDto"
+            }
+          },
+          "accounts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccountPerformanceDto"
+            }
+          },
+          "reports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReportMarkerDto"
+            }
+          },
+          "positionsValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "costBasis": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "DeclarationAccountLineDto": {
+        "required": [
+          "name",
+          "broker",
+          "treatment",
+          "revenue",
+          "costs",
+          "dividendsGross",
+          "dividendsWithheld",
+          "accountId",
+          "takesPit8C",
+          "pit8C",
+          "pit8CCoveredBy"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "broker": {
+            "type": "string"
+          },
+          "treatment": {
+            "type": "string"
+          },
+          "revenue": {
+            "type": "number",
+            "format": "double"
+          },
+          "costs": {
+            "type": "number",
+            "format": "double"
+          },
+          "dividendsGross": {
+            "type": "number",
+            "format": "double"
+          },
+          "dividendsWithheld": {
+            "type": "number",
+            "format": "double"
+          },
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "takesPit8C": {
+            "type": "boolean"
+          },
+          "pit8C": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Pit8CAmountsDto"
+              }
+            ]
+          },
+          "pit8CCoveredBy": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "DeclarationAttachmentDto": {
+        "required": [
+          "form",
+          "title",
+          "fields"
+        ],
+        "type": "object",
+        "properties": {
+          "form": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeclarationFieldDto"
+            }
+          }
+        }
+      },
+      "DeclarationDto": {
+        "required": [
+          "declaration",
+          "warnings"
+        ],
+        "type": "object",
+        "properties": {
+          "declaration": {
+            "$ref": "#/components/schemas/TaxDeclarationDto"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "DeclarationFactDto": {
+        "required": [
+          "label",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "DeclarationFieldDto": {
+        "required": [
+          "position",
+          "label",
+          "amount",
+          "text",
+          "hint",
+          "computed"
+        ],
+        "type": "object",
+        "properties": {
+          "position": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "label": {
+            "type": "string"
+          },
+          "amount": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "text": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "hint": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "computed": {
+            "type": "boolean"
+          }
+        }
+      },
       "DeclarationFormDto": {
         "required": [
           "code",
@@ -4460,6 +5693,169 @@
           },
           "title": {
             "type": "string"
+          }
+        }
+      },
+      "DeclarationNoteDto": {
+        "required": [
+          "text",
+          "action",
+          "short"
+        ],
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "action": {
+            "type": "boolean"
+          },
+          "short": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "DeclarationSectionDto": {
+        "required": [
+          "code",
+          "title",
+          "fields"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeclarationFieldDto"
+            }
+          }
+        }
+      },
+      "DefaultReportScheduleDto": {
+        "required": [
+          "frequency",
+          "day",
+          "weekday",
+          "time",
+          "minute"
+        ],
+        "type": "object",
+        "properties": {
+          "frequency": {
+            "type": "string"
+          },
+          "day": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "weekday": {
+            "type": "string"
+          },
+          "time": {
+            "type": "string"
+          },
+          "minute": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "DestinationDto": {
+        "required": [
+          "id",
+          "channel",
+          "label",
+          "suggested",
+          "selected"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "suggested": {
+            "type": "boolean"
+          },
+          "selected": {
+            "type": "boolean"
+          }
+        }
+      },
+      "DividendIncomeDto": {
+        "required": [
+          "transactionId",
+          "receivedOn",
+          "instrumentId",
+          "amount",
+          "amountInTaxCurrency",
+          "fxRate",
+          "grossInTaxCurrency",
+          "withheldInTaxCurrency",
+          "currency",
+          "withholdingKnown",
+          "accountId"
+        ],
+        "type": "object",
+        "properties": {
+          "transactionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "receivedOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "instrumentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "amountInTaxCurrency": {
+            "type": "number",
+            "format": "double"
+          },
+          "fxRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "grossInTaxCurrency": {
+            "type": "number",
+            "format": "double"
+          },
+          "withheldInTaxCurrency": {
+            "type": "number",
+            "format": "double"
+          },
+          "currency": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "withholdingKnown": {
+            "type": "boolean"
+          },
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
@@ -4531,6 +5927,150 @@
           }
         }
       },
+      "DraftCheckDto": {
+        "required": [
+          "isClean",
+          "problems",
+          "signalIds"
+        ],
+        "type": "object",
+        "properties": {
+          "isClean": {
+            "type": "boolean"
+          },
+          "problems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DraftProblemDto"
+            }
+          },
+          "signalIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "DraftDto": {
+        "required": [
+          "id",
+          "name",
+          "description",
+          "revision",
+          "updatedAt",
+          "setup",
+          "graph",
+          "layout",
+          "reports",
+          "originStrategyId",
+          "originVersion",
+          "problems",
+          "words"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "revision": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "setup": {
+            "$ref": "#/components/schemas/DraftSetupDto"
+          },
+          "graph": {
+            "$ref": "#/components/schemas/GraphDto"
+          },
+          "layout": {
+            "$ref": "#/components/schemas/LayoutDto"
+          },
+          "reports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DraftReportDto"
+            }
+          },
+          "originStrategyId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "originVersion": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "problems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DraftProblemDto"
+            }
+          },
+          "words": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BlockWordsDto"
+            }
+          }
+        }
+      },
+      "DraftProblemDto": {
+        "required": [
+          "message",
+          "severity",
+          "nodeId",
+          "block",
+          "reportCode"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "nodeId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "block": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reportCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "DraftReportDto": {
         "required": [
           "code",
@@ -4544,7 +6084,7 @@
             "type": "string"
           },
           "schedule": {
-            "$ref": "#/components/schemas/ReportTimingDto"
+            "$ref": "#/components/schemas/DraftReportTimingDto"
           },
           "signalKinds": {
             "type": "array",
@@ -4558,6 +6098,46 @@
               "type": "string",
               "format": "uuid"
             }
+          }
+        }
+      },
+      "DraftReportTimingDto": {
+        "required": [
+          "frequency",
+          "day",
+          "weekday",
+          "time",
+          "minute"
+        ],
+        "type": "object",
+        "properties": {
+          "frequency": {
+            "type": "string"
+          },
+          "day": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "weekday": {
+            "type": "string"
+          },
+          "time": {
+            "type": "string"
+          },
+          "minute": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "DraftRulesDto": {
+        "required": [
+          "json"
+        ],
+        "type": "object",
+        "properties": {
+          "json": {
+            "type": "string"
           }
         }
       },
@@ -4654,6 +6234,50 @@
           }
         }
       },
+      "DraftSummaryDto": {
+        "required": [
+          "id",
+          "name",
+          "originStrategyName",
+          "originVersion",
+          "updatedAt",
+          "lastTrialAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "originStrategyName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "originVersion": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastTrialAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "EvaluateSubPortfolioCommand": {
         "required": [
           "accountId",
@@ -4687,6 +6311,292 @@
               "integer"
             ],
             "format": "int32"
+          }
+        }
+      },
+      "ExperimentConditionsDto": {
+        "required": [
+          "period",
+          "initialCapital",
+          "costs",
+          "robustness"
+        ],
+        "type": "object",
+        "properties": {
+          "period": {
+            "$ref": "#/components/schemas/ExperimentPeriodDto"
+          },
+          "initialCapital": {
+            "type": "number",
+            "format": "double"
+          },
+          "costs": {
+            "$ref": "#/components/schemas/ResearchTradingCostsDto"
+          },
+          "robustness": {
+            "$ref": "#/components/schemas/RobustnessPlanDto"
+          }
+        }
+      },
+      "ExperimentDto": {
+        "required": [
+          "id",
+          "strategyId",
+          "strategyVersion",
+          "status",
+          "requestedAt",
+          "finishedAt",
+          "failureReason",
+          "conditions",
+          "result"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "strategyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "strategyVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string"
+          },
+          "requestedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "failureReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "conditions": {
+            "$ref": "#/components/schemas/ExperimentConditionsDto"
+          },
+          "result": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ResearchReportDto"
+              }
+            ]
+          }
+        }
+      },
+      "ExperimentJournalDto": {
+        "required": [
+          "total",
+          "offset",
+          "entries"
+        ],
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "offset": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResearchJournalEntryDto"
+            }
+          }
+        }
+      },
+      "ExperimentPeriodDto": {
+        "required": [
+          "start",
+          "end"
+        ],
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date"
+          },
+          "end": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "FillDto": {
+        "required": [
+          "number",
+          "quantity",
+          "price",
+          "fee",
+          "executedOn",
+          "note",
+          "transactionId",
+          "linked",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "price": {
+            "type": "number",
+            "format": "double"
+          },
+          "fee": {
+            "type": "number",
+            "format": "double"
+          },
+          "executedOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "transactionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "linked": {
+            "type": "boolean"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "FoundFundDto": {
+        "required": [
+          "symbol",
+          "name",
+          "currency",
+          "fundFamily",
+          "totalAssets",
+          "expenseRatio",
+          "instrumentId"
+        ],
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "currency": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fundFamily": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "totalAssets": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "expenseRatio": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "instrumentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "FundNotAddedDto": {
+        "required": [
+          "symbol",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "FundSearchChoiceDto": {
+        "required": [
+          "id",
+          "label"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      },
+      "FundSearchOptionsDto": {
+        "required": [
+          "exchanges",
+          "regions"
+        ],
+        "type": "object",
+        "properties": {
+          "exchanges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FundSearchChoiceDto"
+            }
+          },
+          "regions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FundSearchChoiceDto"
+            }
           }
         }
       },
@@ -4771,6 +6681,23 @@
           }
         }
       },
+      "GainAttributionDto": {
+        "required": [
+          "subPortfolioId",
+          "gainInTaxCurrency"
+        ],
+        "type": "object",
+        "properties": {
+          "subPortfolioId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "gainInTaxCurrency": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "GenerateReportRequest": {
         "type": "object",
         "properties": {
@@ -4828,6 +6755,82 @@
           }
         }
       },
+      "ImportCountsDto": {
+        "required": [
+          "new",
+          "alreadyImported",
+          "differs",
+          "matchesExisting",
+          "outOfScope",
+          "unsupported",
+          "needsMapping",
+          "toRecord",
+          "toReverse"
+        ],
+        "type": "object",
+        "properties": {
+          "new": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "alreadyImported": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "differs": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "matchesExisting": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "outOfScope": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "unsupported": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "needsMapping": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "toRecord": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "toReverse": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ImportReport": {
+        "required": [
+          "recorded",
+          "skipped",
+          "warnings"
+        ],
+        "type": "object",
+        "properties": {
+          "recorded": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "skipped": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "ImportRulesCommand": {
         "required": [
           "name",
@@ -4840,6 +6843,40 @@
           },
           "json": {
             "type": "string"
+          }
+        }
+      },
+      "IndicatorKindDto": {
+        "required": [
+          "code",
+          "label",
+          "hint",
+          "phrase",
+          "columnFormat",
+          "fields"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "hint": {
+            "type": "string"
+          },
+          "phrase": {
+            "type": "string"
+          },
+          "columnFormat": {
+            "type": "string"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VocabularyFieldDto"
+            }
           }
         }
       },
@@ -4872,6 +6909,74 @@
           }
         }
       },
+      "InputSocketDto": {
+        "required": [
+          "name",
+          "type",
+          "required",
+          "many"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "many": {
+            "type": "boolean"
+          }
+        }
+      },
+      "InstrumentChoiceDto": {
+        "required": [
+          "id",
+          "label",
+          "name",
+          "group",
+          "assetClass",
+          "region",
+          "isVolatilityIndex"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "group": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "assetClass": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "region": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isVolatilityIndex": {
+            "type": "boolean"
+          }
+        }
+      },
       "InstrumentDto": {
         "required": [
           "id",
@@ -4882,7 +6987,14 @@
           "tradingCurrency",
           "group",
           "isAccumulating",
-          "providerSymbols"
+          "providerSymbols",
+          "description",
+          "ticker",
+          "isVolatilityIndex",
+          "assetClass",
+          "region",
+          "assetCurrency",
+          "label"
         ],
         "type": "object",
         "properties": {
@@ -4961,10 +7073,204 @@
             ]
           },
           "label": {
+            "type": "string"
+          }
+        }
+      },
+      "InstrumentLabelDto": {
+        "required": [
+          "symbol",
+          "name",
+          "isin",
+          "currency"
+        ],
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "isin": {
             "type": [
               "null",
               "string"
             ]
+          },
+          "currency": {
+            "type": "string"
+          }
+        }
+      },
+      "InstrumentScoreDto": {
+        "required": [
+          "instrumentId",
+          "name",
+          "group",
+          "price",
+          "momentum",
+          "return1m",
+          "return3m",
+          "return12m",
+          "volatility",
+          "sharpe",
+          "drawdown",
+          "aboveMovingAverage",
+          "lastDate",
+          "rank",
+          "status",
+          "reason",
+          "weight",
+          "values"
+        ],
+        "type": "object",
+        "properties": {
+          "instrumentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "group": {
+            "type": "string"
+          },
+          "price": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "momentum": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "return1m": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "return3m": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "return12m": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "volatility": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "sharpe": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "drawdown": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "aboveMovingAverage": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "lastDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "rank": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "status": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "weight": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "values": {
+            "type": [
+              "null",
+              "object"
+            ]
+          }
+        }
+      },
+      "InternalTransferRecordedDto": {
+        "required": [
+          "fromSubPortfolioId",
+          "toSubPortfolioId",
+          "instrumentId",
+          "quantity",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "fromSubPortfolioId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "toSubPortfolioId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "instrumentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "amount": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
           }
         }
       },
@@ -5083,6 +7389,27 @@
           }
         }
       },
+      "LoadOperationsPreviewDto": {
+        "required": [
+          "matches",
+          "unmatched"
+        ],
+        "type": "object",
+        "properties": {
+          "matches": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActionMatchDto"
+            }
+          },
+          "unmatched": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MatchedOperationDto"
+            }
+          }
+        }
+      },
       "LoginCommand": {
         "required": [
           "email",
@@ -5156,6 +7483,47 @@
           }
         }
       },
+      "LotMatchDto": {
+        "required": [
+          "buyTransactionId",
+          "acquiredOn",
+          "quantity",
+          "costInTaxCurrency",
+          "fromBroker",
+          "gross",
+          "fxRate"
+        ],
+        "type": "object",
+        "properties": {
+          "buyTransactionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "acquiredOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "costInTaxCurrency": {
+            "type": "number",
+            "format": "double"
+          },
+          "fromBroker": {
+            "type": "boolean"
+          },
+          "gross": {
+            "type": "number",
+            "format": "double"
+          },
+          "fxRate": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "MarkActionExecutedCommand": {
         "type": "object",
         "properties": {
@@ -5190,6 +7558,96 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "MarketRegimeDto": {
+        "required": [
+          "isFavorable",
+          "benchmarkPrice",
+          "benchmarkMovingAverage",
+          "volatilityIndex",
+          "reasons"
+        ],
+        "type": "object",
+        "properties": {
+          "isFavorable": {
+            "type": "boolean"
+          },
+          "benchmarkPrice": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "benchmarkMovingAverage": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "volatilityIndex": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "reasons": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "MatchedOperationDto": {
+        "required": [
+          "transactionId",
+          "occurredOn",
+          "kind",
+          "instrumentId",
+          "quantity",
+          "price",
+          "fee",
+          "source"
+        ],
+        "type": "object",
+        "properties": {
+          "transactionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "occurredOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "instrumentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "price": {
+            "type": "number",
+            "format": "double"
+          },
+          "fee": {
+            "type": "number",
+            "format": "double"
+          },
+          "source": {
+            "type": "string"
           }
         }
       },
@@ -5358,6 +7816,31 @@
           }
         }
       },
+      "NodeKindDto": {
+        "required": [
+          "kind",
+          "inputs",
+          "output"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InputSocketDto"
+            }
+          },
+          "output": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "NodePositionDto": {
         "required": [
           "x",
@@ -5372,6 +7855,31 @@
           "y": {
             "type": "number",
             "format": "double"
+          }
+        }
+      },
+      "NotificationSettingsDto": {
+        "required": [
+          "channels",
+          "automatic",
+          "destinations"
+        ],
+        "type": "object",
+        "properties": {
+          "channels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "automatic": {
+            "type": "boolean"
+          },
+          "destinations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DestinationDto"
+            }
           }
         }
       },
@@ -5429,6 +7937,108 @@
           }
         }
       },
+      "OpenLotSnapshotDto": {
+        "required": [
+          "buyTransactionId",
+          "acquiredOn",
+          "instrumentId",
+          "quantity",
+          "costInTaxCurrency",
+          "fxRate",
+          "accountId"
+        ],
+        "type": "object",
+        "properties": {
+          "buyTransactionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "acquiredOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "instrumentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "costInTaxCurrency": {
+            "type": "number",
+            "format": "double"
+          },
+          "fxRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "OwnSignalDto": {
+        "required": [
+          "id",
+          "name",
+          "isMarket",
+          "target"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "isMarket": {
+            "type": "boolean"
+          },
+          "target": {
+            "type": "string"
+          }
+        }
+      },
+      "ParameterNeighborhoodDto": {
+        "required": [
+          "path",
+          "values"
+        ],
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        }
+      },
+      "Pit8CAmountsDto": {
+        "required": [
+          "revenue",
+          "costs"
+        ],
+        "type": "object",
+        "properties": {
+          "revenue": {
+            "type": "number",
+            "format": "double"
+          },
+          "costs": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "Pit8CCommand": {
         "required": [
           "revenue",
@@ -5443,6 +8053,123 @@
           "costs": {
             "type": "number",
             "format": "double"
+          }
+        }
+      },
+      "PlanReviewDto": {
+        "required": [
+          "reviewer",
+          "verdict",
+          "summary",
+          "findings"
+        ],
+        "type": "object",
+        "properties": {
+          "reviewer": {
+            "type": "string"
+          },
+          "verdict": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "findings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewFindingDto"
+            }
+          }
+        }
+      },
+      "PlanSettingsDto": {
+        "required": [
+          "accountId",
+          "monthlyContribution",
+          "minTrade",
+          "trimBand",
+          "allowFractionalShares",
+          "generateOnSchedule",
+          "levelByPurchasesOnly"
+        ],
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "monthlyContribution": {
+            "type": "number",
+            "format": "double"
+          },
+          "minTrade": {
+            "type": "number",
+            "format": "double"
+          },
+          "trimBand": {
+            "type": "number",
+            "format": "double"
+          },
+          "allowFractionalShares": {
+            "type": "boolean"
+          },
+          "generateOnSchedule": {
+            "type": "boolean"
+          },
+          "levelByPurchasesOnly": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PortfolioRiskDto": {
+        "required": [
+          "value",
+          "cost",
+          "pnlPct",
+          "drawdown",
+          "peakDate",
+          "exitLimitHit",
+          "alerts"
+        ],
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "number",
+            "format": "double"
+          },
+          "cost": {
+            "type": "number",
+            "format": "double"
+          },
+          "pnlPct": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "drawdown": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "peakDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "exitLimitHit": {
+            "type": "boolean"
+          },
+          "alerts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -5482,6 +8209,119 @@
             "items": {
               "$ref": "#/components/schemas/LotDto"
             }
+          }
+        }
+      },
+      "PositionRiskDto": {
+        "required": [
+          "instrumentId",
+          "status",
+          "quantity",
+          "averageCost",
+          "currentPrice",
+          "value",
+          "pnlPct",
+          "drawdownFromHigh",
+          "aboveMovingAverage",
+          "movingAverage",
+          "exitPrice",
+          "exitRule",
+          "exitDistance",
+          "stopPrice",
+          "maExitPrice",
+          "trailExitPrice",
+          "alerts",
+          "sell"
+        ],
+        "type": "object",
+        "properties": {
+          "instrumentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "averageCost": {
+            "type": "number",
+            "format": "double"
+          },
+          "currentPrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "value": {
+            "type": "number",
+            "format": "double"
+          },
+          "pnlPct": {
+            "type": "number",
+            "format": "double"
+          },
+          "drawdownFromHigh": {
+            "type": "number",
+            "format": "double"
+          },
+          "aboveMovingAverage": {
+            "type": "boolean"
+          },
+          "movingAverage": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "exitPrice": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "exitRule": {
+            "type": "string"
+          },
+          "exitDistance": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "stopPrice": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "maExitPrice": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "trailExitPrice": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "alerts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sell": {
+            "type": "boolean"
           }
         }
       },
@@ -5544,6 +8384,49 @@
         "type": "object",
         "properties": {
           "revision": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PublishedStrategyDto": {
+        "required": [
+          "editable",
+          "draftId",
+          "words"
+        ],
+        "type": "object",
+        "properties": {
+          "editable": {
+            "type": "boolean"
+          },
+          "draftId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "words": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BlockWordsDto"
+            }
+          }
+        }
+      },
+      "PublishedVersionDto": {
+        "required": [
+          "strategyId",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "strategyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
             "type": "integer",
             "format": "int32"
           }
@@ -5614,6 +8497,187 @@
           }
         }
       },
+      "RationaleColumnDto": {
+        "required": [
+          "id",
+          "label",
+          "format",
+          "hint",
+          "compact",
+          "trueHint",
+          "falseHint"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "format": {
+            "type": "string"
+          },
+          "hint": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "compact": {
+            "type": "boolean"
+          },
+          "trueHint": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "falseHint": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "RationaleDto": {
+        "required": [
+          "summary",
+          "riskFreeRate",
+          "scores",
+          "title",
+          "instrumentLabel",
+          "columns"
+        ],
+        "type": "object",
+        "properties": {
+          "summary": {
+            "type": "string"
+          },
+          "riskFreeRate": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "scores": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InstrumentScoreDto"
+            }
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instrumentLabel": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "columns": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/RationaleColumnDto"
+            }
+          }
+        }
+      },
+      "RealizationDto": {
+        "required": [
+          "saleTransactionId",
+          "soldOn",
+          "instrumentId",
+          "quantity",
+          "proceedsInTaxCurrency",
+          "costInTaxCurrency",
+          "gainInTaxCurrency",
+          "fxRate",
+          "fxRateDate",
+          "lots",
+          "attributions",
+          "unmatchedQuantity",
+          "brokerGainInTaxCurrency",
+          "accountId"
+        ],
+        "type": "object",
+        "properties": {
+          "saleTransactionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "soldOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "instrumentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "proceedsInTaxCurrency": {
+            "type": "number",
+            "format": "double"
+          },
+          "costInTaxCurrency": {
+            "type": "number",
+            "format": "double"
+          },
+          "gainInTaxCurrency": {
+            "type": "number",
+            "format": "double"
+          },
+          "fxRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "fxRateDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "lots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LotMatchDto"
+            }
+          },
+          "attributions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GainAttributionDto"
+            }
+          },
+          "unmatchedQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "brokerGainInTaxCurrency": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
       "RecordCashMovementCommand": {
         "required": [
           "kind",
@@ -5673,6 +8737,25 @@
             ],
             "items": {
               "$ref": "#/components/schemas/AmountAllocationDto"
+            }
+          }
+        }
+      },
+      "RecordedTransaction": {
+        "required": [
+          "transactionId",
+          "warnings"
+        ],
+        "type": "object",
+        "properties": {
+          "transactionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
             }
           }
         }
@@ -6335,6 +9418,136 @@
           }
         }
       },
+      "ReportActionDto": {
+        "required": [
+          "id",
+          "sequence",
+          "kind",
+          "instrumentId",
+          "plannedQuantity",
+          "plannedPrice",
+          "plannedAmount",
+          "allocations",
+          "fromSubPortfolioId",
+          "toSubPortfolioId",
+          "reason",
+          "status",
+          "filledQuantity",
+          "remainingQuantity",
+          "fills",
+          "skipReason",
+          "rejection",
+          "estimatedGain",
+          "estimatedTaxChange",
+          "estimatedCarriedLoss"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sequence": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "instrumentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "plannedQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "plannedPrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "plannedAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "allocations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActionAllocationDto"
+            }
+          },
+          "fromSubPortfolioId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "toSubPortfolioId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "filledQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "remainingQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "fills": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FillDto"
+            }
+          },
+          "skipReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rejection": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "estimatedGain": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "estimatedTaxChange": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "estimatedCarriedLoss": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          }
+        }
+      },
       "ReportDefinitionDto": {
         "required": [
           "code",
@@ -6364,7 +9577,7 @@
                 "type": "null"
               },
               {
-                "$ref": "#/components/schemas/ReportScheduleDto"
+                "$ref": "#/components/schemas/DefaultReportScheduleDto"
               }
             ]
           },
@@ -6376,6 +9589,134 @@
             "items": {
               "type": "string"
             }
+          }
+        }
+      },
+      "ReportDetailsDto": {
+        "required": [
+          "summary",
+          "contributionPlan",
+          "actions",
+          "sections",
+          "warnings",
+          "review",
+          "taxEstimate",
+          "instruments",
+          "subPortfolios"
+        ],
+        "type": "object",
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/ReportSummaryDto"
+          },
+          "contributionPlan": {
+            "$ref": "#/components/schemas/ContributionPlanDto"
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReportActionDto"
+            }
+          },
+          "sections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReportSectionDto"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "review": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PlanReviewDto"
+              }
+            ]
+          },
+          "taxEstimate": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TaxEstimateDto"
+              }
+            ]
+          },
+          "instruments": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/InstrumentLabelDto"
+            }
+          },
+          "subPortfolios": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ReportKindDto": {
+        "required": [
+          "code",
+          "name",
+          "description",
+          "signalKinds"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "signalKinds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ReportMarkerDto": {
+        "required": [
+          "reportId",
+          "date",
+          "kind",
+          "period",
+          "accountId"
+        ],
+        "type": "object",
+        "properties": {
+          "reportId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "period": {
+            "type": "string"
+          },
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
@@ -6464,32 +9805,163 @@
           }
         }
       },
-      "ReportScheduleDto": {
+      "ReportRequestedResponse": {
         "required": [
-          "frequency",
-          "day",
-          "weekday",
-          "time",
-          "minute"
+          "requestId"
         ],
         "type": "object",
         "properties": {
-          "frequency": {
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "ReportScheduleDto": {
+        "required": [
+          "generateOnSchedule",
+          "timeZone",
+          "reports"
+        ],
+        "type": "object",
+        "properties": {
+          "generateOnSchedule": {
+            "type": "boolean"
+          },
+          "timeZone": {
             "type": "string"
           },
-          "day": {
-            "type": "integer",
+          "reports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScheduledReportDto"
+            }
+          }
+        }
+      },
+      "ReportSectionDto": {
+        "required": [
+          "subPortfolioId",
+          "name",
+          "targetShare",
+          "strategyId",
+          "strategyVersion",
+          "strategyCode",
+          "engineVersion",
+          "contribution",
+          "decision",
+          "orders",
+          "allocation",
+          "totalBefore",
+          "totalAfter",
+          "parkedBefore",
+          "parkedAfter",
+          "notes",
+          "risk",
+          "error"
+        ],
+        "type": "object",
+        "properties": {
+          "subPortfolioId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "targetShare": {
+            "type": "number",
+            "format": "double"
+          },
+          "strategyId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "strategyVersion": {
+            "type": [
+              "null",
+              "integer"
+            ],
             "format": "int32"
           },
-          "weekday": {
-            "type": "string"
+          "strategyCode": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
-          "time": {
-            "type": "string"
+          "engineVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
-          "minute": {
-            "type": "integer",
-            "format": "int32"
+          "contribution": {
+            "type": "number",
+            "format": "double"
+          },
+          "decision": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SectionDecisionDto"
+              }
+            ]
+          },
+          "orders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SectionOrderDto"
+            }
+          },
+          "allocation": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SectionAllocationDto"
+            }
+          },
+          "totalBefore": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalAfter": {
+            "type": "number",
+            "format": "double"
+          },
+          "parkedBefore": {
+            "type": "number",
+            "format": "double"
+          },
+          "parkedAfter": {
+            "type": "number",
+            "format": "double"
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risk": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SectionRiskDto"
+              }
+            ]
+          },
+          "error": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -6612,6 +10084,556 @@
           }
         }
       },
+      "ResearchAllocationDto": {
+        "required": [
+          "cash",
+          "targets",
+          "positions"
+        ],
+        "type": "object",
+        "properties": {
+          "cash": {
+            "type": "number",
+            "format": "double"
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResearchTargetDto"
+            }
+          },
+          "positions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResearchPositionWeightDto"
+            }
+          }
+        }
+      },
+      "ResearchCandidateDto": {
+        "required": [
+          "instrumentId",
+          "name",
+          "status",
+          "reason",
+          "weight",
+          "values"
+        ],
+        "type": "object",
+        "properties": {
+          "instrumentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "weight": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "values": {
+            "type": [
+              "null",
+              "object"
+            ]
+          }
+        }
+      },
+      "ResearchExplanationDto": {
+        "required": [
+          "summary",
+          "engineVersion",
+          "candidates",
+          "valueLabels"
+        ],
+        "type": "object",
+        "properties": {
+          "summary": {
+            "type": "string"
+          },
+          "engineVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "candidates": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ResearchCandidateDto"
+            }
+          },
+          "valueLabels": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ResearchFillDto": {
+        "required": [
+          "instrumentId",
+          "quantity",
+          "price",
+          "referencePrice",
+          "commission",
+          "spreadCost",
+          "slippageCost",
+          "decisionDate"
+        ],
+        "type": "object",
+        "properties": {
+          "instrumentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "price": {
+            "type": "number",
+            "format": "double"
+          },
+          "referencePrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "commission": {
+            "type": "number",
+            "format": "double"
+          },
+          "spreadCost": {
+            "type": "number",
+            "format": "double"
+          },
+          "slippageCost": {
+            "type": "number",
+            "format": "double"
+          },
+          "decisionDate": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "ResearchFoldDto": {
+        "required": [
+          "training",
+          "test"
+        ],
+        "type": "object",
+        "properties": {
+          "training": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ExperimentPeriodDto"
+              }
+            ]
+          },
+          "test": {
+            "$ref": "#/components/schemas/ExperimentPeriodDto"
+          }
+        }
+      },
+      "ResearchJournalEntryDto": {
+        "required": [
+          "date",
+          "kind",
+          "reason",
+          "fill",
+          "allocation",
+          "explanation",
+          "marketFavorable"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "fill": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ResearchFillDto"
+              }
+            ]
+          },
+          "allocation": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ResearchAllocationDto"
+              }
+            ]
+          },
+          "explanation": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ResearchExplanationDto"
+              }
+            ]
+          },
+          "marketFavorable": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          }
+        }
+      },
+      "ResearchPointDto": {
+        "required": [
+          "date",
+          "growth",
+          "worstDrawdown"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "growth": {
+            "type": "number",
+            "format": "double"
+          },
+          "worstDrawdown": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "ResearchPositionWeightDto": {
+        "required": [
+          "instrumentId",
+          "quantity",
+          "weight"
+        ],
+        "type": "object",
+        "properties": {
+          "instrumentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "weight": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "ResearchReportDto": {
+        "required": [
+          "baseline",
+          "studies",
+          "parametersHash",
+          "engineVersion",
+          "selectionMetric",
+          "replayModel",
+          "instrumentLabels",
+          "cashInstrumentId"
+        ],
+        "type": "object",
+        "properties": {
+          "baseline": {
+            "$ref": "#/components/schemas/ResearchResultDto"
+          },
+          "studies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResearchStudyDto"
+            }
+          },
+          "parametersHash": {
+            "type": "string"
+          },
+          "engineVersion": {
+            "type": "string"
+          },
+          "selectionMetric": {
+            "type": "string"
+          },
+          "replayModel": {
+            "type": "string"
+          },
+          "instrumentLabels": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "cashInstrumentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "ResearchResultDto": {
+        "required": [
+          "start",
+          "end",
+          "currency",
+          "trades",
+          "riskExits",
+          "signalReports",
+          "series",
+          "journal",
+          "initialCapital",
+          "finalCapital"
+        ],
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date"
+          },
+          "end": {
+            "type": "string",
+            "format": "date"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "trades": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "riskExits": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "signalReports": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "series": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResearchSeriesDto"
+            }
+          },
+          "journal": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ResearchJournalEntryDto"
+            }
+          },
+          "initialCapital": {
+            "type": "number",
+            "format": "double"
+          },
+          "finalCapital": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "ResearchSeriesDto": {
+        "required": [
+          "code",
+          "label",
+          "summary",
+          "points"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/ResearchSummaryDto"
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResearchPointDto"
+            }
+          }
+        }
+      },
+      "ResearchStudyDto": {
+        "required": [
+          "kind",
+          "window",
+          "parameterValue",
+          "summary",
+          "trainingSharpe",
+          "failureReason"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "window": {
+            "$ref": "#/components/schemas/ResearchFoldDto"
+          },
+          "parameterValue": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "summary": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ResearchSummaryDto"
+              }
+            ]
+          },
+          "trainingSharpe": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "failureReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ResearchSummaryDto": {
+        "required": [
+          "totalReturn",
+          "annualReturn",
+          "volatility",
+          "sharpe",
+          "maxDrawdown",
+          "annualReturnAfterTax"
+        ],
+        "type": "object",
+        "properties": {
+          "totalReturn": {
+            "type": "number",
+            "format": "double"
+          },
+          "annualReturn": {
+            "type": "number",
+            "format": "double"
+          },
+          "volatility": {
+            "type": "number",
+            "format": "double"
+          },
+          "sharpe": {
+            "type": "number",
+            "format": "double"
+          },
+          "maxDrawdown": {
+            "type": "number",
+            "format": "double"
+          },
+          "annualReturnAfterTax": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "ResearchTargetDto": {
+        "required": [
+          "instrumentId",
+          "weight"
+        ],
+        "type": "object",
+        "properties": {
+          "instrumentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "weight": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "ResearchTradingCostsDto": {
+        "required": [
+          "commissionRate",
+          "feePerTrade",
+          "spreadBps",
+          "slippageBps"
+        ],
+        "type": "object",
+        "properties": {
+          "commissionRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "feePerTrade": {
+            "type": "number",
+            "format": "double"
+          },
+          "spreadBps": {
+            "type": "number",
+            "format": "double"
+          },
+          "slippageBps": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "RetireSubPortfolioCommand": {
         "required": [
           "targetSharesOfRemaining"
@@ -6645,6 +10667,152 @@
           }
         }
       },
+      "ReviewFindingDto": {
+        "required": [
+          "severity",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "severity": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "RiskAssessmentDto": {
+        "required": [
+          "strategyId",
+          "strategyVersion",
+          "strategyCode",
+          "engineVersion",
+          "asOf",
+          "status",
+          "marketAlerts",
+          "positions",
+          "portfolio",
+          "signals",
+          "actions"
+        ],
+        "type": "object",
+        "properties": {
+          "strategyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "strategyVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "strategyCode": {
+            "type": "string"
+          },
+          "engineVersion": {
+            "type": "string"
+          },
+          "asOf": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "type": "string"
+          },
+          "marketAlerts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "positions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PositionRiskDto"
+            }
+          },
+          "portfolio": {
+            "$ref": "#/components/schemas/PortfolioRiskDto"
+          },
+          "signals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RiskSignalDto"
+            }
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "RiskSignalDto": {
+        "required": [
+          "instrumentId",
+          "kind",
+          "reason",
+          "exitPrice"
+        ],
+        "type": "object",
+        "properties": {
+          "instrumentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "exitPrice": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "RobustnessPlanDto": {
+        "required": [
+          "outOfSampleStart",
+          "walkForward",
+          "neighborhood"
+        ],
+        "type": "object",
+        "properties": {
+          "outOfSampleStart": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "walkForward": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/WalkForwardWindowsDto"
+              }
+            ]
+          },
+          "neighborhood": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ParameterNeighborhoodDto"
+              }
+            ]
+          }
+        }
+      },
       "RunTrialRequest": {
         "required": [
           "label"
@@ -6670,6 +10838,55 @@
           "rerun": {
             "type": "boolean",
             "default": false
+          }
+        }
+      },
+      "ScheduledReportDto": {
+        "required": [
+          "code",
+          "name",
+          "description",
+          "mode",
+          "schedule",
+          "strategySchedule",
+          "own",
+          "next",
+          "strategies"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "schedule": {
+            "$ref": "#/components/schemas/ReportTimingDto"
+          },
+          "strategySchedule": {
+            "$ref": "#/components/schemas/ReportTimingDto"
+          },
+          "own": {
+            "type": "boolean"
+          },
+          "next": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "strategies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -6727,6 +10944,435 @@
           }
         }
       },
+      "SectionAllocationDto": {
+        "required": [
+          "instrumentId",
+          "role",
+          "valueBefore",
+          "valueAfter",
+          "weightBefore",
+          "weightAfter",
+          "targetWeight"
+        ],
+        "type": "object",
+        "properties": {
+          "instrumentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "role": {
+            "type": "string"
+          },
+          "valueBefore": {
+            "type": "number",
+            "format": "double"
+          },
+          "valueAfter": {
+            "type": "number",
+            "format": "double"
+          },
+          "weightBefore": {
+            "type": "number",
+            "format": "double"
+          },
+          "weightAfter": {
+            "type": "number",
+            "format": "double"
+          },
+          "targetWeight": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "SectionColumnDto": {
+        "required": [
+          "id",
+          "label",
+          "format",
+          "hint",
+          "compact",
+          "trueHint",
+          "falseHint"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "format": {
+            "type": "string"
+          },
+          "hint": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "compact": {
+            "type": "boolean"
+          },
+          "trueHint": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "falseHint": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SectionDecisionDto": {
+        "required": [
+          "marketIsFavorable",
+          "investFraction",
+          "marketReasons",
+          "summary",
+          "targets",
+          "scores",
+          "warnings",
+          "scoreTitle",
+          "instrumentLabel",
+          "columns"
+        ],
+        "type": "object",
+        "properties": {
+          "marketIsFavorable": {
+            "type": "boolean"
+          },
+          "investFraction": {
+            "type": "number",
+            "format": "double"
+          },
+          "marketReasons": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "summary": {
+            "type": "string"
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SectionTargetDto"
+            }
+          },
+          "scores": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SectionScoreDto"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "scoreTitle": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instrumentLabel": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "columns": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/SectionColumnDto"
+            }
+          }
+        }
+      },
+      "SectionOrderDto": {
+        "required": [
+          "kind",
+          "instrumentId",
+          "quantity",
+          "price",
+          "amount",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "instrumentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "price": {
+            "type": "number",
+            "format": "double"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "SectionRiskDto": {
+        "required": [
+          "status",
+          "marketAlerts",
+          "positions",
+          "portfolioAlerts",
+          "actions"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "marketAlerts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "positions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SectionRiskPositionDto"
+            }
+          },
+          "portfolioAlerts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "SectionRiskPositionDto": {
+        "required": [
+          "instrumentId",
+          "status",
+          "quantity",
+          "averageCost",
+          "currentPrice",
+          "value",
+          "pnlPct",
+          "drawdownFromHigh",
+          "exitPrice",
+          "exitRule",
+          "exitDistance",
+          "alerts",
+          "sell"
+        ],
+        "type": "object",
+        "properties": {
+          "instrumentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "averageCost": {
+            "type": "number",
+            "format": "double"
+          },
+          "currentPrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "value": {
+            "type": "number",
+            "format": "double"
+          },
+          "pnlPct": {
+            "type": "number",
+            "format": "double"
+          },
+          "drawdownFromHigh": {
+            "type": "number",
+            "format": "double"
+          },
+          "exitPrice": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "exitRule": {
+            "type": "string"
+          },
+          "exitDistance": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "alerts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sell": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SectionScoreDto": {
+        "required": [
+          "instrumentId",
+          "name",
+          "group",
+          "price",
+          "momentum",
+          "return1m",
+          "return3m",
+          "return12m",
+          "volatility",
+          "aboveMovingAverage",
+          "rank",
+          "status",
+          "reason",
+          "values"
+        ],
+        "type": "object",
+        "properties": {
+          "instrumentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "group": {
+            "type": "string"
+          },
+          "price": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "momentum": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "return1m": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "return3m": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "return12m": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "volatility": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "aboveMovingAverage": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "rank": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "status": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "values": {
+            "type": [
+              "null",
+              "object"
+            ]
+          }
+        }
+      },
+      "SectionTargetDto": {
+        "required": [
+          "instrumentId",
+          "weight"
+        ],
+        "type": "object",
+        "properties": {
+          "instrumentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "weight": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "SeriesMoneyOutcomesDto": {
         "required": [
           "code",
@@ -6743,6 +11389,64 @@
           },
           "outcomes": {
             "$ref": "#/components/schemas/MoneyOutcomeRangeDto"
+          }
+        }
+      },
+      "SeriesPointDto": {
+        "required": [
+          "date",
+          "value",
+          "netContributions",
+          "twrIndex",
+          "planValue",
+          "planNetContributions",
+          "drawdown",
+          "positionsValue",
+          "costBasis"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "value": {
+            "type": "number",
+            "format": "double"
+          },
+          "netContributions": {
+            "type": "number",
+            "format": "double"
+          },
+          "twrIndex": {
+            "type": "number",
+            "format": "double"
+          },
+          "planValue": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "planNetContributions": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "drawdown": {
+            "type": "number",
+            "format": "double"
+          },
+          "positionsValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "costBasis": {
+            "type": "number",
+            "format": "double"
           }
         }
       },
@@ -7063,6 +11767,107 @@
           }
         }
       },
+      "StatementImportDto": {
+        "required": [
+          "id",
+          "broker",
+          "fileName",
+          "uploadedAt",
+          "status",
+          "mode",
+          "fromDate",
+          "cashSubPortfolioId",
+          "accountCurrency",
+          "mappings",
+          "rows",
+          "counts",
+          "warnings",
+          "subPortfolios",
+          "confirmedAt",
+          "undoneAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "broker": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "uploadedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "fromDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "cashSubPortfolioId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "accountCurrency": {
+            "type": "string"
+          },
+          "mappings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TickerMappingDto"
+            }
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StatementRowDto"
+            }
+          },
+          "counts": {
+            "$ref": "#/components/schemas/ImportCountsDto"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "subPortfolios": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubPortfolioOptionDto"
+            }
+          },
+          "confirmedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "undoneAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "StatementImportSummaryDto": {
         "required": [
           "id",
@@ -7098,6 +11903,159 @@
           "recorded": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "StatementRowDto": {
+        "required": [
+          "number",
+          "occurredOn",
+          "kind",
+          "rawType",
+          "ticker",
+          "quantity",
+          "price",
+          "amount",
+          "currency",
+          "amountInAccountCurrency",
+          "decision",
+          "note",
+          "willRecord",
+          "willReverseExisting",
+          "result"
+        ],
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "occurredOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "rawType": {
+            "type": "string"
+          },
+          "ticker": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "quantity": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "price": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "amountInAccountCurrency": {
+            "type": "number",
+            "format": "double"
+          },
+          "decision": {
+            "type": "string"
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "willRecord": {
+            "type": "boolean"
+          },
+          "willReverseExisting": {
+            "type": "boolean"
+          },
+          "result": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "StrategyDecisionDto": {
+        "required": [
+          "strategyId",
+          "strategyVersion",
+          "strategyCode",
+          "engineVersion",
+          "asOf",
+          "investFraction",
+          "targets",
+          "market",
+          "rationale",
+          "warnings",
+          "cashInstrumentId"
+        ],
+        "type": "object",
+        "properties": {
+          "strategyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "strategyVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "strategyCode": {
+            "type": "string"
+          },
+          "engineVersion": {
+            "type": "string"
+          },
+          "asOf": {
+            "type": "string",
+            "format": "date"
+          },
+          "investFraction": {
+            "type": "number",
+            "format": "double"
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TargetWeightDto"
+            }
+          },
+          "market": {
+            "$ref": "#/components/schemas/MarketRegimeDto"
+          },
+          "rationale": {
+            "$ref": "#/components/schemas/RationaleDto"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cashInstrumentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -7160,7 +12118,9 @@
           "name",
           "description",
           "mode",
-          "schedule"
+          "schedule",
+          "signalKinds",
+          "signalIds"
         ],
         "type": "object",
         "properties": {
@@ -7401,12 +12361,17 @@
           }
         }
       },
+      "Stream": {
+        "type": "string",
+        "format": "binary"
+      },
       "SubPortfolioHoldingsDto": {
         "required": [
           "subPortfolioId",
           "name",
           "cash",
-          "positions"
+          "positions",
+          "foreignCash"
         ],
         "type": "object",
         "properties": {
@@ -7435,6 +12400,66 @@
             "items": {
               "$ref": "#/components/schemas/CashBalanceDto"
             }
+          }
+        }
+      },
+      "SubPortfolioOptionDto": {
+        "required": [
+          "id",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "SubPortfolioPerformanceDto": {
+        "required": [
+          "id",
+          "name",
+          "value",
+          "targetShare",
+          "actualShare",
+          "twr",
+          "netContributions"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "number",
+            "format": "double"
+          },
+          "targetShare": {
+            "type": "number",
+            "format": "double"
+          },
+          "actualShare": {
+            "type": "number",
+            "format": "double"
+          },
+          "twr": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "netContributions": {
+            "type": "number",
+            "format": "double"
           }
         }
       },
@@ -7515,6 +12540,23 @@
           }
         }
       },
+      "TargetWeightDto": {
+        "required": [
+          "instrumentId",
+          "weight"
+        ],
+        "type": "object",
+        "properties": {
+          "instrumentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "weight": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "TaxAccountDto": {
         "required": [
           "id",
@@ -7544,6 +12586,142 @@
           },
           "isTaxed": {
             "type": "boolean"
+          }
+        }
+      },
+      "TaxDeclarationDto": {
+        "required": [
+          "form",
+          "title",
+          "year",
+          "deadline",
+          "sections",
+          "attachments",
+          "accounts",
+          "notes",
+          "taxDue",
+          "facts"
+        ],
+        "type": "object",
+        "properties": {
+          "form": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "year": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "deadline": {
+            "type": "string",
+            "format": "date"
+          },
+          "sections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeclarationSectionDto"
+            }
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeclarationAttachmentDto"
+            }
+          },
+          "accounts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeclarationAccountLineDto"
+            }
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeclarationNoteDto"
+            }
+          },
+          "taxDue": {
+            "type": "number",
+            "format": "double"
+          },
+          "facts": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/DeclarationFactDto"
+            }
+          }
+        }
+      },
+      "TaxEstimateDto": {
+        "required": [
+          "policyCode",
+          "isTaxed",
+          "gainInTaxCurrency",
+          "taxChange",
+          "fxRate",
+          "notes",
+          "yearTaxBefore",
+          "carriedLoss",
+          "year",
+          "taxCurrency"
+        ],
+        "type": "object",
+        "properties": {
+          "policyCode": {
+            "type": "string"
+          },
+          "isTaxed": {
+            "type": "boolean"
+          },
+          "gainInTaxCurrency": {
+            "type": "number",
+            "format": "double"
+          },
+          "taxChange": {
+            "type": "number",
+            "format": "double"
+          },
+          "fxRate": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "yearTaxBefore": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "carriedLoss": {
+            "type": "number",
+            "format": "double"
+          },
+          "year": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "taxCurrency": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -7737,6 +12915,92 @@
           }
         }
       },
+      "TaxYearDetailsDto": {
+        "required": [
+          "year",
+          "policyCode",
+          "fxRule",
+          "computedAt",
+          "summary",
+          "realizations",
+          "dividends",
+          "carryforwardUses",
+          "openLots",
+          "instruments",
+          "accounts",
+          "warnings",
+          "isTaxed",
+          "rateLabel"
+        ],
+        "type": "object",
+        "properties": {
+          "year": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "policyCode": {
+            "type": "string"
+          },
+          "fxRule": {
+            "type": "string"
+          },
+          "computedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/TaxYearSummaryDto"
+          },
+          "realizations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RealizationDto"
+            }
+          },
+          "dividends": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DividendIncomeDto"
+            }
+          },
+          "carryforwardUses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CarryforwardUseDto"
+            }
+          },
+          "openLots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OpenLotSnapshotDto"
+            }
+          },
+          "instruments": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "accounts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaxAccountDto"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "isTaxed": {
+            "type": "boolean"
+          },
+          "rateLabel": {
+            "type": "string"
+          }
+        }
+      },
       "TaxYearListItemDto": {
         "required": [
           "year",
@@ -7829,6 +13093,25 @@
           }
         }
       },
+      "TemplateDto": {
+        "required": [
+          "code",
+          "name",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
       "TickerMappingChoice": {
         "required": [
           "ticker",
@@ -7860,6 +13143,220 @@
               "string"
             ],
             "format": "uuid"
+          }
+        }
+      },
+      "TickerMappingDto": {
+        "required": [
+          "ticker",
+          "currency",
+          "instrumentId",
+          "registerAs",
+          "subPortfolioId",
+          "rows",
+          "instrumentName"
+        ],
+        "type": "object",
+        "properties": {
+          "ticker": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "instrumentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "registerAs": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "subPortfolioId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "rows": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "instrumentName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "TradeRecordedDto": {
+        "required": [
+          "instrumentId",
+          "side",
+          "quantity",
+          "price",
+          "fee",
+          "allocations",
+          "settledAmount",
+          "settledCurrency"
+        ],
+        "type": "object",
+        "properties": {
+          "instrumentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "side": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "price": {
+            "type": "number",
+            "format": "double"
+          },
+          "fee": {
+            "type": "number",
+            "format": "double"
+          },
+          "allocations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuantityAllocationDto"
+            }
+          },
+          "settledAmount": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "settledCurrency": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "TransactionDto": {
+        "required": [
+          "id",
+          "kind",
+          "occurredOn",
+          "recordedAt",
+          "source",
+          "sourceReference",
+          "isReversed",
+          "trade",
+          "cash",
+          "transfer",
+          "reversalOf",
+          "reversalReason"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "occurredOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "recordedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "source": {
+            "type": "string"
+          },
+          "sourceReference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isReversed": {
+            "type": "boolean"
+          },
+          "trade": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TradeRecordedDto"
+              }
+            ]
+          },
+          "cash": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CashMovementRecordedDto"
+              }
+            ]
+          },
+          "transfer": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/InternalTransferRecordedDto"
+              }
+            ]
+          },
+          "reversalOf": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "reversalReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "TransferHintDto": {
+        "required": [
+          "fromSubPortfolioId",
+          "toSubPortfolioId",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "fromSubPortfolioId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "toSubPortfolioId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
           }
         }
       },
@@ -7982,6 +13479,110 @@
           }
         }
       },
+      "TrialRunDto": {
+        "required": [
+          "number",
+          "strategyId",
+          "version",
+          "label",
+          "ranAt",
+          "status",
+          "failureReason",
+          "annualReturn",
+          "annualReturnAfterTax",
+          "volatility",
+          "sharpe",
+          "maxDrawdown",
+          "experimentId",
+          "experiment"
+        ],
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "strategyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "label": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ranAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string"
+          },
+          "failureReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "annualReturn": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "annualReturnAfterTax": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "volatility": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "sharpe": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "maxDrawdown": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "experimentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "experiment": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TrialExperimentDto"
+              }
+            ]
+          }
+        }
+      },
       "TrialWindowsDto": {
         "required": [
           "trainingMonths",
@@ -8047,6 +13648,28 @@
             "type": "string"
           },
           "content": {
+            "type": "string"
+          }
+        }
+      },
+      "UserProfileDto": {
+        "required": [
+          "displayCurrency",
+          "language",
+          "timeZone"
+        ],
+        "type": "object",
+        "properties": {
+          "displayCurrency": {
+            "type": "string"
+          },
+          "language": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "timeZone": {
             "type": "string"
           }
         }
@@ -8290,6 +13913,129 @@
               "type": "string",
               "format": "uuid"
             }
+          }
+        }
+      },
+      "VocabularyDto": {
+        "required": [
+          "indicators",
+          "conditions",
+          "blockFields",
+          "nodeKinds",
+          "reports",
+          "templates"
+        ],
+        "type": "object",
+        "properties": {
+          "indicators": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IndicatorKindDto"
+            }
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConditionKindDto"
+            }
+          },
+          "blockFields": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/VocabularyFieldDto"
+            }
+          },
+          "nodeKinds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NodeKindDto"
+            }
+          },
+          "reports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReportKindDto"
+            }
+          },
+          "templates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TemplateDto"
+            }
+          }
+        }
+      },
+      "VocabularyFieldDto": {
+        "required": [
+          "name",
+          "kind",
+          "label",
+          "minimum",
+          "maximum",
+          "required",
+          "default",
+          "choiceLabels"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "minimum": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "maximum": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "default": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            ]
+          },
+          "choiceLabels": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "WalkForwardWindowsDto": {
+        "required": [
+          "trainingMonths",
+          "testMonths"
+        ],
+        "type": "object",
+        "properties": {
+          "trainingMonths": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "testMonths": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       }

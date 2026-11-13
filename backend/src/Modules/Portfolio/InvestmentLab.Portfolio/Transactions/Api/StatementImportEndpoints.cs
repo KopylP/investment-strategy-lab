@@ -19,14 +19,33 @@ internal static class StatementImportEndpoints
 {
     public static RouteGroupBuilder MapStatementImports(this RouteGroupBuilder group)
     {
-        var imports = group.MapGroup("/accounts/{accountId:guid}/statement-imports").WithTags("Statement import");
+        var imports = group
+            .MapGroup("/accounts/{accountId:guid}/statement-imports")
+            .WithTags("Statement import");
 
-        imports.MapGet("", ListStatementImports).WithName("ListStatementImports");
-        imports.MapPost("", UploadStatement).WithName("UploadStatement");
-        imports.MapGet("/{importId:guid}", GetStatementImport).WithName("GetStatementImport");
-        imports.MapPut("/{importId:guid}", ConfigureStatementImport).WithName("ConfigureStatementImport");
-        imports.MapPost("/{importId:guid}/confirm", ConfirmStatementImport).WithName("ConfirmStatementImport");
-        imports.MapPost("/{importId:guid}/undo", UndoStatementImport).WithName("UndoStatementImport");
+        imports
+            .MapGet(string.Empty, ListStatementImports)
+            .WithName("ListStatementImports");
+        imports
+            .MapPost(string.Empty, UploadStatement)
+            .WithName("UploadStatement")
+            .Produces<StatementImportDto>();
+        imports
+            .MapGet("/{importId:guid}", GetStatementImport)
+            .WithName("GetStatementImport")
+            .Produces<StatementImportDto>();
+        imports
+            .MapPut("/{importId:guid}", ConfigureStatementImport)
+            .WithName("ConfigureStatementImport")
+            .Produces<StatementImportDto>();
+        imports
+            .MapPost("/{importId:guid}/confirm", ConfirmStatementImport)
+            .WithName("ConfirmStatementImport")
+            .Produces<StatementImportDto>();
+        imports
+            .MapPost("/{importId:guid}/undo", UndoStatementImport)
+            .WithName("UndoStatementImport")
+            .Produces<StatementImportDto>();
 
         return group;
     }

@@ -5,5 +5,5 @@ public sealed record ReportDefinitionDto(
     string Name,
     string Description,
     string Mode,
-    ReportScheduleDto? Schedule,
+    DefaultReportScheduleDto? Schedule,
     IReadOnlyList<string>? SignalKinds);

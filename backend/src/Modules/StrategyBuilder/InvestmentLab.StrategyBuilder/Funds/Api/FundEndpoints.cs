@@ -12,11 +12,22 @@ internal static class FundEndpoints
 {
     public static RouteGroupBuilder MapFunds(this RouteGroupBuilder group)
     {
-        var funds = group.MapGroup("/funds").WithTags("StrategyBuilder");
+        var funds = group
+            .MapGroup("/funds")
+            .WithTags("StrategyBuilder");
 
-        funds.MapGet("/options", GetOptions).WithName("GetBuilderFundSearchOptions");
-        funds.MapPost("/search", Search).WithName("SearchBuilderFunds");
-        funds.MapPost("", Add).WithName("AddBuilderFunds");
+        funds
+            .MapGet("/options", GetOptions)
+            .WithName("GetBuilderFundSearchOptions")
+            .Produces<FundSearchOptionsDto>();
+        funds
+            .MapPost("/search", Search)
+            .WithName("SearchBuilderFunds")
+            .Produces<IReadOnlyList<FoundFundDto>>();
+        funds
+            .MapPost(string.Empty, Add)
+            .WithName("AddBuilderFunds")
+            .Produces<AddedFundsDto>();
 
         return group;
     }

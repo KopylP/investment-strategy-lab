@@ -231,5 +231,8 @@ internal sealed class PlanningAccounts(IAccountSetupQueries accounts) : IPlannin
   stored events lack them; never change or remove existing ones.
 - Formatting and analyzers follow `.editorconfig`; EF migrations count as generated code. Primary constructors,
   collection expressions, file-scoped namespaces.
+- `string.Empty`, never `""`. A route with chained calls is written one call per line, the receiver on its own line
+  (`profile` / `.MapPut(string.Empty, UpdateProfile)` / `.WithName("UpdateProfile")` / `.Produces<UserProfileDto>()`);
+  lines stay within 120 characters.
 - Text the user reads never appears in code: warnings, reasons and notes are `Message.Of(code, parameters)`, errors carry a
   code and parameters, and the words are in `../locales/uk.json` and `../locales/en.json` (see Language in `../CLAUDE.md`).

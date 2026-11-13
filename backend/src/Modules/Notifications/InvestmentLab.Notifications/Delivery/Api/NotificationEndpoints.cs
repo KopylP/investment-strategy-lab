@@ -17,11 +17,24 @@ internal static class NotificationEndpoints
     {
         group.WithTags("Notifications");
 
-        group.MapGet("/settings", GetNotificationSettings).WithName("GetNotificationSettings");
-        group.MapPut("/settings", ChangeNotificationSettings).WithName("ChangeNotificationSettings");
-        group.MapGet("/muted-signals", GetMutedSignals).WithName("GetMutedSignals").Produces<IReadOnlyList<Guid>>();
-        group.MapPut("/signals/{signalId:guid}", HearSignal).WithName("HearSignal");
-        group.MapPost("/test", SendTestNotification).WithName("SendTestNotification");
+        group
+            .MapGet("/settings", GetNotificationSettings)
+            .WithName("GetNotificationSettings")
+            .Produces<NotificationSettingsDto>();
+        group
+            .MapPut("/settings", ChangeNotificationSettings)
+            .WithName("ChangeNotificationSettings")
+            .Produces<NotificationSettingsDto>();
+        group
+            .MapGet("/muted-signals", GetMutedSignals)
+            .WithName("GetMutedSignals")
+            .Produces<IReadOnlyList<Guid>>();
+        group
+            .MapPut("/signals/{signalId:guid}", HearSignal)
+            .WithName("HearSignal");
+        group
+            .MapPost("/test", SendTestNotification)
+            .WithName("SendTestNotification");
 
         return group;
     }

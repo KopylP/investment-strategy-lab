@@ -76,7 +76,8 @@ public sealed class StrategiesModule : IModule
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>
-        endpoints.MapGroup("/api/strategies")
+        endpoints
+            .MapGroup("/api/strategies")
             .MapCatalog()
             .MapDefinitions()
             .MapEvaluation();

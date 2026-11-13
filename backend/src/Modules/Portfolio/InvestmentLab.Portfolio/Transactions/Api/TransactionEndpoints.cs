@@ -16,14 +16,34 @@ internal static class TransactionEndpoints
 {
     public static RouteGroupBuilder MapTransactions(this RouteGroupBuilder group)
     {
-        var account = group.MapGroup("/accounts/{accountId:guid}").WithTags("Transactions");
+        var account = group
+            .MapGroup("/accounts/{accountId:guid}")
+            .WithTags("Transactions");
 
-        account.MapPost("/trades", RecordTrade).WithName("RecordTrade");
-        account.MapPost("/contributions", RecordContribution).WithName("RecordContribution");
-        account.MapPost("/cash-movements", RecordCashMovement).WithName("RecordCashMovement");
-        account.MapPost("/internal-transfers", RecordInternalTransfer).WithName("RecordInternalTransfer");
-        account.MapPost("/transactions/{transactionId:guid}/reverse", ReverseTransaction).WithName("ReverseTransaction");
-        account.MapGet("/transactions", GetTransactions).WithName("GetTransactions");
+        account
+            .MapPost("/trades", RecordTrade)
+            .WithName("RecordTrade")
+            .Produces<RecordedTransaction>();
+        account
+            .MapPost("/contributions", RecordContribution)
+            .WithName("RecordContribution")
+            .Produces<RecordedTransaction>();
+        account
+            .MapPost("/cash-movements", RecordCashMovement)
+            .WithName("RecordCashMovement")
+            .Produces<RecordedTransaction>();
+        account
+            .MapPost("/internal-transfers", RecordInternalTransfer)
+            .WithName("RecordInternalTransfer")
+            .Produces<RecordedTransaction>();
+        account
+            .MapPost("/transactions/{transactionId:guid}/reverse", ReverseTransaction)
+            .WithName("ReverseTransaction")
+            .Produces<RecordedTransaction>();
+        account
+            .MapGet("/transactions", GetTransactions)
+            .WithName("GetTransactions")
+            .Produces<IReadOnlyList<TransactionDto>>();
 
         return group;
     }

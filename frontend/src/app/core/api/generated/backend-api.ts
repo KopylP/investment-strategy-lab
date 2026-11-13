@@ -1712,6 +1712,21 @@ export interface components {
             asOf: null | string;
             subPortfolios: components["schemas"]["SubPortfolioHoldingsDto"][];
         };
+        AccountPerformanceDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            broker: string;
+            baseCurrency: string;
+            /** Format: double */
+            value: number;
+            /** Format: double */
+            share: number;
+            /** Format: double */
+            netContributions: number;
+            /** Format: double */
+            twr: null | number;
+        };
         AccountSetupDto: {
             /** Format: uuid */
             id: string;
@@ -1725,6 +1740,32 @@ export interface components {
             /** Format: double */
             driftBand: number;
             subPortfolios: components["schemas"]["SubPortfolioSetupDto"][];
+        };
+        ActionAllocationDto: {
+            /** Format: uuid */
+            subPortfolioId: string;
+            /** Format: double */
+            quantity: number;
+            reason: null | string;
+        };
+        ActionMatchDto: {
+            /** Format: uuid */
+            actionId: string;
+            /** Format: int32 */
+            sequence: number;
+            actionKind: string;
+            /** Format: uuid */
+            instrumentId: null | string;
+            /** Format: double */
+            plannedQuantity: number;
+            /** Format: double */
+            remainingQuantity: number;
+            completes: boolean;
+            operations: components["schemas"]["MatchedOperationDto"][];
+        };
+        AddedFundsDto: {
+            instrumentIds: string[];
+            failed: components["schemas"]["FundNotAddedDto"][];
         };
         AddFundsCommand: {
             funds: null | components["schemas"]["FundToAddDto"][];
@@ -1796,10 +1837,59 @@ export interface components {
             /** Format: uuid */
             experimentId?: null | string;
         };
+        BlockWordsDto: {
+            block: string;
+            sentence: string;
+        };
+        BrokerStatementDto: {
+            /** Format: uuid */
+            id: string;
+            broker: string;
+            fileName: string;
+            /** Format: date-time */
+            uploadedAt: string;
+            /** Format: date */
+            from: string;
+            /** Format: date */
+            to: string;
+            /** Format: int32 */
+            sales: number;
+            /** Format: int32 */
+            dividends: number;
+            warnings: string[];
+        };
+        BrokerStatementsDto: {
+            statements: components["schemas"]["BrokerStatementDto"][];
+            /** Format: int32 */
+            sales: number;
+            /** Format: int32 */
+            matchedSales: number;
+            /** Format: int32 */
+            dividends: number;
+            /** Format: int32 */
+            matchedDividends: number;
+        };
+        CarryforwardUseDto: {
+            /** Format: int32 */
+            lossYear: number;
+            /** Format: double */
+            amount: number;
+        };
         CashBalanceDto: {
             currency: string;
             /** Format: double */
             amount: number;
+        };
+        CashMovementRecordedDto: {
+            kind: string;
+            /** Format: double */
+            amount: number;
+            /** Format: uuid */
+            instrumentId: null | string;
+            allocations: components["schemas"]["AmountAllocationDto"][];
+            /** Format: double */
+            settledAmount: null | number;
+            settledCurrency: null | string;
         };
         ChangeNotificationSettingsCommand: {
             destinations: null | string[];
@@ -1841,6 +1931,13 @@ export interface components {
             first: components["schemas"]["BacktestRunDto"];
             second: components["schemas"]["BacktestRunDto"];
         };
+        ConditionKindDto: {
+            code: string;
+            label: string;
+            hint: string;
+            phrase: string;
+            fields: components["schemas"]["VocabularyFieldDto"][];
+        };
         ConfigureImportCommand: {
             mode: string;
             /** Format: date */
@@ -1848,6 +1945,19 @@ export interface components {
             /** Format: uuid */
             cashSubPortfolioId: null | string;
             mappings: components["schemas"]["TickerMappingChoice"][];
+        };
+        ContributionPartDto: {
+            /** Format: uuid */
+            subPortfolioId: string;
+            /** Format: double */
+            amount: number;
+        };
+        ContributionPlanDto: {
+            /** Format: double */
+            total: number;
+            split: string;
+            parts: components["schemas"]["ContributionPartDto"][];
+            transfer: null | components["schemas"]["TransferHintDto"];
         };
         ContributionPolicyChoice: {
             kind: string;
@@ -1891,9 +2001,140 @@ export interface components {
             typeCode: string;
             setup: components["schemas"]["StrategySetupDraft"];
         };
+        CurrentUserDto: {
+            /** Format: uuid */
+            id: string;
+            email: string;
+            /** @default false */
+            viaHomeAssistant: boolean;
+        };
+        DashboardDto: {
+            /** Format: uuid */
+            accountId: null | string;
+            currency: string;
+            /** Format: date */
+            asOf: null | string;
+            period: string;
+            /** Format: double */
+            value: number;
+            /** Format: double */
+            netContributions: number;
+            /** Format: double */
+            gain: number;
+            /** Format: double */
+            twr: null | number;
+            /** Format: double */
+            twrAnnualized: null | number;
+            /** Format: double */
+            xirr: null | number;
+            /** Format: double */
+            maxDrawdown: number;
+            /** Format: double */
+            currentDrawdown: number;
+            /** Format: double */
+            planValue: null | number;
+            series: components["schemas"]["SeriesPointDto"][];
+            subPortfolios: components["schemas"]["SubPortfolioPerformanceDto"][];
+            accounts: components["schemas"]["AccountPerformanceDto"][];
+            reports: components["schemas"]["ReportMarkerDto"][];
+            /** Format: double */
+            positionsValue: number;
+            /** Format: double */
+            costBasis: number;
+        };
+        DeclarationAccountLineDto: {
+            name: string;
+            broker: string;
+            treatment: string;
+            /** Format: double */
+            revenue: number;
+            /** Format: double */
+            costs: number;
+            /** Format: double */
+            dividendsGross: number;
+            /** Format: double */
+            dividendsWithheld: number;
+            /** Format: uuid */
+            accountId: string;
+            takesPit8C: boolean;
+            pit8C: null | components["schemas"]["Pit8CAmountsDto"];
+            pit8CCoveredBy: null | string;
+        };
+        DeclarationAttachmentDto: {
+            form: string;
+            title: string;
+            fields: components["schemas"]["DeclarationFieldDto"][];
+        };
+        DeclarationDto: {
+            declaration: components["schemas"]["TaxDeclarationDto"];
+            warnings: string[];
+        };
+        DeclarationFactDto: {
+            label: string;
+            /** Format: double */
+            amount: number;
+        };
+        DeclarationFieldDto: {
+            /** Format: int32 */
+            position: number;
+            label: string;
+            /** Format: double */
+            amount: null | number;
+            text: null | string;
+            hint: null | string;
+            computed: boolean;
+        };
         DeclarationFormDto: {
             code: string;
             title: string;
+        };
+        DeclarationNoteDto: {
+            text: string;
+            action: boolean;
+            short: null | string;
+        };
+        DeclarationSectionDto: {
+            code: string;
+            title: string;
+            fields: components["schemas"]["DeclarationFieldDto"][];
+        };
+        DefaultReportScheduleDto: {
+            frequency: string;
+            /** Format: int32 */
+            day: number;
+            weekday: string;
+            time: string;
+            /** Format: int32 */
+            minute: number;
+        };
+        DestinationDto: {
+            id: string;
+            channel: string;
+            label: string;
+            suggested: boolean;
+            selected: boolean;
+        };
+        DividendIncomeDto: {
+            /** Format: uuid */
+            transactionId: string;
+            /** Format: date */
+            receivedOn: string;
+            /** Format: uuid */
+            instrumentId: string;
+            /** Format: double */
+            amount: number;
+            /** Format: double */
+            amountInTaxCurrency: number;
+            /** Format: double */
+            fxRate: number;
+            /** Format: double */
+            grossInTaxCurrency: number;
+            /** Format: double */
+            withheldInTaxCurrency: number;
+            currency: null | string;
+            withholdingKnown: boolean;
+            /** Format: uuid */
+            accountId: string;
         };
         DraftChangeDto: {
             /** Format: int32 */
@@ -1905,11 +2146,55 @@ export interface components {
             reports: null | components["schemas"]["DraftReportDto"][];
             setupPatch?: null | components["schemas"]["DraftSetupPatchDto"];
         };
+        DraftCheckDto: {
+            isClean: boolean;
+            problems: components["schemas"]["DraftProblemDto"][];
+            signalIds: string[];
+        };
+        DraftDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            description: null | string;
+            /** Format: int32 */
+            revision: number;
+            /** Format: date-time */
+            updatedAt: string;
+            setup: components["schemas"]["DraftSetupDto"];
+            graph: components["schemas"]["GraphDto"];
+            layout: components["schemas"]["LayoutDto"];
+            reports: components["schemas"]["DraftReportDto"][];
+            /** Format: uuid */
+            originStrategyId: null | string;
+            /** Format: int32 */
+            originVersion: null | number;
+            problems: components["schemas"]["DraftProblemDto"][];
+            words: components["schemas"]["BlockWordsDto"][];
+        };
+        DraftProblemDto: {
+            message: string;
+            severity: string;
+            nodeId: null | string;
+            block: null | string;
+            reportCode: null | string;
+        };
         DraftReportDto: {
             code: string;
-            schedule: components["schemas"]["ReportTimingDto"];
+            schedule: components["schemas"]["DraftReportTimingDto"];
             signalKinds: string[];
             signalIds: string[];
+        };
+        DraftReportTimingDto: {
+            frequency: string;
+            /** Format: int32 */
+            day: number;
+            weekday: string;
+            time: string;
+            /** Format: int32 */
+            minute: number;
+        };
+        DraftRulesDto: {
+            json: string;
         };
         DraftSetupDto: {
             funds: string[];
@@ -1931,6 +2216,18 @@ export interface components {
             volatilityIndexId: null | string;
             extraSeries: null | string[];
         };
+        DraftSummaryDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            originStrategyName: null | string;
+            /** Format: int32 */
+            originVersion: null | number;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            lastTrialAt: null | string;
+        };
         EvaluateSubPortfolioCommand: {
             /** Format: uuid */
             accountId: string;
@@ -1945,6 +2242,84 @@ export interface components {
             contribution: number;
             /** Format: int32 */
             version?: null | number;
+        };
+        ExperimentConditionsDto: {
+            period: components["schemas"]["ExperimentPeriodDto"];
+            /** Format: double */
+            initialCapital: number;
+            costs: components["schemas"]["ResearchTradingCostsDto"];
+            robustness: components["schemas"]["RobustnessPlanDto"];
+        };
+        ExperimentDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            strategyId: string;
+            /** Format: int32 */
+            strategyVersion: number;
+            status: string;
+            /** Format: date-time */
+            requestedAt: string;
+            /** Format: date-time */
+            finishedAt: null | string;
+            failureReason: null | string;
+            conditions: components["schemas"]["ExperimentConditionsDto"];
+            result: null | components["schemas"]["ResearchReportDto"];
+        };
+        ExperimentJournalDto: {
+            /** Format: int32 */
+            total: number;
+            /** Format: int32 */
+            offset: number;
+            entries: components["schemas"]["ResearchJournalEntryDto"][];
+        };
+        ExperimentPeriodDto: {
+            /** Format: date */
+            start: string;
+            /** Format: date */
+            end: string;
+        };
+        FillDto: {
+            /** Format: int32 */
+            number: number;
+            /** Format: double */
+            quantity: number;
+            /** Format: double */
+            price: number;
+            /** Format: double */
+            fee: number;
+            /** Format: date */
+            executedOn: string;
+            note: null | string;
+            /** Format: uuid */
+            transactionId: null | string;
+            linked: boolean;
+            /** Format: double */
+            amount: number;
+        };
+        FoundFundDto: {
+            symbol: string;
+            name: string;
+            currency: null | string;
+            fundFamily: null | string;
+            /** Format: double */
+            totalAssets: null | number;
+            /** Format: double */
+            expenseRatio: null | number;
+            /** Format: uuid */
+            instrumentId: null | string;
+        };
+        FundNotAddedDto: {
+            symbol: string;
+            reason: string;
+        };
+        FundSearchChoiceDto: {
+            id: string;
+            label: string;
+        };
+        FundSearchOptionsDto: {
+            exchanges: components["schemas"]["FundSearchChoiceDto"][];
+            regions: components["schemas"]["FundSearchChoiceDto"][];
         };
         FundToAddDto: {
             symbol: string;
@@ -1968,6 +2343,12 @@ export interface components {
             rate: number;
             tableNumber: null | string;
         };
+        GainAttributionDto: {
+            /** Format: uuid */
+            subPortfolioId: string;
+            /** Format: double */
+            gainInTaxCurrency: number;
+        };
         GenerateReportRequest: {
             code: null | string;
             /** Format: double */
@@ -1982,9 +2363,44 @@ export interface components {
         HearSignalCommand: {
             notify: boolean;
         };
+        ImportCountsDto: {
+            /** Format: int32 */
+            new: number;
+            /** Format: int32 */
+            alreadyImported: number;
+            /** Format: int32 */
+            differs: number;
+            /** Format: int32 */
+            matchesExisting: number;
+            /** Format: int32 */
+            outOfScope: number;
+            /** Format: int32 */
+            unsupported: number;
+            /** Format: int32 */
+            needsMapping: number;
+            /** Format: int32 */
+            toRecord: number;
+            /** Format: int32 */
+            toReverse: number;
+        };
+        ImportReport: {
+            /** Format: int32 */
+            recorded: number;
+            /** Format: int32 */
+            skipped: number;
+            warnings: string[];
+        };
         ImportRulesCommand: {
             name: string;
             json: string;
+        };
+        IndicatorKindDto: {
+            code: string;
+            label: string;
+            hint: string;
+            phrase: string;
+            columnFormat: string;
+            fields: components["schemas"]["VocabularyFieldDto"][];
         };
         IngestReport: {
             /** Format: int32 */
@@ -1994,6 +2410,22 @@ export interface components {
             /** Format: int32 */
             quotesUpdated: number;
             missingSymbols: string[];
+        };
+        InputSocketDto: {
+            name: string;
+            type: string;
+            required: boolean;
+            many: boolean;
+        };
+        InstrumentChoiceDto: {
+            /** Format: uuid */
+            id: string;
+            label: string;
+            name: string;
+            group: null | string;
+            assetClass: null | string;
+            region: null | string;
+            isVolatilityIndex: boolean;
         };
         InstrumentDto: {
             /** Format: uuid */
@@ -2006,14 +2438,64 @@ export interface components {
             group: null | string;
             isAccumulating: null | boolean;
             providerSymbols: string[];
-            description?: null | string;
-            ticker?: null | string;
+            description: null | string;
+            ticker: null | string;
             /** @default false */
             isVolatilityIndex: boolean;
-            assetClass?: null | string;
-            region?: null | string;
-            assetCurrency?: null | string;
-            label?: null | string;
+            assetClass: null | string;
+            region: null | string;
+            assetCurrency: null | string;
+            label: string;
+        };
+        InstrumentLabelDto: {
+            symbol: string;
+            name: string;
+            isin: null | string;
+            currency: string;
+        };
+        InstrumentScoreDto: {
+            /** Format: uuid */
+            instrumentId: string;
+            name: string;
+            group: string;
+            /** Format: double */
+            price: null | number;
+            /** Format: double */
+            momentum: null | number;
+            /** Format: double */
+            return1m: null | number;
+            /** Format: double */
+            return3m: null | number;
+            /** Format: double */
+            return12m: null | number;
+            /** Format: double */
+            volatility: null | number;
+            /** Format: double */
+            sharpe: null | number;
+            /** Format: double */
+            drawdown: null | number;
+            aboveMovingAverage: null | boolean;
+            /** Format: date */
+            lastDate: null | string;
+            /** Format: int32 */
+            rank: null | number;
+            status: string;
+            reason: string;
+            /** Format: double */
+            weight: null | number;
+            values: null | Record<string, never>;
+        };
+        InternalTransferRecordedDto: {
+            /** Format: uuid */
+            fromSubPortfolioId: string;
+            /** Format: uuid */
+            toSubPortfolioId: string;
+            /** Format: uuid */
+            instrumentId: null | string;
+            /** Format: double */
+            quantity: null | number;
+            /** Format: double */
+            amount: null | number;
         };
         JsonElement: unknown;
         LatestFxRatesDto: {
@@ -2051,6 +2533,10 @@ export interface components {
             /** @default output */
             output: string;
         };
+        LoadOperationsPreviewDto: {
+            matches: components["schemas"]["ActionMatchDto"][];
+            unmatched: components["schemas"]["MatchedOperationDto"][];
+        };
         LoginCommand: {
             email: string;
             password: string;
@@ -2077,6 +2563,21 @@ export interface components {
             /** Format: double */
             unitCost: number;
         };
+        LotMatchDto: {
+            /** Format: uuid */
+            buyTransactionId: string;
+            /** Format: date */
+            acquiredOn: string;
+            /** Format: double */
+            quantity: number;
+            /** Format: double */
+            costInTaxCurrency: number;
+            fromBroker: boolean;
+            /** Format: double */
+            gross: number;
+            /** Format: double */
+            fxRate: number;
+        };
         MarkActionExecutedCommand: {
             /** Format: double */
             quantity: null | number;
@@ -2090,6 +2591,32 @@ export interface components {
             /** Format: date */
             executedOn: null | string;
             note: null | string;
+        };
+        MarketRegimeDto: {
+            isFavorable: boolean;
+            /** Format: double */
+            benchmarkPrice: null | number;
+            /** Format: double */
+            benchmarkMovingAverage: null | number;
+            /** Format: double */
+            volatilityIndex: null | number;
+            reasons: string[];
+        };
+        MatchedOperationDto: {
+            /** Format: uuid */
+            transactionId: string;
+            /** Format: date */
+            occurredOn: string;
+            kind: string;
+            /** Format: uuid */
+            instrumentId: null | string;
+            /** Format: double */
+            quantity: number;
+            /** Format: double */
+            price: number;
+            /** Format: double */
+            fee: number;
+            source: string;
         };
         MoneyOutcomeDto: {
             /** Format: double */
@@ -2134,11 +2661,21 @@ export interface components {
             block: string;
             parameters: Record<string, never>;
         };
+        NodeKindDto: {
+            kind: string;
+            inputs: components["schemas"]["InputSocketDto"][];
+            output: null | string;
+        };
         NodePositionDto: {
             /** Format: double */
             x: number;
             /** Format: double */
             y: number;
+        };
+        NotificationSettingsDto: {
+            channels: string[];
+            automatic: boolean;
+            destinations: components["schemas"]["DestinationDto"][];
         };
         OpenAccountCommand: {
             name: string;
@@ -2152,11 +2689,77 @@ export interface components {
             /** Format: int32 */
             count: number;
         };
+        OpenLotSnapshotDto: {
+            /** Format: uuid */
+            buyTransactionId: string;
+            /** Format: date */
+            acquiredOn: string;
+            /** Format: uuid */
+            instrumentId: string;
+            /** Format: double */
+            quantity: number;
+            /** Format: double */
+            costInTaxCurrency: number;
+            /** Format: double */
+            fxRate: number;
+            /** Format: uuid */
+            accountId: string;
+        };
+        OwnSignalDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            isMarket: boolean;
+            target: string;
+        };
+        ParameterNeighborhoodDto: {
+            path: string;
+            values: number[];
+        };
+        Pit8CAmountsDto: {
+            /** Format: double */
+            revenue: number;
+            /** Format: double */
+            costs: number;
+        };
         Pit8CCommand: {
             /** Format: double */
             revenue: number;
             /** Format: double */
             costs: number;
+        };
+        PlanReviewDto: {
+            reviewer: string;
+            verdict: string;
+            summary: string;
+            findings: components["schemas"]["ReviewFindingDto"][];
+        };
+        PlanSettingsDto: {
+            /** Format: uuid */
+            accountId: string;
+            /** Format: double */
+            monthlyContribution: number;
+            /** Format: double */
+            minTrade: number;
+            /** Format: double */
+            trimBand: number;
+            allowFractionalShares: boolean;
+            generateOnSchedule: boolean;
+            levelByPurchasesOnly: boolean;
+        };
+        PortfolioRiskDto: {
+            /** Format: double */
+            value: number;
+            /** Format: double */
+            cost: number;
+            /** Format: double */
+            pnlPct: null | number;
+            /** Format: double */
+            drawdown: null | number;
+            /** Format: date */
+            peakDate: null | string;
+            exitLimitHit: boolean;
+            alerts: string[];
         };
         PositionDto: {
             /** Format: uuid */
@@ -2170,6 +2773,39 @@ export interface components {
             /** Format: date */
             firstOpenedOn: string;
             lots: components["schemas"]["LotDto"][];
+        };
+        PositionRiskDto: {
+            /** Format: uuid */
+            instrumentId: string;
+            status: string;
+            /** Format: double */
+            quantity: number;
+            /** Format: double */
+            averageCost: number;
+            /** Format: double */
+            currentPrice: number;
+            /** Format: double */
+            value: number;
+            /** Format: double */
+            pnlPct: number;
+            /** Format: double */
+            drawdownFromHigh: number;
+            aboveMovingAverage: boolean;
+            /** Format: double */
+            movingAverage: null | number;
+            /** Format: double */
+            exitPrice: null | number;
+            exitRule: string;
+            /** Format: double */
+            exitDistance: null | number;
+            /** Format: double */
+            stopPrice: null | number;
+            /** Format: double */
+            maExitPrice: null | number;
+            /** Format: double */
+            trailExitPrice: null | number;
+            alerts: string[];
+            sell: boolean;
         };
         PositionsFile: {
             /** Format: double */
@@ -2189,6 +2825,18 @@ export interface components {
         PublishDraftCommand: {
             /** Format: int32 */
             revision: number;
+        };
+        PublishedStrategyDto: {
+            editable: boolean;
+            /** Format: uuid */
+            draftId: null | string;
+            words: components["schemas"]["BlockWordsDto"][];
+        };
+        PublishedVersionDto: {
+            /** Format: uuid */
+            strategyId: string;
+            /** Format: int32 */
+            version: number;
         };
         QuantityAllocationDto: {
             /** Format: uuid */
@@ -2210,6 +2858,52 @@ export interface components {
             instrumentId: string;
             points: components["schemas"]["QuotePointDto"][];
         };
+        RationaleColumnDto: {
+            id: string;
+            label: string;
+            format: string;
+            hint: null | string;
+            compact: boolean;
+            trueHint: null | string;
+            falseHint: null | string;
+        };
+        RationaleDto: {
+            summary: string;
+            /** Format: double */
+            riskFreeRate: null | number;
+            scores: components["schemas"]["InstrumentScoreDto"][];
+            title: null | string;
+            instrumentLabel: null | string;
+            columns: null | components["schemas"]["RationaleColumnDto"][];
+        };
+        RealizationDto: {
+            /** Format: uuid */
+            saleTransactionId: string;
+            /** Format: date */
+            soldOn: string;
+            /** Format: uuid */
+            instrumentId: string;
+            /** Format: double */
+            quantity: number;
+            /** Format: double */
+            proceedsInTaxCurrency: number;
+            /** Format: double */
+            costInTaxCurrency: number;
+            /** Format: double */
+            gainInTaxCurrency: number;
+            /** Format: double */
+            fxRate: number;
+            /** Format: date */
+            fxRateDate: null | string;
+            lots: components["schemas"]["LotMatchDto"][];
+            attributions: components["schemas"]["GainAttributionDto"][];
+            /** Format: double */
+            unmatchedQuantity: number;
+            /** Format: double */
+            brokerGainInTaxCurrency: null | number;
+            /** Format: uuid */
+            accountId: string;
+        };
         RecordCashMovementCommand: {
             kind: string;
             /** Format: double */
@@ -2226,6 +2920,11 @@ export interface components {
             /** Format: date */
             occurredOn: string;
             allocations?: null | components["schemas"]["AmountAllocationDto"][];
+        };
+        RecordedTransaction: {
+            /** Format: uuid */
+            transactionId: string;
+            warnings: string[];
         };
         RecordInternalTransferCommand: {
             /** Format: uuid */
@@ -2418,13 +3117,79 @@ export interface components {
             /** Format: double */
             weight: number;
         };
+        ReportActionDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            sequence: number;
+            kind: string;
+            /** Format: uuid */
+            instrumentId: null | string;
+            /** Format: double */
+            plannedQuantity: number;
+            /** Format: double */
+            plannedPrice: number;
+            /** Format: double */
+            plannedAmount: number;
+            allocations: components["schemas"]["ActionAllocationDto"][];
+            /** Format: uuid */
+            fromSubPortfolioId: null | string;
+            /** Format: uuid */
+            toSubPortfolioId: null | string;
+            reason: string;
+            status: string;
+            /** Format: double */
+            filledQuantity: number;
+            /** Format: double */
+            remainingQuantity: number;
+            fills: components["schemas"]["FillDto"][];
+            skipReason: null | string;
+            rejection: null | string;
+            /** Format: double */
+            estimatedGain: null | number;
+            /** Format: double */
+            estimatedTaxChange: null | number;
+            /** Format: double */
+            estimatedCarriedLoss: null | number;
+        };
         ReportDefinitionDto: {
             code: string;
             name: string;
             description: string;
             mode: string;
-            schedule: null | components["schemas"]["ReportScheduleDto"];
+            schedule: null | components["schemas"]["DefaultReportScheduleDto"];
             signalKinds: null | string[];
+        };
+        ReportDetailsDto: {
+            summary: components["schemas"]["ReportSummaryDto"];
+            contributionPlan: components["schemas"]["ContributionPlanDto"];
+            actions: components["schemas"]["ReportActionDto"][];
+            sections: components["schemas"]["ReportSectionDto"][];
+            warnings: string[];
+            review: null | components["schemas"]["PlanReviewDto"];
+            taxEstimate: null | components["schemas"]["TaxEstimateDto"];
+            instruments: {
+                [key: string]: components["schemas"]["InstrumentLabelDto"];
+            };
+            subPortfolios: {
+                [key: string]: string;
+            };
+        };
+        ReportKindDto: {
+            code: string;
+            name: string;
+            description: string;
+            signalKinds: string[];
+        };
+        ReportMarkerDto: {
+            /** Format: uuid */
+            reportId: string;
+            /** Format: date */
+            date: string;
+            kind: string;
+            period: string;
+            /** Format: uuid */
+            accountId: string;
         };
         ReportRequestDto: {
             /** Format: uuid */
@@ -2452,14 +3217,43 @@ export interface components {
             /** Format: int32 */
             strategiesAnswered: number;
         };
+        ReportRequestedResponse: {
+            /** Format: uuid */
+            requestId: string;
+        };
         ReportScheduleDto: {
-            frequency: string;
+            generateOnSchedule: boolean;
+            timeZone: string;
+            reports: components["schemas"]["ScheduledReportDto"][];
+        };
+        ReportSectionDto: {
+            /** Format: uuid */
+            subPortfolioId: string;
+            name: string;
+            /** Format: double */
+            targetShare: number;
+            /** Format: uuid */
+            strategyId: null | string;
             /** Format: int32 */
-            day: number;
-            weekday: string;
-            time: string;
-            /** Format: int32 */
-            minute: number;
+            strategyVersion: null | number;
+            strategyCode: null | string;
+            engineVersion: null | string;
+            /** Format: double */
+            contribution: number;
+            decision: null | components["schemas"]["SectionDecisionDto"];
+            orders: components["schemas"]["SectionOrderDto"][];
+            allocation: components["schemas"]["SectionAllocationDto"][];
+            /** Format: double */
+            totalBefore: number;
+            /** Format: double */
+            totalAfter: number;
+            /** Format: double */
+            parkedBefore: number;
+            /** Format: double */
+            parkedAfter: number;
+            notes: string[];
+            risk: null | components["schemas"]["SectionRiskDto"];
+            error: null | string;
         };
         ReportSummaryDto: {
             /** Format: uuid */
@@ -2498,6 +3292,156 @@ export interface components {
             /** Format: int32 */
             minute: number;
         };
+        ResearchAllocationDto: {
+            /** Format: double */
+            cash: number;
+            targets: components["schemas"]["ResearchTargetDto"][];
+            positions: components["schemas"]["ResearchPositionWeightDto"][];
+        };
+        ResearchCandidateDto: {
+            /** Format: uuid */
+            instrumentId: string;
+            name: string;
+            status: string;
+            reason: string;
+            /** Format: double */
+            weight: null | number;
+            values: null | Record<string, never>;
+        };
+        ResearchExplanationDto: {
+            summary: string;
+            engineVersion: null | string;
+            candidates: null | components["schemas"]["ResearchCandidateDto"][];
+            valueLabels: null | {
+                [key: string]: string;
+            };
+        };
+        ResearchFillDto: {
+            /** Format: uuid */
+            instrumentId: string;
+            /** Format: double */
+            quantity: number;
+            /** Format: double */
+            price: number;
+            /** Format: double */
+            referencePrice: number;
+            /** Format: double */
+            commission: number;
+            /** Format: double */
+            spreadCost: number;
+            /** Format: double */
+            slippageCost: number;
+            /** Format: date */
+            decisionDate: string;
+        };
+        ResearchFoldDto: {
+            training: null | components["schemas"]["ExperimentPeriodDto"];
+            test: components["schemas"]["ExperimentPeriodDto"];
+        };
+        ResearchJournalEntryDto: {
+            /** Format: date */
+            date: string;
+            kind: string;
+            reason: string;
+            fill: null | components["schemas"]["ResearchFillDto"];
+            allocation: null | components["schemas"]["ResearchAllocationDto"];
+            explanation: null | components["schemas"]["ResearchExplanationDto"];
+            marketFavorable: null | boolean;
+        };
+        ResearchPointDto: {
+            /** Format: date */
+            date: string;
+            /** Format: double */
+            growth: number;
+            /** Format: double */
+            worstDrawdown: number;
+        };
+        ResearchPositionWeightDto: {
+            /** Format: uuid */
+            instrumentId: string;
+            /** Format: double */
+            quantity: number;
+            /** Format: double */
+            weight: number;
+        };
+        ResearchReportDto: {
+            baseline: components["schemas"]["ResearchResultDto"];
+            studies: components["schemas"]["ResearchStudyDto"][];
+            parametersHash: string;
+            engineVersion: string;
+            selectionMetric: string;
+            replayModel: string;
+            instrumentLabels: null | {
+                [key: string]: string;
+            };
+            /** Format: uuid */
+            cashInstrumentId: null | string;
+        };
+        ResearchResultDto: {
+            /** Format: date */
+            start: string;
+            /** Format: date */
+            end: string;
+            currency: string;
+            /** Format: int32 */
+            trades: number;
+            /** Format: int32 */
+            riskExits: number;
+            /** Format: int32 */
+            signalReports: number;
+            series: components["schemas"]["ResearchSeriesDto"][];
+            journal: null | components["schemas"]["ResearchJournalEntryDto"][];
+            /** Format: double */
+            initialCapital: number;
+            /** Format: double */
+            finalCapital: number;
+        };
+        ResearchSeriesDto: {
+            code: string;
+            label: string;
+            summary: components["schemas"]["ResearchSummaryDto"];
+            points: components["schemas"]["ResearchPointDto"][];
+        };
+        ResearchStudyDto: {
+            kind: string;
+            window: components["schemas"]["ResearchFoldDto"];
+            /** Format: double */
+            parameterValue: null | number;
+            summary: null | components["schemas"]["ResearchSummaryDto"];
+            /** Format: double */
+            trainingSharpe: null | number;
+            failureReason: null | string;
+        };
+        ResearchSummaryDto: {
+            /** Format: double */
+            totalReturn: number;
+            /** Format: double */
+            annualReturn: number;
+            /** Format: double */
+            volatility: number;
+            /** Format: double */
+            sharpe: number;
+            /** Format: double */
+            maxDrawdown: number;
+            /** Format: double */
+            annualReturnAfterTax: null | number;
+        };
+        ResearchTargetDto: {
+            /** Format: uuid */
+            instrumentId: string;
+            /** Format: double */
+            weight: number;
+        };
+        ResearchTradingCostsDto: {
+            /** Format: double */
+            commissionRate: number;
+            /** Format: double */
+            feePerTrade: number;
+            /** Format: double */
+            spreadBps: number;
+            /** Format: double */
+            slippageBps: number;
+        };
         RetireSubPortfolioCommand: {
             targetSharesOfRemaining: {
                 [key: string]: number;
@@ -2508,11 +3452,56 @@ export interface components {
             /** Format: date */
             reversedOn?: null | string;
         };
+        ReviewFindingDto: {
+            severity: string;
+            message: string;
+        };
+        RiskAssessmentDto: {
+            /** Format: uuid */
+            strategyId: string;
+            /** Format: int32 */
+            strategyVersion: number;
+            strategyCode: string;
+            engineVersion: string;
+            /** Format: date */
+            asOf: string;
+            status: string;
+            marketAlerts: string[];
+            positions: components["schemas"]["PositionRiskDto"][];
+            portfolio: components["schemas"]["PortfolioRiskDto"];
+            signals: components["schemas"]["RiskSignalDto"][];
+            actions: string[];
+        };
+        RiskSignalDto: {
+            /** Format: uuid */
+            instrumentId: string;
+            kind: string;
+            reason: string;
+            /** Format: double */
+            exitPrice: null | number;
+        };
+        RobustnessPlanDto: {
+            /** Format: date */
+            outOfSampleStart: null | string;
+            walkForward: null | components["schemas"]["WalkForwardWindowsDto"];
+            neighborhood: null | components["schemas"]["ParameterNeighborhoodDto"];
+        };
         RunTrialRequest: {
             label: null | string;
             experiment?: null | components["schemas"]["TrialExperimentDto"];
             /** @default false */
             rerun: boolean;
+        };
+        ScheduledReportDto: {
+            code: string;
+            name: string;
+            description: string;
+            mode: string;
+            schedule: components["schemas"]["ReportTimingDto"];
+            strategySchedule: components["schemas"]["ReportTimingDto"];
+            own: boolean;
+            next: null | string;
+            strategies: string[];
         };
         SearchFundsCommand: {
             exchangeId: null | string;
@@ -2524,10 +3513,140 @@ export interface components {
             maxExpenseRatio: null | number;
             nameWords: null | string[];
         };
+        SectionAllocationDto: {
+            /** Format: uuid */
+            instrumentId: null | string;
+            role: string;
+            /** Format: double */
+            valueBefore: number;
+            /** Format: double */
+            valueAfter: number;
+            /** Format: double */
+            weightBefore: number;
+            /** Format: double */
+            weightAfter: number;
+            /** Format: double */
+            targetWeight: null | number;
+        };
+        SectionColumnDto: {
+            id: string;
+            label: string;
+            format: string;
+            hint: null | string;
+            compact: boolean;
+            trueHint: null | string;
+            falseHint: null | string;
+        };
+        SectionDecisionDto: {
+            marketIsFavorable: boolean;
+            /** Format: double */
+            investFraction: number;
+            marketReasons: string[];
+            summary: string;
+            targets: components["schemas"]["SectionTargetDto"][];
+            scores: components["schemas"]["SectionScoreDto"][];
+            warnings: string[];
+            scoreTitle: null | string;
+            instrumentLabel: null | string;
+            columns: null | components["schemas"]["SectionColumnDto"][];
+        };
+        SectionOrderDto: {
+            kind: string;
+            /** Format: uuid */
+            instrumentId: string;
+            /** Format: double */
+            quantity: number;
+            /** Format: double */
+            price: number;
+            /** Format: double */
+            amount: number;
+            reason: string;
+        };
+        SectionRiskDto: {
+            status: string;
+            marketAlerts: string[];
+            positions: components["schemas"]["SectionRiskPositionDto"][];
+            portfolioAlerts: string[];
+            actions: string[];
+        };
+        SectionRiskPositionDto: {
+            /** Format: uuid */
+            instrumentId: string;
+            status: string;
+            /** Format: double */
+            quantity: number;
+            /** Format: double */
+            averageCost: number;
+            /** Format: double */
+            currentPrice: number;
+            /** Format: double */
+            value: number;
+            /** Format: double */
+            pnlPct: number;
+            /** Format: double */
+            drawdownFromHigh: number;
+            /** Format: double */
+            exitPrice: null | number;
+            exitRule: string;
+            /** Format: double */
+            exitDistance: null | number;
+            alerts: string[];
+            sell: boolean;
+        };
+        SectionScoreDto: {
+            /** Format: uuid */
+            instrumentId: string;
+            name: string;
+            group: string;
+            /** Format: double */
+            price: null | number;
+            /** Format: double */
+            momentum: null | number;
+            /** Format: double */
+            return1m: null | number;
+            /** Format: double */
+            return3m: null | number;
+            /** Format: double */
+            return12m: null | number;
+            /** Format: double */
+            volatility: null | number;
+            aboveMovingAverage: null | boolean;
+            /** Format: int32 */
+            rank: null | number;
+            status: string;
+            reason: string;
+            values: null | Record<string, never>;
+        };
+        SectionTargetDto: {
+            /** Format: uuid */
+            instrumentId: string;
+            /** Format: double */
+            weight: number;
+        };
         SeriesMoneyOutcomesDto: {
             code: string;
             label: string;
             outcomes: components["schemas"]["MoneyOutcomeRangeDto"];
+        };
+        SeriesPointDto: {
+            /** Format: date */
+            date: string;
+            /** Format: double */
+            value: number;
+            /** Format: double */
+            netContributions: number;
+            /** Format: double */
+            twrIndex: number;
+            /** Format: double */
+            planValue: null | number;
+            /** Format: double */
+            planNetContributions: null | number;
+            /** Format: double */
+            drawdown: number;
+            /** Format: double */
+            positionsValue: number;
+            /** Format: double */
+            costBasis: number;
         };
         SignalConditionDto: {
             metric: string;
@@ -2614,6 +3733,30 @@ export interface components {
         SkipActionCommand: {
             reason: string;
         };
+        StatementImportDto: {
+            /** Format: uuid */
+            id: string;
+            broker: string;
+            fileName: string;
+            /** Format: date-time */
+            uploadedAt: string;
+            status: string;
+            mode: string;
+            /** Format: date */
+            fromDate: null | string;
+            /** Format: uuid */
+            cashSubPortfolioId: null | string;
+            accountCurrency: string;
+            mappings: components["schemas"]["TickerMappingDto"][];
+            rows: components["schemas"]["StatementRowDto"][];
+            counts: components["schemas"]["ImportCountsDto"];
+            warnings: string[];
+            subPortfolios: components["schemas"]["SubPortfolioOptionDto"][];
+            /** Format: date-time */
+            confirmedAt: null | string;
+            /** Format: date-time */
+            undoneAt: null | string;
+        };
         StatementImportSummaryDto: {
             /** Format: uuid */
             id: string;
@@ -2625,6 +3768,47 @@ export interface components {
             mode: string;
             /** Format: int32 */
             recorded: number;
+        };
+        StatementRowDto: {
+            /** Format: int32 */
+            number: number;
+            /** Format: date */
+            occurredOn: string;
+            kind: string;
+            rawType: string;
+            ticker: null | string;
+            /** Format: double */
+            quantity: null | number;
+            /** Format: double */
+            price: null | number;
+            /** Format: double */
+            amount: number;
+            currency: string;
+            /** Format: double */
+            amountInAccountCurrency: number;
+            decision: string;
+            note: null | string;
+            willRecord: boolean;
+            willReverseExisting: boolean;
+            result: null | string;
+        };
+        StrategyDecisionDto: {
+            /** Format: uuid */
+            strategyId: string;
+            /** Format: int32 */
+            strategyVersion: number;
+            strategyCode: string;
+            engineVersion: string;
+            /** Format: date */
+            asOf: string;
+            /** Format: double */
+            investFraction: number;
+            targets: components["schemas"]["TargetWeightDto"][];
+            market: components["schemas"]["MarketRegimeDto"];
+            rationale: components["schemas"]["RationaleDto"];
+            warnings: string[];
+            /** Format: uuid */
+            cashInstrumentId: null | string;
         };
         StrategyDto: {
             /** Format: uuid */
@@ -2646,8 +3830,8 @@ export interface components {
             description: string;
             mode: string;
             schedule: components["schemas"]["StrategyReportScheduleDto"];
-            signalKinds?: null | string[];
-            signalIds?: null | string[];
+            signalKinds: null | string[];
+            signalIds: null | string[];
         };
         StrategyReportScheduleDto: {
             frequency: string;
@@ -2697,6 +3881,8 @@ export interface components {
             createdAt: string;
             extraSeries: string[];
         };
+        /** Format: binary */
+        Stream: string;
         SubPortfolioHoldingsDto: {
             /** Format: uuid */
             subPortfolioId: string;
@@ -2704,7 +3890,27 @@ export interface components {
             /** Format: double */
             cash: number;
             positions: components["schemas"]["PositionDto"][];
-            foreignCash?: null | components["schemas"]["CashBalanceDto"][];
+            foreignCash: null | components["schemas"]["CashBalanceDto"][];
+        };
+        SubPortfolioOptionDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
+        SubPortfolioPerformanceDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: double */
+            value: number;
+            /** Format: double */
+            targetShare: number;
+            /** Format: double */
+            actualShare: number;
+            /** Format: double */
+            twr: null | number;
+            /** Format: double */
+            netContributions: number;
         };
         SubPortfolioSetupDto: {
             /** Format: uuid */
@@ -2728,6 +3934,12 @@ export interface components {
             /** Format: int32 */
             strategyTypes: number;
         };
+        TargetWeightDto: {
+            /** Format: uuid */
+            instrumentId: string;
+            /** Format: double */
+            weight: number;
+        };
         TaxAccountDto: {
             /** Format: uuid */
             id: string;
@@ -2736,6 +3948,39 @@ export interface components {
             currency: string;
             policyCode: string;
             isTaxed: boolean;
+        };
+        TaxDeclarationDto: {
+            form: string;
+            title: string;
+            /** Format: int32 */
+            year: number;
+            /** Format: date */
+            deadline: string;
+            sections: components["schemas"]["DeclarationSectionDto"][];
+            attachments: components["schemas"]["DeclarationAttachmentDto"][];
+            accounts: components["schemas"]["DeclarationAccountLineDto"][];
+            notes: components["schemas"]["DeclarationNoteDto"][];
+            /** Format: double */
+            taxDue: number;
+            facts: null | components["schemas"]["DeclarationFactDto"][];
+        };
+        TaxEstimateDto: {
+            policyCode: string;
+            isTaxed: boolean;
+            /** Format: double */
+            gainInTaxCurrency: number;
+            /** Format: double */
+            taxChange: number;
+            /** Format: double */
+            fxRate: null | number;
+            notes: string[];
+            /** Format: double */
+            yearTaxBefore: null | number;
+            /** Format: double */
+            carriedLoss: number;
+            /** Format: int32 */
+            year: null | number;
+            taxCurrency: null | string;
         };
         TaxOverviewDto: {
             years: components["schemas"]["TaxYearListItemDto"][];
@@ -2785,6 +4030,26 @@ export interface components {
             /** Format: double */
             taxDue: number;
         };
+        TaxYearDetailsDto: {
+            /** Format: int32 */
+            year: number;
+            policyCode: string;
+            fxRule: string;
+            /** Format: date-time */
+            computedAt: string;
+            summary: components["schemas"]["TaxYearSummaryDto"];
+            realizations: components["schemas"]["RealizationDto"][];
+            dividends: components["schemas"]["DividendIncomeDto"][];
+            carryforwardUses: components["schemas"]["CarryforwardUseDto"][];
+            openLots: components["schemas"]["OpenLotSnapshotDto"][];
+            instruments: {
+                [key: string]: string;
+            };
+            accounts: components["schemas"]["TaxAccountDto"][];
+            warnings: string[];
+            isTaxed: boolean;
+            rateLabel: string;
+        };
         TaxYearListItemDto: {
             /** Format: int32 */
             year: number;
@@ -2819,6 +4084,11 @@ export interface components {
             /** Format: double */
             dividendTaxCredit: number;
         };
+        TemplateDto: {
+            code: string;
+            name: string;
+            description: string;
+        };
         TickerMappingChoice: {
             ticker: string;
             /** Format: uuid */
@@ -2826,6 +4096,59 @@ export interface components {
             registerAs: null | string;
             /** Format: uuid */
             subPortfolioId: null | string;
+        };
+        TickerMappingDto: {
+            ticker: string;
+            currency: string;
+            /** Format: uuid */
+            instrumentId: null | string;
+            registerAs: null | string;
+            /** Format: uuid */
+            subPortfolioId: null | string;
+            /** Format: int32 */
+            rows: number;
+            instrumentName: null | string;
+        };
+        TradeRecordedDto: {
+            /** Format: uuid */
+            instrumentId: string;
+            side: string;
+            /** Format: double */
+            quantity: number;
+            /** Format: double */
+            price: number;
+            /** Format: double */
+            fee: number;
+            allocations: components["schemas"]["QuantityAllocationDto"][];
+            /** Format: double */
+            settledAmount: null | number;
+            settledCurrency: null | string;
+        };
+        TransactionDto: {
+            /** Format: uuid */
+            id: string;
+            kind: string;
+            /** Format: date */
+            occurredOn: string;
+            /** Format: date-time */
+            recordedAt: string;
+            source: string;
+            sourceReference: null | string;
+            isReversed: boolean;
+            trade: null | components["schemas"]["TradeRecordedDto"];
+            cash: null | components["schemas"]["CashMovementRecordedDto"];
+            transfer: null | components["schemas"]["InternalTransferRecordedDto"];
+            /** Format: uuid */
+            reversalOf: null | string;
+            reversalReason: null | string;
+        };
+        TransferHintDto: {
+            /** Format: uuid */
+            fromSubPortfolioId: string;
+            /** Format: uuid */
+            toSubPortfolioId: string;
+            /** Format: double */
+            amount: number;
         };
         TrialExecutionCostsDto: {
             /** Format: double */
@@ -2860,6 +4183,32 @@ export interface components {
             walkForward: null | components["schemas"]["TrialWindowsDto"];
             neighborhood: null | components["schemas"]["TrialParameterNeighborhoodDto"];
         };
+        TrialRunDto: {
+            /** Format: int32 */
+            number: number;
+            /** Format: uuid */
+            strategyId: string;
+            /** Format: int32 */
+            version: number;
+            label: null | string;
+            /** Format: date-time */
+            ranAt: string;
+            status: string;
+            failureReason: null | string;
+            /** Format: double */
+            annualReturn: null | number;
+            /** Format: double */
+            annualReturnAfterTax: null | number;
+            /** Format: double */
+            volatility: null | number;
+            /** Format: double */
+            sharpe: null | number;
+            /** Format: double */
+            maxDrawdown: null | number;
+            /** Format: uuid */
+            experimentId: null | string;
+            experiment: null | components["schemas"]["TrialExperimentDto"];
+        };
         TrialWindowsDto: {
             /** Format: int32 */
             trainingMonths: number;
@@ -2878,6 +4227,11 @@ export interface components {
         UploadStatementRequest: {
             fileName: string;
             content: string;
+        };
+        UserProfileDto: {
+            displayCurrency: string;
+            language: null | string;
+            timeZone: string;
         };
         ValuedHoldingsDto: {
             /** Format: uuid */
@@ -2947,6 +4301,36 @@ export interface components {
             signalKinds: null | string[];
             signalIds: null | string[];
         };
+        VocabularyDto: {
+            indicators: components["schemas"]["IndicatorKindDto"][];
+            conditions: components["schemas"]["ConditionKindDto"][];
+            blockFields: {
+                [key: string]: components["schemas"]["VocabularyFieldDto"];
+            };
+            nodeKinds: components["schemas"]["NodeKindDto"][];
+            reports: components["schemas"]["ReportKindDto"][];
+            templates: components["schemas"]["TemplateDto"][];
+        };
+        VocabularyFieldDto: {
+            name: string;
+            kind: string;
+            label: string;
+            /** Format: double */
+            minimum: null | number;
+            /** Format: double */
+            maximum: null | number;
+            required: boolean;
+            default: null | components["schemas"]["JsonElement"];
+            choiceLabels: {
+                [key: string]: string;
+            };
+        };
+        WalkForwardWindowsDto: {
+            /** Format: int32 */
+            trainingMonths: number;
+            /** Format: int32 */
+            testMonths: number;
+        };
     };
     responses: never;
     parameters: never;
@@ -2974,7 +4358,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CurrentUserDto"];
+                };
             };
         };
     };
@@ -3032,7 +4418,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CurrentUserDto"];
+                };
             };
         };
     };
@@ -3050,7 +4438,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["UserProfileDto"];
+                };
             };
         };
     };
@@ -3072,7 +4462,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["UserProfileDto"];
+                };
             };
         };
     };
@@ -3114,7 +4506,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": string;
+                };
             };
         };
     };
@@ -3430,7 +4824,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StrategyDto"];
+                };
             };
         };
     };
@@ -3448,7 +4844,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StrategyDto"][];
+                };
             };
         };
     };
@@ -3470,7 +4868,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StrategyDto"];
+                };
             };
         };
     };
@@ -3494,7 +4894,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StrategyDto"];
+                };
             };
         };
     };
@@ -3538,7 +4940,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StrategyDecisionDto"];
+                };
             };
         };
     };
@@ -3562,7 +4966,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RiskAssessmentDto"];
+                };
             };
         };
     };
@@ -3604,7 +5010,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AccountSetupDto"];
+                };
             };
         };
     };
@@ -3624,7 +5032,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AccountSetupDto"];
+                };
             };
         };
     };
@@ -3648,7 +5058,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AccountSetupDto"];
+                };
             };
         };
     };
@@ -3672,7 +5084,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AccountSetupDto"];
+                };
             };
         };
     };
@@ -3696,7 +5110,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AccountSetupDto"];
+                };
             };
         };
     };
@@ -3721,7 +5137,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AccountSetupDto"];
+                };
             };
         };
     };
@@ -3746,7 +5164,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AccountSetupDto"];
+                };
             };
         };
     };
@@ -3771,7 +5191,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AccountSetupDto"];
+                };
             };
         };
     };
@@ -3795,7 +5217,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RecordedTransaction"];
+                };
             };
         };
     };
@@ -3819,7 +5243,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RecordedTransaction"];
+                };
             };
         };
     };
@@ -3843,7 +5269,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RecordedTransaction"];
+                };
             };
         };
     };
@@ -3867,7 +5295,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RecordedTransaction"];
+                };
             };
         };
     };
@@ -3892,7 +5322,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RecordedTransaction"];
+                };
             };
         };
     };
@@ -3912,7 +5344,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TransactionDto"][];
+                };
             };
         };
     };
@@ -3939,7 +5373,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ImportReport"];
+                };
             };
         };
     };
@@ -4033,7 +5469,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StatementImportDto"];
+                };
             };
         };
     };
@@ -4054,7 +5492,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StatementImportDto"];
+                };
             };
         };
     };
@@ -4079,7 +5519,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StatementImportDto"];
+                };
             };
         };
     };
@@ -4100,7 +5542,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StatementImportDto"];
+                };
             };
         };
     };
@@ -4121,7 +5565,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StatementImportDto"];
+                };
             };
         };
     };
@@ -4204,12 +5650,14 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Accepted */
+            202: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ReportRequestedResponse"];
+                };
             };
         };
     };
@@ -4229,7 +5677,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["PlanSettingsDto"];
+                };
             };
         };
     };
@@ -4253,7 +5703,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["PlanSettingsDto"];
+                };
             };
         };
     };
@@ -4273,7 +5725,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ReportScheduleDto"];
+                };
             };
         };
     };
@@ -4298,7 +5752,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ReportScheduleDto"];
+                };
             };
         };
     };
@@ -4319,7 +5775,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ReportScheduleDto"];
+                };
             };
         };
     };
@@ -4383,7 +5841,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ReportRequestDto"];
+                };
             };
         };
     };
@@ -4425,7 +5885,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ReportDetailsDto"];
+                };
             };
         };
     };
@@ -4465,7 +5927,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["LoadOperationsPreviewDto"];
+                };
             };
         };
     };
@@ -4485,7 +5949,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": number;
+                };
             };
         };
     };
@@ -4661,7 +6127,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TaxYearDetailsDto"];
+                };
             };
         };
     };
@@ -4725,7 +6193,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["LossCarryforwardDto"];
+                };
             };
         };
     };
@@ -4765,7 +6235,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["BrokerStatementsDto"];
+                };
             };
         };
     };
@@ -4789,7 +6261,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["BrokerStatementsDto"];
+                };
             };
         };
     };
@@ -4853,7 +6327,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DeclarationDto"];
+                };
             };
         };
     };
@@ -4876,7 +6352,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/pdf": components["schemas"]["Stream"];
+                };
             };
         };
     };
@@ -4944,7 +6422,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DashboardDto"];
+                };
             };
         };
     };
@@ -4965,7 +6445,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DashboardDto"];
+                };
             };
         };
     };
@@ -5168,7 +6650,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ExperimentDto"];
+                };
             };
         };
     };
@@ -5194,7 +6678,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ExperimentJournalDto"];
+                };
             };
         };
     };
@@ -5218,7 +6704,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["PublishedVersionDto"];
+                };
             };
         };
     };
@@ -5239,7 +6727,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DraftDto"];
+                };
             };
         };
     };
@@ -5260,7 +6750,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["PublishedStrategyDto"];
+                };
             };
         };
     };
@@ -5278,7 +6770,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["VocabularyDto"];
+                };
             };
         };
     };
@@ -5296,7 +6790,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OwnSignalDto"][];
+                };
             };
         };
     };
@@ -5314,7 +6810,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["InstrumentChoiceDto"][];
+                };
             };
         };
     };
@@ -5332,7 +6830,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DraftSummaryDto"][];
+                };
             };
         };
     };
@@ -5354,7 +6854,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DraftDto"];
+                };
             };
         };
     };
@@ -5376,7 +6878,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DraftDto"];
+                };
             };
         };
     };
@@ -5396,7 +6900,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DraftDto"];
+                };
             };
         };
     };
@@ -5420,7 +6926,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DraftDto"];
+                };
             };
         };
     };
@@ -5484,7 +6992,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DraftCheckDto"];
+                };
             };
         };
     };
@@ -5508,7 +7018,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DraftDto"];
+                };
             };
         };
     };
@@ -5528,7 +7040,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DraftRulesDto"];
+                };
             };
         };
     };
@@ -5552,7 +7066,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DraftDto"];
+                };
             };
         };
     };
@@ -5572,7 +7088,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TrialRunDto"][];
+                };
             };
         };
     };
@@ -5596,7 +7114,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TrialRunDto"];
+                };
             };
         };
     };
@@ -5614,7 +7134,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["FundSearchOptionsDto"];
+                };
             };
         };
     };
@@ -5636,7 +7158,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["FoundFundDto"][];
+                };
             };
         };
     };
@@ -5658,7 +7182,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AddedFundsDto"];
+                };
             };
         };
     };
@@ -5676,7 +7202,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["NotificationSettingsDto"];
+                };
             };
         };
     };
@@ -5698,7 +7226,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["NotificationSettingsDto"];
+                };
             };
         };
     };

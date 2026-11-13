@@ -57,5 +57,8 @@ public sealed class BacktestingModule : IModule
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>
-        endpoints.MapGroup("/api/backtesting").MapBacktests().MapExperiments();
+        endpoints
+            .MapGroup("/api/backtesting")
+            .MapBacktests()
+            .MapExperiments();
 }

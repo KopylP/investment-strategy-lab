@@ -1,6 +1,7 @@
 using InvestmentLab.BuildingBlocks.Http;
 using InvestmentLab.BuildingBlocks.Security;
 using InvestmentLab.Identity.Profiles.Application.GetProfile;
+using InvestmentLab.Identity.Profiles.Application.Shared;
 using InvestmentLab.Identity.Profiles.Application.UpdateProfile;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -12,10 +13,18 @@ internal static class ProfileEndpoints
 {
     public static RouteGroupBuilder MapProfiles(this RouteGroupBuilder group)
     {
-        var profile = group.MapGroup("/profile").WithTags("Profile");
+        var profile = group
+            .MapGroup("/profile")
+            .WithTags("Profile");
 
-        profile.MapGet("", GetProfile).WithName("GetProfile");
-        profile.MapPut("", UpdateProfile).WithName("UpdateProfile");
+        profile
+            .MapGet(string.Empty, GetProfile)
+            .WithName("GetProfile")
+            .Produces<UserProfileDto>();
+        profile
+            .MapPut(string.Empty, UpdateProfile)
+            .WithName("UpdateProfile")
+            .Produces<UserProfileDto>();
 
         return group;
     }

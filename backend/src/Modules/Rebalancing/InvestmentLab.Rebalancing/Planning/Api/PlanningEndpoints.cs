@@ -31,28 +31,65 @@ internal static class PlanningEndpoints
 {
     public static RouteGroupBuilder MapPlanning(this RouteGroupBuilder group)
     {
-        var rules = group.MapGroup("/signal-report-rules").WithTags("Planning");
+        var rules = group
+            .MapGroup("/signal-report-rules")
+            .WithTags("Planning");
 
-        rules.MapGet("", GetSignalReportRules).WithName("GetSignalReportRules")
+        rules
+            .MapGet(string.Empty, GetSignalReportRules)
+            .WithName("GetSignalReportRules")
             .Produces<IReadOnlyList<SignalReportRuleDto>>();
-        rules.MapPost("", AddSignalReportRule).WithName("AddSignalReportRule")
+        rules
+            .MapPost(string.Empty, AddSignalReportRule)
+            .WithName("AddSignalReportRule")
             .Produces<SignalReportRuleDto>();
-        rules.MapDelete("/{ruleId:guid}", RemoveSignalReportRule).WithName("RemoveSignalReportRule");
+        rules
+            .MapDelete("/{ruleId:guid}", RemoveSignalReportRule)
+            .WithName("RemoveSignalReportRule");
 
-        var account = group.MapGroup("/accounts/{accountId:guid}").WithTags("Planning");
+        var account = group
+            .MapGroup("/accounts/{accountId:guid}")
+            .WithTags("Planning");
 
-        account.MapPost("/reports", GenerateReport).WithName("GenerateReport");
-        account.MapGet("/settings", GetPlanSettings).WithName("GetPlanSettings");
-        account.MapGet("/report-schedule", GetReportSchedule).WithName("GetReportSchedule");
-        account.MapPut("/report-schedule/{code}", ChangeReportSchedule).WithName("ChangeReportSchedule");
-        account.MapDelete("/report-schedule/{code}", UseStrategyReportSchedule).WithName("UseStrategyReportSchedule");
-        account.MapPut("/settings", ChangePlanSettings).WithName("ChangePlanSettings");
-        account.MapGet("/open-actions", GetOpenActionsCount).WithName("GetOpenActionsCount");
+        account
+            .MapPost("/reports", GenerateReport)
+            .WithName("GenerateReport")
+            .Produces<ReportRequestedResponse>(StatusCodes.Status202Accepted);
+        account
+            .MapGet("/settings", GetPlanSettings)
+            .WithName("GetPlanSettings")
+            .Produces<PlanSettingsDto>();
+        account
+            .MapGet("/report-schedule", GetReportSchedule)
+            .WithName("GetReportSchedule")
+            .Produces<ReportScheduleDto>();
+        account
+            .MapPut("/report-schedule/{code}", ChangeReportSchedule)
+            .WithName("ChangeReportSchedule")
+            .Produces<ReportScheduleDto>();
+        account
+            .MapDelete("/report-schedule/{code}", UseStrategyReportSchedule)
+            .WithName("UseStrategyReportSchedule")
+            .Produces<ReportScheduleDto>();
+        account
+            .MapPut("/settings", ChangePlanSettings)
+            .WithName("ChangePlanSettings")
+            .Produces<PlanSettingsDto>();
+        account
+            .MapGet("/open-actions", GetOpenActionsCount)
+            .WithName("GetOpenActionsCount");
 
-        var requests = group.MapGroup("/report-requests").WithTags("Planning");
+        var requests = group
+            .MapGroup("/report-requests")
+            .WithTags("Planning");
 
-        requests.MapGet("/", ListReportRequests).WithName("ListReportRequests");
-        requests.MapGet("/{requestId:guid}", GetReportRequest).WithName("GetReportRequest");
+        requests
+            .MapGet("/", ListReportRequests)
+            .WithName("ListReportRequests");
+        requests
+            .MapGet("/{requestId:guid}", GetReportRequest)
+            .WithName("GetReportRequest")
+            .Produces<ReportRequestDto>();
 
         return group;
     }

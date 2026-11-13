@@ -15,12 +15,26 @@ internal static class UserEndpoints
 {
     public static RouteGroupBuilder MapUsers(this RouteGroupBuilder group)
     {
-        var users = group.MapGroup("").WithTags("Users");
+        var users = group
+            .MapGroup(string.Empty)
+            .WithTags("Users");
 
-        users.MapPost("/register", Register).AllowAnonymous().WithName("Register");
-        users.MapPost("/login", Login).AllowAnonymous().WithName("Login");
-        users.MapPost("/logout", Logout).WithName("Logout");
-        users.MapGet("/me", GetCurrentUser).WithName("GetCurrentUser");
+        users
+            .MapPost("/register", Register)
+            .AllowAnonymous()
+            .WithName("Register")
+            .Produces<CurrentUserDto>();
+        users
+            .MapPost("/login", Login)
+            .AllowAnonymous()
+            .WithName("Login");
+        users
+            .MapPost("/logout", Logout)
+            .WithName("Logout");
+        users
+            .MapGet("/me", GetCurrentUser)
+            .WithName("GetCurrentUser")
+            .Produces<CurrentUserDto>();
 
         return group;
     }

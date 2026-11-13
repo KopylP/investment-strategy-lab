@@ -20,20 +20,43 @@ internal static class ReportsEndpoints
 {
     public static RouteGroupBuilder MapReports(this RouteGroupBuilder group)
     {
-        var reports = group.MapGroup("/reports").WithTags("Reports");
+        var reports = group
+            .MapGroup("/reports")
+            .WithTags("Reports");
 
-        reports.MapGet("/", ListReports).WithName("ListReports");
-        reports.MapGet("/{reportId:guid}", GetReport).WithName("GetReport");
-        reports.MapPost("/{reportId:guid}/close", CloseReport).WithName("CloseReport");
-        reports.MapGet("/{reportId:guid}/journal-matches", PreviewJournalMatches).WithName("PreviewJournalMatches");
-        reports.MapPost("/{reportId:guid}/journal-matches", ApplyJournalMatches).WithName("ApplyJournalMatches");
+        reports
+            .MapGet("/", ListReports)
+            .WithName("ListReports");
+        reports
+            .MapGet("/{reportId:guid}", GetReport)
+            .WithName("GetReport")
+            .Produces<ReportDetailsDto>();
+        reports
+            .MapPost("/{reportId:guid}/close", CloseReport)
+            .WithName("CloseReport");
+        reports
+            .MapGet("/{reportId:guid}/journal-matches", PreviewJournalMatches)
+            .WithName("PreviewJournalMatches")
+            .Produces<LoadOperationsPreviewDto>();
+        reports
+            .MapPost("/{reportId:guid}/journal-matches", ApplyJournalMatches)
+            .WithName("ApplyJournalMatches")
+            .Produces<int>();
 
         var action = reports.MapGroup("/{reportId:guid}/actions/{actionId:guid}");
 
-        action.MapPost("/fills", MarkActionExecuted).WithName("MarkActionExecuted");
-        action.MapPost("/partial-fills", RecordPartialFill).WithName("RecordPartialFill");
-        action.MapPost("/skip", SkipAction).WithName("SkipAction");
-        action.MapPost("/undo", UndoActionMark).WithName("UndoActionMark");
+        action
+            .MapPost("/fills", MarkActionExecuted)
+            .WithName("MarkActionExecuted");
+        action
+            .MapPost("/partial-fills", RecordPartialFill)
+            .WithName("RecordPartialFill");
+        action
+            .MapPost("/skip", SkipAction)
+            .WithName("SkipAction");
+        action
+            .MapPost("/undo", UndoActionMark)
+            .WithName("UndoActionMark");
 
         return group;
     }

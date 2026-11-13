@@ -100,7 +100,7 @@ public static class DraftMapping
 
     private static DraftReport ToReport(DraftReportDto report) => new(report.Code, ToTiming(report.Schedule), report.SignalKinds ?? [], report.SignalIds ?? []);
 
-    private static ReportTiming ToTiming(ReportTimingDto timing) => new(timing.Frequency, timing.Day, timing.Weekday, timing.Time, timing.Minute);
+    private static ReportTiming ToTiming(DraftReportTimingDto timing) => new(timing.Frequency, timing.Day, timing.Weekday, timing.Time, timing.Minute);
 
     private static NodePosition ToPosition(NodePositionDto position) => new(position.X, position.Y);
 
@@ -127,7 +127,7 @@ public static class DraftMapping
 
     private static DraftReportDto ToDto(DraftReport report) => new(report.Code, ToDto(report.Schedule), report.SignalKinds, report.SignalIds);
 
-    private static ReportTimingDto ToDto(ReportTiming timing) => new(timing.Frequency, timing.Day, timing.Weekday, timing.Time, timing.Minute);
+    private static DraftReportTimingDto ToDto(ReportTiming timing) => new(timing.Frequency, timing.Day, timing.Weekday, timing.Time, timing.Minute);
 
     private static BlockWordsDto ToDto(BlockWords words) => new(words.Block.ToString(), words.Sentence);
 }

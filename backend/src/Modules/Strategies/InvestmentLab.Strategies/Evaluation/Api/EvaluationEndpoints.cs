@@ -1,4 +1,5 @@
 using InvestmentLab.BuildingBlocks.Http;
+using InvestmentLab.Strategies.Contracts;
 using InvestmentLab.Strategies.Evaluation.Application.AssessSubPortfolioRisk;
 using InvestmentLab.Strategies.Evaluation.Application.DecideSubPortfolio;
 using InvestmentLab.Strategies.Evaluation.Application.Shared;
@@ -12,10 +13,18 @@ internal static class EvaluationEndpoints
 {
     public static RouteGroupBuilder MapEvaluation(this RouteGroupBuilder group)
     {
-        var evaluation = group.MapGroup("/{strategyId:guid}").WithTags("Strategy evaluation");
+        var evaluation = group
+            .MapGroup("/{strategyId:guid}")
+            .WithTags("Strategy evaluation");
 
-        evaluation.MapPost("/decide", Decide).WithName("EvaluateStrategy");
-        evaluation.MapPost("/risk", AssessRisk).WithName("AssessStrategyRisk");
+        evaluation
+            .MapPost("/decide", Decide)
+            .WithName("EvaluateStrategy")
+            .Produces<StrategyDecisionDto>();
+        evaluation
+            .MapPost("/risk", AssessRisk)
+            .WithName("AssessStrategyRisk")
+            .Produces<RiskAssessmentDto>();
 
         return group;
     }

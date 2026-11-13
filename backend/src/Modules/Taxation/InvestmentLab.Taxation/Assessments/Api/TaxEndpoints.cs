@@ -20,16 +20,36 @@ internal static class TaxEndpoints
 {
     public static RouteGroupBuilder MapAssessments(this RouteGroupBuilder group)
     {
-        var taxes = group.MapGroup("").WithTags("Taxes");
+        var taxes = group
+            .MapGroup(string.Empty)
+            .WithTags("Taxes");
 
-        taxes.MapGet("/policies", ListTaxPolicies).WithName("ListTaxPolicies");
-        taxes.MapGet("/regime", GetTaxRegime).WithName("GetTaxRegime");
-        taxes.MapGet("/years", RefreshAndGetTaxYears).WithName("GetTaxYears");
-        taxes.MapGet("/years/{year:int}", RefreshAndGetTaxYear).WithName("GetTaxYear");
-        taxes.MapGet("/progress/{year:int}", RefreshAndGetTaxProgress).WithName("GetTaxProgress");
-        taxes.MapGet("/losses", GetLossCarryforwards).WithName("GetLossCarryforwards");
-        taxes.MapPost("/losses", RecordLossCarryforward).WithName("RecordLossCarryforward");
-        taxes.MapDelete("/losses/{lossId:guid}", RemoveLossCarryforward).WithName("RemoveLossCarryforward");
+        taxes
+            .MapGet("/policies", ListTaxPolicies)
+            .WithName("ListTaxPolicies");
+        taxes
+            .MapGet("/regime", GetTaxRegime)
+            .WithName("GetTaxRegime");
+        taxes
+            .MapGet("/years", RefreshAndGetTaxYears)
+            .WithName("GetTaxYears");
+        taxes
+            .MapGet("/years/{year:int}", RefreshAndGetTaxYear)
+            .WithName("GetTaxYear")
+            .Produces<TaxYearDetailsDto>();
+        taxes
+            .MapGet("/progress/{year:int}", RefreshAndGetTaxProgress)
+            .WithName("GetTaxProgress");
+        taxes
+            .MapGet("/losses", GetLossCarryforwards)
+            .WithName("GetLossCarryforwards");
+        taxes
+            .MapPost("/losses", RecordLossCarryforward)
+            .WithName("RecordLossCarryforward")
+            .Produces<LossCarryforwardDto>();
+        taxes
+            .MapDelete("/losses/{lossId:guid}", RemoveLossCarryforward)
+            .WithName("RemoveLossCarryforward");
 
         return group;
     }

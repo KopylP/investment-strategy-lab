@@ -87,7 +87,8 @@ public sealed class RebalancingModule : IModule
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>
-        endpoints.MapGroup("/api/rebalancing")
+        endpoints
+            .MapGroup("/api/rebalancing")
             .MapPlanning()
             .MapReports();
 }

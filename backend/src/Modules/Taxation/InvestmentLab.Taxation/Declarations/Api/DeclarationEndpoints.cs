@@ -16,13 +16,27 @@ internal static class DeclarationEndpoints
 {
     public static RouteGroupBuilder MapDeclarations(this RouteGroupBuilder group)
     {
-        var declarations = group.MapGroup("/declarations/{year:int}").WithTags("Taxes");
+        var declarations = group
+            .MapGroup("/declarations/{year:int}")
+            .WithTags("Taxes");
 
-        declarations.MapGet("", GetDeclarationForms).WithName("GetDeclarationForms");
-        declarations.MapGet("/{code}", GetDeclaration).WithName("GetDeclaration");
-        declarations.MapGet("/{code}/pdf", GetDeclarationPdf).WithName("GetDeclarationPdf");
-        declarations.MapPut("/pit-8c/{accountId:guid}", SetPit8C).WithName("SetPit8C");
-        declarations.MapDelete("/pit-8c/{accountId:guid}", RemovePit8C).WithName("RemovePit8C");
+        declarations
+            .MapGet(string.Empty, GetDeclarationForms)
+            .WithName("GetDeclarationForms");
+        declarations
+            .MapGet("/{code}", GetDeclaration)
+            .WithName("GetDeclaration")
+            .Produces<DeclarationDto>();
+        declarations
+            .MapGet("/{code}/pdf", GetDeclarationPdf)
+            .WithName("GetDeclarationPdf")
+            .Produces<Stream>(contentType: "application/pdf");
+        declarations
+            .MapPut("/pit-8c/{accountId:guid}", SetPit8C)
+            .WithName("SetPit8C");
+        declarations
+            .MapDelete("/pit-8c/{accountId:guid}", RemovePit8C)
+            .WithName("RemovePit8C");
 
         return group;
     }
