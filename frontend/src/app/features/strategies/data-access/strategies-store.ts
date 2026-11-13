@@ -3,7 +3,7 @@ import { computed, inject, Injectable, resource, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { toProblemMessage } from '../../../core/api/api-client';
 import { InstrumentCatalog } from '../../../core/context/instrument-catalog';
-import { StrategySetupDraft } from '../models/strategy';
+import { StrategySetupDraft } from '../models/strategy-dto';
 import { StrategiesApi } from './strategies-api';
 
 @Injectable()

@@ -2,7 +2,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { Tag } from 'primeng/tag';
 import { InstrumentCatalog } from '../../../../core/context/instrument-catalog';
-import { Strategy } from '../../models/strategy';
+import { Strategy } from '../../models/strategy-dto';
 import { describeStrategy } from '../../models/strategy-summary';
 
 @Component({

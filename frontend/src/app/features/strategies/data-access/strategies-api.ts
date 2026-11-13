@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { ApiClient } from '../../../core/api/api-client';
-import { Strategy, StrategySetupDraft, StrategyType } from '../models/strategy';
+import { Strategy, StrategySetupDraft, StrategyType } from '../models/strategy-dto';
 
 @Injectable({ providedIn: 'root' })
 export class StrategiesApi {

@@ -5,7 +5,7 @@ import {
   ChangeReportScheduleBody,
   ReportSchedule,
 } from '../../reports/models/report-schedule-dto';
-import { Strategy } from '../../strategies/models/strategy';
+import { Strategy } from '../../strategies/models/strategy-dto';
 import {
   AddSubPortfolioBody,
   AssignStrategyBody,

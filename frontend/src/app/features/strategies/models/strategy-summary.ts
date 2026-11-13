@@ -1,5 +1,5 @@
 import { translate } from '@jsverse/transloco';
-import { Strategy } from './strategy';
+import { Strategy } from './strategy-dto';
 
 export interface StrategyBlurb {
   headline: string;

@@ -9,7 +9,7 @@ import { formatMoney } from '../../../shared/pipes/format';
 import { StrategiesApi } from '../../strategies/data-access/strategies-api';
 import { editableTiming, isTimingComplete, reportIcon, scheduleLabel } from '../../reports/models/report-schedule';
 import { ReportTiming } from '../../reports/models/report-schedule-dto';
-import { ReportDefinition, Strategy } from '../../strategies/models/strategy';
+import { ReportDefinition, Strategy } from '../../strategies/models/strategy-dto';
 import { describeStrategy } from '../../strategies/models/strategy-summary';
 import { PlanSettingsVm } from '../ui/plan-settings-form/plan-settings-form';
 import { NewSubPortfolioDto } from '../models/account-dto';

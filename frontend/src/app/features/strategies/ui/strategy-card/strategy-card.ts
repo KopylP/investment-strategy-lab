@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { Tag } from 'primeng/tag';
 import { DatePipe } from '../../../../shared/pipes/format-pipes';
 import { StrategiesStore } from '../../data-access/strategies-store';
-import { Strategy } from '../../models/strategy';
+import { Strategy } from '../../models/strategy-dto';
 import { describeStrategy } from '../../models/strategy-summary';
 
 @Component({
