@@ -1,10 +1,10 @@
-using InvestmentLab.Performance.Contracts;
 using InvestmentLab.Performance.Valuation.Application.Shared;
 using InvestmentLab.Performance.Valuation.Domain;
+using InvestmentLab.Signals.Contracts;
 
 namespace InvestmentLab.Performance.Valuation.Infrastructure;
 
-internal sealed class ValuationHistory(IPerformanceRepository store, SnapshotBuilder builder) : IValuationHistory
+internal sealed class PortfolioReturnHistory(IPerformanceRepository store, SnapshotBuilder builder) : IPortfolioReturnHistory
 {
     public async Task<IReadOnlyList<TwrPointDto>> GetTwrHistory(
         Guid accountId,

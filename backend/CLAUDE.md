@@ -208,6 +208,10 @@ internal sealed class PlanningAccounts(IAccountSetupQueries accounts) : IPlannin
 
 - A module uses another only through its `.Contracts` project: integration events (`…V1` records) and query
   interfaces implemented inside the owning module. Contracts hold primitives only and reference nothing of ours.
+- Modules never depend on each other in a cycle. When the ordinary direction would close one, the
+  module that needs the data states it in its own `.Contracts` (a required contract, `Signals.Contracts.IPortfolioReturnHistory`)
+  and the providing module implements it in its `Infrastructure/` and registers it in its module file (ADR-0031). Use it
+  only to break a cycle.
 - `Domain` depends only on `SharedKernel`; no EF Core / ASP.NET there.
 - Handlers, endpoints and MCP tools take and return no domain type, not even nested in a DTO (`ApplicationContractTests`).
 - Each module has its own `DbContext` and schema; integration events go out through the outbox in the same save

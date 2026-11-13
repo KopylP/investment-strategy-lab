@@ -1,7 +1,7 @@
 using System.Reflection;
 using InvestmentLab.BuildingBlocks.Modules;
 using InvestmentLab.BuildingBlocks.Persistence;
-using InvestmentLab.Performance.Contracts;
+using InvestmentLab.Signals.Contracts;
 using InvestmentLab.Performance.Shared.Infrastructure;
 using InvestmentLab.Performance.Valuation.Api;
 using InvestmentLab.Performance.Valuation.Application.Integration;
@@ -33,7 +33,7 @@ public sealed class PerformanceModule : IModule
         services.AddScoped<SnapshotBuilder>();
         services.AddScoped<AccountHistoryLoader>();
         services.AddScoped<IAccountJournals, AccountJournals>();
-        services.AddScoped<IValuationHistory, ValuationHistory>();
+        services.AddScoped<IPortfolioReturnHistory, PortfolioReturnHistory>();
         services.AddScoped<SnapshotInvalidation>();
     }
 

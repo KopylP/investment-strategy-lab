@@ -1,10 +1,10 @@
-using InvestmentLab.Performance.Contracts;
+using InvestmentLab.Signals.Contracts;
 using InvestmentLab.Portfolio.Contracts.Accounts;
 using InvestmentLab.Signals.Monitoring.Domain;
 
 namespace InvestmentLab.Signals.Monitoring.Application.ReadSubjects;
 
-public sealed class PortfolioSubjectReader(IAccountSetupQueries accounts, IValuationHistory valuation, TimeProvider clock)
+public sealed class PortfolioSubjectReader(IAccountSetupQueries accounts, IPortfolioReturnHistory returns, TimeProvider clock)
 {
     private static readonly string UnknownSubPortfolioLabel = Message.Of("signal.subject.unknown_sub_portfolio");
 
@@ -19,7 +19,7 @@ public sealed class PortfolioSubjectReader(IAccountSetupQueries accounts, IValua
         var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
         var from = MeasurementWindow.StartOf(signal.Condition, today);
 
-        var points = await valuation.GetTwrHistory(accountId, signal.Target.SubPortfolioId, from, cancellationToken);
+        var points = await returns.GetTwrHistory(accountId, signal.Target.SubPortfolioId, from, cancellationToken);
         var value = Measure(signal.Condition.Metric, points);
         if (value is not { } measured)
             return SubjectReadings.Unmeasured(key);

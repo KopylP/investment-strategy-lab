@@ -61,6 +61,7 @@ public sealed partial class ForeignContractIsolationTests
             .SelectMany(TypesWithin)
             .Where(seen => IsDtoOfAnotherModule(seen, module))
             .Where(seen => !IsEventInItsIntegrationFolder(seen, type))
+            .Where(seen => !IsPartOfAContractItProvides(seen, type))
             .Select(seen => $"{type.FullName} exposes {seen.FullName}");
     }
 
@@ -88,6 +89,16 @@ public sealed partial class ForeignContractIsolationTests
 
     private static bool IsEventInItsIntegrationFolder(Type seen, Type user) =>
         VersionedEvent().IsMatch(seen.Name) && user.Namespace!.Contains(IntegrationFolder, StringComparison.Ordinal);
+
+    private static bool IsPartOfAContractItProvides(Type seen, Type provider)
+    {
+        var providedContracts = provider.GetInterfaces().Where(IsInContracts);
+
+        return providedContracts.SelectMany(MethodTypes).SelectMany(TypesWithin).Contains(seen);
+    }
+
+    private static bool IsInContracts(Type type) =>
+        type.Namespace is { } name && CodeLocation.Parse(name).Kind == LocationKind.Contracts;
 
     private static IEnumerable<Type> TypesWithin(Type type)
     {
