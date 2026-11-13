@@ -1,8 +1,10 @@
 import { inject, Injectable } from '@angular/core';
 import { ApiClient } from '../../../core/api/api-client';
 import {
+  AddSignalReportRuleBody,
   ChangeSignalBody,
   CreateSignalBody,
+  HearSignalBody,
   SignalCreatedDto,
   SignalReportRuleDto,
   SignalsOverviewDto,
@@ -17,7 +19,7 @@ export class SignalsApi {
   }
 
   create(body: CreateSignalBody): Promise<SignalCreatedDto> {
-    return this.api.post('/api/signals', body);
+    return this.api.post<SignalCreatedDto>('/api/signals', body);
   }
 
   change(signalId: string, body: ChangeSignalBody): Promise<void> {
@@ -41,11 +43,9 @@ export class SignalsApi {
     accountId: string,
     reportCode: string,
   ): Promise<SignalReportRuleDto> {
-    return this.api.post('/api/rebalancing/signal-report-rules', {
-      signalId,
-      accountId,
-      reportCode,
-    });
+    const body: AddSignalReportRuleBody = { signalId, accountId, reportCode };
+
+    return this.api.post<SignalReportRuleDto>('/api/rebalancing/signal-report-rules', body);
   }
 
   removeReportRule(ruleId: string): Promise<void> {
@@ -57,6 +57,8 @@ export class SignalsApi {
   }
 
   setNotify(signalId: string, notify: boolean): Promise<void> {
-    return this.api.put(`/api/notifications/signals/${signalId}`, { notify });
+    const body: HearSignalBody = { notify };
+
+    return this.api.put(`/api/notifications/signals/${signalId}`, body);
   }
 }

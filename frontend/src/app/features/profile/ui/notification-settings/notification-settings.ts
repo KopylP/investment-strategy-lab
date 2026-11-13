@@ -17,20 +17,11 @@ import { Message } from 'primeng/message';
 import { Skeleton } from 'primeng/skeleton';
 import { Tag } from 'primeng/tag';
 import { ApiClient, toProblemMessage } from '../../../../core/api/api-client';
-
-export interface NotificationDestination {
-  id: string;
-  channel: string;
-  label: string;
-  suggested: boolean;
-  selected: boolean;
-}
-
-export interface NotificationSettings {
-  channels: string[];
-  automatic: boolean;
-  destinations: NotificationDestination[];
-}
+import {
+  ChangeNotificationSettingsBody,
+  NotificationDestination,
+  NotificationSettings,
+} from '../../models/notification-settings-dto';
 
 @Component({
   selector: 'app-notification-settings',
@@ -103,8 +94,10 @@ export class NotificationSettingsCard {
     this.saving.set(true);
 
     try {
+      const body: ChangeNotificationSettingsBody = { destinations };
+
       this.settingsResource.set(
-        await this.api.put<NotificationSettings>('/api/notifications/settings', { destinations }),
+        await this.api.put<NotificationSettings>('/api/notifications/settings', body),
       );
     } catch (error) {
       this.messages.add({

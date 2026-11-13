@@ -2,19 +2,14 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { DOCUMENT } from '@angular/common';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { ApiClient } from '../api/api-client';
+import { ApiSchema } from '../api/api-schema';
 import { isInHomeAssistantPanel } from '../home-assistant/home-assistant-panel';
 
-export interface CurrentUser {
-  id: string;
-  email: string;
-  viaHomeAssistant: boolean;
-}
-
-export interface UserProfile {
-  displayCurrency: string;
-  language: string | null;
-  timeZone: string;
-}
+export type CurrentUser = ApiSchema<'CurrentUserDto'>;
+export type UserProfile = ApiSchema<'UserProfileDto'>;
+type LoginBody = ApiSchema<'LoginCommand'>;
+type RegisterBody = ApiSchema<'RegisterCommand'>;
+type UpdateProfileBody = ApiSchema<'UpdateProfileCommand'>;
 
 @Injectable({ providedIn: 'root' })
 export class AuthStore {
@@ -41,13 +36,17 @@ export class AuthStore {
   }
 
   async login(email: string, password: string): Promise<void> {
-    await this.api.post('/api/identity/login', { email, password, remember: true });
+    const body: LoginBody = { email, password, remember: true };
+
+    await this.api.post('/api/identity/login', body);
     this.userState.set(undefined);
     await this.ensureLoaded();
   }
 
   async register(email: string, password: string): Promise<void> {
-    await this.api.post('/api/identity/register', { email, password });
+    const body: RegisterBody = { email, password };
+
+    await this.api.post<CurrentUser>('/api/identity/register', body);
     await this.login(email, password);
   }
 
@@ -67,7 +66,7 @@ export class AuthStore {
     return this.api.get<UserProfile>('/api/identity/profile');
   }
 
-  updateProfile(profile: UserProfile): Promise<UserProfile> {
+  updateProfile(profile: UpdateProfileBody): Promise<UserProfile> {
     return this.api.put<UserProfile>('/api/identity/profile', profile);
   }
 }

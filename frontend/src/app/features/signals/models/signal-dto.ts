@@ -42,3 +42,5 @@ export type ChangeSignalBody = Omit<ApiSchema<'ChangeSignalCommand'>, 'condition
 
 export type SignalCreatedDto = ApiSchema<'SignalCreatedDto'>;
 export type SignalReportRuleDto = ApiSchema<'SignalReportRuleDto'>;
+export type AddSignalReportRuleBody = ApiSchema<'AddSignalReportRuleCommand'>;
+export type HearSignalBody = ApiSchema<'HearSignalCommand'>;
