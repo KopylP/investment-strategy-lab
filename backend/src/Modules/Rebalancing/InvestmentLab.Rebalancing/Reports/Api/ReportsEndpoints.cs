@@ -33,7 +33,8 @@ internal static class ReportsEndpoints
             .Produces<ReportDetailsDto>();
         reports
             .MapPost("/{reportId:guid}/close", CloseReport)
-            .WithName("CloseReport");
+            .WithName("CloseReport")
+            .Produces(StatusCodes.Status204NoContent);
         reports
             .MapGet("/{reportId:guid}/journal-matches", PreviewJournalMatches)
             .WithName("PreviewJournalMatches")
@@ -47,16 +48,20 @@ internal static class ReportsEndpoints
 
         action
             .MapPost("/fills", MarkActionExecuted)
-            .WithName("MarkActionExecuted");
+            .WithName("MarkActionExecuted")
+            .Produces(StatusCodes.Status204NoContent);
         action
             .MapPost("/partial-fills", RecordPartialFill)
-            .WithName("RecordPartialFill");
+            .WithName("RecordPartialFill")
+            .Produces(StatusCodes.Status204NoContent);
         action
             .MapPost("/skip", SkipAction)
-            .WithName("SkipAction");
+            .WithName("SkipAction")
+            .Produces(StatusCodes.Status204NoContent);
         action
             .MapPost("/undo", UndoActionMark)
-            .WithName("UndoActionMark");
+            .WithName("UndoActionMark")
+            .Produces(StatusCodes.Status204NoContent);
 
         return group;
     }

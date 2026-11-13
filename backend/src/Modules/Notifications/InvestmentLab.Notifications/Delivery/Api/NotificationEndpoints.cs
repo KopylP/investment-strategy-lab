@@ -31,10 +31,12 @@ internal static class NotificationEndpoints
             .Produces<IReadOnlyList<Guid>>();
         group
             .MapPut("/signals/{signalId:guid}", HearSignal)
-            .WithName("HearSignal");
+            .WithName("HearSignal")
+            .Produces(StatusCodes.Status204NoContent);
         group
             .MapPost("/test", SendTestNotification)
-            .WithName("SendTestNotification");
+            .WithName("SendTestNotification")
+            .Produces(StatusCodes.Status204NoContent);
 
         return group;
     }

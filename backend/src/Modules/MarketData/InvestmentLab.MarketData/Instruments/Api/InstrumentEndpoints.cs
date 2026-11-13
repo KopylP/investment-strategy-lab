@@ -29,7 +29,8 @@ internal static class InstrumentEndpoints
             .Produces<Guid>();
         instruments
             .MapPost("/{instrumentId:guid}/provider-symbols", AssignProviderSymbol)
-            .WithName("AssignProviderSymbol");
+            .WithName("AssignProviderSymbol")
+            .Produces(StatusCodes.Status204NoContent);
 
         return group;
     }

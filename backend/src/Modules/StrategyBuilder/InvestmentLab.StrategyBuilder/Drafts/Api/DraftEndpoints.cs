@@ -78,7 +78,8 @@ internal static class DraftEndpoints
             .Produces<DraftDto>();
         builder
             .MapPut("/drafts/{draftId:guid}/layout", MoveNodes)
-            .WithName("MoveDraftNodes");
+            .WithName("MoveDraftNodes")
+            .Produces(StatusCodes.Status204NoContent);
         builder
             .MapPost("/drafts/{draftId:guid}/check", CheckDraft)
             .WithName("CheckDraft")
@@ -97,7 +98,8 @@ internal static class DraftEndpoints
             .Produces<DraftDto>();
         builder
             .MapDelete("/drafts/{draftId:guid}", DiscardDraft)
-            .WithName("DiscardDraft");
+            .WithName("DiscardDraft")
+            .Produces(StatusCodes.Status204NoContent);
 
         return group;
     }

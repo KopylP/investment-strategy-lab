@@ -33,10 +33,12 @@ internal static class DeclarationEndpoints
             .Produces<Stream>(contentType: "application/pdf");
         declarations
             .MapPut("/pit-8c/{accountId:guid}", SetPit8C)
-            .WithName("SetPit8C");
+            .WithName("SetPit8C")
+            .Produces(StatusCodes.Status204NoContent);
         declarations
             .MapDelete("/pit-8c/{accountId:guid}", RemovePit8C)
-            .WithName("RemovePit8C");
+            .WithName("RemovePit8C")
+            .Produces(StatusCodes.Status204NoContent);
 
         return group;
     }

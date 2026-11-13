@@ -37,14 +37,13 @@ specs yet; verify UI changes by building and, when a stack is running, in the br
   messageformat: `{name}`, `{count, plural, one {…} other {…}}`), used with the `transloco` pipe in templates and `translate()`
   in code. Add every key to both files. Numbers and dates follow `activeLocale` (`core/i18n/language.ts`); money through the
   `money` pipe. The language is fixed for a page load: changing it in the profile reloads the page.
-- **API types come from the backend's OpenAPI document.** A DTO in `models/*-dto.ts` is an alias of the generated schema,
-  `ApiSchema<'BacktestDto'>` (`core/api/api-schema.ts`), narrowed only where the backend sends a name as a plain string or
-  fills a field it only accepts as optional (`Omit<…, 'status'> & { status: BacktestStatus }`). When the API changes, build
-  the backend (the Debug build writes `../backend/contracts/openapi.json`), run `npm run api:types`, commit both and fix
-  the mappers the compiler points to. Message tokens stay plain strings: the translation interceptor turns them into text.
-  Migrated so far: backtesting, holdings, signals, accounts, transactions, instruments, reports, strategies, the strategy builder and its experiments, taxes, the overview and the shared account and
-  instrument models (`shared/models/*-dto.ts`); the other features still keep hand-written DTOs, which move to
-  `ApiSchema` when they are next changed. A request body is typed with its command too (`ApiSchema<'RecordTradeCommand'>`);
-  a one-off use outside a feature (`core/`, `shared/`) may name `ApiSchema<'…'>` in the call itself.
+- **API types come from the backend's OpenAPI document; no payload type is written by hand.** A DTO in a feature's
+  `models/*-dto.ts` (shared ones in `shared/models/`) is an alias of the generated schema, `ApiSchema<'BacktestDto'>`
+  (`core/api/api-schema.ts`), and a request body is typed by the command the backend reads (`ApiSchema<'RecordTradeCommand'>`).
+  Narrow an alias only where the backend sends a name as a plain string or passes JSON on untyped
+  (`Omit<…, 'status'> & { status: BacktestStatus }`); anything else that looks wrong is fixed in the backend's description.
+  A one-off use in `core/` or `shared/` may name `ApiSchema<'…'>` in the call itself. When the API changes, build the
+  backend (the Debug build writes `../backend/contracts/openapi.json`), run `npm run api:types`, commit both and fix the
+  mappers the compiler points to. Message tokens stay plain strings: the translation interceptor turns them into text.
 - No business logic here: the backend decides and calculates, and the frontend formats what it receives in mappers and
   shows it. No tax rates, policy codes, provider names or symbol formats (see Modularity in `../CLAUDE.md`).

@@ -27,7 +27,8 @@ internal static class BrokerStatementEndpoints
             .Produces<BrokerStatementsDto>();
         statements
             .MapDelete("/{statementId:guid}", RemoveBrokerStatement)
-            .WithName("RemoveBrokerStatement");
+            .WithName("RemoveBrokerStatement")
+            .Produces(StatusCodes.Status204NoContent);
 
         return group;
     }

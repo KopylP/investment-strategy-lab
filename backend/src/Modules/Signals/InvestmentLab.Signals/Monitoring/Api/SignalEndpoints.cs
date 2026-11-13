@@ -27,13 +27,16 @@ internal static class SignalEndpoints
             .Produces<SignalCreatedDto>();
         group
             .MapPut("/{signalId:guid}", ChangeSignal)
-            .WithName("ChangeSignal");
+            .WithName("ChangeSignal")
+            .Produces(StatusCodes.Status204NoContent);
         group
             .MapDelete("/{signalId:guid}", DeleteSignal)
-            .WithName("DeleteSignal");
+            .WithName("DeleteSignal")
+            .Produces(StatusCodes.Status204NoContent);
         group
             .MapPost("/{signalId:guid}/check", CheckSignal)
-            .WithName("CheckSignal");
+            .WithName("CheckSignal")
+            .Produces(StatusCodes.Status204NoContent);
 
         return group;
     }

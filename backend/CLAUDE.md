@@ -132,9 +132,12 @@ public sealed class RetireSubPortfolioHandler(IAccountRepository accounts, TimeP
 - **Failures** are returned as `Result` with an error from `<Feature>Errors` in `Domain/`, not thrown. Parsing input into
   value objects is a private method or lives on the input DTO.
 - **An endpoint** is a named private method that calls one handler and returns `ToHttpResult()`; the route table at the
-  top of the file only maps routes to those methods. A route that returns data states its type there, `.Produces<BacktestDto>()`,
-  because an `IResult` tells OpenAPI nothing: the Debug build writes the document to `contracts/openapi.json`, the frontend
-  generates its types from it, and the `API contract` workflow fails when the committed document or types are out of date.
+  top of the file only maps routes to those methods. Every route that returns data states its type there,
+  `.Produces<BacktestDto>()` (a file `.Produces<Stream>(contentType: "application/pdf")`), because an `IResult` tells OpenAPI
+  nothing: the Debug build writes the document to `contracts/openapi.json`, the frontend generates its types from it, and the
+  `API contract` workflow fails when the committed document or types are out of date. The document is described as the API
+  writes it (`Hosts/InvestmentLab.Api/Hosting/`): two types may not share a schema name (the build fails; rename one),
+  every property of a type that only travels to the client is required, and a dictionary of any JSON says so.
 - **An integration event handler** reacts to one event, is idempotent because delivery is at-least-once, and is named
   for what it does (`RequestReportsOnSignal`).
 - **A job** only decides what is due and calls a handler per item, each in its own scope, so one failure does not stop

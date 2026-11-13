@@ -43,7 +43,8 @@ internal static class StrategyEndpoints
             .Produces<StrategyDto>();
         strategies
             .MapPost("/{strategyId:guid}/archive", ArchiveStrategy)
-            .WithName("ArchiveStrategy");
+            .WithName("ArchiveStrategy")
+            .Produces(StatusCodes.Status204NoContent);
 
         return group;
     }

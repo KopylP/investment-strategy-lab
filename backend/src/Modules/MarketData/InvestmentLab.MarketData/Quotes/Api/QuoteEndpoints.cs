@@ -35,7 +35,8 @@ internal static class QuoteEndpoints
             .WithName("GetQuoteHistory");
         quotes
             .MapPost("/{instrumentId:guid}/corrections", CorrectQuote)
-            .WithName("CorrectQuote");
+            .WithName("CorrectQuote")
+            .Produces(StatusCodes.Status204NoContent);
 
         return group;
     }

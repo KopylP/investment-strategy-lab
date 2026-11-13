@@ -49,7 +49,8 @@ internal static class TaxEndpoints
             .Produces<LossCarryforwardDto>();
         taxes
             .MapDelete("/losses/{lossId:guid}", RemoveLossCarryforward)
-            .WithName("RemoveLossCarryforward");
+            .WithName("RemoveLossCarryforward")
+            .Produces(StatusCodes.Status204NoContent);
 
         return group;
     }

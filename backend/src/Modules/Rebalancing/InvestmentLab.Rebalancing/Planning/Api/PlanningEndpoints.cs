@@ -45,7 +45,8 @@ internal static class PlanningEndpoints
             .Produces<SignalReportRuleDto>();
         rules
             .MapDelete("/{ruleId:guid}", RemoveSignalReportRule)
-            .WithName("RemoveSignalReportRule");
+            .WithName("RemoveSignalReportRule")
+            .Produces(StatusCodes.Status204NoContent);
 
         var account = group
             .MapGroup("/accounts/{accountId:guid}")

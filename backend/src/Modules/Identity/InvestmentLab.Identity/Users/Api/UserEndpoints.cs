@@ -27,7 +27,8 @@ internal static class UserEndpoints
         users
             .MapPost("/login", Login)
             .AllowAnonymous()
-            .WithName("Login");
+            .WithName("Login")
+            .Produces(StatusCodes.Status204NoContent);
         users
             .MapPost("/logout", Logout)
             .WithName("Logout");
