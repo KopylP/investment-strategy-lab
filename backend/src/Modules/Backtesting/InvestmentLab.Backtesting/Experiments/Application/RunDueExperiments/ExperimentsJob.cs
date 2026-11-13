@@ -1,13 +1,14 @@
 using InvestmentLab.Backtesting.Experiments.Application.FailExperiment;
 using InvestmentLab.Backtesting.Experiments.Application.RunExperiment;
 using InvestmentLab.Backtesting.Experiments.Domain;
+using InvestmentLab.Backtesting.Replays.Domain;
 using InvestmentLab.BuildingBlocks.Scheduling;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace InvestmentLab.Backtesting.Experiments.Application.RunDueExperiments;
 
-public sealed class ExperimentsJob(IServiceScopeFactory scopes, ILogger<ExperimentsJob> logger) : IScheduledJob
+public sealed class ExperimentsJob(IServiceScopeFactory scopes, IReplayRunGate gate, ILogger<ExperimentsJob> logger) : IScheduledJob
 {
     public static IJobSchedule Schedule { get; } = new IntervalSchedule(TimeSpan.FromSeconds(15));
 
@@ -29,16 +30,21 @@ public sealed class ExperimentsJob(IServiceScopeFactory scopes, ILogger<Experime
     {
         try
         {
-            await using var scope = scopes.CreateAsyncScope();
-            var handler = scope.ServiceProvider.GetRequiredService<RunExperimentHandler>();
-
-            await handler.Handle(id, cancellationToken);
+            await gate.RunAsync(() => RunInScope(id, cancellationToken), cancellationToken);
         }
         catch (Exception error) when (error is not OperationCanceledException)
         {
             logger.LogError(error, "Experiment {Id} failed", id);
             await Fail(id, cancellationToken);
         }
+    }
+
+    private async Task RunInScope(Guid id, CancellationToken cancellationToken)
+    {
+        await using var scope = scopes.CreateAsyncScope();
+        var handler = scope.ServiceProvider.GetRequiredService<RunExperimentHandler>();
+
+        await handler.Handle(id, cancellationToken);
     }
 
     private async Task Fail(Guid id, CancellationToken cancellationToken)

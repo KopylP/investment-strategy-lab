@@ -5,7 +5,11 @@ using Microsoft.Extensions.Logging;
 
 namespace InvestmentLab.Backtesting.Replays.Application.RunBacktest;
 
-public sealed class BacktestsJob(IServiceScopeFactory scopes, TimeProvider clock, ILogger<BacktestsJob> logger) : IScheduledJob
+public sealed class BacktestsJob(
+    IServiceScopeFactory scopes,
+    IReplayRunGate gate,
+    TimeProvider clock,
+    ILogger<BacktestsJob> logger) : IScheduledJob
 {
     public static IJobSchedule Schedule { get; } = new IntervalSchedule(TimeSpan.FromSeconds(15));
 
@@ -26,15 +30,20 @@ public sealed class BacktestsJob(IServiceScopeFactory scopes, TimeProvider clock
     {
         try
         {
-            await using var scope = scopes.CreateAsyncScope();
-
-            await scope.ServiceProvider.GetRequiredService<RunBacktestHandler>().Handle(backtestId, cancellationToken);
+            await gate.RunAsync(() => RunInScopeAsync(backtestId, cancellationToken), cancellationToken);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             logger.LogError(exception, "Backtest {BacktestId} failed", backtestId);
             await FailAsync(backtestId, cancellationToken);
         }
+    }
+
+    private async Task RunInScopeAsync(Guid backtestId, CancellationToken cancellationToken)
+    {
+        await using var scope = scopes.CreateAsyncScope();
+
+        await scope.ServiceProvider.GetRequiredService<RunBacktestHandler>().Handle(backtestId, cancellationToken);
     }
 
     private async Task FailAsync(Guid backtestId, CancellationToken cancellationToken)

@@ -49,6 +49,11 @@ public sealed class BacktestingModule : IModule
         services.AddScoped<IResearchStrategies, ResearchStrategies>();
         services.AddScoped<IExperimentRepository, ExperimentRepository>();
         services.AddScoped<IBacktestExperiments, BacktestExperiments>();
+        services.AddSingleton<IReplayRunGate, ReplayRunGate>();
+        services.AddOptions<ReplayRunOptions>()
+            .BindConfiguration(ReplayRunOptions.Section)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>
