@@ -208,7 +208,9 @@ internal sealed class PlanningAccounts(IAccountSetupQueries accounts) : IPlannin
 
 - A module uses another only through its `.Contracts` project: integration events (`…V1` records) and query
   interfaces implemented inside the owning module. Contracts hold primitives only and reference nothing of ours.
-- Modules never depend on each other in a cycle. When the ordinary direction would close one, the
+- Modules never depend on each other in a cycle (`ModuleCycleTests`, built from the contracts each module assembly really
+  uses). Its list of known cycles (Portfolio ↔ Taxation, Portfolio ↔ Strategies, Portfolio → Strategies → Signals) must
+  match exactly: a new cycle fails, and so does a listed one that is gone. When the ordinary direction would close one, the
   module that needs the data states it in its own `.Contracts` (a required contract, `Signals.Contracts.IPortfolioReturnHistory`)
   and the providing module implements it in its `Infrastructure/` and registers it in its module file (ADR-0031). Use it
   only to break a cycle.
