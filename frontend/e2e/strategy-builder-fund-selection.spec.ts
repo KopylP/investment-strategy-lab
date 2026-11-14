@@ -35,18 +35,20 @@ test('trend template saves an entire fund group and shows per-fund and shared ev
     await page.goto(`/strategy-builder/${draft.id}`);
     await chooseFromEditorMenu(page, 'Стратегія', 'Фонди й ряди…');
     const setup = page.locator('[data-node-id="strategy-setup"]');
-    await setup.locator('app-builder-fund-picker p-multiselect').click();
-    const group = page.getByRole('checkbox', { name: 'Уся група «Тестова група»', exact: true });
-    await expect(group).toHaveAttribute('aria-checked', 'false');
+    await setup.locator('.picker-button').first().click();
+    const dialog = page.getByRole('dialog', { name: 'Фонди стратегії', exact: true });
+    const group = dialog.locator('.fund-group .group-title').getByRole('checkbox');
+    await expect(group).not.toBeChecked();
+    await group.check();
     const savedResponse = page.waitForResponse(
       (response) =>
         response.url().endsWith(`/drafts/${draft.id}`) && response.request().method() === 'PUT',
     );
-    await group.click();
+    await dialog.getByRole('button', { name: 'Застосувати · 3', exact: true }).click();
     const saved = await savedResponse;
     expect(saved.ok(), await saved.text()).toBe(true);
     expect(saved.request().postDataJSON().setup.funds.toSorted()).toEqual(expectedIds);
-    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
     await expect(setup.locator('.fund-token')).toHaveCount(3);
     await expect(page.locator('[data-node-id="e-mom"]')).toHaveAttribute(
       'data-iteration-count',
@@ -82,11 +84,10 @@ test('trend template saves an entire fund group and shows per-fund and shared ev
       '3',
     );
     await chooseFromEditorMenu(page, 'Стратегія', 'Фонди й ряди…');
-    await setup.locator('app-builder-fund-picker p-multiselect').click();
-    await expect(group).toHaveAttribute('aria-checked', 'true');
-    await expect(page.locator('.p-multiselect-overlay:visible')).toHaveCSS('opacity', '1');
+    await setup.locator('.picker-button').first().click();
+    await expect(group).toBeChecked();
     await page.screenshot({ path: testInfo.outputPath('selected-fund-group.png') });
-    await page.keyboard.press('Escape');
+    await dialog.getByRole('button', { name: 'Скасувати', exact: true }).click();
   } finally {
     await page.request.delete(`/api/strategy-builder/drafts/${draft.id}`);
   }

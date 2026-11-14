@@ -1532,6 +1532,7 @@
       "catalogPlaceholder": "For example, SPY or MSCI World",
       "sourceHint": "Search ETFs in the quote source, including those not yet added to the service. Chosen new funds are added after “Apply”.",
       "nameWords": "Words in the ETF name",
+      "namePlaceholder": "For example, MSCI World",
       "sourceLimits": "Choose an exchange or a region. The search checks up to 250 of the largest ETFs and shows up to 100 matches. This is a limited sample, not a full list of ETFs. Searching by an exact ticker is not supported here yet.",
       "chooseExchange": "Choose an exchange",
       "region": "Region",
@@ -1564,30 +1565,6 @@
         "catalog": "Added instruments",
         "source": "Search the quote source"
       }
-    },
-    "fundSearch": {
-      "namePlaceholder": "For example, MSCI World",
-      "title": "Find funds",
-      "hint": "Find ETFs and add the chosen ones to the strategy funds. The search checks up to 250 of the largest funds for the chosen conditions and shows up to 100 matches.",
-      "loading": "Loading exchanges and regions…",
-      "chooseExchange": "Choose an exchange",
-      "tradingRegion": "Trading region",
-      "chooseRegion": "Choose a region",
-      "optional": "Optional",
-      "maxTer": "Highest yearly fee (TER), %",
-      "nameWords": "Words in the name (up to five)",
-      "search": "Search",
-      "retry": "Load again",
-      "someNotAdded": "Some funds were not added. The rest were already added to the selection.",
-      "symbol": "Symbol",
-      "name": "Name",
-      "assets": "Assets",
-      "inService": "In the service",
-      "exists": "Already there",
-      "new": "New",
-      "empty": "No funds found for these conditions. Try loosening the limits.",
-      "addChosen": "Add the chosen ones",
-      "found": "Found: {funds} · Chosen: {selected}"
     },
     "setup": {
       "universe": "Funds the strategy picks from",
@@ -1704,15 +1681,6 @@
       "run": "Run the experiment",
       "currentValue": "Current value: {value}. It will be checked too.",
       "percentHint": "Enter values in percent."
-    },
-    "fundPicker": {
-      "search": "Search for a fund",
-      "placeholder": "Choose funds",
-      "limitReached": "Up to 60 funds can be chosen. Free up a place or choose single funds.",
-      "toggleGroup": "Select or deselect the whole visible group",
-      "chosenCount": "Chosen {value} of 60",
-      "selectedCount": "Chosen: '{0}'",
-      "wholeGroup": "The whole group “{group}”"
     },
     "journal": {
       "title": "Decision and trade journal",

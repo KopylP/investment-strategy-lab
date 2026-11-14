@@ -50,7 +50,7 @@
           pInputText
           id="fund-remote-query"
           type="search"
-          [placeholder]="'builder.fundSearch.namePlaceholder' | transloco"
+          [placeholder]="'builder.fundSelection.namePlaceholder' | transloco"
           [ngModel]="remoteQuery()"
           (ngModelChange)="remoteQuery.set($event)"
           [disabled]="busy() || store.searching()"
