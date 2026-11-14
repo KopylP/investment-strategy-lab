@@ -26,6 +26,7 @@ var api = builder.AddProject<Projects.InvestmentLab_Api>("api")
 if (!ephemeral)
 {
     builder.AddJavaScriptApp("frontend", "../../../../frontend", "start")
+        .WithNpm(install: false)
         .WithReference(api)
         .WaitFor(api)
         .WithHttpEndpoint(port: 4200, env: "PORT")

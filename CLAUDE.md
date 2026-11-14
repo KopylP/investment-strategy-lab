@@ -14,7 +14,8 @@ Personal investment service: accounts split into sub-portfolios, each run by a s
 ## Commands
 
 ```bash
-# Whole stack (needs Docker for Postgres)
+# Whole stack (needs Docker for Postgres). It does not install frontend packages: run `cd frontend && npm ci` first
+# and whenever package-lock.json changes, never a bare `npm install` (on macOS it drops packages Linux CI needs)
 cd backend && dotnet run --project src/Hosts/InvestmentLab.AppHost --launch-profile https
 
 cd backend && dotnet build InvestmentLab.slnx && dotnet test --solution InvestmentLab.slnx   # integration tests need Docker

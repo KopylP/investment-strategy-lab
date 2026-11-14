@@ -3,6 +3,7 @@
 ## Commands (from `frontend/`)
 
 ```bash
+npm ci                       # install exactly what package-lock.json says; the stack does not install packages
 npx ng build                 # the check to run after every change (type errors in templates show up here)
 npm start                    # dev server on :4200; /api is proxied to the API (proxy.conf.js)
 npx playwright test          # e2e against a running stack (start the Aspire AppHost first; see playwright.config.ts)
@@ -10,7 +11,11 @@ npm run api:types            # regenerate src/app/core/api/generated/ from ../ba
 npm run api:check            # what CI runs: fails when the generated types are older than the contract
 ```
 
-Normally the whole stack, frontend included, is started by the Aspire AppHost in `../backend`. There are no unit
+Normally the whole stack, frontend included, is started by the Aspire AppHost in `../backend`. It does not install
+packages: run `npm ci` after a clone or when `package-lock.json` changes. Never run a bare `npm install`: on macOS it
+rewrites the lock without the optional `@emnapi/*` packages, and `npm ci` on Linux (the add-on release) then fails.
+A dependency is added or upgraded on purpose with `npm install <package>`; check in the diff that the lock kept
+`@emnapi` before committing it. There are no unit
 specs yet; verify UI changes by building and, when a stack is running, in the browser or with Playwright.
 
 ## Layout
