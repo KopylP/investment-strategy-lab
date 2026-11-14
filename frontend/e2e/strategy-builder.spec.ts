@@ -137,6 +137,7 @@ test('guided edits persist across modes and problems select their graph node', a
     buffer: Buffer.from(JSON.stringify(outOfRange)),
   });
   await expect(page).not.toHaveURL(new RegExp(draft.id));
+  await page.locator('.review-button').click();
   await expect(page.locator('app-builder-problems-panel button').first()).toBeVisible();
   expect(errors).toEqual([]);
 });

@@ -146,7 +146,7 @@ test('one canvas supports selection, zoom, drag and responsive steps', async ({ 
       .toBe(true);
   };
   await assertEdgesMeetSockets();
-  const node = page.locator('app-graph-editor article').first();
+  const node = page.locator('[data-node-id="condition-0"]');
   await node.click();
   await expect(node).toHaveClass(/selected/);
   await node.getByRole('button', { name: 'Почати звʼязок' }).click();
@@ -161,11 +161,12 @@ test('one canvas supports selection, zoom, drag and responsive steps', async ({ 
     .locator('[data-node-id="result-1"]')
     .getByRole('button', { name: 'Вхід condition', exact: true })
     .click();
-  await expect(page.getByRole('alert').filter({ hasText: 'Різні ролі' })).toBeVisible();
+  await expect(page.getByRole('alert').filter({ hasText: 'очікує' })).toBeVisible();
+  expect(draft.graph.links.some((link: any) => link.from === 'number')).toBe(false);
   const compatible = page
     .locator('[data-node-id="compare"]')
     .getByRole('button', { name: 'Вхід left', exact: true });
-  await expect(compatible).toHaveClass(/ring-green-300/);
+  await expect(compatible).toHaveClass(/compatible/);
   await compatible.click();
   await expect
     .poll(() =>
@@ -186,8 +187,7 @@ test('one canvas supports selection, zoom, drag and responsive steps', async ({ 
   await signalOutput.focus();
   await signalOutput.press('Enter');
   const resultInput = page.locator('[data-node-id="result-0"]').getByRole('button', { name: 'Вхід condition', exact: true });
-  await expect(resultInput).toHaveAttribute('aria-description', /Замінити поточний зв’язок/);
-  await resultInput.click();
+  await resultInput.press('Enter');
   await expect.poll(() => draft.graph.links.filter((link: any) => link.to === 'result-0').map((link: any) => link.from)).toEqual(['signal']);
   await page.keyboard.press('ControlOrMeta+z');
   await expect.poll(() => draft.graph.links.filter((link: any) => link.to === 'result-0').map((link: any) => link.from)).toEqual(['condition-0']);
@@ -210,7 +210,7 @@ test('one canvas supports selection, zoom, drag and responsive steps', async ({ 
   await expect(page.getByRole('button', { name: 'Повторити збереження' })).toBeVisible();
   failSave = false;
   await page.getByRole('button', { name: 'Повторити збереження' }).click();
-  await expect(page.getByText('Чернетка · збережено', { exact: true })).toBeVisible();
+  await expect(page.getByText('Збережено', { exact: true })).toBeVisible();
   for (const width of [1440, 1024, 390]) {
     await page.setViewportSize({ width, height: 900 });
     await page.getByRole('button', { name: 'Кроки', exact: true }).click();

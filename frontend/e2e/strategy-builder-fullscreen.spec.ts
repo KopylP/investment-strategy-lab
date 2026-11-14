@@ -11,6 +11,8 @@ test('fullscreen expands the workspace independently of fit and keeps dropdowns 
   const workspace = page.locator('app-graph-editor .workspace');
   await expect(workspace).toBeVisible();
   const initial = (await workspace.boundingBox())!;
+  const zoomLevel = async () => parseInt(await workspace.locator('output').innerText());
+  await expect.poll(zoomLevel).toBeLessThan(100);
   const zoom = await workspace.locator('output').innerText();
   const enter = page.getByRole('button', { name: 'На весь екран', exact: true });
   await expect(enter.locator('i')).toHaveClass(/pi-expand/);
@@ -46,10 +48,6 @@ test('fullscreen expands the workspace independently of fit and keeps dropdowns 
   expect(screen.height).toBeGreaterThan(initial.height);
   await page.getByRole('button', { name: 'Показати всю схему' }).click();
   await expect.poll(() => workspace.evaluate((el) => document.fullscreenElement === el)).toBe(true);
-  await workspace
-    .getByRole('navigation', { name: 'Ролі стратегії' })
-    .getByRole('button', { name: 'Ринковий фільтр', exact: true })
-    .click();
   await workspace.locator('[data-node-id="signal"]').getByRole('combobox').click();
   await expect(workspace.locator('.p-select-overlay:visible').last()).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath('fullscreen-dropdown.png') });

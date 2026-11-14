@@ -1,4 +1,9 @@
-import { expect, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
+
+async function openFundsStep(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Кроки', exact: true }).click();
+  await page.getByRole('button', { name: '2. Фонди й ряди', exact: true }).click();
+}
 
 test('funds found at the provider join the draft and remain selected after reload', async ({
   page,
@@ -18,22 +23,25 @@ test('funds found at the provider join the draft and remain selected after reloa
   expect(created.ok()).toBeTruthy();
   const draft = await created.json();
   await page.goto(`/strategy-builder/${draft.id}`);
-  await page.getByRole('button', { name: '2. Фонди й ряди', exact: true }).click();
-  await page.getByRole('button', { name: 'Знайти фонди', exact: true }).click();
-  const dialog = page.getByRole('dialog', { name: 'Знайти фонди', exact: true });
-  await dialog.locator('#fund-search-exchange').click();
+  await openFundsStep(page);
+  await page.getByRole('button', { name: 'Обрати фонди', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Фонди стратегії', exact: true });
+  await dialog.getByRole('button', { name: 'Пошук у джерелі котирувань', exact: true }).click();
+  await dialog.locator('#selection-exchange').click();
   await page.getByRole('option', { name: 'Xetra', exact: true }).click();
-  await dialog.locator('#fund-search-assets').fill('1000000000');
-  await dialog.locator('#fund-search-words').fill('MSCI World');
-  await dialog.getByRole('button', { name: 'Шукати', exact: true }).click();
-  const rows = dialog.locator('tbody tr');
-  await expect(rows.first().getByRole('checkbox')).toBeVisible({ timeout: 60_000 });
-  expect(await rows.count()).toBeGreaterThanOrEqual(3);
-  for (let index = 0; index < 3; index++) await rows.nth(index).getByRole('checkbox').check();
-  await dialog.getByRole('button', { name: 'Додати вибрані', exact: true }).click();
+  await dialog.getByText('Додаткові фільтри', { exact: true }).click();
+  await dialog.locator('#selection-assets').fill('1000000000');
+  await dialog.locator('#fund-remote-query').fill('MSCI World');
+  await dialog.getByRole('button', { name: 'Шукати в джерелі котирувань' }).click();
+  const found = dialog.locator('.results .fund-row');
+  await expect(found.first().getByRole('checkbox')).toBeVisible({ timeout: 60_000 });
+  expect(await found.count()).toBeGreaterThanOrEqual(3);
+  for (let index = 0; index < 3; index++) await found.nth(index).getByRole('checkbox').check();
+  await expect(dialog.getByText('Вибрано 3 із 60', { exact: true })).toBeVisible();
+  await dialog.getByRole('button', { name: 'Застосувати · 3', exact: true }).click();
   await expect(dialog).toBeHidden({ timeout: 60_000 });
   await expect(page.getByText('3 із 60', { exact: true })).toBeVisible();
-  await expect(page.getByText('Чернетка · збережено', { exact: true })).toBeVisible();
+  await expect(page.getByText('Збережено', { exact: true })).toBeVisible();
 
   const saved = await (await page.request.get(`/api/strategy-builder/drafts/${draft.id}`)).json();
   expect(saved.setup.funds).toHaveLength(3);
@@ -42,10 +50,10 @@ test('funds found at the provider join the draft and remain selected after reloa
     expect(directory.some((fund: { id: string }) => fund.id === id)).toBeTruthy();
 
   await page.reload();
-  await page.getByRole('button', { name: '2. Фонди й ряди', exact: true }).click();
+  await openFundsStep(page);
   await expect(page.getByText('3 із 60', { exact: true })).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole('button', { name: 'Знайти фонди', exact: true }).click();
+  await page.getByRole('button', { name: 'Обрати фонди', exact: true }).click();
   await expect(dialog).toBeVisible();
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
@@ -62,9 +70,12 @@ test('funds found at the provider join the draft and remain selected after reloa
       }),
     }),
   );
-  await dialog.getByRole('button', { name: 'Шукати', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Пошук у джерелі котирувань', exact: true }).click();
+  await dialog.locator('#selection-exchange').click();
+  await page.getByRole('option', { name: 'Xetra', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Шукати в джерелі котирувань' }).click();
   await expect(dialog.getByText(/Пошук зараз недоступний/)).toBeVisible();
-  await dialog.getByRole('button', { name: 'Закрити', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Скасувати', exact: true }).click();
   await expect(page.getByText('3 із 60', { exact: true })).toBeVisible();
   expect(errors).toEqual([]);
 });
