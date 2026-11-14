@@ -29,7 +29,11 @@ internal static class DashboardEndpoints
     }
 
     private static async Task<IResult> RefreshAndGetDashboard(
-        Guid accountId, string? period, RefreshSnapshotsHandler refresh, GetDashboardHandler query, CancellationToken cancellationToken)
+        Guid accountId,
+        string? period,
+        RefreshSnapshotsHandler refresh,
+        GetDashboardHandler query,
+        CancellationToken cancellationToken)
     {
         var refreshed = await refresh.Handle(new RefreshSnapshotsCommand(accountId), cancellationToken);
         if (refreshed.IsFailure)
@@ -41,7 +45,11 @@ internal static class DashboardEndpoints
     }
 
     private static async Task<IResult> RefreshAndGetAllAccountsDashboard(
-        string? currency, string? period, RefreshSnapshotsHandler refresh, GetAllAccountsDashboardHandler query, CancellationToken cancellationToken)
+        string? currency,
+        string? period,
+        RefreshSnapshotsHandler refresh,
+        GetAllAccountsDashboardHandler query,
+        CancellationToken cancellationToken)
     {
         var refreshed = await refresh.Handle(new RefreshSnapshotsCommand(AccountId: null), cancellationToken);
         if (refreshed.IsFailure)

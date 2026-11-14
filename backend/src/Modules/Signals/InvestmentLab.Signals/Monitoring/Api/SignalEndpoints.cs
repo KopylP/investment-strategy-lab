@@ -49,7 +49,10 @@ internal static class SignalEndpoints
     }
 
     private static async Task<IResult> CreateSignal(
-        CreateSignalCommand body, CreateSignalHandler handler, ICurrentUser user, CancellationToken cancellationToken)
+        CreateSignalCommand body,
+        CreateSignalHandler handler,
+        ICurrentUser user,
+        CancellationToken cancellationToken)
     {
         var created = await handler.Handle(user.RequiredId, body, cancellationToken);
 
@@ -57,21 +60,30 @@ internal static class SignalEndpoints
     }
 
     private static async Task<IResult> ChangeSignal(
-        Guid signalId, ChangeSignalCommand body, ChangeSignalHandler handler, CancellationToken cancellationToken)
+        Guid signalId,
+        ChangeSignalCommand body,
+        ChangeSignalHandler handler,
+        CancellationToken cancellationToken)
     {
         var changed = await handler.Handle(signalId, body, cancellationToken);
 
         return changed.ToHttpResult();
     }
 
-    private static async Task<IResult> DeleteSignal(Guid signalId, DeleteSignalHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> DeleteSignal(
+        Guid signalId,
+        DeleteSignalHandler handler,
+        CancellationToken cancellationToken)
     {
         var deleted = await handler.Handle(signalId, cancellationToken);
 
         return deleted.ToHttpResult();
     }
 
-    private static async Task<IResult> CheckSignal(Guid signalId, CheckSignalHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> CheckSignal(
+        Guid signalId,
+        CheckSignalHandler handler,
+        CancellationToken cancellationToken)
     {
         var checkedSignal = await handler.Handle(signalId, cancellationToken);
 

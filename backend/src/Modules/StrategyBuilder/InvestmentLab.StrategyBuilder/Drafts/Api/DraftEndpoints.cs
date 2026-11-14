@@ -104,21 +104,35 @@ internal static class DraftEndpoints
         return group;
     }
 
-    private static async Task<IResult> PublishDraft(Guid draftId, PublishDraftCommand body, PublishDraftHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> PublishDraft(
+        Guid draftId,
+        PublishDraftCommand body,
+        PublishDraftHandler handler,
+        CancellationToken cancellationToken)
     {
         var published = await handler.Handle(draftId, body.Revision, cancellationToken);
 
         return published.ToHttpResult();
     }
 
-    private static async Task<IResult> OpenPublishedStrategy(Guid strategyId, int version, OpenPublishedStrategyHandler handler, ICurrentUser user, CancellationToken cancellationToken)
+    private static async Task<IResult> OpenPublishedStrategy(
+        Guid strategyId,
+        int version,
+        OpenPublishedStrategyHandler handler,
+        ICurrentUser user,
+        CancellationToken cancellationToken)
     {
         var draft = await handler.Handle(user.RequiredId, strategyId, version, cancellationToken);
 
         return draft.ToHttpResult();
     }
 
-    private static async Task<IResult> GetPublishedStrategy(Guid strategyId, int version, GetPublishedStrategyHandler handler, ICurrentUser user, CancellationToken cancellationToken)
+    private static async Task<IResult> GetPublishedStrategy(
+        Guid strategyId,
+        int version,
+        GetPublishedStrategyHandler handler,
+        ICurrentUser user,
+        CancellationToken cancellationToken)
     {
         var published = await handler.Handle(user.RequiredId, strategyId, version, cancellationToken);
 
@@ -132,14 +146,18 @@ internal static class DraftEndpoints
         return vocabulary.ToHttpResult();
     }
 
-    private static async Task<IResult> ListOwnSignals(ListOwnSignalsHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> ListOwnSignals(
+        ListOwnSignalsHandler handler,
+        CancellationToken cancellationToken)
     {
         var signals = await handler.Handle(cancellationToken);
 
         return TypedResults.Ok(signals);
     }
 
-    private static async Task<IResult> ListInstruments(ListInstrumentsHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> ListInstruments(
+        ListInstrumentsHandler handler,
+        CancellationToken cancellationToken)
     {
         var instruments = await handler.Handle(cancellationToken);
 
@@ -153,42 +171,64 @@ internal static class DraftEndpoints
         return TypedResults.Ok(drafts);
     }
 
-    private static async Task<IResult> CreateDraft(CreateDraftCommand body, CreateDraftHandler handler, ICurrentUser user, CancellationToken cancellationToken)
+    private static async Task<IResult> CreateDraft(
+        CreateDraftCommand body,
+        CreateDraftHandler handler,
+        ICurrentUser user,
+        CancellationToken cancellationToken)
     {
         var created = await handler.Handle(user.RequiredId, body, cancellationToken);
 
         return created.ToHttpResult();
     }
 
-    private static async Task<IResult> ImportRules(ImportRulesCommand body, ImportRulesHandler handler, ICurrentUser user, CancellationToken cancellationToken)
+    private static async Task<IResult> ImportRules(
+        ImportRulesCommand body,
+        ImportRulesHandler handler,
+        ICurrentUser user,
+        CancellationToken cancellationToken)
     {
         var imported = await handler.Handle(user.RequiredId, body, cancellationToken);
 
         return imported.ToHttpResult();
     }
 
-    private static async Task<IResult> GetDraft(Guid draftId, GetDraftHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> GetDraft(
+        Guid draftId,
+        GetDraftHandler handler,
+        CancellationToken cancellationToken)
     {
         var draft = await handler.Handle(draftId, cancellationToken);
 
         return draft.ToHttpResult();
     }
 
-    private static async Task<IResult> ChangeDraft(Guid draftId, DraftChangeDto body, ChangeDraftHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> ChangeDraft(
+        Guid draftId,
+        DraftChangeDto body,
+        ChangeDraftHandler handler,
+        CancellationToken cancellationToken)
     {
         var changed = await handler.Handle(draftId, body, cancellationToken);
 
         return changed.ToHttpResult();
     }
 
-    private static async Task<IResult> MoveNodes(Guid draftId, LayoutDto body, MoveNodesHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> MoveNodes(
+        Guid draftId,
+        LayoutDto body,
+        MoveNodesHandler handler,
+        CancellationToken cancellationToken)
     {
         var moved = await handler.Handle(draftId, body, cancellationToken);
 
         return moved.ToHttpResult();
     }
 
-    private static async Task<IResult> CheckDraft(Guid draftId, CheckDraftHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> CheckDraft(
+        Guid draftId,
+        CheckDraftHandler handler,
+        CancellationToken cancellationToken)
     {
         var check = await handler.Handle(draftId, cancellationToken);
 
@@ -206,7 +246,10 @@ internal static class DraftEndpoints
         return copied.ToHttpResult();
     }
 
-    private static async Task<IResult> GetDraftRules(Guid draftId, GetDraftRulesHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> GetDraftRules(
+        Guid draftId,
+        GetDraftRulesHandler handler,
+        CancellationToken cancellationToken)
     {
         var rules = await handler.Handle(draftId, cancellationToken);
 
@@ -224,7 +267,10 @@ internal static class DraftEndpoints
         return replaced.ToHttpResult();
     }
 
-    private static async Task<IResult> DiscardDraft(Guid draftId, DiscardDraftHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> DiscardDraft(
+        Guid draftId,
+        DiscardDraftHandler handler,
+        CancellationToken cancellationToken)
     {
         var discarded = await handler.Handle(draftId, cancellationToken);
 

@@ -95,7 +95,9 @@ internal static class PlanningEndpoints
         return group;
     }
 
-    private static async Task<IResult> GetSignalReportRules(GetSignalReportRulesHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> GetSignalReportRules(
+        GetSignalReportRulesHandler handler,
+        CancellationToken cancellationToken)
     {
         var rules = await handler.Handle(cancellationToken);
 
@@ -103,7 +105,10 @@ internal static class PlanningEndpoints
     }
 
     private static async Task<IResult> AddSignalReportRule(
-        AddSignalReportRuleCommand body, AddSignalReportRuleHandler handler, ICurrentUser user, CancellationToken cancellationToken)
+        AddSignalReportRuleCommand body,
+        AddSignalReportRuleHandler handler,
+        ICurrentUser user,
+        CancellationToken cancellationToken)
     {
         var added = await handler.Handle(user.RequiredId, body, cancellationToken);
 
@@ -111,7 +116,9 @@ internal static class PlanningEndpoints
     }
 
     private static async Task<IResult> RemoveSignalReportRule(
-        Guid ruleId, RemoveSignalReportRuleHandler handler, CancellationToken cancellationToken)
+        Guid ruleId,
+        RemoveSignalReportRuleHandler handler,
+        CancellationToken cancellationToken)
     {
         var removed = await handler.Handle(ruleId, cancellationToken);
 
@@ -119,7 +126,10 @@ internal static class PlanningEndpoints
     }
 
     private static async Task<IResult> GenerateReport(
-        Guid accountId, GenerateReportRequest? body, RequestReportOnDemandHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        GenerateReportRequest? body,
+        RequestReportOnDemandHandler handler,
+        CancellationToken cancellationToken)
     {
         var command = new RequestReportCommand(accountId, body?.Code, body?.Contribution, body?.AsOf);
 
@@ -132,7 +142,10 @@ internal static class PlanningEndpoints
         return TypedResults.Accepted(location, new ReportRequestedResponse(requested.Value));
     }
 
-    private static async Task<IResult> GetPlanSettings(Guid accountId, GetPlanSettingsHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> GetPlanSettings(
+        Guid accountId,
+        GetPlanSettingsHandler handler,
+        CancellationToken cancellationToken)
     {
         var settings = await handler.Handle(accountId, cancellationToken);
 
@@ -140,7 +153,9 @@ internal static class PlanningEndpoints
     }
 
     private static async Task<IResult> GetReportSchedule(
-        Guid accountId, GetReportScheduleHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        GetReportScheduleHandler handler,
+        CancellationToken cancellationToken)
     {
         var schedule = await handler.Handle(accountId, cancellationToken);
 
@@ -148,7 +163,11 @@ internal static class PlanningEndpoints
     }
 
     private static async Task<IResult> ChangeReportSchedule(
-        Guid accountId, string code, ChangeReportScheduleCommand body, ChangeReportScheduleHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        string code,
+        ChangeReportScheduleCommand body,
+        ChangeReportScheduleHandler handler,
+        CancellationToken cancellationToken)
     {
         var changed = await handler.Handle(accountId, code, body, cancellationToken);
 
@@ -156,7 +175,10 @@ internal static class PlanningEndpoints
     }
 
     private static async Task<IResult> UseStrategyReportSchedule(
-        Guid accountId, string code, UseStrategyScheduleHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        string code,
+        UseStrategyScheduleHandler handler,
+        CancellationToken cancellationToken)
     {
         var changed = await handler.Handle(accountId, code, cancellationToken);
 
@@ -164,7 +186,10 @@ internal static class PlanningEndpoints
     }
 
     private static async Task<IResult> ChangePlanSettings(
-        Guid accountId, ChangePlanSettingsCommand body, ChangePlanSettingsHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        ChangePlanSettingsCommand body,
+        ChangePlanSettingsHandler handler,
+        CancellationToken cancellationToken)
     {
         var changed = await handler.Handle(accountId, body, cancellationToken);
 
@@ -172,7 +197,9 @@ internal static class PlanningEndpoints
     }
 
     private static async Task<Ok<OpenActionsCountResponse>> GetOpenActionsCount(
-        Guid accountId, IReportQueries queries, CancellationToken cancellationToken)
+        Guid accountId,
+        IReportQueries queries,
+        CancellationToken cancellationToken)
     {
         var count = await queries.GetOpenActionsCount(accountId, cancellationToken);
 
@@ -180,7 +207,9 @@ internal static class PlanningEndpoints
     }
 
     private static async Task<Ok<IReadOnlyList<ReportRequestDto>>> ListReportRequests(
-        Guid? accountId, ListReportRequestsHandler handler, CancellationToken cancellationToken)
+        Guid? accountId,
+        ListReportRequestsHandler handler,
+        CancellationToken cancellationToken)
     {
         var requests = await handler.Handle(accountId, cancellationToken);
 
@@ -188,7 +217,9 @@ internal static class PlanningEndpoints
     }
 
     private static async Task<IResult> GetReportRequest(
-        Guid requestId, GetReportRequestHandler handler, CancellationToken cancellationToken)
+        Guid requestId,
+        GetReportRequestHandler handler,
+        CancellationToken cancellationToken)
     {
         var request = await handler.Handle(requestId, cancellationToken);
 

@@ -24,7 +24,11 @@ internal static class TrialEndpoints
         return group;
     }
 
-    private static async Task<IResult> RunTrial(Guid draftId, RunTrialRequest body, RunTrialHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> RunTrial(
+        Guid draftId,
+        RunTrialRequest body,
+        RunTrialHandler handler,
+        CancellationToken cancellationToken)
     {
         var command = body.CommandFor(draftId);
         var result = await handler.Handle(command, cancellationToken);
@@ -32,7 +36,10 @@ internal static class TrialEndpoints
         return result.ToHttpResult();
     }
 
-    private static async Task<IResult> ListTrials(Guid draftId, ListTrialsHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> ListTrials(
+        Guid draftId,
+        ListTrialsHandler handler,
+        CancellationToken cancellationToken)
     {
         var result = await handler.Handle(draftId, cancellationToken);
 

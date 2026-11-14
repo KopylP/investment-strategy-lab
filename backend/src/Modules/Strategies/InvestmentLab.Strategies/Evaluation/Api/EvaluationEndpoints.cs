@@ -30,7 +30,10 @@ internal static class EvaluationEndpoints
     }
 
     private static async Task<IResult> Decide(
-        Guid strategyId, EvaluateSubPortfolioCommand body, DecideSubPortfolioHandler handler, CancellationToken cancellationToken)
+        Guid strategyId,
+        EvaluateSubPortfolioCommand body,
+        DecideSubPortfolioHandler handler,
+        CancellationToken cancellationToken)
     {
         var decision = await handler.Handle(strategyId, body, cancellationToken);
 
@@ -38,7 +41,10 @@ internal static class EvaluationEndpoints
     }
 
     private static async Task<IResult> AssessRisk(
-        Guid strategyId, EvaluateSubPortfolioCommand body, AssessSubPortfolioRiskHandler handler, CancellationToken cancellationToken)
+        Guid strategyId,
+        EvaluateSubPortfolioCommand body,
+        AssessSubPortfolioRiskHandler handler,
+        CancellationToken cancellationToken)
     {
         var assessment = await handler.Handle(strategyId, body, cancellationToken);
 

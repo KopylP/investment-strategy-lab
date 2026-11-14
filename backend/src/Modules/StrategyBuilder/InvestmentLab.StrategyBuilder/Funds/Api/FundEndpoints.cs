@@ -34,14 +34,20 @@ internal static class FundEndpoints
 
     private static IResult GetOptions(GetFundSearchOptionsHandler handler) => TypedResults.Ok(handler.Handle());
 
-    private static async Task<IResult> Search(SearchFundsCommand body, SearchFundsHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> Search(
+        SearchFundsCommand body,
+        SearchFundsHandler handler,
+        CancellationToken cancellationToken)
     {
         var found = await handler.Handle(body, cancellationToken);
 
         return found.ToHttpResult();
     }
 
-    private static async Task<IResult> Add(AddFundsCommand body, AddFundsHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> Add(
+        AddFundsCommand body,
+        AddFundsHandler handler,
+        CancellationToken cancellationToken)
     {
         var added = await handler.Handle(body, cancellationToken);
 

@@ -36,7 +36,8 @@ internal static class InstrumentEndpoints
     }
 
     private static async Task<Ok<IReadOnlyList<InstrumentDto>>> GetInstruments(
-        GetInstrumentsHandler handler, CancellationToken cancellationToken)
+        GetInstrumentsHandler handler,
+        CancellationToken cancellationToken)
     {
         var instruments = await handler.Handle(cancellationToken);
 
@@ -44,7 +45,9 @@ internal static class InstrumentEndpoints
     }
 
     private static async Task<IResult> RegisterInstrument(
-        RegisterInstrumentCommand command, RegisterInstrumentHandler handler, CancellationToken cancellationToken)
+        RegisterInstrumentCommand command,
+        RegisterInstrumentHandler handler,
+        CancellationToken cancellationToken)
     {
         var registered = await handler.Handle(command, cancellationToken);
 
@@ -52,7 +55,10 @@ internal static class InstrumentEndpoints
     }
 
     private static async Task<IResult> AssignProviderSymbol(
-        Guid instrumentId, AssignProviderSymbolRequest body, AssignProviderSymbolHandler handler, CancellationToken cancellationToken)
+        Guid instrumentId,
+        AssignProviderSymbolRequest body,
+        AssignProviderSymbolHandler handler,
+        CancellationToken cancellationToken)
     {
         var command = new AssignProviderSymbolCommand(instrumentId, body.ProviderSymbol);
 

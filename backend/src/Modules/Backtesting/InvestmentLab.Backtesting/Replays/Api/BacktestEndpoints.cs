@@ -32,7 +32,10 @@ internal static class BacktestEndpoints
         return group;
     }
 
-    private static async Task<IResult> Compare(CompareBacktestsQuery query, CompareBacktestsHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> Compare(
+        CompareBacktestsQuery query,
+        CompareBacktestsHandler handler,
+        CancellationToken cancellationToken)
     {
         var result = await handler.Handle(query, cancellationToken);
 
@@ -40,7 +43,11 @@ internal static class BacktestEndpoints
     }
 
     private static async Task<IResult> EnsureAndGetBacktest(
-        Guid strategyId, int? version, EnsureBacktestHandler ensure, GetBacktestHandler query, CancellationToken cancellationToken)
+        Guid strategyId,
+        int? version,
+        EnsureBacktestHandler ensure,
+        GetBacktestHandler query,
+        CancellationToken cancellationToken)
     {
         var ensured = await ensure.Handle(strategyId, version, cancellationToken);
         if (ensured.IsFailure)
@@ -52,9 +59,22 @@ internal static class BacktestEndpoints
     }
 
     private static async Task<IResult> GetMoneyOutcomes(
-        Guid strategyId, int version, decimal start, decimal contribution, int years, GetMoneyOutcomesHandler query, CancellationToken cancellationToken)
+        Guid strategyId,
+        int version,
+        decimal start,
+        decimal contribution,
+        int years,
+        GetMoneyOutcomesHandler query,
+        CancellationToken cancellationToken)
     {
-        var outcomes = await query.Handle(new GetMoneyOutcomesQuery(strategyId, version, start, contribution, years), cancellationToken);
+        var request = new GetMoneyOutcomesQuery(
+            StrategyId: strategyId,
+            Version: version,
+            Start: start,
+            MonthlyContribution: contribution,
+            Years: years);
+
+        var outcomes = await query.Handle(request, cancellationToken);
 
         return outcomes.ToHttpResult();
     }

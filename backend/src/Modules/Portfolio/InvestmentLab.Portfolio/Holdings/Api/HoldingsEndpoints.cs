@@ -27,7 +27,10 @@ internal static class HoldingsEndpoints
     }
 
     private static async Task<IResult> GetHoldings(
-        Guid accountId, DateOnly? asOf, GetHoldingsHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        DateOnly? asOf,
+        GetHoldingsHandler handler,
+        CancellationToken cancellationToken)
     {
         var holdings = await handler.Handle(accountId, asOf, cancellationToken);
 
@@ -35,7 +38,10 @@ internal static class HoldingsEndpoints
     }
 
     private static async Task<IResult> GetValuedHoldings(
-        Guid accountId, DateOnly? asOf, GetValuedHoldingsHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        DateOnly? asOf,
+        GetValuedHoldingsHandler handler,
+        CancellationToken cancellationToken)
     {
         var holdings = await handler.Handle(accountId, asOf, cancellationToken);
 

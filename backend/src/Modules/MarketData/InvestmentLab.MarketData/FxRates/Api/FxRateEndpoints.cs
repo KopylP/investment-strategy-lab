@@ -29,14 +29,18 @@ internal static class FxRateEndpoints
         return group;
     }
 
-    private static async Task<Ok<FxIngestReport>> IngestFxRates(IngestFxRatesHandler handler, CancellationToken cancellationToken)
+    private static async Task<Ok<FxIngestReport>> IngestFxRates(
+        IngestFxRatesHandler handler,
+        CancellationToken cancellationToken)
     {
         var report = await handler.Handle(cancellationToken);
 
         return TypedResults.Ok(report);
     }
 
-    private static async Task<Ok<LatestFxRatesDto>> GetLatestFxRates(GetLatestFxRatesHandler handler, CancellationToken cancellationToken)
+    private static async Task<Ok<LatestFxRatesDto>> GetLatestFxRates(
+        GetLatestFxRatesHandler handler,
+        CancellationToken cancellationToken)
     {
         var rates = await handler.Handle(cancellationToken);
 
@@ -44,7 +48,11 @@ internal static class FxRateEndpoints
     }
 
     private static async Task<Results<Ok<FxRateDto>, NotFound>> GetFxRate(
-        string baseCurrency, string quoteCurrency, DateOnly transactionDate, IFxRates rates, CancellationToken cancellationToken)
+        string baseCurrency,
+        string quoteCurrency,
+        DateOnly transactionDate,
+        IFxRates rates,
+        CancellationToken cancellationToken)
     {
         var rate = await rates.GetFxRate(baseCurrency, quoteCurrency, transactionDate, cancellationToken);
 

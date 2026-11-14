@@ -37,8 +37,12 @@ app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi().AllowAnonymous();
-    app.MapScalarApiReference().AllowAnonymous();
+    app
+        .MapOpenApi()
+        .AllowAnonymous();
+    app
+        .MapScalarApiReference()
+        .AllowAnonymous();
 }
 
 app.MapDefaultEndpoints();

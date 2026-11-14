@@ -51,7 +51,9 @@ internal static class StatementImportEndpoints
     }
 
     private static async Task<Ok<IReadOnlyList<StatementImportSummaryDto>>> ListStatementImports(
-        Guid accountId, ListStatementImportsHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        ListStatementImportsHandler handler,
+        CancellationToken cancellationToken)
     {
         var imports = await handler.Handle(accountId, cancellationToken);
 
@@ -59,7 +61,10 @@ internal static class StatementImportEndpoints
     }
 
     private static async Task<IResult> UploadStatement(
-        Guid accountId, UploadStatementRequest body, UploadStatementHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        UploadStatementRequest body,
+        UploadStatementHandler handler,
+        CancellationToken cancellationToken)
     {
         var uploaded = await handler.Handle(accountId, body.FileName, body.Content, cancellationToken);
 
@@ -67,7 +72,10 @@ internal static class StatementImportEndpoints
     }
 
     private static async Task<IResult> GetStatementImport(
-        Guid accountId, Guid importId, GetStatementImportHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        Guid importId,
+        GetStatementImportHandler handler,
+        CancellationToken cancellationToken)
     {
         var statementImport = await handler.Handle(accountId, importId, cancellationToken);
 
@@ -75,7 +83,11 @@ internal static class StatementImportEndpoints
     }
 
     private static async Task<IResult> ConfigureStatementImport(
-        Guid accountId, Guid importId, ConfigureImportCommand body, ConfigureStatementImportHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        Guid importId,
+        ConfigureImportCommand body,
+        ConfigureStatementImportHandler handler,
+        CancellationToken cancellationToken)
     {
         var configured = await handler.Handle(accountId, importId, body, cancellationToken);
 
@@ -83,7 +95,10 @@ internal static class StatementImportEndpoints
     }
 
     private static async Task<IResult> ConfirmStatementImport(
-        Guid accountId, Guid importId, ConfirmStatementImportHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        Guid importId,
+        ConfirmStatementImportHandler handler,
+        CancellationToken cancellationToken)
     {
         var confirmed = await handler.Handle(accountId, importId, cancellationToken);
 
@@ -91,7 +106,10 @@ internal static class StatementImportEndpoints
     }
 
     private static async Task<IResult> UndoStatementImport(
-        Guid accountId, Guid importId, UndoStatementImportHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        Guid importId,
+        UndoStatementImportHandler handler,
+        CancellationToken cancellationToken)
     {
         var undone = await handler.Handle(accountId, importId, cancellationToken);
 

@@ -67,21 +67,29 @@ internal static class ReportsEndpoints
     }
 
     private static async Task<Ok<IReadOnlyList<ReportSummaryDto>>> ListReports(
-        Guid? accountId, ListReportsHandler handler, CancellationToken cancellationToken)
+        Guid? accountId,
+        ListReportsHandler handler,
+        CancellationToken cancellationToken)
     {
         var reports = await handler.Handle(accountId, cancellationToken);
 
         return TypedResults.Ok(reports);
     }
 
-    private static async Task<IResult> GetReport(Guid reportId, GetReportHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> GetReport(
+        Guid reportId,
+        GetReportHandler handler,
+        CancellationToken cancellationToken)
     {
         var report = await handler.Handle(reportId, cancellationToken);
 
         return report.ToHttpResult();
     }
 
-    private static async Task<IResult> CloseReport(Guid reportId, CloseReportHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> CloseReport(
+        Guid reportId,
+        CloseReportHandler handler,
+        CancellationToken cancellationToken)
     {
         var closed = await handler.Handle(reportId, cancellationToken);
 
@@ -89,7 +97,9 @@ internal static class ReportsEndpoints
     }
 
     private static async Task<IResult> PreviewJournalMatches(
-        Guid reportId, PreviewJournalMatchesHandler handler, CancellationToken cancellationToken)
+        Guid reportId,
+        PreviewJournalMatchesHandler handler,
+        CancellationToken cancellationToken)
     {
         var matches = await handler.Handle(reportId, cancellationToken);
 
@@ -97,7 +107,9 @@ internal static class ReportsEndpoints
     }
 
     private static async Task<IResult> ApplyJournalMatches(
-        Guid reportId, ApplyJournalMatchesHandler handler, CancellationToken cancellationToken)
+        Guid reportId,
+        ApplyJournalMatchesHandler handler,
+        CancellationToken cancellationToken)
     {
         var applied = await handler.Handle(reportId, cancellationToken);
 
@@ -105,7 +117,11 @@ internal static class ReportsEndpoints
     }
 
     private static async Task<IResult> MarkActionExecuted(
-        Guid reportId, Guid actionId, MarkActionExecutedCommand body, MarkActionExecutedHandler handler, CancellationToken cancellationToken)
+        Guid reportId,
+        Guid actionId,
+        MarkActionExecutedCommand body,
+        MarkActionExecutedHandler handler,
+        CancellationToken cancellationToken)
     {
         var marked = await handler.Handle(reportId, actionId, body, cancellationToken);
 
@@ -113,7 +129,11 @@ internal static class ReportsEndpoints
     }
 
     private static async Task<IResult> RecordPartialFill(
-        Guid reportId, Guid actionId, RecordPartialFillCommand body, RecordPartialFillHandler handler, CancellationToken cancellationToken)
+        Guid reportId,
+        Guid actionId,
+        RecordPartialFillCommand body,
+        RecordPartialFillHandler handler,
+        CancellationToken cancellationToken)
     {
         var recorded = await handler.Handle(reportId, actionId, body, cancellationToken);
 
@@ -121,7 +141,11 @@ internal static class ReportsEndpoints
     }
 
     private static async Task<IResult> SkipAction(
-        Guid reportId, Guid actionId, SkipActionCommand body, SkipActionHandler handler, CancellationToken cancellationToken)
+        Guid reportId,
+        Guid actionId,
+        SkipActionCommand body,
+        SkipActionHandler handler,
+        CancellationToken cancellationToken)
     {
         var skipped = await handler.Handle(reportId, actionId, body, cancellationToken);
 
@@ -129,7 +153,10 @@ internal static class ReportsEndpoints
     }
 
     private static async Task<IResult> UndoActionMark(
-        Guid reportId, Guid actionId, UndoMarkHandler handler, CancellationToken cancellationToken)
+        Guid reportId,
+        Guid actionId,
+        UndoMarkHandler handler,
+        CancellationToken cancellationToken)
     {
         var undone = await handler.Handle(reportId, actionId, cancellationToken);
 

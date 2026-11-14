@@ -66,7 +66,10 @@ internal static class AccountEndpoints
     }
 
     private static async Task<IResult> OpenAccount(
-        OpenAccountCommand body, OpenAccountHandler handler, ICurrentUser user, CancellationToken cancellationToken)
+        OpenAccountCommand body,
+        OpenAccountHandler handler,
+        ICurrentUser user,
+        CancellationToken cancellationToken)
     {
         var opened = await handler.Handle(user.RequiredId, body, cancellationToken);
 
@@ -74,14 +77,18 @@ internal static class AccountEndpoints
     }
 
     private static async Task<Ok<IReadOnlyList<AccountSetupDto>>> ListAccounts(
-        ListAccountsHandler handler, CancellationToken cancellationToken)
+        ListAccountsHandler handler,
+        CancellationToken cancellationToken)
     {
         var accounts = await handler.Handle(cancellationToken);
 
         return TypedResults.Ok(accounts);
     }
 
-    private static async Task<IResult> GetAccount(Guid accountId, GetAccountHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> GetAccount(
+        Guid accountId,
+        GetAccountHandler handler,
+        CancellationToken cancellationToken)
     {
         var account = await handler.Handle(accountId, cancellationToken);
 
@@ -89,7 +96,10 @@ internal static class AccountEndpoints
     }
 
     private static async Task<IResult> AddSubPortfolio(
-        Guid accountId, AddSubPortfolioCommand body, AddSubPortfolioHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        AddSubPortfolioCommand body,
+        AddSubPortfolioHandler handler,
+        CancellationToken cancellationToken)
     {
         var added = await handler.Handle(accountId, body, cancellationToken);
 
@@ -97,7 +107,10 @@ internal static class AccountEndpoints
     }
 
     private static async Task<IResult> ChangeTargetShares(
-        Guid accountId, ChangeTargetSharesCommand body, ChangeTargetSharesHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        ChangeTargetSharesCommand body,
+        ChangeTargetSharesHandler handler,
+        CancellationToken cancellationToken)
     {
         var changed = await handler.Handle(accountId, body, cancellationToken);
 
@@ -105,7 +118,10 @@ internal static class AccountEndpoints
     }
 
     private static async Task<IResult> ChangeContributionPolicy(
-        Guid accountId, ContributionPolicyChoice body, ChangeContributionPolicyHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        ContributionPolicyChoice body,
+        ChangeContributionPolicyHandler handler,
+        CancellationToken cancellationToken)
     {
         var changed = await handler.Handle(accountId, body, cancellationToken);
 
@@ -113,7 +129,11 @@ internal static class AccountEndpoints
     }
 
     private static async Task<IResult> AssignStrategy(
-        Guid accountId, Guid subPortfolioId, AssignStrategyCommand body, AssignStrategyHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        Guid subPortfolioId,
+        AssignStrategyCommand body,
+        AssignStrategyHandler handler,
+        CancellationToken cancellationToken)
     {
         var assigned = await handler.Handle(accountId, subPortfolioId, body, cancellationToken);
 
@@ -121,7 +141,11 @@ internal static class AccountEndpoints
     }
 
     private static async Task<IResult> RenameSubPortfolio(
-        Guid accountId, Guid subPortfolioId, RenameSubPortfolioCommand body, RenameSubPortfolioHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        Guid subPortfolioId,
+        RenameSubPortfolioCommand body,
+        RenameSubPortfolioHandler handler,
+        CancellationToken cancellationToken)
     {
         var renamed = await handler.Handle(accountId, subPortfolioId, body, cancellationToken);
 
@@ -129,7 +153,11 @@ internal static class AccountEndpoints
     }
 
     private static async Task<IResult> RetireSubPortfolio(
-        Guid accountId, Guid subPortfolioId, RetireSubPortfolioCommand body, RetireSubPortfolioHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        Guid subPortfolioId,
+        RetireSubPortfolioCommand body,
+        RetireSubPortfolioHandler handler,
+        CancellationToken cancellationToken)
     {
         var retired = await handler.Handle(accountId, subPortfolioId, body, cancellationToken);
 

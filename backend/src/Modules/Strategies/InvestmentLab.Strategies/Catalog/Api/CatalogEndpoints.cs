@@ -33,7 +33,8 @@ internal static class CatalogEndpoints
     }
 
     private static async Task<Ok<IReadOnlyList<StrategyTypeDto>>> GetStrategyCatalog(
-        GetStrategyCatalogHandler handler, CancellationToken cancellationToken)
+        GetStrategyCatalogHandler handler,
+        CancellationToken cancellationToken)
     {
         var strategyTypes = await handler.Handle(cancellationToken);
 
@@ -41,11 +42,13 @@ internal static class CatalogEndpoints
     }
 
     private static async Task<Ok<IReadOnlyDictionary<string, string>>> GetStrategyMessages(
-        IStrategyDirectory directory, CancellationToken cancellationToken) =>
+        IStrategyDirectory directory,
+        CancellationToken cancellationToken) =>
         TypedResults.Ok(await directory.GetMessages(MessageLocalizer.CurrentLanguage.Code, cancellationToken));
 
     private static async Task<Ok<SyncedStrategyCatalogResponse>> SyncStrategyCatalog(
-        IStrategyCatalog catalog, CancellationToken cancellationToken)
+        IStrategyCatalog catalog,
+        CancellationToken cancellationToken)
     {
         var strategyTypes = await catalog.SyncAsync(cancellationToken);
 

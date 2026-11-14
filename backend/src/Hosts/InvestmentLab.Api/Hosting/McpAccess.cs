@@ -48,7 +48,9 @@ public static class McpAccess
             .RequireAuthenticatedUser()
             .Build();
 
-        app.MapMcp(Path).RequireAuthorization(signedInByAccessToken);
+        app
+            .MapMcp(Path)
+            .RequireAuthorization(signedInByAccessToken);
     }
 
     public static bool IsMcpRequest(HttpContext context)

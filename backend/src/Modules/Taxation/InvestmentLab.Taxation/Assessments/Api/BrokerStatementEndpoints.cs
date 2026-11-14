@@ -34,7 +34,9 @@ internal static class BrokerStatementEndpoints
     }
 
     private static async Task<IResult> ListBrokerStatements(
-        Guid accountId, ListBrokerStatementsHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        ListBrokerStatementsHandler handler,
+        CancellationToken cancellationToken)
     {
         var statements = await handler.Handle(accountId, cancellationToken);
 
@@ -42,7 +44,10 @@ internal static class BrokerStatementEndpoints
     }
 
     private static async Task<IResult> UploadBrokerStatement(
-        Guid accountId, UploadBrokerStatementCommand body, UploadBrokerStatementHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        UploadBrokerStatementCommand body,
+        UploadBrokerStatementHandler handler,
+        CancellationToken cancellationToken)
     {
         var uploaded = await handler.Handle(accountId, body, cancellationToken);
 
@@ -50,7 +55,10 @@ internal static class BrokerStatementEndpoints
     }
 
     private static async Task<IResult> RemoveBrokerStatement(
-        Guid accountId, Guid statementId, RemoveBrokerStatementHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        Guid statementId,
+        RemoveBrokerStatementHandler handler,
+        CancellationToken cancellationToken)
     {
         var removed = await handler.Handle(accountId, statementId, cancellationToken);
 

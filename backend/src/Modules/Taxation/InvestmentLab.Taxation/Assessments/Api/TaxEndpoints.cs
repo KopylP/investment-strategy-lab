@@ -55,13 +55,18 @@ internal static class TaxEndpoints
         return group;
     }
 
-    private static Ok<IReadOnlyList<TaxPolicyDto>> ListTaxPolicies(ListTaxPoliciesHandler handler) => TypedResults.Ok(ListTaxPoliciesHandler.Handle());
+    private static Ok<IReadOnlyList<TaxPolicyDto>> ListTaxPolicies(ListTaxPoliciesHandler handler) =>
+        TypedResults.Ok(ListTaxPoliciesHandler.Handle());
 
-    private static async Task<Ok<TaxRegimeDto>> GetTaxRegime(GetTaxRegimeHandler handler, CancellationToken cancellationToken) =>
+    private static async Task<Ok<TaxRegimeDto>> GetTaxRegime(
+        GetTaxRegimeHandler handler,
+        CancellationToken cancellationToken) =>
         TypedResults.Ok(await handler.Handle(cancellationToken));
 
     private static async Task<Ok<TaxOverviewDto>> RefreshAndGetTaxYears(
-        RefreshTaxAssessmentsHandler refresh, GetTaxYearsHandler query, CancellationToken cancellationToken)
+        RefreshTaxAssessmentsHandler refresh,
+        GetTaxYearsHandler query,
+        CancellationToken cancellationToken)
     {
         await refresh.Handle(cancellationToken);
         var overview = await query.Handle(cancellationToken);
@@ -70,7 +75,10 @@ internal static class TaxEndpoints
     }
 
     private static async Task<IResult> RefreshAndGetTaxYear(
-        int year, RefreshTaxAssessmentsHandler refresh, GetTaxYearHandler query, CancellationToken cancellationToken)
+        int year,
+        RefreshTaxAssessmentsHandler refresh,
+        GetTaxYearHandler query,
+        CancellationToken cancellationToken)
     {
         await refresh.Handle(cancellationToken);
         var taxYear = await query.Handle(year, cancellationToken);
@@ -79,7 +87,10 @@ internal static class TaxEndpoints
     }
 
     private static async Task<Ok<TaxProgressDto>> RefreshAndGetTaxProgress(
-        int year, RefreshTaxAssessmentsHandler refresh, GetTaxProgressHandler query, CancellationToken cancellationToken)
+        int year,
+        RefreshTaxAssessmentsHandler refresh,
+        GetTaxProgressHandler query,
+        CancellationToken cancellationToken)
     {
         await refresh.Handle(cancellationToken);
         var progress = await query.Handle(year, cancellationToken);
@@ -88,7 +99,8 @@ internal static class TaxEndpoints
     }
 
     private static async Task<Ok<IReadOnlyList<LossCarryforwardDto>>> GetLossCarryforwards(
-        ListLossCarryforwardsHandler handler, CancellationToken cancellationToken)
+        ListLossCarryforwardsHandler handler,
+        CancellationToken cancellationToken)
     {
         var losses = await handler.Handle(cancellationToken);
 
@@ -96,14 +108,19 @@ internal static class TaxEndpoints
     }
 
     private static async Task<IResult> RecordLossCarryforward(
-        RecordLossCommand body, RecordLossCarryforwardHandler handler, CancellationToken cancellationToken)
+        RecordLossCommand body,
+        RecordLossCarryforwardHandler handler,
+        CancellationToken cancellationToken)
     {
         var recorded = await handler.Handle(body, cancellationToken);
 
         return recorded.ToHttpResult();
     }
 
-    private static async Task<IResult> RemoveLossCarryforward(Guid lossId, RemoveLossCarryforwardHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> RemoveLossCarryforward(
+        Guid lossId,
+        RemoveLossCarryforwardHandler handler,
+        CancellationToken cancellationToken)
     {
         var removed = await handler.Handle(lossId, cancellationToken);
 

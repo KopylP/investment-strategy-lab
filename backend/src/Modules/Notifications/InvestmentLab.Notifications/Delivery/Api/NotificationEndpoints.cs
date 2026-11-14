@@ -42,7 +42,9 @@ internal static class NotificationEndpoints
     }
 
     private static async Task<IResult> GetNotificationSettings(
-        GetNotificationSettingsHandler handler, ICurrentUser user, CancellationToken cancellationToken)
+        GetNotificationSettingsHandler handler,
+        ICurrentUser user,
+        CancellationToken cancellationToken)
     {
         var settings = await handler.Handle(user.RequiredId, cancellationToken);
 
@@ -50,7 +52,10 @@ internal static class NotificationEndpoints
     }
 
     private static async Task<IResult> ChangeNotificationSettings(
-        ChangeNotificationSettingsCommand body, ChangeNotificationSettingsHandler handler, ICurrentUser user, CancellationToken cancellationToken)
+        ChangeNotificationSettingsCommand body,
+        ChangeNotificationSettingsHandler handler,
+        ICurrentUser user,
+        CancellationToken cancellationToken)
     {
         var changed = await handler.Handle(user.RequiredId, body, cancellationToken);
 
@@ -58,7 +63,9 @@ internal static class NotificationEndpoints
     }
 
     private static async Task<IResult> GetMutedSignals(
-        GetMutedSignalsHandler handler, ICurrentUser user, CancellationToken cancellationToken)
+        GetMutedSignalsHandler handler,
+        ICurrentUser user,
+        CancellationToken cancellationToken)
     {
         var muted = await handler.Handle(user.RequiredId, cancellationToken);
 
@@ -66,7 +73,11 @@ internal static class NotificationEndpoints
     }
 
     private static async Task<IResult> HearSignal(
-        Guid signalId, HearSignalCommand body, HearSignalHandler handler, ICurrentUser user, CancellationToken cancellationToken)
+        Guid signalId,
+        HearSignalCommand body,
+        HearSignalHandler handler,
+        ICurrentUser user,
+        CancellationToken cancellationToken)
     {
         var heard = await handler.Handle(user.RequiredId, signalId, body, cancellationToken);
 
@@ -74,7 +85,9 @@ internal static class NotificationEndpoints
     }
 
     private static async Task<IResult> SendTestNotification(
-        SendTestNotificationHandler handler, ICurrentUser user, CancellationToken cancellationToken)
+        SendTestNotificationHandler handler,
+        ICurrentUser user,
+        CancellationToken cancellationToken)
     {
         var sent = await handler.Handle(user.RequiredId, cancellationToken);
 

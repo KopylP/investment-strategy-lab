@@ -44,7 +44,9 @@ internal static class DeclarationEndpoints
     }
 
     private static async Task<Ok<IReadOnlyList<DeclarationFormDto>>> GetDeclarationForms(
-        int year, ListDeclarationFormsHandler handler, CancellationToken cancellationToken)
+        int year,
+        ListDeclarationFormsHandler handler,
+        CancellationToken cancellationToken)
     {
         var forms = await handler.Handle(year, cancellationToken);
 
@@ -52,7 +54,10 @@ internal static class DeclarationEndpoints
     }
 
     private static async Task<IResult> GetDeclaration(
-        int year, string code, GetDeclarationHandler handler, CancellationToken cancellationToken)
+        int year,
+        string code,
+        GetDeclarationHandler handler,
+        CancellationToken cancellationToken)
     {
         var declaration = await handler.Handle(year, code, cancellationToken);
 
@@ -60,7 +65,11 @@ internal static class DeclarationEndpoints
     }
 
     private static async Task<IResult> GetDeclarationPdf(
-        int year, string code, string? kind, GetDeclarationPdfHandler handler, CancellationToken cancellationToken)
+        int year,
+        string code,
+        string? kind,
+        GetDeclarationPdfHandler handler,
+        CancellationToken cancellationToken)
     {
         var pdf = await handler.Handle(year, code, kind ?? "summary", cancellationToken);
         if (pdf.IsFailure)
@@ -70,7 +79,11 @@ internal static class DeclarationEndpoints
     }
 
     private static async Task<IResult> SetPit8C(
-        int year, Guid accountId, Pit8CCommand body, SetPit8CHandler handler, CancellationToken cancellationToken)
+        int year,
+        Guid accountId,
+        Pit8CCommand body,
+        SetPit8CHandler handler,
+        CancellationToken cancellationToken)
     {
         var set = await handler.Handle(year, accountId, body, cancellationToken);
 
@@ -78,7 +91,10 @@ internal static class DeclarationEndpoints
     }
 
     private static async Task<IResult> RemovePit8C(
-        int year, Guid accountId, RemovePit8CHandler handler, CancellationToken cancellationToken)
+        int year,
+        Guid accountId,
+        RemovePit8CHandler handler,
+        CancellationToken cancellationToken)
     {
         var removed = await handler.Handle(year, accountId, cancellationToken);
 

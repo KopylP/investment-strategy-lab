@@ -40,14 +40,20 @@ internal static class UserEndpoints
         return group;
     }
 
-    private static async Task<IResult> Register(RegisterCommand body, RegisterHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> Register(
+        RegisterCommand body,
+        RegisterHandler handler,
+        CancellationToken cancellationToken)
     {
         var registered = await handler.Handle(body, cancellationToken);
 
         return registered.ToHttpResult();
     }
 
-    private static async Task<IResult> Login(LoginCommand body, LoginHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> Login(
+        LoginCommand body,
+        LoginHandler handler,
+        CancellationToken cancellationToken)
     {
         var loggedIn = await handler.Handle(body, cancellationToken);
 
@@ -61,12 +67,18 @@ internal static class UserEndpoints
         return TypedResults.NoContent();
     }
 
-    private static async Task<IResult> GetCurrentUser(HttpContext context, GetCurrentUserHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> GetCurrentUser(
+        HttpContext context,
+        GetCurrentUserHandler handler,
+        CancellationToken cancellationToken)
     {
-        var viaHomeAssistant = context.User.HasClaim(claim => claim.Type == HomeAssistantAuthenticationHandler.UserClaim);
+        var viaHomeAssistant = IsSignedInThroughHomeAssistant(context);
 
         var current = await handler.Handle(viaHomeAssistant, cancellationToken);
 
         return current.ToHttpResult();
     }
+
+    private static bool IsSignedInThroughHomeAssistant(HttpContext context) =>
+        context.User.HasClaim(claim => claim.Type == HomeAssistantAuthenticationHandler.UserClaim);
 }

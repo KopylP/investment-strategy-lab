@@ -11,7 +11,9 @@ internal static class ImportEndpoints
     public static RouteGroupBuilder MapImport(this RouteGroupBuilder group)
     {
         group
-            .MapPost("/accounts/{accountId:guid}/sub-portfolios/{subPortfolioId:guid}/import-positions", ImportPositions)
+            .MapPost(
+                "/accounts/{accountId:guid}/sub-portfolios/{subPortfolioId:guid}/import-positions",
+                ImportPositions)
             .WithTags("Import")
             .WithName("ImportPositions")
             .Produces<ImportReport>();
@@ -20,7 +22,12 @@ internal static class ImportEndpoints
     }
 
     private static async Task<IResult> ImportPositions(
-        Guid accountId, Guid subPortfolioId, DateOnly? asOf, PositionsFile body, ImportPositionsHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        Guid subPortfolioId,
+        DateOnly? asOf,
+        PositionsFile body,
+        ImportPositionsHandler handler,
+        CancellationToken cancellationToken)
     {
         var positions = (body.Positions ?? []).Select(ToLegacyPosition);
         var command = new ImportPositionsCommand(subPortfolioId, body.Cash, [.. positions], asOf);

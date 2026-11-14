@@ -236,6 +236,6 @@ internal sealed class PlanningAccounts(IAccountSetupQueries accounts) : IPlannin
   collection expressions, file-scoped namespaces.
 - `string.Empty`, never `""`. A route with chained calls is written one call per line, the receiver on its own line
   (`profile` / `.MapPut(string.Empty, UpdateProfile)` / `.WithName("UpdateProfile")` / `.Produces<UserProfileDto>()`);
-  lines stay within 120 characters.
+  lines stay within 120 characters, and a signature that does not fit on one line puts each parameter on its own line.
 - Text the user reads never appears in code: warnings, reasons and notes are `Message.Of(code, parameters)`, errors carry a
   code and parameters, and the words are in `../locales/uk.json` and `../locales/en.json` (see Language in `../CLAUDE.md`).

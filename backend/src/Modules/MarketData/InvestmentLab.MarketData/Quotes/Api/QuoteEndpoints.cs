@@ -41,7 +41,9 @@ internal static class QuoteEndpoints
         return group;
     }
 
-    private static async Task<Ok<IngestReport>> IngestDailyQuotes(IngestDailyQuotesHandler handler, CancellationToken cancellationToken)
+    private static async Task<Ok<IngestReport>> IngestDailyQuotes(
+        IngestDailyQuotesHandler handler,
+        CancellationToken cancellationToken)
     {
         var report = await handler.Handle(cancellationToken);
 
@@ -49,7 +51,11 @@ internal static class QuoteEndpoints
     }
 
     private static async Task<Ok<IReadOnlyList<LatestPriceDto>>> GetLatestPrices(
-        [FromQuery] Guid[] instrumentIds, DateOnly? asOf, IQuoteHistory history, TimeProvider clock, CancellationToken cancellationToken)
+        [FromQuery] Guid[] instrumentIds,
+        DateOnly? asOf,
+        IQuoteHistory history,
+        TimeProvider clock,
+        CancellationToken cancellationToken)
     {
         var date = asOf ?? DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
         var prices = await history.GetLatestPrices(instrumentIds, date, cancellationToken);
@@ -58,7 +64,11 @@ internal static class QuoteEndpoints
     }
 
     private static async Task<Ok<IReadOnlyList<QuoteSeriesDto>>> GetQuoteHistories(
-        [FromQuery] Guid[] instrumentIds, DateOnly from, DateOnly to, IQuoteHistory history, CancellationToken cancellationToken)
+        [FromQuery] Guid[] instrumentIds,
+        DateOnly from,
+        DateOnly to,
+        IQuoteHistory history,
+        CancellationToken cancellationToken)
     {
         var series = await history.GetQuoteHistory(instrumentIds, from, to, cancellationToken);
 
@@ -66,7 +76,11 @@ internal static class QuoteEndpoints
     }
 
     private static async Task<Ok<QuoteSeriesDto>> GetQuoteHistory(
-        Guid instrumentId, DateOnly from, DateOnly to, IQuoteHistory history, CancellationToken cancellationToken)
+        Guid instrumentId,
+        DateOnly from,
+        DateOnly to,
+        IQuoteHistory history,
+        CancellationToken cancellationToken)
     {
         var series = await history.GetQuoteHistory([instrumentId], from, to, cancellationToken);
 
@@ -74,9 +88,18 @@ internal static class QuoteEndpoints
     }
 
     private static async Task<IResult> CorrectQuote(
-        Guid instrumentId, CorrectQuoteRequest body, CorrectQuoteHandler handler, ICurrentUser user, CancellationToken cancellationToken)
+        Guid instrumentId,
+        CorrectQuoteRequest body,
+        CorrectQuoteHandler handler,
+        ICurrentUser user,
+        CancellationToken cancellationToken)
     {
-        var command = new CorrectQuoteCommand(instrumentId, body.TradingDate, body.Close, body.AdjustedClose, body.Reason);
+        var command = new CorrectQuoteCommand(
+            InstrumentId: instrumentId,
+            TradingDate: body.TradingDate,
+            Close: body.Close,
+            AdjustedClose: body.AdjustedClose,
+            Reason: body.Reason);
 
         var corrected = await handler.Handle(command, user.RequiredId.ToString(), cancellationToken);
 

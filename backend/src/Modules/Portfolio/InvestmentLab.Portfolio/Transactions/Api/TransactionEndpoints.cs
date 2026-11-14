@@ -49,7 +49,10 @@ internal static class TransactionEndpoints
     }
 
     private static async Task<IResult> RecordTrade(
-        Guid accountId, RecordTradeCommand body, RecordTradeHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        RecordTradeCommand body,
+        RecordTradeHandler handler,
+        CancellationToken cancellationToken)
     {
         var recorded = await handler.RecordManually(accountId, body, cancellationToken);
 
@@ -57,7 +60,10 @@ internal static class TransactionEndpoints
     }
 
     private static async Task<IResult> RecordContribution(
-        Guid accountId, RecordContributionCommand body, RecordContributionHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        RecordContributionCommand body,
+        RecordContributionHandler handler,
+        CancellationToken cancellationToken)
     {
         var recorded = await handler.RecordManually(accountId, body, cancellationToken);
 
@@ -65,7 +71,10 @@ internal static class TransactionEndpoints
     }
 
     private static async Task<IResult> RecordCashMovement(
-        Guid accountId, RecordCashMovementCommand body, RecordCashMovementHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        RecordCashMovementCommand body,
+        RecordCashMovementHandler handler,
+        CancellationToken cancellationToken)
     {
         var recorded = await handler.RecordManually(accountId, body, cancellationToken);
 
@@ -73,7 +82,10 @@ internal static class TransactionEndpoints
     }
 
     private static async Task<IResult> RecordInternalTransfer(
-        Guid accountId, RecordInternalTransferCommand body, RecordInternalTransferHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        RecordInternalTransferCommand body,
+        RecordInternalTransferHandler handler,
+        CancellationToken cancellationToken)
     {
         var recorded = await handler.RecordManually(accountId, body, cancellationToken);
 
@@ -81,14 +93,21 @@ internal static class TransactionEndpoints
     }
 
     private static async Task<IResult> ReverseTransaction(
-        Guid accountId, Guid transactionId, ReverseTransactionCommand body, ReverseTransactionHandler handler, CancellationToken cancellationToken)
+        Guid accountId,
+        Guid transactionId,
+        ReverseTransactionCommand body,
+        ReverseTransactionHandler handler,
+        CancellationToken cancellationToken)
     {
         var reversed = await handler.Handle(accountId, transactionId, body, cancellationToken);
 
         return reversed.ToHttpResult();
     }
 
-    private static async Task<IResult> GetTransactions(Guid accountId, GetTransactionsHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> GetTransactions(
+        Guid accountId,
+        GetTransactionsHandler handler,
+        CancellationToken cancellationToken)
     {
         var transactions = await handler.Handle(accountId, cancellationToken);
 

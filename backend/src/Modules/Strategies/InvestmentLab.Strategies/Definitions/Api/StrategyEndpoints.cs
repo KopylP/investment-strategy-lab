@@ -50,7 +50,8 @@ internal static class StrategyEndpoints
     }
 
     private static async Task<Ok<IReadOnlyList<StrategyDto>>> ListStrategies(
-        ListStrategiesHandler handler, CancellationToken cancellationToken)
+        ListStrategiesHandler handler,
+        CancellationToken cancellationToken)
     {
         var strategies = await handler.Handle(cancellationToken);
 
@@ -58,7 +59,10 @@ internal static class StrategyEndpoints
     }
 
     private static async Task<IResult> CreateStrategy(
-        CreateStrategyCommand body, CreateStrategyHandler handler, ICurrentUser user, CancellationToken cancellationToken)
+        CreateStrategyCommand body,
+        CreateStrategyHandler handler,
+        ICurrentUser user,
+        CancellationToken cancellationToken)
     {
         var created = await handler.Handle(user.RequiredId, body, cancellationToken);
 
@@ -66,7 +70,9 @@ internal static class StrategyEndpoints
     }
 
     private static async Task<IResult> CreateDefaultStrategies(
-        CreateDefaultStrategiesHandler handler, ICurrentUser user, CancellationToken cancellationToken)
+        CreateDefaultStrategiesHandler handler,
+        ICurrentUser user,
+        CancellationToken cancellationToken)
     {
         var created = await handler.Handle(user.RequiredId, cancellationToken);
 
@@ -74,7 +80,10 @@ internal static class StrategyEndpoints
     }
 
     private static async Task<IResult> GetStrategy(
-        Guid strategyId, int? version, GetStrategyHandler handler, CancellationToken cancellationToken)
+        Guid strategyId,
+        int? version,
+        GetStrategyHandler handler,
+        CancellationToken cancellationToken)
     {
         var strategy = await handler.Handle(strategyId, version, cancellationToken);
 
@@ -82,14 +91,20 @@ internal static class StrategyEndpoints
     }
 
     private static async Task<IResult> ReconfigureStrategy(
-        Guid strategyId, StrategySetupDraft body, ReconfigureStrategyHandler handler, CancellationToken cancellationToken)
+        Guid strategyId,
+        StrategySetupDraft body,
+        ReconfigureStrategyHandler handler,
+        CancellationToken cancellationToken)
     {
         var reconfigured = await handler.Handle(strategyId, body, cancellationToken);
 
         return reconfigured.ToHttpResult();
     }
 
-    private static async Task<IResult> ArchiveStrategy(Guid strategyId, ArchiveStrategyHandler handler, CancellationToken cancellationToken)
+    private static async Task<IResult> ArchiveStrategy(
+        Guid strategyId,
+        ArchiveStrategyHandler handler,
+        CancellationToken cancellationToken)
     {
         var archived = await handler.Handle(strategyId, cancellationToken);
 

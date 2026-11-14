@@ -29,7 +29,10 @@ internal static class ProfileEndpoints
         return group;
     }
 
-    private static async Task<IResult> GetProfile(GetProfileHandler handler, ICurrentUser user, CancellationToken cancellationToken)
+    private static async Task<IResult> GetProfile(
+        GetProfileHandler handler,
+        ICurrentUser user,
+        CancellationToken cancellationToken)
     {
         var profile = await handler.Handle(user.RequiredId, cancellationToken);
 
@@ -37,7 +40,10 @@ internal static class ProfileEndpoints
     }
 
     private static async Task<IResult> UpdateProfile(
-        UpdateProfileCommand body, UpdateProfileHandler handler, ICurrentUser user, CancellationToken cancellationToken)
+        UpdateProfileCommand body,
+        UpdateProfileHandler handler,
+        ICurrentUser user,
+        CancellationToken cancellationToken)
     {
         var updated = await handler.Handle(user.RequiredId, body, cancellationToken);
 
