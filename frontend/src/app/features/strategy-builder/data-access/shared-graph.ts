@@ -13,6 +13,24 @@ export function dependenciesOf(graph: GraphDto, id: string): Set<string> {
   return visited;
 }
 
+export function roleDependenciesOf(graph: GraphDto, resultId: string): Set<string> {
+  const visited = new Set<string>(),
+    pending = [resultId];
+  while (pending.length) {
+    const current = pending.pop()!;
+    if (visited.has(current)) continue;
+    visited.add(current);
+    if (current !== resultId && isRoleBoundary(graph, current)) continue;
+    pending.push(...graph.links.filter((link) => link.to === current).map((link) => link.from));
+  }
+  return visited;
+}
+
+function isRoleBoundary(graph: GraphDto, id: string): boolean {
+  const kind = graph.nodes.find((node) => node.id === id)?.kind;
+  return kind === 'Cash' || !!kind?.endsWith('Result');
+}
+
 export function resultsUsing(graph: GraphDto, id: string): NodeDto[] {
   const visited = new Set<string>(),
     pending = [id],

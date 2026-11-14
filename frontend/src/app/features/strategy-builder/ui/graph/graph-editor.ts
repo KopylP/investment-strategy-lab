@@ -53,7 +53,12 @@ import { setupNodeId, withSetup, resolvedSeries } from '../../data-access/setup-
 import { withPortfolioFlow, candidatePath } from '../../data-access/portfolio-flow';
 import { wireStyles } from './graph-visuals';
 import { blocks } from '../../models/draft-vm';
-import { dependenciesOf, resultsUsing, fundContext } from '../../data-access/shared-graph';
+import {
+  dependenciesOf,
+  resultsUsing,
+  fundContext,
+  roleDependenciesOf,
+} from '../../data-access/shared-graph';
 
 interface Snapshot {
   graph: GraphDto;
@@ -510,7 +515,7 @@ export class GraphEditor implements AfterViewInit, OnDestroy {
       .getNodes()
       .find((node) => node.dto.kind.endsWith('Result') && node.dto.block === block);
     if (!result) return;
-    const ids = dependenciesOf(this.graphValue, result.id);
+    const ids = roleDependenciesOf(this.graphValue, result.id);
     const nodes = this.editor
       .getNodes()
       .filter(
