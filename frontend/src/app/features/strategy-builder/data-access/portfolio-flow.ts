@@ -1,4 +1,5 @@
-import { GraphDto, JsonValue, NodeDto } from '../models/draft-dto';
+import { JsonValue } from '../../../shared/models/json-value';
+import { GraphDto, NodeDto } from '../models/draft-dto';
 import { setupNodeId } from './setup-bindings';
 
 export const portfolioNodeId = 'strategy-portfolio';

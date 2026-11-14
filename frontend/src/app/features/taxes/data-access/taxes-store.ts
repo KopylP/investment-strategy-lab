@@ -153,14 +153,11 @@ export class TaxesStore {
   }
 
   async addLoss(year: number, amount: number, alreadyUsed: number): Promise<boolean> {
-    return this.change(
-      () => {
-        const body: RecordLossBody = { year, amount, alreadyUsed };
+    return this.change(() => {
+      const body: RecordLossBody = { year, amount, alreadyUsed };
 
-        return this.api.post<LossCarryforward>('/api/taxation/losses', body);
-      },
-      translate('taxes.lossAdded'),
-    );
+      return this.api.post<LossCarryforward>('/api/taxation/losses', body);
+    }, translate('taxes.lossAdded'));
   }
 
   async removeLoss(loss: LossCarryforward): Promise<boolean> {

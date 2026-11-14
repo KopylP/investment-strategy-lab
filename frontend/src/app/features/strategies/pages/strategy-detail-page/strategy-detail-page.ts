@@ -20,7 +20,8 @@ import { Skeleton } from 'primeng/skeleton';
 import { Tag } from 'primeng/tag';
 import { DateTimePipe } from '../../../../shared/pipes/format-pipes';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
-import { JsonObject, SchemaForm } from '../../../../shared/ui/schema-form/schema-form';
+import { JsonObject } from '../../../../shared/models/json-value';
+import { SchemaForm } from '../../../../shared/ui/schema-form/schema-form';
 import { scheduleLabel } from '../../../reports/models/report-schedule';
 import { StrategyDetailStore } from '../../data-access/strategies-store';
 

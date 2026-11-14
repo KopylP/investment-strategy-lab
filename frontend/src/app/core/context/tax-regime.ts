@@ -13,7 +13,9 @@ export class TaxRegime {
     loader: () => this.api.get<ApiSchema<'TaxRegimeDto'>>('/api/taxation/regime'),
   });
 
-  readonly regime = computed(() => (this.regimeResource.hasValue() ? this.regimeResource.value() : null));
+  readonly regime = computed(() =>
+    this.regimeResource.hasValue() ? this.regimeResource.value() : null,
+  );
   readonly currency = computed(() => this.regime()?.taxCurrency ?? null);
 
   reload(): void {

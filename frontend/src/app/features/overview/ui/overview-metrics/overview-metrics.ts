@@ -12,7 +12,16 @@ import { OverviewStore } from '../../data-access/overview-store';
 
 @Component({
   selector: 'app-overview-metrics',
-  imports: [TranslocoPipe, TaxMoneyPipe, RouterLink, Tooltip, TapTooltip, SignedValue, MoneyPipe, SignedPercentPipe],
+  imports: [
+    TranslocoPipe,
+    TaxMoneyPipe,
+    RouterLink,
+    Tooltip,
+    TapTooltip,
+    SignedValue,
+    MoneyPipe,
+    SignedPercentPipe,
+  ],
   templateUrl: './overview-metrics.html',
   host: { class: 'contents' },
   changeDetection: ChangeDetectionStrategy.OnPush,

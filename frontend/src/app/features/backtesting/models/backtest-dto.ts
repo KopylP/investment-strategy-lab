@@ -1,6 +1,7 @@
 import { ApiSchema } from '../../../core/api/api-schema';
 
-export type BacktestStatus = 'Queued' | 'Running' | 'Succeeded' | 'Failed' | 'Cancelled' | 'NotSupported';
+export type BacktestStatus =
+  'Queued' | 'Running' | 'Succeeded' | 'Failed' | 'Cancelled' | 'NotSupported';
 export const STRATEGY_SERIES = 'strategy';
 
 export type ReplayPointDto = ApiSchema<'ReplayPointDto'>;

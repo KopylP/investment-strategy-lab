@@ -42,7 +42,7 @@ import { NewPaletteNode } from '../../ui/palette/palette';
 import { CopyEntryDialog } from '../../ui/graph/copy-entry-dialog';
 import { ExperimentDialog } from '../../ui/experiment-dialog/experiment-dialog';
 import { ExperimentRequestVm } from '../../models/experiment-request-vm';
-import { JsonValue } from '../../models/draft-dto';
+import { JsonValue } from '../../../../shared/models/json-value';
 import { experimentParameters } from '../../data-access/experiment-parameters-mapper';
 
 import { JsonView } from '../../ui/json-view/json-view';

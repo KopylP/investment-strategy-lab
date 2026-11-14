@@ -1,5 +1,6 @@
 import { translate } from '@jsverse/transloco';
-import { DraftSetupDto, GraphDto, NodeDto, JsonValue } from '../models/draft-dto';
+import { JsonValue } from '../../../shared/models/json-value';
+import { DraftSetupDto, GraphDto, NodeDto } from '../models/draft-dto';
 export const setupNodeId = 'strategy-setup';
 export const setupFields = [
   { key: 'funds', label: translate('builder.graph.node.funds'), type: 'Series' as const },

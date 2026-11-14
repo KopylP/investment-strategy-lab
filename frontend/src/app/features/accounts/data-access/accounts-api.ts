@@ -1,10 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { ApiClient } from '../../../core/api/api-client';
 import { AccountSetup } from '../../../shared/models/account-setup-dto';
-import {
-  ChangeReportScheduleBody,
-  ReportSchedule,
-} from '../../reports/models/report-schedule-dto';
+import { ChangeReportScheduleBody, ReportSchedule } from '../../reports/models/report-schedule-dto';
 import { Strategy } from '../../strategies/models/strategy-dto';
 import {
   AddSubPortfolioBody,

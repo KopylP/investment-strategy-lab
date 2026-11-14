@@ -41,7 +41,8 @@ specs yet; verify UI changes by building and, when a stack is running, in the br
   `models/*-dto.ts` (shared ones in `shared/models/`) is an alias of the generated schema, `ApiSchema<'BacktestDto'>`
   (`core/api/api-schema.ts`), and a request body is typed by the command the backend reads (`ApiSchema<'RecordTradeCommand'>`).
   Narrow an alias only where the backend sends a name as a plain string or passes JSON on untyped
-  (`Omit<…, 'status'> & { status: BacktestStatus }`); anything else that looks wrong is fixed in the backend's description.
+  (`Omit<…, 'status'> & { status: BacktestStatus }`, JSON as `JsonValue`/`JsonObject` from `shared/models/json-value.ts`);
+  anything else that looks wrong is fixed in the backend's description.
   A one-off use in `core/` or `shared/` may name `ApiSchema<'…'>` in the call itself. When the API changes, build the
   backend (the Debug build writes `../backend/contracts/openapi.json`), run `npm run api:types`, commit both and fix the
   mappers the compiler points to. Message tokens stay plain strings: the translation interceptor turns them into text.

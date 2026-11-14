@@ -1,5 +1,5 @@
 import { ApiSchema } from '../../../core/api/api-schema';
-import { JsonObject } from '../../../shared/ui/schema-form/schema-form';
+import { JsonObject } from '../../../shared/models/json-value';
 import { ReportMode } from '../../reports/models/report-schedule-dto';
 
 export type StrategyStatus = 'Active' | 'Archived';

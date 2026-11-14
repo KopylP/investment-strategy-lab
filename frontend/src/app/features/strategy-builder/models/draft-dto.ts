@@ -1,4 +1,5 @@
 import { ApiSchema } from '../../../core/api/api-schema';
+import { JsonValue } from '../../../shared/models/json-value';
 
 export type BlockKind = 'MarketFilter' | 'Exit' | 'Entry' | 'Selection' | 'Risk';
 
@@ -20,9 +21,6 @@ export type NodeKind =
   | 'FundSelection'
   | 'Cash'
   | 'Portfolio';
-
-export type JsonValue =
-  string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
 export type NodeDto = Omit<ApiSchema<'NodeDto'>, 'kind' | 'block' | 'parameters'> & {
   kind: NodeKind;

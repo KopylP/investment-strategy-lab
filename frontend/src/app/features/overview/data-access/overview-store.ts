@@ -3,6 +3,7 @@ import { computed, inject, Injectable, linkedSignal, resource, signal } from '@a
 import { ApiClient, toProblemMessage } from '../../../core/api/api-client';
 import { AccountContext } from '../../../core/context/account-context';
 import { DisplayCurrency } from '../../../core/context/display-currency';
+import { AccountSetup } from '../../../shared/models/account-setup-dto';
 import { DashboardDto, ReportSummaryDto, StrategyDto, TaxProgress } from '../models/overview-dto';
 
 export type DashboardPeriod = '1M' | '3M' | '6M' | '1Y' | 'YTD' | 'ALL';
@@ -179,8 +180,6 @@ export class OverviewStore {
   }
 }
 
-function hasNoActiveStrategy(account: {
-  subPortfolios: { status: string; strategyId: unknown }[];
-}) {
+function hasNoActiveStrategy(account: AccountSetup): boolean {
   return !account.subPortfolios.some((sub) => sub.status === 'Active' && sub.strategyId);
 }

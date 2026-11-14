@@ -7,7 +7,12 @@ import { AccountContext } from '../../../core/context/account-context';
 import { InstrumentCatalog } from '../../../core/context/instrument-catalog';
 import { formatMoney } from '../../../shared/pipes/format';
 import { StrategiesApi } from '../../strategies/data-access/strategies-api';
-import { editableTiming, isTimingComplete, reportIcon, scheduleLabel } from '../../reports/models/report-schedule';
+import {
+  editableTiming,
+  isTimingComplete,
+  reportIcon,
+  scheduleLabel,
+} from '../../reports/models/report-schedule';
 import { ReportTiming } from '../../reports/models/report-schedule-dto';
 import { ReportDefinition, Strategy } from '../../strategies/models/strategy-dto';
 import { describeStrategy } from '../../strategies/models/strategy-summary';
@@ -54,7 +59,8 @@ export class NewAccountDraft {
   readonly currency = signal<'EUR' | 'PLN' | 'USD'>('EUR');
   private readonly chosenTaxPolicy = signal<string | null>(null);
   readonly taxPolicy = computed(
-    () => this.chosenTaxPolicy() ?? this.taxPolicies().find((policy) => policy.isDefault)?.value ?? '',
+    () =>
+      this.chosenTaxPolicy() ?? this.taxPolicies().find((policy) => policy.isDefault)?.value ?? '',
   );
   readonly preset = signal<Preset>('simple');
   readonly sleeves = signal<SleeveDraft[]>([]);
@@ -72,9 +78,13 @@ export class NewAccountDraft {
   readonly showAdvanced = signal(false);
   readonly saving = signal(false);
 
-  readonly brokers = ['Revolut', 'XTB', 'Interactive Brokers', 'Trading 212', translate('accounts.wizard.otherBroker')].map(
-    (value) => ({ label: value, value }),
-  );
+  readonly brokers = [
+    'Revolut',
+    'XTB',
+    'Interactive Brokers',
+    'Trading 212',
+    translate('accounts.wizard.otherBroker'),
+  ].map((value) => ({ label: value, value }));
   readonly currencies = ['EUR', 'PLN', 'USD'].map((value) => ({ label: value, value }));
   private readonly taxPoliciesResource = resource({ loader: () => this.api.taxPolicies() });
 
@@ -191,7 +201,8 @@ export class NewAccountDraft {
       strategies.find((strategy) => strategy.name.startsWith('US')) ??
       strategies[1] ??
       strategies[0];
-    if (preset === 'simple') this.sleeves.set([this.sleeve(translate('accounts.wizard.mainSleeve'), 100, eu?.id ?? null)]);
+    if (preset === 'simple')
+      this.sleeves.set([this.sleeve(translate('accounts.wizard.mainSleeve'), 100, eu?.id ?? null)]);
     else if (preset === 'balanced')
       this.sleeves.set([
         this.sleeve(translate('accounts.wizard.europe'), 70, eu?.id ?? null),

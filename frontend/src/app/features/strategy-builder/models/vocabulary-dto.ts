@@ -1,5 +1,6 @@
 import { ApiSchema } from '../../../core/api/api-schema';
-import { JsonValue, NodeKind } from './draft-dto';
+import { JsonValue } from '../../../shared/models/json-value';
+import { NodeKind } from './draft-dto';
 
 export type SocketType =
   'Number' | 'Boolean' | 'Funds' | 'Series' | 'SeriesList' | 'Candidates' | 'Budget' | 'RiskPolicy';

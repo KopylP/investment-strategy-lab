@@ -1,7 +1,8 @@
 import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { JsonValue, NodeKind } from '../../models/draft-dto';
+import { JsonValue } from '../../../../shared/models/json-value';
+import { NodeKind } from '../../models/draft-dto';
 import {
   ConditionKindDto,
   IndicatorKindDto,

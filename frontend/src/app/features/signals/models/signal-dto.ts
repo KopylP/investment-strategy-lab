@@ -2,11 +2,7 @@ import { ApiSchema } from '../../../core/api/api-schema';
 import { ReportTiming } from '../../reports/models/report-schedule-dto';
 
 export type SignalTargetKind =
-  | 'Instrument'
-  | 'InstrumentGroup'
-  | 'EachPosition'
-  | 'SubPortfolio'
-  | 'Account';
+  'Instrument' | 'InstrumentGroup' | 'EachPosition' | 'SubPortfolio' | 'Account';
 export type SignalMetric = 'DrawdownFromPeak' | 'DayFall' | 'LossFromCost' | 'Level';
 export type SignalDirection = 'Above' | 'Below';
 
@@ -25,7 +21,10 @@ export type SignalOccurrenceDto = Omit<ApiSchema<'SignalOccurrenceDto'>, 'metric
   metric: SignalMetric;
 };
 
-export type SignalsOverviewDto = Omit<ApiSchema<'SignalsOverviewDto'>, 'signals' | 'active' | 'recent'> & {
+export type SignalsOverviewDto = Omit<
+  ApiSchema<'SignalsOverviewDto'>,
+  'signals' | 'active' | 'recent'
+> & {
   signals: SignalDto[];
   active: SignalOccurrenceDto[];
   recent: SignalOccurrenceDto[];

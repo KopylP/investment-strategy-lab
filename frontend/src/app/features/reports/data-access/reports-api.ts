@@ -39,7 +39,10 @@ export class ReportsApi {
   ): Promise<ReportRequestedDto> {
     const body: GenerateReportBody = { code, contribution };
 
-    return this.api.post<ReportRequestedDto>(`/api/rebalancing/accounts/${accountId}/reports`, body);
+    return this.api.post<ReportRequestedDto>(
+      `/api/rebalancing/accounts/${accountId}/reports`,
+      body,
+    );
   }
 
   requests(accountId: string): Promise<ReportRequestDto[]> {

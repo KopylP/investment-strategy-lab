@@ -50,10 +50,7 @@ export class TrialComparison {
   protected readonly hiddenLines = new HiddenLines();
   private readonly results = resource({
     params: () => [this.first(), this.second()],
-    loader: ({ params }) =>
-      Promise.all(
-        params.map((run) => this.load(run)),
-      ),
+    loader: ({ params }) => Promise.all(params.map((run) => this.load(run))),
   });
   protected readonly error = this.results.error;
   private readonly comparison = resource({
@@ -61,13 +58,20 @@ export class TrialComparison {
       first: this.reference(this.first()),
       second: this.reference(this.second()),
     }),
-    loader: ({ params }) => this.api.post<BacktestComparisonDto>('/api/backtesting/comparisons', params),
+    loader: ({ params }) =>
+      this.api.post<BacktestComparisonDto>('/api/backtesting/comparisons', params),
   });
-  protected readonly comparisonReason = computed(() => this.comparison.hasValue() ? this.comparison.value().reason : null);
+  protected readonly comparisonReason = computed(() =>
+    this.comparison.hasValue() ? this.comparison.value().reason : null,
+  );
   protected readonly comparisonError = this.comparison.error;
 
   private reference(run: TrialRunDto) {
-    return { strategyId: run.strategyId, version: run.version, experimentId: run.experimentId ?? null };
+    return {
+      strategyId: run.strategyId,
+      version: run.version,
+      experimentId: run.experimentId ?? null,
+    };
   }
 
   private async load(run: TrialRunDto): Promise<BacktestDto> {
@@ -76,13 +80,17 @@ export class TrialComparison {
       return experimentBacktest(experiment);
     }
 
-    return this.api.get<BacktestDto>(`/api/backtesting/strategies/${run.strategyId}`, { version: run.version });
+    return this.api.get<BacktestDto>(`/api/backtesting/strategies/${run.strategyId}`, {
+      version: run.version,
+    });
   }
   protected readonly rows = computed(() =>
     metrics.map(({ key, label }) => {
       const first = this.first()[key];
       const second = this.second()[key];
-      const difference = this.comparison.hasValue() ? this.comparison.value().difference?.[key] ?? null : null;
+      const difference = this.comparison.hasValue()
+        ? (this.comparison.value().difference?.[key] ?? null)
+        : null;
 
       return {
         label,
@@ -103,7 +111,11 @@ export class TrialComparison {
           ? translate('builder.comparison.runA', { number: this.first().number })
           : series.label,
     }));
-    if (second) lines.push({ ...second, label: translate('builder.comparison.runB', { number: this.second().number }) });
+    if (second)
+      lines.push({
+        ...second,
+        label: translate('builder.comparison.runB', { number: this.second().number }),
+      });
 
     return lines;
   });

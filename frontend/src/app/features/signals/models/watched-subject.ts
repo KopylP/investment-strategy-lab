@@ -3,8 +3,7 @@ import { SignalForm } from './signal-form';
 import { activeLocale } from '../../../core/i18n/language';
 
 export type WatchedSubject =
-  | { target: 'Instrument'; instrumentId: string }
-  | { target: 'InstrumentGroup'; groupName: string };
+  { target: 'Instrument'; instrumentId: string } | { target: 'InstrumentGroup'; groupName: string };
 
 export interface InstrumentGroupSummary {
   name: string;

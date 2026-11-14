@@ -11,7 +11,9 @@ export class OpenActionsBadge {
   private readonly countResource = resource({
     params: () => this.accounts.currentId(),
     loader: ({ params: accountId }) =>
-      this.api.get<ApiSchema<'OpenActionsCountResponse'>>(`/api/rebalancing/accounts/${accountId}/open-actions`),
+      this.api.get<ApiSchema<'OpenActionsCountResponse'>>(
+        `/api/rebalancing/accounts/${accountId}/open-actions`,
+      ),
   });
 
   readonly count = computed(() => this.countResource.value()?.count ?? 0);

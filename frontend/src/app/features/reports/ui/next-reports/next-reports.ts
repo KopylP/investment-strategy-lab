@@ -1,7 +1,12 @@
 import { TranslocoPipe } from '@jsverse/transloco';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { nextLabel, reportIcon, scheduleLabel, upcomingReports } from '../../models/report-schedule';
+import {
+  nextLabel,
+  reportIcon,
+  scheduleLabel,
+  upcomingReports,
+} from '../../models/report-schedule';
 import { ReportSchedule } from '../../models/report-schedule-dto';
 
 @Component({

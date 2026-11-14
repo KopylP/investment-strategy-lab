@@ -10,11 +10,7 @@ import { Tooltip } from 'primeng/tooltip';
 import { formatQuantity } from '../../pipes/format';
 import { Viewport } from '../viewport';
 import { TapTooltip } from '../tap-tooltip';
-
-type JsonValue = string | number | boolean | null | JsonObject | JsonValue[];
-export interface JsonObject {
-  [key: string]: JsonValue;
-}
+import { JsonObject, JsonValue } from '../../models/json-value';
 
 interface SchemaNode {
   type?: string;

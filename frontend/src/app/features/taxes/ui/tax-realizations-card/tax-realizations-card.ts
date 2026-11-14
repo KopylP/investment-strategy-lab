@@ -13,7 +13,8 @@ import { TaxesStore } from '../../data-access/taxes-store';
 
 @Component({
   selector: 'app-tax-realizations-card',
-  imports: [TranslocoPipe, 
+  imports: [
+    TranslocoPipe,
     TaxMoneyPipe,
     Button,
     Message,
@@ -34,6 +35,9 @@ export class TaxRealizationsCard {
   protected readonly store = inject(TaxesStore);
 
   protected brokerDifference(sale: Realization): boolean {
-    return sale.brokerGainInTaxCurrency !== null && Math.abs(sale.gainInTaxCurrency - sale.brokerGainInTaxCurrency) >= 1;
+    return (
+      sale.brokerGainInTaxCurrency !== null &&
+      Math.abs(sale.gainInTaxCurrency - sale.brokerGainInTaxCurrency) >= 1
+    );
   }
 }
