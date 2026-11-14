@@ -25,7 +25,7 @@ export function provideI18n() {
       },
       loader: CatalogLoader,
     }),
-    provideTranslocoMessageformat(),
+    provideTranslocoMessageformat({ locales: activeLanguage }),
     { provide: TitleStrategy, useClass: TranslatedTitleStrategy },
     provideEnvironmentInitializer(() => inject(ChosenLanguage)),
     provideAppInitializer(() => {
