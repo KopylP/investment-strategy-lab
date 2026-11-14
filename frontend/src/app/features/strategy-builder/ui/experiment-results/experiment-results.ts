@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { DecimalPipe } from '@angular/common';
 import { Message } from 'primeng/message';
 import { DatePipe, MoneyPipe, PercentPipe } from '../../../../shared/pipes/format-pipes';
+import { formatMoney, formatQuantity } from '../../../../shared/pipes/format';
 import { StrategyBacktest } from '../../../backtesting/ui/strategy-backtest/strategy-backtest';
 import { ExperimentStore } from '../../data-access/experiment-store';
 import { ExperimentJournal } from '../experiment-journal/experiment-journal';
@@ -30,4 +31,16 @@ export class ExperimentResults {
   protected readonly currency = computed(
     () => this.store.experiment()?.result?.baseline.currency ?? '',
   );
+  protected readonly startingCapital = computed(() =>
+    this.amount(this.store.experiment()?.conditions.initialCapital),
+  );
+  protected readonly feePerTrade = computed(() =>
+    this.amount(this.store.experiment()?.conditions.costs.feePerTrade),
+  );
+
+  private amount(value: number | undefined): string {
+    const currency = this.currency();
+
+    return currency ? formatMoney(value, currency) : formatQuantity(value);
+  }
 }
