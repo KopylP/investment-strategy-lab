@@ -11,7 +11,7 @@
       <div><dt class="text-muted-color">{{ 'builder.experiment.period' | transloco }}</dt><dd class="m-0">{{ experiment.conditions.period.start | date }} – {{ experiment.conditions.period.end | date }}</dd></div>
       <div><dt class="text-muted-color">{{ 'builder.experiment.startingCapital' | transloco }}</dt><dd class="m-0">{{ startingCapital() }}</dd></div>
       <div><dt class="text-muted-color">{{ 'transactions.trade.fee' | transloco }}</dt><dd class="m-0">{{ 'builder.experiment.commissionLine' | transloco: { commissionRate: (experiment.conditions.costs.commissionRate | percent), feePerTrade: feePerTrade() } }}</dd></div>
-      <div><dt class="text-muted-color">Spread / slippage</dt><dd class="m-0">{{ 'builder.experiment.spreadLine' | transloco: { spreadBps: (experiment.conditions.costs.spreadBps | number), slippageBps: (experiment.conditions.costs.slippageBps | number) } }}</dd></div>
+      <div><dt class="text-muted-color">{{ 'builder.experiment.spreadAndSlippage' | transloco }}</dt><dd class="m-0">{{ 'builder.experiment.spreadLine' | transloco: { spreadBps: (experiment.conditions.costs.spreadBps | number), slippageBps: (experiment.conditions.costs.slippageBps | number) } }}</dd></div>
       @if (experiment.result?.baseline?.finalCapital !== undefined) {
         <div><dt class="text-muted-color">{{ 'builder.experiment.endCapital' | transloco }}</dt><dd class="m-0 font-semibold">{{ experiment.result!.baseline.finalCapital | money: currency() }}</dd></div>
       }

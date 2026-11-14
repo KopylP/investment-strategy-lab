@@ -1508,6 +1508,7 @@
       "startingCapital": "Starting capital",
       "endCapital": "Capital at the end, before tax",
       "commissionLine": "{commissionRate} + {feePerTrade} per trade",
+      "spreadAndSlippage": "Spread / slippage",
       "spreadLine": "{spreadBps} / {slippageBps} bp"
     },
     "palette": {

@@ -1508,6 +1508,7 @@
       "startingCapital": "Початковий капітал",
       "endCapital": "Капітал наприкінці, до податку",
       "commissionLine": "{commissionRate} + {feePerTrade} за угоду",
+      "spreadAndSlippage": "Spread / slippage",
       "spreadLine": "{spreadBps} / {slippageBps} б.п."
     },
     "palette": {
